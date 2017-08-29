@@ -19,6 +19,8 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
+import static org.openpnp.vision.FluentCv.pointToLineDistance;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -26,6 +28,7 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.Callable;
 
 import javax.swing.AbstractAction;
@@ -33,16 +36,17 @@ import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.JDialog;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.opencv.core.Core;
+import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
@@ -65,6 +69,7 @@ import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder.TapeType;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
@@ -77,7 +82,7 @@ import org.openpnp.vision.Ransac;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
-import org.opencv.core.Mat;
+import org.pmw.tinylog.Logger;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
@@ -85,8 +90,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-
-import static org.openpnp.vision.FluentCv.pointToLineDistance;
 
 @SuppressWarnings("serial")
 public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurationWizard {
@@ -117,7 +120,13 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JLabel lblRotationInTape;
     private JTextField textFieldLocationRotation;
     private JButton btnAutoSetup;
+    private JCheckBox chckbxUseVision;
+    private JLabel lblUseVision;
+    private JLabel lblPart;
+    private JLabel lblRetryCount;
+    private JTextField retryCountTf;
 
+    private boolean logDebugInfo = false;
     private Location firstPartLocation;
     private Location secondPartLocation;
     private List<Location> part1HoleLocations;
@@ -397,13 +406,13 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             cameraView.setText("Click on the center of the first part in the tape.");
             cameraView.flash();
 
-            final boolean showDetails = (e.getModifiers() & ActionEvent.ALT_MASK) != 0;
+            logDebugInfo = (e.getModifiers() & ActionEvent.ALT_MASK) != 0;
 
             cameraView.setCameraViewFilter(new CameraViewFilter() {
                 @Override
                 public BufferedImage filterCameraImage(Camera camera, BufferedImage image) {
                     try {
-                        return showHoles(camera, image, showDetails);
+                        return showHoles(camera, image);
                     }
                     catch (Exception e) {
                         MessageBoxes.errorBox(MainFrame.get(), "Error", e);
@@ -493,6 +502,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                                  }
 
                                  List<Location> referenceHoles = deriveReferenceHoles(
+                                         firstPartLocation, secondPartLocation,
                                          part1HoleLocations, part2HoleLocations);
                                  final Location referenceHole1 = referenceHoles.get(0)
                                                                                .derive(null, null,
@@ -504,11 +514,16 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                                  feeder.setReferenceHoleLocation(referenceHole1);
                                  feeder.setLastHoleLocation(referenceHole2);
 
-                                 Length partPitch =
-                                         firstPartLocation.getLinearLengthTo(secondPartLocation);
-                                 partPitch.setValue(2 * (Math.round(partPitch.getValue() / 2)));
+                                 Length partPitch = firstPartLocation.getLinearLengthTo(secondPartLocation);
+                                 // Round to the nearest 2mm (parts are spaced either 2mm or 4mm in the tape)
+                                 Length partPitchMM = partPitch.convertToUnits(LengthUnit.Millimeters);
+                                 long standardPitchIncrements = Math.round(partPitchMM.getValue() / 2.0);
+                                 if (standardPitchIncrements == 0) {
+                                     throw new Exception("The same part was selected both times");
+                                 }
+                                 partPitchMM.setValue(2.0 * standardPitchIncrements);
 
-                                 final Length partPitch_ = partPitch;
+                                 final Length partPitch_ = partPitchMM.convertToUnits(firstPartLocation.getUnits());
                                  SwingUtilities.invokeLater(new Runnable() {
                                      public void run() {
                                          Helpers.copyLocationIntoTextFields(referenceHole1,
@@ -555,37 +570,152 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         pipeline.process();
 
         // Grab the results
-        List<CvStage.Result.Circle> results = (List<CvStage.Result.Circle>)pipeline.getResult("results").model;
-        if (results.isEmpty()) {
+        FindHoles findHolesResults = new FindHoles(camera, pipeline).invoke();
+        List<CvStage.Result.Circle> inLine = findHolesResults.getInLine();
+        if (inLine.isEmpty()) {
             throw new Exception("Feeder " + getName() + ": No tape holes found.");
         }
 
-        // Sort by the distance to the camera center (which is over the part, not the hole)
-        results.sort((a, b) -> {
-            Double da = VisionUtils.getPixelLocation(camera, a.x, a.y)
-                    .getLinearDistanceTo(camera.getLocation());
-            Double db = VisionUtils.getPixelLocation(camera, b.x, b.y)
-                    .getLinearDistanceTo(camera.getLocation());
-            return da.compareTo(db);
-        });
-
         List<Location> holeLocations = new ArrayList<>();
-        double minDistancePx = VisionUtils.toPixels(feeder.getHoleDistanceMin(), camera);
-        double maxDistancePx = VisionUtils.toPixels(feeder.getHoleDistanceMax(), camera);
-        for (int i=0; i<results.size(); i++) {
-            CvStage.Result.Circle result = results.get(i);
-            Double distance = VisionUtils.getPixelLocation(camera, result.x, result.y)
-                    .getLinearDistanceTo(camera.getLocation());
-            Double distancePx = VisionUtils.toPixels(new Length(distance, camera.getUnitsPerPixel().getUnits()), camera);
-            // Min distance is because we're centered at the part, not the hole - so we need to ignore
-            // circles found in the part
-            if ((distancePx >= minDistancePx) && (distancePx <= maxDistancePx)) {
-                Location location = VisionUtils.getPixelLocation(camera, result.x, result.y);
-                holeLocations.add(location);
-            }
+        for (int i=0; i<inLine.size(); i++) {
+            CvStage.Result.Circle result = inLine.get(i);
+            Location location = VisionUtils.getPixelLocation(camera, result.x, result.y);
+            holeLocations.add(location);
         }
 
         return holeLocations;
+    }
+
+    /**
+     * Show candidate holes in the image. Red are any holes that are found. Orange are holes that
+     * passed the distance check but failed the line check. Blue are holes that passed the line
+     * check but are considered superfluous. Green passed all checks and are considered good.
+     * 
+     * @param camera
+     * @param image
+     * @return
+     */
+    private BufferedImage showHoles(Camera camera, BufferedImage image) throws Exception {
+        // BufferedCameraImage is used as we want to run the pipeline on an existing image
+        BufferedImageCamera bufferedImageCamera = new BufferedImageCamera(camera, image);
+
+        // Process the pipeline to clean up the image and detect the tape holes
+        CvPipeline pipeline = getCvPipeline(bufferedImageCamera);
+        pipeline.process();
+        // Grab the results
+        Mat resultMat = pipeline.getWorkingImage().clone();
+        FindHoles findHolesResults = new FindHoles(camera, pipeline).invoke();
+
+        List<CvStage.Result.Circle> inLine = findHolesResults.getInLine();
+        List<Ransac.Line> lines = findHolesResults.getLines();
+        Ransac.Line bestLine = findHolesResults.getBestLine();
+
+        drawLines(resultMat, lines, Color.orange, 1);
+        if (bestLine != null) {
+            drawLine(resultMat, bestLine, Color.yellow, 2);
+        }
+        drawCircles(resultMat, inLine, inLine.size(), Color.blue);
+        drawCircles(resultMat, inLine, 2, Color.green);
+
+        BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
+        resultMat.release();
+        return showResult;
+    }
+
+    private class FindHoles {
+        private Camera camera;
+        private CvPipeline pipeline;
+        private List<Ransac.Line> lines;
+        private Ransac.Line bestLine;
+        private List<CvStage.Result.Circle> inLine;
+
+        public FindHoles(Camera camera, CvPipeline pipeline) {
+            this.camera = camera;
+            this.pipeline = pipeline;
+        }
+
+        public List<Ransac.Line> getLines() {
+            return lines;
+        }
+
+        public Ransac.Line getBestLine() {
+            return bestLine;
+        }
+
+        public List<CvStage.Result.Circle> getInLine() {
+            return inLine;
+        }
+
+        public FindHoles invoke() throws Exception {
+            List<CvStage.Result.Circle> results = null;
+            Object result = null;
+            try {
+                result = pipeline.getResult("results").model;
+                results = (List<CvStage.Result.Circle>) result;
+            }
+            catch (ClassCastException e) {
+                throw new Exception("Unrecognized result type (should be Circles): " + result);
+            }
+
+            // Sort by the distance to the camera center (which is over the part, not the hole)
+            results.sort((a, b) -> {
+                Double da = VisionUtils.getPixelLocation(camera, a.x, a.y)
+                        .getLinearDistanceTo(camera.getLocation());
+                Double db = VisionUtils.getPixelLocation(camera, b.x, b.y)
+                        .getLinearDistanceTo(camera.getLocation());
+                return da.compareTo(db);
+            });
+
+            double maxDistanceToLine = VisionUtils.toPixels(feeder.getHoleLineDistanceMax(), camera);
+            double minDistancePx = VisionUtils.toPixels(feeder.getHoleDistanceMin(), camera);
+            double maxDistancePx = VisionUtils.toPixels(feeder.getHoleDistanceMax(), camera);
+            double holePitchPx = VisionUtils.toPixels(feeder.getHolePitch(), camera);
+            double minHolePitchPx = VisionUtils.toPixels(feeder.getHolePitchMin(), camera);
+
+            List<Point> points = new ArrayList<>();
+            // collect the circles into a list of points
+            for (int i = 0; i < results.size(); i++) {
+                CvStage.Result.Circle circle = results.get(i);
+                points.add(new Point(circle.x, circle.y));
+            }
+
+            lines = Ransac.ransac(points, 100, maxDistanceToLine, holePitchPx, holePitchPx - minHolePitchPx);
+
+            bestLine = null;
+            double bestLineDistance = Double.MAX_VALUE;
+            for (Ransac.Line line : lines) {
+                Point a = line.a;
+                Point b = line.b;
+
+                Location aLocation = VisionUtils.getPixelLocation(camera, a.x, a.y);
+                Location bLocation = VisionUtils.getPixelLocation(camera, b.x, b.y);
+
+                Double distance = camera.getLocation().getLinearDistanceToLine(aLocation, bLocation);
+                Double distancePx = VisionUtils.toPixels(new Length(distance, camera.getUnitsPerPixel().getUnits()), camera);
+                // Min distance is because we're centered at the part, not the hole - so we need to ignore
+                // circles found in the part
+                if ((distancePx >= minDistancePx) && (distancePx <= maxDistancePx)) {
+                    if (distance < bestLineDistance) {
+                        bestLine = line;
+                        bestLineDistance = distance;
+                    }
+                }
+            }
+
+            // filter the circles by distance from the resulting line
+            inLine = new ArrayList<CvStage.Result.Circle>();
+            if (bestLine != null) {
+                for (int i = 0; i < results.size(); i++) {
+                    CvStage.Result.Circle circle = results.get(i);
+
+                    Point p = new Point(circle.x, circle.y);
+                    if (pointToLineDistance(bestLine.a, bestLine.b, p) <= maxDistanceToLine) {
+                        inLine.add(circle);
+                    }
+                }
+            }
+            return this;
+        }
     }
 
     private void drawCircles(Mat mat, List<CvStage.Result.Circle> circles, int numToDraw, Color color) {
@@ -603,112 +733,109 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         }
     }
 
-    /**
-     * Show candidate holes in the image. Red are any holes that are found. Orange are holes that
-     * passed the distance check but failed the line check. Blue are holes that passed the line
-     * check but are considered superfluous. Green passed all checks and are considered good.
-     * 
-     * @param camera
-     * @param image
-     * @return
-     */
-    private BufferedImage showHoles(Camera camera, BufferedImage image, boolean showDetails) throws Exception {
-        // BufferedCameraImage is used as we want to run the pipeline on an existing image
-        BufferedImageCamera bufferedImageCamera = new BufferedImageCamera(camera, image);
-
-        // Process the pipeline to clean up the image and detect the tape holes
-        CvPipeline pipeline = getCvPipeline(bufferedImageCamera);
-        pipeline.process();
-        // Grab the results
-        Mat resultMat = pipeline.getWorkingImage().clone();
-        List<CvStage.Result.Circle> results = (List<CvStage.Result.Circle>)pipeline.getResult("results").model;
-
-        // Sort by the distance to the camera center (which is over the part, not the hole)
-        results.sort((a, b) -> {
-            Double da = VisionUtils.getPixelLocation(camera, a.x, a.y)
-                    .getLinearDistanceTo(camera.getLocation());
-            Double db = VisionUtils.getPixelLocation(camera, b.x, b.y)
-                    .getLinearDistanceTo(camera.getLocation());
-            return da.compareTo(db);
-        });
-
-        List<CvStage.Result.Circle> withinDistance = new ArrayList<CvStage.Result.Circle>();
-        double minDistancePx = VisionUtils.toPixels(feeder.getHoleDistanceMin(), camera);
-        double maxDistancePx = VisionUtils.toPixels(feeder.getHoleDistanceMax(), camera);
-        for (int i=0; i<results.size(); i++) {
-            CvStage.Result.Circle result = results.get(i);
-            Double distance = VisionUtils.getPixelLocation(camera, result.x, result.y)
-                    .getLinearDistanceTo(camera.getLocation());
-            Double distancePx = VisionUtils.toPixels(new Length(distance, camera.getUnitsPerPixel().getUnits()), camera);
-            // Min distance is because we're centered at the part, not the hole - so we need to ignore
-            // circles found in the part
-            if ((distancePx >= minDistancePx) && (distancePx <= maxDistancePx)) {
-                withinDistance.add(result);
-            }
+    private void drawLines(Mat mat, List<Ransac.Line> lines, Color color, int thickness) {
+        for (Ransac.Line line : lines) {
+            drawLine(mat, line, color, thickness);
         }
-
-        List<CvStage.Result.Circle> inLine = new ArrayList<CvStage.Result.Circle>();
-        if (withinDistance.size() <= 2) {
-            inLine.addAll(withinDistance);
-        }
-        else {
-            double maxDistanceToLine = VisionUtils.toPixels(feeder.getHoleLineDistanceMax(), camera);
-
-            List<Point> points = new ArrayList<>();
-            // collect the circles into a list of points
-            for (int i = 0; i < withinDistance.size(); i++) {
-                CvStage.Result.Circle circle = withinDistance.get(i);
-                points.add(new Point(circle.x, circle.y));
-            }
-
-            Point[] line = Ransac.ransac(points, 100, maxDistanceToLine);
-            Point a = line[0];
-            Point b = line[1];
-
-            // filter the circles by distance from the resulting line
-            for (int i = 0; i < withinDistance.size(); i++) {
-                CvStage.Result.Circle circle = withinDistance.get(i);
-
-                Point p = new Point(circle.x, circle.y);
-                if (pointToLineDistance(a, b, p) <= maxDistanceToLine) {
-                    inLine.add(circle);
-                }
-            }
-        }
-
-        if (showDetails) {
-            drawCircles(resultMat, withinDistance, withinDistance.size(), Color.orange);
-            drawCircles(resultMat, inLine, inLine.size(), Color.blue);
-            drawCircles(resultMat, inLine, 2, Color.green);
-        }
-        else {
-            drawCircles(resultMat, inLine, 2, Color.green);
-        }
-
-        BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
-        resultMat.release();
-        return showResult;
     }
 
-    private List<Location> deriveReferenceHoles(List<Location> part1HoleLocations,
-            List<Location> part2HoleLocations) {
+    private void drawLine(Mat mat, Ransac.Line line, Color color, int thickness) {
+        Core.line(mat, line.a, line.b, FluentCv.colorToScalar(color), thickness);
+    }
+
+    private List<Location> deriveReferenceHoles(
+            Location firstPartLocation,
+            Location secondPartLocation,
+            List<Location> part1HoleLocations,
+            List<Location> part2HoleLocations) throws Exception {
+
+        Location partsLocationRay = secondPartLocation.subtract(firstPartLocation);
+        Point feedDirection = new Point(partsLocationRay.getX(), partsLocationRay.getY());
+
         // We are only interested in the pair of holes closest to each part
         part1HoleLocations = part1HoleLocations.subList(0, Math.min(2, part1HoleLocations.size()));
         part2HoleLocations = part2HoleLocations.subList(0, Math.min(2, part2HoleLocations.size()));
 
-        // Part 1's reference hole is the one closest to either of part 2's holes.
-        Location part1ReferenceHole =
-                VisionUtils.sortLocationsByDistance(part2HoleLocations.get(0), part1HoleLocations)
-                           .get(0);
-        // Part 2's reference hole is the one farthest from part 1's reference hole.
-        Location part2ReferenceHole = Lists.reverse(
-                VisionUtils.sortLocationsByDistance(part1ReferenceHole, part2HoleLocations))
-                                           .get(0);
+        // Part 2's reference hole is the one farthest from part 1, in the direction of part 2
+        List<LocationsAlongRay> part2HoleLocationsAlongRay = new ArrayList<>(part2HoleLocations.size());
+        for (Location partLocation : part2HoleLocations) {
+            Location loc = partLocation.convertToUnits(partsLocationRay.getUnits());
+            Point p = new Point(loc.getX() - firstPartLocation.getX(), loc.getY() - firstPartLocation.getY());
+            double distanceAlongRay = feedDirection.dot(p);
+            part2HoleLocationsAlongRay.add(new LocationsAlongRay(partLocation, distanceAlongRay));
+        }
+        part2HoleLocationsAlongRay.sort(null);
+        List<Location> part2SortedLocations = new ArrayList<>(part2HoleLocationsAlongRay.size());
+        part2HoleLocationsAlongRay.forEach(locationAlongRay -> part2SortedLocations.add(locationAlongRay.location));
+        List<Location> part2ReverseSortedLocations = Lists.reverse(part2SortedLocations);
+        Location part2ReferenceHole = part2ReverseSortedLocations.get(0);
+
+        // Part 1's reference hole is the one closest to part 2's reference hole.
+        List<Location> part1SortedLocations = VisionUtils.sortLocationsByDistance(part2ReferenceHole, part1HoleLocations);
+        Location part1ReferenceHole = part1SortedLocations.get(0);
+        double holePitchMin = feeder.getHolePitchMin().convertToUnits(part1ReferenceHole.getUnits()).getValue();
+        double referenceHoleDistance = part1ReferenceHole.getLinearDistanceTo(part2ReferenceHole);
+        // Part 1 and part 2 may have the same reference holes for 2mm part-pitch tape, so "the one closest to part 2's
+        // reference hole" will be part 2's reference hole - thus we want the other hole
+        if (referenceHoleDistance < holePitchMin) {
+            part1ReferenceHole = part1SortedLocations.get(1);
+        }
+
+        // Get the vector perpendicular to feedDirection (perp dot is (-y, x) and gives the vector rotated 90° to the
+        // left, but we want the vector rotated 90° to the right and thus (y, -x))
+        Point expectedHoleHalfspace = new Point(feedDirection.y, -feedDirection.x);
+        Location hole1RelativeLocation = part1ReferenceHole.subtract(firstPartLocation);
+        Location hole2RelativeLocation = part2ReferenceHole.subtract(firstPartLocation);
+        Point h1 = new Point(hole1RelativeLocation.getX(), hole1RelativeLocation.getY());
+        Point h2 = new Point(hole2RelativeLocation.getX(), hole2RelativeLocation.getY());
+        double h1Dist = expectedHoleHalfspace.dot(h1);
+        double h2Dist = expectedHoleHalfspace.dot(h2);
+        boolean correctOrientation = (h1Dist > 0.0) && (h2Dist > 0.0);
+
+        if (this.logDebugInfo) {
+            Logger.info("deriveReferenceHoles");
+            Logger.info("  feedDirection: " + feedDirection);
+            Logger.info("  firstPartLocation: " + firstPartLocation);
+            Logger.info("  secondPartLocation: " + secondPartLocation);
+            Logger.info("  part1HoleLocations: " + part1HoleLocations);
+            Logger.info("  part2HoleLocations: " + part2HoleLocations);
+            Logger.info("  part2HoleLocationsAlongRay: " + part2HoleLocationsAlongRay);
+            Logger.info("  part2ReverseSortedLocations: " + part2ReverseSortedLocations);
+            Logger.info("  part1SortedLocations: " + part1SortedLocations);
+            Logger.info("  referenceHoleDistance: " + referenceHoleDistance);
+            Logger.info("  h1Dist: " + h1Dist);
+            Logger.info("  h2Dist: " + h2Dist);
+            Logger.info("  correctOrientation: " + correctOrientation);
+        }
+
+        if (!correctOrientation) {
+            throw new Exception("The tape is oriented incorrectly for the feed direction of the components selected");
+        }
 
         List<Location> referenceHoles = new ArrayList<>();
         referenceHoles.add(part1ReferenceHole);
         referenceHoles.add(part2ReferenceHole);
         return referenceHoles;
+    }
+
+    private static class LocationsAlongRay implements Comparable<LocationsAlongRay> {
+        public Location location;
+        public double distance;
+
+        public LocationsAlongRay(Location location, double distance) {
+            this.location = location;
+            this.distance = distance;
+        }
+
+        @Override
+        public int compareTo(LocationsAlongRay o) {
+            return Double.compare(this.distance, o.distance);
+        }
+
+        @Override
+        public String toString() {
+            return String.format(Locale.US, "(%s, %s)", Double.toString(distance), location.toString());
+        }
     }
 
     private void editPipeline() throws Exception {
@@ -739,10 +866,4 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
         return pipeline;
     }
-
-    private JCheckBox chckbxUseVision;
-    private JLabel lblUseVision;
-    private JLabel lblPart;
-    private JLabel lblRetryCount;
-    private JTextField retryCountTf;
 }
