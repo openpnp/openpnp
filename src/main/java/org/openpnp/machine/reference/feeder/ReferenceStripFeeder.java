@@ -141,7 +141,11 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 
     public Length getHoleDistanceMax() {
-        return getTapeWidth().multiply(1.5);
+        // 1.75mm = 1.5mm holes are 1mm from the edge of the tape (as per EIA-481)
+        Length tapeEdgeToFeedHoleCenter = new Length(1.75, LengthUnit.Millimeters);
+        // The distance from the centre of the component to the edge of the tape. Gives a bit of leeway for not
+        // clicking exactly in the centre of the component, but is close enough to eliminate most false-positives.
+        return tapeEdgeToFeedHoleCenter.add(getHoleToPartLateral());
     }
 
     public Length getHoleLineDistanceMax() {
@@ -281,7 +285,14 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         }
 
         // Grab the results
-        List<CvStage.Result.Circle> results = (List<CvStage.Result.Circle>)pipeline.getResult("results").model;
+        List<CvStage.Result.Circle> results = null;
+        Object result = pipeline.getResult("results").model;
+        try {
+            results = (List<CvStage.Result.Circle>) result;
+        }
+        catch (ClassCastException e) {
+            throw new Exception("Unrecognized result type (should be Circles): " + result);
+        }
         if (results.isEmpty()) {
             throw new Exception("Feeder " + getName() + ": No tape holes found.");
         }
