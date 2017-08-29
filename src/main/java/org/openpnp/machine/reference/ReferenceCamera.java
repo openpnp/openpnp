@@ -207,7 +207,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     @Override
     public void moveTo(Location location, double speed) throws Exception {
         Logger.debug("moveTo({}, {})", location, speed);
-        getDriver().moveTo(this, location, speed);
+        getDriver().moveTo(this, location, getHead().getMaxPartSpeed() * speed);
         getMachine().fireMachineHeadActivity(head);
     }
 
@@ -217,7 +217,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
         Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN,
                 safeZ.getValue(), Double.NaN);
-        getDriver().moveTo(this, l, speed);
+        getDriver().moveTo(this, l, getHead().getMaxPartSpeed() * speed);
         getMachine().fireMachineHeadActivity(head);
     }
 

@@ -118,10 +118,7 @@ public class ReferenceBottomVision implements PartAlignment {
             } // rounding
             nozzle.moveTo(
                     new Location(LengthUnit.Millimeters, Double.NaN, Double.NaN, Double.NaN,
-                            placementAngle + angle),
-                    nozzle.getHead()
-                          .getMachine()
-                          .getSpeed());
+                            placementAngle + angle));
             pipeline.process();
             if (!((pipeline.getResult("result")).model instanceof RotatedRect)) {
                 throw new Exception("Bottom vision alignment failed for part " + part.getId()

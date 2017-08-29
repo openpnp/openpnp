@@ -31,6 +31,7 @@ import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
 import org.openpnp.machine.reference.psh.NozzlesPropertySheetHolder;
 import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractHead;
 import org.openpnp.spi.base.SimplePropertySheetHolder;

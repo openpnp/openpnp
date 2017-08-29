@@ -1,6 +1,22 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-08-29
+
+* Head Movement Speed Limiting
+
+	Head movements are now limited to the speed of the slowest part on the head at any
+	time. This means that if you have more than one nozzle, and you have picked more than
+	one part, if one part has a slower speed setting than the other, the slower one will
+	dictate the speed of the head. Movements initiated by Cameras and Actuators on the same
+	head will be limited in the same fashion.
+	
+	Implemented in PR https://github.com/openpnp/openpnp/pull/630
+	
+	Original issue https://github.com/openpnp/openpnp/issues/576
+	
+	Thank you to @johngrabner for this nice improvement!
+	 
 # 2017-08-19
 
 * New Scripting Event: Job.Placement.Complete
@@ -8,7 +24,6 @@ a complete change list, only those that may directly interest or affect users.
 	New Scripting Event fired when a placement is complete, i.e. a part has been placed.
 	
 	See https://github.com/openpnp/openpnp/wiki/Scripting#jobplacementcomplete for usage.
-	
 	
 # 2017-08-16
 
