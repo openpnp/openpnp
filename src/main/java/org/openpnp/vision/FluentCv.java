@@ -430,9 +430,9 @@ public class FluentCv {
             points.add(new Point(x, y));
         }
 
-        Point[] line = Ransac.ransac(points, 100, maxDistance);
-        Point a = line[0];
-        Point b = line[1];
+        List<Ransac.Line> lines = Ransac.ransac(points, 100, maxDistance);
+        Point a = lines.get(0).a;
+        Point b = lines.get(0).b;
 
         // filter the points by distance from the resulting line
         List<float[]> results = new ArrayList<>();
