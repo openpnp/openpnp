@@ -285,7 +285,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
                 
                 // Ignore placements that are placed already
-                if (placement.getPlaced()) {
+                if (boardLocation.getPlaced(placement.getId())) {
                     continue;
                 }
 
@@ -728,7 +728,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             jobPlacement.status = Status.Complete;
             
             // Mark the placement as "placed"
-            jobPlacement.placement.setPlaced(true);
+            boardLocation.setPlaced(jobPlacement.placement.getId(), true);
 
             plannedPlacement.stepComplete = true;
 

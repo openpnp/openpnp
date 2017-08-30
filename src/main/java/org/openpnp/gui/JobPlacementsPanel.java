@@ -248,11 +248,11 @@ public class JobPlacementsPanel extends JPanel {
     public void setBoardLocation(BoardLocation boardLocation) {
         this.boardLocation = boardLocation;
         if (boardLocation == null) {
-            tableModel.setBoard(null);
+            tableModel.setBoard(null, null);
             boardLocationSelectionActionGroup.setEnabled(false);
         }
         else {
-            tableModel.setBoard(boardLocation.getBoard());
+            tableModel.setBoard(boardLocation.getBoard(), boardLocation);
             boardLocationSelectionActionGroup.setEnabled(true);
         }
     }
@@ -306,7 +306,6 @@ public class JobPlacementsPanel extends JPanel {
 
             boardLocation.getBoard().addPlacement(placement);
             tableModel.fireTableDataChanged();
-            placement.setPlaced(false);
             Helpers.selectLastTableRow(table);
         }
     };
@@ -524,7 +523,7 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
-                placement.setPlaced(placed);
+                boardLocation.setPlaced(placement.getId(), placed);
                 tableModel.fireTableDataChanged();   
             }
         }

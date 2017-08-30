@@ -26,6 +26,7 @@ import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
+import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
@@ -52,13 +53,15 @@ public class PlacementsTableModel extends AbstractTableModel {
     }
 
     private Board board;
+    private BoardLocation boardLocation;
 
     public PlacementsTableModel(Configuration configuration) {
         this.configuration = configuration;
     }
 
-    public void setBoard(Board board) {
+    public void setBoard(Board board, BoardLocation boardLocation) {
         this.board = board;
+        this.boardLocation = boardLocation;
         fireTableDataChanged();
     }
     
@@ -126,7 +129,8 @@ public class PlacementsTableModel extends AbstractTableModel {
                 placement.setType((Type) aValue);
             }
             else if (columnIndex == 7) {
-                placement.setPlaced((Boolean) aValue);
+                //placement.setPlaced((Boolean) aValue);
+            	boardLocation.setPlaced(placement.getId(), (Boolean) aValue);
             }
             else if (columnIndex == 9) {
                 placement.setCheckFids((Boolean) aValue);
@@ -183,7 +187,7 @@ public class PlacementsTableModel extends AbstractTableModel {
             case 6:
                 return placement.getType();
             case 7:
-            	return placement.getPlaced();
+            	return boardLocation.getPlaced(placement.getId());
             case 8:
                 return getPlacementStatus(placement);
             case 9:
