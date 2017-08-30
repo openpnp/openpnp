@@ -306,6 +306,7 @@ public class JobPlacementsPanel extends JPanel {
 
             boardLocation.getBoard().addPlacement(placement);
             tableModel.fireTableDataChanged();
+            boardLocation.setPlaced(placement.getId(), false);
             Helpers.selectLastTableRow(table);
         }
     };
