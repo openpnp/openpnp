@@ -1,9 +1,10 @@
 <cv-pipeline>
    <stages>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="original" enabled="true" settle-first="true"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.BlurMedian" name="cleanup-noise" enabled="true" kernel-size="5"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ConvertColor" name="gray" enabled="true" conversion="Bgr2Gray"/>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.Threshold" name="threshold" enabled="true" threshold="100" auto="true" invert="false"/>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.BlurGaussian" name="predetect" enabled="true" kernel-size="9"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ThresholdAdaptive" name="threshold" enabled="true" adaptive-method="Gaussian" invert="false" block-size="9" c-parm="0"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.BlurGaussian" name="predetect" enabled="true" kernel-size="5"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.DetectFixedCirclesHough" name="results" enabled="true"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ImageRecall" name="recalled" enabled="true" image-stage-name="original"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.DrawCircles" name="display" enabled="true" circles-stage-name="results" thickness="1">

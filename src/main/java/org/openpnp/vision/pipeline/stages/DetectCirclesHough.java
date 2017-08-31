@@ -34,6 +34,7 @@ public class DetectCirclesHough extends CvStage {
      * half as big width and height.
      */
     @Attribute(required = false)
+    @Property(description = "Inverse ratio of the accumulator resolution to the image resolution")
     private double dp = 1;
 
     /**
@@ -41,6 +42,7 @@ public class DetectCirclesHough extends CvStage {
      * the two passed to the Canny() edge detector (the lower one is twice smaller).
      */
     @Attribute(required = false)
+    @Property(description = "The higher threshold of the two passed to the Canny() edge detector (the lower one is twice smaller)")
     private double param1 = 80;
 
     /**
@@ -50,6 +52,7 @@ public class DetectCirclesHough extends CvStage {
      * returned first.
      */
     @Attribute(required = false)
+    @Property(description = "The accumulator threshold for the circle centers at the detection stage. The smaller it is, the more false circles may be detected")
     private double param2 = 10;
 
     public int getMinDistance() {
