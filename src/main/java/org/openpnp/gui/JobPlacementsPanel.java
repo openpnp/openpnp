@@ -233,6 +233,10 @@ public class JobPlacementsPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
     }
+    
+    public void refresh() {
+        tableModel.fireTableDataChanged();
+    }
 
     public void selectPlacement(Placement placement) {
         for (int i = 0; i < tableModel.getRowCount(); i++) {

@@ -160,6 +160,11 @@ public class BoardLocation extends AbstractModelObject {
             return false;
         }
     }
+    
+    public void clearAllPlaced() {
+        this.placed.clear();
+        firePropertyChange("placed", null, this.placed);
+    }
 
     @Override
     public String toString() {

@@ -287,15 +287,19 @@ public class MainFrame extends JFrame {
         }
         mnUnits.add(menuItem);
 
-        // Job Control
+        // Job
         //////////////////////////////////////////////////////////////////////
-        JMenu mnJob = new JMenu("Job Control");
+        JMenu mnJob = new JMenu("Job");
         mnJob.setMnemonic(KeyEvent.VK_J);
         menuBar.add(mnJob);
 
         mnJob.add(new JMenuItem(jobPanel.startPauseResumeJobAction));
         mnJob.add(new JMenuItem(jobPanel.stepJobAction));
         mnJob.add(new JMenuItem(jobPanel.stopJobAction));
+        
+        mnJob.addSeparator();
+        
+        mnJob.add(new JMenuItem(jobPanel.resetAllPlacedAction));
 
         // Machine
         //////////////////////////////////////////////////////////////////////
