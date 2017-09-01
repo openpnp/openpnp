@@ -88,7 +88,7 @@ public class JobPlacementsPanel extends JPanel {
         boardLocationSelectionActionGroup.setEnabled(false);
 
         singleSelectionActionGroup =
-                new ActionGroup(removeAction, editPlacementFeederAction, setTypeAction);
+                new ActionGroup(removeAction, editPlacementFeederAction, setTypeAction, setSideAction, setPlacedAction);
         singleSelectionActionGroup.setEnabled(false);
 
         multiSelectionActionGroup = new ActionGroup(removeAction, setTypeAction, setSideAction, setPlacedAction);
