@@ -147,16 +147,23 @@ public class BoardLocation extends AbstractModelObject {
         firePropertyChange("enabled", oldValue, enabled);
     }
 
-    public void setPlaced(String placementID, boolean Placed) {
-        placed.put(placementID, Placed);
+    public void setPlaced(String placementId, boolean placed) {
+        this.placed.put(placementId, placed);
+        firePropertyChange("placed", null, this.placed);
     }
 
-    public boolean getPlaced(String placementID) {
-        if (placed.containsKey(placementID)) {
-            return placed.get(placementID);
-        } else {
+    public boolean getPlaced(String placementId) {
+        if (placed.containsKey(placementId)) {
+            return placed.get(placementId);
+        } 
+        else {
             return false;
         }
+    }
+    
+    public void clearAllPlaced() {
+        this.placed.clear();
+        firePropertyChange("placed", null, this.placed);
     }
 
     @Override

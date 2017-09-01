@@ -59,9 +59,14 @@ public class PlacementsTableModel extends AbstractTableModel {
         this.configuration = configuration;
     }
 
-    public void setBoard(Board board, BoardLocation boardLocation) {
-        this.board = board;
+    public void setBoardLocation(BoardLocation boardLocation) {
         this.boardLocation = boardLocation;
+        if (boardLocation == null) {
+            this.board = null;
+        }
+        else {
+            this.board = boardLocation.getBoard();
+        }
         fireTableDataChanged();
     }
     
