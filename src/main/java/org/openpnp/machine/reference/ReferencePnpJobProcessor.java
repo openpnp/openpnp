@@ -280,15 +280,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             
             // Check for ID duplicates - throw error if any are found
-            List<Placement> compareplacements = boardLocation.getBoard().getPlacements();
-            for (int i = 0; i <= compareplacements.size() - 1; i++) {
-            	for (int j = i+1; j <= compareplacements.size() - 1; j++) {
-            		if (compareplacements.get(i).getId().equals(compareplacements.get(j).getId())) {			
-            			throw new Exception(String.format("This board contains at least one duplicate ID entry: %s ",
-            					compareplacements.get(j).getId()));
-            		}
+            HashSet<String> idlist = new HashSet<String>();
+            for (Placement placement : boardLocation.getBoard().getPlacements()) {
+            	if (idlist.contains(placement.getId())) {
+            		throw new Exception(String.format("This board contains at least one duplicate ID entry: %s ",
+            				placement.getId()));
+            	} else {
+            		idlist.add(placement.getId());
             	}
-            }
+            }		
             
             for (Placement placement : boardLocation.getBoard().getPlacements()) {
                 // Ignore placements that aren't set to be placed
