@@ -302,7 +302,16 @@ public class JobPlacementsPanel extends JPanel {
             if (id == null) {
                 return;
             }
-            // TODO: Make sure it's unique.
+            
+            // Check if the new placement ID is unique
+            for(Placement compareplacement : boardLocation.getBoard().getPlacements()) {
+            	if (compareplacement.getId().equals(id)) {
+            		MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
+                            "The ID for the new placement already exists");
+                    return;
+            	}
+            }
+            
             Placement placement = new Placement(id);
 
             placement.setPart(Configuration.get().getParts().get(0));
