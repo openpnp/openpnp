@@ -1,6 +1,26 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-08-31
+
+* Job Placed Status
+
+	Placements now have a Placed column that indicates if the placement has been placed.
+	This value is saved with the job, so it is now possible to do partial assembly, exit
+	OpenPnP, and then recover the job from where you left off.
+	
+	You can right click the placements table to perform a bulk set or reset of the Placed flag
+	and there is a new Job menu item that will reset the Placed status for the entire job at
+	once. This can be used to quickly prep the job to be run again after it's finished. 
+
+	Associated issues:
+	https://github.com/openpnp/openpnp/issues/205
+	https://github.com/openpnp/openpnp/issues/258
+	
+	Implemented in PR https://github.com/openpnp/openpnp/pull/632
+	
+	Thanks to @sp-apertus for this huge improvement in usability!
+	  
 # 2017-08-29
 
 * ReferenceStripFeeder Improvements

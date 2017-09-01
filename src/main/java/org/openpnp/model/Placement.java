@@ -143,7 +143,6 @@ public class Placement extends AbstractModelObject implements Identifiable {
         firePropertyChange("check fids", oldValue, checkFids);
     }
 
-
     @Override
     public String toString() {
         return String.format("id %s, location %s, side %s, part %s, type %s", id, location, side,

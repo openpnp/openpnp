@@ -1017,6 +1017,22 @@ public class JobPanel extends JPanel {
         }
     };
 
+    public final Action resetAllPlacedAction = new AbstractAction() {
+        {
+            putValue(NAME, "Reset All Placed");
+//            putValue(SMALL_ICON, Icons.add);
+            putValue(SHORT_DESCRIPTION, "Reset the Placed status for every placement in the job.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            for (BoardLocation boardLocation : job.getBoardLocations()) {
+                boardLocation.clearAllPlaced();
+            }
+            jobPlacementsPanel.refresh();
+        }
+    };
+
     public final Action addBoardAction = new AbstractAction() {
         {
             putValue(NAME, "Add Board...");

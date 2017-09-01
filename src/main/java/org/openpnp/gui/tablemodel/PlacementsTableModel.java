@@ -26,6 +26,7 @@ import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
+import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
@@ -38,11 +39,11 @@ public class PlacementsTableModel extends AbstractTableModel {
     final Configuration configuration;
 
     private String[] columnNames =
-            new String[] {"Id", "Part", "Side", "X", "Y", "Rot.", "Type", "Status", "Check Fids"};
+            new String[] {"Id", "Part", "Side", "X", "Y", "Rot.", "Type", "Placed", "Status", "Check Fids"};
 
     private Class[] columnTypes = new Class[] {PartCellValue.class, Part.class, Side.class,
             LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, Type.class,
-            Status.class, Boolean.class, Boolean.class};
+            Boolean.class, Status.class, Boolean.class};
 
     public enum Status {
         Ready,
@@ -52,13 +53,20 @@ public class PlacementsTableModel extends AbstractTableModel {
     }
 
     private Board board;
+    private BoardLocation boardLocation;
 
     public PlacementsTableModel(Configuration configuration) {
         this.configuration = configuration;
     }
 
-    public void setBoard(Board board) {
-        this.board = board;
+    public void setBoardLocation(BoardLocation boardLocation) {
+        this.boardLocation = boardLocation;
+        if (boardLocation == null) {
+            this.board = null;
+        }
+        else {
+            this.board = boardLocation.getBoard();
+        }
         fireTableDataChanged();
     }
     
@@ -82,7 +90,7 @@ public class PlacementsTableModel extends AbstractTableModel {
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
         return columnIndex == 1 || columnIndex == 2 || columnIndex == 3 || columnIndex == 4
-                || columnIndex == 5 || columnIndex == 6 || columnIndex == 8;
+                || columnIndex == 5 || columnIndex == 6 || columnIndex == 7 || columnIndex == 9;
     }
 
     @Override
@@ -125,7 +133,11 @@ public class PlacementsTableModel extends AbstractTableModel {
             else if (columnIndex == 6) {
                 placement.setType((Type) aValue);
             }
-            else if (columnIndex == 8) {
+            else if (columnIndex == 7) {
+                //placement.setPlaced((Boolean) aValue);
+            	boardLocation.setPlaced(placement.getId(), (Boolean) aValue);
+            }
+            else if (columnIndex == 9) {
                 placement.setCheckFids((Boolean) aValue);
             }
         }
@@ -180,8 +192,10 @@ public class PlacementsTableModel extends AbstractTableModel {
             case 6:
                 return placement.getType();
             case 7:
-                return getPlacementStatus(placement);
+            	return boardLocation.getPlaced(placement.getId());
             case 8:
+                return getPlacementStatus(placement);
+            case 9:
                 return placement.getCheckFids();
             default:
                 return null;

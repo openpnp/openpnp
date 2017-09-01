@@ -19,9 +19,12 @@
 
 package org.openpnp.model;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.openpnp.model.Board.Side;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.core.Commit;
 
 public class BoardLocation extends AbstractModelObject {
@@ -35,14 +38,18 @@ public class BoardLocation extends AbstractModelObject {
     private String boardFile;
 
     @Attribute(required = false)
-    private String panelId = new String("Panel1"); // UI doesn't have a way to specify multiple
-                                                   // panels at this point
+    private String panelId = new String("Panel1"); // UI doesn't have a way to
+                                                    // specify multiple
+                                                    // panels at this point
 
     @Attribute(required = false)
     private boolean checkFiducials;
 
     @Attribute(required = false)
     private boolean enabled = true;
+
+    @ElementMap(required = false)
+    private Map<String, Boolean> placed = new HashMap<String, Boolean>();
 
     BoardLocation() {
         setLocation(new Location(LengthUnit.Millimeters));
@@ -57,6 +64,7 @@ public class BoardLocation extends AbstractModelObject {
         this.panelId = obj.panelId;
         this.checkFiducials = obj.checkFiducials;
         this.enabled = obj.enabled;
+        this.placed = obj.placed;
     }
 
     public BoardLocation(Board board) {
@@ -137,6 +145,25 @@ public class BoardLocation extends AbstractModelObject {
         boolean oldValue = this.enabled;
         this.enabled = enabled;
         firePropertyChange("enabled", oldValue, enabled);
+    }
+
+    public void setPlaced(String placementId, boolean placed) {
+        this.placed.put(placementId, placed);
+        firePropertyChange("placed", null, this.placed);
+    }
+
+    public boolean getPlaced(String placementId) {
+        if (placed.containsKey(placementId)) {
+            return placed.get(placementId);
+        } 
+        else {
+            return false;
+        }
+    }
+    
+    public void clearAllPlaced() {
+        this.placed.clear();
+        firePropertyChange("placed", null, this.placed);
     }
 
     @Override
