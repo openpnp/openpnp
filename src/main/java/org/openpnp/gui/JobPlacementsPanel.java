@@ -91,7 +91,7 @@ public class JobPlacementsPanel extends JPanel {
                 new ActionGroup(removeAction, editPlacementFeederAction, setTypeAction);
         singleSelectionActionGroup.setEnabled(false);
 
-        multiSelectionActionGroup = new ActionGroup(removeAction, setTypeAction);
+        multiSelectionActionGroup = new ActionGroup(removeAction, setTypeAction, setSideAction, setPlacedAction);
         multiSelectionActionGroup.setEnabled(false);
 
         captureAndPositionActionGroup = new ActionGroup(captureCameraPlacementLocation,
@@ -248,11 +248,11 @@ public class JobPlacementsPanel extends JPanel {
     public void setBoardLocation(BoardLocation boardLocation) {
         this.boardLocation = boardLocation;
         if (boardLocation == null) {
-            tableModel.setBoard(null, null);
+            tableModel.setBoardLocation(null);
             boardLocationSelectionActionGroup.setEnabled(false);
         }
         else {
-            tableModel.setBoard(boardLocation.getBoard(), boardLocation);
+            tableModel.setBoardLocation(boardLocation);
             boardLocationSelectionActionGroup.setEnabled(true);
         }
     }
@@ -517,8 +517,9 @@ public class JobPlacementsPanel extends JPanel {
 
         public SetPlacedAction(Boolean placed) {
             this.placed = placed;
-            putValue(NAME, placed.toString());
-            putValue(SHORT_DESCRIPTION, "Set placement status to " + placed.toString());
+            String name = placed ? "Placed" : "Not Placed";
+            putValue(NAME, name);
+            putValue(SHORT_DESCRIPTION, "Set placement status to " + name);
         }
 
         @Override
