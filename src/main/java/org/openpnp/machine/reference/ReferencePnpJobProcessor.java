@@ -278,6 +278,18 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             if (!boardLocation.isEnabled()) {
                 continue;
             }
+            
+            // Check for ID duplicates - throw error if any are found
+            HashSet<String> idlist = new HashSet<String>();
+            for (Placement placement : boardLocation.getBoard().getPlacements()) {
+            	if (idlist.contains(placement.getId())) {
+            		throw new Exception(String.format("This board contains at least one duplicate ID entry: %s ",
+            				placement.getId()));
+            	} else {
+            		idlist.add(placement.getId());
+            	}
+            }		
+            
             for (Placement placement : boardLocation.getBoard().getPlacements()) {
                 // Ignore placements that aren't set to be placed
                 if (placement.getType() != Placement.Type.Place) {
