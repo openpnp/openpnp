@@ -39,7 +39,7 @@ public class PlacementsTableModel extends AbstractTableModel {
     final Configuration configuration;
 
     private String[] columnNames =
-            new String[] {"Id", "Part", "Side", "X", "Y", "Rot.", "Type", "Placed", "Status", "Check Fids"};
+            new String[] {"ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Placed", "Status", "Check Fids"};
 
     private Class[] columnTypes = new Class[] {PartCellValue.class, Part.class, Side.class,
             LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, Type.class,
