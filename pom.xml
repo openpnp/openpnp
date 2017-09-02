@@ -269,7 +269,8 @@
 				</configuration>
 			</plugin>
 
-			<!-- Checks source code for common format violations and stops the build if any are found. -->
+			<!-- Checks source code for common format violations and stops the build 
+				if any are found. -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
@@ -294,15 +295,15 @@
 										<module name="OneStatementPerLine">
 										</module>
 										<module name="MemberName">
-											<property name="format" value="^[a-z][a-zA-Z0-9_]*$"/>
+											<property name="format" value="^[a-z][a-zA-Z0-9_]*$" />
 										</module>
 										<module name="TypeName">
-											<property name="format" value="^[A-Z][a-zA-Z0-9_]*$"/>
+											<property name="format" value="^[A-Z][a-zA-Z0-9_]*$" />
 										</module>
 										<module name="MethodName">
 										</module>
 										<module name="LocalVariableName">
-											<property name="format" value="^[a-z][a-zA-Z0-9_]*$"/>
+											<property name="format" value="^[a-z][a-zA-Z0-9_]*$" />
 										</module>
 									</module>
 								</module>
@@ -320,6 +321,17 @@
 					</execution>
 				</executions>
 			</plugin>
+
+			<!-- Increase memory availability for mvn test -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.19</version>
+				<configuration>
+					<argLine>-Xmx256m</argLine>
+				</configuration>
+			</plugin>
+
 		</plugins>
 	</build>
 	<repositories>
