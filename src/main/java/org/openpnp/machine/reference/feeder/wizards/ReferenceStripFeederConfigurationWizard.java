@@ -567,23 +567,28 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private List<Location> findHoles(Camera camera) throws Exception {
         // Process the pipeline to clean up the image and detect the tape holes
         CvPipeline pipeline = getCvPipeline(camera);
-        pipeline.process();
-
-        // Grab the results
-        FindHoles findHolesResults = new FindHoles(camera, pipeline).invoke();
-        List<CvStage.Result.Circle> inLine = findHolesResults.getInLine();
-        if (inLine.isEmpty()) {
-            throw new Exception("Feeder " + getName() + ": No tape holes found.");
+        try {
+            pipeline.process();
+    
+            // Grab the results
+            FindHoles findHolesResults = new FindHoles(camera, pipeline).invoke();
+            List<CvStage.Result.Circle> inLine = findHolesResults.getInLine();
+            if (inLine.isEmpty()) {
+                throw new Exception("Feeder " + getName() + ": No tape holes found.");
+            }
+    
+            List<Location> holeLocations = new ArrayList<>();
+            for (int i=0; i<inLine.size(); i++) {
+                CvStage.Result.Circle result = inLine.get(i);
+                Location location = VisionUtils.getPixelLocation(camera, result.x, result.y);
+                holeLocations.add(location);
+            }
+    
+            return holeLocations;
         }
-
-        List<Location> holeLocations = new ArrayList<>();
-        for (int i=0; i<inLine.size(); i++) {
-            CvStage.Result.Circle result = inLine.get(i);
-            Location location = VisionUtils.getPixelLocation(camera, result.x, result.y);
-            holeLocations.add(location);
+        finally {
+            pipeline.release();
         }
-
-        return holeLocations;
     }
 
     /**
@@ -599,27 +604,32 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         // BufferedCameraImage is used as we want to run the pipeline on an existing image
         BufferedImageCamera bufferedImageCamera = new BufferedImageCamera(camera, image);
 
-        // Process the pipeline to clean up the image and detect the tape holes
         CvPipeline pipeline = getCvPipeline(bufferedImageCamera);
-        pipeline.process();
-        // Grab the results
-        Mat resultMat = pipeline.getWorkingImage().clone();
-        FindHoles findHolesResults = new FindHoles(camera, pipeline).invoke();
-
-        List<CvStage.Result.Circle> inLine = findHolesResults.getInLine();
-        List<Ransac.Line> lines = findHolesResults.getLines();
-        Ransac.Line bestLine = findHolesResults.getBestLine();
-
-        drawLines(resultMat, lines, Color.orange, 1);
-        if (bestLine != null) {
-            drawLine(resultMat, bestLine, Color.yellow, 2);
+        try {
+            // Process the pipeline to clean up the image and detect the tape holes
+            pipeline.process();
+            // Grab the results
+            Mat resultMat = pipeline.getWorkingImage().clone();
+            FindHoles findHolesResults = new FindHoles(camera, pipeline).invoke();
+    
+            List<CvStage.Result.Circle> inLine = findHolesResults.getInLine();
+            List<Ransac.Line> lines = findHolesResults.getLines();
+            Ransac.Line bestLine = findHolesResults.getBestLine();
+    
+            drawLines(resultMat, lines, Color.orange, 1);
+            if (bestLine != null) {
+                drawLine(resultMat, bestLine, Color.yellow, 2);
+            }
+            drawCircles(resultMat, inLine, inLine.size(), Color.blue);
+            drawCircles(resultMat, inLine, 2, Color.green);
+    
+            BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
+            resultMat.release();
+            return showResult;
         }
-        drawCircles(resultMat, inLine, inLine.size(), Color.blue);
-        drawCircles(resultMat, inLine, 2, Color.green);
-
-        BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
-        resultMat.release();
-        return showResult;
+        finally {
+            pipeline.release();
+        }
     }
 
     private class FindHoles {
