@@ -257,52 +257,57 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 
     private Location findClosestHole(Camera camera) throws Exception {
-        Integer pxMinDistance = (int) VisionUtils.toPixels(getHolePitchMin(), camera);
-        Integer pxMinDiameter = (int) VisionUtils.toPixels(getHoleDiameterMin(), camera);
-        Integer pxMaxDiameter = (int) VisionUtils.toPixels(getHoleDiameterMax(), camera);
-
-        // Process the pipeline to clean up the image and detect the tape holes
-        pipeline.setProperty("camera", camera);
-        pipeline.setProperty("feeder", this);
-        pipeline.setProperty("DetectFixedCirclesHough.minDistance", pxMinDistance);
-        pipeline.setProperty("DetectFixedCirclesHough.minDiameter", pxMinDiameter);
-        pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
-        pipeline.process();
-
         try {
-            MainFrame.get().getCameraViews().getCameraView(camera)
-                    .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
+            Integer pxMinDistance = (int) VisionUtils.toPixels(getHolePitchMin(), camera);
+            Integer pxMinDiameter = (int) VisionUtils.toPixels(getHoleDiameterMin(), camera);
+            Integer pxMaxDiameter = (int) VisionUtils.toPixels(getHoleDiameterMax(), camera);
+    
+            // Process the pipeline to clean up the image and detect the tape holes
+            pipeline.setProperty("camera", camera);
+            pipeline.setProperty("feeder", this);
+            pipeline.setProperty("DetectFixedCirclesHough.minDistance", pxMinDistance);
+            pipeline.setProperty("DetectFixedCirclesHough.minDiameter", pxMinDiameter);
+            pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
+            pipeline.process();
+    
+            try {
+                MainFrame.get().getCameraViews().getCameraView(camera)
+                        .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
+            }
+            catch (Exception e) {
+                // if we aren't running in the UI this will fail, and that's okay
+            }
+    
+            // Grab the results
+            Object result = null;
+            List<CvStage.Result.Circle> results = null;
+            try {
+                result = pipeline.getResult("results").model;            
+                results = (List<CvStage.Result.Circle>) result;
+            }
+            catch (ClassCastException e) {
+                throw new Exception("Unrecognized result type (should be Circles): " + result);
+            }
+            if (results.isEmpty()) {
+                throw new Exception("Feeder " + getName() + ": No tape holes found.");
+            }
+    
+            // Find the closest result
+            results.sort((a, b) -> {
+                Double da = VisionUtils.getPixelLocation(camera, a.x, a.y)
+                        .getLinearDistanceTo(camera.getLocation());
+                Double db = VisionUtils.getPixelLocation(camera, b.x, b.y)
+                        .getLinearDistanceTo(camera.getLocation());
+                return da.compareTo(db);
+            });
+    
+            CvStage.Result.Circle closestResult = results.get(0);
+            Location holeLocation = VisionUtils.getPixelLocation(camera, closestResult.x, closestResult.y);
+            return holeLocation;
         }
-        catch (Exception e) {
-            // if we aren't running in the UI this will fail, and that's okay
+        finally {
+            pipeline.release();
         }
-
-        // Grab the results
-        Object result = null;
-        List<CvStage.Result.Circle> results = null;
-        try {
-            result = pipeline.getResult("results").model;            
-            results = (List<CvStage.Result.Circle>) result;
-        }
-        catch (ClassCastException e) {
-            throw new Exception("Unrecognized result type (should be Circles): " + result);
-        }
-        if (results.isEmpty()) {
-            throw new Exception("Feeder " + getName() + ": No tape holes found.");
-        }
-
-        // Find the closest result
-        results.sort((a, b) -> {
-            Double da = VisionUtils.getPixelLocation(camera, a.x, a.y)
-                    .getLinearDistanceTo(camera.getLocation());
-            Double db = VisionUtils.getPixelLocation(camera, b.x, b.y)
-                    .getLinearDistanceTo(camera.getLocation());
-            return da.compareTo(db);
-        });
-
-        CvStage.Result.Circle closestResult = results.get(0);
-        Location holeLocation = VisionUtils.getPixelLocation(camera, closestResult.x, closestResult.y);
-        return holeLocation;
     }
 
     public CvPipeline getPipeline() {
