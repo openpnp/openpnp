@@ -868,12 +868,17 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         Integer pxMinDiameter = (int) VisionUtils.toPixels(feeder.getHoleDiameterMin(), camera);
         Integer pxMaxDiameter = (int) VisionUtils.toPixels(feeder.getHoleDiameterMax(), camera);
 
-        CvPipeline pipeline = feeder.getPipeline();
-        pipeline.setProperty("camera", camera);
-        pipeline.setProperty("feeder", feeder);
-        pipeline.setProperty("DetectFixedCirclesHough.minDistance", pxMinDistance);
-        pipeline.setProperty("DetectFixedCirclesHough.minDiameter", pxMinDiameter);
-        pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
-        return pipeline;
+        try {
+            CvPipeline pipeline = feeder.getPipeline().clone();
+            pipeline.setProperty("camera", camera);
+            pipeline.setProperty("feeder", feeder);
+            pipeline.setProperty("DetectFixedCirclesHough.minDistance", pxMinDistance);
+            pipeline.setProperty("DetectFixedCirclesHough.minDiameter", pxMinDiameter);
+            pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
+            return pipeline;
+        }
+        catch (CloneNotSupportedException e) {
+            throw new Error(e);
+        }
     }
 }
