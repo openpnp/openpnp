@@ -19,8 +19,6 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
-import static org.openpnp.vision.FluentCv.pointToLineDistance;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -692,7 +690,6 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             lines = Ransac.ransac(points, 100, maxDistanceToLine, holePitchPx, holePitchPx - minHolePitchPx);
 
             bestLine = null;
-            double bestLineDistance = Double.MAX_VALUE;
             for (Ransac.Line line : lines) {
                 Point a = line.a;
                 Point b = line.b;
@@ -700,28 +697,73 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 Location aLocation = VisionUtils.getPixelLocation(camera, a.x, a.y);
                 Location bLocation = VisionUtils.getPixelLocation(camera, b.x, b.y);
 
-                Double distance = camera.getLocation().getLinearDistanceToLine(aLocation, bLocation);
+                // Checks the distance to the line *segment*, as we expect the line to have the maximum extents that
+                // encompass all points (circles) that meet the criteria.
+                Double distance = camera.getLocation().getLinearDistanceToLineSegment(aLocation, bLocation);
                 Double distancePx = VisionUtils.toPixels(new Length(distance, camera.getUnitsPerPixel().getUnits()), camera);
                 // Min distance is because we're centered at the part, not the hole - so we need to ignore
                 // circles found in the part
                 if ((distancePx >= minDistancePx) && (distancePx <= maxDistancePx)) {
-                    if (distance < bestLineDistance) {
-                        bestLine = line;
-                        bestLineDistance = distance;
-                    }
+                    // Take the first line that is close enough, as the lines are ordered by length (descending),
+                    // and we want the longest line (avoid the case of a really close but erroneous line that
+                    // would likely only be made up of only 2 points).
+                    bestLine = line;
+                    break;
                 }
             }
 
-            // filter the circles by distance from the resulting line
             inLine = new ArrayList<CvStage.Result.Circle>();
             if (bestLine != null) {
+                // Filter the circles by distance from the resulting line
+                List<CvStage.Result.Circle> realLine = new ArrayList<CvStage.Result.Circle>();
                 for (int i = 0; i < results.size(); i++) {
                     CvStage.Result.Circle circle = results.get(i);
 
                     Point p = new Point(circle.x, circle.y);
-                    if (pointToLineDistance(bestLine.a, bestLine.b, p) <= maxDistanceToLine) {
-                        inLine.add(circle);
+                    if (FluentCv.pointToLineDistance(bestLine.a, bestLine.b, p) <= maxDistanceToLine) {
+                        realLine.add(circle);
                     }
+                }
+
+                // Compute the average offset from the ideal centre positions
+                Point a = bestLine.a;
+                Point b = bestLine.b;
+                Point ab = new Point(b.x - a.x, b.y - a.y);
+                double lineLen = Math.sqrt(ab.dot(ab));
+                double fittedLineLen = (double)Math.round(lineLen / holePitchPx) * holePitchPx;
+                Point lineDir = new Point(ab.x / lineLen, ab.y / lineLen);
+
+                Point totalOffsets = new Point();
+                for (CvStage.Result.Circle circle : realLine) {
+                    Point p = new Point(circle.x, circle.y);
+
+                    // Project p onto the line
+                    Point ap = new Point(p.x - a.x, p.y - a.y);
+                    double distAlongLine = ap.dot(lineDir) / lineDir.dot(lineDir);
+
+                    double fittedLen = (double)Math.round(distAlongLine / holePitchPx) * holePitchPx;
+                    Point fittedPos = new Point(a.x + lineDir.x * fittedLen, a.y + lineDir.y * fittedLen);
+
+                    totalOffsets.x += fittedPos.x - p.x;
+                    totalOffsets.y += fittedPos.y - p.y;
+                }
+                Point avgOffset = new Point(totalOffsets.x / realLine.size(), totalOffsets.y / realLine.size());
+
+                // Fit the detected circles to the best line at the expected spacing
+                Point fittedA = new Point(a.x - avgOffset.x, a.y - avgOffset.y);
+                for (CvStage.Result.Circle circle : realLine) {
+                    Point p = new Point(circle.x, circle.y);
+
+                    // Project p onto the line
+                    Point ap = new Point(p.x - a.x, p.y - a.y);
+                    double distAlongLine = ap.dot(lineDir) / lineDir.dot(lineDir);
+
+                    double fittedLen = (double)Math.round(distAlongLine / holePitchPx) * holePitchPx;
+                    Point fittedPosOnLine = new Point(lineDir.x * fittedLen, lineDir.y * fittedLen);
+
+                    Point fittedP = new Point(fittedA.x + fittedPosOnLine.x, fittedA.y + fittedPosOnLine.y);
+                    CvStage.Result.Circle fittedCircle = new CvStage.Result.Circle(fittedP.x, fittedP.y, circle.diameter);
+                    inLine.add(fittedCircle);
                 }
             }
             return this;
