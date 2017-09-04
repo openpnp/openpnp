@@ -306,6 +306,8 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             return holeLocation;
         }
         finally {
+            pipeline.setProperty("camera", null);
+            pipeline.setProperty("feeder", null);
             pipeline.release();
         }
     }
