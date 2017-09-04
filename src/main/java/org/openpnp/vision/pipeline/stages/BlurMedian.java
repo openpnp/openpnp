@@ -12,7 +12,7 @@ import org.simpleframework.xml.Attribute;
         description = "Performs median blurring on the working image.")
 public class BlurMedian extends CvStage {
     @Attribute
-    @Property(description = "Width and height of the blurring kernel")
+    @Property(description = "Width and height of the blurring kernel. Should be and odd number greater than or equal to 3")
     private int kernelSize = 3;
 
     public int getKernelSize() {
