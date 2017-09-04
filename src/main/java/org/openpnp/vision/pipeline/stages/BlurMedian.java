@@ -20,7 +20,8 @@ public class BlurMedian extends CvStage {
     }
 
     public void setKernelSize(int kernelSize) {
-        this.kernelSize = kernelSize;
+        this.kernelSize = 2 * (kernelSize / 2) + 1;
+        this.kernelSize = this.kernelSize < 3 ? 3 : this.kernelSize;
     }
 
     @Override
