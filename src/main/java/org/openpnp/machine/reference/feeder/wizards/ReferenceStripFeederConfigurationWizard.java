@@ -564,7 +564,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
     private List<Location> findHoles(Camera camera) throws Exception {
         // Process the pipeline to clean up the image and detect the tape holes
-        CvPipeline pipeline = getCvPipeline(camera);
+        CvPipeline pipeline = getCvPipeline(camera, true);
         try {
             pipeline.process();
     
@@ -602,7 +602,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         // BufferedCameraImage is used as we want to run the pipeline on an existing image
         BufferedImageCamera bufferedImageCamera = new BufferedImageCamera(camera, image);
 
-        CvPipeline pipeline = getCvPipeline(bufferedImageCamera);
+        CvPipeline pipeline = getCvPipeline(bufferedImageCamera, true);
         try {
             // Process the pipeline to clean up the image and detect the tape holes
             pipeline.process();
@@ -892,7 +892,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
     private void editPipeline() throws Exception {
         Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-        CvPipeline pipeline = getCvPipeline(camera);
+        CvPipeline pipeline = getCvPipeline(camera, false);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), feeder.getPart().getId() + " Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
@@ -905,13 +905,16 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         feeder.resetPipeline();
     }
 
-    private CvPipeline getCvPipeline(Camera camera) {
+    private CvPipeline getCvPipeline(Camera camera, boolean clone) {
         Integer pxMinDistance = (int) VisionUtils.toPixels(feeder.getHolePitchMin(), camera);
         Integer pxMinDiameter = (int) VisionUtils.toPixels(feeder.getHoleDiameterMin(), camera);
         Integer pxMaxDiameter = (int) VisionUtils.toPixels(feeder.getHoleDiameterMax(), camera);
 
         try {
-            CvPipeline pipeline = feeder.getPipeline().clone();
+            CvPipeline pipeline = feeder.getPipeline();;
+            if (clone) {
+                pipeline = pipeline.clone();
+            }
             pipeline.setProperty("camera", camera);
             pipeline.setProperty("feeder", feeder);
             pipeline.setProperty("DetectFixedCirclesHough.minDistance", pxMinDistance);
