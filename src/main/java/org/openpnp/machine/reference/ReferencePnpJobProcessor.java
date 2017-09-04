@@ -279,6 +279,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 continue;
             }
             
+            // Check if board z-height is still 0 
+            if ((Double.compare(boardLocation.getLocation().getZ(), 0.0)) == 0) {
+            	throw new Exception(String.format("Board z-height is set to 0"));
+            }
+            
+            
             // Check for ID duplicates - throw error if any are found
             HashSet<String> idlist = new HashSet<String>();
             for (Placement placement : boardLocation.getBoard().getPlacements()) {
