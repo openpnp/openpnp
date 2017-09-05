@@ -224,6 +224,9 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
                 visionOffset = getVisionOffsets(head, location);
             }
             Logger.debug("visionOffsets " + visionOffset);
+        } else {
+        	// user may have run with vision, then later disabled vision.
+        	visionOffset = null;
         }
 
         // Now we have visionOffsets (if we're using them) so we
