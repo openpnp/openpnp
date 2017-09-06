@@ -70,6 +70,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
     private JComboBox comboBoxPart;
     private LocationButtonsPanel locationButtonsPanel;
     private JTextField retryCountTf;
+    private JTextField nameTf;
 
     /**
      * @wbp.parser.constructor
@@ -98,6 +99,8 @@ public abstract class AbstractReferenceFeederConfigurationWizard
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         comboBoxPart = new JComboBox();
@@ -108,6 +111,14 @@ public abstract class AbstractReferenceFeederConfigurationWizard
             // Swallow this error. This happens during parsing in
             // in WindowBuilder but doesn't happen during normal run.
         }
+        
+        JLabel lblName = new JLabel("Name");
+        panelPart.add(lblName, "2, 6, right, default");
+        
+        nameTf = new JTextField();
+        nameTf.setText(feeder.getName());
+        panelPart.add(nameTf, "4, 6");
+        nameTf.setColumns(3);
         
         JLabel lblPart = new JLabel("Part");
         panelPart.add(lblPart, "2, 2, right, default");
@@ -186,6 +197,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
 
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
         addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
+        addWrappedBinding(feeder, "name", nameTf, "text");
 
         if (includePickLocation) {
             MutableLocationProxy location = new MutableLocationProxy();

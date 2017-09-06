@@ -100,6 +100,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 	private LocationButtonsPanel locationButtonsPanel;
 	private LocationButtonsPanel lastLocationButtonsPanel;
 	private JTextField retryCountTf;
+	private JTextField nameTf;
 
 	/**
 	 * @wbp.parser.constructor
@@ -123,7 +124,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 						FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC, FormSpecs.RELATED_GAP_COLSPEC,
 						ColumnSpec.decode("default:grow"), },
 				new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-						FormSpecs.DEFAULT_ROWSPEC, }));
+						FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, }));
 
 		comboBoxPart = new JComboBox();
 		try {
@@ -143,7 +144,15 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		lblWarningThisFeeder.setForeground(Color.RED);
 		lblWarningThisFeeder.setHorizontalAlignment(SwingConstants.LEFT);
 		warningPanel.add(lblWarningThisFeeder);
-
+		
+		JLabel lblName = new JLabel("Name");
+        panelPart.add(lblName, "2, 6, right, default");
+        
+        nameTf = new JTextField();
+        nameTf.setText(feeder.getName());
+        panelPart.add(nameTf, "4, 6");
+        nameTf.setColumns(3);
+        
 		JLabel lblPart = new JLabel("Part");
 		panelPart.add(lblPart, "2, 2, right, default");
 		comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
@@ -393,7 +402,8 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		LengthConverter lengthConverter = new LengthConverter();
 		IntegerConverter intConverter = new IntegerConverter();
 		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
-
+		
+		addWrappedBinding(feeder, "name", nameTf, "text");
 		addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
 		addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
 

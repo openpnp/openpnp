@@ -123,6 +123,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JLabel lblPart;
     private JLabel lblRetryCount;
     private JTextField retryCountTf;
+    private JTextField nameTf;
 
     private boolean logDebugInfo = false;
     private Location firstPartLocation;
@@ -144,6 +145,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
         try {
         }
@@ -151,7 +153,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             // Swallow this error. This happens during parsing in
             // in WindowBuilder but doesn't happen during normal run.
         }
-
+        
+        
         lblPart = new JLabel("Part");
         panelPart.add(lblPart, "2, 2, right, default");
 
@@ -174,6 +177,15 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         retryCountTf.setText("3");
         panelPart.add(retryCountTf, "4, 6, fill, default");
         retryCountTf.setColumns(3);
+        
+        JLabel lblName = new JLabel("Name");
+        panelPart.add(lblName, "2, 8, right, default");
+        
+        nameTf = new JTextField();
+        nameTf.setText(feeder.getName());
+        panelPart.add(nameTf, "4, 8");
+        nameTf.setColumns(3);
+        
 
         panelTapeSettings = new JPanel();
         contentPanel.add(panelTapeSettings);
@@ -341,11 +353,12 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         MutableLocationProxy location = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
         addWrappedBinding(location, "rotation", textFieldLocationRotation, "text", doubleConverter);
-
+        
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
         addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
+        addWrappedBinding(feeder, "name", nameTf, "text");
         addWrappedBinding(feeder, "tapeType", comboBoxTapeType, "selectedItem");
-
+        
         addWrappedBinding(feeder, "tapeWidth", textFieldTapeWidth, "text", lengthConverter);
         addWrappedBinding(feeder, "partPitch", textFieldPartPitch, "text", lengthConverter);
         addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", intConverter);
