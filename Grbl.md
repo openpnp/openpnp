@@ -8,3 +8,9 @@ Original Grbl, with 3 axes is at https://github.com/grbl/grbl.
 
 In OpenPnP you will need to select the `org.openpnp.machine.reference.driver.GcodeDriver` driver.
 
+# GcodeDriver 4 Axis Grbl Notes
+
+If you are using the 4 axis Grbl fork mentioned above, there are some important considerations to make sure it works with GcodeDriver:
+
+1. In the Gcode configuration, remove any comments that begin with semicolon. For example, change `G21 ; Set millimeters mode` to `G21`. This older version of Grbl is not compatible with semicolon comments.
+2. Change Gcodes to suit Grbl. In particular, remove `M82 ; Set absolute mode for extruder` from `CONNECT_COMMAND` and change `MOVE_TO_COMMAND` to use C for the fourth axis rather than E.
