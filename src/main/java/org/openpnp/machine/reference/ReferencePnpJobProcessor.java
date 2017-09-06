@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
 import org.openpnp.model.BoardLocation;
@@ -281,7 +283,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             // Check if board z-height is still 0 
             if ((Double.compare(boardLocation.getLocation().getZ(), 0.0)) == 0) {
-            	throw new Exception(String.format("Board z-height is set to 0"));
+            	MessageBoxes.infoBox("Warning", "Warning: Board Z-height is set to 0");
             }
             
             
