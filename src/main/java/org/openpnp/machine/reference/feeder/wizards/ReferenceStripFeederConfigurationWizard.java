@@ -572,7 +572,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             FindHoles findHolesResults = new FindHoles(camera, pipeline).invoke();
             List<CvStage.Result.Circle> inLine = findHolesResults.getInLine();
             if (inLine.isEmpty()) {
-                throw new Exception("Feeder " + getName() + ": No tape holes found.");
+                throw new Exception("Feeder " + feeder.getName() + ": No tape holes found.");
             }
     
             List<Location> holeLocations = new ArrayList<>();
