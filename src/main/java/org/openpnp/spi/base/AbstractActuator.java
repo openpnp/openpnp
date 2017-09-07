@@ -68,6 +68,4 @@ public abstract class AbstractActuator extends AbstractModelObject implements Ac
     public String read() throws Exception {
         return null;
     }
-    
-    
 }

@@ -46,8 +46,7 @@ public interface Actuator
     public void actuate(double value) throws Exception;
     
     /**
-     * Provides the actuator with 2 double value to which it can respond in an implementation
-     * dependent manner.
+     *  Extrude a distance and rate. Used for things like peeling tape cover.
      * 
      * @param distance
      * @param rate

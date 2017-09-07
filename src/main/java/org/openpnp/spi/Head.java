@@ -118,7 +118,6 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
     
     public Location getParkLocation();
 
-
     /**
      * Returns true if any nozzle on the Head is currently carrying a part.
      * @return
@@ -131,5 +130,4 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
      * @return
      */
 	public double getMaxPartSpeed(); 
-
 }

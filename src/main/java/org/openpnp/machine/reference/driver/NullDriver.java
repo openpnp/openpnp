@@ -248,6 +248,8 @@ public class NullDriver implements ReferenceDriver {
         }
     }
     
+    
+    // Extrude a distance and rate. Used for things like peeling tape cover.
     @Override
     public void extrude(ReferenceActuator actuator, double distance, double rate) throws Exception {
         Logger.debug("extrude({}, {} {})", actuator, distance, rate);

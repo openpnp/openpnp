@@ -144,7 +144,7 @@ public class LocationButtonsPanel extends JPanel {
         }
         HeadMountable tool = getTool();
         Head head = tool.getHead();
-        Actuator actuator = head.getActuatorByName(actuatorName);
+        Actuator actuator = head.getActuatorByName(actuatorName); // Initially name==id, but user may change name.
         if (actuator == null) {
             throw new Exception(String.format("No Actuator with name %s on Head %s", actuatorName,
                     head.getName()));

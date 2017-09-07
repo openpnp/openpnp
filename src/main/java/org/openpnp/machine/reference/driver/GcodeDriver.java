@@ -416,9 +416,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                                 .add(hm.getHeadOffsets());
         return location;
     }
-
-
-    
+ 
     @Override
     public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
             throws Exception {
@@ -687,6 +685,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
     }
     
+    // Extrude a distance and rate. Used for things like peeling tape cover.
     @Override
     public void extrude(ReferenceActuator actuator, double distance, double rate) throws Exception {
         String command = getCommand(actuator, CommandType.EXTRUDE_COMMAND);

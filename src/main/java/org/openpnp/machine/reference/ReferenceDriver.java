@@ -45,8 +45,6 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
      * @throws Exception
      */
     public void home(ReferenceHead head) throws Exception;
-
-    
     		
     /**
      * Moves the specified HeadMountable to the given location at a speed defined by (maximum feed
@@ -108,10 +106,11 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
     public void actuate(ReferenceActuator actuator, double value) throws Exception;
 
     /**
-     * Actuates a machine defined object with a double value.
+     * Extrude a distance and rate. Can be used for actions like peeling tape cover.
      * 
      * @param actuator
-     * @param on
+     * @param distance to extrude
+     * @param rate ... how fast to extrude
      * @throws Exception
      */
     public void extrude(ReferenceActuator actuator, double distance, double rate) throws Exception;
@@ -138,6 +137,5 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
     public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
             Location endLocation, long dispenseTimeMilliseconds) throws Exception;
 
-    
     public default void createDefaults() {};
 }
