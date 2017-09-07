@@ -33,13 +33,19 @@ import org.openpnp.model.Location;
 
 public class BoardLocationsTableModel extends AbstractTableModel {
     private final Configuration configuration;
-
+    public enum BoardStatus {
+        Ready,
+        MissingPart,
+        MissingFeeder,
+        ZHeight,
+        ZeroPartHeight
+    }
     private String[] columnNames = new String[] {"Board", "Width", "Length", "Side", "X", "Y", "Z",
-            "Rot.", "Enabled?", "Check Fids?"};
+            "Rot.", "Status", "Enabled?", "Check Fids?"};
 
     private Class[] columnTypes = new Class[] {String.class, LengthCellValue.class,
             LengthCellValue.class, Side.class, LengthCellValue.class, LengthCellValue.class,
-            LengthCellValue.class, String.class, Boolean.class, Boolean.class};
+            LengthCellValue.class, String.class, BoardStatus.class, Boolean.class, Boolean.class};
 
     private Job job;
 
@@ -51,9 +57,16 @@ public class BoardLocationsTableModel extends AbstractTableModel {
         this.job = job;
         fireTableDataChanged();
     }
-
+    
     public Job getJob() {
         return job;
+    }
+
+    public BoardStatus getBoardStatus(int index) {
+    	if (Double.compare(job.getBoardLocations().get(index).getLocation().getLengthZ().getValue(), 0.0) == 0) {
+        	return BoardStatus.ZHeight;
+        }	
+        else return BoardStatus.Ready;
     }
 
     public BoardLocation getBoardLocation(int index) {
@@ -147,11 +160,11 @@ public class BoardLocationsTableModel extends AbstractTableModel {
                         Double.parseDouble(aValue.toString())));
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
-            else if (columnIndex == 8) {
+            else if (columnIndex == 9) {
                 boardLocation.setEnabled((Boolean) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
-            else if (columnIndex == 9) {
+            else if (columnIndex == 10) {
                 boardLocation.setCheckFiducials((Boolean) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
@@ -184,8 +197,10 @@ public class BoardLocationsTableModel extends AbstractTableModel {
                 return String.format(Locale.US, configuration.getLengthDisplayFormat(),
                         loc.getRotation(), "");
             case 8:
-                return boardLocation.isEnabled();
+                return getBoardStatus(row);
             case 9:
+                return boardLocation.isEnabled();
+            case 10:
                 return boardLocation.isCheckFiducials();
             default:
                 return null;

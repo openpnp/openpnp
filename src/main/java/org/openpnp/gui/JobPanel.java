@@ -57,11 +57,13 @@ import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
+import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.table.DefaultTableCellRenderer;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.events.BoardLocationSelectedEvent;
@@ -77,6 +79,7 @@ import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
+import org.openpnp.gui.tablemodel.BoardLocationsTableModel.BoardStatus;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -114,6 +117,10 @@ public class JobPanel extends JPanel {
 
     final private Configuration configuration;
     final private MainFrame frame;
+    
+    private static Color statusColorWarning = new Color(252, 255, 157);
+    private static Color statusColorReady = new Color(157, 255, 168);
+    private static Color statusColorError = new Color(255, 157, 157);
 
     private static final String PREF_DIVIDER_POSITION = "JobPanel.dividerPosition";
     private static final int PREF_DIVIDER_POSITION_DEF = -1;
@@ -248,6 +255,7 @@ public class JobPanel extends JPanel {
                 });
 
         setLayout(new BorderLayout(0, 0));
+        boardLocationsTable.setDefaultRenderer(BoardLocationsTableModel.BoardStatus.class, new BoardStatusRenderer());
 
         splitPane = new JSplitPane();
         splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
@@ -499,6 +507,48 @@ public class JobPanel extends JPanel {
             recentJobs.remove(recentJobs.size() - 1);
         }
         saveRecentJobs();
+    }
+    
+    static class BoardStatusRenderer extends DefaultTableCellRenderer {
+        public void setValue(Object value) {
+            BoardStatus status = (BoardStatus) value;
+            if (status == BoardStatus.Ready) {
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorReady);
+                setText("Ready");
+            }
+            else if (status == BoardStatus.MissingFeeder) {
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorError);
+                setText("Missing Feeder");
+            }
+            else if (status == BoardStatus.ZeroPartHeight) {
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorWarning);
+                setText("Part Height");
+            }
+            else if (status == BoardStatus.ZHeight) {
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorWarning);
+                setText("Z-Height is 0");
+            }
+            else if (status == BoardStatus.MissingPart) {
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorError);
+                setText("Missing Part");
+            }
+            else {
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorError);
+                setText(status.toString());
+            }
+        }
     }
 
     public void refresh() {
