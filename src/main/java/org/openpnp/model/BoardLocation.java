@@ -40,7 +40,7 @@ public class BoardLocation extends AbstractModelObject {
     @Attribute
     private Side side = Side.Top;
     private Board board;
-    private BoardStatus boardStatus;
+    private BoardStatus boardStatus = BoardStatus.Error;
 
     @Attribute
     private String boardFile;
@@ -73,6 +73,8 @@ public class BoardLocation extends AbstractModelObject {
         this.checkFiducials = obj.checkFiducials;
         this.enabled = obj.enabled;
         this.placed = obj.placed;
+        
+        initBoardStatus();
     }
 
     public BoardLocation(Board board) {
@@ -113,25 +115,24 @@ public class BoardLocation extends AbstractModelObject {
         firePropertyChange("boardStatus", oldValue, boardStatus);
     }
 
-    public BoardStatus getBoardStatus() {
-        for (Placement placement : getBoard().getPlacements()) {
+    public void initBoardStatus() {
+    	for (Placement placement : getBoard().getPlacements()) {
             if (placement.getPlacementStatus() == Placement.Status.MissingFeeder) {
                 Object oldValue = this.boardStatus;
                 boardStatus = BoardStatus.Error;
                 firePropertyChange("boardStatus", oldValue, boardStatus);
-                return BoardStatus.Error;
             } else if (placement.getPlacementStatus() == Placement.Status.MissingPart) {
                 Object oldValue = this.boardStatus;
                 boardStatus = BoardStatus.Error;
                 firePropertyChange("boardStatus", oldValue, boardStatus);
-                return BoardStatus.Error;
             } else if (placement.getPlacementStatus() == Placement.Status.ZeroPartHeight) {
                 Object oldValue = this.boardStatus;
                 boardStatus = BoardStatus.Error;
                 firePropertyChange("boardStatus", oldValue, boardStatus);
-                return BoardStatus.Error;
             }
         }
+    }
+    public BoardStatus getBoardStatus() {
         // Display warning if the board Z height is set to 0
         if (getLocation().getLengthZ().getValue() == 0) {
             return BoardStatus.ZHeight;
@@ -141,7 +142,7 @@ public class BoardLocation extends AbstractModelObject {
                 || getBoard().getDimensions().getY() == 0) {
             return BoardStatus.DimensionsMissing;
         } else {
-            return BoardStatus.Ready;
+            return boardStatus;
         }
     }
 

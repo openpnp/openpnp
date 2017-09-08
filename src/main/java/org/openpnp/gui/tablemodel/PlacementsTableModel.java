@@ -159,6 +159,7 @@ public class PlacementsTableModel extends AbstractTableModel {
     private Placement.Status getPlacementStatus(Placement placement) {
         if (placement.getPart() == null) {
         	placement.setPlacementStatus(Placement.Status.MissingPart);
+        	boardLocation.setBoardStatus(BoardStatus.Error);
             return Placement.Status.MissingPart;
         }
         if (placement.getType() == Placement.Type.Place) {
@@ -171,15 +172,18 @@ public class PlacementsTableModel extends AbstractTableModel {
             }
             if (!found) {
             	placement.setPlacementStatus(Placement.Status.MissingFeeder);
+            	boardLocation.setBoardStatus(BoardStatus.Error);
                 return Placement.Status.MissingFeeder;
             }
 
             if (placement.getPart().getHeight().getValue() == 0) {
             	placement.setPlacementStatus(Placement.Status.ZeroPartHeight);
+            	boardLocation.setBoardStatus(BoardStatus.Error);
                 return Placement.Status.ZeroPartHeight;
             }
         }
         placement.setPlacementStatus(Placement.Status.Ready);
+        boardLocation.setBoardStatus(BoardStatus.Ready);
         return Placement.Status.Ready;
     }
 
