@@ -278,9 +278,26 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             if (!boardLocation.isEnabled()) {
                 continue;
             }
+            
+            // Check for ID duplicates - throw error if any are found
+            HashSet<String> idlist = new HashSet<String>();
+            for (Placement placement : boardLocation.getBoard().getPlacements()) {
+            	if (idlist.contains(placement.getId())) {
+            		throw new Exception(String.format("This board contains at least one duplicate ID entry: %s ",
+            				placement.getId()));
+            	} else {
+            		idlist.add(placement.getId());
+            	}
+            }		
+            
             for (Placement placement : boardLocation.getBoard().getPlacements()) {
                 // Ignore placements that aren't set to be placed
                 if (placement.getType() != Placement.Type.Place) {
+                    continue;
+                }
+                
+                // Ignore placements that are placed already
+                if (boardLocation.getPlaced(placement.getId())) {
                     continue;
                 }
 
@@ -721,6 +738,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             // Mark the placement as finished
             jobPlacement.status = Status.Complete;
+            
+            // Mark the placement as "placed"
+            boardLocation.setPlaced(jobPlacement.placement.getId(), true);
 
             plannedPlacement.stepComplete = true;
 
@@ -766,6 +786,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         params.put("job", job);
         params.put("jobProcessor", this);
         Configuration.get().getScripting().on("Job.Finished", params);
+        
+        fireTextStatus("Job finished - placed %s parts in %s sec. (%s CPH)", totalPartsPlaced, df.format(dtSec), df.format(totalPartsPlaced / (dtSec / 3600.0)));
     }
 
     protected void doReset() throws Exception {
