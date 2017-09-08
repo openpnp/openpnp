@@ -83,7 +83,8 @@ public class BoardLocationsTableModel extends AbstractTableModel {
                 if (!found) {
                     return BoardStatus.Error;
                 }
-                // Display general error if the part height for any placement is not set
+                // Display general error if the part height for any placement is
+                // not set
                 if (placement.getPart().getHeight().getValue() == 0) {
                     return BoardStatus.Error;
                 }
@@ -98,8 +99,9 @@ public class BoardLocationsTableModel extends AbstractTableModel {
         else if (job.getBoardLocations().get(index).getBoard().getDimensions().getX() == 0
                 || job.getBoardLocations().get(index).getBoard().getDimensions().getY() == 0) {
             return BoardStatus.DimensionsMissing;
-        } else
+        } else {
             return BoardStatus.Ready;
+        }
 
     }
 
