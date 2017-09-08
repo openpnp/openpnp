@@ -102,6 +102,7 @@ public class PlacementsTableModel extends AbstractTableModel {
                 placement.setPart((Part) aValue);
                 fireTableCellUpdated(rowIndex, 8);
                 //TODO Update Job panel board table rows here
+                boardLocation.getBoardStatus();
             }
             else if (columnIndex == 2) {
             	//Placement Side
@@ -137,6 +138,7 @@ public class PlacementsTableModel extends AbstractTableModel {
                 placement.setType((Type) aValue);
                 fireTableCellUpdated(rowIndex, 8);
                 //TODO Update Job panel board table rows here
+                boardLocation.getBoardStatus();
             }
             else if (columnIndex == 7) {
             	//Placement Placed

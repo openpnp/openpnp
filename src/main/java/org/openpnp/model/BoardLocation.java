@@ -113,7 +113,7 @@ public class BoardLocation extends AbstractModelObject {
         firePropertyChange("boardStatus", oldValue, boardStatus);
     }
 
-    public BoardStatus getBoardStatus(int index) {
+    public BoardStatus getBoardStatus() {
         for (Placement placement : getBoard().getPlacements()) {
             if (placement.getPlacementStatus() == Placement.Status.MissingFeeder) {
                 Object oldValue = this.boardStatus;

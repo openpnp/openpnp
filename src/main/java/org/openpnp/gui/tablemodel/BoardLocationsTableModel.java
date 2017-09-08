@@ -242,7 +242,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
         case 7:
             return String.format(Locale.US, configuration.getLengthDisplayFormat(), loc.getRotation(), "");
         case 8:
-            return boardLocation.getBoardStatus(row);
+            return boardLocation.getBoardStatus();
         case 9:
             return boardLocation.isEnabled();
         case 10:

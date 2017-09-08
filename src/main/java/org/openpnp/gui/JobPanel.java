@@ -354,13 +354,6 @@ public class JobPanel extends JPanel {
 
         jobPastePanel = new JobPastePanel(this);
         jobPlacementsPanel = new JobPlacementsPanel(this);
-        
-        jobPlacementsPanel.addPropertyChangeListener("PlacementStatus", new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                int i = 1;
-            }
-        });
 
         add(splitPane);
 
