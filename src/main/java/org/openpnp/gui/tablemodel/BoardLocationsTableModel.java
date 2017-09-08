@@ -102,7 +102,6 @@ public class BoardLocationsTableModel extends AbstractTableModel {
         } else {
             return BoardStatus.Ready;
         }
-
     }
 
     public BoardLocation getBoardLocation(int index) {
@@ -145,25 +144,32 @@ public class BoardLocationsTableModel extends AbstractTableModel {
         try {
             BoardLocation boardLocation = job.getBoardLocations().get(rowIndex);
             if (columnIndex == 0) {
+            	//Board ID/Name
                 boardLocation.getBoard().setName((String) aValue);
             } else if (columnIndex == 1) {
+            	//Board Width 
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
                 Location location = boardLocation.getBoard().getDimensions();
                 location = Length.setLocationField(configuration, location, length, Length.Field.X);
                 boardLocation.getBoard().setDimensions(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
+                fireTableCellUpdated(rowIndex, 8);
             } else if (columnIndex == 2) {
+            	//Board Length
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
                 Location location = boardLocation.getBoard().getDimensions();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Y);
                 boardLocation.getBoard().setDimensions(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
+                fireTableCellUpdated(rowIndex, 8);
             } else if (columnIndex == 3) {
+            	//Board Side
                 boardLocation.setSide((Side) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
             } else if (columnIndex == 4) {
+            	//Board X
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
                 Location location = boardLocation.getLocation();
@@ -171,6 +177,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
                 boardLocation.setLocation(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
             } else if (columnIndex == 5) {
+            	//Board Y
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
                 Location location = boardLocation.getLocation();
@@ -178,20 +185,25 @@ public class BoardLocationsTableModel extends AbstractTableModel {
                 boardLocation.setLocation(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
             } else if (columnIndex == 6) {
+            	//Board Z
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
                 Location location = boardLocation.getLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Z);
                 boardLocation.setLocation(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
+                fireTableCellUpdated(rowIndex, 8);
             } else if (columnIndex == 7) {
+            	//Board Rotation
                 boardLocation.setLocation(
                         boardLocation.getLocation().derive(null, null, null, Double.parseDouble(aValue.toString())));
                 fireTableCellUpdated(rowIndex, columnIndex);
             } else if (columnIndex == 9) {
+            	//Board Enabled
                 boardLocation.setEnabled((Boolean) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
             } else if (columnIndex == 10) {
+            	//Check Fiducials
                 boardLocation.setCheckFiducials((Boolean) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }

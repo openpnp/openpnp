@@ -103,12 +103,16 @@ public class PlacementsTableModel extends AbstractTableModel {
         try {
             Placement placement = board.getPlacements().get(rowIndex);
             if (columnIndex == 1) {
+            	//Placement Part
                 placement.setPart((Part) aValue);
+                fireTableCellUpdated(rowIndex, 8);
             }
             else if (columnIndex == 2) {
+            	//Placement Side
                 placement.setSide((Side) aValue);
             }
             else if (columnIndex == 3) {
+            	//Placement X
                 LengthCellValue value = (LengthCellValue) aValue;
                 value.setDisplayNativeUnits(true);
                 Length length = value.getLength();
@@ -118,6 +122,7 @@ public class PlacementsTableModel extends AbstractTableModel {
                 placement.setLocation(location);
             }
             else if (columnIndex == 4) {
+            	//Placement Y
                 LengthCellValue value = (LengthCellValue) aValue;
                 value.setDisplayNativeUnits(true);
                 Length length = value.getLength();
@@ -127,17 +132,21 @@ public class PlacementsTableModel extends AbstractTableModel {
                 placement.setLocation(location);
             }
             else if (columnIndex == 5) {
+            	//Placement Rotation
                 placement.setLocation(placement.getLocation().derive(null, null, null,
                         Double.parseDouble(aValue.toString())));
             }
             else if (columnIndex == 6) {
+            	//Placement Type
                 placement.setType((Type) aValue);
+                fireTableCellUpdated(rowIndex, 8);
             }
             else if (columnIndex == 7) {
-                //placement.setPlaced((Boolean) aValue);
+            	//Placement Placed
             	boardLocation.setPlaced(placement.getId(), (Boolean) aValue);
             }
             else if (columnIndex == 9) {
+            	//Placement Ceck Fiducials
                 placement.setCheckFids((Boolean) aValue);
             }
         }
