@@ -24,28 +24,31 @@ import java.util.Locale;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.gui.support.LengthCellValue;
+import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
 import org.openpnp.model.Board.Side;
+import org.openpnp.spi.Feeder;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
+import org.openpnp.model.Placement;
+
+import java.util.List;
 
 public class BoardLocationsTableModel extends AbstractTableModel {
     private final Configuration configuration;
-    public enum BoardStatus {
-        Ready,
-        MissingPart,
-        MissingFeeder,
-        ZHeight,
-        ZeroPartHeight
-    }
-    private String[] columnNames = new String[] {"Board", "Width", "Length", "Side", "X", "Y", "Z",
-            "Rot.", "Status", "Enabled?", "Check Fids?"};
 
-    private Class[] columnTypes = new Class[] {String.class, LengthCellValue.class,
-            LengthCellValue.class, Side.class, LengthCellValue.class, LengthCellValue.class,
-            LengthCellValue.class, String.class, BoardStatus.class, Boolean.class, Boolean.class};
+    public enum BoardStatus {
+        Ready, ZHeight, DimensionsMissing, Error
+    }
+
+    private String[] columnNames = new String[] { "Board", "Width", "Length", "Side", "X", "Y", "Z", "Rot.", "Status",
+            "Enabled?", "Check Fids?" };
+
+    private Class[] columnTypes = new Class[] { String.class, LengthCellValue.class, LengthCellValue.class, Side.class,
+            LengthCellValue.class, LengthCellValue.class, LengthCellValue.class, String.class, BoardStatus.class,
+            Boolean.class, Boolean.class };
 
     private Job job;
 
@@ -57,16 +60,47 @@ public class BoardLocationsTableModel extends AbstractTableModel {
         this.job = job;
         fireTableDataChanged();
     }
-    
+
     public Job getJob() {
         return job;
     }
 
     public BoardStatus getBoardStatus(int index) {
-    	if (Double.compare(job.getBoardLocations().get(index).getLocation().getLengthZ().getValue(), 0.0) == 0) {
-        	return BoardStatus.ZHeight;
-        }	
-        else return BoardStatus.Ready;
+        for (Placement placement : job.getBoardLocations().get(index).getBoard().getPlacements()) {
+            // Display general error for missing parts
+            if (placement.getPart() == null) {
+                return BoardStatus.Error;
+            }
+            if (placement.getType() == Placement.Type.Place) {
+                boolean found = false;
+                for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+                    if (feeder.getPart() == placement.getPart() && feeder.isEnabled()) {
+                        found = true;
+                        break;
+                    }
+                }
+                // Display general error for missing feeders
+                if (!found) {
+                    return BoardStatus.Error;
+                }
+                // Display general error if the part height for any placement is not set
+                if (placement.getPart().getHeight().getValue() == 0) {
+                    return BoardStatus.Error;
+                }
+            }
+        }
+
+        // Display warning if the board Z height is set to 0
+        if (job.getBoardLocations().get(index).getLocation().getLengthZ().getValue() == 0) {
+            return BoardStatus.ZHeight;
+        }
+        // Display warning if the board has no width or height values
+        else if (job.getBoardLocations().get(index).getBoard().getDimensions().getX() == 0
+                || job.getBoardLocations().get(index).getBoard().getDimensions().getY() == 0) {
+            return BoardStatus.DimensionsMissing;
+        } else
+            return BoardStatus.Ready;
+
     }
 
     public BoardLocation getBoardLocation(int index) {
@@ -110,66 +144,56 @@ public class BoardLocationsTableModel extends AbstractTableModel {
             BoardLocation boardLocation = job.getBoardLocations().get(rowIndex);
             if (columnIndex == 0) {
                 boardLocation.getBoard().setName((String) aValue);
-            }
-            else if (columnIndex == 1) {
+            } else if (columnIndex == 1) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
                 Location location = boardLocation.getBoard().getDimensions();
                 location = Length.setLocationField(configuration, location, length, Length.Field.X);
                 boardLocation.getBoard().setDimensions(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
-            }
-            else if (columnIndex == 2) {
+            } else if (columnIndex == 2) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
                 Location location = boardLocation.getBoard().getDimensions();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Y);
                 boardLocation.getBoard().setDimensions(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
-            }
-            else if (columnIndex == 3) {
+            } else if (columnIndex == 3) {
                 boardLocation.setSide((Side) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
-            }
-            else if (columnIndex == 4) {
+            } else if (columnIndex == 4) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
                 Location location = boardLocation.getLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.X);
                 boardLocation.setLocation(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
-            }
-            else if (columnIndex == 5) {
+            } else if (columnIndex == 5) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
                 Location location = boardLocation.getLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Y);
                 boardLocation.setLocation(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
-            }
-            else if (columnIndex == 6) {
+            } else if (columnIndex == 6) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
                 Location location = boardLocation.getLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Z);
                 boardLocation.setLocation(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
-            }
-            else if (columnIndex == 7) {
-                boardLocation.setLocation(boardLocation.getLocation().derive(null, null, null,
-                        Double.parseDouble(aValue.toString())));
+            } else if (columnIndex == 7) {
+                boardLocation.setLocation(
+                        boardLocation.getLocation().derive(null, null, null, Double.parseDouble(aValue.toString())));
                 fireTableCellUpdated(rowIndex, columnIndex);
-            }
-            else if (columnIndex == 9) {
+            } else if (columnIndex == 9) {
                 boardLocation.setEnabled((Boolean) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
-            }
-            else if (columnIndex == 10) {
+            } else if (columnIndex == 10) {
                 boardLocation.setCheckFiducials((Boolean) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             // TODO: dialog, bad input
         }
     }
@@ -179,31 +203,30 @@ public class BoardLocationsTableModel extends AbstractTableModel {
         Location loc = boardLocation.getLocation();
         Location dim = boardLocation.getBoard().getDimensions();
         switch (col) {
-            case 0:
-                return boardLocation.getBoard().getName();
-            case 1:
-                return new LengthCellValue(dim.getLengthX());
-            case 2:
-                return new LengthCellValue(dim.getLengthY());
-            case 3:
-                return boardLocation.getSide();
-            case 4:
-                return new LengthCellValue(loc.getLengthX());
-            case 5:
-                return new LengthCellValue(loc.getLengthY());
-            case 6:
-                return new LengthCellValue(loc.getLengthZ());
-            case 7:
-                return String.format(Locale.US, configuration.getLengthDisplayFormat(),
-                        loc.getRotation(), "");
-            case 8:
-                return getBoardStatus(row);
-            case 9:
-                return boardLocation.isEnabled();
-            case 10:
-                return boardLocation.isCheckFiducials();
-            default:
-                return null;
+        case 0:
+            return boardLocation.getBoard().getName();
+        case 1:
+            return new LengthCellValue(dim.getLengthX());
+        case 2:
+            return new LengthCellValue(dim.getLengthY());
+        case 3:
+            return boardLocation.getSide();
+        case 4:
+            return new LengthCellValue(loc.getLengthX());
+        case 5:
+            return new LengthCellValue(loc.getLengthY());
+        case 6:
+            return new LengthCellValue(loc.getLengthZ());
+        case 7:
+            return String.format(Locale.US, configuration.getLengthDisplayFormat(), loc.getRotation(), "");
+        case 8:
+            return getBoardStatus(row);
+        case 9:
+            return boardLocation.isEnabled();
+        case 10:
+            return boardLocation.isCheckFiducials();
+        default:
+            return null;
         }
     }
 }

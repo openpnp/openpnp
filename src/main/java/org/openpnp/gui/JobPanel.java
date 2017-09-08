@@ -518,29 +518,23 @@ public class JobPanel extends JPanel {
                 setBackground(statusColorReady);
                 setText("Ready");
             }
-            else if (status == BoardStatus.MissingFeeder) {
+            else if (status == BoardStatus.Error) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorError);
-                setText("Missing Feeder");
+                setText("Placement Errors");
             }
-            else if (status == BoardStatus.ZeroPartHeight) {
+            else if (status == BoardStatus.DimensionsMissing) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorWarning);
-                setText("Part Height");
+                setText("Board width or length missing");
             }
             else if (status == BoardStatus.ZHeight) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorWarning);
                 setText("Z-Height is 0");
-            }
-            else if (status == BoardStatus.MissingPart) {
-                setBorder(new LineBorder(getBackground()));
-                setForeground(Color.black);
-                setBackground(statusColorError);
-                setText("Missing Part");
             }
             else {
                 setBorder(new LineBorder(getBackground()));
