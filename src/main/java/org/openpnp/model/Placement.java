@@ -67,7 +67,7 @@ public class Placement extends AbstractModelObject implements Identifiable {
 
     private Part part;
     
-    private Status PlacementStatus;
+    private Status placementStatus;
 
     @Attribute
     private boolean checkFids;
@@ -109,12 +109,12 @@ public class Placement extends AbstractModelObject implements Identifiable {
     }
     
     public Status getPlacementStatus() {
-        return PlacementStatus;
+        return placementStatus;
     }
 
     public void setPlacementStatus(Status PlacementStatus) {
-    	Status oldValue = this.PlacementStatus;
-        this.PlacementStatus = PlacementStatus;
+    	Status oldValue = this.placementStatus;
+        this.placementStatus = PlacementStatus;
         firePropertyChange("PlacementStatus", oldValue, PlacementStatus);
     }
     
