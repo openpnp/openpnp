@@ -24,6 +24,7 @@ import javax.swing.table.AbstractTableModel;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.RotationCellValue;
+import org.openpnp.model.BoardLocation.BoardStatus;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -43,14 +44,8 @@ public class PlacementsTableModel extends AbstractTableModel {
 
     private Class[] columnTypes = new Class[] {PartCellValue.class, Part.class, Side.class,
             LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, Type.class,
-            Boolean.class, Status.class, Boolean.class};
+            Boolean.class, Placement.Status.class, Boolean.class};
 
-    public enum Status {
-        Ready,
-        MissingPart,
-        MissingFeeder,
-        ZeroPartHeight
-    }
 
     private Board board;
     private BoardLocation boardLocation;
@@ -106,6 +101,7 @@ public class PlacementsTableModel extends AbstractTableModel {
             	//Placement Part
                 placement.setPart((Part) aValue);
                 fireTableCellUpdated(rowIndex, 8);
+                //TODO Update Job panel board table rows here
             }
             else if (columnIndex == 2) {
             	//Placement Side
@@ -140,13 +136,14 @@ public class PlacementsTableModel extends AbstractTableModel {
             	//Placement Type
                 placement.setType((Type) aValue);
                 fireTableCellUpdated(rowIndex, 8);
+                //TODO Update Job panel board table rows here
             }
             else if (columnIndex == 7) {
             	//Placement Placed
             	boardLocation.setPlaced(placement.getId(), (Boolean) aValue);
             }
             else if (columnIndex == 9) {
-            	//Placement Ceck Fiducials
+            	//Placement Check Fiducials
                 placement.setCheckFids((Boolean) aValue);
             }
         }
@@ -157,9 +154,10 @@ public class PlacementsTableModel extends AbstractTableModel {
 
     // TODO: Ideally this would all come from the JobPlanner, but this is a
     // good start for now.
-    private Status getPlacementStatus(Placement placement) {
+    private Placement.Status getPlacementStatus(Placement placement) {
         if (placement.getPart() == null) {
-            return Status.MissingPart;
+        	placement.setPlacementStatus(Placement.Status.MissingPart);
+            return Placement.Status.MissingPart;
         }
         if (placement.getType() == Placement.Type.Place) {
             boolean found = false;
@@ -170,14 +168,17 @@ public class PlacementsTableModel extends AbstractTableModel {
                 }
             }
             if (!found) {
-                return Status.MissingFeeder;
+            	placement.setPlacementStatus(Placement.Status.MissingFeeder);
+                return Placement.Status.MissingFeeder;
             }
 
             if (placement.getPart().getHeight().getValue() == 0) {
-                return Status.ZeroPartHeight;
+            	placement.setPlacementStatus(Placement.Status.ZeroPartHeight);
+                return Placement.Status.ZeroPartHeight;
             }
         }
-        return Status.Ready;
+        placement.setPlacementStatus(Placement.Status.Ready);
+        return Placement.Status.Ready;
     }
 
     public Object getValueAt(int row, int col) {

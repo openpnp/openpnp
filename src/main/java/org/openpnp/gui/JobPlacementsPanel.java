@@ -43,7 +43,6 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
-import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -152,7 +151,7 @@ public class JobPlacementsPanel extends JPanel {
         table.setDefaultEditor(Part.class, new DefaultCellEditor(partsComboBox));
         table.setDefaultEditor(Type.class, new DefaultCellEditor(typesComboBox));
         table.setDefaultRenderer(Part.class, new IdentifiableTableCellRenderer<Part>());
-        table.setDefaultRenderer(PlacementsTableModel.Status.class, new StatusRenderer());
+        table.setDefaultRenderer(Placement.Status.class, new StatusRenderer());
         table.setDefaultRenderer(Placement.Type.class, new TypeRenderer());
         table.setDefaultRenderer(PartCellValue.class, new IdRenderer());
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
@@ -186,8 +185,8 @@ public class JobPlacementsPanel extends JPanel {
                 }
                 int row = table.rowAtPoint(new Point(mouseEvent.getX(), mouseEvent.getY()));
                 int col = table.columnAtPoint(new Point(mouseEvent.getX(), mouseEvent.getY()));
-                if (tableModel.getColumnClass(col) == Status.class) {
-                    Status status = (Status) tableModel.getValueAt(row, col);
+                if (tableModel.getColumnClass(col) == Placement.Status.class) {
+                	Placement.Status status = (Placement.Status) tableModel.getValueAt(row, col);
                     // TODO: This is some sample code for handling the user
                     // wishing to do something with the status. Not using it
                     // right now but leaving it here for the future.
@@ -568,26 +567,26 @@ public class JobPlacementsPanel extends JPanel {
 
     static class StatusRenderer extends DefaultTableCellRenderer {
         public void setValue(Object value) {
-            Status status = (Status) value;
-            if (status == Status.Ready) {
+        	Placement.Status status = (Placement.Status) value;
+            if (status == Placement.Status.Ready) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorReady);
                 setText("Ready");
             }
-            else if (status == Status.MissingFeeder) {
+            else if (status == Placement.Status.MissingFeeder) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorError);
                 setText("Missing Feeder");
             }
-            else if (status == Status.ZeroPartHeight) {
+            else if (status == Placement.Status.ZeroPartHeight) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorWarning);
                 setText("Part Height");
             }
-            else if (status == Status.MissingPart) {
+            else if (status == Placement.Status.MissingPart) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorError);

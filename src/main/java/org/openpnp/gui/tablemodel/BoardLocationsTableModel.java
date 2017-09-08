@@ -24,10 +24,11 @@ import java.util.Locale;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.gui.support.LengthCellValue;
-import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
+//import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
 import org.openpnp.model.Board.Side;
 import org.openpnp.spi.Feeder;
 import org.openpnp.model.BoardLocation;
+import org.openpnp.model.BoardLocation.BoardStatus;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.Length;
@@ -38,11 +39,7 @@ import java.util.List;
 
 public class BoardLocationsTableModel extends AbstractTableModel {
     private final Configuration configuration;
-
-    public enum BoardStatus {
-        Ready, ZHeight, DimensionsMissing, Error
-    }
-
+    
     private String[] columnNames = new String[] { "Board", "Width", "Length", "Side", "X", "Y", "Z", "Rot.", "Status",
             "Enabled?", "Check Fids?" };
 
@@ -64,10 +61,21 @@ public class BoardLocationsTableModel extends AbstractTableModel {
     public Job getJob() {
         return job;
     }
-
-    public BoardStatus getBoardStatus(int index) {
+    
+    /*public BoardStatus getBoardStatus(int index) {
         for (Placement placement : job.getBoardLocations().get(index).getBoard().getPlacements()) {
-            // Display general error for missing parts
+            
+        	if (placement.getPlacementStatus() == Placement.Status.MissingFeeder) {
+        		boardstatus = BoardStatus.Error;
+        		return BoardStatus.Error;
+        	} else if (placement.getPlacementStatus() == Placement.Status.MissingPart) {
+        		boardstatus = BoardStatus.Error;
+        		return BoardStatus.Error;
+        	} else if (placement.getPlacementStatus() == Placement.Status.ZeroPartHeight) {
+        		boardstatus = BoardStatus.Error;
+        		return BoardStatus.Error;
+        	}         	
+        	// Display general error for missing parts
             if (placement.getPart() == null) {
                 return BoardStatus.Error;
             }
@@ -102,7 +110,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
         } else {
             return BoardStatus.Ready;
         }
-    }
+    }*/
 
     public BoardLocation getBoardLocation(int index) {
         return job.getBoardLocations().get(index);
@@ -234,7 +242,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
         case 7:
             return String.format(Locale.US, configuration.getLengthDisplayFormat(), loc.getRotation(), "");
         case 8:
-            return getBoardStatus(row);
+            return boardLocation.getBoardStatus(row);
         case 9:
             return boardLocation.isEnabled();
         case 10:

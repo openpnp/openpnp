@@ -37,6 +37,12 @@ public class Placement extends AbstractModelObject implements Identifiable {
     public enum Type {
         Place, Fiducial, Ignore
     }
+    public enum Status {
+        Ready,
+        MissingPart,
+        MissingFeeder,
+        ZeroPartHeight
+    }
 
     /**
      * History: 1.0: Initial revision. 
@@ -60,6 +66,8 @@ public class Placement extends AbstractModelObject implements Identifiable {
     private Type type;
 
     private Part part;
+    
+    private Status PlacementStatus;
 
     @Attribute
     private boolean checkFids;
@@ -99,7 +107,17 @@ public class Placement extends AbstractModelObject implements Identifiable {
         this.part = part;
         firePropertyChange("part", oldValue, part);
     }
+    
+    public Status getPlacementStatus() {
+        return PlacementStatus;
+    }
 
+    public void setPlacementStatus(Status PlacementStatus) {
+    	Status oldValue = this.PlacementStatus;
+        this.PlacementStatus = PlacementStatus;
+        firePropertyChange("PlacementStatus", oldValue, PlacementStatus);
+    }
+    
     public String getId() {
         return id;
     }

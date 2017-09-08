@@ -79,7 +79,7 @@ import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
-import org.openpnp.gui.tablemodel.BoardLocationsTableModel.BoardStatus;
+import org.openpnp.model.BoardLocation.BoardStatus;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -229,9 +229,7 @@ public class JobPanel extends JPanel {
                     // A generic table update in response to TableDataChange
                     // event
                 	updatePanelizationIconState();
-                	
                 }
-
             }
         });
 
@@ -255,7 +253,7 @@ public class JobPanel extends JPanel {
                 });
 
         setLayout(new BorderLayout(0, 0));
-        boardLocationsTable.setDefaultRenderer(BoardLocationsTableModel.BoardStatus.class, new BoardStatusRenderer());
+        boardLocationsTable.setDefaultRenderer(BoardStatus.class, new BoardStatusRenderer());
 
         splitPane = new JSplitPane();
         splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
@@ -356,6 +354,13 @@ public class JobPanel extends JPanel {
 
         jobPastePanel = new JobPastePanel(this);
         jobPlacementsPanel = new JobPlacementsPanel(this);
+        
+        jobPlacementsPanel.addPropertyChangeListener("PlacementStatus", new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                int i = 1;
+            }
+        });
 
         add(splitPane);
 
