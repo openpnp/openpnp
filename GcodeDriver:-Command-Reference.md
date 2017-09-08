@@ -60,7 +60,7 @@ This command has special handling for the X, Y, Z and Rotation variables. If the
 | X              | Double   | The calculated X position for the move. |
 | Y              | Double   | The calculated Y position for the move. |
 | Z              | Double   | The calculated Z position for the move. |
-| Rotation       | Double   | The calculated C or Rotation position for the move. |
+| Rotation       | Double   | The calculated C or Rotation position for the move in deg. |
 | FeedRate       | Double   | The calculated feed rate for the move. |
 
 Example:
