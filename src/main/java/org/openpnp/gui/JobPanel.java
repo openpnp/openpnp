@@ -254,7 +254,7 @@ public class JobPanel extends JPanel {
 
         setLayout(new BorderLayout(0, 0));
         boardLocationsTable.setDefaultRenderer(BoardStatus.class, new BoardStatusRenderer());
-
+                
         splitPane = new JSplitPane();
         splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         splitPane.setBorder(null);
@@ -810,6 +810,10 @@ public class JobPanel extends JPanel {
                 Job job = configuration.loadJob(file);
                 setJob(job);
                 addRecentJob(file);
+                
+                for (BoardLocation location : job.getBoardLocations()) {
+                	location.addPropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+                }            
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -1120,6 +1124,7 @@ public class JobPanel extends JPanel {
                 boardLocationsTableModel.fireTableDataChanged();
 
                 Helpers.selectLastTableRow(boardLocationsTable);
+                boardLocation.addPropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -1159,6 +1164,8 @@ public class JobPanel extends JPanel {
                 boardLocationsTableModel.fireTableDataChanged();
 
                 Helpers.selectLastTableRow(boardLocationsTable);
+                
+                boardLocation.addPropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -1360,6 +1367,12 @@ public class JobPanel extends JPanel {
 
             DlgAutoPanelize dlg = new DlgAutoPanelize(frame, JobPanel.this);
             dlg.setVisible(true);
+            
+            
+            for (BoardLocation location : job.getBoardLocations()) {
+            	location.initBoardStatus();
+            	location.addPropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+            }  
         }
     };
 
@@ -1423,6 +1436,10 @@ public class JobPanel extends JPanel {
                 Job job = configuration.loadJob(file);
                 setJob(job);
                 addRecentJob(file);
+                
+                for (BoardLocation location : job.getBoardLocations()) {
+                	location.addPropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+                }
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -1461,6 +1478,14 @@ public class JobPanel extends JPanel {
                     jobSaveActionGroup.setEnabled(getJob().isDirty());
                 }
             };
+            
+    private final PropertyChangeListener boardStatusPropertyChangeListener =
+    		new PropertyChangeListener() {
+    		    @Override
+    		    public void propertyChange(PropertyChangeEvent evt) {
+    		    	boardLocationsTableModel.fireTableCellUpdated(boardLocationsTable.getSelectedRow(), 8);
+    		    }
+    		};
 
     private final TextStatusListener textStatusListener = text -> {
         MainFrame.get().setStatus(text);

@@ -73,8 +73,6 @@ public class BoardLocation extends AbstractModelObject {
         this.checkFiducials = obj.checkFiducials;
         this.enabled = obj.enabled;
         this.placed = obj.placed;
-        
-        initBoardStatus();
     }
 
     public BoardLocation(Board board) {
@@ -118,17 +116,13 @@ public class BoardLocation extends AbstractModelObject {
     public void initBoardStatus() {
     	for (Placement placement : getBoard().getPlacements()) {
             if (placement.getPlacementStatus() == Placement.Status.MissingFeeder) {
-                Object oldValue = this.boardStatus;
-                boardStatus = BoardStatus.Error;
-                firePropertyChange("boardStatus", oldValue, boardStatus);
+                setBoardStatus(BoardStatus.Error);
             } else if (placement.getPlacementStatus() == Placement.Status.MissingPart) {
-                Object oldValue = this.boardStatus;
-                boardStatus = BoardStatus.Error;
-                firePropertyChange("boardStatus", oldValue, boardStatus);
+            	setBoardStatus(BoardStatus.Error);
             } else if (placement.getPlacementStatus() == Placement.Status.ZeroPartHeight) {
-                Object oldValue = this.boardStatus;
-                boardStatus = BoardStatus.Error;
-                firePropertyChange("boardStatus", oldValue, boardStatus);
+            	setBoardStatus(BoardStatus.Error);
+            } else if (placement.getPlacementStatus() == Placement.Status.Ready) {
+            	setBoardStatus(BoardStatus.Ready);
             }
         }
     }
@@ -154,6 +148,10 @@ public class BoardLocation extends AbstractModelObject {
         Board oldValue = this.board;
         this.board = board;
         firePropertyChange("board", oldValue, board);
+        
+        if (board != null){
+        	initBoardStatus();
+        }
     }
 
     String getBoardFile() {

@@ -20,6 +20,8 @@
 package org.openpnp.model;
 
 import org.openpnp.model.Board.Side;
+import org.openpnp.model.BoardLocation.BoardStatus;
+import org.openpnp.spi.Feeder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Version;
@@ -109,7 +111,30 @@ public class Placement extends AbstractModelObject implements Identifiable {
     }
     
     public Status getPlacementStatus() {
-        return placementStatus;
+    	if (getPart() == null) {
+        	setPlacementStatus(Placement.Status.MissingPart);
+            return Placement.Status.MissingPart;
+        }
+        if (getType() == Placement.Type.Place) {
+            boolean found = false;
+            for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+                if (feeder.getPart() == getPart() && feeder.isEnabled()) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+            	setPlacementStatus(Placement.Status.MissingFeeder);
+                return Placement.Status.MissingFeeder;
+            }
+
+            if (getPart().getHeight().getValue() == 0) {
+            	setPlacementStatus(Placement.Status.ZeroPartHeight);
+                return Placement.Status.ZeroPartHeight;
+            }
+        }
+        setPlacementStatus(Placement.Status.Ready);
+        return Placement.Status.Ready;
     }
 
     public void setPlacementStatus(Status PlacementStatus) {

@@ -24,18 +24,14 @@ import java.util.Locale;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.gui.support.LengthCellValue;
-//import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
 import org.openpnp.model.Board.Side;
-import org.openpnp.spi.Feeder;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.BoardLocation.BoardStatus;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
-import org.openpnp.model.Placement;
 
-import java.util.List;
 
 public class BoardLocationsTableModel extends AbstractTableModel {
     private final Configuration configuration;
@@ -61,56 +57,6 @@ public class BoardLocationsTableModel extends AbstractTableModel {
     public Job getJob() {
         return job;
     }
-    
-    /*public BoardStatus getBoardStatus(int index) {
-        for (Placement placement : job.getBoardLocations().get(index).getBoard().getPlacements()) {
-            
-        	if (placement.getPlacementStatus() == Placement.Status.MissingFeeder) {
-        		boardstatus = BoardStatus.Error;
-        		return BoardStatus.Error;
-        	} else if (placement.getPlacementStatus() == Placement.Status.MissingPart) {
-        		boardstatus = BoardStatus.Error;
-        		return BoardStatus.Error;
-        	} else if (placement.getPlacementStatus() == Placement.Status.ZeroPartHeight) {
-        		boardstatus = BoardStatus.Error;
-        		return BoardStatus.Error;
-        	}         	
-        	// Display general error for missing parts
-            if (placement.getPart() == null) {
-                return BoardStatus.Error;
-            }
-            if (placement.getType() == Placement.Type.Place) {
-                boolean found = false;
-                for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
-                    if (feeder.getPart() == placement.getPart() && feeder.isEnabled()) {
-                        found = true;
-                        break;
-                    }
-                }
-                // Display general error for missing feeders
-                if (!found) {
-                    return BoardStatus.Error;
-                }
-                // Display general error if the part height for any placement is
-                // not set
-                if (placement.getPart().getHeight().getValue() == 0) {
-                    return BoardStatus.Error;
-                }
-            }
-        }
-
-        // Display warning if the board Z height is set to 0
-        if (job.getBoardLocations().get(index).getLocation().getLengthZ().getValue() == 0) {
-            return BoardStatus.ZHeight;
-        }
-        // Display warning if the board has no width or height values
-        else if (job.getBoardLocations().get(index).getBoard().getDimensions().getX() == 0
-                || job.getBoardLocations().get(index).getBoard().getDimensions().getY() == 0) {
-            return BoardStatus.DimensionsMissing;
-        } else {
-            return BoardStatus.Ready;
-        }
-    }*/
 
     public BoardLocation getBoardLocation(int index) {
         return job.getBoardLocations().get(index);
@@ -205,6 +151,10 @@ public class BoardLocationsTableModel extends AbstractTableModel {
             	//Board Rotation
                 boardLocation.setLocation(
                         boardLocation.getLocation().derive(null, null, null, Double.parseDouble(aValue.toString())));
+                fireTableCellUpdated(rowIndex, columnIndex);
+            } else if (columnIndex == 8) {
+            	//Board Status
+                boardLocation.setBoardStatus((BoardStatus) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
             } else if (columnIndex == 9) {
             	//Board Enabled

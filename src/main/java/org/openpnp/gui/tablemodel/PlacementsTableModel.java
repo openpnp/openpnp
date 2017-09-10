@@ -101,8 +101,9 @@ public class PlacementsTableModel extends AbstractTableModel {
             	//Placement Part
                 placement.setPart((Part) aValue);
                 fireTableCellUpdated(rowIndex, 8);
-                //TODO Update Job panel board table rows here
-                boardLocation.getBoardStatus();
+                
+                //Update Job panel board table rows
+                UpdateBoardStatus(placement);
             }
             else if (columnIndex == 2) {
             	//Placement Side
@@ -137,8 +138,9 @@ public class PlacementsTableModel extends AbstractTableModel {
             	//Placement Type
                 placement.setType((Type) aValue);
                 fireTableCellUpdated(rowIndex, 8);
-                //TODO Update Job panel board table rows here
-                boardLocation.getBoardStatus();
+                
+                //Update Job panel board table rows
+                UpdateBoardStatus(placement);
             }
             else if (columnIndex == 7) {
             	//Placement Placed
@@ -153,39 +155,27 @@ public class PlacementsTableModel extends AbstractTableModel {
             // TODO: dialog, bad input
         }
     }
+    
+    private void UpdateBoardStatus(Placement placement){
+    	if (placement.getPlacementStatus() == Placement.Status.MissingFeeder) {
+    		boardLocation.setBoardStatus(BoardStatus.Error);
+    	} else if (placement.getPlacementStatus() == Placement.Status.MissingPart) {
+    		boardLocation.setBoardStatus(BoardStatus.Error);
+    	} else if (placement.getPlacementStatus() == Placement.Status.ZeroPartHeight) {
+    		boardLocation.setBoardStatus(BoardStatus.Error);
+    	} else if (placement.getPart() == null) {
+        	// Display general error for missing parts
+        	boardLocation.setBoardStatus(BoardStatus.Error);
+        } else {
+        	boardLocation.setBoardStatus(BoardStatus.Ready);
+        }
+    }
 
     // TODO: Ideally this would all come from the JobPlanner, but this is a
     // good start for now.
-    private Placement.Status getPlacementStatus(Placement placement) {
-        if (placement.getPart() == null) {
-        	placement.setPlacementStatus(Placement.Status.MissingPart);
-        	boardLocation.setBoardStatus(BoardStatus.Error);
-            return Placement.Status.MissingPart;
-        }
-        if (placement.getType() == Placement.Type.Place) {
-            boolean found = false;
-            for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
-                if (feeder.getPart() == placement.getPart() && feeder.isEnabled()) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-            	placement.setPlacementStatus(Placement.Status.MissingFeeder);
-            	boardLocation.setBoardStatus(BoardStatus.Error);
-                return Placement.Status.MissingFeeder;
-            }
-
-            if (placement.getPart().getHeight().getValue() == 0) {
-            	placement.setPlacementStatus(Placement.Status.ZeroPartHeight);
-            	boardLocation.setBoardStatus(BoardStatus.Error);
-                return Placement.Status.ZeroPartHeight;
-            }
-        }
-        placement.setPlacementStatus(Placement.Status.Ready);
-        boardLocation.setBoardStatus(BoardStatus.Ready);
-        return Placement.Status.Ready;
-    }
+    /*private Placement.Status getPlacementStatus(Placement placement) {
+        
+    }*/
 
     public Object getValueAt(int row, int col) {
         Placement placement = board.getPlacements().get(row);
@@ -210,7 +200,7 @@ public class PlacementsTableModel extends AbstractTableModel {
             case 7:
             	return boardLocation.getPlaced(placement.getId());
             case 8:
-                return getPlacementStatus(placement);
+                return placement.getPlacementStatus();
             case 9:
                 return placement.getCheckFids();
             default:
