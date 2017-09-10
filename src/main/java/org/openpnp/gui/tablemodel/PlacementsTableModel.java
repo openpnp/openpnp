@@ -103,7 +103,7 @@ public class PlacementsTableModel extends AbstractTableModel {
                 fireTableCellUpdated(rowIndex, 8);
                 
                 //Update Job panel board table rows
-                UpdateBoardStatus(placement);
+                updateBoardStatus(placement);
             }
             else if (columnIndex == 2) {
             	//Placement Side
@@ -140,7 +140,7 @@ public class PlacementsTableModel extends AbstractTableModel {
                 fireTableCellUpdated(rowIndex, 8);
                 
                 //Update Job panel board table rows
-                UpdateBoardStatus(placement);
+                updateBoardStatus(placement);
             }
             else if (columnIndex == 7) {
             	//Placement Placed
@@ -156,7 +156,7 @@ public class PlacementsTableModel extends AbstractTableModel {
         }
     }
     
-    private void UpdateBoardStatus(Placement placement){
+    private void updateBoardStatus(Placement placement){
     	if (placement.getPlacementStatus() == Placement.Status.MissingFeeder) {
     		boardLocation.setBoardStatus(BoardStatus.Error);
     	} else if (placement.getPlacementStatus() == Placement.Status.MissingPart) {
