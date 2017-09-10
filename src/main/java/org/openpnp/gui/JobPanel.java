@@ -1483,7 +1483,17 @@ public class JobPanel extends JPanel {
     		new PropertyChangeListener() {
     		    @Override
     		    public void propertyChange(PropertyChangeEvent evt) {
-    		    	boardLocationsTableModel.fireTableCellUpdated(boardLocationsTable.getSelectedRow(), 8);
+    		    	if (job.isUsingPanel()){
+    		    		// Update all boards in the panel
+    		    		for (int i = 0; i < boardLocationsTable.getRowCount(); i++) {
+    		    			if (evt.getPropertyName().equals("boardStatus")) {
+    		    				job.getBoardLocations().get(i).setBoardStatus((BoardStatus)evt.getNewValue());
+    		    			}
+    		    			boardLocationsTableModel.fireTableCellUpdated(i, 8);
+    		    		} 
+    		    	} else {
+    		    		boardLocationsTableModel.fireTableCellUpdated(boardLocationsTable.getSelectedRow(), 8);
+    		    	}
     		    }
     		};
 

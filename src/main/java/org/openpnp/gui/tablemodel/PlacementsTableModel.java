@@ -171,12 +171,6 @@ public class PlacementsTableModel extends AbstractTableModel {
         }
     }
 
-    // TODO: Ideally this would all come from the JobPlanner, but this is a
-    // good start for now.
-    /*private Placement.Status getPlacementStatus(Placement placement) {
-        
-    }*/
-
     public Object getValueAt(int row, int col) {
         Placement placement = board.getPlacements().get(row);
         Location loc = placement.getLocation();
