@@ -34,7 +34,7 @@ import org.openpnp.model.Package;
 public class PackagesTableModel extends AbstractTableModel implements PropertyChangeListener {
     final private Configuration configuration;
 
-    private String[] columnNames = new String[] {"Id", "Description"};
+    private String[] columnNames = new String[] {"ID", "Description"};
     private Class[] columnTypes = new Class[] {String.class, String.class,};
     private List<Package> packages;
 

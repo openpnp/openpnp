@@ -157,7 +157,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     protected int timeoutMilliseconds = 5000;
 
     @Attribute(required = false)
-    protected int connectWaitTimeMilliseconds = 1000;
+    protected int connectWaitTimeMilliseconds = 3000;
 
     @Element(required = false)
     protected Location homingFiducialLocation = new Location(LengthUnit.Millimeters);

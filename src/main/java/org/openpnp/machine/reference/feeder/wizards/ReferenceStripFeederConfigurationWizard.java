@@ -19,8 +19,6 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
-import static org.openpnp.vision.FluentCv.pointToLineDistance;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -566,24 +564,29 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
     private List<Location> findHoles(Camera camera) throws Exception {
         // Process the pipeline to clean up the image and detect the tape holes
-        CvPipeline pipeline = getCvPipeline(camera);
-        pipeline.process();
-
-        // Grab the results
-        FindHoles findHolesResults = new FindHoles(camera, pipeline).invoke();
-        List<CvStage.Result.Circle> inLine = findHolesResults.getInLine();
-        if (inLine.isEmpty()) {
-            throw new Exception("Feeder " + getName() + ": No tape holes found.");
+        CvPipeline pipeline = getCvPipeline(camera, true);
+        try {
+            pipeline.process();
+    
+            // Grab the results
+            FindHoles findHolesResults = new FindHoles(camera, pipeline).invoke();
+            List<CvStage.Result.Circle> inLine = findHolesResults.getInLine();
+            if (inLine.isEmpty()) {
+                throw new Exception("Feeder " + getName() + ": No tape holes found.");
+            }
+    
+            List<Location> holeLocations = new ArrayList<>();
+            for (int i=0; i<inLine.size(); i++) {
+                CvStage.Result.Circle result = inLine.get(i);
+                Location location = VisionUtils.getPixelLocation(camera, result.x, result.y);
+                holeLocations.add(location);
+            }
+    
+            return holeLocations;
         }
-
-        List<Location> holeLocations = new ArrayList<>();
-        for (int i=0; i<inLine.size(); i++) {
-            CvStage.Result.Circle result = inLine.get(i);
-            Location location = VisionUtils.getPixelLocation(camera, result.x, result.y);
-            holeLocations.add(location);
+        finally {
+            pipeline.release();
         }
-
-        return holeLocations;
     }
 
     /**
@@ -599,27 +602,32 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         // BufferedCameraImage is used as we want to run the pipeline on an existing image
         BufferedImageCamera bufferedImageCamera = new BufferedImageCamera(camera, image);
 
-        // Process the pipeline to clean up the image and detect the tape holes
-        CvPipeline pipeline = getCvPipeline(bufferedImageCamera);
-        pipeline.process();
-        // Grab the results
-        Mat resultMat = pipeline.getWorkingImage().clone();
-        FindHoles findHolesResults = new FindHoles(camera, pipeline).invoke();
-
-        List<CvStage.Result.Circle> inLine = findHolesResults.getInLine();
-        List<Ransac.Line> lines = findHolesResults.getLines();
-        Ransac.Line bestLine = findHolesResults.getBestLine();
-
-        drawLines(resultMat, lines, Color.orange, 1);
-        if (bestLine != null) {
-            drawLine(resultMat, bestLine, Color.yellow, 2);
+        CvPipeline pipeline = getCvPipeline(bufferedImageCamera, true);
+        try {
+            // Process the pipeline to clean up the image and detect the tape holes
+            pipeline.process();
+            // Grab the results
+            Mat resultMat = pipeline.getWorkingImage().clone();
+            FindHoles findHolesResults = new FindHoles(camera, pipeline).invoke();
+    
+            List<CvStage.Result.Circle> inLine = findHolesResults.getInLine();
+            List<Ransac.Line> lines = findHolesResults.getLines();
+            Ransac.Line bestLine = findHolesResults.getBestLine();
+    
+            drawLines(resultMat, lines, Color.orange, 1);
+            if (bestLine != null) {
+                drawLine(resultMat, bestLine, Color.yellow, 2);
+            }
+            drawCircles(resultMat, inLine, inLine.size(), Color.blue);
+            drawCircles(resultMat, inLine, 2, Color.green);
+    
+            BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
+            resultMat.release();
+            return showResult;
         }
-        drawCircles(resultMat, inLine, inLine.size(), Color.blue);
-        drawCircles(resultMat, inLine, 2, Color.green);
-
-        BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
-        resultMat.release();
-        return showResult;
+        finally {
+            pipeline.release();
+        }
     }
 
     private class FindHoles {
@@ -682,7 +690,6 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             lines = Ransac.ransac(points, 100, maxDistanceToLine, holePitchPx, holePitchPx - minHolePitchPx);
 
             bestLine = null;
-            double bestLineDistance = Double.MAX_VALUE;
             for (Ransac.Line line : lines) {
                 Point a = line.a;
                 Point b = line.b;
@@ -690,28 +697,73 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 Location aLocation = VisionUtils.getPixelLocation(camera, a.x, a.y);
                 Location bLocation = VisionUtils.getPixelLocation(camera, b.x, b.y);
 
-                Double distance = camera.getLocation().getLinearDistanceToLine(aLocation, bLocation);
+                // Checks the distance to the line *segment*, as we expect the line to have the maximum extents that
+                // encompass all points (circles) that meet the criteria.
+                Double distance = camera.getLocation().getLinearDistanceToLineSegment(aLocation, bLocation);
                 Double distancePx = VisionUtils.toPixels(new Length(distance, camera.getUnitsPerPixel().getUnits()), camera);
                 // Min distance is because we're centered at the part, not the hole - so we need to ignore
                 // circles found in the part
                 if ((distancePx >= minDistancePx) && (distancePx <= maxDistancePx)) {
-                    if (distance < bestLineDistance) {
-                        bestLine = line;
-                        bestLineDistance = distance;
-                    }
+                    // Take the first line that is close enough, as the lines are ordered by length (descending),
+                    // and we want the longest line (avoid the case of a really close but erroneous line that
+                    // would likely only be made up of only 2 points).
+                    bestLine = line;
+                    break;
                 }
             }
 
-            // filter the circles by distance from the resulting line
             inLine = new ArrayList<CvStage.Result.Circle>();
             if (bestLine != null) {
+                // Filter the circles by distance from the resulting line
+                List<CvStage.Result.Circle> realLine = new ArrayList<CvStage.Result.Circle>();
                 for (int i = 0; i < results.size(); i++) {
                     CvStage.Result.Circle circle = results.get(i);
 
                     Point p = new Point(circle.x, circle.y);
-                    if (pointToLineDistance(bestLine.a, bestLine.b, p) <= maxDistanceToLine) {
-                        inLine.add(circle);
+                    if (FluentCv.pointToLineDistance(bestLine.a, bestLine.b, p) <= maxDistanceToLine) {
+                        realLine.add(circle);
                     }
+                }
+
+                // Compute the average offset from the ideal centre positions
+                Point a = bestLine.a;
+                Point b = bestLine.b;
+                Point ab = new Point(b.x - a.x, b.y - a.y);
+                double lineLen = Math.sqrt(ab.dot(ab));
+                double fittedLineLen = (double)Math.round(lineLen / holePitchPx) * holePitchPx;
+                Point lineDir = new Point(ab.x / lineLen, ab.y / lineLen);
+
+                Point totalOffsets = new Point();
+                for (CvStage.Result.Circle circle : realLine) {
+                    Point p = new Point(circle.x, circle.y);
+
+                    // Project p onto the line
+                    Point ap = new Point(p.x - a.x, p.y - a.y);
+                    double distAlongLine = ap.dot(lineDir) / lineDir.dot(lineDir);
+
+                    double fittedLen = (double)Math.round(distAlongLine / holePitchPx) * holePitchPx;
+                    Point fittedPos = new Point(a.x + lineDir.x * fittedLen, a.y + lineDir.y * fittedLen);
+
+                    totalOffsets.x += fittedPos.x - p.x;
+                    totalOffsets.y += fittedPos.y - p.y;
+                }
+                Point avgOffset = new Point(totalOffsets.x / realLine.size(), totalOffsets.y / realLine.size());
+
+                // Fit the detected circles to the best line at the expected spacing
+                Point fittedA = new Point(a.x - avgOffset.x, a.y - avgOffset.y);
+                for (CvStage.Result.Circle circle : realLine) {
+                    Point p = new Point(circle.x, circle.y);
+
+                    // Project p onto the line
+                    Point ap = new Point(p.x - a.x, p.y - a.y);
+                    double distAlongLine = ap.dot(lineDir) / lineDir.dot(lineDir);
+
+                    double fittedLen = (double)Math.round(distAlongLine / holePitchPx) * holePitchPx;
+                    Point fittedPosOnLine = new Point(lineDir.x * fittedLen, lineDir.y * fittedLen);
+
+                    Point fittedP = new Point(fittedA.x + fittedPosOnLine.x, fittedA.y + fittedPosOnLine.y);
+                    CvStage.Result.Circle fittedCircle = new CvStage.Result.Circle(fittedP.x, fittedP.y, circle.diameter);
+                    inLine.add(fittedCircle);
                 }
             }
             return this;
@@ -840,7 +892,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
     private void editPipeline() throws Exception {
         Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-        CvPipeline pipeline = getCvPipeline(camera);
+        CvPipeline pipeline = getCvPipeline(camera, false);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), feeder.getPart().getId() + " Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
@@ -853,17 +905,25 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         feeder.resetPipeline();
     }
 
-    private CvPipeline getCvPipeline(Camera camera) {
+    private CvPipeline getCvPipeline(Camera camera, boolean clone) {
         Integer pxMinDistance = (int) VisionUtils.toPixels(feeder.getHolePitchMin(), camera);
         Integer pxMinDiameter = (int) VisionUtils.toPixels(feeder.getHoleDiameterMin(), camera);
         Integer pxMaxDiameter = (int) VisionUtils.toPixels(feeder.getHoleDiameterMax(), camera);
 
-        CvPipeline pipeline = feeder.getPipeline();
-        pipeline.setProperty("camera", camera);
-        pipeline.setProperty("feeder", feeder);
-        pipeline.setProperty("DetectFixedCirclesHough.minDistance", pxMinDistance);
-        pipeline.setProperty("DetectFixedCirclesHough.minDiameter", pxMinDiameter);
-        pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
-        return pipeline;
+        try {
+            CvPipeline pipeline = feeder.getPipeline();;
+            if (clone) {
+                pipeline = pipeline.clone();
+            }
+            pipeline.setProperty("camera", camera);
+            pipeline.setProperty("feeder", feeder);
+            pipeline.setProperty("DetectFixedCirclesHough.minDistance", pxMinDistance);
+            pipeline.setProperty("DetectFixedCirclesHough.minDiameter", pxMinDiameter);
+            pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
+            return pipeline;
+        }
+        catch (CloneNotSupportedException e) {
+            throw new Error(e);
+        }
     }
 }

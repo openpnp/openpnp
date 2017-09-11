@@ -36,7 +36,7 @@ import org.openpnp.model.Part;
 @SuppressWarnings("serial")
 public class PartsTableModel extends AbstractTableModel implements PropertyChangeListener {
     private String[] columnNames =
-            new String[] {"Id", "Description", "Height", "Package", "Speed %"};
+            new String[] {"ID", "Description", "Height", "Package", "Speed %"};
     private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class,
             Package.class, String.class};
     private List<Part> parts;

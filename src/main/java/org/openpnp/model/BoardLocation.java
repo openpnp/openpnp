@@ -46,8 +46,7 @@ public class BoardLocation extends AbstractModelObject {
     private String boardFile;
 
     @Attribute(required = false)
-    private String panelId = new String("Panel1"); // UI doesn't have a way to
-                                                    // specify multiple
+    private String panelId = new String("Panel1"); // UI doesn't have a way to specify multiple
                                                     // panels at this point
 
     @Attribute(required = false)
