@@ -1037,6 +1037,7 @@ public class JobPanel extends JPanel {
         	}
         	if (allPlaced) {
 	        	int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+	                    "All placements have been placed already. Reset all placements status and start Job?",
 	                    "Reset placement status?", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 	            if (ret == JOptionPane.YES_OPTION) {
 	                for (BoardLocation boardLocation : job.getBoardLocations()) {
