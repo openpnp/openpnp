@@ -407,13 +407,23 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             logDebugInfo = (e.getModifiers() & ActionEvent.ALT_MASK) != 0;
 
             cameraView.setCameraViewFilter(new CameraViewFilter() {
+                private boolean hasShownError = false;
+
                 @Override
                 public BufferedImage filterCameraImage(Camera camera, BufferedImage image) {
                     try {
-                        return showHoles(camera, image);
+                        BufferedImage bufferedImage = showHoles(camera, image);
+                        hasShownError = false;
+                        return bufferedImage;
                     }
                     catch (Exception e) {
-                        MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+                        if (!hasShownError) {
+                            hasShownError = true;
+                            MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+                        }
+                        else {
+                            Logger.debug("{}: {}", "Error", e);
+                        }
                     }
 
                     return null;
