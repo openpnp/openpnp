@@ -246,6 +246,7 @@ public class JobPanel extends JPanel {
                         updatePanelizationIconState();
 
                         jobPlacementsPanel.setBoardLocation(boardLocation);
+                        jobPlacementsPanel.setJob(job);
                         jobPastePanel.setBoardLocation(boardLocation);
                         Configuration.get().getBus()
                                 .post(new BoardLocationSelectedEvent(boardLocation, JobPanel.this));
@@ -771,6 +772,7 @@ public class JobPanel extends JPanel {
                     existingBoard.addSolderPastePad(pad);
                 }
                 jobPlacementsPanel.setBoardLocation(getSelectedBoardLocation());
+                jobPlacementsPanel.setJob(job);
                 jobPastePanel.setBoardLocation(getSelectedBoardLocation());
             }
         }

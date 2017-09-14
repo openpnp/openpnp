@@ -47,6 +47,7 @@ import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Job;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
@@ -68,6 +69,7 @@ public class JobPlacementsPanel extends JPanel {
     private ActionGroup multiSelectionActionGroup;
     private ActionGroup captureAndPositionActionGroup;
     private BoardLocation boardLocation;
+    private Job job;
 
     private static Color typeColorIgnore = new Color(252, 255, 157);
     private static Color typeColorFiducial = new Color(157, 188, 255);
@@ -246,6 +248,9 @@ public class JobPlacementsPanel extends JPanel {
                 break;
             }
         }
+    }
+    public void setJob(Job job) { 
+    	tableModel.setJob(job);
     }
 
     public void setBoardLocation(BoardLocation boardLocation) {
