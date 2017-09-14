@@ -19,6 +19,8 @@
 
 package org.openpnp.spi;
 
+import org.openpnp.model.Location;
+
 /**
  * Defines a simple interface to some type of device that can be actuated on the machine or on a
  * head. This is a minimal interface and it is expected that concrete implementations may have many
@@ -43,5 +45,15 @@ public interface Actuator
      */
     public void actuate(double value) throws Exception;
     
+    /**
+     *  Extrude a distance and rate. Used for things like peeling tape cover.
+     * 
+     * @param distance
+     * @param rate
+     * @throws Exception
+     */
+    public void extrude(double distance, double rate) throws Exception;
+    
     public String read() throws Exception;
+
 }

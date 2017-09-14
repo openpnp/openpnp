@@ -45,7 +45,7 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
      * @throws Exception
      */
     public void home(ReferenceHead head) throws Exception;
-
+    		
     /**
      * Moves the specified HeadMountable to the given location at a speed defined by (maximum feed
      * rate * speed) where speed is greater than 0 and typically less than or equal to 1. A speed of
@@ -105,6 +105,16 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
      */
     public void actuate(ReferenceActuator actuator, double value) throws Exception;
 
+    /**
+     * Extrude a distance and rate. Can be used for actions like peeling tape cover.
+     * 
+     * @param actuator
+     * @param distance to extrude
+     * @param rate ... how fast to extrude
+     * @throws Exception
+     */
+    public void extrude(ReferenceActuator actuator, double distance, double rate) throws Exception;
+    
     /**
      * Read a String value from the given Actuator.
      * 

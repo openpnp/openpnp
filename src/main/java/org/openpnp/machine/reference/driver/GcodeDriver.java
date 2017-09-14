@@ -61,14 +61,15 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         DISABLE_COMMAND,
         POST_VISION_HOME_COMMAND,
         HOME_COMMAND("Id", "Name"),
-        PUMP_ON_COMMAND,
-        PUMP_OFF_COMMAND,
+        PUMP_ON_COMMAND(true), // Permitted on head so can have 2 pumps, one for each nozzle
+        PUMP_OFF_COMMAND(true), // Permitted on head so can have 2 pumps, one for each nozzle
         MOVE_TO_COMMAND(true, "Id", "Name", "FeedRate", "X", "Y", "Z", "Rotation"),
         MOVE_TO_COMPLETE_REGEX(true),
         PICK_COMMAND(true, "Id", "Name", "VacuumLevelPartOn", "VacuumLevelPartOff"),
         PLACE_COMMAND(true, "Id", "Name"),
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
+        EXTRUDE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue", "DoubleValue", "IntegerValue"),
         ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index"),
         ACTUATOR_READ_REGEX(true),
         PRE_DISPENSE_COMMAND(false, "DispenseTime"),
@@ -415,7 +416,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                                 .add(hm.getHeadOffsets());
         return location;
     }
-
+ 
     @Override
     public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
             throws Exception {
@@ -681,6 +682,23 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         for (ReferenceDriver driver : subDrivers) {
             driver.actuate(actuator, value);
+        }
+    }
+    
+    // Extrude a distance and rate. Used for things like peeling tape cover.
+    @Override
+    public void extrude(ReferenceActuator actuator, double distance, double rate) throws Exception {
+        String command = getCommand(actuator, CommandType.EXTRUDE_COMMAND);
+        command = substituteVariable(command, "Id", actuator.getId());
+        command = substituteVariable(command, "Name", actuator.getName());
+        command = substituteVariable(command, "Index", actuator.getIndex());
+        command = substituteVariable(command, "Distance", distance);
+        command = substituteVariable(command, "FeedRate", maxFeedRate * rate);
+
+        sendGcode(command);
+
+        for (ReferenceDriver driver : subDrivers) {
+            driver.extrude(actuator, distance, rate);
         }
     }
     

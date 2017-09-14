@@ -181,6 +181,17 @@ public class SimulatorDriver implements ReferenceDriver {
             Thread.sleep(500);
         }
     }
+    
+    
+    // Extrude a distance and rate. Used for things like peeling tape cover.
+    @Override
+    public void extrude(ReferenceActuator actuator, double distance, double rate) throws Exception {
+        Logger.debug("extrude({}, {} {})", actuator, distance, rate);
+        checkEnabled();
+        if (feedRateMmPerMinute > 0) {
+            Thread.sleep(500);
+        }
+    }
 
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
@@ -195,6 +206,8 @@ public class SimulatorDriver implements ReferenceDriver {
     public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
             Location endLocation, long dispenseTimeMilliseconds) throws Exception {}
 
+
+    
     @Override
     public void setEnabled(boolean enabled) throws Exception {
         Logger.debug("setEnabled({})", enabled);

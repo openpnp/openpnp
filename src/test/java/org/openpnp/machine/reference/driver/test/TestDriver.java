@@ -31,6 +31,8 @@ public class TestDriver implements ReferenceDriver {
     public void setDelegate(ReferenceDriver delegate) {
         this.delegate = delegate;
     }
+   
+    
 
     @Override
     public Wizard getConfigurationWizard() {
@@ -100,6 +102,12 @@ public class TestDriver implements ReferenceDriver {
         Logger.debug("actuate({}, {})", actuator, value);
         delegate.actuate(actuator, value);
     }
+    
+    @Override
+    public void extrude(ReferenceActuator actuator, double distance, double rate) throws Exception {
+        Logger.debug("extrude({}, {} {})", actuator, distance, rate);
+        delegate.extrude(actuator, distance, rate);
+    }
 
     @Override
     public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
@@ -128,6 +136,7 @@ public class TestDriver implements ReferenceDriver {
                 throws Exception {
 
         }
+        
 
         @Override
         public Location getLocation(ReferenceHeadMountable hm) {
@@ -151,6 +160,11 @@ public class TestDriver implements ReferenceDriver {
 
         @Override
         public void actuate(ReferenceActuator actuator, double value) throws Exception {
+
+        }
+        
+        @Override
+        public void extrude(ReferenceActuator actuator, double distance, double rate) throws Exception {
 
         }
 

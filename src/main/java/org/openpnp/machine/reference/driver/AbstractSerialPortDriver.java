@@ -139,6 +139,8 @@ public abstract class AbstractSerialPortDriver extends AbstractModelObject imple
         // without breaking every driver in the wild.
     }
 
+
+    
     public String[] getPortNames() {
 		if (SerialNativeInterface.getOsType () == SerialNativeInterface.OS_LINUX) {
 			ArrayList<String> linuxPortNames = new ArrayList<String>();

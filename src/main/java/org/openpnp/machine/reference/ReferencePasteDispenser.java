@@ -56,7 +56,7 @@ public class ReferencePasteDispenser extends AbstractPasteDispenser
         driver.dispense(this, startLocation, endLocation, dispenseTimeMilliseconds);
         machine.fireMachineHeadActivity(head);
     }
-
+    
     @Override
     public void moveTo(Location location, double speed) throws Exception {
         Logger.debug("{}.moveTo({}, {})", getName(), location, speed);

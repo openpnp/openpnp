@@ -118,6 +118,9 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {}
 
+    // Extrude a distance and rate. Can be used for actions like peeling tape cover.
+    @Override
+    public void extrude(ReferenceActuator actuator, double distance, double rate) throws Exception {}
 
     @Override
     public Location getLocation(ReferenceHeadMountable hm) {

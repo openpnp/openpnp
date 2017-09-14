@@ -92,6 +92,14 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         getMachine().fireMachineHeadActivity(head);
     }
     
+    // Extrude a distance and rate. Can be used for actions like peeling tape cover.
+    //@Override
+    public void extrude(double distance, double rate) throws Exception {
+        Logger.debug("{}.extrude distance {}, rate {})", getName(), distance, rate);
+        getDriver().extrude(this, distance, rate);
+        getMachine().fireMachineHeadActivity(head);
+    }
+    
     @Override
     public String read() throws Exception {
         String value = getDriver().actuatorRead(this);
@@ -99,6 +107,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         getMachine().fireMachineHeadActivity(head);
         return value;
     }
+    
 
     @Override
     public void moveTo(Location location, double speed) throws Exception {
