@@ -116,12 +116,16 @@ public class BoardLocation extends AbstractModelObject {
     	for (Placement placement : getBoard().getPlacements()) {
             if (placement.getPlacementStatus() == Placement.Status.MissingFeeder) {
                 setBoardStatus(BoardStatus.Error);
+                break;
             } else if (placement.getPlacementStatus() == Placement.Status.MissingPart) {
-            	setBoardStatus(BoardStatus.Error);
+                setBoardStatus(BoardStatus.Error);
+                break;
             } else if (placement.getPlacementStatus() == Placement.Status.ZeroPartHeight) {
-            	setBoardStatus(BoardStatus.Error);
+                setBoardStatus(BoardStatus.Error);
+                break;
             } else if (placement.getPlacementStatus() == Placement.Status.Ready) {
-            	setBoardStatus(BoardStatus.Ready);
+                setBoardStatus(BoardStatus.Ready);
+                break;
             }
         }
     }

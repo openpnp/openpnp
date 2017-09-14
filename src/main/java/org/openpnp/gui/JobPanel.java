@@ -811,7 +811,10 @@ public class JobPanel extends JPanel {
                 setJob(job);
                 addRecentJob(file);
                 
+                
                 for (BoardLocation location : job.getBoardLocations()) {
+                	location.removePropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+                	location.initBoardStatus();
                 	location.addPropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
                 }            
             }
@@ -1147,7 +1150,12 @@ public class JobPanel extends JPanel {
                 boardLocationsTableModel.fireTableDataChanged();
 
                 Helpers.selectLastTableRow(boardLocationsTable);
-                boardLocation.addPropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+                for (BoardLocation location : job.getBoardLocations()) {
+                	location.removePropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+                	
+                	location.initBoardStatus();
+                	location.addPropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+                }  
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -1188,7 +1196,12 @@ public class JobPanel extends JPanel {
 
                 Helpers.selectLastTableRow(boardLocationsTable);
                 
-                boardLocation.addPropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+                for (BoardLocation location : job.getBoardLocations()) {
+                	location.removePropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+
+                	location.initBoardStatus();
+                	location.addPropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+                }  
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -1393,6 +1406,8 @@ public class JobPanel extends JPanel {
             
             
             for (BoardLocation location : job.getBoardLocations()) {
+            	location.removePropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+
             	location.initBoardStatus();
             	location.addPropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
             }  
@@ -1461,6 +1476,9 @@ public class JobPanel extends JPanel {
                 addRecentJob(file);
                 
                 for (BoardLocation location : job.getBoardLocations()) {
+                	location.removePropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+
+                	location.initBoardStatus();
                 	location.addPropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
                 }
             }

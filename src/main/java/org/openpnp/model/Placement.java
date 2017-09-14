@@ -137,10 +137,10 @@ public class Placement extends AbstractModelObject implements Identifiable {
         return Placement.Status.Ready;
     }
 
-    public void setPlacementStatus(Status PlacementStatus) {
+    public void setPlacementStatus(Status placementStatus) {
     	Status oldValue = this.placementStatus;
-        this.placementStatus = PlacementStatus;
-        firePropertyChange("PlacementStatus", oldValue, PlacementStatus);
+        this.placementStatus = placementStatus;
+        firePropertyChange("placementStatus", oldValue, placementStatus);
     }
     
     public String getId() {
