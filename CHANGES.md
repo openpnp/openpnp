@@ -358,7 +358,7 @@ a complete change list, only those that may directly interest or affect users.
 
 * BREAKING CHANGE: Outdated Drivers Removed
 
-	Several outdated drivers have been removed. These are: GrblDriver, MarlinDriver, SprinterDriver
+	Several outdated drivers have been removed. These are: GrblDriver, MarlinDriver, SprinterDriver, and
 	TinygDriver. All of these drivers have been replaced with the much better supported
 	GcodeDriver. If you are currently using one of these drivers this version WILL BREAK your
 	configuration. If you need help migrating, please post a question to the mailing list at:
