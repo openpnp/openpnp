@@ -1411,7 +1411,9 @@ public class CameraView extends JComponent implements CameraListener {
         }
 
         public double next(long val) {
-            if (n < window.length)  n++;
+            if (n < window.length)  {
+                n++;
+            }
             sum -= window[insert];
             sum += val;
             window[insert] = val;
