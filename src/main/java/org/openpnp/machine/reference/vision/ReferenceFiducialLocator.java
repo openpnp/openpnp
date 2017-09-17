@@ -1,5 +1,6 @@
 package org.openpnp.machine.reference.vision;
 
+import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -30,7 +31,6 @@ import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.VisionProvider.TemplateMatch;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
@@ -53,9 +53,19 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
+    
+    protected boolean useAffineTransform = false;
 
     public Location locateBoard(BoardLocation boardLocation) throws Exception {
         return locateBoard(boardLocation, false);
+    }
+    
+    public boolean isUseAffineTransform() {
+        return useAffineTransform;
+    }
+
+    public void setUseAffineTransform(boolean useAffineTransform) {
+        this.useAffineTransform = useAffineTransform;
     }
 
     public Location locateBoard(BoardLocation boardLocation, boolean checkPanel) throws Exception {
@@ -77,41 +87,88 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                     fiducials.size()));
         }
 
-        // Find the two that are most distant from each other
-        List<Placement> mostDistant = getMostDistantPlacements(fiducials);
+        boardLocation.setPlacementTransform(null);
+        if (useAffineTransform) {
+            
+            Placement fid1 = fiducials.get(0);
+            Placement fid2 = fiducials.get(1);
+            Placement fid3 = fiducials.get(2);
+            
+            Location fid1RealLoc = getFiducialLocation(boardLocation, fid1);
+            if (fid1RealLoc == null) {
+                throw new Exception("Unable to locate " + fid1.getId());
+            }
 
-        Placement placementA = mostDistant.get(0);
-        Placement placementB = mostDistant.get(1);
+            Location fid2RealLoc = getFiducialLocation(boardLocation, fid2);
+            if (fid2RealLoc == null) {
+                throw new Exception("Unable to locate " + fid2.getId());
+            }
 
-        Logger.debug("Chose {} and {}", placementA.getId(), placementB.getId());
-
-        // Run the fiducial check on each and get their actual locations
-        Location actualLocationA = getFiducialLocation(boardLocation, placementA);
-        if (actualLocationA == null) {
-            throw new Exception("Unable to locate first fiducial.");
+            Location fid3RealLoc = getFiducialLocation(boardLocation, fid3);
+            if (fid3RealLoc == null) {
+                throw new Exception("Unable to locate " + fid3.getId());
+            }
+            
+            fid1RealLoc = fid1RealLoc.convertToUnits(LengthUnit.Millimeters);
+            fid2RealLoc = fid2RealLoc.convertToUnits(LengthUnit.Millimeters);
+            fid3RealLoc = fid3RealLoc.convertToUnits(LengthUnit.Millimeters);
+            
+            Location fid1Loc = fid1.getLocation().convertToUnits(LengthUnit.Millimeters);
+            Location fid2Loc = fid2.getLocation().convertToUnits(LengthUnit.Millimeters);
+            Location fid3Loc = fid3.getLocation().convertToUnits(LengthUnit.Millimeters);
+            
+            AffineTransform tx = Utils2D.deriveAffineTransform(
+                    fid1Loc.getX(), fid1Loc.getY(), 
+                    fid2Loc.getX(), fid2Loc.getY(), 
+                    fid3Loc.getX(), fid3Loc.getY(), 
+                    fid1RealLoc.getX(), fid1RealLoc.getY(), 
+                    fid2RealLoc.getX(), fid2RealLoc.getY(), 
+                    fid3RealLoc.getX(), fid3RealLoc.getY());
+            
+            boardLocation.setPlacementTransform(tx);
+            
+            return boardLocation.getLocation();
         }
-        Location actualLocationB = getFiducialLocation(boardLocation, placementB);
-        if (actualLocationB == null) {
-            throw new Exception("Unable to locate second fiducial.");
+        else {
+            // Find the two that are most distant from each other
+            List<Placement> mostDistant = getMostDistantPlacements(fiducials);
+    
+            Placement placementA = mostDistant.get(0);
+            Placement placementB = mostDistant.get(1);
+    
+            Logger.debug("Chose {} and {}", placementA.getId(), placementB.getId());
+    
+            // Run the fiducial check on each and get their actual locations
+            Location actualLocationA = getFiducialLocation(boardLocation, placementA);
+            if (actualLocationA == null) {
+                throw new Exception("Unable to locate first fiducial.");
+            }
+            Location actualLocationB = getFiducialLocation(boardLocation, placementB);
+            if (actualLocationB == null) {
+                throw new Exception("Unable to locate second fiducial.");
+            }
+    
+            // Calculate the linear distance between the ideal points and the
+            // located points. If they differ by more than a few percent we
+            // probably made a mistake.
+            double expectedDistance =
+                    Math.abs(placementA.getLocation().getLinearDistanceTo(placementB.getLocation()));
+            double measuredDistance = Math.abs(actualLocationA.getLinearDistanceTo(actualLocationB));
+            Logger.debug("Distance between fids: expected {}, measured {}", 
+                    expectedDistance, 
+                    measuredDistance);
+            if (Math.abs(expectedDistance - measuredDistance) > expectedDistance * 0.01) {
+                throw new Exception("Located fiducials are more than 1% away from expected.");
+            }
+            
+            Location location = Utils2D.calculateBoardLocation(boardLocation, placementA, placementB,
+                    actualLocationA, actualLocationB);
+    
+            location = location.derive(null, null,
+                    boardLocation.getLocation().convertToUnits(location.getUnits()).getZ(), null);
+            
+            return location;
         }
-
-        // Calculate the linear distance between the ideal points and the
-        // located points. If they differ by more than a few percent we
-        // probably made a mistake.
-        double fidDistance =
-                Math.abs(placementA.getLocation().getLinearDistanceTo(placementB.getLocation()));
-        double visionDistance = Math.abs(actualLocationA.getLinearDistanceTo(actualLocationB));
-        if (Math.abs(fidDistance - visionDistance) > fidDistance * 0.01) {
-            throw new Exception("Located fiducials are more than 1% away from expected.");
-        }
-
-        Location location = Utils2D.calculateBoardLocation(boardLocation, placementA, placementB,
-                actualLocationA, actualLocationB);
-
-        location = location.derive(null, null,
-                boardLocation.getLocation().convertToUnits(location.getUnits()).getZ(), null);
-
-        return location;
     }
 
     /**

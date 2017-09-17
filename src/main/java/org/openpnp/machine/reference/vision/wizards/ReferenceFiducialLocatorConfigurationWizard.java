@@ -37,6 +37,7 @@ import com.jgoodies.forms.layout.RowSpec;
 public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceFiducialLocator fiducialLocator;
     private static Part defaultPart = createDefaultPart();
+    private JCheckBox chckbxUseAffineTransfor;
 
     public ReferenceFiducialLocatorConfigurationWizard(ReferenceFiducialLocator fiducialLocator) {
         this.fiducialLocator = fiducialLocator;
@@ -55,6 +56,8 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
@@ -102,6 +105,9 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
             }
         });
         panel.add(btnResetAllTo, "8, 2");
+        
+        chckbxUseAffineTransfor = new JCheckBox("Use Affine Transform");
+        panel.add(chckbxUseAffineTransfor, "2, 4, 5, 1");
     }
     
     private void editPipeline() throws Exception {
@@ -138,6 +144,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
 
     @Override
     public void createBindings() {
+        addWrappedBinding(fiducialLocator, "useAffineTransform", chckbxUseAffineTransfor, "selected");
     }
     
     @Override

@@ -19,8 +19,10 @@
 
 package org.openpnp.model;
 
+import java.awt.geom.AffineTransform;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.openpnp.model.Board.Side;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -48,7 +50,9 @@ public class BoardLocation extends AbstractModelObject {
     private boolean enabled = true;
 
     @ElementMap(required = false)
-    private Map<String, Boolean> placed = new HashMap<String, Boolean>();
+    private Map<String, Boolean> placed = new HashMap<>();
+
+    private AffineTransform placementTransform;
 
     BoardLocation() {
         setLocation(new Location(LengthUnit.Millimeters));
@@ -87,7 +91,7 @@ public class BoardLocation extends AbstractModelObject {
         this.location = location;
         firePropertyChange("location", oldValue, location);
     }
-
+    
     public Side getSide() {
         return side;
     }
@@ -163,6 +167,14 @@ public class BoardLocation extends AbstractModelObject {
     public void clearAllPlaced() {
         this.placed.clear();
         firePropertyChange("placed", null, this.placed);
+    }
+    
+    public AffineTransform getPlacementTransform() {
+        return placementTransform;
+    }
+
+    public void setPlacementTransform(AffineTransform placementTransform) {
+        this.placementTransform = placementTransform;
     }
 
     @Override

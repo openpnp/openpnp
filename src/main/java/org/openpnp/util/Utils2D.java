@@ -21,12 +21,21 @@
 
 package org.openpnp.util;
 
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
+
+import org.apache.commons.math3.linear.LUDecomposition;
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
+import org.pmw.tinylog.Logger;
 
 
 public class Utils2D {
@@ -82,8 +91,21 @@ public class Utils2D {
 
     public static Location calculateBoardPlacementLocation(BoardLocation bl,
             Location placementLocation) {
-        return calculateBoardPlacementLocation(bl.getLocation(), bl.getSide(),
-                bl.getBoard().getDimensions().getX(), placementLocation);
+        if (bl.getPlacementTransform() != null) {
+            Logger.debug("Using placement transform {}", bl.getPlacementTransform());
+            AffineTransform tx = bl.getPlacementTransform();
+            placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
+            Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
+            p = tx.transform(p, null);
+            Location l = new Location(LengthUnit.Millimeters, p.getX(), p.getY(), 0, bl.getLocation().getRotation());
+            l = l.convertToUnits(placementLocation.getUnits());
+            Logger.debug("{} -> {}", placementLocation, l);
+            return l;
+        }
+        else {
+            return calculateBoardPlacementLocation(bl.getLocation(), bl.getSide(),
+                    bl.getBoard().getDimensions().getX(), placementLocation);
+        }
     }
 
     public static Location calculateBoardPlacementLocation(Location boardLocation, Side side,
@@ -239,5 +261,98 @@ public class Utils2D {
                     (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
         }
         return angle;
+    }
+    
+    // https://stackoverflow.com/questions/21270892/generate-affinetransform-from-3-points
+    public static AffineTransform deriveAffineTransform(
+            double oldX1, double oldY1,
+            double oldX2, double oldY2,
+            double oldX3, double oldY3,
+            double newX1, double newY1,
+            double newX2, double newY2,
+            double newX3, double newY3) {
+
+        double[][] oldData = { {oldX1, oldX2, oldX3}, {oldY1, oldY2, oldY3}, {1, 1, 1} };
+        RealMatrix oldMatrix = MatrixUtils.createRealMatrix(oldData);
+
+        double[][] newData = { {newX1, newX2, newX3}, {newY1, newY2, newY3} };
+        RealMatrix newMatrix = MatrixUtils.createRealMatrix(newData);
+
+        RealMatrix inverseOld = new LUDecomposition(oldMatrix).getSolver().getInverse();
+        RealMatrix transformationMatrix = newMatrix.multiply(inverseOld);
+
+        double m00 = transformationMatrix.getEntry(0, 0);
+        double m01 = transformationMatrix.getEntry(0, 1);
+        double m02 = transformationMatrix.getEntry(0, 2);
+        double m10 = transformationMatrix.getEntry(1, 0);
+        double m11 = transformationMatrix.getEntry(1, 1);
+        double m12 = transformationMatrix.getEntry(1, 2);
+
+        return new AffineTransform(m00, m10, m01, m11, m02, m12);       
+    }    
+    
+    public static void main(String[] args) {
+        Board board = new Board(null);
+        Placement fid1 = new Placement("FID1");
+        fid1.setLocation(new Location(LengthUnit.Millimeters, 10, 10, 0 ,0));
+        board.addPlacement(fid1);
+        Placement fid2 = new Placement("FID2");
+        fid2.setLocation(new Location(LengthUnit.Millimeters, 80, 40, 0 ,0));
+        board.addPlacement(fid2);
+        Placement fid3 = new Placement("FID3");
+        fid3.setLocation(new Location(LengthUnit.Millimeters, 10, 40, 0 ,0));
+        board.addPlacement(fid3);
+        BoardLocation bl = new BoardLocation(board);
+        bl.setLocation(new Location(LengthUnit.Millimeters, 10, 10, 0, 10));
+        
+        Location fid1a = calculateBoardPlacementLocation(bl, fid1.getLocation());
+        Location fid2a = calculateBoardPlacementLocation(bl, fid2.getLocation());
+        Location fid3a = calculateBoardPlacementLocation(bl, fid3.getLocation());
+        System.out.println(String.format("%s -> %s", fid1.getLocation(), fid1a));
+        System.out.println(String.format("%s -> %s", fid2.getLocation(), fid2a));
+        System.out.println(String.format("%s -> %s", fid3.getLocation(), fid3a));
+
+        Point2D p1 = new Point2D.Double(fid1.getLocation().getX(), fid1.getLocation().getY());
+        Point2D p2 = new Point2D.Double(fid2.getLocation().getX(), fid2.getLocation().getY());
+        Point2D p3 = new Point2D.Double(fid3.getLocation().getX(), fid3.getLocation().getY());
+
+        AffineTransform tx = new AffineTransform();
+        tx.translate(bl.getLocation().getX(), bl.getLocation().getY());
+        tx.rotate(Math.toRadians(bl.getLocation().getRotation()));
+        
+        Point2D p1a = tx.transform(p1, null);
+        Point2D p2a = tx.transform(p2, null);
+        Point2D p3a = tx.transform(p3, null);
+        
+        System.out.println(String.format("%s -> %s", p1, p1a));
+        System.out.println(String.format("%s -> %s", p2, p2a));
+        System.out.println(String.format("%s -> %s", p3, p3a));
+        
+        // The above code correctly implements the calculateBoardPlacementLocation call
+        // with an AffineTransform. So now the goal is to take p1, p1a and p2, p2a and
+        // compute the AffineTransform that produces p1a and p2a from p1 and p2. This
+        // will give us the transform we can use to map coordinates in fiducial space.
+        
+        AffineTransform txA = deriveAffineTransform(
+                p1.getX(), p1.getY(), 
+                p2.getX(), p2.getY(), 
+                p3.getX(), p3.getY(), 
+                
+                p1a.getX(), p1a.getY(),
+                p2a.getX(), p2a.getY(),
+                p3a.getX(), p3a.getY());
+        
+        System.out.println(String.format("%s -> %s", tx, txA));
+        
+        Point2D p1b = txA.transform(p1, null);
+        Point2D p2b = txA.transform(p2, null);
+        Point2D p3b = txA.transform(p3, null);
+        
+        System.out.println(String.format("%s -> %s", p1, p1b));
+        System.out.println(String.format("%s -> %s", p2, p2b));
+        System.out.println(String.format("%s -> %s", p3, p3b));
+        
+        // The above code correctly calculates the inverse of the transform using the
+        // function above from StackOverflow.
     }
 }
