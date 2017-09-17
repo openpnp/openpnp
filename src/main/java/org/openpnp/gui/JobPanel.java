@@ -127,7 +127,6 @@ public class JobPanel extends JPanel {
     private JTable boardLocationsTable;
     private JSplitPane splitPane;
 
-    private ActionGroup jobSaveActionGroup;
     private ActionGroup boardLocationSelectionActionGroup;
 
     private Preferences prefs = Preferences.userNodeForPackage(JobPanel.class);
@@ -164,9 +163,6 @@ public class JobPanel extends JPanel {
         fsm.add(State.Stepping, Message.Step, State.Stepping, this::jobRun);
         fsm.add(State.Stepping, Message.Abort, State.Stopped, this::jobAbort);
         fsm.add(State.Stepping, Message.Finished, State.Stopped);
-
-        jobSaveActionGroup = new ActionGroup(saveJobAction);
-        jobSaveActionGroup.setEnabled(false);
 
         boardLocationSelectionActionGroup =
                 new ActionGroup(removeBoardAction, captureCameraBoardLocationAction,
@@ -1416,7 +1412,6 @@ public class JobPanel extends JPanel {
                 @Override
                 public void propertyChange(PropertyChangeEvent evt) {
                     updateTitle();
-                    jobSaveActionGroup.setEnabled(getJob().isDirty());
                 }
             };
 

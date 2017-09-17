@@ -1,6 +1,22 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-09-16
+
+* Job Save Always Enabled
+
+	The File -> Save Job menu option is now always enabled so that you can save the job
+	and any associated boards at any time. Previously this was only enabled when the
+	board was marked dirty, and it did not reflect the status of the associated boards which
+	made it hard to save boards on demand.
+	
+* Camera FPS in Image Info
+
+	The Image Info pane in the camera view now shows current FPS being received from the
+	camera. This was put in for testing some new features but was useful enough that I
+	decided to leave it in so users can check their camera feeds.
+
+
 # 2017-08-31
 
 * Job Placed Status
