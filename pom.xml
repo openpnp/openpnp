@@ -160,6 +160,11 @@
 			<artifactId>commons-beanutils</artifactId>
 			<version>1.9.3</version>
 		</dependency>
+		<dependency>
+			<groupId>org.openpnp</groupId>
+			<artifactId>openpnp-capture-java</artifactId>
+			<version>0.0.2-2</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
