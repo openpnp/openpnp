@@ -25,19 +25,16 @@ import java.util.List;
 
 import org.openpnp.CameraListener;
 import org.openpnp.capture.CaptureDevice;
-import org.openpnp.capture.CaptureDevice.CaptureFormat;
-import org.openpnp.capture.CaptureDevice.CaptureStream;
+import org.openpnp.capture.CaptureFormat;
+import org.openpnp.capture.CaptureStream;
 import org.openpnp.capture.OpenPnpCapture;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.OpenPnpCaptureCameraConfigurationWizard;
 import org.openpnp.spi.PropertySheetHolder;
 import org.pmw.tinylog.Logger;
+import org.simpleframework.xml.Attribute;
 
-// TODO: Color is wrong (BGR vs. RGB)
-// TODO: Objects get re-created each time wizard is loaded, so the dropdowns don't stick
-// TODO: Move the capture helper objects into this project. Just leave the bindings to just
-// the bindings and maybe some tests.
 public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     private OpenPnpCapture capture = new OpenPnpCapture();
     private Thread thread;
@@ -45,6 +42,12 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     private CaptureDevice device;
     private CaptureFormat format;
     private CaptureStream stream;
+    
+    @Attribute(required=false)
+    private String uniqueId;
+    
+    @Attribute(required=false)
+    private Integer formatId;
 
     public OpenPnpCaptureCamera() {
         
@@ -113,6 +116,35 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         }
         stream = null;
         
+        
+        if (device == null && format == null) {
+            if (uniqueId == null) {
+                return;
+            }
+            for (CaptureDevice device : capture.getDevices()) {
+                if (device.getUniqueId().equals(uniqueId)) {
+                    this.device = device;
+                }
+            }
+            if (device == null) {
+                Logger.warn("No camera found with ID {} for camera {}", uniqueId, getName());
+                return;
+            }
+            
+            if (formatId == null) {
+                return;
+            }
+            for (CaptureFormat format : device.getFormats()) {
+                if (format.getFormatId() == formatId) {
+                    this.format = format;
+                }
+            }
+            if (format == null) {
+                Logger.warn("No format found with ID {} for camera {}", formatId, getName());
+            }
+        }
+        
+        
         if (device == null) {
             Logger.debug("open called with null device");
             return;
@@ -128,8 +160,6 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             height = null;
             
             stream = device.openStream(format);
-            
-            System.out.println(stream);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -187,8 +217,13 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     }
 
     public void setDevice(CaptureDevice device) {
-        Logger.debug("setDevice({})", device);
         this.device = device;
+        if (device == null) {
+            this.uniqueId = null;
+        }
+        else {
+            this.uniqueId = device.getUniqueId();
+        }
     }
 
     public CaptureFormat getFormat() {
@@ -196,7 +231,12 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     }
 
     public void setFormat(CaptureFormat format) {
-        Logger.debug("setFormat({})", format);
         this.format = format;
+        if (format == null) {
+            this.formatId = null;
+        }
+        else {
+            this.formatId = format.getFormatId();
+        }
     }
 }

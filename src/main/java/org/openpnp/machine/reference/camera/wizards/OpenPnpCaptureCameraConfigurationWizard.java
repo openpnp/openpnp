@@ -28,7 +28,7 @@ import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.capture.CaptureDevice;
-import org.openpnp.capture.CaptureDevice.CaptureFormat;
+import org.openpnp.capture.CaptureFormat;
 import org.openpnp.machine.reference.camera.OpenCvCamera.OpenCvCapturePropertyValue;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
