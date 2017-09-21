@@ -26,8 +26,10 @@ import java.util.List;
 import org.openpnp.CameraListener;
 import org.openpnp.capture.CaptureDevice;
 import org.openpnp.capture.CaptureFormat;
+import org.openpnp.capture.CaptureProperty;
 import org.openpnp.capture.CaptureStream;
 import org.openpnp.capture.OpenPnpCapture;
+import org.openpnp.capture.PropertyLimits;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.OpenPnpCaptureCameraConfigurationWizard;
@@ -48,6 +50,12 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     
     @Attribute(required=false)
     private Integer formatId;
+    
+    @Attribute(required=false)
+    private int exposure;
+
+    @Attribute(required=false)
+    private boolean exposureAuto;
 
     public OpenPnpCaptureCamera() {
         
@@ -238,5 +246,41 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         else {
             this.formatId = format.getFormatId();
         }
+    }
+    
+    public int getExposureMin() throws Exception {
+        if (stream == null) {
+            return 0;
+        }
+        PropertyLimits limits = stream.getPropertyLimits(CaptureProperty.Exposure);
+        return limits.getMin();
+    }
+    
+    public int getExposureMax() throws Exception {
+        if (stream == null) {
+            return 0;
+        }
+        PropertyLimits limits = stream.getPropertyLimits(CaptureProperty.Exposure);
+        return limits.getMax();
+    }
+    
+    public boolean isExposureAuto() {
+        return exposureAuto;
+    }
+    
+    public void setExposureAuto(boolean exposureAuto) {
+        this.exposureAuto = exposureAuto;
+    }
+    
+    public void setExposure(int value) throws Exception {
+        if (stream == null) {
+            return;
+        }
+        stream.setProperty(CaptureProperty.Exposure, value);
+        this.exposure = value;
+    }
+    
+    public int getExposure() {
+        return this.exposure;
     }
 }
