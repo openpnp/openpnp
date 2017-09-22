@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.openpnp.CameraListener;
 import org.openpnp.capture.CaptureDevice;
+import org.openpnp.capture.CaptureException;
 import org.openpnp.capture.CaptureFormat;
 import org.openpnp.capture.CaptureProperty;
 import org.openpnp.capture.CaptureStream;
@@ -233,6 +234,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         else {
             this.uniqueId = device.getUniqueId();
         }
+        firePropertyChange("device", null, device);
     }
 
     public CaptureFormat getFormat() {
@@ -247,6 +249,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         else {
             this.formatId = format.getFormatId();
         }
+        firePropertyChange("format", null, format);
     }
     
     public CapturePropertyHolder getFocus() {
@@ -277,10 +280,16 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         
         public CapturePropertyHolder(CaptureProperty property) {
             this.property = property;
+            OpenPnpCaptureCamera.this.addPropertyChangeListener("device", e -> {
+                firePropertyChange("supported", null, isSupported());
+            });
+            OpenPnpCaptureCamera.this.addPropertyChangeListener("format", e -> {
+                firePropertyChange("supported", null, isSupported());
+            });
         }
         
         public int getMin() {
-            if (stream == null) {
+            if (stream == null || !isSupported()) {
                 return 0;
             }
             try {
@@ -293,7 +302,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         }
         
         public int getMax() {
-            if (stream == null) {
+            if (stream == null || !isSupported()) {
                 return 0;
             }
             try {
@@ -306,7 +315,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         }
         
         public boolean isAuto() {
-            if (stream == null) {
+            if (stream == null || !isSupported()) {
                 return false;
             }
             try {
@@ -318,7 +327,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         }
         
         public void setAuto(boolean auto) {
-            if (stream == null) {
+            if (stream == null || !isSupported()) {
                 return;
             }
             try {
@@ -331,7 +340,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         }
         
         public void setValue(int value) {
-            if (stream == null) {
+            if (stream == null || !isSupported()) {
                 return;
             }
             try {
@@ -344,7 +353,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         }
         
         public int getValue() {
-            if (stream == null) {
+            if (stream == null || !isSupported()) {
                 return 0;
             }
             try {
@@ -352,6 +361,16 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             }
             catch (Exception e) {
                 return 0;
+            }
+        }
+        
+        public boolean isSupported() {
+            try {
+                stream.getProperty(property);
+                return true;
+            }
+            catch (Exception e) {
+                return false;
             }
         }
     }

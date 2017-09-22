@@ -48,7 +48,7 @@ import javax.swing.JTextField;
 import javax.swing.JCheckBox;
 
 @SuppressWarnings("serial")
-public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurationWizard {
+public class OpenPnpCaptureCameraConfigurationWizard extends ReferenceCameraConfigurationWizard {
     private final OpenPnpCaptureCamera camera;
 
     private List<OpenCvCapturePropertyValue> properties = new ArrayList<>();
@@ -57,16 +57,16 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
     private JLabel lblDevice;
     private JLabel lblFormat;
     private JComboBox formatCb;
-    private JLabel lblExposure;
+    private JLabel exposure;
     private JLabel exposureMin;
     private JLabel lblMax;
     private JLabel lblMin_1;
     private JLabel exposureMax;
     private JLabel lblValue;
-    private JLabel lblWhiteBalance;
-    private JLabel lblFocus;
-    private JLabel lblZoom;
-    private JLabel lblGain;
+    private JLabel whiteBalance;
+    private JLabel focus;
+    private JLabel zoom;
+    private JLabel gain;
     private JLabel whiteBalanceMin;
     private JLabel focusMin;
     private JLabel zoomMin;
@@ -88,8 +88,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
     private JSlider gainValue;
 
     public OpenPnpCaptureCameraConfigurationWizard(OpenPnpCaptureCamera camera) {
-        // super(camera);
-
+        super(camera);
         this.camera = camera;
         createUi();
     }
@@ -139,14 +138,14 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         lblMax = new JLabel("Max");
         panel.add(lblMax, "10, 6");
 
-        lblExposure = new JLabel("Exposure");
-        panel.add(lblExposure, "2, 8, right, default");
+        exposure = new JLabel("Exposure");
+        panel.add(exposure, "2, 8, right, default");
 
         exposureAuto = new JCheckBox("");
         panel.add(exposureAuto, "4, 8");
 
         exposureMin = new JLabel("min");
-        panel.add(exposureMin, "6, 8");
+        panel.add(exposureMin, "6, 8, right, default");
 
         exposureValue = new JSlider();
         exposureValue.setPaintLabels(true);
@@ -156,8 +155,8 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         exposureMax = new JLabel("max");
         panel.add(exposureMax, "10, 8");
 
-        lblWhiteBalance = new JLabel("White Balance");
-        panel.add(lblWhiteBalance, "2, 10, right, default");
+        whiteBalance = new JLabel("White Balance");
+        panel.add(whiteBalance, "2, 10, right, default");
 
         whiteBalanceAuto = new JCheckBox("");
         panel.add(whiteBalanceAuto, "4, 10");
@@ -173,8 +172,8 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         whiteBalanceMax = new JLabel("max");
         panel.add(whiteBalanceMax, "10, 10");
 
-        lblFocus = new JLabel("Focus");
-        panel.add(lblFocus, "2, 12, right, default");
+        focus = new JLabel("Focus");
+        panel.add(focus, "2, 12, right, default");
 
         focusAuto = new JCheckBox("");
         panel.add(focusAuto, "4, 12");
@@ -190,8 +189,8 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         focusMax = new JLabel("max");
         panel.add(focusMax, "10, 12");
 
-        lblZoom = new JLabel("Zoom");
-        panel.add(lblZoom, "2, 14, right, default");
+        zoom = new JLabel("Zoom");
+        panel.add(zoom, "2, 14, right, default");
 
         zoomAuto = new JCheckBox("");
         panel.add(zoomAuto, "4, 14");
@@ -207,8 +206,8 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         zoomMax = new JLabel("max");
         panel.add(zoomMax, "10, 14");
 
-        lblGain = new JLabel("Gain");
-        panel.add(lblGain, "2, 16, right, default");
+        gain = new JLabel("Gain");
+        panel.add(gain, "2, 16, right, default");
 
         gainAuto = new JCheckBox("");
         panel.add(gainAuto, "4, 16");
@@ -248,16 +247,16 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         addWrappedBinding(camera, "device", deviceCb, "selectedItem");
         addWrappedBinding(camera, "format", formatCb, "selectedItem");
 
-        bindProperty("focus", focusAuto, focusMin, focusMax, focusValue);
+        bindProperty("focus", focusAuto, focusMin, focusMax, focusValue, focus);
         bindProperty("whiteBalance", whiteBalanceAuto, whiteBalanceMin, whiteBalanceMax,
-                whiteBalanceValue);
-        bindProperty("gain", gainAuto, gainMin, gainMax, gainValue);
-        bindProperty("exposure", exposureAuto, exposureMin, exposureMax, exposureValue);
-        bindProperty("zoom", zoomAuto, zoomMin, zoomMax, zoomValue);
+                whiteBalanceValue, whiteBalance);
+        bindProperty("gain", gainAuto, gainMin, gainMax, gainValue, gain);
+        bindProperty("exposure", exposureAuto, exposureMin, exposureMax, exposureValue, exposure);
+        bindProperty("zoom", zoomAuto, zoomMin, zoomMax, zoomValue, zoom);
     }
 
     private void bindProperty(String property, JCheckBox auto, JLabel min, JLabel max,
-            JSlider value) {
+            JSlider value, JLabel label) {
         IntegerConverter intConverter = new IntegerConverter();
         
         bind(UpdateStrategy.READ_WRITE, camera, property + ".auto", auto, "selected");
@@ -269,7 +268,9 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         bind(UpdateStrategy.READ, camera, property + ".max", value, "maximum");
         bind(UpdateStrategy.READ_WRITE, camera, property + ".value", value, "value");
         
-        bind(UpdateStrategy.READ, camera, property + ".auto", value, "enabled", new BooleanInverter());
+        bind(UpdateStrategy.READ, camera, property + ".supported", value, "enabled");
+        bind(UpdateStrategy.READ, camera, property + ".supported", auto, "enabled");
+        bind(UpdateStrategy.READ, camera, property + ".supported", label, "enabled");
     }
 
     @Override
@@ -281,11 +282,13 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
     class BooleanInverter extends Converter<Boolean, Boolean> {
         @Override
         public Boolean convertForward(Boolean arg0) {
+            System.out.println("convertForward " + arg0);
             return !arg0;
         }
 
         @Override
         public Boolean convertReverse(Boolean arg0) {
+            System.out.println("convertReverse " + arg0);
             return !arg0;
         }
     }
