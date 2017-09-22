@@ -140,6 +140,7 @@ There are a few important keyboard shortcuts that are critical to know to use Op
 * Ctrl-Shift-S: Steps through the job
 * Ctrl-Shift-A: Stops the job
 * Ctrl-Shift-P: Parks head (Z retract then XY park)
+* Ctrl-Shift-L: Parks Z axis only
 * Ctrl-Shift-Z: Moves head to safe Z
 * Ctrl-Shift-D: Discard component
 * Ctrl-Shift-F1: 0.01mm / 0.001" jog increment
