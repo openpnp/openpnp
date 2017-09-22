@@ -282,13 +282,11 @@ public class OpenPnpCaptureCameraConfigurationWizard extends ReferenceCameraConf
     class BooleanInverter extends Converter<Boolean, Boolean> {
         @Override
         public Boolean convertForward(Boolean arg0) {
-            System.out.println("convertForward " + arg0);
             return !arg0;
         }
 
         @Override
         public Boolean convertReverse(Boolean arg0) {
-            System.out.println("convertReverse " + arg0);
             return !arg0;
         }
     }
