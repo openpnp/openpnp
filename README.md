@@ -1,5 +1,7 @@
 ![OpenPNP Logo](https://raw.githubusercontent.com/openpnp/openpnp-logo/develop/logo_small.png)
 
+# OpenPnP
+
 Open Source SMT Pick and Place Hardware and Software
 
 ## Introduction
