@@ -33,6 +33,7 @@ import org.openpnp.capture.PropertyLimits;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.OpenPnpCaptureCameraConfigurationWizard;
+import org.openpnp.model.AbstractModelObject;
 import org.openpnp.spi.PropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -51,11 +52,11 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     @Attribute(required=false)
     private Integer formatId;
     
-    @Attribute(required=false)
-    private int exposure;
-
-    @Attribute(required=false)
-    private boolean exposureAuto;
+    final private CapturePropertyHolder focus = new CapturePropertyHolder(CaptureProperty.Focus);
+    final private CapturePropertyHolder zoom = new CapturePropertyHolder(CaptureProperty.Zoom);
+    final private CapturePropertyHolder whiteBalance = new CapturePropertyHolder(CaptureProperty.WhiteBalance);
+    final private CapturePropertyHolder exposure = new CapturePropertyHolder(CaptureProperty.Exposure);
+    final private CapturePropertyHolder gain = new CapturePropertyHolder(CaptureProperty.Gain);
 
     public OpenPnpCaptureCamera() {
         
@@ -248,39 +249,110 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         }
     }
     
-    public int getExposureMin() throws Exception {
-        if (stream == null) {
-            return 0;
+    public CapturePropertyHolder getFocus() {
+        return focus;
+    }
+
+    public CapturePropertyHolder getZoom() {
+        return zoom;
+    }
+
+    public CapturePropertyHolder getWhiteBalance() {
+        return whiteBalance;
+    }
+
+    public CapturePropertyHolder getExposure() {
+        return exposure;
+    }
+
+    public CapturePropertyHolder getGain() {
+        return gain;
+    }
+
+
+    public class CapturePropertyHolder extends AbstractModelObject {
+        final private CaptureProperty property;
+        private int value;
+        private boolean auto;
+        
+        public CapturePropertyHolder(CaptureProperty property) {
+            this.property = property;
         }
-        PropertyLimits limits = stream.getPropertyLimits(CaptureProperty.Exposure);
-        return limits.getMin();
-    }
-    
-    public int getExposureMax() throws Exception {
-        if (stream == null) {
-            return 0;
+        
+        public int getMin() {
+            if (stream == null) {
+                return 0;
+            }
+            try {
+                PropertyLimits limits = stream.getPropertyLimits(property);
+                return limits.getMin();
+            }
+            catch (Exception e) {
+                return 0;
+            }
         }
-        PropertyLimits limits = stream.getPropertyLimits(CaptureProperty.Exposure);
-        return limits.getMax();
-    }
-    
-    public boolean isExposureAuto() {
-        return exposureAuto;
-    }
-    
-    public void setExposureAuto(boolean exposureAuto) {
-        this.exposureAuto = exposureAuto;
-    }
-    
-    public void setExposure(int value) throws Exception {
-        if (stream == null) {
-            return;
+        
+        public int getMax() {
+            if (stream == null) {
+                return 0;
+            }
+            try {
+                PropertyLimits limits = stream.getPropertyLimits(property);
+                return limits.getMax();
+            }
+            catch (Exception e) {
+                return 0;
+            }
         }
-        stream.setProperty(CaptureProperty.Exposure, value);
-        this.exposure = value;
-    }
-    
-    public int getExposure() {
-        return this.exposure;
+        
+        public boolean isAuto() {
+            if (stream == null) {
+                return false;
+            }
+            try {
+                return this.auto = stream.getAutoProperty(property);
+            }
+            catch (Exception e) {
+                return false;
+            }
+        }
+        
+        public void setAuto(boolean auto) {
+            if (stream == null) {
+                return;
+            }
+            try {
+                stream.setAutoProperty(property, auto);
+                this.auto = auto;
+                firePropertyChange("auto", null, auto);
+            }
+            catch (Exception e) {
+            }
+        }
+        
+        public void setValue(int value) {
+            if (stream == null) {
+                return;
+            }
+            try {
+                stream.setProperty(property, value);
+                this.value = value;
+                firePropertyChange("value", null, value);
+            }
+            catch (Exception e) {
+            }
+        }
+        
+        public int getValue() {
+            if (stream == null) {
+                return 0;
+            }
+            try {
+                return this.value = stream.getProperty(property);
+            }
+            catch (Exception e) {
+                return 0;
+            }
+        }
     }
 }
