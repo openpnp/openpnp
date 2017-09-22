@@ -241,8 +241,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends ReferenceCameraConf
 
     @Override
     public void createBindings() {
-
-        // super.createBindings();
+         super.createBindings();
 
         addWrappedBinding(camera, "device", deviceCb, "selectedItem");
         addWrappedBinding(camera, "format", formatCb, "selectedItem");
