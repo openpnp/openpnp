@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.openpnp.CameraListener;
 import org.openpnp.capture.CaptureDevice;
-import org.openpnp.capture.CaptureException;
 import org.openpnp.capture.CaptureFormat;
 import org.openpnp.capture.CaptureProperty;
 import org.openpnp.capture.CaptureStream;
@@ -38,6 +37,8 @@ import org.openpnp.model.AbstractModelObject;
 import org.openpnp.spi.PropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     private OpenPnpCapture capture = new OpenPnpCapture();
@@ -52,15 +53,33 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     
     @Attribute(required=false)
     private Integer formatId;
-    
-    final private CapturePropertyHolder focus = new CapturePropertyHolder(CaptureProperty.Focus);
-    final private CapturePropertyHolder zoom = new CapturePropertyHolder(CaptureProperty.Zoom);
-    final private CapturePropertyHolder whiteBalance = new CapturePropertyHolder(CaptureProperty.WhiteBalance);
-    final private CapturePropertyHolder exposure = new CapturePropertyHolder(CaptureProperty.Exposure);
-    final private CapturePropertyHolder gain = new CapturePropertyHolder(CaptureProperty.Gain);
 
+    @Element(required=false)
+    private CapturePropertyHolder focus = new CapturePropertyHolder(CaptureProperty.Focus);
+
+    @Element(required=false)
+    private CapturePropertyHolder zoom = new CapturePropertyHolder(CaptureProperty.Zoom);
+
+    @Element(required=false)
+    private CapturePropertyHolder whiteBalance = new CapturePropertyHolder(CaptureProperty.WhiteBalance);
+
+    @Element(required=false)
+    private CapturePropertyHolder exposure = new CapturePropertyHolder(CaptureProperty.Exposure);
+
+    @Element(required=false)
+    private CapturePropertyHolder gain = new CapturePropertyHolder(CaptureProperty.Gain);
+    
     public OpenPnpCaptureCamera() {
         
+    }
+    
+    @Commit
+    public void commit() {
+        exposure.setCamera(this);
+        whiteBalance.setCamera(this);
+        gain.setCamera(this);
+        zoom.setCamera(this);
+        focus.setCamera(this);
     }
     
     public List<CaptureDevice> getCaptureDevices() {
@@ -125,8 +144,10 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             }
         }
         stream = null;
+        setPropertiesStream(stream);
         
-        
+        // If a device and format are not set, see if we can read them from the stored
+        // properties. This will only happen during startup.
         if (device == null && format == null) {
             if (uniqueId == null) {
                 return;
@@ -164,12 +185,12 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             return;
         }
         
-        
         try {
             width = null;
             height = null;
             
             stream = device.openStream(format);
+            setPropertiesStream(stream);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -178,6 +199,14 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         thread = new Thread(this);
         thread.setDaemon(true);
         thread.start();
+    }
+    
+    private void setPropertiesStream(CaptureStream stream) {
+        exposure.setStream(stream);
+        whiteBalance.setStream(stream);
+        gain.setStream(stream);
+        zoom.setStream(stream);
+        focus.setStream(stream);
     }
 
     @Override
@@ -272,20 +301,37 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         return gain;
     }
 
+    public static class CapturePropertyHolder extends AbstractModelObject {
+        @Attribute(required=false)
+        private CaptureProperty property;
 
-    public class CapturePropertyHolder extends AbstractModelObject {
-        final private CaptureProperty property;
+        @Attribute(required=false)
         private int value;
+
+        @Attribute(required=false)
         private boolean auto;
+        
+        private CaptureStream stream;
         
         public CapturePropertyHolder(CaptureProperty property) {
             this.property = property;
-            OpenPnpCaptureCamera.this.addPropertyChangeListener("device", e -> {
+        }
+        
+        public CapturePropertyHolder() {
+            this(null);
+        }
+        
+        public void setCamera(OpenPnpCaptureCamera camera) {
+            camera.addPropertyChangeListener("device", e -> {
                 firePropertyChange("supported", null, isSupported());
             });
-            OpenPnpCaptureCamera.this.addPropertyChangeListener("format", e -> {
+            camera.addPropertyChangeListener("format", e -> {
                 firePropertyChange("supported", null, isSupported());
             });
+        }
+        
+        public void setStream(CaptureStream stream) {
+            this.stream = stream;
         }
         
         public int getMin() {
