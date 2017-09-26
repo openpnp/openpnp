@@ -70,7 +70,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     private CapturePropertyHolder gain = new CapturePropertyHolder(CaptureProperty.Gain);
     
     public OpenPnpCaptureCamera() {
-        
+        System.out.println("capture " + capture.getLibraryVersion());
     }
     
     @Commit
