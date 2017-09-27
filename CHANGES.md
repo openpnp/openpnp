@@ -1,6 +1,10 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-09-21
+
+* Ctrl-Shift-L Hotkey Added for Park Z
+
 # 2017-09-16
 
 * Job Save Always Enabled
