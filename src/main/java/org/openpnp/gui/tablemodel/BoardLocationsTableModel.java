@@ -26,20 +26,22 @@ import javax.swing.table.AbstractTableModel;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
+import org.openpnp.model.BoardLocation.BoardStatus;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 
+
 public class BoardLocationsTableModel extends AbstractTableModel {
     private final Configuration configuration;
+    
+    private String[] columnNames = new String[] { "Board", "Width", "Length", "Side", "X", "Y", "Z", "Rot.", "Status",
+            "Enabled?", "Check Fids?" };
 
-    private String[] columnNames = new String[] {"Board", "Width", "Length", "Side", "X", "Y", "Z",
-            "Rot.", "Enabled?", "Check Fids?"};
-
-    private Class[] columnTypes = new Class[] {String.class, LengthCellValue.class,
-            LengthCellValue.class, Side.class, LengthCellValue.class, LengthCellValue.class,
-            LengthCellValue.class, String.class, Boolean.class, Boolean.class};
+    private Class[] columnTypes = new Class[] { String.class, LengthCellValue.class, LengthCellValue.class, Side.class,
+            LengthCellValue.class, LengthCellValue.class, LengthCellValue.class, String.class, BoardStatus.class,
+            Boolean.class, Boolean.class };
 
     private Job job;
 
@@ -96,67 +98,74 @@ public class BoardLocationsTableModel extends AbstractTableModel {
         try {
             BoardLocation boardLocation = job.getBoardLocations().get(rowIndex);
             if (columnIndex == 0) {
+            	//Board ID/Name
                 boardLocation.getBoard().setName((String) aValue);
-            }
-            else if (columnIndex == 1) {
+            } else if (columnIndex == 1) {
+            	//Board Width 
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
                 Location location = boardLocation.getBoard().getDimensions();
                 location = Length.setLocationField(configuration, location, length, Length.Field.X);
                 boardLocation.getBoard().setDimensions(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
-            }
-            else if (columnIndex == 2) {
+                fireTableCellUpdated(rowIndex, 8);
+            } else if (columnIndex == 2) {
+            	//Board Length
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
                 Location location = boardLocation.getBoard().getDimensions();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Y);
                 boardLocation.getBoard().setDimensions(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
-            }
-            else if (columnIndex == 3) {
+                fireTableCellUpdated(rowIndex, 8);
+            } else if (columnIndex == 3) {
+            	//Board Side
                 boardLocation.setSide((Side) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
-            }
-            else if (columnIndex == 4) {
+            } else if (columnIndex == 4) {
+            	//Board X
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
                 Location location = boardLocation.getLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.X);
                 boardLocation.setLocation(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
-            }
-            else if (columnIndex == 5) {
+            } else if (columnIndex == 5) {
+            	//Board Y
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
                 Location location = boardLocation.getLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Y);
                 boardLocation.setLocation(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
-            }
-            else if (columnIndex == 6) {
+            } else if (columnIndex == 6) {
+            	//Board Z
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
                 Location location = boardLocation.getLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Z);
                 boardLocation.setLocation(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
-            }
-            else if (columnIndex == 7) {
-                boardLocation.setLocation(boardLocation.getLocation().derive(null, null, null,
-                        Double.parseDouble(aValue.toString())));
+                fireTableCellUpdated(rowIndex, 8);
+            } else if (columnIndex == 7) {
+            	//Board Rotation
+                boardLocation.setLocation(
+                        boardLocation.getLocation().derive(null, null, null, Double.parseDouble(aValue.toString())));
                 fireTableCellUpdated(rowIndex, columnIndex);
-            }
-            else if (columnIndex == 8) {
+            } else if (columnIndex == 8) {
+            	//Board Status
+                boardLocation.setBoardStatus((BoardStatus) aValue);
+                fireTableCellUpdated(rowIndex, columnIndex);
+            } else if (columnIndex == 9) {
+            	//Board Enabled
                 boardLocation.setEnabled((Boolean) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
-            }
-            else if (columnIndex == 9) {
+            } else if (columnIndex == 10) {
+            	//Check Fiducials
                 boardLocation.setCheckFiducials((Boolean) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             // TODO: dialog, bad input
         }
     }
@@ -166,29 +175,30 @@ public class BoardLocationsTableModel extends AbstractTableModel {
         Location loc = boardLocation.getLocation();
         Location dim = boardLocation.getBoard().getDimensions();
         switch (col) {
-            case 0:
-                return boardLocation.getBoard().getName();
-            case 1:
-                return new LengthCellValue(dim.getLengthX());
-            case 2:
-                return new LengthCellValue(dim.getLengthY());
-            case 3:
-                return boardLocation.getSide();
-            case 4:
-                return new LengthCellValue(loc.getLengthX());
-            case 5:
-                return new LengthCellValue(loc.getLengthY());
-            case 6:
-                return new LengthCellValue(loc.getLengthZ());
-            case 7:
-                return String.format(Locale.US, configuration.getLengthDisplayFormat(),
-                        loc.getRotation(), "");
-            case 8:
-                return boardLocation.isEnabled();
-            case 9:
-                return boardLocation.isCheckFiducials();
-            default:
-                return null;
+        case 0:
+            return boardLocation.getBoard().getName();
+        case 1:
+            return new LengthCellValue(dim.getLengthX());
+        case 2:
+            return new LengthCellValue(dim.getLengthY());
+        case 3:
+            return boardLocation.getSide();
+        case 4:
+            return new LengthCellValue(loc.getLengthX());
+        case 5:
+            return new LengthCellValue(loc.getLengthY());
+        case 6:
+            return new LengthCellValue(loc.getLengthZ());
+        case 7:
+            return String.format(Locale.US, configuration.getLengthDisplayFormat(), loc.getRotation(), "");
+        case 8:
+            return boardLocation.getBoardStatus();
+        case 9:
+            return boardLocation.isEnabled();
+        case 10:
+            return boardLocation.isCheckFiducials();
+        default:
+            return null;
         }
     }
 }

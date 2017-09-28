@@ -21,6 +21,8 @@ package org.openpnp.model;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import org.openpnp.model.BoardLocation.BoardStatus;
 import org.openpnp.model.Board.Side;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -28,11 +30,17 @@ import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.core.Commit;
 
 public class BoardLocation extends AbstractModelObject {
+
+    public enum BoardStatus {
+        Ready, ZHeight, DimensionsMissing, Error
+    }
+
     @Element
     private Location location;
     @Attribute
     private Side side = Side.Top;
     private Board board;
+    private BoardStatus boardStatus = BoardStatus.Error;
 
     @Attribute
     private String boardFile;
@@ -98,6 +106,43 @@ public class BoardLocation extends AbstractModelObject {
         firePropertyChange("side", oldValue, side);
     }
 
+    public void setBoardStatus(BoardStatus boardstatus) {
+        Object oldValue = this.boardStatus;
+        this.boardStatus = boardstatus;
+        firePropertyChange("boardStatus", oldValue, boardStatus);
+    }
+
+    public void initBoardStatus() {
+    	for (Placement placement : getBoard().getPlacements()) {
+            if (placement.getPlacementStatus() == Placement.Status.MissingFeeder) {
+                setBoardStatus(BoardStatus.Error);
+                break;
+            } else if (placement.getPlacementStatus() == Placement.Status.MissingPart) {
+                setBoardStatus(BoardStatus.Error);
+                break;
+            } else if (placement.getPlacementStatus() == Placement.Status.ZeroPartHeight) {
+                setBoardStatus(BoardStatus.Error);
+                break;
+            } else if (placement.getPlacementStatus() == Placement.Status.Ready) {
+                setBoardStatus(BoardStatus.Ready);
+                break;
+            }
+        }
+    }
+    public BoardStatus getBoardStatus() {
+        // Display warning if the board Z height is set to 0
+        if (getLocation().getLengthZ().getValue() == 0) {
+            return BoardStatus.ZHeight;
+        }
+        // Display warning if the board has no width or height values
+        else if (getBoard().getDimensions().getX() == 0
+                || getBoard().getDimensions().getY() == 0) {
+            return BoardStatus.DimensionsMissing;
+        } else {
+            return boardStatus;
+        }
+    }
+
     public Board getBoard() {
         return board;
     }
@@ -106,6 +151,10 @@ public class BoardLocation extends AbstractModelObject {
         Board oldValue = this.board;
         this.board = board;
         firePropertyChange("board", oldValue, board);
+        
+        if (board != null){
+        	initBoardStatus();
+        }
     }
 
     String getBoardFile() {
@@ -148,18 +197,17 @@ public class BoardLocation extends AbstractModelObject {
 
     public void setPlaced(String placementId, boolean placed) {
         this.placed.put(placementId, placed);
-        firePropertyChange("placed", null, this.placed);
+        firePropertyChange("placed", null, placed);
     }
 
     public boolean getPlaced(String placementId) {
         if (placed.containsKey(placementId)) {
             return placed.get(placementId);
-        } 
-        else {
+        } else {
             return false;
         }
     }
-    
+
     public void clearAllPlaced() {
         this.placed.clear();
         firePropertyChange("placed", null, this.placed);

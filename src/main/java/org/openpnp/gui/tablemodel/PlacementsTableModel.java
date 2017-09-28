@@ -24,10 +24,12 @@ import javax.swing.table.AbstractTableModel;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.RotationCellValue;
+import org.openpnp.model.BoardLocation.BoardStatus;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -38,22 +40,16 @@ import org.openpnp.spi.Feeder;
 public class PlacementsTableModel extends AbstractTableModel {
     final Configuration configuration;
 
-    private String[] columnNames =
-            new String[] {"ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Placed", "Status", "Check Fids"};
+    private String[] columnNames = new String[] { "ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Placed", "Status",
+            "Check Fids" };
 
-    private Class[] columnTypes = new Class[] {PartCellValue.class, Part.class, Side.class,
-            LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, Type.class,
-            Boolean.class, Status.class, Boolean.class};
-
-    public enum Status {
-        Ready,
-        MissingPart,
-        MissingFeeder,
-        ZeroPartHeight
-    }
+    private Class[] columnTypes = new Class[] { PartCellValue.class, Part.class, Side.class, LengthCellValue.class,
+            LengthCellValue.class, RotationCellValue.class, Type.class, Boolean.class, Placement.Status.class,
+            Boolean.class };
 
     private Board board;
     private BoardLocation boardLocation;
+    private Job job;
 
     public PlacementsTableModel(Configuration configuration) {
         this.configuration = configuration;
@@ -63,15 +59,23 @@ public class PlacementsTableModel extends AbstractTableModel {
         this.boardLocation = boardLocation;
         if (boardLocation == null) {
             this.board = null;
-        }
-        else {
+        } else {
             this.board = boardLocation.getBoard();
         }
         fireTableDataChanged();
     }
-    
+
     public Placement getPlacement(int index) {
         return board.getPlacements().get(index);
+    }
+
+    public void setJob(Job job) {
+        this.job = job;
+        fireTableDataChanged();
+    }
+
+    public Job getJob() {
+        return job;
     }
 
     @Override
@@ -89,8 +93,8 @@ public class PlacementsTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex == 1 || columnIndex == 2 || columnIndex == 3 || columnIndex == 4
-                || columnIndex == 5 || columnIndex == 6 || columnIndex == 7 || columnIndex == 9;
+        return columnIndex == 1 || columnIndex == 2 || columnIndex == 3 || columnIndex == 4 || columnIndex == 5
+                || columnIndex == 6 || columnIndex == 7 || columnIndex == 9;
     }
 
     @Override
@@ -103,102 +107,115 @@ public class PlacementsTableModel extends AbstractTableModel {
         try {
             Placement placement = board.getPlacements().get(rowIndex);
             if (columnIndex == 1) {
+                // Placement Part
                 placement.setPart((Part) aValue);
-            }
-            else if (columnIndex == 2) {
+                fireTableCellUpdated(rowIndex, 8);
+
+                // Update Job panel board table rows
+                updateBoardStatus(placement);
+            } else if (columnIndex == 2) {
+                // Placement Side
                 placement.setSide((Side) aValue);
-            }
-            else if (columnIndex == 3) {
+            } else if (columnIndex == 3) {
+                // Placement X
                 LengthCellValue value = (LengthCellValue) aValue;
                 value.setDisplayNativeUnits(true);
                 Length length = value.getLength();
                 Location location = placement.getLocation();
-                location = Length.setLocationField(configuration, location, length, Length.Field.X,
-                        true);
+                location = Length.setLocationField(configuration, location, length, Length.Field.X, true);
                 placement.setLocation(location);
-            }
-            else if (columnIndex == 4) {
+            } else if (columnIndex == 4) {
+                // Placement Y
                 LengthCellValue value = (LengthCellValue) aValue;
                 value.setDisplayNativeUnits(true);
                 Length length = value.getLength();
                 Location location = placement.getLocation();
-                location = Length.setLocationField(configuration, location, length, Length.Field.Y,
-                        true);
+                location = Length.setLocationField(configuration, location, length, Length.Field.Y, true);
                 placement.setLocation(location);
-            }
-            else if (columnIndex == 5) {
-                placement.setLocation(placement.getLocation().derive(null, null, null,
-                        Double.parseDouble(aValue.toString())));
-            }
-            else if (columnIndex == 6) {
+            } else if (columnIndex == 5) {
+                // Placement Rotation
+                placement.setLocation(
+                        placement.getLocation().derive(null, null, null, Double.parseDouble(aValue.toString())));
+            } else if (columnIndex == 6) {
+                // Placement Type
                 placement.setType((Type) aValue);
-            }
-            else if (columnIndex == 7) {
-                //placement.setPlaced((Boolean) aValue);
-            	boardLocation.setPlaced(placement.getId(), (Boolean) aValue);
-            }
-            else if (columnIndex == 9) {
+                fireTableCellUpdated(rowIndex, 8);
+
+                // Update Job panel board table rows
+                updateBoardStatus(placement);
+            } else if (columnIndex == 7) {
+                // Placement Placed
+                boardLocation.setPlaced(placement.getId(), (Boolean) aValue);
+            } else if (columnIndex == 9) {
+                // Placement Check Fiducials
                 placement.setCheckFids((Boolean) aValue);
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             // TODO: dialog, bad input
         }
     }
 
-    // TODO: Ideally this would all come from the JobPlanner, but this is a
-    // good start for now.
-    private Status getPlacementStatus(Placement placement) {
-        if (placement.getPart() == null) {
-            return Status.MissingPart;
-        }
-        if (placement.getType() == Placement.Type.Place) {
-            boolean found = false;
-            for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
-                if (feeder.getPart() == placement.getPart() && feeder.isEnabled()) {
-                    found = true;
-                    break;
+    private void updateBoardStatus(Placement placement) {
+        if (getJob().isUsingPanel()) {
+            for (BoardLocation boardlocation : job.getBoardLocations()) {
+                if (placement.getPlacementStatus() == Placement.Status.MissingFeeder) {
+                    boardlocation.setBoardStatus(BoardStatus.Error);
+                } else if (placement.getPlacementStatus() == Placement.Status.MissingPart) {
+                    boardlocation.setBoardStatus(BoardStatus.Error);
+                } else if (placement.getPlacementStatus() == Placement.Status.ZeroPartHeight) {
+                    boardlocation.setBoardStatus(BoardStatus.Error);
+                } else if (placement.getPart() == null) {
+                    // Display general error for missing parts
+                    boardlocation.setBoardStatus(BoardStatus.Error);
+                } else {
+                    boardlocation.setBoardStatus(BoardStatus.Ready);
                 }
             }
-            if (!found) {
-                return Status.MissingFeeder;
-            }
-
-            if (placement.getPart().getHeight().getValue() == 0) {
-                return Status.ZeroPartHeight;
+        } else {
+            if (placement.getPlacementStatus() == Placement.Status.MissingFeeder) {
+                boardLocation.setBoardStatus(BoardStatus.Error);
+            } else if (placement.getPlacementStatus() == Placement.Status.MissingPart) {
+                boardLocation.setBoardStatus(BoardStatus.Error);
+            } else if (placement.getPlacementStatus() == Placement.Status.ZeroPartHeight) {
+                boardLocation.setBoardStatus(BoardStatus.Error);
+            } else if (placement.getPart() == null) {
+                // Display general error for missing parts
+                boardLocation.setBoardStatus(BoardStatus.Error);
+            } else {
+                boardLocation.setBoardStatus(BoardStatus.Ready);
             }
         }
-        return Status.Ready;
     }
 
     public Object getValueAt(int row, int col) {
         Placement placement = board.getPlacements().get(row);
         Location loc = placement.getLocation();
         switch (col) {
-            case 0:
-                return new PartCellValue(placement.getId());
-            case 1:
-                return placement.getPart();
-            case 2:
-                return placement.getSide();
-            case 3:
-                return new LengthCellValue(loc.getLengthX(), true);
-            case 4:
-                return new LengthCellValue(loc.getLengthY(), true);
-            case 5:
-                // return String.format(Locale.US, configuration.getLengthDisplayFormat(),
-                // loc.getRotation());
-                return new RotationCellValue(loc.getRotation(), true);
-            case 6:
-                return placement.getType();
-            case 7:
-            	return boardLocation.getPlaced(placement.getId());
-            case 8:
-                return getPlacementStatus(placement);
-            case 9:
-                return placement.getCheckFids();
-            default:
-                return null;
+        case 0:
+            return new PartCellValue(placement.getId());
+        case 1:
+            return placement.getPart();
+        case 2:
+            return placement.getSide();
+        case 3:
+            return new LengthCellValue(loc.getLengthX(), true);
+        case 4:
+            return new LengthCellValue(loc.getLengthY(), true);
+        case 5:
+            // return String.format(Locale.US,
+            // configuration.getLengthDisplayFormat(),
+            // loc.getRotation());
+            return new RotationCellValue(loc.getRotation(), true);
+        case 6:
+            return placement.getType();
+        case 7:
+            return boardLocation.getPlaced(placement.getId());
+        case 8:
+            return placement.getPlacementStatus();
+        case 9:
+            return placement.getCheckFids();
+        default:
+            return null;
         }
     }
 }

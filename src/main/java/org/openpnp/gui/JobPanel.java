@@ -57,11 +57,13 @@ import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
+import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.table.DefaultTableCellRenderer;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.events.BoardLocationSelectedEvent;
@@ -77,6 +79,7 @@ import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
+import org.openpnp.model.BoardLocation.BoardStatus;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -114,6 +117,10 @@ public class JobPanel extends JPanel {
 
     final private Configuration configuration;
     final private MainFrame frame;
+    
+    private static Color statusColorWarning = new Color(252, 255, 157);
+    private static Color statusColorReady = new Color(157, 255, 168);
+    private static Color statusColorError = new Color(255, 157, 157);
 
     private static final String PREF_DIVIDER_POSITION = "JobPanel.dividerPosition";
     private static final int PREF_DIVIDER_POSITION_DEF = -1;
@@ -242,9 +249,7 @@ public class JobPanel extends JPanel {
                     // A generic table update in response to TableDataChange
                     // event
                 	updatePanelizationIconState();
-                	
                 }
-
             }
         });
 
@@ -261,6 +266,7 @@ public class JobPanel extends JPanel {
                         updatePanelizationIconState();
 
                         jobPlacementsPanel.setBoardLocation(boardLocation);
+                        jobPlacementsPanel.setJob(job);
                         jobPastePanel.setBoardLocation(boardLocation);
                         Configuration.get().getBus()
                                 .post(new BoardLocationSelectedEvent(boardLocation, JobPanel.this));
@@ -268,7 +274,8 @@ public class JobPanel extends JPanel {
                 });
 
         setLayout(new BorderLayout(0, 0));
-
+        boardLocationsTable.setDefaultRenderer(BoardStatus.class, new BoardStatusRenderer());
+                
         splitPane = new JSplitPane();
         splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         splitPane.setBorder(null);
@@ -520,6 +527,42 @@ public class JobPanel extends JPanel {
         }
         saveRecentJobs();
     }
+    
+    static class BoardStatusRenderer extends DefaultTableCellRenderer {
+        public void setValue(Object value) {
+            BoardStatus status = (BoardStatus) value;
+            if (status == BoardStatus.Ready) {
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorReady);
+                setText("Ready");
+            }
+            else if (status == BoardStatus.Error) {
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorError);
+                setText("Placement Errors");
+            }
+            else if (status == BoardStatus.DimensionsMissing) {
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorWarning);
+                setText("Board width or length missing");
+            }
+            else if (status == BoardStatus.ZHeight) {
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorWarning);
+                setText("Z-Height is 0");
+            }
+            else {
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorError);
+                setText(status.toString());
+            }
+        }
+    }
 
     public void refresh() {
         boardLocationsTableModel.fireTableDataChanged();
@@ -749,6 +792,7 @@ public class JobPanel extends JPanel {
                     existingBoard.addSolderPastePad(pad);
                 }
                 jobPlacementsPanel.setBoardLocation(getSelectedBoardLocation());
+                jobPlacementsPanel.setJob(job);
                 jobPastePanel.setBoardLocation(getSelectedBoardLocation());
             }
         }
@@ -788,6 +832,13 @@ public class JobPanel extends JPanel {
                 Job job = configuration.loadJob(file);
                 setJob(job);
                 addRecentJob(file);
+                
+                
+                for (BoardLocation location : job.getBoardLocations()) {
+                	location.removePropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+                	location.initBoardStatus();
+                	location.addPropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+                }            
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -1001,9 +1052,32 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
-                fsm.send(Message.StartOrPause);
-            });
+        	Boolean allPlaced = true;
+        	for (BoardLocation boardLocation : job.getBoardLocations()) {
+	        	for (Placement placement : boardLocation.getBoard().getPlacements()) {
+	        		if (!boardLocation.getPlaced(placement.getId())) {
+	        			allPlaced = false;
+	        		}
+	        	}
+        	}
+        	if (allPlaced) {
+	        	int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+	                    "All placements have been placed already. Reset all placements status and start Job?",
+	                    "Reset placement status?", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+	            if (ret == JOptionPane.YES_OPTION) {
+	                for (BoardLocation boardLocation : job.getBoardLocations()) {
+	                    boardLocation.clearAllPlaced();
+	                }
+	                jobPlacementsPanel.refresh();
+	            	UiUtils.messageBoxOnException(() -> {
+	                    fsm.send(Message.StartOrPause);
+	                });
+	            }
+        	} else {
+        		UiUtils.messageBoxOnException(() -> {
+                    fsm.send(Message.StartOrPause);
+                });
+        	}
         }
     };
 
@@ -1098,6 +1172,12 @@ public class JobPanel extends JPanel {
                 boardLocationsTableModel.fireTableDataChanged();
 
                 Helpers.selectLastTableRow(boardLocationsTable);
+                for (BoardLocation location : job.getBoardLocations()) {
+                	location.removePropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+                	
+                	location.initBoardStatus();
+                	location.addPropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+                }  
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -1137,6 +1217,13 @@ public class JobPanel extends JPanel {
                 boardLocationsTableModel.fireTableDataChanged();
 
                 Helpers.selectLastTableRow(boardLocationsTable);
+                
+                for (BoardLocation location : job.getBoardLocations()) {
+                	location.removePropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+
+                	location.initBoardStatus();
+                	location.addPropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+                }  
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -1338,6 +1425,14 @@ public class JobPanel extends JPanel {
 
             DlgAutoPanelize dlg = new DlgAutoPanelize(frame, JobPanel.this);
             dlg.setVisible(true);
+            
+            
+            for (BoardLocation location : job.getBoardLocations()) {
+            	location.removePropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+
+            	location.initBoardStatus();
+            	location.addPropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+            }  
         }
     };
 
@@ -1401,6 +1496,13 @@ public class JobPanel extends JPanel {
                 Job job = configuration.loadJob(file);
                 setJob(job);
                 addRecentJob(file);
+                
+                for (BoardLocation location : job.getBoardLocations()) {
+                	location.removePropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+
+                	location.initBoardStatus();
+                	location.addPropertyChangeListener("boardStatus", boardStatusPropertyChangeListener);
+                }
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -1438,6 +1540,24 @@ public class JobPanel extends JPanel {
                     updateTitle();
                 }
             };
+            
+    private final PropertyChangeListener boardStatusPropertyChangeListener =
+    		new PropertyChangeListener() {
+    		    @Override
+    		    public void propertyChange(PropertyChangeEvent evt) {
+    		    	if (job.isUsingPanel()){
+    		    		// Update all boards in the panel
+    		    		for (int i = 0; i < boardLocationsTable.getRowCount(); i++) {
+    		    			if (evt.getPropertyName().equals("boardStatus")) {
+    		    				job.getBoardLocations().get(i).setBoardStatus((BoardStatus)evt.getNewValue());
+    		    			}
+    		    			boardLocationsTableModel.fireTableCellUpdated(i, 8);
+    		    		} 
+    		    	} else {
+    		    		boardLocationsTableModel.fireTableCellUpdated(boardLocationsTable.getSelectedRow(), 8);
+    		    	}
+    		    }
+    		};
 
     private final TextStatusListener textStatusListener = text -> {
         MainFrame.get().setStatus(text);
