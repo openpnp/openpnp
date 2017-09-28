@@ -179,7 +179,31 @@ public class JobPanel extends JPanel {
         @SuppressWarnings({"unchecked", "rawtypes"})
         JComboBox sidesComboBox = new JComboBox(Side.values());
 
-        boardLocationsTable = new AutoSelectTextTable(boardLocationsTableModel);
+        boardLocationsTable = new AutoSelectTextTable(boardLocationsTableModel) {
+            @Override
+            public String getToolTipText(MouseEvent e) {
+
+                java.awt.Point p = e.getPoint();
+                int row = rowAtPoint(p);
+                int col = columnAtPoint(p);
+
+                if (row >= 0) {
+                    if (col == 0) {
+                        row = boardLocationsTable.convertRowIndexToModel(row);
+                        BoardLocation boardLocation =
+                                boardLocationsTableModel.getBoardLocation(row);
+                        if (boardLocation != null) {
+                            return boardLocation.getBoard()
+                                                .getFile()
+                                                .toString();
+                        }
+                    }
+                }
+
+                return super.getToolTipText();
+            }
+        };
+
         boardLocationsTable.setAutoCreateRowSorter(true);
         boardLocationsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         boardLocationsTable.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
