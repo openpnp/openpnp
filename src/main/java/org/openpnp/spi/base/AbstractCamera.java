@@ -40,6 +40,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     @Attribute(required = false)
     protected long settleTimeMs = 250;
 
+    protected ConfigurationListenerAdapter configurationListener = new ConfigurationListenerAdapter();
     protected Set<ListenerEntry> listeners = Collections.synchronizedSet(new HashSet<>());
 
     protected Head head;
@@ -53,14 +54,11 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     public AbstractCamera() {
         this.id = Configuration.createId("CAM");
         this.name = getClass().getSimpleName();
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationLoaded(Configuration configuration) throws Exception {
-                if (visionProvider != null) {
-                    visionProvider.setCamera(AbstractCamera.this);
-                }
-            }
-        });
+        Configuration.get().addListener(configurationListener);
+    }
+
+    public void release() {
+        Configuration.get().removeListener(configurationListener);
     }
 
     @Override
@@ -201,6 +199,15 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         @Override
         public boolean equals(Object obj) {
             return obj.equals(listener);
+        }
+    }
+
+    private class ConfigurationListenerAdapter extends ConfigurationListener.Adapter {
+        @Override
+        public void configurationLoaded(Configuration configuration) throws Exception {
+            if (visionProvider != null) {
+                visionProvider.setCamera(AbstractCamera.this);
+            }
         }
     }
 }

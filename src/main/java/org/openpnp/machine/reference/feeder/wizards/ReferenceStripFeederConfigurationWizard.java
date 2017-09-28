@@ -595,7 +595,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             return holeLocations;
         }
         finally {
-            pipeline.release();
+            releaseCvPipeline(pipeline);
         }
     }
 
@@ -636,7 +636,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             return showResult;
         }
         finally {
-            pipeline.release();
+            releaseCvPipeline(pipeline);
+            bufferedImageCamera.release();
         }
     }
 
@@ -935,5 +936,12 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         catch (CloneNotSupportedException e) {
             throw new Error(e);
         }
+    }
+
+    private void releaseCvPipeline(CvPipeline pipeline) {
+        pipeline.setProperty("camera", null);
+        pipeline.setProperty("feeder", null);
+
+        pipeline.release();
     }
 }
