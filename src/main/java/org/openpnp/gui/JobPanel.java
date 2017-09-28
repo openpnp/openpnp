@@ -187,12 +187,16 @@ public class JobPanel extends JPanel {
                 int row = rowAtPoint(p);
                 int col = columnAtPoint(p);
 
-                if(row >= 0){
-                    if(col == 0) {
-                         BoardLocation boardLocation = boardLocationsTableModel.getBoardLocation(row);
-                         if(boardLocation != null) {
-                             return boardLocation.getBoard().getFile().toString();
-                         }
+                if (row >= 0) {
+                    if (col == 0) {
+                        row = boardLocationsTable.convertRowIndexToModel(row);
+                        BoardLocation boardLocation =
+                                boardLocationsTableModel.getBoardLocation(row);
+                        if (boardLocation != null) {
+                            return boardLocation.getBoard()
+                                                .getFile()
+                                                .toString();
+                        }
                     }
                 }
 
