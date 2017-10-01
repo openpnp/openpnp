@@ -1,6 +1,56 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-09-30
+
+* Major Update: New Camera Capture System!
+
+	OpenPnP now has it's very own, custom written camera capture system written specifically to
+	solve all of the problems that have plagued camera capture since the beginning of this project!
+	
+	openpnp-capture is a brand new capture library written by Niels Moseley (@trcwm) specifically
+	for OpenPnP. Using this library we are now finally able to do things like run multiple USB
+	cameras on a single port/hub, manage camera properties such as exposure, focus and white
+	balance and select camera data formats to make intelligent choices based on quality, size, 
+	frame rate, etc.
+	
+	Two of the biggest difficulties with capture in OpenPnP from the start have been the
+	inability to run multiple cameras over a single USB port/hub and the inability to control
+	manual exposure. The first is important because many people use OpenPnP with laptops
+	which may have a limited number of ports. The second is important because most commercial
+	USB cameras default to auto exposure and this causes problems with vision as the camera
+	adjusts the exposure to compensate for differences in the image.
+	
+	Using the new library, you can now set up your lighting and choose the exact exposure that
+	works best for your machine, and you will know that it won't change just because the
+	camera is looking at something else.
+	
+	To use the new feature, add a new camera using the OpenPnpCaptureCamera and see the General
+	Settings tab to select a device, format and property settings.
+	
+	I want to give a HUGE shout out and thank you to Niels for all his incredibly hard work
+	on the new capture library over the past couple months. He wrote a robust and expansive library
+	for video capture for all three major operating systems in a very short period of time,
+	knocking out feature after feature faster than I could integrate them into OpenPnP. This is
+	an invaluable contribution to the project and will really push OpenPnP forward in it's
+	computer vision abilities. Thank you Niels!
+	
+	For more information about the capture library itself, see:
+	https://github.com/openpnp/openpnp-capture
+	
+	For information about the Java and Maven bindings for the capture library, see:
+	https://github.com/openpnp/openpnp-capture-java
+	
+	Finally, be aware that there are some known issues:
+	* When you switch the selected device, the wizard doesn't reload the properties. To work
+	around, simply click to another wizard and then click back. To be fixed soon. 
+	* Brightness, contrast, saturation, gamma properties not yet implemented in OpenPnP. These
+	properties were recently added to the capture library but have not yet been implemented
+	in OpenPnp. 
+	
+	If you run into any other issues, please file a bug report or post to the mailing list. Your
+	feedback will help us make this new feature even better! 
+
 # 2017-09-21
 
 * Ctrl-Shift-L Hotkey Added for Park Z

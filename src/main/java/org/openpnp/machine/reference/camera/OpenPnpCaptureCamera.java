@@ -53,6 +53,9 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     
     @Attribute(required=false)
     private Integer formatId;
+    
+    @Attribute(required=false)
+    private int fps = 10;
 
     @Element(required=false)
     private CapturePropertyHolder focus = new CapturePropertyHolder(CaptureProperty.Focus);
@@ -70,7 +73,6 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     private CapturePropertyHolder gain = new CapturePropertyHolder(CaptureProperty.Gain);
     
     public OpenPnpCaptureCamera() {
-        System.out.println("capture " + capture.getLibraryVersion());
     }
     
     @Commit
@@ -119,6 +121,12 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             }
             catch (Exception e) {
                 e.printStackTrace();
+            }
+            try {
+                Thread.sleep(1000 / fps);
+            }
+            catch (InterruptedException e) {
+                break;
             }
         }
     }
@@ -281,6 +289,14 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         firePropertyChange("format", null, format);
     }
     
+    public int getFps() {
+        return fps;
+    }
+
+    public void setFps(int fps) {
+        this.fps = fps;
+    }
+
     public CapturePropertyHolder getFocus() {
         return focus;
     }
@@ -332,6 +348,10 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         
         public void setStream(CaptureStream stream) {
             this.stream = stream;
+            setAuto(auto);
+            if (!auto) {
+                setValue(value);
+            }
         }
         
         public int getMin() {

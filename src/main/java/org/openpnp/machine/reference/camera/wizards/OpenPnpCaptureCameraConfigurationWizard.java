@@ -86,6 +86,8 @@ public class OpenPnpCaptureCameraConfigurationWizard extends ReferenceCameraConf
     private JCheckBox whiteBalanceAuto;
     private JCheckBox gainAuto;
     private JSlider gainValue;
+    private JLabel lblFps;
+    private JTextField fps;
 
     public OpenPnpCaptureCameraConfigurationWizard(OpenPnpCaptureCamera camera) {
         super(camera);
@@ -99,129 +101,152 @@ public class OpenPnpCaptureCameraConfigurationWizard extends ReferenceCameraConf
         panel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         contentPanel.add(panel);
-        panel.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblDevice = new JLabel("Device");
         panel.add(lblDevice, "2, 2, right, default");
 
         deviceCb = new JComboBox();
-        panel.add(deviceCb, "6, 2, 5, 1");
+        panel.add(deviceCb, "4, 2, 7, 1");
 
         lblFormat = new JLabel("Format");
         panel.add(lblFormat, "2, 4, right, default");
 
         formatCb = new JComboBox();
-        panel.add(formatCb, "6, 4, 5, 1, fill, default");
+        panel.add(formatCb, "4, 4, 7, 1, fill, default");
+        
+        lblFps = new JLabel("FPS");
+        panel.add(lblFps, "2, 6, right, default");
+        
+        fps = new JTextField();
+        panel.add(fps, "4, 6, 7, 1");
+        fps.setColumns(10);
 
         lblAuto = new JLabel("Auto");
-        panel.add(lblAuto, "4, 6");
+        panel.add(lblAuto, "4, 8");
 
         lblMin_1 = new JLabel("Min");
-        panel.add(lblMin_1, "6, 6");
+        panel.add(lblMin_1, "6, 8");
 
         lblValue = new JLabel("Value");
-        panel.add(lblValue, "8, 6, center, default");
+        panel.add(lblValue, "8, 8, center, default");
 
         lblMax = new JLabel("Max");
-        panel.add(lblMax, "10, 6");
+        panel.add(lblMax, "10, 8");
 
         exposure = new JLabel("Exposure");
-        panel.add(exposure, "2, 8, right, default");
+        panel.add(exposure, "2, 10, right, default");
 
         exposureAuto = new JCheckBox("");
-        panel.add(exposureAuto, "4, 8");
+        panel.add(exposureAuto, "4, 10");
 
         exposureMin = new JLabel("min");
-        panel.add(exposureMin, "6, 8, right, default");
+        panel.add(exposureMin, "6, 10, right, default");
 
         exposureValue = new JSlider();
         exposureValue.setPaintLabels(true);
         exposureValue.setPaintTicks(true);
-        panel.add(exposureValue, "8, 8");
+        panel.add(exposureValue, "8, 10");
 
         exposureMax = new JLabel("max");
-        panel.add(exposureMax, "10, 8");
+        panel.add(exposureMax, "10, 10");
 
         whiteBalance = new JLabel("White Balance");
-        panel.add(whiteBalance, "2, 10, right, default");
+        panel.add(whiteBalance, "2, 12, right, default");
 
         whiteBalanceAuto = new JCheckBox("");
-        panel.add(whiteBalanceAuto, "4, 10");
+        panel.add(whiteBalanceAuto, "4, 12");
 
         whiteBalanceMin = new JLabel("min");
-        panel.add(whiteBalanceMin, "6, 10, right, default");
+        panel.add(whiteBalanceMin, "6, 12, right, default");
 
         whiteBalanceValue = new JSlider();
         whiteBalanceValue.setPaintTicks(true);
         whiteBalanceValue.setPaintLabels(true);
-        panel.add(whiteBalanceValue, "8, 10");
+        panel.add(whiteBalanceValue, "8, 12");
 
         whiteBalanceMax = new JLabel("max");
-        panel.add(whiteBalanceMax, "10, 10");
+        panel.add(whiteBalanceMax, "10, 12");
 
         focus = new JLabel("Focus");
-        panel.add(focus, "2, 12, right, default");
+        panel.add(focus, "2, 14, right, default");
 
         focusAuto = new JCheckBox("");
-        panel.add(focusAuto, "4, 12");
+        panel.add(focusAuto, "4, 14");
 
         focusMin = new JLabel("min");
-        panel.add(focusMin, "6, 12, right, default");
+        panel.add(focusMin, "6, 14, right, default");
 
         focusValue = new JSlider();
         focusValue.setPaintTicks(true);
         focusValue.setPaintLabels(true);
-        panel.add(focusValue, "8, 12");
+        panel.add(focusValue, "8, 14");
 
         focusMax = new JLabel("max");
-        panel.add(focusMax, "10, 12");
+        panel.add(focusMax, "10, 14");
 
         zoom = new JLabel("Zoom");
-        panel.add(zoom, "2, 14, right, default");
+        panel.add(zoom, "2, 16, right, default");
 
         zoomAuto = new JCheckBox("");
-        panel.add(zoomAuto, "4, 14");
+        panel.add(zoomAuto, "4, 16");
 
         zoomMin = new JLabel("min");
-        panel.add(zoomMin, "6, 14, right, default");
+        panel.add(zoomMin, "6, 16, right, default");
 
         zoomValue = new JSlider();
         zoomValue.setPaintTicks(true);
         zoomValue.setPaintLabels(true);
-        panel.add(zoomValue, "8, 14");
+        panel.add(zoomValue, "8, 16");
 
         zoomMax = new JLabel("max");
-        panel.add(zoomMax, "10, 14");
+        panel.add(zoomMax, "10, 16");
 
         gain = new JLabel("Gain");
-        panel.add(gain, "2, 16, right, default");
+        panel.add(gain, "2, 18, right, default");
 
         gainAuto = new JCheckBox("");
-        panel.add(gainAuto, "4, 16");
+        panel.add(gainAuto, "4, 18");
 
         gainMin = new JLabel("min");
-        panel.add(gainMin, "6, 16, right, default");
+        panel.add(gainMin, "6, 18, right, default");
 
         gainValue = new JSlider();
         gainValue.setPaintTicks(true);
         gainValue.setPaintLabels(true);
-        panel.add(gainValue, "8, 16");
+        panel.add(gainValue, "8, 18");
 
         gainMax = new JLabel("max");
-        panel.add(gainMax, "10, 16");
+        panel.add(gainMax, "10, 18");
 
         deviceCb.addActionListener(l -> {
             formatCb.removeAllItems();
@@ -241,10 +266,14 @@ public class OpenPnpCaptureCameraConfigurationWizard extends ReferenceCameraConf
 
     @Override
     public void createBindings() {
-         super.createBindings();
+        super.createBindings();
+
+        IntegerConverter intConverter = new IntegerConverter();
 
         addWrappedBinding(camera, "device", deviceCb, "selectedItem");
         addWrappedBinding(camera, "format", formatCb, "selectedItem");
+        
+        addWrappedBinding(camera, "fps", fps, "text", intConverter);
 
         bindProperty("focus", focusAuto, focusMin, focusMax, focusValue, focus);
         bindProperty("whiteBalance", whiteBalanceAuto, whiteBalanceMin, whiteBalanceMax,
