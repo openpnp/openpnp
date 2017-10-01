@@ -31,6 +31,7 @@ import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.Converter;
 import org.openpnp.capture.CaptureDevice;
 import org.openpnp.capture.CaptureFormat;
+import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.JBindings;
@@ -281,6 +282,8 @@ public class OpenPnpCaptureCameraConfigurationWizard extends ReferenceCameraConf
         bindProperty("gain", gainAuto, gainMin, gainMax, gainValue, gain);
         bindProperty("exposure", exposureAuto, exposureMin, exposureMax, exposureValue, exposure);
         bindProperty("zoom", zoomAuto, zoomMin, zoomMax, zoomValue, zoom);
+        
+        ComponentDecorators.decorateWithAutoSelect(fps);
     }
 
     private void bindProperty(String property, JCheckBox auto, JLabel min, JLabel max,
