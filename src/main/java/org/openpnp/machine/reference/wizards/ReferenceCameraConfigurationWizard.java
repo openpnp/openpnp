@@ -1,12 +1,15 @@
 package org.openpnp.machine.reference.wizards;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -25,6 +28,9 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.model.Configuration;
+import org.openpnp.util.UiUtils;
+import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 import org.simpleframework.xml.Attribute;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -65,7 +71,9 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
     private JPanel panelLensCalibration;
     private JLabel lblApplyCalibration;
     private JCheckBox calibrationEnabledChk;
-
+    private JPanel panelCenterToCamera;
+    private JButton btnCalibrate;
+    private JButton btnEditPipeline;
 
     public ReferenceCameraConfigurationWizard(ReferenceCamera referenceCamera) {
         this.referenceCamera = referenceCamera;
@@ -277,7 +285,39 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         textFieldLocationRotation = new JTextField();
         panelLocation.add(textFieldLocationRotation, "8, 4, fill, default");
         textFieldLocationRotation.setColumns(8);
-
+        
+        panelCenterToCamera = new JPanel();
+        panelCenterToCamera.setBorder(new TitledBorder(null, "Center Detected Object to Camera", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
+        contentPanel.add(panelCenterToCamera);
+        panelCenterToCamera.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        btnCalibrate = new JButton("Detect and Center");
+        btnCalibrate.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                findLocation();
+            }
+        });
+        panelCenterToCamera.add(btnCalibrate, "2, 4");
+        
+        btnEditPipeline = new JButton("Edit Pipeline");
+        btnEditPipeline.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                UiUtils.messageBoxOnException(() -> {
+                    editFindLocationPipeline();
+                });
+            }
+        });
+        panelCenterToCamera.add(btnEditPipeline, "4, 4");
+        
         panelLensCalibration = new JPanel();
         panelLensCalibration.setBorder(new TitledBorder(null, "Lens Calibration",
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -320,6 +360,22 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         catch (Exception e) {
 
         }
+    }
+    
+    private void editFindLocationPipeline() throws Exception {
+        CvPipeline pipeline = referenceCamera.getLocationPipeline();
+        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+        JDialog dialog = new JDialog(MainFrame.get(), "Calibration Pipeline");
+        dialog.getContentPane().setLayout(new BorderLayout());
+        dialog.getContentPane().add(editor);
+        dialog.setSize(1024, 768);
+        dialog.setVisible(true);
+    }
+
+    private void findLocation() {
+        UiUtils.submitUiMachineTask(() -> {
+            referenceCamera.findLocation();
+        });
     }
 
     @Override
