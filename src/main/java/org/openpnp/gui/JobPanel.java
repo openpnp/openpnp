@@ -85,6 +85,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.JobProcessor;
@@ -1000,10 +1001,25 @@ public class JobPanel extends JPanel {
         }
 
         @Override
-        public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
-                fsm.send(Message.StartOrPause);
-            });
+        public void actionPerformed(ActionEvent arg0) {    	
+        	if (isAllPlaced()) {
+	        	int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+	                    "All placements have been placed already. Reset all placements status and start Job?",
+	                    "Reset placement status?", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+	            if (ret == JOptionPane.YES_OPTION) {
+	                for (BoardLocation boardLocation : job.getBoardLocations()) {
+	                    boardLocation.clearAllPlaced();
+	                }
+	                jobPlacementsPanel.refresh();
+	            	UiUtils.messageBoxOnException(() -> {
+	                    fsm.send(Message.StartOrPause);
+	                });
+	            }
+        	} else {
+        		UiUtils.messageBoxOnException(() -> {
+                    fsm.send(Message.StartOrPause);
+                });
+        	}
         }
     };
 
@@ -1036,7 +1052,7 @@ public class JobPanel extends JPanel {
             });
         }
     };
-
+    
     public final Action resetAllPlacedAction = new AbstractAction() {
         {
             putValue(NAME, "Reset All Placed");
@@ -1445,5 +1461,17 @@ public class JobPanel extends JPanel {
         // Would be better to have property notifiers but this is going to have to do for now.
         repaint();
     };
-
+    
+    boolean isAllPlaced() {
+    	for (BoardLocation boardLocation : job.getBoardLocations()) {
+        	for (Placement placement : boardLocation.getBoard().getPlacements()) {
+        		if (!boardLocation.getPlaced(placement.getId())) {
+        			if (placement.getType() == Type.Place){
+        				return false;
+        			}
+        		}
+        	}
+    	}
+    	return true;
+    }
 }
