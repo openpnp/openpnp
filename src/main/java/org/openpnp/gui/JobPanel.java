@@ -1001,25 +1001,22 @@ public class JobPanel extends JPanel {
         }
 
         @Override
-        public void actionPerformed(ActionEvent arg0) {    	
-        	if (isAllPlaced()) {
-	        	int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-	                    "All placements have been placed already. Reset all placements status and start Job?",
-	                    "Reset placement status?", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-	            if (ret == JOptionPane.YES_OPTION) {
-	                for (BoardLocation boardLocation : job.getBoardLocations()) {
-	                    boardLocation.clearAllPlaced();
-	                }
-	                jobPlacementsPanel.refresh();
-	            	UiUtils.messageBoxOnException(() -> {
-	                    fsm.send(Message.StartOrPause);
-	                });
-	            }
-        	} else {
-        		UiUtils.messageBoxOnException(() -> {
-                    fsm.send(Message.StartOrPause);
-                });
-        	}
+        public void actionPerformed(ActionEvent arg0) {
+            if (isAllPlaced()) {
+                int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "All placements have been placed already. Reset all placements before starting job?",
+                        "Reset placement status?", JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE);
+                if (ret == JOptionPane.YES_OPTION) {
+                    for (BoardLocation boardLocation : job.getBoardLocations()) {
+                        boardLocation.clearAllPlaced();
+                    }
+                    jobPlacementsPanel.refresh();
+                }
+            }
+            UiUtils.messageBoxOnException(() -> {
+                fsm.send(Message.StartOrPause);
+            });
         }
     };
 
