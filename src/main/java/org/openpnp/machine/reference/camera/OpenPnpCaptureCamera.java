@@ -58,30 +58,46 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     private int fps = 10;
 
     @Element(required=false)
-    private CapturePropertyHolder focus = new CapturePropertyHolder(CaptureProperty.Focus);
+    private CapturePropertyHolder brightness = new CapturePropertyHolder(CaptureProperty.Brightness);
 
     @Element(required=false)
-    private CapturePropertyHolder zoom = new CapturePropertyHolder(CaptureProperty.Zoom);
-
-    @Element(required=false)
-    private CapturePropertyHolder whiteBalance = new CapturePropertyHolder(CaptureProperty.WhiteBalance);
+    private CapturePropertyHolder contrast = new CapturePropertyHolder(CaptureProperty.Contrast);
 
     @Element(required=false)
     private CapturePropertyHolder exposure = new CapturePropertyHolder(CaptureProperty.Exposure);
 
     @Element(required=false)
+    private CapturePropertyHolder focus = new CapturePropertyHolder(CaptureProperty.Focus);
+
+    @Element(required=false)
     private CapturePropertyHolder gain = new CapturePropertyHolder(CaptureProperty.Gain);
     
+    @Element(required=false)
+    private CapturePropertyHolder gamma = new CapturePropertyHolder(CaptureProperty.Gamma);
+    
+    @Element(required=false)
+    private CapturePropertyHolder saturation = new CapturePropertyHolder(CaptureProperty.Saturation);
+    
+    @Element(required=false)
+    private CapturePropertyHolder whiteBalance = new CapturePropertyHolder(CaptureProperty.WhiteBalance);
+
+    @Element(required=false)
+    private CapturePropertyHolder zoom = new CapturePropertyHolder(CaptureProperty.Zoom);
+
     public OpenPnpCaptureCamera() {
     }
     
     @Commit
     public void commit() {
+        brightness.setCamera(this);
+        contrast.setCamera(this);
         exposure.setCamera(this);
-        whiteBalance.setCamera(this);
-        gain.setCamera(this);
-        zoom.setCamera(this);
         focus.setCamera(this);
+        gain.setCamera(this);
+        gamma.setCamera(this);
+        saturation.setCamera(this);
+        whiteBalance.setCamera(this);
+        zoom.setCamera(this);
     }
     
     public List<CaptureDevice> getCaptureDevices() {
@@ -210,11 +226,15 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     }
     
     private void setPropertiesStream(CaptureStream stream) {
+        brightness.setStream(stream);
+        contrast.setStream(stream);
         exposure.setStream(stream);
-        whiteBalance.setStream(stream);
-        gain.setStream(stream);
-        zoom.setStream(stream);
         focus.setStream(stream);
+        gain.setStream(stream);
+        gamma.setStream(stream);
+        saturation.setStream(stream);
+        whiteBalance.setStream(stream);
+        zoom.setStream(stream);
     }
 
     @Override
@@ -297,24 +317,40 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         this.fps = fps;
     }
 
-    public CapturePropertyHolder getFocus() {
-        return focus;
+    public CapturePropertyHolder getBrightness() {
+        return brightness;
     }
 
-    public CapturePropertyHolder getZoom() {
-        return zoom;
-    }
-
-    public CapturePropertyHolder getWhiteBalance() {
-        return whiteBalance;
+    public CapturePropertyHolder getContrast() {
+        return contrast;
     }
 
     public CapturePropertyHolder getExposure() {
         return exposure;
     }
 
+    public CapturePropertyHolder getFocus() {
+        return focus;
+    }
+
     public CapturePropertyHolder getGain() {
         return gain;
+    }
+    
+    public CapturePropertyHolder getGamma() {
+        return gamma;
+    }
+
+    public CapturePropertyHolder getSaturation() {
+        return saturation;
+    }
+
+    public CapturePropertyHolder getWhiteBalance() {
+        return whiteBalance;
+    }
+
+    public CapturePropertyHolder getZoom() {
+        return zoom;
     }
 
     public static class CapturePropertyHolder extends AbstractModelObject {
@@ -322,10 +358,10 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         private CaptureProperty property;
 
         @Attribute(required=false)
-        private int value;
+        private Integer value;
 
         @Attribute(required=false)
-        private boolean auto;
+        private Boolean auto;
         
         private CaptureStream stream;
         
@@ -348,16 +384,25 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         
         public void setStream(CaptureStream stream) {
             this.stream = stream;
-            setAuto(auto);
-            if (!auto) {
+            if (stream == null) {
+                return;
+            }
+            if (auto != null) {
+                setAuto(auto);
+            }
+            if (value != null) {
                 setValue(value);
             }
+            firePropertyChange("supported", null, isSupported());
+            firePropertyChange("autoSupported", null, isAutoSupported());
+            firePropertyChange("min", null, getMin());
+            firePropertyChange("max", null, getMax());
+            firePropertyChange("default", null, getDefault());
+            firePropertyChange("value", null, getValue());
+            firePropertyChange("auto", null, isAuto());
         }
         
         public int getMin() {
-            if (stream == null || !isSupported()) {
-                return 0;
-            }
             try {
                 PropertyLimits limits = stream.getPropertyLimits(property);
                 return limits.getMin();
@@ -368,9 +413,6 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         }
         
         public int getMax() {
-            if (stream == null || !isSupported()) {
-                return 0;
-            }
             try {
                 PropertyLimits limits = stream.getPropertyLimits(property);
                 return limits.getMax();
@@ -380,10 +422,17 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             }
         }
         
-        public boolean isAuto() {
-            if (stream == null || !isSupported()) {
-                return false;
+        public int getDefault() {
+            try {
+                PropertyLimits limits = stream.getPropertyLimits(property);
+                return limits.getDefault();
             }
+            catch (Exception e) {
+                return 0;
+            }
+        }
+        
+        public boolean isAuto() {
             try {
                 return this.auto = stream.getAutoProperty(property);
             }
@@ -393,9 +442,6 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         }
         
         public void setAuto(boolean auto) {
-            if (stream == null || !isSupported()) {
-                return;
-            }
             try {
                 stream.setAutoProperty(property, auto);
                 this.auto = auto;
@@ -406,9 +452,6 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         }
         
         public void setValue(int value) {
-            if (stream == null || !isSupported()) {
-                return;
-            }
             try {
                 stream.setProperty(property, value);
                 this.value = value;
@@ -419,9 +462,6 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         }
         
         public int getValue() {
-            if (stream == null || !isSupported()) {
-                return 0;
-            }
             try {
                 return this.value = stream.getProperty(property);
             }
@@ -432,7 +472,17 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         
         public boolean isSupported() {
             try {
-                stream.getProperty(property);
+                stream.getPropertyLimits(property);
+                return true;
+            }
+            catch (Exception e) {
+                return false;
+            }
+        }
+        
+        public boolean isAutoSupported() {
+            try {
+                stream.getAutoProperty(property);
                 return true;
             }
             catch (Exception e) {

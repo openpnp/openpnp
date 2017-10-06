@@ -1,6 +1,15 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-10-05
+
+* OpenPnpCaptureCamera Updates
+
+	* Implemented the rest of the camera properties.
+	* Camera properties now refresh when changing device or format.
+	* Auto disabled state now reflects if auto is supported.
+	* Added display of default value.
+
 # 2017-09-30
 
 * Major Update: New Camera Capture System!
