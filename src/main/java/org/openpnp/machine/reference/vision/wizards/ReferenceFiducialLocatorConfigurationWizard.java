@@ -11,10 +11,12 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator.PartSettings;
@@ -37,6 +39,9 @@ import com.jgoodies.forms.layout.RowSpec;
 public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceFiducialLocator fiducialLocator;
     private static Part defaultPart = createDefaultPart();
+    
+    JCheckBox enabledAveragingCheckbox; 
+    JTextField textFieldRepeatFiducialRecognition;
 
     public ReferenceFiducialLocatorConfigurationWizard(ReferenceFiducialLocator fiducialLocator) {
         this.fiducialLocator = fiducialLocator;
@@ -55,6 +60,10 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
@@ -102,6 +111,20 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
             }
         });
         panel.add(btnResetAllTo, "8, 2");
+        
+        JLabel lblRepeatFiducialRecognition = new JLabel("Repeat Recognition");
+        panel.add(lblRepeatFiducialRecognition, "2, 4");
+        
+        textFieldRepeatFiducialRecognition = new JTextField();
+        panel.add(textFieldRepeatFiducialRecognition, "4, 4");
+        textFieldRepeatFiducialRecognition.setColumns(2);
+
+        JLabel lblEnabledAveraging = new JLabel("Average?");
+        panel.add(lblEnabledAveraging, "2, 6");
+
+        enabledAveragingCheckbox = new JCheckBox("");
+        panel.add(enabledAveragingCheckbox, "4, 6");
+
     }
     
     private void editPipeline() throws Exception {
@@ -138,6 +161,10 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
 
     @Override
     public void createBindings() {
+    	IntegerConverter intConverter = new IntegerConverter();
+    	
+    	addWrappedBinding(fiducialLocator, "enabledAveraging", enabledAveragingCheckbox, "selected");
+    	addWrappedBinding(fiducialLocator, "repeatFiducialRecognition", textFieldRepeatFiducialRecognition, "text", intConverter);
     }
     
     @Override

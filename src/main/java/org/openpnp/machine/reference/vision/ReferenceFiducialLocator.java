@@ -54,6 +54,12 @@ public class ReferenceFiducialLocator implements FiducialLocator {
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
 
+    @Attribute(required = false)
+    protected boolean enabledAveraging = false;
+    
+    @Attribute(required = false)
+    protected int repeatFiducialRecognition = 3;
+    
     public Location locateBoard(BoardLocation boardLocation) throws Exception {
         return locateBoard(boardLocation, false);
     }
@@ -185,6 +191,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
         PartSettings partSettings = getPartSettings(part);
         CvPipeline pipeline = partSettings.getPipeline();
+        List<Location> matchedLocations = new ArrayList<Location>();
         
         MovableUtils.moveToLocationAtSafeZ(camera, location);
 
@@ -193,7 +200,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         pipeline.setProperty("package", pkg);
         pipeline.setProperty("footprint", footprint);
         
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < this.repeatFiducialRecognition; i++) {
             List<KeyPoint> keypoints;
             try {
                 // Perform vision operation
@@ -233,11 +240,31 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             // And use the closest result
             location = locations.get(0);
             
+            if (i > 0) {
+            	//hold all matches to calculate the average later
+            	//keep a list, but don't keep the first match, since its probably most off
+            	matchedLocations.add(location);
+            }
+            
             Logger.debug("{} located at {}", part.getId(), location);
             // Move to where we actually found the fid
             camera.moveTo(location);
         }
-
+        
+        if (this.enabledAveraging) {
+        	double sumX=0;
+        	double sumY=0;
+        	
+        	for (Location matchedLocation : matchedLocations) {
+        		sumX+=matchedLocation.getX();
+        		sumY+=matchedLocation.getY();
+        	}
+        	
+        	location=location.derive((sumX/(this.repeatFiducialRecognition-1)), sumY/(this.repeatFiducialRecognition-1),null,null);
+        	
+        	camera.moveTo(location);
+        }
+        
         return location;
     }
     
@@ -282,6 +309,22 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             }
         }
         return fiducials;
+    }
+
+    public boolean isEnabledAveraging() {
+        return enabledAveraging;
+    }
+
+    public void setEnabledAveraging(boolean enabledAveraging) {
+        this.enabledAveraging = enabledAveraging;
+    }
+
+    public int getRepeatFiducialRecognition() {
+    	return this.repeatFiducialRecognition;
+    }
+    
+    public void setRepeatFiducialRecognition(int repeatFiducialRecognition) {
+        this.repeatFiducialRecognition = repeatFiducialRecognition;
     }
     
     public CvPipeline getPipeline() {
