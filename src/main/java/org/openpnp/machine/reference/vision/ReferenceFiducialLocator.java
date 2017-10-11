@@ -180,13 +180,17 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                     pkg.getId()));
         }
 
-        Logger.debug("Looking for {} at {}", part.getId(), location);
-        MovableUtils.moveToLocationAtSafeZ(camera, location);
+        //detect fid at offset?
+        Location offsetVision = new Location(LengthUnit.Millimeters,4,0,0,0);
+        Location offsetLocation = location.add(offsetVision);
+        
+        Logger.debug("Looking for {} at {} including {} offset", part.getId(), offsetLocation, offsetVision);
+        MovableUtils.moveToLocationAtSafeZ(camera, offsetLocation);
 
         PartSettings partSettings = getPartSettings(part);
         CvPipeline pipeline = partSettings.getPipeline();
         
-        MovableUtils.moveToLocationAtSafeZ(camera, location);
+        MovableUtils.moveToLocationAtSafeZ(camera, offsetLocation);
 
         pipeline.setProperty("camera", camera);
         pipeline.setProperty("part", part);
@@ -224,19 +228,22 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             Collections.sort(locations, new Comparator<Location>() {
                 @Override
                 public int compare(Location o1, Location o2) {
-                    double d1 = o1.getLinearDistanceTo(camera.getLocation());
-                    double d2 = o2.getLinearDistanceTo(camera.getLocation());
+                    double d1 = o1.getLinearDistanceTo(camera.getLocation().subtract(offsetVision));
+                    double d2 = o2.getLinearDistanceTo(camera.getLocation().subtract(offsetVision));
                     return Double.compare(d1, d2);
                 }
             });
             
             // And use the closest result
-            location = locations.get(0);
+            location = locations.get(0).add(offsetVision);
             
             Logger.debug("{} located at {}", part.getId(), location);
             // Move to where we actually found the fid
             camera.moveTo(location);
         }
+        
+        //finally return real location with offset removed
+        location=location.subtract(offsetVision);
 
         return location;
     }
