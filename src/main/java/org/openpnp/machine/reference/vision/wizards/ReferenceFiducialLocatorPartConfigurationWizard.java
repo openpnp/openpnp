@@ -10,10 +10,12 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator.PartSettings;
 import org.openpnp.model.Configuration;
@@ -34,6 +36,9 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
     private final ReferenceFiducialLocator fiducialLocator;
     private final Part part;
     private final PartSettings partSettings;
+    
+    private JLabel lblOffsetVision;
+    private JTextField textFieldOffsetVision;
 
     public ReferenceFiducialLocatorPartConfigurationWizard(ReferenceFiducialLocator fiducialLocator,
             Part part) {
@@ -53,6 +58,8 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
@@ -82,6 +89,13 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
             }
         });
         panel.add(btnLoadDefault, "6, 2");
+        
+        lblOffsetVision = new JLabel("Offset Vision");
+        panel.add(lblOffsetVision, "2, 4, left, default");
+
+        textFieldOffsetVision = new JTextField();
+        panel.add(textFieldOffsetVision, "4, 4, fill, default");
+        textFieldOffsetVision.setColumns(4);
     }
 
     private void editPipeline() throws Exception {
@@ -100,8 +114,11 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
     }
     @Override
     public void createBindings() {
+    	LengthConverter lengthConverter = new LengthConverter();
+    	
+    	addWrappedBinding(part, "offsetVision", textFieldOffsetVision, "text", lengthConverter);
     }
-    
+        
     
     @Override
     public String getWizardName() {

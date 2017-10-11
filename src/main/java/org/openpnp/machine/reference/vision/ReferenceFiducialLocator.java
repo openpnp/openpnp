@@ -181,7 +181,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         }
 
         //detect fid at offset?
-        Location offsetVision = new Location(LengthUnit.Millimeters,4,0,0,0);
+        Location offsetVision = new Location(LengthUnit.Millimeters,part.getOffsetVision().getValue(),0,0,0);
         Location offsetLocation = location.add(offsetVision);
         
         Logger.debug("Looking for {} at {} including {} offset", part.getId(), offsetLocation, offsetVision);

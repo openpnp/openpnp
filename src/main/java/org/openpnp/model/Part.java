@@ -46,7 +46,11 @@ public class Part extends AbstractModelObject implements Identifiable {
 
     @Attribute(required = false)
     private double speed = 1.0;
-
+    
+    @Attribute(required = false)
+    private LengthUnit offsetVisionUnits = LengthUnit.Millimeters;
+    @Attribute(required = false)
+    private double offsetVision = 0.0;
 
     @SuppressWarnings("unused")
     private Part() {
@@ -88,11 +92,28 @@ public class Part extends AbstractModelObject implements Identifiable {
     public double getSpeed() {
         return speed;
     }
-
+    
     public void setSpeed(double speed) {
         Object oldValue = this.speed;
         this.speed = speed;
         firePropertyChange("speed", oldValue, speed);
+    }
+
+    public Length getOffsetVision() {
+        return new Length(offsetVision,offsetVisionUnits);
+    }
+    
+    public void setOffsetVision(Length offsetVision) {
+    	Object oldValue = getOffsetVision();
+        if (offsetVision == null) {
+            this.offsetVision = 0;
+            this.offsetVisionUnits = null;
+        }
+        else {
+            this.offsetVision = offsetVision.getValue();
+            this.offsetVisionUnits = offsetVision.getUnits();
+        }
+        firePropertyChange("offsetVision", oldValue, getOffsetVision());
     }
 
     public Length getHeight() {
