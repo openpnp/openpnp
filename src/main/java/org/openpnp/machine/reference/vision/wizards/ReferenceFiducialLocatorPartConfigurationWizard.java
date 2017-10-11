@@ -13,9 +13,13 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator.PartSettings;
 import org.openpnp.model.Configuration;
@@ -37,8 +41,8 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
     private final Part part;
     private final PartSettings partSettings;
     
-    private JLabel lblOffsetVision;
-    private JTextField textFieldOffsetVision;
+    private JTextField textFieldVisionOffsetX;
+    private JTextField textFieldVisionOffsetY;
 
     public ReferenceFiducialLocatorPartConfigurationWizard(ReferenceFiducialLocator fiducialLocator,
             Part part) {
@@ -90,12 +94,45 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
         });
         panel.add(btnLoadDefault, "6, 2");
         
-        lblOffsetVision = new JLabel("Offset Vision");
-        panel.add(lblOffsetVision, "2, 4, left, default");
-
+        /*
         textFieldOffsetVision = new JTextField();
         panel.add(textFieldOffsetVision, "4, 4, fill, default");
         textFieldOffsetVision.setColumns(4);
+        */
+        
+        JPanel panelVisionOffset = new JPanel();
+        contentPanel.add(panelVisionOffset);
+        panelVisionOffset.setBorder(new TitledBorder(null, "Vision Offset", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
+        panelVisionOffset.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        ColumnSpec.decode("left:default:grow"),},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+
+        JLabel lblX = new JLabel("X");
+        panelVisionOffset.add(lblX, "4, 2");
+
+        JLabel lblY = new JLabel("Y");
+        panelVisionOffset.add(lblY, "6, 2");
+
+        JLabel lblFeedStartLocation = new JLabel("Offset");
+        lblFeedStartLocation.setToolTipText(
+                "TODO.");
+        panelVisionOffset.add(lblFeedStartLocation, "2, 4, right, default");
+
+        textFieldVisionOffsetX = new JTextField();
+        panelVisionOffset.add(textFieldVisionOffsetX, "4, 4");
+        textFieldVisionOffsetX.setColumns(8);
+
+        textFieldVisionOffsetY = new JTextField();
+        panelVisionOffset.add(textFieldVisionOffsetY, "6, 4");
+        textFieldVisionOffsetY.setColumns(8);
+
     }
 
     private void editPipeline() throws Exception {
@@ -116,7 +153,13 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
     public void createBindings() {
     	LengthConverter lengthConverter = new LengthConverter();
     	
-    	addWrappedBinding(part, "offsetVision", textFieldOffsetVision, "text", lengthConverter);
+    	MutableLocationProxy visionOffsetLocation = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, part, "offsetVision", visionOffsetLocation, "location");
+        addWrappedBinding(visionOffsetLocation, "lengthX", textFieldVisionOffsetX, "text", lengthConverter);
+        addWrappedBinding(visionOffsetLocation, "lengthY", textFieldVisionOffsetY, "text", lengthConverter);
+        
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldVisionOffsetX);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldVisionOffsetY);
     }
         
     

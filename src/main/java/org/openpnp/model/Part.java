@@ -21,6 +21,7 @@ package org.openpnp.model;
 
 import org.openpnp.ConfigurationListener;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Persist;
 
 /**
@@ -47,10 +48,8 @@ public class Part extends AbstractModelObject implements Identifiable {
     @Attribute(required = false)
     private double speed = 1.0;
     
-    @Attribute(required = false)
-    private LengthUnit offsetVisionUnits = LengthUnit.Millimeters;
-    @Attribute(required = false)
-    private double offsetVision = 0.0;
+    @Element(required = false)
+    private Location offsetVision = new Location(LengthUnit.Millimeters);
 
     @SuppressWarnings("unused")
     private Part() {
@@ -99,23 +98,14 @@ public class Part extends AbstractModelObject implements Identifiable {
         firePropertyChange("speed", oldValue, speed);
     }
 
-    public Length getOffsetVision() {
-        return new Length(offsetVision,offsetVisionUnits);
-    }
-    
-    public void setOffsetVision(Length offsetVision) {
-    	Object oldValue = getOffsetVision();
-        if (offsetVision == null) {
-            this.offsetVision = 0;
-            this.offsetVisionUnits = null;
-        }
-        else {
-            this.offsetVision = offsetVision.getValue();
-            this.offsetVisionUnits = offsetVision.getUnits();
-        }
-        firePropertyChange("offsetVision", oldValue, getOffsetVision());
+    public Location getOffsetVision() {
+        return offsetVision;
     }
 
+    public void setOffsetVision(Location offsetVision) {
+        this.offsetVision = offsetVision;
+    }
+    
     public Length getHeight() {
         return new Length(height, heightUnits);
     }
