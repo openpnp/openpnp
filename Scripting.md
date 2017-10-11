@@ -124,6 +124,38 @@ var file = new java.io.File(fileName);
 javax.imageio.ImageIO.write(image, "PNG", file);
 ```
 
+### Camera.BeforeSettle
+
+Called concurrently with the start of the settle timer before an image is captured from a camera. This is intended to be used to control lighting, mirrors, strobes, etc. Using Camera.BeforeSettle instead Camera.BeforeCapture gives the lighting more time to actually turn on and gives the camera more time to adjust to a new lighting condition.
+
+Variables:
+
+| Name  | Type | Description |
+| ------------- | ------------- | -------------- |
+| camera  | [org.openpnp.spi.Camera](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Camera.html) | The Camera which will be used to capture an image. |
+
+Example:
+
+.scripts/events/Camera.BeforeSettle.js
+```
+/**
+ * Controls lighting for the two cameras using two named actuators. The lights
+ * for the up camera and down camera are turned on and off based on which camera
+ * needs to capture.
+ */
+ var upCamLights = machine.getActuatorByName("UpCamLights");
+ var downCamLights = machine.getActuatorByName("DownCamLights");
+
+if (camera.looking == Packages.org.openpnp.spi.Camera.Looking.Up) {
+	upCamLights.actuate(true);
+	downCamLights.actuate(false);
+}
+else if (camera.looking == Packages.org.openpnp.spi.Camera.Looking.Down) {
+	upCamLights.actuate(false);
+	downCamLights.actuate(true);
+}
+```
+
 ### Camera.BeforeCapture
 
 Called before an image is captured from a Camera. This is intended to be used to control lighting, mirrors, strobes, etc.
