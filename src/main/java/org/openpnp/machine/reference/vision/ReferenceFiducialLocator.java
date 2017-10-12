@@ -241,8 +241,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             location = locations.get(0);
             
             if (i > 0) {
-            	//hold all matches to calculate the average later
-            	//keep a list, but don't keep the first match, since its probably most off
+            	//to average, keep a list of all matches except the first, since its probably most off
             	matchedLocations.add(location);
             }
             
@@ -260,8 +259,11 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         		sumY+=matchedLocation.getY();
         	}
         	
-        	location=location.derive((sumX/(this.repeatFiducialRecognition-1)), sumY/(this.repeatFiducialRecognition-1),null,null);
+        	//set the location to the averaged one
+        	location=location.derive(sumX/matchedLocations.size(), sumY/matchedLocations.size(),null,null);
         	
+        	Logger.debug("{} averaged location is at {}", part.getId(), location);
+
         	camera.moveTo(location);
         }
         
