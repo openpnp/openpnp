@@ -180,10 +180,11 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                     pkg.getId()));
         }
 
-        //add offset to real fiducial's location
-        Location offsetLocation = location.add(part.getOffsetVision());
+        //add offset to fiducial's real location
+        Location offsetVision = part.getOffsetVision();
+        Location offsetLocation = location.add(offsetVision);
         
-        Logger.debug("Looking for {} at {} including {} offset", part.getId(), offsetLocation, part.getOffsetVision());
+        Logger.debug("Looking for {} at {} plus {} vision offset", part.getId(), location, offsetVision);
         MovableUtils.moveToLocationAtSafeZ(camera, offsetLocation);
 
         PartSettings partSettings = getPartSettings(part);
@@ -221,28 +222,26 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             
             System.out.println(locations);
             
-            // Sort by distance from center.
+            // Sort by distance from center with respect to the offset the camera is viewing at.
             Collections.sort(locations, new Comparator<Location>() {
                 @Override
                 public int compare(Location o1, Location o2) {
-                    double d1 = o1.getLinearDistanceTo(camera.getLocation().subtract(part.getOffsetVision()));
-                    double d2 = o2.getLinearDistanceTo(camera.getLocation().subtract(part.getOffsetVision()));
+                    double d1 = o1.getLinearDistanceTo(camera.getLocation().subtract(offsetVision));
+                    double d2 = o2.getLinearDistanceTo(camera.getLocation().subtract(offsetVision));
                     return Double.compare(d1, d2);
                 }
             });
             
-            // And use the closest result
-            location = locations.get(0).add(part.getOffsetVision());
+            // Update the location variables by using the closest result
+            offsetLocation = locations.get(0).add(offsetVision);
+            location = locations.get(0);
             
             Logger.debug("{} located at {}", part.getId(), location);
-            // Move to where we actually found the fid
-            camera.moveTo(location);
+            // Move to where we actually found the fid plus offset for next iteration
+            camera.moveTo(offsetLocation);
         }
         
-        //calculate real location with offset removed
-        location=location.subtract(part.getOffsetVision());
-        
-        //move camera to the right point finally
+        //finally move camera to the real, non-offset location
         camera.moveTo(location);
 
         return location;

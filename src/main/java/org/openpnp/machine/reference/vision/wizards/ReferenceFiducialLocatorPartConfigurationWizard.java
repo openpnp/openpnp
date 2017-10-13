@@ -94,12 +94,6 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
         });
         panel.add(btnLoadDefault, "6, 2");
         
-        /*
-        textFieldOffsetVision = new JTextField();
-        panel.add(textFieldOffsetVision, "4, 4, fill, default");
-        textFieldOffsetVision.setColumns(4);
-        */
-        
         JPanel panelVisionOffset = new JPanel();
         contentPanel.add(panelVisionOffset);
         panelVisionOffset.setBorder(new TitledBorder(null, "Vision Offset", TitledBorder.LEADING,
@@ -122,7 +116,7 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
 
         JLabel lblFeedStartLocation = new JLabel("Offset");
         lblFeedStartLocation.setToolTipText(
-                "TODO.");
+                "Detection of reflective surfaces can be improved if doing vision with an offset to the camera's center.");
         panelVisionOffset.add(lblFeedStartLocation, "2, 4, right, default");
 
         textFieldVisionOffsetX = new JTextField();
