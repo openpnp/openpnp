@@ -185,6 +185,11 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                     "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials.",
                     pkg.getId()));
         }
+        
+        int repeatFiducialRecognition = 3;
+        if ( this.repeatFiducialRecognition > 3 ) {
+        	repeatFiducialRecognition = this.repeatFiducialRecognition;
+        }
 
         Logger.debug("Looking for {} at {}", part.getId(), location);
         MovableUtils.moveToLocationAtSafeZ(camera, location);
@@ -200,7 +205,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         pipeline.setProperty("package", pkg);
         pipeline.setProperty("footprint", footprint);
         
-        for (int i = 0; i < this.repeatFiducialRecognition; i++) {
+        for (int i = 0; i < repeatFiducialRecognition; i++) {
             List<KeyPoint> keypoints;
             try {
                 // Perform vision operation
@@ -250,7 +255,8 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             camera.moveTo(location);
         }
         
-        if (this.enabledAveraging) {
+        if (this.enabledAveraging && matchedLocations.size() >= 2) {
+        	//the arithmetic average is calculated if user wishes to do so and there were at least 2 matches
         	double sumX=0;
         	double sumY=0;
         	
@@ -259,7 +265,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         		sumY+=matchedLocation.getY();
         	}
         	
-        	//set the location to the averaged one
+        	//update the location to the arithmetic average
         	location=location.derive(sumX/matchedLocations.size(), sumY/matchedLocations.size(),null,null);
         	
         	Logger.debug("{} averaged location is at {}", part.getId(), location);

@@ -116,10 +116,12 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         panel.add(lblRepeatFiducialRecognition, "2, 4");
         
         textFieldRepeatFiducialRecognition = new JTextField();
+        textFieldRepeatFiducialRecognition.setToolTipText("To dial-in on fiducials the recognition is repeated several times, but at least 3 times. (default: 3)");
         panel.add(textFieldRepeatFiducialRecognition, "4, 4");
         textFieldRepeatFiducialRecognition.setColumns(2);
 
-        JLabel lblEnabledAveraging = new JLabel("Average?");
+        JLabel lblEnabledAveraging = new JLabel("Average Matches?");
+        lblEnabledAveraging.setToolTipText("Finally calculates the arithmetic average over all matches (except the first). Needs 3 or more repeated recognitions to work.");
         panel.add(lblEnabledAveraging, "2, 6");
 
         enabledAveragingCheckbox = new JCheckBox("");
