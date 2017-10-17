@@ -42,6 +42,8 @@ In general, any motion controller that can accept GCode commands for movement an
 
 [TinyG](http://synthetos.myshopify.com/products/tinyg) is another great Open Source motion control platform. It supports up to 6 axes and is one of the only ones to support S-curve acceleration. This makes it's motion very smooth and can allow for faster accelerations without losing steps. The TinyG board only has 4 stepper drivers, but if that's all you need than it's an excellent choice.
 
+Unfortunately, due to some strange quirks in TinyG, it's not a great solution for OpenPnP. The problems can be worked around, but it requires some hacking that is not fully documented. For more information, see [TinyG Quirks](https://github.com/openpnp/openpnp/wiki/TinyG#quirks)
+
 ## Grbl
 
 [Grbl](https://github.com/gnea/grbl) is an Open Source motion control system for the Arduino platform. Grbl is very easy to get up and running and can be considered the cheapest option, but it only supports 3 axes by default. This makes it not ideal for pick and place since it leaves you without an option to rotate the nozzle. There is a modification of Grbl available [here](https://github.com/openpnp/grbl) but it is out of date, unsupported and somewhat buggy. You can use it in a pinch if it's all you have, but it's not recommended.
