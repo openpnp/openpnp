@@ -62,7 +62,7 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         MovableUtils.moveToLocationAtSafeZ(camera, location);
         for (int i = 0; i < 3; i++) {
             pickLocation = getPickLocation(camera, nozzle);
-            camera.moveTo(pickLocation);
+            camera.moveTo(pickLocation.derive(null, null, null, 0.0));
         }
     }
 
@@ -89,7 +89,12 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         Location location = VisionUtils.getPixelLocation(camera, result.center.x, result.center.y);
         // Get the result's Location
         // Update the location with the result's rotation
-        location = location.derive(null, null, null, result.angle);
+    	double angleCorrection=0;
+    	if(result.size.width < result.size.height) {
+    		angleCorrection = 90;
+    	}
+
+        location = location.derive(null, null, null, -(result.angle+angleCorrection + location.getRotation()));
         // Update the location with the correct Z, which is the configured Location's Z
         // plus the part height.
         location =
