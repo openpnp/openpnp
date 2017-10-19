@@ -9,7 +9,7 @@ a complete change list, only those that may directly interest or affect users.
 	the vision pipeline system.
 	
 	* ReferenceBottomVision now looks for it's results in a stage named "results", like the
-	other primary vision operations.
+	other primary vision operations. It also falls back to "result" for backwards compatibility.
 	* ReferenceBottomVision now has improved error messages when a result is not found, or when
 	the result in not in the correct format. This should help users as they experiment with
 	new pipelines.
