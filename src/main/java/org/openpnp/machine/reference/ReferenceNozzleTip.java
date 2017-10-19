@@ -445,7 +445,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             pipeline.setProperty("camera", camera);
             pipeline.process();
             Location location;
-            Object result = pipeline.getResult("result").model;
+            Object result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
             if (result instanceof List) {
                 if (((List) result).get(0) instanceof Result.Circle) {
                     List<Result.Circle> circles = (List<Result.Circle>) result;
