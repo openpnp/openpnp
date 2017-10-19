@@ -200,7 +200,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                 pipeline.process();
                 
                 // Get the results
-                keypoints = (List<KeyPoint>) pipeline.getResult("results").getModel();
+                keypoints = (List<KeyPoint>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).getModel();
             }
             catch (Exception e) {
                 Logger.debug(e);

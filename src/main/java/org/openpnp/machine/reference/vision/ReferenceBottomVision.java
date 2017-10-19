@@ -9,7 +9,6 @@ import javax.swing.Icon;
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.RotatedRect;
 import org.openpnp.gui.MainFrame;
-import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionConfigurationWizard;
@@ -51,19 +50,6 @@ public class ReferenceBottomVision implements PartAlignment {
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
 
-    private double angleNorm(double val, double lim) {
-        double clip = lim * 2;
-        while (Math.abs(val) > lim) {
-            val += (val < 0.) ? clip : -clip;
-        }
-        return val;
-    }
-
-    private double angleNorm(double val) {
-        return angleNorm(val, 45.);
-    }
-
-
     @Override
     public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation,
             Location placementLocation, Nozzle nozzle) throws Exception {
@@ -73,77 +59,74 @@ public class ReferenceBottomVision implements PartAlignment {
             return new PartAlignmentOffset(new Location(LengthUnit.Millimeters), false);
         }
 
-        Camera camera = VisionUtils.getBottomVisionCamera();
-
-        // Pre-rotate to minimize runout
-        double preRotateAngle = 0;
-        if (preRotate) {
-            if (part == null || nozzle.getPart() == null) {
-                throw new Exception("No part on nozzle.");
-            }
-            if (part != nozzle.getPart()) {
-                throw new Exception("Part mismatch with part on nozzle.");
-            }
-            double angle = placementLocation.getRotation();
-            if (boardLocation != null) {
-                angle = Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation)
-                               .getRotation();
-            }
-            angle = angleNorm(angle, 180.);
-            double placementAngle = angle;
-            MovableUtils.moveToLocationAtSafeZ(nozzle, camera.getLocation()
-                                                             .add(new Location(part.getHeight()
-                                                                                   .getUnits(),
-                                                                     0.0, 0.0, part.getHeight()
-                                                                                   .getValue(),
-                                                                     0.0))
-                                                             .derive(null, null, null, angle));
-            CvPipeline pipeline = partSettings.getPipeline();
-            pipeline.setProperty("camera", camera);
-            pipeline.setProperty("nozzle", nozzle);
-            pipeline.process();
-            if (!((pipeline.getResult("result")).model instanceof RotatedRect)) {
-                throw new Exception("Bottom vision alignment failed for part " + part.getId()
-                        + " on nozzle " + nozzle.getName() + ". No result found.");
-            }
-
-            RotatedRect rect = ((RotatedRect) (pipeline.getResult("result")).model);
-            angle = angleNorm(angleNorm(angle) + angleNorm(
-                    (rect.size.width < rect.size.height) ? 90 + rect.angle : rect.angle));
-            // error is -angle
-            // See https://github.com/openpnp/openpnp/pull/590 for explanations of the magic
-            // values below.
-            if (Math.abs(angle) > 0.0765) {
-                angle += 0.0567 * Math.signum(angle);
-            } // rounding
-            nozzle.moveTo(
-                    new Location(LengthUnit.Millimeters, Double.NaN, Double.NaN, Double.NaN,
-                            placementAngle + angle));
-            pipeline.process();
-            if (!((pipeline.getResult("result")).model instanceof RotatedRect)) {
-                throw new Exception("Bottom vision alignment failed for part " + part.getId()
-                        + " on nozzle " + nozzle.getName() + ". No result found.");
-            }
-
-            rect = (RotatedRect) pipeline.getResult("result").model;
-            Logger.debug("Result rect {}", rect);
-            Location offsets =
-                    VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y)
-                               .derive(null, null, null, Double.NaN);
-            try {
-                String s = String.format("%s : %s", part.getId(), offsets.toString());
-                MainFrame.get()
-                         .getCameraViews()
-                         .getCameraView(camera)
-                         .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()),
-                                 s, 1500);
-            }
-            catch (Exception e) {
-                // Throw away, just means we're running outside of the UI.
-            }
-            return new PartAlignment.PartAlignmentOffset(offsets, true);
+        if (part == null || nozzle.getPart() == null) {
+            throw new Exception("No part on nozzle.");
+        }
+        if (part != nozzle.getPart()) {
+            throw new Exception("Part mismatch with part on nozzle.");
         }
 
+        Camera camera = VisionUtils.getBottomVisionCamera();
+
+        if (preRotate) {
+            return findOffsetsPreRotate(part, boardLocation, placementLocation, nozzle, camera,
+                    partSettings);
+        }
+        else {
+            return findOffsetsPostRotate(part, boardLocation, placementLocation, nozzle, camera,
+                    partSettings);
+        }
+    }
+
+    private static PartAlignmentOffset findOffsetsPreRotate(Part part, BoardLocation boardLocation,
+            Location placementLocation, Nozzle nozzle, Camera camera, PartSettings partSettings)
+            throws Exception {
+        double angle = placementLocation.getRotation();
+        if (boardLocation != null) {
+            angle = Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation)
+                           .getRotation();
+        }
+        angle = angleNorm(angle, 180.);
+        double placementAngle = angle;
+        Location location = camera.getLocation()
+                                  .add(new Location(part.getHeight()
+                                                        .getUnits(),
+                                          0.0, 0.0, part.getHeight()
+                                                        .getValue(),
+                                          0.0))
+                                  .derive(null, null, null, angle);
+        MovableUtils.moveToLocationAtSafeZ(nozzle, location);
+
+        CvPipeline pipeline = partSettings.getPipeline();
+
+        RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
+
+        angle = angleNorm(angleNorm(angle)
+                + angleNorm((rect.size.width < rect.size.height) ? 90 + rect.angle : rect.angle));
+        // error is -angle
+        // See https://github.com/openpnp/openpnp/pull/590 for explanations of the magic
+        // values below.
+        if (Math.abs(angle) > 0.0765) {
+            angle += 0.0567 * Math.signum(angle);
+        } // rounding
+
+        nozzle.moveTo(new Location(LengthUnit.Millimeters, Double.NaN, Double.NaN, Double.NaN,
+                placementAngle + angle));
+
+        rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
+
+        Logger.debug("Result rect {}", rect);
+        Location offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y)
+                                      .derive(null, null, null, Double.NaN);
+
+        displayResult(pipeline, part, offsets, camera);
+
+        return new PartAlignment.PartAlignmentOffset(offsets, true);
+    }
+
+    private static PartAlignmentOffset findOffsetsPostRotate(Part part, BoardLocation boardLocation,
+            Location placementLocation, Nozzle nozzle, Camera camera, PartSettings partSettings)
+            throws Exception {
         // Create a location that is the Camera's X, Y, it's Z + part height
         // and a rotation of 0, unless preRotate is enabled
         Location startLocation = camera.getLocation();
@@ -151,22 +134,14 @@ public class ReferenceBottomVision implements PartAlignment {
         Location partHeightLocation =
                 new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0);
         startLocation = startLocation.add(partHeightLocation)
-                                     .derive(null, null, null, preRotateAngle);
+                                     .derive(null, null, null, 0.);
 
         MovableUtils.moveToLocationAtSafeZ(nozzle, startLocation);
 
         CvPipeline pipeline = partSettings.getPipeline();
 
-        pipeline.setProperty("camera", camera);
-        pipeline.setProperty("nozzle", nozzle);
-        pipeline.process();
+        RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
 
-        Result result = pipeline.getResult("result");
-        if (!(result.model instanceof RotatedRect)) {
-            throw new Exception("Bottom vision alignment failed for part " + part.getId()
-                    + " on nozzle " + nozzle.getName() + ". No result found.");
-        }
-        RotatedRect rect = (RotatedRect) result.model;
         Logger.debug("Result rect {}", rect);
 
         // Create the offsets object. This is the physical distance from
@@ -191,25 +166,48 @@ public class ReferenceBottomVision implements PartAlignment {
         offsets = offsets.derive(null, null, null, -angle);
         Logger.debug("Final offsets {}", offsets);
 
-        OpenCvUtils.saveDebugImage(ReferenceBottomVision.class, "findOffsets", "result",
-                pipeline.getWorkingImage());
+        offsets = offsets.derive(null, null, null, offsets.getRotation());
 
-        offsets = offsets.derive(null, null, null, offsets.getRotation() + preRotateAngle);
+        displayResult(pipeline, part, offsets, camera);
 
+        return new PartAlignmentOffset(offsets, false);
+    }
+
+    private static void displayResult(CvPipeline pipeline, Part part, Location offsets, Camera camera) {
         try {
-            CameraView cameraView = MainFrame.get()
-                                             .getCameraViews()
-                                             .getCameraView(camera);
             String s = String.format("%s : %s", part.getId(), offsets.toString());
-            cameraView.showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), s,
-                    1500);
-
+            MainFrame.get()
+                     .getCameraViews()
+                     .getCameraView(camera)
+                     .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), s,
+                             1500);
         }
         catch (Exception e) {
             // Throw away, just means we're running outside of the UI.
         }
+    }
 
-        return new PartAlignmentOffset(offsets, false);
+    private static RotatedRect processPipelineAndGetResult(CvPipeline pipeline, Camera camera, Part part,
+            Nozzle nozzle) throws Exception {
+        pipeline.setProperty("camera", camera);
+        pipeline.setProperty("nozzle", nozzle);
+        pipeline.process();
+
+        Result result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME);
+
+        // Fall back to the old name of "result" instead of "results" for backwards
+        // compatibility.
+        if (result == null) {
+            result = pipeline.getResult("result");
+        }
+
+        if (result == null || !(result.model instanceof RotatedRect)) {
+            throw new Exception(String.format(
+                    "Bottom vision alignment failed for part %s on nozzle %s. No result named '%s' or '%s' with a RotatedRect found after processing pipeline.",
+                    part.getId(), nozzle.getName(), VisionUtils.PIPELINE_RESULTS_NAME, "result"));
+        }
+
+        return (RotatedRect) result.model;
     }
 
     @Override
@@ -231,7 +229,17 @@ public class ReferenceBottomVision implements PartAlignment {
         }
     }
 
+    private static double angleNorm(double val, double lim) {
+        double clip = lim * 2;
+        while (Math.abs(val) > lim) {
+            val += (val < 0.) ? clip : -clip;
+        }
+        return val;
+    }
 
+    private static double angleNorm(double val) {
+        return angleNorm(val, 45.);
+    }
 
     @Override
     public String getId() {

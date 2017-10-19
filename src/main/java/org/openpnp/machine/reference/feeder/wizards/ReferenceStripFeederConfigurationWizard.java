@@ -668,7 +668,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             List<CvStage.Result.Circle> results = null;
             Object result = null;
             try {
-                result = pipeline.getResult("results").model;
+                result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
                 results = (List<CvStage.Result.Circle>) result;
             }
             catch (ClassCastException e) {

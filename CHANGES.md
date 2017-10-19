@@ -1,6 +1,20 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-10-18
+
+* Vision Usability Improvements
+
+	As a result of the discussion in https://groups.google.com/d/msgid/openpnp/7029bade-fa16-46e5-8c2d-d9e22105c5fe%40googlegroups.com?utm_medium=email&utm_source=footer several changes have been made to
+	the vision pipeline system.
+	
+	* ReferenceBottomVision now looks for it's results in a stage named "results", like the
+	other primary vision operations.
+	* ReferenceBottomVision now has improved error messages when a result is not found, or when
+	the result in not in the correct format. This should help users as they experiment with
+	new pipelines.
+	* Vision operations all now reference a common name to avoid mistakes like this in the future.
+
 # 2017-10-05
 
 * OpenPnpCaptureCamera Updates

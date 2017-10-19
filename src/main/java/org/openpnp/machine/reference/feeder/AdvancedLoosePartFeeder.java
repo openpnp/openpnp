@@ -76,7 +76,7 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
         pipeline.setProperty("feeder", this);
         pipeline.process();
         // Grab the results
-        List<RotatedRect> results = (List<RotatedRect>) pipeline.getResult("results").model;
+        List<RotatedRect> results = (List<RotatedRect>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
         if (results.isEmpty()) {
             throw new Exception("Feeder " + getName() + ": No parts found.");
         }
