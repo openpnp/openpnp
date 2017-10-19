@@ -1002,6 +1002,7 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
+            System.out.println("isAllPlaced " + isAllPlaced());
             if (isAllPlaced()) {
                 int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                         "All placements have been placed already. Reset all placements before starting job?",
@@ -1461,11 +1462,18 @@ public class JobPanel extends JPanel {
     
     boolean isAllPlaced() {
     	for (BoardLocation boardLocation : job.getBoardLocations()) {
+    	    if (!boardLocation.isEnabled()) {
+    	        continue;
+    	    }
         	for (Placement placement : boardLocation.getBoard().getPlacements()) {
+        	    if (placement.getType() != Type.Place) {
+        	        continue;
+        	    }
+        	    if (placement.getSide() != boardLocation.getSide()) {
+        	        continue;
+        	    }
         		if (!boardLocation.getPlaced(placement.getId())) {
-        			if (placement.getType() == Type.Place){
-        				return false;
-        			}
+    				return false;
         		}
         	}
     	}
