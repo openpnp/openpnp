@@ -178,6 +178,7 @@ The updated command moves past the target point using the backlash offsets and t
 
 # Troubleshooting
 
-## Nozzle is Moving When Camera is Moved
+## Nozzle is Moving or Turning When Camera is Moved
 
 If your nozzle is moving when the camera is commanded to move, especially in Z, you need to set up [[GcodeDriver: Axis Mapping]] so that the camera is not included in the Z axis. This is done by specifying only the Nozzle IDs in the Z axis instead of "*". For more information see [[GcodeDriver: Axis Mapping]].
+This solve also a limited speed of moves in the x,y,z axis, if the camera is commanded to turn and the nozzle rotates as well (rather slowly). 
