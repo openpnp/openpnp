@@ -1,3 +1,9 @@
+# Deprecation Note
+
+Note that this FAQ is now deprecated with the release of the OpenPnP Capture System. Please see https://github.com/openpnp/openpnp/blob/develop/CHANGES.md#2017-09-30 for more details.
+
+# USB Camera Troubleshooting FAQ 
+
 If you are using multiple USB cameras with OpenPnP you may find that it's difficult to get more than one to show an image at the same time. This is a software limitation in the libraries that OpenPnP uses to talk to cameras and is very difficult to fix. Read on for some solutions to the problems. 
 
 ## I just want it to work!
