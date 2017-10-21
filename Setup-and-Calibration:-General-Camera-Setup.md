@@ -7,7 +7,7 @@
     * If you are adding a head mounted camera (down looking, fiducial), find the head in the tree on the left. Under the head look for Cameras and select it.
     * If you are adding a machine mounted camera (up looking, bottom vision), find Cameras under the root of the tree and select it.
 3. Add a camera by pressing the green plus button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg).  
-2. Select a camera driver from the provided list, try "OpenCVCamera" (USB) or "OnvifIPCamera" (IP) and press the "Accept" button. The newly added camera will show up in the camera list.
+2. Select a camera driver from the provided list, try "OpenCVCamera" (USB) or "OnvifIPCamera" (IP) and press the "Accept" button. The newly added camera will show up in the camera list. **Note that as of 2017/09/30 you should use OpenPnpCaptureCamera. Documentation has not yet been updated for this. Please see https://github.com/openpnp/openpnp/blob/develop/CHANGES.md#2017-09-30 for details.**
 3. Click on the name of the new camera to open it's properties.
 4. Click on the "Camera Specific" tab.
 5. In the "General" section you can configure settings specific to the type of camera (USB or IP).
