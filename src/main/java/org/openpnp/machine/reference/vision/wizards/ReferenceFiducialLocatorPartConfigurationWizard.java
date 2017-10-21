@@ -10,10 +10,16 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator.PartSettings;
 import org.openpnp.model.Configuration;
@@ -34,6 +40,9 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
     private final ReferenceFiducialLocator fiducialLocator;
     private final Part part;
     private final PartSettings partSettings;
+    
+    private JTextField textFieldVisionOffsetX;
+    private JTextField textFieldVisionOffsetY;
 
     public ReferenceFiducialLocatorPartConfigurationWizard(ReferenceFiducialLocator fiducialLocator,
             Part part) {
@@ -53,6 +62,8 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
@@ -82,6 +93,40 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
             }
         });
         panel.add(btnLoadDefault, "6, 2");
+        
+        JPanel panelVisionOffset = new JPanel();
+        contentPanel.add(panelVisionOffset);
+        panelVisionOffset.setBorder(new TitledBorder(null, "Vision Offset", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
+        panelVisionOffset.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        ColumnSpec.decode("left:default:grow"),},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+
+        JLabel lblX = new JLabel("X");
+        panelVisionOffset.add(lblX, "4, 2");
+
+        JLabel lblY = new JLabel("Y");
+        panelVisionOffset.add(lblY, "6, 2");
+
+        JLabel lblFeedStartLocation = new JLabel("Offset");
+        lblFeedStartLocation.setToolTipText(
+                "Detection of reflective surfaces can be improved if doing vision with an offset to the camera's center.");
+        panelVisionOffset.add(lblFeedStartLocation, "2, 4, right, default");
+
+        textFieldVisionOffsetX = new JTextField();
+        panelVisionOffset.add(textFieldVisionOffsetX, "4, 4");
+        textFieldVisionOffsetX.setColumns(8);
+
+        textFieldVisionOffsetY = new JTextField();
+        panelVisionOffset.add(textFieldVisionOffsetY, "6, 4");
+        textFieldVisionOffsetY.setColumns(8);
+
     }
 
     private void editPipeline() throws Exception {
@@ -100,8 +145,17 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
     }
     @Override
     public void createBindings() {
+    	LengthConverter lengthConverter = new LengthConverter();
+    	
+    	MutableLocationProxy visionOffsetLocation = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, part, "offsetVision", visionOffsetLocation, "location");
+        addWrappedBinding(visionOffsetLocation, "lengthX", textFieldVisionOffsetX, "text", lengthConverter);
+        addWrappedBinding(visionOffsetLocation, "lengthY", textFieldVisionOffsetY, "text", lengthConverter);
+        
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldVisionOffsetX);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldVisionOffsetY);
     }
-    
+        
     
     @Override
     public String getWizardName() {
