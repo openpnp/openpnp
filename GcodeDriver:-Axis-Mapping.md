@@ -123,6 +123,15 @@ Finally, we define the second rotational axis and include a `T1` pre-move-comman
       <pre-move-command>T1</pre-move-command>
    </axis>
 ```
+## Pre Move Command
+
+The `pre-move-command` shown in examples above supports a `Coordinate` variable which can be used to reset the axis before moving it. This is useful for motion controllers that do not support multiple extruder coordinates, for example. Usage looks like:
+
+`<pre-move-command>T0G92E{Coordinate:%.4f}</pre-move-command>`
+
+For more information, see:
+* https://github.com/openpnp/openpnp/blob/develop/CHANGES.md#2017-10-21
+* https://groups.google.com/d/msgid/openpnp/d7a88150-6e12-4532-b0fa-6971da25c557%40googlegroups.com
 
 # Axis Transforms
 ## NegatingTransform
