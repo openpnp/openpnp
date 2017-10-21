@@ -1,6 +1,6 @@
-Marlin is a 5 axis controller that can run on an Arduino and intended for 3d printer. In it's default state it is not well suited for pick and place machines because several functions useful for 3d printers interfere if using without heated bed, extruders, thermistors, etc. Nevertheless if configured properly, the firmware can be a good and favorable choice in combination with a ramps 1.4 board + A4988 stepper drivers.
+Marlin is a 5 axis controller that can run on an Arduino and is intended for 3d printer. In it's default state it is not well suited for pick and place machines because several functions like temperature control useful for 3d printers interfere. Nevertheless if configured properly, the firmware can be a good and favorable choice in combination with a ramps 1.4 board + A4988 stepper drivers.
 
-Source files of a configured marlin version running OpenPnP are located at [github](https://github.com/mgrl/MarlinOnRamps4OpenPnP). That fork can be used as a template to be adapted for a specific machine as the fork itself was.
+Source files of a configured marlin version running OpenPnP are located at [github](https://github.com/mgrl/MarlinOnRamps4OpenPnP). That fork can be used as a template to adapt for a specific machine as the fork itself was.
 
 In OpenPnP you will need to select the org.openpnp.machine.reference.driver.GcodeDriver driver.
 
