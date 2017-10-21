@@ -1090,7 +1090,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         @Element(required = false)
         private AxisTransform transform;
 
-        @Element(required = false)
+        @Element(required = false, data = true)
         private String preMoveCommand;
 
         /**
