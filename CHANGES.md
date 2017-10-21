@@ -1,6 +1,16 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-10-21
+
+* GcodeDriver Axis Pre Move Command Coordinate Variable
+
+	Pre Move Command in GcodeDriver Axes now has a Coordinate variable which can be used to reset
+	an axis' position before moving it. This can be used in controller firmwares that do not
+	support individual variables for multiple axes. In particular, this makes it possible to
+	use Marlin with multiple rotation axes by using a Pre Move Command like
+	`T0G92E{Coordinate:%.4f}`
+	
 # 2017-10-18
 
 * Vision Usability Improvements
