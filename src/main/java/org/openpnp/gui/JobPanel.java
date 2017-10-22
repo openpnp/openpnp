@@ -1002,6 +1002,8 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
+        	boolean readyToRun = true;
+        	
             System.out.println("isAllPlaced " + isAllPlaced());
             if (isAllPlaced()) {
                 int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
@@ -1015,9 +1017,24 @@ public class JobPanel extends JPanel {
                     jobPlacementsPanel.refresh();
                 }
             }
-            UiUtils.messageBoxOnException(() -> {
-                fsm.send(Message.StartOrPause);
-            });
+            
+            System.out.println("isBoardHeightZero " + isBoardHeightZero());
+            if (isBoardHeightZero()) {
+            	readyToRun = false;
+                int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "One of your boards has the Z-height set to 0 (default).\nRun job anyway?",
+                        "Run job anyway?", JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE);
+                if (ret == JOptionPane.YES_OPTION) {
+                	readyToRun = true;
+                    jobPlacementsPanel.refresh();
+                }
+            }
+            if (readyToRun) {
+	            UiUtils.messageBoxOnException(() -> {
+	                fsm.send(Message.StartOrPause);
+	            });
+            }
         }
     };
 
@@ -1478,5 +1495,17 @@ public class JobPanel extends JPanel {
         	}
     	}
     	return true;
+    }
+    
+    boolean isBoardHeightZero() {
+    	for (BoardLocation boardLocation : job.getBoardLocations()) {
+    		if (!boardLocation.isEnabled()) {
+    	        continue;
+    	    }
+    		if (boardLocation.getLocation().getLengthZ().getValue() == 0.0) {
+    			return true;
+    		}
+    	}
+    	return false;
     }
 }
