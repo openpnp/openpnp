@@ -85,6 +85,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.JobProcessor;
@@ -1001,6 +1002,19 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
+            System.out.println("isAllPlaced " + isAllPlaced());
+            if (isAllPlaced()) {
+                int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "All placements have been placed already. Reset all placements before starting job?",
+                        "Reset placement status?", JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE);
+                if (ret == JOptionPane.YES_OPTION) {
+                    for (BoardLocation boardLocation : job.getBoardLocations()) {
+                        boardLocation.clearAllPlaced();
+                    }
+                    jobPlacementsPanel.refresh();
+                }
+            }
             UiUtils.messageBoxOnException(() -> {
                 fsm.send(Message.StartOrPause);
             });
@@ -1036,7 +1050,7 @@ public class JobPanel extends JPanel {
             });
         }
     };
-
+    
     public final Action resetAllPlacedAction = new AbstractAction() {
         {
             putValue(NAME, "Reset All Placed");
@@ -1445,5 +1459,24 @@ public class JobPanel extends JPanel {
         // Would be better to have property notifiers but this is going to have to do for now.
         repaint();
     };
-
+    
+    boolean isAllPlaced() {
+    	for (BoardLocation boardLocation : job.getBoardLocations()) {
+    	    if (!boardLocation.isEnabled()) {
+    	        continue;
+    	    }
+        	for (Placement placement : boardLocation.getBoard().getPlacements()) {
+        	    if (placement.getType() != Type.Place) {
+        	        continue;
+        	    }
+        	    if (placement.getSide() != boardLocation.getSide()) {
+        	        continue;
+        	    }
+        		if (!boardLocation.getPlaced(placement.getId())) {
+    				return false;
+        		}
+        	}
+    	}
+    	return true;
+    }
 }
