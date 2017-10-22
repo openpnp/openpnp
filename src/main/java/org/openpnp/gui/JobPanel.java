@@ -1125,6 +1125,7 @@ public class JobPanel extends JPanel {
 
                 Board board = configuration.getBoard(file);
                 BoardLocation boardLocation = new BoardLocation(board);
+                boardLocation.setLocation(new Location(boardLocation.getLocation().getUnits(), 0, 0, Double.NaN, 0));
                 getJob().addBoardLocation(boardLocation);
                 boardLocationsTableModel.fireTableDataChanged();
 
