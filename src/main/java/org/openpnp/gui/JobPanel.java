@@ -1018,11 +1018,19 @@ public class JobPanel extends JPanel {
                 }
             }
             
+<<<<<<< HEAD
             System.out.println("isBoardHeightNaN " + isBoardHeightNaN());
             if (isBoardHeightNaN()) {
             	readyToRun = false;
                 int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                         "One of the boards has an undefined Z-height.\nRun job anyway?",
+=======
+            System.out.println("isBoardHeightZero " + isBoardHeightZero());
+            if (isBoardHeightZero()) {
+            	readyToRun = false;
+                int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "One of your boards has the Z-height set to 0 (default).\nRun job anyway?",
+>>>>>>> origin/board-z-warning
                         "Run job anyway?", JOptionPane.YES_NO_OPTION,
                         JOptionPane.WARNING_MESSAGE);
                 if (ret == JOptionPane.YES_OPTION) {
@@ -1497,12 +1505,20 @@ public class JobPanel extends JPanel {
     	return true;
     }
     
+<<<<<<< HEAD
     boolean isBoardHeightNaN() {
+=======
+    boolean isBoardHeightZero() {
+>>>>>>> origin/board-z-warning
     	for (BoardLocation boardLocation : job.getBoardLocations()) {
     		if (!boardLocation.isEnabled()) {
     	        continue;
     	    }
+<<<<<<< HEAD
     		if (Double.isNaN(boardLocation.getLocation().getLengthZ().getValue())) {
+=======
+    		if (boardLocation.getLocation().getLengthZ().getValue() == 0.0) {
+>>>>>>> origin/board-z-warning
     			return true;
     		}
     	}
