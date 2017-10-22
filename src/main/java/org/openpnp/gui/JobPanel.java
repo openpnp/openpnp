@@ -1002,8 +1002,6 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-        	boolean readyToRun = true;
-        	
             System.out.println("isAllPlaced " + isAllPlaced());
             if (isAllPlaced()) {
                 int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
@@ -1020,21 +1018,12 @@ public class JobPanel extends JPanel {
             
             System.out.println("isBoardHeightNaN " + isBoardHeightNaN());
             if (isBoardHeightNaN()) {
-            	readyToRun = false;
-                int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "One of the boards has an undefined Z-height.\nRun job anyway?",
-                        "Run job anyway?", JOptionPane.YES_NO_OPTION,
-                        JOptionPane.WARNING_MESSAGE);
-                if (ret == JOptionPane.YES_OPTION) {
-                	readyToRun = true;
-                    jobPlacementsPanel.refresh();
-                }
+            	MessageBoxes.errorBox(frame, "At least one board has undefined Z height.", "At least one board has undefined Z height.");
+            	return;
             }
-            if (readyToRun) {
-	            UiUtils.messageBoxOnException(() -> {
-	                fsm.send(Message.StartOrPause);
-	            });
-            }
+            UiUtils.messageBoxOnException(() -> {
+                fsm.send(Message.StartOrPause);
+            });
         }
     };
 
