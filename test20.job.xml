@@ -1,0 +1,14 @@
+<openpnp-job>
+   <panels/>
+   <board-locations>
+      <board-location side="Top" board-file="test20.board.xml" panel-id="Panel1" check-fiducials="false" enabled="true" z-set="true">
+         <location units="Millimeters" x="5.822769230769231" y="8.237741649899396" z="-5.0" rotation="0.0"/>
+         <placed class="java.util.HashMap">
+            <entry>
+               <string>test1</string>
+               <boolean>true</boolean>
+            </entry>
+         </placed>
+      </board-location>
+   </board-locations>
+</openpnp-job>

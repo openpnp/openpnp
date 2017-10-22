@@ -46,6 +46,9 @@ public class BoardLocation extends AbstractModelObject {
 
     @Attribute(required = false)
     private boolean enabled = true;
+    
+    @Attribute(required = false)
+    private boolean zSet = false;
 
     @ElementMap(required = false)
     private Map<String, Boolean> placed = new HashMap<String, Boolean>();
@@ -145,7 +148,17 @@ public class BoardLocation extends AbstractModelObject {
         this.enabled = enabled;
         firePropertyChange("enabled", oldValue, enabled);
     }
+    
+    public boolean iszSet() {
+        return zSet;
+    }
 
+    public void setzSet(boolean zSet) {
+        boolean oldValue = this.zSet;
+        this.zSet = zSet;
+        firePropertyChange("zSet", oldValue, zSet);
+    }
+    
     public void setPlaced(String placementId, boolean placed) {
         this.placed.put(placementId, placed);
         firePropertyChange("placed", null, this.placed);

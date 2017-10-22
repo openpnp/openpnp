@@ -1,0 +1,10 @@
+<openpnp-board version="1.1" name="test20.board.xml">
+   <dimensions units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+   <fiducials/>
+   <placements>
+      <placement version="1.2" id="test1" side="Top" part-id="R0603-1K" type="Place" check-fids="false">
+         <location units="Millimeters" x="3.902276923076923" y="6.8477505030181085" z="0.0" rotation="0.0"/>
+      </placement>
+   </placements>
+   <solder-paste-pads/>
+</openpnp-board>
