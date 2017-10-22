@@ -53,7 +53,7 @@ public class Location {
     }
 
     public Location(LengthUnit units) {
-        this(units, 0, 0, 0, 0);
+        this(units, Double.NaN, Double.NaN, Double.NaN, Double.NaN);
     }
 
     public Location(LengthUnit units, double x, double y, double z, double rotation) {
