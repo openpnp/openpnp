@@ -8,7 +8,7 @@ import org.openpnp.vision.pipeline.Stage;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
-@Stage(description=".")
+@Stage(description="Adds two images together.")
 public class Add extends CvStage {
     @Element(required = false)
 
