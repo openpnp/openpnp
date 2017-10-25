@@ -60,52 +60,48 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         Camera camera = nozzle.getHead().getDefaultCamera();
         // Move to the feeder pick location
         MovableUtils.moveToLocationAtSafeZ(camera, location);
-        try (CvPipeline pipeline = getPipeline()) {
-            for (int i = 0; i < 3; i++) {
-                pickLocation = getPickLocation(pipeline, camera, nozzle);
-                camera.moveTo(pickLocation.derive(null, null, null, 0.0));
-            }
-            MainFrame.get().getCameraViews().getCameraView(camera)
-                .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 1000);
+        for (int i = 0; i < 3; i++) {
+            pickLocation = getPickLocation(camera, nozzle);
+            camera.moveTo(pickLocation);
         }
     }
 
-    private Location getPickLocation(CvPipeline pipeline, Camera camera, Nozzle nozzle) throws Exception {
-        // Process the pipeline to extract RotatedRect results
-        pipeline.setProperty("camera", camera);
-        pipeline.setProperty("nozzle", nozzle);
-        pipeline.setProperty("feeder", this);
-        pipeline.process();
-        // Grab the results
-        List<RotatedRect> results = (List<RotatedRect>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
-        if (results.isEmpty()) {
-            throw new Exception("Feeder " + getName() + ": No parts found.");
+    private Location getPickLocation(Camera camera, Nozzle nozzle) throws Exception {
+        try (CvPipeline pipeline = getPipeline()) {
+            // Process the pipeline to extract RotatedRect results
+            pipeline.setProperty("camera", camera);
+            pipeline.setProperty("nozzle", nozzle);
+            pipeline.setProperty("feeder", this);
+            pipeline.process();
+            // Grab the results
+            List<RotatedRect> results = (List<RotatedRect>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
+            if (results.isEmpty()) {
+                throw new Exception("Feeder " + getName() + ": No parts found.");
+            }
+            // Find the closest result
+            results.sort((a, b) -> {
+                Double da = VisionUtils.getPixelLocation(camera, a.center.x, a.center.y)
+                        .getLinearDistanceTo(camera.getLocation());
+                Double db = VisionUtils.getPixelLocation(camera, b.center.x, b.center.y)
+                        .getLinearDistanceTo(camera.getLocation());
+                return da.compareTo(db);
+            });
+            RotatedRect result = results.get(0);
+            Location location = VisionUtils.getPixelLocation(camera, result.center.x, result.center.y);
+            // Get the result's Location
+            // Update the location with the result's rotation
+            location = location.derive(null, null, null, result.angle);
+            // Update the location with the correct Z, which is the configured Location's Z
+            // plus the part height.
+            location =
+                    location.derive(null, null,
+                            this.location.convertToUnits(location.getUnits()).getZ()
+                                    + part.getHeight().convertToUnits(location.getUnits()).getValue(),
+                            null);
+            MainFrame.get().getCameraViews().getCameraView(camera)
+                    .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
+            return location;
         }
-        // Find the closest result
-        results.sort((a, b) -> {
-            Double da = VisionUtils.getPixelLocation(camera, a.center.x, a.center.y)
-                    .getLinearDistanceTo(camera.getLocation());
-            Double db = VisionUtils.getPixelLocation(camera, b.center.x, b.center.y)
-                    .getLinearDistanceTo(camera.getLocation());
-            return da.compareTo(db);
-        });
-        RotatedRect result = results.get(0);
-        // Get the result's Location
-        Location location = VisionUtils.getPixelLocation(camera, result.center.x, result.center.y);
-        // Update the location's rotation with the result's angle, forcing 
-        double angleCorrection = 0;
-        if (result.size.width < result.size.height) {
-           angleCorrection = 90;
-        }
-        location = location.derive(null, null, null, -(result.angle + angleCorrection + location.getRotation()));        
-        // Update the location with the correct Z, which is the configured Location's Z
-        // plus the part height.
-        location =
-                location.derive(null, null,
-                        this.location.convertToUnits(location.getUnits()).getZ()
-                                + part.getHeight().convertToUnits(location.getUnits()).getValue(),
-                        null);
-        return location;
     }
 
     public CvPipeline getPipeline() {
