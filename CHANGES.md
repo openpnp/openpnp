@@ -12,6 +12,15 @@ a complete change list, only those that may directly interest or affect users.
 
 	ReferenceBottomVision will now throw specific error messages for common pipeline setup errors
 	such as an improperly named result stage or an invalid result type.
+	
+* ReferenceLoosePartFeeder Improvements
+
+	ReferenceLoosePartFeeder will now try to pick parts in a fixed landscape orientation. This makes
+	it perform much better for parts like capacitors and resistors as they should always be picked
+	in a specific orientation.
+	
+	Additionally, the camera feedback is now only shown at the end of the process, and for a longer
+	time. This better represents what OpenPnP is "seeing" before it picks a part.
 	 
 # 2017-10-21
 
