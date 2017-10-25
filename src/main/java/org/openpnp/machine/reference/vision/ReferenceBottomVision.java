@@ -97,31 +97,31 @@ public class ReferenceBottomVision implements PartAlignment {
                                   .derive(null, null, null, angle);
         MovableUtils.moveToLocationAtSafeZ(nozzle, location);
 
-        CvPipeline pipeline = partSettings.getPipeline();
+        try (CvPipeline pipeline = partSettings.getPipeline()) {
 
-        RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
+            RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
 
-        angle = angleNorm(angleNorm(angle)
-                + angleNorm((rect.size.width < rect.size.height) ? 90 + rect.angle : rect.angle));
-        // error is -angle
-        // See https://github.com/openpnp/openpnp/pull/590 for explanations of the magic
-        // values below.
-        if (Math.abs(angle) > 0.0765) {
-            angle += 0.0567 * Math.signum(angle);
-        } // rounding
+            angle = angleNorm(angleNorm(angle)
+                    + angleNorm((rect.size.width < rect.size.height) ? 90 + rect.angle : rect.angle));
+            // error is -angle
+            // See https://github.com/openpnp/openpnp/pull/590 for explanations of the magic
+            // values below.
+            if (Math.abs(angle) > 0.0765) {
+                angle += 0.0567 * Math.signum(angle);
+            } // rounding
 
-        nozzle.moveTo(new Location(LengthUnit.Millimeters, Double.NaN, Double.NaN, Double.NaN,
-                placementAngle + angle));
+            nozzle.moveTo(new Location(LengthUnit.Millimeters, Double.NaN, Double.NaN, Double.NaN,
+                    placementAngle + angle));
 
-        rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
+            rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
 
-        Logger.debug("Result rect {}", rect);
-        Location offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y)
-                                      .derive(null, null, null, Double.NaN);
+            Logger.debug("Result rect {}", rect);
+            Location offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y)
+                                          .derive(null, null, null, Double.NaN);
 
-        displayResult(pipeline, part, offsets, camera);
-
-        return new PartAlignment.PartAlignmentOffset(offsets, true);
+            displayResult(pipeline, part, offsets, camera);
+            return new PartAlignment.PartAlignmentOffset(offsets, true);
+        }
     }
 
     private static PartAlignmentOffset findOffsetsPostRotate(Part part, BoardLocation boardLocation,
@@ -138,39 +138,39 @@ public class ReferenceBottomVision implements PartAlignment {
 
         MovableUtils.moveToLocationAtSafeZ(nozzle, startLocation);
 
-        CvPipeline pipeline = partSettings.getPipeline();
-
-        RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
-
-        Logger.debug("Result rect {}", rect);
-
-        // Create the offsets object. This is the physical distance from
-        // the center of the camera to the located part.
-        Location offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
-
-        // We assume that the part is never picked more than 45º rotated
-        // so if OpenCV tells us it's rotated more than 45º we correct
-        // it. This seems to happen quite a bit when the angle of rotation
-        // is close to 0.
-        double angle = rect.angle;
-        while (Math.abs(angle) > 45) {
-            if (angle < 0) {
-                angle += 90;
+        try (CvPipeline pipeline = partSettings.getPipeline()) {
+            RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
+    
+            Logger.debug("Result rect {}", rect);
+    
+            // Create the offsets object. This is the physical distance from
+            // the center of the camera to the located part.
+            Location offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
+    
+            // We assume that the part is never picked more than 45º rotated
+            // so if OpenCV tells us it's rotated more than 45º we correct
+            // it. This seems to happen quite a bit when the angle of rotation
+            // is close to 0.
+            double angle = rect.angle;
+            while (Math.abs(angle) > 45) {
+                if (angle < 0) {
+                    angle += 90;
+                }
+                else {
+                    angle -= 90;
+                }
             }
-            else {
-                angle -= 90;
-            }
+    
+            // Set the angle on the offsets.
+            offsets = offsets.derive(null, null, null, -angle);
+            Logger.debug("Final offsets {}", offsets);
+    
+            offsets = offsets.derive(null, null, null, offsets.getRotation());
+    
+            displayResult(pipeline, part, offsets, camera);
+    
+            return new PartAlignmentOffset(offsets, false);
         }
-
-        // Set the angle on the offsets.
-        offsets = offsets.derive(null, null, null, -angle);
-        Logger.debug("Final offsets {}", offsets);
-
-        offsets = offsets.derive(null, null, null, offsets.getRotation());
-
-        displayResult(pipeline, part, offsets, camera);
-
-        return new PartAlignmentOffset(offsets, false);
     }
 
     private static void displayResult(CvPipeline pipeline, Part part, Location offsets, Camera camera) {
@@ -200,13 +200,25 @@ public class ReferenceBottomVision implements PartAlignment {
         if (result == null) {
             result = pipeline.getResult("result");
         }
-
-        if (result == null || !(result.model instanceof RotatedRect)) {
+        
+        if (result == null) {
             throw new Exception(String.format(
-                    "Bottom vision alignment failed for part %s on nozzle %s. No result named '%s' or '%s' with a RotatedRect found after processing pipeline.",
-                    part.getId(), nozzle.getName(), VisionUtils.PIPELINE_RESULTS_NAME, "result"));
+                    "ReferenceBottomVision (%s): Pipeline error. Pipeline must contain a result named '%s'.",
+                    part.getId(), VisionUtils.PIPELINE_RESULTS_NAME));
         }
-
+        
+        if (result.model == null) {
+            throw new Exception(String.format(
+                    "ReferenceBottomVision (%s): No result found.",
+                    part.getId()));
+        }
+        
+        if (!(result.model instanceof RotatedRect)) {
+            throw new Exception(String.format(
+                    "ReferenceBottomVision (%s): Incorrect pipeline result type. Expected RotatedRect.",
+                    part.getId()));
+        }
+        
         return (RotatedRect) result.model;
     }
 

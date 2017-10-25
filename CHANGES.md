@@ -1,6 +1,18 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-10-24
+
+* CvPipeline Memory Usage Improvements
+
+	CvPipeline now implements AutoClosable and all of the code that uses it has been updated to
+	release after use. This should greatly improve memory usage on large jobs with many parts.
+	
+* ReferenceBottomVision Improved Error Messages
+
+	ReferenceBottomVision will now throw specific error messages for common pipeline setup errors
+	such as an improperly named result stage or an invalid result type.
+	 
 # 2017-10-21
 
 * GcodeDriver Axis Pre Move Command Coordinate Variable

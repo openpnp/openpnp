@@ -257,7 +257,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 
     private Location findClosestHole(Camera camera) throws Exception {
-        try {
+        try (CvPipeline pipeline = getPipeline()) {
             Integer pxMinDistance = (int) VisionUtils.toPixels(getHolePitchMin(), camera);
             Integer pxMinDiameter = (int) VisionUtils.toPixels(getHoleDiameterMin(), camera);
             Integer pxMaxDiameter = (int) VisionUtils.toPixels(getHoleDiameterMax(), camera);
@@ -304,9 +304,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             CvStage.Result.Circle closestResult = results.get(0);
             Location holeLocation = VisionUtils.getPixelLocation(camera, closestResult.x, closestResult.y);
             return holeLocation;
-        }
-        finally {
-            pipeline.release();
         }
     }
 

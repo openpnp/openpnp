@@ -442,42 +442,44 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
         private Location findCircle() throws Exception {
             Camera camera = VisionUtils.getBottomVisionCamera();
-            pipeline.setProperty("camera", camera);
-            pipeline.process();
-            Location location;
-            Object result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
-            if (result instanceof List) {
-                if (((List) result).get(0) instanceof Result.Circle) {
-                    List<Result.Circle> circles = (List<Result.Circle>) result;
-                    List<Location> locations = circles.stream().map(circle -> {
-                        return VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y);
-                    }).sorted((a, b) -> {
-                        double a1 =
-                                a.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
-                        double b1 =
-                                b.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
-                        return Double.compare(a1, b1);
-                    }).collect(Collectors.toList());
-                    location = locations.get(0);
+            try (CvPipeline pipeline = getPipeline()) {
+                pipeline.setProperty("camera", camera);
+                pipeline.process();
+                Location location;
+                Object result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
+                if (result instanceof List) {
+                    if (((List) result).get(0) instanceof Result.Circle) {
+                        List<Result.Circle> circles = (List<Result.Circle>) result;
+                        List<Location> locations = circles.stream().map(circle -> {
+                            return VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y);
+                        }).sorted((a, b) -> {
+                            double a1 =
+                                    a.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                            double b1 =
+                                    b.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                            return Double.compare(a1, b1);
+                        }).collect(Collectors.toList());
+                        location = locations.get(0);
+                    }
+                    else if (((List) result).get(0) instanceof KeyPoint) {
+                        KeyPoint keyPoint = ((List<KeyPoint>) result).get(0);
+                        location = VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x, keyPoint.pt.y);
+                    }
+                    else {
+                        throw new Exception("Unrecognized result " + result);
+                    }
                 }
-                else if (((List) result).get(0) instanceof KeyPoint) {
-                    KeyPoint keyPoint = ((List<KeyPoint>) result).get(0);
-                    location = VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x, keyPoint.pt.y);
+                else if (result instanceof RotatedRect) {
+                    RotatedRect rect = (RotatedRect) result;
+                    location = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
                 }
                 else {
                     throw new Exception("Unrecognized result " + result);
                 }
+                MainFrame.get().get().getCameraViews().getCameraView(camera).showFilteredImage(
+                        OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
+                return location;
             }
-            else if (result instanceof RotatedRect) {
-                RotatedRect rect = (RotatedRect) result;
-                location = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
-            }
-            else {
-                throw new Exception("Unrecognized result " + result);
-            }
-            MainFrame.get().get().getCameraViews().getCameraView(camera).showFilteredImage(
-                    OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
-            return location;
         }
 
         /**

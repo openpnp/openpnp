@@ -574,10 +574,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
     private List<Location> findHoles(Camera camera) throws Exception {
         // Process the pipeline to clean up the image and detect the tape holes
-        CvPipeline pipeline = getCvPipeline(camera, true);
-        try {
+        try (CvPipeline pipeline = getCvPipeline(camera, true)) {
             pipeline.process();
-    
+            
             // Grab the results
             FindHoles findHolesResults = new FindHoles(camera, pipeline).invoke();
             List<CvStage.Result.Circle> inLine = findHolesResults.getInLine();
@@ -594,9 +593,6 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     
             return holeLocations;
         }
-        finally {
-            pipeline.release();
-        }
     }
 
     /**
@@ -612,8 +608,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         // BufferedCameraImage is used as we want to run the pipeline on an existing image
         BufferedImageCamera bufferedImageCamera = new BufferedImageCamera(camera, image);
 
-        CvPipeline pipeline = getCvPipeline(bufferedImageCamera, true);
-        try {
+        try (CvPipeline pipeline = getCvPipeline(bufferedImageCamera, true)) {
             // Process the pipeline to clean up the image and detect the tape holes
             pipeline.process();
             // Grab the results
@@ -634,9 +629,6 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
             resultMat.release();
             return showResult;
-        }
-        finally {
-            pipeline.release();
         }
     }
 

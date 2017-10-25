@@ -184,61 +184,62 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         MovableUtils.moveToLocationAtSafeZ(camera, location);
 
         PartSettings partSettings = getPartSettings(part);
-        CvPipeline pipeline = partSettings.getPipeline();
         
-        MovableUtils.moveToLocationAtSafeZ(camera, location);
+        try (CvPipeline pipeline = partSettings.getPipeline()) {
+            MovableUtils.moveToLocationAtSafeZ(camera, location);
 
-        pipeline.setProperty("camera", camera);
-        pipeline.setProperty("part", part);
-        pipeline.setProperty("package", pkg);
-        pipeline.setProperty("footprint", footprint);
-        
-        for (int i = 0; i < 3; i++) {
-            List<KeyPoint> keypoints;
-            try {
-                // Perform vision operation
-                pipeline.process();
-                
-                // Get the results
-                keypoints = (List<KeyPoint>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).getModel();
-            }
-            catch (Exception e) {
-                Logger.debug(e);
-                return null;
-            }
+            pipeline.setProperty("camera", camera);
+            pipeline.setProperty("part", part);
+            pipeline.setProperty("package", pkg);
+            pipeline.setProperty("footprint", footprint);
             
-            if (keypoints == null || keypoints.isEmpty()) {
-                Logger.debug("No matches found!");
-                return null;
-            }
-            
-            // Convert to Locations
-            List<Location> locations = new ArrayList<Location>();
-            for (KeyPoint keypoint : keypoints) {
-                locations.add(VisionUtils.getPixelLocation(camera, keypoint.pt.x, keypoint.pt.y));
-            }
-            
-            System.out.println(locations);
-            
-            // Sort by distance from center.
-            Collections.sort(locations, new Comparator<Location>() {
-                @Override
-                public int compare(Location o1, Location o2) {
-                    double d1 = o1.getLinearDistanceTo(camera.getLocation());
-                    double d2 = o2.getLinearDistanceTo(camera.getLocation());
-                    return Double.compare(d1, d2);
+            for (int i = 0; i < 3; i++) {
+                List<KeyPoint> keypoints;
+                try {
+                    // Perform vision operation
+                    pipeline.process();
+                    
+                    // Get the results
+                    keypoints = (List<KeyPoint>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).getModel();
                 }
-            });
-            
-            // And use the closest result
-            location = locations.get(0);
-            
-            Logger.debug("{} located at {}", part.getId(), location);
-            // Move to where we actually found the fid
-            camera.moveTo(location);
-        }
+                catch (Exception e) {
+                    Logger.debug(e);
+                    return null;
+                }
+                
+                if (keypoints == null || keypoints.isEmpty()) {
+                    Logger.debug("No matches found!");
+                    return null;
+                }
+                
+                // Convert to Locations
+                List<Location> locations = new ArrayList<Location>();
+                for (KeyPoint keypoint : keypoints) {
+                    locations.add(VisionUtils.getPixelLocation(camera, keypoint.pt.x, keypoint.pt.y));
+                }
+                
+                System.out.println(locations);
+                
+                // Sort by distance from center.
+                Collections.sort(locations, new Comparator<Location>() {
+                    @Override
+                    public int compare(Location o1, Location o2) {
+                        double d1 = o1.getLinearDistanceTo(camera.getLocation());
+                        double d2 = o2.getLinearDistanceTo(camera.getLocation());
+                        return Double.compare(d1, d2);
+                    }
+                });
+                
+                // And use the closest result
+                location = locations.get(0);
+                
+                Logger.debug("{} located at {}", part.getId(), location);
+                // Move to where we actually found the fid
+                camera.moveTo(location);
+            }
 
-        return location;
+            return location;
+        }
     }
     
     /**
