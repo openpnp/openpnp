@@ -1,6 +1,36 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-10-25
+
+* CvPipeline Editor Model Info
+
+	The pipeline editor will now show some information about any identified models it finds
+	as you move the mouse around the result window. 
+	
+	For instance, if the result you are viewing
+	includes a List<RotatedRect> and you mouse over the center of one of them in the image view,
+	you will see the description of that RotatedRect in the status field. 
+	
+	This is very helpful for learning more about what is happening in your pipelines and makes it
+	easy to debug model data.
+	
+	This feature currently works for RotatedRect, Circle, and KeyPoint models, and Lists of the
+	same.
+	
+	This video shows the feature in action: https://www.youtube.com/watch?v=sHuUPtJNIXw
+	
+* New CvPipeline Stage: Add
+
+	A new stage has been added for use in pipelines. The stage is called Add and it simply
+	outputs the sum of two previous images. This is used in a new Loose Part Feeder pipeline
+	that will be released soon.
+	
+* CvPipeline Standalone Editor Pipeline Restore
+
+	The  CvPipeline Standalone Editor will now save and restore the last pipeline you were
+	working on, similar to how the last directory you were working on is saved.
+
 # 2017-10-24
 
 * CvPipeline Memory Usage Improvements
