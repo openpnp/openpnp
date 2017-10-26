@@ -54,6 +54,7 @@ import org.openpnp.vision.pipeline.stages.MatchTemplate;
 import org.openpnp.vision.pipeline.stages.MinAreaRect;
 import org.openpnp.vision.pipeline.stages.MinAreaRectContours;
 import org.openpnp.vision.pipeline.stages.Normalize;
+import org.openpnp.vision.pipeline.stages.OrientRotatedRects;
 import org.openpnp.vision.pipeline.stages.ReadModelProperty;
 import org.openpnp.vision.pipeline.stages.ReadPartTemplateImage;
 import org.openpnp.vision.pipeline.stages.Rotate;
@@ -121,6 +122,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(MinAreaRect.class);
         registerStageClass(MinAreaRectContours.class);
         registerStageClass(Normalize.class);
+        registerStageClass(OrientRotatedRects.class);
         registerStageClass(ReadModelProperty.class);
         registerStageClass(ReadPartTemplateImage.class);
         registerStageClass(Rotate.class);

@@ -80,15 +80,10 @@ public class ReferenceLoosePartFeederConfigurationWizard
         });
         panel.add(btnResetPipeline, "4, 2");
         
-        JPanel warningPanel = new JPanel();
-        FlowLayout flowLayout = (FlowLayout) warningPanel.getLayout();
-        contentPanel.add(warningPanel, 0);
-        
         JLabel lblWarningThisFeeder = new JLabel("Warning: This feeder is incomplete and experimental. Use at your own risk.");
         lblWarningThisFeeder.setFont(new Font("Lucida Grande", Font.PLAIN, 16));
         lblWarningThisFeeder.setForeground(Color.RED);
         lblWarningThisFeeder.setHorizontalAlignment(SwingConstants.LEFT);
-        warningPanel.add(lblWarningThisFeeder);
     }
 
     private void editPipeline() throws Exception {

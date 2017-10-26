@@ -1,6 +1,33 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-10-26
+
+* ReferenceLoosePartFeeder Improvements
+
+	There is a new default pipeline that performs well for non-polarized, rectangular
+	components such as resistors and capacitors. 
+	
+	It attempts to include the electrodes as well as the bodies to better recognize rectangular
+	parts and it performs landscape orientation on the results so that there is a deterministic
+	orientation for rectangular parts.
+	
+	The camera feedback is now only shown at the end of the process, and for a longer
+	time. This better represents what OpenPnP is "seeing" before it picks the part.
+	
+	The feeder's rotation defined on it's location is now added to the final rotation so that
+	you can set the orientation you want parts picked in.
+	
+* New CvPipeline Stage: OrientRotatedRects
+
+	The new stage ensures the orientation of RotatedRects is set to either landscape or
+	portrait. This is used in the above pipeline. 
+	
+	In addition, you can set a flag to negate the angle of the RotatedRects. This is 
+	primarily used when converting from the output of MinAreaRect to what OpenPnP expects for 
+	Locations.
+
+
 # 2017-10-25
 
 * CvPipeline Editor Model Info
