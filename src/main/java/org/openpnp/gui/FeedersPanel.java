@@ -233,13 +233,15 @@ public class FeedersPanel extends JPanel implements WizardContainer {
      */
     public void showFeederForPart(Part part) {
         mainFrame.showTab("Feeders");
+        searchTextField.setText("");
+        search();
 
         Feeder feeder = findFeeder(part, true);
         // Prefer enabled feeders but fall back to disabled ones.
         if (feeder == null) {
             feeder = findFeeder(part, false);
         }
-        if (feeder == null) {
+        if (feeder == null) {            
             newFeeder(part);
         }
         else {
