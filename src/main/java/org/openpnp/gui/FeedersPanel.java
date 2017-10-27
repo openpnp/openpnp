@@ -234,14 +234,18 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public void showFeederForPart(Part part) {
         mainFrame.showTab("Feeders");
 
-        Feeder feeder = findFeeder(part);
+        Feeder feeder = findFeeder(part, true);
+        // Prefer enabled feeders but fall back to disabled ones.
+        if (feeder == null) {
+            feeder = findFeeder(part, false);
+        }
         if (feeder == null) {
             newFeeder(part);
         }
         else {
             table.getSelectionModel().clearSelection();
             for (int i = 0; i < tableModel.getRowCount(); i++) {
-                if (tableModel.getFeeder(i).getPart() == part) {
+                if (tableModel.getFeeder(i) == feeder) {
                     int index = table.convertRowIndexToView(i);
                     table.getSelectionModel().setSelectionInterval(index, index);
                     table.scrollRectToVisible(new Rectangle(table.getCellRect(index, 0, true)));
@@ -251,10 +255,11 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         }
     }
 
-    private Feeder findFeeder(Part part) {
+    private Feeder findFeeder(Part part, boolean enabled) {
         for (int i = 0; i < tableModel.getRowCount(); i++) {
-            if (tableModel.getFeeder(i).getPart() == part) {
-                return tableModel.getFeeder(i);
+            Feeder feeder = tableModel.getFeeder(i); 
+            if (feeder.getPart() == part && feeder.isEnabled() == enabled) {
+                return feeder;
             }
         }
         return null;
