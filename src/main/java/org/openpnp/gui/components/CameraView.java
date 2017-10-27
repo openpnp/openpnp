@@ -205,8 +205,6 @@ public class CameraView extends JComponent implements CameraListener {
         setBackground(Color.black);
         setOpaque(true);
 
-        popupMenu = new CameraViewPopupMenu(this);
-
         addMouseListener(mouseListener);
         addMouseMotionListener(mouseMotionListener);
         addComponentListener(componentListener);
@@ -1319,7 +1317,7 @@ public class CameraView extends JComponent implements CameraListener {
         @Override
         public void mousePressed(MouseEvent e) {
             if (e.isPopupTrigger()) {
-                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                new CameraViewPopupMenu(CameraView.this).show(e.getComponent(), e.getX(), e.getY());
                 return;
             }
             else if (e.isShiftDown()) {
@@ -1333,7 +1331,7 @@ public class CameraView extends JComponent implements CameraListener {
         @Override
         public void mouseReleased(MouseEvent e) {
             if (e.isPopupTrigger()) {
-                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                new CameraViewPopupMenu(CameraView.this).show(e.getComponent(), e.getX(), e.getY());
                 return;
             }
             else if (isDragJogging()) {
