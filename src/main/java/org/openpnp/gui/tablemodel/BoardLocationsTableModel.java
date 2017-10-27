@@ -140,6 +140,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
                 Location location = boardLocation.getLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Z);
                 boardLocation.setLocation(location);
+                boardLocation.setzSet(true);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 7) {

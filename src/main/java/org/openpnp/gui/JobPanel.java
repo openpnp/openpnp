@@ -1015,6 +1015,12 @@ public class JobPanel extends JPanel {
                     jobPlacementsPanel.refresh();
                 }
             }
+            
+            for (BoardLocation boardLocation : job.getBoardLocations()) {
+                if (!boardLocation.iszSet()) {
+                	MessageBoxes.errorBox(frame, "At least one board has undefined Z height.", "At least one board has undefined Z height.");
+                }
+            }
             UiUtils.messageBoxOnException(() -> {
                 fsm.send(Message.StartOrPause);
             });
@@ -1108,9 +1114,9 @@ public class JobPanel extends JPanel {
 
                 Board board = configuration.getBoard(file);
                 BoardLocation boardLocation = new BoardLocation(board);
+                boardLocation.setzSet(false);
                 getJob().addBoardLocation(boardLocation);
                 boardLocationsTableModel.fireTableDataChanged();
-
                 Helpers.selectLastTableRow(boardLocationsTable);
             }
             catch (Exception e) {
