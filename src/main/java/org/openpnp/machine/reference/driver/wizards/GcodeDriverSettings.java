@@ -43,6 +43,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.JCheckBox;
 
 public class GcodeDriverSettings extends AbstractConfigurationWizard {
     private final GcodeDriver driver;
@@ -135,6 +136,12 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         nonSquarenessFactorTf = new JTextField();
         settingsPanel.add(nonSquarenessFactorTf, "4, 10, fill, default");
         nonSquarenessFactorTf.setColumns(5);
+        
+        JLabel lblVisualHoming = new JLabel("Visual Homing");
+        settingsPanel.add(lblVisualHoming, "6, 10, right, default");
+        
+        visualHoming = new JCheckBox("");
+        settingsPanel.add(visualHoming, "8, 10");
     }
 
     @Override
@@ -153,6 +160,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         addWrappedBinding(driver, "timeoutMilliseconds", commandTimeoutTf, "text", intConverter);
         addWrappedBinding(driver, "connectWaitTimeMilliseconds", connectWaitTimeTf, "text", intConverter);
         addWrappedBinding(driver, "name", driverName, "text");
+        addWrappedBinding(driver, "visualHomingEnabled", visualHoming, "selected");
         
         ComponentDecorators.decorateWithAutoSelect(maxFeedRateTf);
         ComponentDecorators.decorateWithAutoSelect(backlashOffsetXTf);
@@ -299,6 +307,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
     private JTextField connectWaitTimeTf;
     private JComboBox unitsCb;
     private JTextField driverName;
+    private JCheckBox visualHoming;
 
     static class HeadMountableItem {
         private HeadMountable hm;

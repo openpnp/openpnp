@@ -159,6 +159,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
 
     @Attribute(required = false)
     protected int connectWaitTimeMilliseconds = 3000;
+    
+    @Attribute(required = false)
+    protected boolean visualHomingEnabled = true;
 
     @Element(required = false)
     protected Location homingFiducialLocation = new Location(LengthUnit.Millimeters);
@@ -292,37 +295,38 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
             driver.home(head);
         }
 
-        /*
-         * The head camera for nozzle-1 should now be (if everything has homed correctly) directly
-         * above the homing pin in the machine bed, use the head camera scan for this and make sure
-         * this is exactly central - otherwise we move the camera until it is, and then reset all
-         * the axis back to 0,0,0,0 as this is calibrated home.
-         */
-        Part homePart = Configuration.get().getPart("FIDUCIAL-HOME");
-        if (homePart != null) {
-            Configuration.get().getMachine().getFiducialLocator()
-                    .getHomeFiducialLocation(homingFiducialLocation, homePart);
+        if (visualHomingEnabled) {
+            /*
+             * The head camera for nozzle-1 should now be (if everything has homed correctly) directly
+             * above the homing pin in the machine bed, use the head camera scan for this and make sure
+             * this is exactly central - otherwise we move the camera until it is, and then reset all
+             * the axis back to 0,0,0,0 as this is calibrated home.
+             */
+            Part homePart = Configuration.get().getPart("FIDUCIAL-HOME");
+            if (homePart != null) {
+                Configuration.get().getMachine().getFiducialLocator()
+                        .getHomeFiducialLocation(homingFiducialLocation, homePart);
 
-            // homeOffset contains the offset, but we are not really concerned with that,
-            // we just reset X,Y back to the home-coordinate at this point.
-            double xHomeCoordinate = 0;
-            double yHomeCoordinate = 0;
-            for (Axis axis : axes) {
-                if (axis.getType() == Axis.Type.X) {
-                    axis.setCoordinate(axis.getHomeCoordinate());
-                    xHomeCoordinate = axis.getHomeCoordinate();
+                // homeOffset contains the offset, but we are not really concerned with that,
+                // we just reset X,Y back to the home-coordinate at this point.
+                double xHomeCoordinate = 0;
+                double yHomeCoordinate = 0;
+                for (Axis axis : axes) {
+                    if (axis.getType() == Axis.Type.X) {
+                        axis.setCoordinate(axis.getHomeCoordinate());
+                        xHomeCoordinate = axis.getHomeCoordinate();
+                    }
+                    if (axis.getType() == Axis.Type.Y) {
+                        axis.setCoordinate(axis.getHomeCoordinate());
+                        yHomeCoordinate = axis.getHomeCoordinate();
+                    }
                 }
-                if (axis.getType() == Axis.Type.Y) {
-                    axis.setCoordinate(axis.getHomeCoordinate());
-                    yHomeCoordinate = axis.getHomeCoordinate();
-                }
+
+                String g92command = getCommand(null, CommandType.POST_VISION_HOME_COMMAND);
+                g92command = substituteVariable(g92command, "X", xHomeCoordinate);
+                g92command = substituteVariable(g92command, "Y", yHomeCoordinate);
+                sendGcode(g92command, -1);
             }
-
-            String g92command = getCommand(null, CommandType.POST_VISION_HOME_COMMAND);
-            g92command = substituteVariable(g92command, "X", xHomeCoordinate);
-            g92command = substituteVariable(g92command, "Y", yHomeCoordinate);
-            sendGcode(g92command, -1);
-
         }
     }
 
@@ -1083,6 +1087,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
     public void setName(String name) {
         this.name = name;
         firePropertyChange("name", null, getName());
+    }
+    
+    public boolean isVisualHomingEnabled() {
+        return visualHomingEnabled;
+    }
+
+    public void setVisualHomingEnabled(boolean visualHomingEnabled) {
+        this.visualHomingEnabled = visualHomingEnabled;
     }
 
     public static class Axis {
