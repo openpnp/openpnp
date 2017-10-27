@@ -25,12 +25,15 @@ import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
+import org.apache.commons.io.IOUtils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -38,6 +41,7 @@ import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
+import org.opencv.features2d.KeyPoint;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
@@ -48,11 +52,17 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Camera;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.base.AbstractCamera;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
+import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.LensCalibration;
 import org.openpnp.vision.LensCalibration.LensModel;
 import org.openpnp.vision.LensCalibration.Pattern;
+import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.CvStage.Result;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -107,6 +117,12 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     @Element(required = false)
     private LensCalibrationParams calibration = new LensCalibrationParams();
+    
+    @Element(required = false)
+    private CvPipeline locationPipeline = createDefaultLocationPipeline();
+    
+    @Attribute(required = false)
+    private int findLocationIterations = 3;
     
     private boolean calibrating;
     private CalibrationCallback calibrationCallback;
@@ -514,6 +530,84 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     public LensCalibrationParams getCalibration() {
         return calibration;
+    }
+    
+    private static CvPipeline createDefaultLocationPipeline() {
+        try {
+            String xml = IOUtils.toString(ReferenceNozzleTip.class
+                    .getResource("ReferenceNozzleTip-Calibration-DefaultPipeline.xml"));
+            return new CvPipeline(xml);
+        }
+        catch (Exception e) {
+            throw new Error(e);
+        }
+    }
+    
+    public CvPipeline getLocationPipeline() throws Exception {
+        this.locationPipeline.setProperty("camera", this);
+        return this.locationPipeline;
+    }
+
+    public void setLocationPipeline(CvPipeline calibrationPipeline) {
+        this.locationPipeline = calibrationPipeline;
+    }
+    
+    private Location findCircle(CvPipeline pipeline) throws Exception {
+        pipeline.process();
+        Location location;
+        Object result = pipeline.getResult("result").model;
+        if (result instanceof List) {
+            if (((List) result).get(0) instanceof Result.Circle) {
+                List<Result.Circle> circles = (List<Result.Circle>) result;
+                List<Location> locations = circles.stream().map(circle -> {
+                    return VisionUtils.getPixelCenterOffsets(this, circle.x, circle.y);
+                }).sorted((a, b) -> {
+                    double a1 =
+                            a.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                    double b1 =
+                            b.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                    return Double.compare(a1, b1);
+                }).collect(Collectors.toList());
+                location = locations.get(0);
+            }
+            else if (((List) result).get(0) instanceof KeyPoint) {
+                KeyPoint keyPoint = ((List<KeyPoint>) result).get(0);
+                location = VisionUtils.getPixelCenterOffsets(this, keyPoint.pt.x, keyPoint.pt.y);
+            }
+            else {
+                throw new Exception("Unrecognized result " + result);
+            }
+        }
+        else if (result instanceof RotatedRect) {
+            RotatedRect rect = (RotatedRect) result;
+            location = VisionUtils.getPixelCenterOffsets(this, rect.center.x, rect.center.y);
+        }
+        else {
+            throw new Exception("Unrecognized result " + result);
+        }
+        MainFrame.get().get().getCameraViews().getCameraView(this).showFilteredImage(
+                OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
+        return location;
+    }
+    
+    public void findLocation() throws Exception {
+        Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+        
+        // Move to the camera with an angle of 0.
+        Location location = getLocation();
+        location = location.derive(null, null, null, 0d);
+        MovableUtils.moveToLocationAtSafeZ(nozzle, location);
+        for (int i = 0; i < findLocationIterations; i++) {
+            // Locate the nozzle offsets.
+            Location offset = findCircle(this.locationPipeline);
+
+            // Subtract the offsets and move to that position to center the nozzle.
+            location = location.subtract(offset);
+            nozzle.moveTo(location);
+        }
+        // This is our baseline location and should have the nozzle well centered over the
+        // camera.
+        this.setHeadOffsets(location);
     }
 
     @Override
