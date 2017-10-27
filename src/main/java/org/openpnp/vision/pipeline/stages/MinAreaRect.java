@@ -54,6 +54,9 @@ public class MinAreaRect extends CvStage {
                 }
             }
         }
+        if (points.isEmpty()) {
+            return null;
+        }
         MatOfPoint2f pointsMat = new MatOfPoint2f(points.toArray(new Point[]{}));
         RotatedRect r = Imgproc.minAreaRect(pointsMat);
         pointsMat.release();

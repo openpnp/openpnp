@@ -215,8 +215,8 @@ public class ReferenceBottomVision implements PartAlignment {
         
         if (!(result.model instanceof RotatedRect)) {
             throw new Exception(String.format(
-                    "ReferenceBottomVision (%s): Incorrect pipeline result type. Expected RotatedRect.",
-                    part.getId()));
+                    "ReferenceBottomVision (%s): Incorrect pipeline result type (%s). Expected RotatedRect.",
+                    part.getId(), result.model.getClass().getSimpleName()));
         }
         
         return (RotatedRect) result.model;
