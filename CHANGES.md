@@ -3,6 +3,15 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2017-10-26
 
+* Fiducial Locator Retry and Averaging
+
+	With thanks to @mgrl, retry count on the fiducial locator, which was previously fixed at
+	3 is now configurable in Machine Setup -> Vision -> Fiducial Locator.
+	
+	In addition, a new option is added which allows averaging the results from the retries. This
+	helps alleviate some jitter that happens as the results shift with the movement of the
+	camera. 
+
 * ReferenceLoosePartFeeder Improvements
 
 	There is a new default pipeline that performs well for non-polarized, rectangular
