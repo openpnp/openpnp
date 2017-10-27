@@ -122,6 +122,13 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         settingsPanel.add(backlashFeedRateFactorTf, "4, 8, fill, default");
         backlashFeedRateFactorTf.setColumns(5);
         
+        JLabel lblNewLabel = new JLabel("Driver Name");
+        settingsPanel.add(lblNewLabel, "6, 8, right, default");
+        
+        driverName = new JTextField();
+        driverName.setColumns(5);
+        settingsPanel.add(driverName, "8, 8");
+        
         JLabel lblNonSquarenessFactor = new JLabel("Non-Squareness Factor");
         settingsPanel.add(lblNonSquarenessFactor, "2, 10, right, default");
         
@@ -145,6 +152,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         addWrappedBinding(driver, "backlashFeedRateFactor", backlashFeedRateFactorTf, "text", doubleConverter);
         addWrappedBinding(driver, "timeoutMilliseconds", commandTimeoutTf, "text", intConverter);
         addWrappedBinding(driver, "connectWaitTimeMilliseconds", connectWaitTimeTf, "text", intConverter);
+        addWrappedBinding(driver, "name", driverName, "text");
         
         ComponentDecorators.decorateWithAutoSelect(maxFeedRateTf);
         ComponentDecorators.decorateWithAutoSelect(backlashOffsetXTf);
@@ -153,6 +161,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         ComponentDecorators.decorateWithAutoSelect(backlashFeedRateFactorTf);
         ComponentDecorators.decorateWithAutoSelect(commandTimeoutTf);
         ComponentDecorators.decorateWithAutoSelect(connectWaitTimeTf);
+        ComponentDecorators.decorateWithAutoSelect(driverName);
     }
 
     public final Action exportProfileAction = new AbstractAction() {
@@ -289,6 +298,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
     private JTextField commandTimeoutTf;
     private JTextField connectWaitTimeTf;
     private JComboBox unitsCb;
+    private JTextField driverName;
 
     static class HeadMountableItem {
         private HeadMountable hm;

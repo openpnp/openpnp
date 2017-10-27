@@ -35,6 +35,7 @@ import org.openpnp.machine.reference.driver.wizards.GcodeDriverSettings;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Named;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
@@ -51,7 +52,7 @@ import org.simpleframework.xml.core.Commit;
 import com.google.common.base.Joiner;
 
 @Root
-public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
+public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runnable {
     public enum CommandType {
         COMMAND_CONFIRM_REGEX,
         POSITION_REPORT_REGEX,
@@ -170,6 +171,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @ElementList(required = false)
     protected List<Axis> axes = new ArrayList<>();
+    
+    @Attribute(required = false)
+    protected String name = "GcodeDriver";
 
     private Thread readerThread;
     private boolean disconnectRequested;
@@ -937,6 +941,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         matcher.appendTail(sb);
         return sb.toString();
     }
+    
+    @Override
+    public String getPropertySheetHolderTitle() {
+        return getName() == null ? "GcodeDriver" : getName();
+    }
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
@@ -1065,6 +1074,15 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     public void setConnectWaitTimeMilliseconds(int connectWaitTimeMilliseconds) {
         this.connectWaitTimeMilliseconds = connectWaitTimeMilliseconds;
+    }
+    
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+        firePropertyChange("name", null, getName());
     }
 
     public static class Axis {
