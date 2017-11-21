@@ -1,6 +1,19 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-11-20
+
+* Manual NozzleTip Changing Fixes
+
+	Thanks to @netzmark there is now a fix for manual nozzle tip changing. Now, if you do not
+	have auto changing turned on, when the job attempts to change nozzles, the job will be
+	paused and you will be shown a message indicating the change.
+	
+	See:
+		* https://groups.google.com/d/msgid/openpnp/00ead7a9-e7d5-49e8-856c-2a403208058d%40googlegroups.com?utm_medium=email&utm_source=footer
+		* https://github.com/openpnp/openpnp/issues/118
+		* https://github.com/openpnp/openpnp/issues/526
+	
 # 2017-10-26
 
 * Fiducial Locator Retry and Averaging

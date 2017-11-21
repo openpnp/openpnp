@@ -497,7 +497,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             // Otherwise find a compatible tip and load it
             NozzleTip nozzleTip = findNozzleTip(nozzle, part);
-            Logger.debug("Change nozzle tip on {} from {} to {}",
+            fireTextStatus("Change NozzleTip on Nozzle %s from %s to %s.", 
+                    nozzle.getId(), 
+                    nozzle.getNozzleTip().getName(),
+                    nozzleTip.getName());   
+            Logger.debug("Change NozzleTip on Nozzle {} from {} to {}",
                     new Object[] {nozzle, nozzle.getNozzleTip(), nozzleTip});
             nozzle.unloadNozzleTip();
             nozzle.loadNozzleTip(nozzleTip);
