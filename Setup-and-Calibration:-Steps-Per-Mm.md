@@ -18,4 +18,4 @@ To test that your steps per mm settings are correct:
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Top Camera Setup|Setup and Calibration: Top Camera Setup]] | [[Table of Contents|Setup and Calibration]] | [[Nozzle Setup|Setup and Calibration: Nozzle Setup]] |
+| [Top Camera Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Steps-Per-Mm) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Nozzle Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Nozzle-Setup) |
