@@ -30,4 +30,4 @@ Now that OpenPnP knows where the camera is, let's move the nozzle around and mak
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Actuators|Setup and Calibration: Actuators]] | [[Table of Contents|Setup and Calibration]] | [[Park Location|Setup and Calibration: Park Location]] |
+| [Actuators](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Park Location](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Park-Location) |
