@@ -22,4 +22,4 @@ To set up vacuum sensing:
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Bottom Vision|Setup and Calibration: Bottom Vision]] | [[Table of Contents|Setup and Calibration]] | [[Camera Lighting|Setup and Calibration: Camera Lighting]] |
+| [Bottom Vision](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Bottom-Vision) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Camera Lighting](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Camera-Lighting) |
