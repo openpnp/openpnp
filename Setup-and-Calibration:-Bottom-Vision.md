@@ -7,4 +7,4 @@ Bottom Vision is a large and complex topic, and has it's own section of the Wiki
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Feeders|Setup and Calibration: Feeders]] | [[Table of Contents|Setup and Calibration]] | [[Vacuum Sensing|Setup and Calibration: Vacuum Sensing]] |
+| [Feeders](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Feeders) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Vacuum Sensing](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Sensing) |
