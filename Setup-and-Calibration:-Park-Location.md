@@ -27,4 +27,4 @@ If you'd like the machine to park itself when a job completes, you have to turn 
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Bottom Camera Setup|Setup and Calibration: Bottom Camera Setup]] | [[Table of Contents|Setup and Calibration]] | [[Discard Location|Setup and Calibration: Discard Location]] |
+| [Bottom Camera Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Bottom-Camera-Setup) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Discard Location](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Discard-Location) |
