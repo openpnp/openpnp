@@ -23,4 +23,4 @@ Now that the camera is configured, click and drag anywhere in the camera view. Y
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Driver Setup|Setup and Calibration: Driver Setup]] | [[Table of Contents|Setup and Calibration]] | [[Steps Per Mm|Setup and Calibration: Steps Per Mm]] |
+| [Driver Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Steps Per Mm](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Steps-Per-Mm) |
