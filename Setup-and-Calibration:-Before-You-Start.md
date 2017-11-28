@@ -32,4 +32,4 @@ See [Where are configuration and log files located?](https://github.com/openpnp/
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Setup and Calibration]] | [[Table of Contents|Setup and Calibration]] | [[Driver Setup|Setup and Calibration: Driver Setup]] |
+| [[Setup and Calibration]] | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Driver Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup) |
