@@ -43,4 +43,4 @@ With the machine homed, you can now try jogging the machine to make sure everyth
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Before You Start|Setup and Calibration: Before You Start]] | [[Table of Contents|Setup and Calibration]] | [[Top Camera Setup|Setup and Calibration: Top Camera Setup]] |
+| [Before You Start](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Before-You-Start) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Top Camera Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Top-Camera-Setup) |
