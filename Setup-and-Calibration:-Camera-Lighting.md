@@ -33,4 +33,4 @@ Here is a short video showing the steps above: https://www.youtube.com/watch?v=Y
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Vacuum Sensing|Setup and Calibration: Vacuum Sensing]] | [[Table of Contents|Setup and Calibration]] | [[Next Steps|Setup and Calibration: Next Steps]] |
+| [Vacuum Sensing](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Sensing) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Next Steps](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Next-Steps) |
