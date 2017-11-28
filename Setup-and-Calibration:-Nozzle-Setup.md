@@ -79,4 +79,4 @@ The Position Tool and Position Camera buttons can be used to switch back and for
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Steps Per Mm|Setup and Calibration: Steps Per Mm]] | [[Table of Contents|Setup and Calibration]] | [[Actuators|Setup and Calibration: Actuators]] |
+| [Steps Per Mm](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Steps-Per-Mm) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Actuators](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators) |
