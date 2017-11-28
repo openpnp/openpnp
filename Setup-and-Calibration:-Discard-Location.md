@@ -20,4 +20,4 @@ With the discard location set, we can test that it works properly. We haven't se
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Park Location|Setup and Calibration: Park Location]] | [[Table of Contents|Setup and Calibration]] | [[Feeders|Setup and Calibration: Feeders]] |
+| [Park Location](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Park-Location) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Feeders](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Feeders) |
