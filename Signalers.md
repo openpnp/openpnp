@@ -15,7 +15,8 @@ If you want to disable the sounds you can set the attributes on the the SoundSig
 `enable-error-sound="false"`
 `enable-success-sound="false"`
 
-Replacing the sounds with own sound files will be possible later on.
+### Custom sound files
+It is possible to use custom sound files by placing an `error.wav` or `success.wav` file in a `sounds` subdirectory in the [configuration directory](https://github.com/openpnp/openpnp/wiki/FAQ#how-do-i-use-a-different-config-directory).
 
 # Actuator Signaler
 An actuator signaler will cause an actuator to be turned on when a configured job or machine state is reached. They will stay on as long as the state is active.
