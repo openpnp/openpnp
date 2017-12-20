@@ -51,7 +51,7 @@ G92 X0 Y0 Z0 E0 ; Reset machine coordinates to zero.
 
 ### MOVE_TO_COMMAND
 
-This command has special handling for the X, Y, Z and Rotation variables. If the move does not change one of these variables that variable is replaced with the empty string, removing it from the command. This allows Gcode to be sent containing only the components that are being used which is important for some controllers when moving an "extruder" for the C axis. The end result is that if a move contains only a change in the C axis only the C axis value will be sent.
+This command has special handling for the X, Y, Z and Rotation variables. If the move does not change one of these variables that variable is replaced with the empty string, removing it from the command. This allows Gcode to be sent containing only the components that are being used which is important for some controllers when moving an "extruder" for the C axis (The current extruder is selected by sending a Gcode tool command like 'T1' in the pre-move-command). The end result is that if a move contains only a change in the C axis only the C axis value will be sent.
 
 | Variable Name  |   Type   | Description |
 | -------------- | -------- | ----------- |
