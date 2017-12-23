@@ -884,12 +884,14 @@ public class JobPanel extends JPanel {
             List<String> options = new ArrayList<>();
             String retryOption = "Try Again";
             String skipOption = "Skip";
+            String ignoreContinueOption = "Ignore and Continue";
             String pauseOption = "Pause Job";
 
             options.add(retryOption);
             if (jobProcessor.canSkip()) {
                 options.add(skipOption);
             }
+            options.add(ignoreContinueOption);
             options.add(pauseOption);
             int result = JOptionPane.showOptionDialog(getTopLevelAncestor(), t.getMessage(),
                     "Job Error", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null,
@@ -904,6 +906,13 @@ public class JobPanel extends JPanel {
                     // Tell the job processor to skip the current placement and then call jobRun()
                     // to start things back up, either running or stepping.
                     jobSkip();
+                });
+            }
+            //ignore/continue
+            else if (selectedOption.equals(ignoreContinueOption)) {
+                UiUtils.messageBoxOnException(() -> {
+                    // Tell the job processor ignore error and continue as if everything were normal
+                    jobIgnoreContinue();
                 });
             }
             // Pause or cancel dialog
@@ -929,6 +938,13 @@ public class JobPanel extends JPanel {
     public void jobSkip() {
         UiUtils.submitUiMachineTask(() -> {
             jobProcessor.skip();
+            jobRun();
+        });
+    }
+
+    public void jobIgnoreContinue() {
+        UiUtils.submitUiMachineTask(() -> {
+            jobProcessor.ignoreContinue();
             jobRun();
         });
     }

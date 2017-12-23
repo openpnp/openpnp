@@ -81,6 +81,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         Complete,
         Abort,
         Skip,
+        IgnoreContinue,
         Reset
     }
 
@@ -161,6 +162,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         fsm.add(State.Align, Message.Next, State.Place, this::doAlign, Message.Next);
         fsm.add(State.Align, Message.Skip, State.Align, this::doSkip, Message.Next);
+        fsm.add(State.Align, Message.IgnoreContinue, State.Place, Message.Next);
         fsm.add(State.Align, Message.Abort, State.Cleanup, Message.Next);
 
         fsm.add(State.Place, Message.Next, State.Plan, this::doPlace);
@@ -214,6 +216,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     public synchronized void skip() throws Exception {
         fsm.send(Message.Skip);
+    }
+    
+    public synchronized void ignoreContinue() throws Exception {
+        fsm.send(Message.IgnoreContinue);
     }
 
     /*
@@ -813,7 +819,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Logger.debug("Skipped {}", jobPlacement.placement);
         }
     }
-
+    
     protected void clearStepComplete() {
         for (PlannedPlacement plannedPlacement : plannedPlacements) {
             plannedPlacement.stepComplete = false;
