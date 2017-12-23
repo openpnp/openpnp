@@ -896,7 +896,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
         CvPipeline pipeline = getCvPipeline(camera, false);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new JDialog(MainFrame.get(), feeder.getPart().getId() + " Pipeline");
+        JDialog dialog = new JDialog(MainFrame.get(), feeder.getName() + " Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
         dialog.getContentPane().add(editor);
         dialog.setSize(1024, 768);
