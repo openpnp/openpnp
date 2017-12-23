@@ -149,6 +149,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         fsm.add(State.Feed, Message.Next, State.Align, this::doFeedAndPick, Message.Next);
         fsm.add(State.Feed, Message.Skip, State.Feed, this::doSkip, Message.Next);
+        fsm.add(State.Feed, Message.IgnoreContinue, State.Align, Message.Next);
         fsm.add(State.Feed, Message.Abort, State.Cleanup, Message.Next);
 
         // TODO: See notes on doFeedAndPick()
@@ -240,6 +241,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      */
     public boolean canSkip() {
         return fsm.canSend(Message.Skip);
+    }
+
+    public boolean canIgnoreContinue() {
+        return fsm.canSend(Message.IgnoreContinue);
     }
 
     /**

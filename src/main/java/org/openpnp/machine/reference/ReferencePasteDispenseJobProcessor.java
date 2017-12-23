@@ -183,6 +183,10 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
         return fsm.canSend(Message.Skip);
     }
 
+	public boolean canIgnoreContinue() {
+		return fsm.canSend(Message.IgnoreContinue);
+	}
+
     /**
      * Validate that there is a job set before allowing it to start.
      *
@@ -330,6 +334,7 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
     protected boolean isJobComplete() {
         return jobDispenses.isEmpty();
     }
+
 
     /*
     @Override

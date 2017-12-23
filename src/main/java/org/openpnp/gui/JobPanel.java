@@ -891,7 +891,9 @@ public class JobPanel extends JPanel {
             if (jobProcessor.canSkip()) {
                 options.add(skipOption);
             }
-            options.add(ignoreContinueOption);
+            if (jobProcessor.canSkip()) {
+            	options.add(ignoreContinueOption);
+            }
             options.add(pauseOption);
             int result = JOptionPane.showOptionDialog(getTopLevelAncestor(), t.getMessage(),
                     "Job Error", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null,

@@ -18,6 +18,8 @@ public interface JobProcessor extends PropertySheetHolder, WizardConfigurable {
     public void ignoreContinue() throws Exception;
 
     public boolean canSkip();
+    
+    public boolean canIgnoreContinue();
 
     public void addTextStatusListener(TextStatusListener listener);
 
