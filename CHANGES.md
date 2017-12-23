@@ -3,9 +3,11 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2017-12-23
 
+With thanks to @mgrl:
+
 * Bugfix: Setting placed flag correctly (fixes #663)
 
-	Thanks to @mgrl there is now a fix having the placed flag set correctly if fiducials checking is enabled.
+	There is now a fix having the placed flag set correctly if fiducials checking is enabled.
 	
 	See:
 		* https://groups.google.com/forum/#!topic/openpnp/4MKg7JaUTAk
