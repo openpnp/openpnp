@@ -897,8 +897,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     BoardLocation getFiducialCompensatedBoardLocation(BoardLocation boardLocation) {
         // Check if there is a fiducial override for the board location and if so, use it.
         if (boardLocationFiducialOverrides.containsKey(boardLocation)) {
-            BoardLocation boardLocation2 = new BoardLocation(boardLocation.getBoard());
-            boardLocation2.setSide(boardLocation.getSide());
+        	BoardLocation boardLocation2 = new BoardLocation(boardLocation);
             boardLocation2.setLocation(boardLocationFiducialOverrides.get(boardLocation));
             return boardLocation2;
         }
