@@ -821,10 +821,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     	 		
     	 		//discard
     	 		Nozzle nozzle = plannedPlacement.nozzle;
-    	         discard(nozzle);
+    	        discard(nozzle);
     	         
-    	         jobPlacement.status = Status.Skipped;
-    	         Logger.debug("Skipped {}", jobPlacement.placement);
+    	        jobPlacement.status = Status.Skipped;
+    	        Logger.debug("Skipped {}", jobPlacement.placement);
     	 	}    		
     	}
     }
