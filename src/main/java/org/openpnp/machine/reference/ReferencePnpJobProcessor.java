@@ -739,6 +739,21 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             placementLocation = placementLocation.add(new Location(part.getHeight().getUnits(), 0,
                     0, part.getHeight().getValue(), 0));
 
+            try {
+	            HashMap<String, Object> params = new HashMap<>();
+	            params.put("job", job);
+	            params.put("jobProcessor", this);
+	            params.put("part", part);
+	            params.put("nozzle", nozzle);
+	            params.put("placement", placement);
+	            params.put("boardLocation", boardLocation);
+	            params.put("placementLocation", placementLocation);
+            Configuration.get().getScripting().on("Job.Placement.BeforeAssembly", params);
+	        }
+	        catch (Exception e) {
+	            Logger.warn(e);
+	        }
+            
             // Move to the placement location
             MovableUtils.moveToLocationAtSafeZ(nozzle, placementLocation);
 
@@ -758,15 +773,20 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             plannedPlacement.stepComplete = true;
 
-            HashMap<String, Object> params = new HashMap<>();
-            params.put("job", job);
-            params.put("jobProcessor", this);
-            params.put("part", part);
-            params.put("nozzle", nozzle);
-            params.put("placement", placement);
-            params.put("boardLocation", boardLocation);
-            params.put("placementLocation", placementLocation);
+            try {
+	            HashMap<String, Object> params = new HashMap<>();
+	            params.put("job", job);
+	            params.put("jobProcessor", this);
+	            params.put("part", part);
+	            params.put("nozzle", nozzle);
+	            params.put("placement", placement);
+	            params.put("boardLocation", boardLocation);
+	            params.put("placementLocation", placementLocation);
             Configuration.get().getScripting().on("Job.Placement.Complete", params);
+	        }
+	        catch (Exception e) {
+	            Logger.warn(e);
+	        }
             
             Logger.debug("Place {} with {}", part, nozzle.getName());
         }
