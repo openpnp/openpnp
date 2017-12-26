@@ -804,33 +804,37 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      * @throws Exception
      */
     protected void doSkip() throws Exception {
-    	if (plannedPlacements.size() > 0) {
-    		
-    		//iterate through planned placement in this cycle (number of planned placements == number of nozzles)
-    		for (PlannedPlacement plannedPlacement : plannedPlacements) {
-    	 		JobPlacement jobPlacement = plannedPlacement.jobPlacement;
-    	 		
-    	 		if (plannedPlacement.stepComplete) {
-    	 			//go over placements having the current step already completed
-    	             continue;
-    	        }
-    	 		
-    	 		//remove the placement to be skipped from list
-    	 		plannedPlacements.remove(plannedPlacements.indexOf(plannedPlacement));
-    	 		
-    	 		//discard
-    	 		Nozzle nozzle = plannedPlacement.nozzle;
-    	        discard(nozzle);
-    	         
-    	        jobPlacement.status = Status.Skipped;
-    	        Logger.debug("Skipped {}", jobPlacement.placement);
-    	        
-    	        /* stop iterating through plannedPlacements to prevent the ConcurrentModificationException
-    	 		 * https://docs.oracle.com/javase/7/docs/api/java/util/ConcurrentModificationException.html (cite) Note that this exception does not always indicate that an object has been concurrently modified by a different thread. If a single thread issues a sequence of method invocations that violates the contract of an object, the object may throw this exception. For example, if a thread modifies a collection directly while it is iterating over the collection with a fail-fast iterator, the iterator will throw this exception. 
-    	 		*/
-    	        break;
-    	 	}    		
-    	}
+        if (plannedPlacements.size() > 0) {
+
+            // iterate through planned placement in this cycle (number of planned placements ==
+            // number of nozzles)
+            for (PlannedPlacement plannedPlacement : plannedPlacements) {
+                JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+
+                if (plannedPlacement.stepComplete) {
+                    // go over placements having the current step already completed
+                    continue;
+                }
+
+                // remove the placement to be skipped from list
+                plannedPlacements.remove(plannedPlacements.indexOf(plannedPlacement));
+
+                // discard
+                Nozzle nozzle = plannedPlacement.nozzle;
+                discard(nozzle);
+
+                jobPlacement.status = Status.Skipped;
+                Logger.debug("Skipped {}", jobPlacement.placement);
+
+                /*
+                 * stop iterating through plannedPlacements to prevent the
+                 * ConcurrentModificationException (list is modified within iteration)
+                 * https://docs.oracle.com/javase/7/docs/api/java/util/
+                 * ConcurrentModificationException.html
+                 */
+                break;
+            }
+        }
     }
 
     protected void clearStepComplete() {
