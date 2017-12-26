@@ -804,14 +804,29 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      * @throws Exception
      */
     protected void doSkip() throws Exception {
-        if (plannedPlacements.size() > 0) {
-            PlannedPlacement plannedPlacement = plannedPlacements.remove(0);
-            JobPlacement jobPlacement = plannedPlacement.jobPlacement;
-            Nozzle nozzle = plannedPlacement.nozzle;
-            discard(nozzle);
-            jobPlacement.status = Status.Skipped;
-            Logger.debug("Skipped {}", jobPlacement.placement);
-        }
+    	if (plannedPlacements.size() > 0) {
+    		
+    		//iterate through nozzles to determine which one to clear
+    		for (int i = 0; i < head.getNozzles().size(); i++) {
+    	 		PlannedPlacement plannedPlacement = plannedPlacements.get(i);
+    	 		JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+    	 		
+    	 		if (plannedPlacement.stepComplete) {
+    	 			//go over placements having the current step already completed
+    	             continue;
+    	         }
+    	 		
+    	 		//remove the placement from list
+    	 		plannedPlacements.remove(i);
+    	 		
+    	 		//discard
+    	 		Nozzle nozzle = plannedPlacement.nozzle;
+    	         discard(nozzle);
+    	         
+    	         jobPlacement.status = Status.Skipped;
+    	         Logger.debug("Skipped {}", jobPlacement.placement);
+    	 	}    		
+    	}
     }
 
     protected void clearStepComplete() {
