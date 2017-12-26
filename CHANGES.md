@@ -5,6 +5,15 @@ a complete change list, only those that may directly interest or affect users.
 
 With thanks to @mgrl:
 
+* Bugfix: Discard correct nozzle on skip part
+
+	If an error raised while job run (vacuum sense/bottom aligning failed), the first nozzle was cleared always
+	regardless which nozzle failed in a multi nozzle setup.	This is fixed now.w
+	
+	See:
+		* https://groups.google.com/d/msg/openpnp/x249mhevB3U/DSJg2fyVBAAJ
+		* https://github.com/openpnp/openpnp/pull/693
+		
 * Bugfix: Setting placed flag correctly (fixes #663)
 
 	There is now a fix having the placed flag set correctly if fiducials checking is enabled.
