@@ -748,6 +748,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 	            params.put("placement", placement);
 	            params.put("boardLocation", boardLocation);
 	            params.put("placementLocation", placementLocation);
+	            params.put("alignmentOffsets", plannedPlacement.alignmentOffsets);
             Configuration.get().getScripting().on("Job.Placement.BeforeAssembly", params);
 	        }
 	        catch (Exception e) {
