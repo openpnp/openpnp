@@ -891,7 +891,7 @@ public class JobPanel extends JPanel {
             if (jobProcessor.canSkip()) {
                 options.add(skipOption);
             }
-            if (jobProcessor.canSkip()) {
+            if (jobProcessor.canIgnoreContinue()) {
             	options.add(ignoreContinueOption);
             }
             options.add(pauseOption);
