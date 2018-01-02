@@ -26,7 +26,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -121,8 +120,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     protected List<PlannedPlacement> plannedPlacements = new ArrayList<>();
 
-    protected Map<BoardLocation, Location> boardLocationFiducialOverrides = new HashMap<>();
-    
     long startTime;
     int totalPartsPlaced;
 
@@ -280,7 +277,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         this.machine = Configuration.get().getMachine();
         this.head = this.machine.getDefaultHead();
         this.jobPlacements.clear();
-        this.boardLocationFiducialOverrides.clear();
+        
 
         fireTextStatus("Checking job for setup errors.");
 
@@ -289,6 +286,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             if (!boardLocation.isEnabled()) {
                 continue;
             }
+            
+            // clear locationFiducialOverrides
+            boardLocation.clearLocationFiducialOverrides();            
             
             // Check for ID duplicates - throw error if any are found
             HashSet<String> idlist = new HashSet<String>();
@@ -367,7 +367,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         	BoardLocation boardLocation = job.getBoardLocations().get(0);
         	
         	Location location = locator.locateBoard(boardLocation, p.isCheckFiducials());
-        	boardLocationFiducialOverrides.put(boardLocation, location);
+        	boardLocation.setLocationFiducialOverrides(location);
         	Logger.debug("Panel Fiducial check for {}", boardLocation);
         }
         
@@ -379,7 +379,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 continue;
             }
             Location location = locator.locateBoard(boardLocation);
-            boardLocationFiducialOverrides.put(boardLocation, location);
+            boardLocation.setLocationFiducialOverrides(location);
             Logger.debug("Fiducial check for {}", boardLocation);
         }
     }
@@ -390,7 +390,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
         
         Location location = locator.locateBoard(boardLocation);
-        boardLocationFiducialOverrides.put(boardLocation, location);
+        boardLocation.setLocationFiducialOverrides(location);
         Logger.debug("Fiducial check for {}", boardLocation);
     }
 
@@ -645,14 +645,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Nozzle nozzle = plannedPlacement.nozzle;
             JobPlacement jobPlacement = plannedPlacement.jobPlacement;
             Placement placement = jobPlacement.placement;
+            BoardLocation boardLocation = jobPlacement.boardLocation;
             Part part = placement.getPart();
             fireTextStatus("Aligning %s for %s.", part.getId(), placement.getId());
 
             PartAlignment partAlignment = findPartAligner(machine, part);
 
-            // Check if there is a fiducial override for the board location and if so, use it.
-            BoardLocation boardLocation = getFiducialCompensatedBoardLocation(jobPlacement.boardLocation);
-            
             if(partAlignment!=null) {
                 plannedPlacement.alignmentOffsets = VisionUtils.findPartAlignmentOffsets(
                         partAlignment,
@@ -689,10 +687,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
 
             // Check if there is a fiducial override for the board location and if so, use it.
-            boardLocation = getFiducialCompensatedBoardLocation(boardLocation);
-
             Location placementLocation =
-                    Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation());
+                    Utils2D.calculateFiducialCompensatedBoardPlacementLocation(boardLocation, placement.getLocation());
 
             // If there are alignment offsets update the placement location with them
             if (plannedPlacement.alignmentOffsets != null) {
@@ -893,15 +889,4 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         return countA - countB;
     };
-    
-    BoardLocation getFiducialCompensatedBoardLocation(BoardLocation boardLocation) {
-        // Check if there is a fiducial override for the board location and if so, use it.
-        if (boardLocationFiducialOverrides.containsKey(boardLocation)) {
-            BoardLocation boardLocation2 = new BoardLocation(boardLocation);
-            boardLocation2.setLocation(boardLocationFiducialOverrides.get(boardLocation));
-            return boardLocation2;
-        }
-        return boardLocation;
-    }
-
 }
