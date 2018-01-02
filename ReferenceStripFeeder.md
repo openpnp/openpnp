@@ -4,9 +4,9 @@
 
 When setting the reference hole and second hole on ReferenceStripFeeder either manually or using Auto Setup, you have to choose your reference and second hole or part according to the standards used in SMT tape. Primarily this means that the reference hole should be the first hole 2mm from the first part in the direction of travel.
 
-The direction of travel is fixed, and is always north to south with the holes on the left. The tape can be in any orientation on the table but the direction of travel along the tape always follows this rule. See the image below for clairification:
+The direction of travel is fixed, and is always north to south with the holes on the left. The tape can be in any orientation on the table but the direction of travel along the tape always follows this rule. See the image below for clarification:
 
-![strip feeder orientation](https://cloud.githubusercontent.com/assets/1182323/12517177/6108c344-c0e6-11e5-9228-874a35a3fa5c.png)
+![strip feeder orientation](https://user-images.githubusercontent.com/3868450/34457250-6b69f62a-edab-11e7-8030-0eeed21a9692.png)
 
 ## CvPipeline
 
@@ -26,6 +26,12 @@ During the feeder setup wizard, the strip feeder hole debug colors are as follow
 ## Z and Pick Height
 
 When picking from the strip feeder, OpenPnP will lower the nozzle to the Z value specified on the first reference hole. The Z value for the second reference hole is ignored.
+
+## Rotation in Tape
+To pick up parts taking the right angle into account it has to be set in "Rotation in Tape". The part's orientation is referenced to the direction of feed (direction of unreeling) and thus independent of the tape's orientation on the table. See the image below for some clarifying examples: 
+![rotation in tape_examples](https://user-images.githubusercontent.com/3868450/34457251-6b83c38e-edab-11e7-8e5a-f6e4212db124.png)
+
+For a summarizing article on the orientation of parts according to common standards see https://blogs.mentor.com/tom-hausherr/blog/tag/ipc-standards/
 
 ## Video Tutorials
 
