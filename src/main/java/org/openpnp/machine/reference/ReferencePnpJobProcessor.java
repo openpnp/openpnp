@@ -149,7 +149,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         fsm.add(State.Feed, Message.Next, State.Align, this::doFeedAndPick, Message.Next);
         fsm.add(State.Feed, Message.Skip, State.Feed, this::doSkip, Message.Next);
-        fsm.add(State.Feed, Message.IgnoreContinue, State.Align, Message.Next);
+        fsm.add(State.Feed, Message.IgnoreContinue, State.Feed, this::doIgnoreContinue, Message.Next);
         fsm.add(State.Feed, Message.Abort, State.Cleanup, Message.Next);
 
         // TODO: See notes on doFeedAndPick()
@@ -163,7 +163,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         fsm.add(State.Align, Message.Next, State.Place, this::doAlign, Message.Next);
         fsm.add(State.Align, Message.Skip, State.Align, this::doSkip, Message.Next);
-        fsm.add(State.Align, Message.IgnoreContinue, State.Place, Message.Next);
+        fsm.add(State.Align, Message.IgnoreContinue, State.Align, this::doIgnoreContinue, Message.Next);
         fsm.add(State.Align, Message.Abort, State.Cleanup, Message.Next);
 
         fsm.add(State.Place, Message.Next, State.Plan, this::doPlace);
@@ -822,6 +822,31 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             discard(nozzle);
             jobPlacement.status = Status.Skipped;
             Logger.debug("Skipped {}", jobPlacement.placement);
+        }
+    }
+    
+    /**
+     * Mark the currently processing step as complete in the list of PlannedPlacement to ignore an raised error and go on assembly
+     * 
+     * @throws Exception
+     */
+    protected void doIgnoreContinue() throws Exception {
+        if (plannedPlacements.size() > 0) {
+            for (PlannedPlacement plannedPlacement : plannedPlacements) {
+                if (plannedPlacement.stepComplete) {
+                    // go over placements having the current step already completed
+                    continue;
+                }
+                
+                JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+                
+                //mark current step as completed successfully done
+                plannedPlacement.stepComplete = true;
+                Logger.debug("Ignored Error and Continued for {}", jobPlacement.placement);
+                
+                // stop iterating through plannedPlacements since only one error is handled at a time
+                break;
+            }
         }
     }
     
