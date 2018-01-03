@@ -297,15 +297,15 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             return;
         }
         
+        double speed = getHead().getMachine().getSpeed();
+        
+        Logger.debug("{}.unloadNozzleTip(): Start", getName());
+        ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
+
+        Logger.debug("{}.unloadNozzleTip(): moveTo End Location", getName());
+        MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerEndLocation(), speed);
+
         if (changerEnabled) {
-            double speed = getHead().getMachine().getSpeed();
-            
-            Logger.debug("{}.unloadNozzleTip(): Start", getName());
-            ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
-
-            Logger.debug("{}.unloadNozzleTip(): moveTo End Location", getName());
-            MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerEndLocation(), speed);
-
             Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location 2", getName());
             moveTo(nt.getChangerMidLocation2(), nt.getChangerMid2ToEndSpeed() * speed);
 
@@ -323,6 +323,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         currentNozzleTipId = null;
         firePropertyChange("nozzleTip", null, getNozzleTip());
         ((ReferenceMachine) head.getMachine()).fireMachineHeadActivity(head);
+        
+        if (!changerEnabled) {
+            throw new Exception("Manual NozzleTip change required!");
+        }
     }
 
     @Override

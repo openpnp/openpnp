@@ -118,7 +118,7 @@ public class LogPanel extends JPanel {
 
         filterControlPanel.add(btnScroll);
 
-        filterPanel.add(filterControlPanel, BorderLayout.EAST);
+        filterPanel.add(filterControlPanel, BorderLayout.CENTER);
 
         settingsAndFilterPanel.add(filterPanel);
 

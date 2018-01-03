@@ -337,7 +337,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 Feeder feeder = null;
                 // find a feeder to feed
                 for (Feeder f : Configuration.get().getMachine().getFeeders()) {
-                    if (f.isEnabled() && f.getPart().equals(part)) {
+                    if (f.getPart() == part && f.isEnabled()) {
                         feeder = f;
                     }
                 }

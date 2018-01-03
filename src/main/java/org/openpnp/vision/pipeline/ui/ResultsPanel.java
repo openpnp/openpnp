@@ -9,6 +9,7 @@ import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Rectangle2D;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -23,9 +24,12 @@ import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
 
 import org.opencv.core.Mat;
+import org.opencv.core.RotatedRect;
+import org.opencv.features2d.KeyPoint;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result;
+import org.openpnp.vision.pipeline.CvStage.Result.Circle;
 
 public class ResultsPanel extends JPanel {
     private final CvPipelineEditor editor;
@@ -103,7 +107,7 @@ public class ResultsPanel extends JPanel {
         panel_1.add(matView, BorderLayout.CENTER);
         splitPane.setLeftComponent(panel_1);
 
-        JLabel matStatusLabel = new JLabel("New label");
+        JLabel matStatusLabel = new JLabel(" ");
         panel_1.add(matStatusLabel, BorderLayout.SOUTH);
         
         matView.addMouseMotionListener(new MouseAdapter() {
@@ -112,15 +116,21 @@ public class ResultsPanel extends JPanel {
                 Color color = robot.getPixelColor(e.getXOnScreen(), e.getYOnScreen());
                 float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
                 Point p = matView.scalePoint(e.getPoint());
-                matStatusLabel.setText(String.format("RGB: %03d, %03d, %03d HSB: %03d, %03d, %03d XY: %d, %d",
-                        color.getRed(),
-                        color.getGreen(),
-                        color.getBlue(),
-                        (int) (255.0 * hsb[0]),
-                        (int) (255.0 * hsb[1]),
-                        (int) (255.0 * hsb[2]),
-                        p.x,
-                        p.y));
+                Object model = getModelAtPoint(p);
+                if (model != null) {
+                    matStatusLabel.setText(model.toString());
+                }
+                else {
+                    matStatusLabel.setText(String.format("RGB: %03d, %03d, %03d HSB: %03d, %03d, %03d XY: %d, %d",
+                            color.getRed(),
+                            color.getGreen(),
+                            color.getBlue(),
+                            (int) (255.0 * hsb[0]),
+                            (int) (255.0 * hsb[1]),
+                            (int) (255.0 * hsb[2]),
+                            p.x,
+                            p.y));
+                }
             }
         });
 
@@ -203,6 +213,65 @@ public class ResultsPanel extends JPanel {
             nextResultAction.setEnabled(index < stages.size() - 1);
             lastResultAction.setEnabled(index < stages.size() - 1);
         }
+    }
+    
+    /**
+     * Determine if there is a model at the given point in the image and if one can be found,
+     * return it. 
+     * @param p
+     * @return
+     */
+    private Object getModelAtPoint(Point p) {
+        List<CvStage> stages = editor.getPipeline().getStages();
+
+        CvStage displayStage = (pinnedStage != null) ? pinnedStage : selectedStage;
+
+        Result result = null;
+        Mat image = null;
+        Object model = null;
+        if (displayStage != null) {
+            result = editor.getPipeline().getResult(displayStage);
+            if (result != null) {
+                image = result.image;
+                model = result.model;
+            }
+        }
+
+        if (model instanceof List) {
+            for (Object o : (List) model) {
+                if (isModelAtPoint(o, p)) {
+                    return o;
+                }
+            }
+        }
+        else {
+            if (isModelAtPoint(model, p)) {
+                return model;
+            }
+        }
+        return null;
+    }
+    
+    private boolean isModelAtPoint(Object model, Point p) {
+        if (model instanceof RotatedRect) {
+            RotatedRect r = (RotatedRect) model;
+            if (Math.abs(p.x - r.center.x) < 5 && Math.abs(p.y - r.center.y) < 5) {
+                return true;
+            }
+        }
+        else if (model instanceof KeyPoint) {
+            KeyPoint kp = (KeyPoint) model;
+            if (Math.abs(p.x - kp.pt.x) < 5 && Math.abs(p.y - kp.pt.y) < 5) {
+                return true;
+            }
+        }
+        else if (model instanceof Circle) {
+            Circle c = (Circle) model;
+            if (Math.abs(p.x - c.x) < 5 && Math.abs(p.y - c.y) < 5) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public final Action firstResultAction = new AbstractAction() {
