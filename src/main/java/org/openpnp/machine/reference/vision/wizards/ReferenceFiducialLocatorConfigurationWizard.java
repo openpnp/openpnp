@@ -132,7 +132,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         panel.add(enabledAveragingCheckbox, "4, 6");
 
         chckbxUseAffineTransfor = new JCheckBox("Use Affine Transform");
-        panel.add(chckbxUseAffineTransfor, "2, 4, 5, 1");
+        panel.add(chckbxUseAffineTransfor, "2, 8, 5, 1");
     }
     
     private void editPipeline() throws Exception {
