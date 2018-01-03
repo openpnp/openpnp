@@ -9,6 +9,8 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
+import org.openpnp.util.OpenCvUtils;
+import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
@@ -134,6 +136,6 @@ public class DrawRotatedRects extends CvStage {
                 drawOrientationMark(mat, rect, FluentCv.colorToScalar(thecolor), thickness);
             }
         }
-        return null;
+        return new Result(null, rects);
     }
 }

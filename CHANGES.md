@@ -1,6 +1,180 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-11-20
+
+* Manual NozzleTip Changing Fixes
+
+	Thanks to @netzmark there is now a fix for manual nozzle tip changing. Now, if you do not
+	have auto changing turned on, when the job attempts to change nozzles, the job will be
+	paused and you will be shown a message indicating the change.
+	
+	See:
+		* https://groups.google.com/d/msgid/openpnp/00ead7a9-e7d5-49e8-856c-2a403208058d%40googlegroups.com?utm_medium=email&utm_source=footer
+		* https://github.com/openpnp/openpnp/issues/118
+		* https://github.com/openpnp/openpnp/issues/526
+	
+# 2017-10-26
+
+* Fiducial Locator Retry and Averaging
+
+	With thanks to @mgrl, retry count on the fiducial locator, which was previously fixed at
+	3 is now configurable in Machine Setup -> Vision -> Fiducial Locator.
+	
+	In addition, a new option is added which allows averaging the results from the retries. This
+	helps alleviate some jitter that happens as the results shift with the movement of the
+	camera. 
+
+* ReferenceLoosePartFeeder Improvements
+
+	There is a new default pipeline that performs well for non-polarized, rectangular
+	components such as resistors and capacitors. 
+	
+	It attempts to include the electrodes as well as the bodies to better recognize rectangular
+	parts and it performs landscape orientation on the results so that there is a deterministic
+	orientation for rectangular parts.
+	
+	The camera feedback is now only shown at the end of the process, and for a longer
+	time. This better represents what OpenPnP is "seeing" before it picks the part.
+	
+	The feeder's rotation defined on it's location is now added to the final rotation so that
+	you can set the orientation you want parts picked in.
+	
+* New CvPipeline Stage: OrientRotatedRects
+
+	The new stage ensures the orientation of RotatedRects is set to either landscape or
+	portrait. This is used in the above pipeline. 
+	
+	In addition, you can set a flag to negate the angle of the RotatedRects. This is 
+	primarily used when converting from the output of MinAreaRect to what OpenPnP expects for 
+	Locations.
+
+
+# 2017-10-25
+
+* CvPipeline Editor Model Info
+
+	The pipeline editor will now show some information about any identified models it finds
+	as you move the mouse around the result window. 
+	
+	For instance, if the result you are viewing
+	includes a List<RotatedRect> and you mouse over the center of one of them in the image view,
+	you will see the description of that RotatedRect in the status field. 
+	
+	This is very helpful for learning more about what is happening in your pipelines and makes it
+	easy to debug model data.
+	
+	This feature currently works for RotatedRect, Circle, and KeyPoint models, and Lists of the
+	same.
+	
+	This video shows the feature in action: https://www.youtube.com/watch?v=sHuUPtJNIXw
+	
+* New CvPipeline Stage: Add
+
+	A new stage has been added for use in pipelines. The stage is called Add and it simply
+	outputs the sum of two previous images. This is used in a new Loose Part Feeder pipeline
+	that will be released soon.
+	
+* CvPipeline Standalone Editor Pipeline Restore
+
+	The  CvPipeline Standalone Editor will now save and restore the last pipeline you were
+	working on, similar to how the last directory you were working on is saved.
+
+# 2017-10-24
+
+* CvPipeline Memory Usage Improvements
+
+	CvPipeline now implements AutoClosable and all of the code that uses it has been updated to
+	release after use. This should greatly improve memory usage on large jobs with many parts.
+	
+* ReferenceBottomVision Improved Error Messages
+
+	ReferenceBottomVision will now throw specific error messages for common pipeline setup errors
+	such as an improperly named result stage or an invalid result type.
+	 
+# 2017-10-21
+
+* GcodeDriver Axis Pre Move Command Coordinate Variable
+
+	Pre Move Command in GcodeDriver Axes now has a Coordinate variable which can be used to reset
+	an axis' position before moving it. This can be used in controller firmwares that do not
+	support individual variables for multiple axes. In particular, this makes it possible to
+	use Marlin with multiple rotation axes by using a Pre Move Command like
+	`T0G92E{Coordinate:%.4f}`
+	
+# 2017-10-18
+
+* Vision Usability Improvements
+
+	As a result of the discussion in https://groups.google.com/d/msgid/openpnp/7029bade-fa16-46e5-8c2d-d9e22105c5fe%40googlegroups.com?utm_medium=email&utm_source=footer several changes have been made to
+	the vision pipeline system.
+	
+	* ReferenceBottomVision now looks for it's results in a stage named "results", like the
+	other primary vision operations. It also falls back to "result" for backwards compatibility.
+	* ReferenceBottomVision now has improved error messages when a result is not found, or when
+	the result in not in the correct format. This should help users as they experiment with
+	new pipelines.
+	* Vision operations all now reference a common name to avoid mistakes like this in the future.
+
+# 2017-10-05
+
+* OpenPnpCaptureCamera Updates
+
+	* Implemented the rest of the camera properties.
+	* Camera properties now refresh when changing device or format.
+	* Auto disabled state now reflects if auto is supported.
+	* Added display of default value.
+
+# 2017-09-30
+
+* Major Update: New Camera Capture System!
+
+	OpenPnP now has it's very own, custom written camera capture system written specifically to
+	solve all of the problems that have plagued camera capture since the beginning of this project!
+	
+	openpnp-capture is a brand new capture library written by Niels Moseley (@trcwm) specifically
+	for OpenPnP. Using this library we are now finally able to do things like run multiple USB
+	cameras on a single port/hub, manage camera properties such as exposure, focus and white
+	balance and select camera data formats to make intelligent choices based on quality, size, 
+	frame rate, etc.
+	
+	Two of the biggest difficulties with capture in OpenPnP from the start have been the
+	inability to run multiple cameras over a single USB port/hub and the inability to control
+	manual exposure. The first is important because many people use OpenPnP with laptops
+	which may have a limited number of ports. The second is important because most commercial
+	USB cameras default to auto exposure and this causes problems with vision as the camera
+	adjusts the exposure to compensate for differences in the image.
+	
+	Using the new library, you can now set up your lighting and choose the exact exposure that
+	works best for your machine, and you will know that it won't change just because the
+	camera is looking at something else.
+	
+	To use the new feature, add a new camera using the OpenPnpCaptureCamera and see the General
+	Settings tab to select a device, format and property settings.
+	
+	I want to give a HUGE shout out and thank you to Niels for all his incredibly hard work
+	on the new capture library over the past couple months. He wrote a robust and expansive library
+	for video capture for all three major operating systems in a very short period of time,
+	knocking out feature after feature faster than I could integrate them into OpenPnP. This is
+	an invaluable contribution to the project and will really push OpenPnP forward in it's
+	computer vision abilities. Thank you Niels!
+	
+	For more information about the capture library itself, see:
+	https://github.com/openpnp/openpnp-capture
+	
+	For information about the Java and Maven bindings for the capture library, see:
+	https://github.com/openpnp/openpnp-capture-java
+	
+	Finally, be aware that there are some known issues:
+	* When you switch the selected device, the wizard doesn't reload the properties. To work
+	around, simply click to another wizard and then click back. To be fixed soon. 
+	* Brightness, contrast, saturation, gamma properties not yet implemented in OpenPnP. These
+	properties were recently added to the capture library but have not yet been implemented
+	in OpenPnp. 
+	
+	If you run into any other issues, please file a bug report or post to the mailing list. Your
+	feedback will help us make this new feature even better! 
+
 # 2017-09-21
 
 * Ctrl-Shift-L Hotkey Added for Park Z

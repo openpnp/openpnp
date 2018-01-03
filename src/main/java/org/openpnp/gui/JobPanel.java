@@ -85,6 +85,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.JobProcessor;
@@ -179,7 +180,31 @@ public class JobPanel extends JPanel {
         @SuppressWarnings({"unchecked", "rawtypes"})
         JComboBox sidesComboBox = new JComboBox(Side.values());
 
-        boardLocationsTable = new AutoSelectTextTable(boardLocationsTableModel);
+        boardLocationsTable = new AutoSelectTextTable(boardLocationsTableModel) {
+            @Override
+            public String getToolTipText(MouseEvent e) {
+
+                java.awt.Point p = e.getPoint();
+                int row = rowAtPoint(p);
+                int col = columnAtPoint(p);
+
+                if (row >= 0) {
+                    if (col == 0) {
+                        row = boardLocationsTable.convertRowIndexToModel(row);
+                        BoardLocation boardLocation =
+                                boardLocationsTableModel.getBoardLocation(row);
+                        if (boardLocation != null) {
+                            return boardLocation.getBoard()
+                                                .getFile()
+                                                .toString();
+                        }
+                    }
+                }
+
+                return super.getToolTipText();
+            }
+        };
+
         boardLocationsTable.setAutoCreateRowSorter(true);
         boardLocationsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         boardLocationsTable.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
@@ -859,11 +884,15 @@ public class JobPanel extends JPanel {
             List<String> options = new ArrayList<>();
             String retryOption = "Try Again";
             String skipOption = "Skip";
+            String ignoreContinueOption = "Ignore and Continue";
             String pauseOption = "Pause Job";
 
             options.add(retryOption);
             if (jobProcessor.canSkip()) {
                 options.add(skipOption);
+            }
+            if (jobProcessor.canIgnoreContinue()) {
+            	options.add(ignoreContinueOption);
             }
             options.add(pauseOption);
             int result = JOptionPane.showOptionDialog(getTopLevelAncestor(), t.getMessage(),
@@ -879,6 +908,13 @@ public class JobPanel extends JPanel {
                     // Tell the job processor to skip the current placement and then call jobRun()
                     // to start things back up, either running or stepping.
                     jobSkip();
+                });
+            }
+            //ignore/continue
+            else if (selectedOption.equals(ignoreContinueOption)) {
+                UiUtils.messageBoxOnException(() -> {
+                    // Tell the job processor ignore error and continue as if everything were normal
+                    jobIgnoreContinue();
                 });
             }
             // Pause or cancel dialog
@@ -904,6 +940,13 @@ public class JobPanel extends JPanel {
     public void jobSkip() {
         UiUtils.submitUiMachineTask(() -> {
             jobProcessor.skip();
+            jobRun();
+        });
+    }
+
+    public void jobIgnoreContinue() {
+        UiUtils.submitUiMachineTask(() -> {
+            jobProcessor.ignoreContinue();
             jobRun();
         });
     }
@@ -977,6 +1020,19 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
+            System.out.println("isAllPlaced " + isAllPlaced());
+            if (isAllPlaced()) {
+                int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "All placements have been placed already. Reset all placements before starting job?",
+                        "Reset placement status?", JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE);
+                if (ret == JOptionPane.YES_OPTION) {
+                    for (BoardLocation boardLocation : job.getBoardLocations()) {
+                        boardLocation.clearAllPlaced();
+                    }
+                    jobPlacementsPanel.refresh();
+                }
+            }
             UiUtils.messageBoxOnException(() -> {
                 fsm.send(Message.StartOrPause);
             });
@@ -1012,7 +1068,7 @@ public class JobPanel extends JPanel {
             });
         }
     };
-
+    
     public final Action resetAllPlacedAction = new AbstractAction() {
         {
             putValue(NAME, "Reset All Placed");
@@ -1421,5 +1477,24 @@ public class JobPanel extends JPanel {
         // Would be better to have property notifiers but this is going to have to do for now.
         repaint();
     };
-
+    
+    boolean isAllPlaced() {
+    	for (BoardLocation boardLocation : job.getBoardLocations()) {
+    	    if (!boardLocation.isEnabled()) {
+    	        continue;
+    	    }
+        	for (Placement placement : boardLocation.getBoard().getPlacements()) {
+        	    if (placement.getType() != Type.Place) {
+        	        continue;
+        	    }
+        	    if (placement.getSide() != boardLocation.getSide()) {
+        	        continue;
+        	    }
+        		if (!boardLocation.getPlaced(placement.getId())) {
+    				return false;
+        		}
+        	}
+    	}
+    	return true;
+    }
 }

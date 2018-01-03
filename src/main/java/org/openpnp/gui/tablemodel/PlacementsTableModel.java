@@ -104,6 +104,7 @@ public class PlacementsTableModel extends AbstractTableModel {
             Placement placement = board.getPlacements().get(rowIndex);
             if (columnIndex == 1) {
                 placement.setPart((Part) aValue);
+                fireTableCellUpdated(rowIndex, 8);
             }
             else if (columnIndex == 2) {
                 placement.setSide((Side) aValue);
@@ -132,6 +133,7 @@ public class PlacementsTableModel extends AbstractTableModel {
             }
             else if (columnIndex == 6) {
                 placement.setType((Type) aValue);
+                fireTableCellUpdated(rowIndex, 8);
             }
             else if (columnIndex == 7) {
                 //placement.setPlaced((Boolean) aValue);

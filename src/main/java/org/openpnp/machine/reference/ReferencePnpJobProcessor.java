@@ -81,6 +81,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         Complete,
         Abort,
         Skip,
+        IgnoreContinue,
         Reset
     }
 
@@ -148,6 +149,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         fsm.add(State.Feed, Message.Next, State.Align, this::doFeedAndPick, Message.Next);
         fsm.add(State.Feed, Message.Skip, State.Feed, this::doSkip, Message.Next);
+        fsm.add(State.Feed, Message.IgnoreContinue, State.Align, Message.Next);
         fsm.add(State.Feed, Message.Abort, State.Cleanup, Message.Next);
 
         // TODO: See notes on doFeedAndPick()
@@ -161,6 +163,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         fsm.add(State.Align, Message.Next, State.Place, this::doAlign, Message.Next);
         fsm.add(State.Align, Message.Skip, State.Align, this::doSkip, Message.Next);
+        fsm.add(State.Align, Message.IgnoreContinue, State.Place, Message.Next);
         fsm.add(State.Align, Message.Abort, State.Cleanup, Message.Next);
 
         fsm.add(State.Place, Message.Next, State.Plan, this::doPlace);
@@ -215,6 +218,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     public synchronized void skip() throws Exception {
         fsm.send(Message.Skip);
     }
+    
+    public synchronized void ignoreContinue() throws Exception {
+        fsm.send(Message.IgnoreContinue);
+    }
 
     /*
      * TODO Due to the Align Skip issue I think we'd be better off replacing this API with
@@ -234,6 +241,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      */
     public boolean canSkip() {
         return fsm.canSend(Message.Skip);
+    }
+
+    public boolean canIgnoreContinue() {
+        return fsm.canSend(Message.IgnoreContinue);
     }
 
     /**
@@ -497,7 +508,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             // Otherwise find a compatible tip and load it
             NozzleTip nozzleTip = findNozzleTip(nozzle, part);
-            Logger.debug("Change nozzle tip on {} from {} to {}",
+            fireTextStatus("Change NozzleTip on Nozzle %s to %s.", 
+                    nozzle.getId(), 
+                    nozzleTip.getName());   
+            Logger.debug("Change NozzleTip on Nozzle {} from {} to {}",
                     new Object[] {nozzle, nozzle.getNozzleTip(), nozzleTip});
             nozzle.unloadNozzleTip();
             nozzle.loadNozzleTip(nozzleTip);
@@ -725,6 +739,22 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             placementLocation = placementLocation.add(new Location(part.getHeight().getUnits(), 0,
                     0, part.getHeight().getValue(), 0));
 
+            try {
+	            HashMap<String, Object> params = new HashMap<>();
+	            params.put("job", job);
+	            params.put("jobProcessor", this);
+	            params.put("part", part);
+	            params.put("nozzle", nozzle);
+	            params.put("placement", placement);
+	            params.put("boardLocation", boardLocation);
+	            params.put("placementLocation", placementLocation);
+	            params.put("alignmentOffsets", plannedPlacement.alignmentOffsets);
+            Configuration.get().getScripting().on("Job.Placement.BeforeAssembly", params);
+	        }
+	        catch (Exception e) {
+	            Logger.warn(e);
+	        }
+            
             // Move to the placement location
             MovableUtils.moveToLocationAtSafeZ(nozzle, placementLocation);
 
@@ -744,15 +774,20 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             plannedPlacement.stepComplete = true;
 
-            HashMap<String, Object> params = new HashMap<>();
-            params.put("job", job);
-            params.put("jobProcessor", this);
-            params.put("part", part);
-            params.put("nozzle", nozzle);
-            params.put("placement", placement);
-            params.put("boardLocation", boardLocation);
-            params.put("placementLocation", placementLocation);
+            try {
+	            HashMap<String, Object> params = new HashMap<>();
+	            params.put("job", job);
+	            params.put("jobProcessor", this);
+	            params.put("part", part);
+	            params.put("nozzle", nozzle);
+	            params.put("placement", placement);
+	            params.put("boardLocation", boardLocation);
+	            params.put("placementLocation", placementLocation);
             Configuration.get().getScripting().on("Job.Placement.Complete", params);
+	        }
+	        catch (Exception e) {
+	            Logger.warn(e);
+	        }
             
             Logger.debug("Place {} with {}", part, nozzle.getName());
         }
@@ -810,7 +845,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Logger.debug("Skipped {}", jobPlacement.placement);
         }
     }
-
+    
     protected void clearStepComplete() {
         for (PlannedPlacement plannedPlacement : plannedPlacements) {
             plannedPlacement.stepComplete = false;
