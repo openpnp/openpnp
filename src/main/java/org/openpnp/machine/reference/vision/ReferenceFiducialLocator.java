@@ -54,6 +54,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
     
+    @Attribute(required = false)
     protected boolean useAffineTransform = false;
 
     @Attribute(required = false)
