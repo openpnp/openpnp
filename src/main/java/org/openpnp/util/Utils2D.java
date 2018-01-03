@@ -97,7 +97,7 @@ public class Utils2D {
             placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
             Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
             p = tx.transform(p, null);
-            Location l = new Location(LengthUnit.Millimeters, p.getX(), p.getY(), 0, bl.getLocation().getRotation());
+            Location l = new Location(LengthUnit.Millimeters, p.getX(), p.getY(), bl.getLocation().getZ(), bl.getLocation().getRotation());
             l = l.convertToUnits(placementLocation.getUnits());
             Logger.debug("{} -> {}", placementLocation, l);
             return l;
