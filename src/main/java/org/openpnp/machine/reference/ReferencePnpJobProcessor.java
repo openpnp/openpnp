@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -837,12 +838,35 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      */
     protected void doSkip() throws Exception {
         if (plannedPlacements.size() > 0) {
-            PlannedPlacement plannedPlacement = plannedPlacements.remove(0);
-            JobPlacement jobPlacement = plannedPlacement.jobPlacement;
-            Nozzle nozzle = plannedPlacement.nozzle;
-            discard(nozzle);
-            jobPlacement.status = Status.Skipped;
-            Logger.debug("Skipped {}", jobPlacement.placement);
+            
+            // get iterator to avoid ConcurrentModificationException (list is modified within iteration)
+            Iterator<PlannedPlacement> plannedPlacementIter = plannedPlacements.iterator();
+            
+            // iterate through planned placement in this cycle (number of planned placements ==
+            // number of nozzles)
+            while (plannedPlacementIter.hasNext()) {
+                PlannedPlacement plannedPlacement=plannedPlacementIter.next();
+                JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+                
+                if (plannedPlacement.stepComplete) {
+                    // go over placements having the current step already completed
+                    continue;
+                }
+
+                // remove the placement to be skipped from list
+                plannedPlacementIter.remove();
+
+                // discard
+                Nozzle nozzle = plannedPlacement.nozzle;
+                discard(nozzle);
+
+                jobPlacement.status = Status.Skipped;
+                Logger.debug("Skipped {}", jobPlacement.placement);
+
+                // stop iterating through plannedPlacements, since only one part is handled at a time
+                break;
+                
+            }
         }
     }
     
