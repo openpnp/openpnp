@@ -1,6 +1,41 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-12-23
+
+With thanks to @mgrl:
+
+* Bugfix: Discard correct nozzle on skip part
+
+	If an error raised while job run (vacuum sense/bottom aligning failed), the first nozzle was cleared always
+	regardless which nozzle failed in a multi nozzle setup.	This is fixed now.w
+	
+	See:
+		* https://groups.google.com/d/msg/openpnp/x249mhevB3U/DSJg2fyVBAAJ
+		* https://github.com/openpnp/openpnp/pull/693
+		
+* Bugfix: Setting placed flag correctly (fixes #663)
+
+	There is now a fix having the placed flag set correctly if fiducials checking is enabled.
+	
+	See:
+		* https://groups.google.com/forum/#!topic/openpnp/4MKg7JaUTAk
+		* https://github.com/openpnp/openpnp/issues/663
+		
+* Enhancement: Added option to ignore error and continue assembly
+	
+	To handle errors in a running job, next to Try Again, Skip and Abort there is a new option "ignore and continue".
+	It continues a running job as if no error has been occurred (e.g. vacuum check/bottom vision failed).
+
+	See:
+		* https://groups.google.com/forum/#!topic/openpnp/x249mhevB3U 
+		* https://github.com/openpnp/openpnp/pull/688
+
+* Bugfix: A feeder feeder with no part assigned doesn't throw an NullPointerException if try to edit pipeline due to missing part name 
+
+	See:
+		* https://github.com/openpnp/openpnp/pull/689
+	
 # 2017-11-20
 
 * Manual NozzleTip Changing Fixes
