@@ -1,5 +1,6 @@
 package org.openpnp.vision.pipeline;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -8,14 +9,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.beanutils.PropertyUtils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.openpnp.vision.pipeline.CvStage.Result;
-import org.openpnp.vision.pipeline.stages.BlurGaussian;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
@@ -45,7 +44,7 @@ import org.simpleframework.xml.stream.Style;
  * TODO: Add info showing pixel coordinates when mouse is in image window.
  */
 @Root
-public class CvPipeline {
+public class CvPipeline implements AutoCloseable {
     static {
         nu.pattern.OpenCV.loadShared();
         System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
@@ -136,7 +135,7 @@ public class CvPipeline {
         }
         return null;
     }
-
+    
     /**
      * Get the Result returned by the CvStage with the given name. May return null if the stage did
      * not return a result.
@@ -192,7 +191,6 @@ public class CvPipeline {
     }
 
     public void process() {
-
         totalProcessingTimeNs = 0;
         release();
         for (CvStage stage : stages) {
@@ -220,7 +218,7 @@ public class CvPipeline {
             if(stage.isEnabled() && model != null) {
               workingModel=model;
             }
-            // If the result image is null and there is a working image, replace the result image
+            // If the result image is null and there is a working image,
             // replace the result image with a clone of the working image.
             if (image == null) {
                 if (workingImage != null) {
@@ -251,14 +249,26 @@ public class CvPipeline {
     public void release() {
         if (workingImage != null) {
             workingImage.release();
+            workingImage = null;
         }
         for (Result result : results.values()) {
             if (result.image != null) {
                 result.image.release();
             }
         }
-        workingModel=null;
+        workingModel = null;
         results.clear();
+    }
+    
+    @Override
+    public void close() throws IOException {
+        release();
+    }
+    
+    @Override
+    protected void finalize() throws Throwable {
+        release();
+        super.finalize();
     }
 
     /**

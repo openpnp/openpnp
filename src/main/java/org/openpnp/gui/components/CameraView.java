@@ -196,12 +196,14 @@ public class CameraView extends JComponent implements CameraListener {
     private boolean dragJogging = false;
     
     private MouseEvent dragJoggingTarget = null;
-
+    
+    long lastFrameReceivedTime = 0;
+    MovingAverage fpsAverage = new MovingAverage(24);
+    double fps = 0;
+    
     public CameraView() {
         setBackground(Color.black);
         setOpaque(true);
-
-        popupMenu = new CameraViewPopupMenu(this);
 
         addMouseListener(mouseListener);
         addMouseMotionListener(mouseMotionListener);
@@ -472,6 +474,8 @@ public class CameraView extends JComponent implements CameraListener {
                         || camera.getUnitsPerPixel() != lastUnitsPerPixel)) {
             calculateScalingData();
         }
+        fps = 1000.0 / fpsAverage.next(System.currentTimeMillis() - lastFrameReceivedTime);
+        lastFrameReceivedTime = System.currentTimeMillis();
         repaint();
     }
 
@@ -638,8 +642,6 @@ public class CameraView extends JComponent implements CameraListener {
         if (selectionTextDelegate != null) {
             String text = selectionTextDelegate.getSelectionText(this);
             if (text != null) {
-                // TODO: Be awesome like Apple and move the overlay inside
-                // the rect if it goes past the edge of the window
                 drawTextOverlay(g2d, (int) (rx + rw + 6), (int) (ry + rh + 6), text);
             }
         }
@@ -826,8 +828,11 @@ public class CameraView extends JComponent implements CameraListener {
         if (image == null) {
             return;
         }
-        String text = String.format("Resolution: %d x %d\nZoom: %d%%\nHistogram:", image.getWidth(),
-                image.getHeight(), (int) (zoom * 100));
+        String text = String.format("Resolution: %d x %d\nZoom: %d%%\nFPS: %.1f\nHistogram:", 
+                image.getWidth(),
+                image.getHeight(), 
+                (int) (zoom * 100),
+                fps);
         Insets insets = new Insets(10, 10, 10, 10);
         int interLineSpacing = 4;
         int cornerRadius = 8;
@@ -1312,7 +1317,7 @@ public class CameraView extends JComponent implements CameraListener {
         @Override
         public void mousePressed(MouseEvent e) {
             if (e.isPopupTrigger()) {
-                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                new CameraViewPopupMenu(CameraView.this).show(e.getComponent(), e.getX(), e.getY());
                 return;
             }
             else if (e.isShiftDown()) {
@@ -1326,7 +1331,7 @@ public class CameraView extends JComponent implements CameraListener {
         @Override
         public void mouseReleased(MouseEvent e) {
             if (e.isPopupTrigger()) {
-                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                new CameraViewPopupMenu(CameraView.this).show(e.getComponent(), e.getX(), e.getY());
                 return;
             }
             else if (isDragJogging()) {
@@ -1390,4 +1395,28 @@ public class CameraView extends JComponent implements CameraListener {
                     return text;
                 }
             };
+            
+    // From https://stackoverflow.com/questions/3793400/is-there-a-function-in-java-to-get-moving-average/42407811#42407811
+    static class MovingAverage {
+        private long [] window;
+        private int n, insert;
+        private long sum;
+
+        public MovingAverage(int size) {
+            window = new long[size];
+            insert = 0;
+            sum = 0;
+        }
+
+        public double next(long val) {
+            if (n < window.length)  {
+                n++;
+            }
+            sum -= window[insert];
+            sum += val;
+            window[insert] = val;
+            insert = (insert + 1) % window.length;
+            return (double)sum / n;
+        }
+    }            
 }

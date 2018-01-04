@@ -124,7 +124,7 @@ public class LensCalibration {
         double rms;
 
         if (lensModel == LensModel.Fisheye) {
-            // TODO:
+            // TODO: Uncomment code once we upgrade to OpenCV 3+
             throw new Error(lensModel + " LensModel not yet supported. OpenCV 3+ needed.");
             // Mat _rvecs, _tvecs;
             // rms = fisheye::calibrate(objectPoints, imagePoints, imageSize, cameraMatrix,

@@ -68,6 +68,9 @@ public class Icons {
     public static Icon navigatePrevious = getIcon("/icons/nav-previous.svg");
     public static Icon navigateNext = getIcon("/icons/nav-next.svg");
 
+    public static Icon pinDisabled = getIcon("/icons/pin_disabled.svg");
+    public static Icon pinEnabled = getIcon("/icons/pin_enabled.svg");
+
     public static Icon powerOn = getIcon("/icons/power_button_on.svg");
     public static Icon powerOff = getIcon("/icons/power_button_off.svg");
 

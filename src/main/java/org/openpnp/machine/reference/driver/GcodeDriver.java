@@ -35,6 +35,7 @@ import org.openpnp.machine.reference.driver.wizards.GcodeDriverSettings;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Named;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
@@ -51,7 +52,7 @@ import org.simpleframework.xml.core.Commit;
 import com.google.common.base.Joiner;
 
 @Root
-public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
+public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runnable {
     public enum CommandType {
         COMMAND_CONFIRM_REGEX,
         POSITION_REPORT_REGEX,
@@ -69,9 +70,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         PLACE_COMMAND(true, "Id", "Name"),
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
-        // TODO: Remove the vacuum stuff after 2017-05-01, see https://github.com/openpnp/openpnp/issues/447
-        VACUUM_REQUEST_COMMAND(true, "VacuumLevelPartOn", "VacuumLevelPartOff"),
-        VACUUM_REPORT_REGEX(true),
         ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index"),
         ACTUATOR_READ_REGEX(true),
         PRE_DISPENSE_COMMAND(false, "DispenseTime"),
@@ -160,7 +158,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     protected int timeoutMilliseconds = 5000;
 
     @Attribute(required = false)
-    protected int connectWaitTimeMilliseconds = 1000;
+    protected int connectWaitTimeMilliseconds = 3000;
+    
+    @Attribute(required = false)
+    protected boolean visualHomingEnabled = true;
 
     @Element(required = false)
     protected Location homingFiducialLocation = new Location(LengthUnit.Millimeters);
@@ -173,6 +174,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @ElementList(required = false)
     protected List<Axis> axes = new ArrayList<>();
+    
+    @Attribute(required = false)
+    protected String name = "GcodeDriver";
 
     private Thread readerThread;
     private boolean disconnectRequested;
@@ -291,37 +295,38 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             driver.home(head);
         }
 
-        /*
-         * The head camera for nozzle-1 should now be (if everything has homed correctly) directly
-         * above the homing pin in the machine bed, use the head camera scan for this and make sure
-         * this is exactly central - otherwise we move the camera until it is, and then reset all
-         * the axis back to 0,0,0,0 as this is calibrated home.
-         */
-        Part homePart = Configuration.get().getPart("FIDUCIAL-HOME");
-        if (homePart != null) {
-            Configuration.get().getMachine().getFiducialLocator()
-                    .getHomeFiducialLocation(homingFiducialLocation, homePart);
+        if (visualHomingEnabled) {
+            /*
+             * The head camera for nozzle-1 should now be (if everything has homed correctly) directly
+             * above the homing pin in the machine bed, use the head camera scan for this and make sure
+             * this is exactly central - otherwise we move the camera until it is, and then reset all
+             * the axis back to 0,0,0,0 as this is calibrated home.
+             */
+            Part homePart = Configuration.get().getPart("FIDUCIAL-HOME");
+            if (homePart != null) {
+                Configuration.get().getMachine().getFiducialLocator()
+                        .getHomeFiducialLocation(homingFiducialLocation, homePart);
 
-            // homeOffset contains the offset, but we are not really concerned with that,
-            // we just reset X,Y back to the home-coordinate at this point.
-            double xHomeCoordinate = 0;
-            double yHomeCoordinate = 0;
-            for (Axis axis : axes) {
-                if (axis.getType() == Axis.Type.X) {
-                    axis.setCoordinate(axis.getHomeCoordinate());
-                    xHomeCoordinate = axis.getHomeCoordinate();
+                // homeOffset contains the offset, but we are not really concerned with that,
+                // we just reset X,Y back to the home-coordinate at this point.
+                double xHomeCoordinate = 0;
+                double yHomeCoordinate = 0;
+                for (Axis axis : axes) {
+                    if (axis.getType() == Axis.Type.X) {
+                        axis.setCoordinate(axis.getHomeCoordinate());
+                        xHomeCoordinate = axis.getHomeCoordinate();
+                    }
+                    if (axis.getType() == Axis.Type.Y) {
+                        axis.setCoordinate(axis.getHomeCoordinate());
+                        yHomeCoordinate = axis.getHomeCoordinate();
+                    }
                 }
-                if (axis.getType() == Axis.Type.Y) {
-                    axis.setCoordinate(axis.getHomeCoordinate());
-                    yHomeCoordinate = axis.getHomeCoordinate();
-                }
+
+                String g92command = getCommand(null, CommandType.POST_VISION_HOME_COMMAND);
+                g92command = substituteVariable(g92command, "X", xHomeCoordinate);
+                g92command = substituteVariable(g92command, "Y", yHomeCoordinate);
+                sendGcode(g92command, -1);
             }
-
-            String g92command = getCommand(null, CommandType.POST_VISION_HOME_COMMAND);
-            g92command = substituteVariable(g92command, "X", xHomeCoordinate);
-            g92command = substituteVariable(g92command, "Y", yHomeCoordinate);
-            sendGcode(g92command, -1);
-
         }
     }
 
@@ -508,7 +513,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 command = substituteVariable(command, "X", x + nonSquarenessFactor * y);
                 command = substituteVariable(command, "BacklashOffsetX", x + backlashOffsetX + nonSquarenessFactor * y); // Backlash Compensation
                 if (xAxis.getPreMoveCommand() != null) {
-                    sendGcode(xAxis.getPreMoveCommand());
+                    String preMoveCommand = xAxis.getPreMoveCommand();
+                    preMoveCommand = substituteVariable(preMoveCommand, "Coordinate", xAxis.getCoordinate());
+                    sendGcode(preMoveCommand);
                 }
                 xAxis.setCoordinate(x);
             }
@@ -521,7 +528,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 command = substituteVariable(command, "Y", y);
                 command = substituteVariable(command, "BacklashOffsetY", y + backlashOffsetY); // Backlash Compensation
                 if (yAxis.getPreMoveCommand() != null) {
-                    sendGcode(yAxis.getPreMoveCommand());
+                    String preMoveCommand = yAxis.getPreMoveCommand();
+                    preMoveCommand = substituteVariable(preMoveCommand, "Coordinate", yAxis.getCoordinate());
+                    sendGcode(preMoveCommand);
                 }
             }
             else {
@@ -532,7 +541,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             if (includeZ) {
                 command = substituteVariable(command, "Z", z);
                 if (zAxis.getPreMoveCommand() != null) {
-                    sendGcode(zAxis.getPreMoveCommand());
+                    String preMoveCommand = zAxis.getPreMoveCommand();
+                    preMoveCommand = substituteVariable(preMoveCommand, "Coordinate", zAxis.getCoordinate());
+                    sendGcode(preMoveCommand);
                 }
             }
             else {
@@ -542,7 +553,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             if (includeRotation) {
                 command = substituteVariable(command, "Rotation", rotation);
                 if (rotationAxis.getPreMoveCommand() != null) {
-                    sendGcode(rotationAxis.getPreMoveCommand());
+                    String preMoveCommand = rotationAxis.getPreMoveCommand();
+                    preMoveCommand = substituteVariable(preMoveCommand, "Coordinate", rotationAxis.getCoordinate());
+                    sendGcode(preMoveCommand);
                 }
             }
             else {
@@ -932,6 +945,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         matcher.appendTail(sb);
         return sb.toString();
     }
+    
+    @Override
+    public String getPropertySheetHolderTitle() {
+        return getName() == null ? "GcodeDriver" : getName();
+    }
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
@@ -972,6 +990,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             GcodeDriver driver = new GcodeDriver();
+            driver.commands.add(new Command(null, CommandType.COMMAND_CONFIRM_REGEX, "^ok.*"));
             driver.parent = GcodeDriver.this;
             subDrivers.add(driver);
             fireIndexedPropertyChange("subDrivers", subDrivers.size() - 1, null, driver);
@@ -1060,6 +1079,23 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     public void setConnectWaitTimeMilliseconds(int connectWaitTimeMilliseconds) {
         this.connectWaitTimeMilliseconds = connectWaitTimeMilliseconds;
     }
+    
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+        firePropertyChange("name", null, getName());
+    }
+    
+    public boolean isVisualHomingEnabled() {
+        return visualHomingEnabled;
+    }
+
+    public void setVisualHomingEnabled(boolean visualHomingEnabled) {
+        this.visualHomingEnabled = visualHomingEnabled;
+    }
 
     public static class Axis {
         public enum Type {
@@ -1084,7 +1120,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         @Element(required = false)
         private AxisTransform transform;
 
-        @Element(required = false)
+        @Element(required = false, data = true)
         private String preMoveCommand;
 
         /**

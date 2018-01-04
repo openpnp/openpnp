@@ -61,12 +61,6 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 		if (pickLocation == null) {
 			pickLocation = location;
 		}
-		Logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
-		return pickLocation;
-	}
-
-	public void feed(Nozzle nozzle) throws Exception {
-		Logger.debug("{}.feed({})", getName(), nozzle);
 		int partX, partY;
 
 		if (feedCount >= (trayCountCols * trayCountRows)) {
@@ -83,6 +77,15 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 			partY = feedCount / trayCountCols;
 		}
 
+		calculatePickLocation(partX, partY);
+	
+		Logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
+		
+		return pickLocation;
+	}
+
+	private void calculatePickLocation(int partX, int partY) throws Exception {
+
 		// Multiply the offsets by the X/Y part indexes to get the total offsets
 		// and then add the pickLocation to offset the final value.
 		// and then add them to the location to get the final pickLocation.
@@ -98,6 +101,28 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 		Location delta2 = new Location(LengthUnit.Millimeters, delta_x2, delta_y2, 0, 0);
 
 		pickLocation = location.add(delta1.add(delta2));
+	}
+
+	public void feed(Nozzle nozzle) throws Exception {
+		Logger.debug("{}.feed({})", getName(), nozzle);
+
+		int partX, partY;
+
+		if (feedCount >= (trayCountCols * trayCountRows)) {
+			throw new Exception("Tray empty.");
+		}
+
+		if (trayCountCols >= trayCountRows) {
+			// X major axis.
+			partX = feedCount / trayCountRows;
+			partY = feedCount % trayCountRows;
+		} else {
+			// Y major axis.
+			partX = feedCount % trayCountCols;
+			partY = feedCount / trayCountCols;
+		}
+
+		calculatePickLocation(partX, partY);
 
 		Logger.debug(String.format("Feeding part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f", feedCount, partX, partY,
 				pickLocation.getX(), pickLocation.getY(), pickLocation.getRotation()));
@@ -180,13 +205,11 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 
 	@Override
 	public PropertySheetHolder[] getChildPropertySheetHolders() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Action[] getPropertySheetHolderActions() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 }

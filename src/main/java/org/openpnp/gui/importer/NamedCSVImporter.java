@@ -425,8 +425,6 @@ public class NamedCSVImporter implements BoardImporter {
             chckbxCreateMissingParts.setSelected(true);
             panel_1.add(chckbxCreateMissingParts, "2, 2");
 
-            // TODO the placement of the checkbox is not pretty, big space between it and one above,
-            // not sure how to fix this -trampas
             chckbxUpdatePartHeight = new JCheckBox("Update Existing Part Heights");
             chckbxUpdatePartHeight.setSelected(true);
             panel_1.add(chckbxUpdatePartHeight, "2, 3");

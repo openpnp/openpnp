@@ -1,10 +1,14 @@
 package org.openpnp.machine.reference.signaler;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import org.openpnp.model.Configuration;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractMachine;
@@ -30,8 +34,20 @@ public class SoundSignaler extends AbstractSignaler {
 
     private void playSound(String filename) {
         try {
-            AudioStream audioStream = new AudioStream(classLoader.getResourceAsStream(filename));
+            InputStream soundStream;
+
+            // Check if there is a file in the configuration directory under sounds overriding the resource files
+            File overrideFile = new File(Configuration.get().getConfigurationDirectory(), filename);
+
+            if(overrideFile.exists() && !overrideFile.isDirectory()) {
+                soundStream = new FileInputStream(overrideFile);
+            } else {
+                soundStream = classLoader.getResourceAsStream(filename);
+            }
+
+            AudioStream audioStream = new AudioStream(soundStream);
             AudioPlayer.player.start(audioStream);
+
         } catch (IOException e) {
             e.printStackTrace();
         }

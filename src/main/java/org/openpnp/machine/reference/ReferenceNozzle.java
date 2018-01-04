@@ -220,12 +220,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             nozzleTip.getCalibration().calibrate(nozzleTip);
         }
 
-        // If there is a part on the nozzle we take the incoming speed value
-        // to be a percentage of the part's speed instead of a percentage of
-        // the max speed.
-        if (getPart() != null) {
-            speed = part.getSpeed() * speed;
-        }
         Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
         if (limitRotation && !Double.isNaN(location.getRotation())
                 && Math.abs(location.getRotation()) > 180) {
@@ -241,23 +235,17 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     nozzleTip.getCalibration().getCalibratedOffset(location.getRotation()));
             Logger.debug("{}.moveTo({}, {}) (corrected)", getName(), location, speed);
         }
-        getDriver().moveTo(this, location, speed);
+        getDriver().moveTo(this, location, getHead().getMaxPartSpeed() * speed);
         getMachine().fireMachineHeadActivity(head);
     }
 
     @Override
     public void moveToSafeZ(double speed) throws Exception {
-        // If there is a part on the nozzle we take the incoming speed value
-        // to be a percentage of the part's speed instead of a percentage of
-        // the max speed.
-        if (getPart() != null) {
-            speed = part.getSpeed() * speed;
-        }
         Logger.debug("{}.moveToSafeZ({})", getName(), speed);
         Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
         Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN,
                 safeZ.getValue(), Double.NaN);
-        getDriver().moveTo(this, l, speed);
+        getDriver().moveTo(this, l, getHead().getMaxPartSpeed() * speed);
         getMachine().fireMachineHeadActivity(head);
     }
 
@@ -277,19 +265,19 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
             Logger.debug("{}.loadNozzleTip({}): moveTo Start Location",
                     new Object[] {getName(), nozzleTip.getName()});
-            MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerStartLocation(), nt.getChangerStartSpeed() * speed);
+            MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerStartLocation(), speed);
 
             Logger.debug("{}.loadNozzleTip({}): moveTo Mid Location",
                     new Object[] {getName(), nozzleTip.getName()});
-            moveTo(nt.getChangerMidLocation(), nt.getChangerMidSpeed() * speed * 0.25);
+            moveTo(nt.getChangerMidLocation(), nt.getChangerStartToMidSpeed() * speed);
 
             Logger.debug("{}.loadNozzleTip({}): moveTo Mid Location 2",
                     new Object[] {getName(), nozzleTip.getName()});
-            moveTo(nt.getChangerMidLocation2(), nt.getChangerMidSpeed2() * speed);
+            moveTo(nt.getChangerMidLocation2(), nt.getChangerMidToMid2Speed() * speed);
 
             Logger.debug("{}.loadNozzleTip({}): moveTo End Location",
                     new Object[] {getName(), nozzleTip.getName()});
-            moveTo(nt.getChangerEndLocation(), nt.getChangerEndSpeed() * speed);
+            moveTo(nt.getChangerEndLocation(), nt.getChangerMid2ToEndSpeed() * speed);
             moveToSafeZ(getHead().getMachine().getSpeed());
 
             Logger.debug("{}.loadNozzleTip({}): Finished",
@@ -309,23 +297,23 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             return;
         }
         
+        double speed = getHead().getMachine().getSpeed();
+        
+        Logger.debug("{}.unloadNozzleTip(): Start", getName());
+        ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
+
+        Logger.debug("{}.unloadNozzleTip(): moveTo End Location", getName());
+        MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerEndLocation(), speed);
+
         if (changerEnabled) {
-            double speed = getHead().getMachine().getSpeed();
-            
-            Logger.debug("{}.unloadNozzleTip(): Start", getName());
-            ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
-
-            Logger.debug("{}.unloadNozzleTip(): moveTo End Location", getName());
-            MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerEndLocation(), nt.getChangerEndSpeed() * speed);
-
             Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location 2", getName());
-            moveTo(nt.getChangerMidLocation2(), nt.getChangerMidSpeed2() * speed);
+            moveTo(nt.getChangerMidLocation2(), nt.getChangerMid2ToEndSpeed() * speed);
 
             Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location", getName());
-            moveTo(nt.getChangerMidLocation(), nt.getChangerMidSpeed() * speed);
+            moveTo(nt.getChangerMidLocation(), nt.getChangerMidToMid2Speed() * speed);
 
             Logger.debug("{}.unloadNozzleTip(): moveTo Start Location", getName());
-            moveTo(nt.getChangerStartLocation(), nt.getChangerStartSpeed() * speed * 0.25);
+            moveTo(nt.getChangerStartLocation(), nt.getChangerStartToMidSpeed() * speed);
             moveToSafeZ(getHead().getMachine().getSpeed());
 
             Logger.debug("{}.unloadNozzleTip(): Finished", getName());
@@ -335,6 +323,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         currentNozzleTipId = null;
         firePropertyChange("nozzleTip", null, getNozzleTip());
         ((ReferenceMachine) head.getMachine()).fireMachineHeadActivity(head);
+        
+        if (!changerEnabled) {
+            throw new Exception("Manual NozzleTip change required!");
+        }
     }
 
     @Override

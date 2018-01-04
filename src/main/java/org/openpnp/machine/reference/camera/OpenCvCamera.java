@@ -266,7 +266,6 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
     

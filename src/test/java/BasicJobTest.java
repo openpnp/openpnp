@@ -215,13 +215,11 @@ public class BasicJobTest {
 
         @Override
         public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
-            // TODO Auto-generated method stub
             super.actuate(actuator, on);
         }
 
         @Override
         public void actuate(ReferenceActuator actuator, double value) throws Exception {
-            // TODO Auto-generated method stub
             super.actuate(actuator, value);
         }
 

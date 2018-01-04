@@ -21,12 +21,12 @@ public class Panel extends AbstractModelObject implements Identifiable {
 
     @Element(required=false)
     private String partId;
-
+    
     @Element
     private boolean checkFids;
 
     @ElementList(required = false)
-    protected IdentifiableList<Placement> fiducials;
+    protected IdentifiableList<Placement> fiducials = new IdentifiableList<>();
 
     @SuppressWarnings("unused")
     public Panel() {
@@ -98,6 +98,20 @@ public class Panel extends AbstractModelObject implements Identifiable {
 
     public void setPartId(String partId) {
         this.partId = partId;
+    }
+    
+    public Part getFiducialPart() {
+        if (getPartId() == null) {
+            return null;
+        }
+        return Configuration.get().getPart(getPartId());
+    }
+    
+    public void setFiducialPart(Part fiducialPart) {
+        if (fiducialPart == null) {
+            setPartId(null);
+        }
+        setPartId(fiducialPart.getId());
     }
 
     public boolean isCheckFiducials() {

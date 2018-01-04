@@ -39,7 +39,9 @@ public class Placement extends AbstractModelObject implements Identifiable {
     }
 
     /**
-     * History: 1.0: Initial revision. 1.1: Replaced Boolean place with Type type. Deprecated place.
+     * History: 1.0: Initial revision. 
+     * 1.1: Replaced Boolean place with Type type. Deprecated place.
+     * 1.2: Removed glue attribute.
      */
     @Version(revision = 1.2)
     private double version;
@@ -59,11 +61,6 @@ public class Placement extends AbstractModelObject implements Identifiable {
 
     private Part part;
 
-    // TODO: Remove after July 1, 2017.
-    @Deprecated
-    @Attribute(required=false)
-    private Boolean glue = null;
-    
     @Attribute
     private boolean checkFids;
 
@@ -91,7 +88,6 @@ public class Placement extends AbstractModelObject implements Identifiable {
         if (getPart() == null) {
             setPart(Configuration.get().getPart(partId));
         }
-        glue = null;
     }
 
     public Part getPart() {

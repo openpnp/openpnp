@@ -88,10 +88,10 @@ public class JobPlacementsPanel extends JPanel {
         boardLocationSelectionActionGroup.setEnabled(false);
 
         singleSelectionActionGroup =
-                new ActionGroup(removeAction, editPlacementFeederAction, setTypeAction);
+                new ActionGroup(removeAction, editPlacementFeederAction, setTypeAction, setSideAction, setPlacedAction);
         singleSelectionActionGroup.setEnabled(false);
 
-        multiSelectionActionGroup = new ActionGroup(removeAction, setTypeAction);
+        multiSelectionActionGroup = new ActionGroup(removeAction, setTypeAction, setSideAction, setPlacedAction);
         multiSelectionActionGroup.setEnabled(false);
 
         captureAndPositionActionGroup = new ActionGroup(captureCameraPlacementLocation,
@@ -222,11 +222,20 @@ public class JobPlacementsPanel extends JPanel {
             setSideMenu.add(new SetSideAction(side));
         }
         popupMenu.add(setSideMenu);
+        
+        JMenu setPlacedMenu = new JMenu(setPlacedAction);
+        setPlacedMenu.add(new SetPlacedAction(true));
+        setPlacedMenu.add(new SetPlacedAction(false));
+        popupMenu.add(setPlacedMenu);
 
         table.setComponentPopupMenu(popupMenu);
 
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
+    }
+    
+    public void refresh() {
+        tableModel.fireTableDataChanged();
     }
 
     public void selectPlacement(Placement placement) {
@@ -243,11 +252,11 @@ public class JobPlacementsPanel extends JPanel {
     public void setBoardLocation(BoardLocation boardLocation) {
         this.boardLocation = boardLocation;
         if (boardLocation == null) {
-            tableModel.setBoard(null);
+            tableModel.setBoardLocation(null);
             boardLocationSelectionActionGroup.setEnabled(false);
         }
         else {
-            tableModel.setBoard(boardLocation.getBoard());
+            tableModel.setBoardLocation(boardLocation);
             boardLocationSelectionActionGroup.setEnabled(true);
         }
     }
@@ -293,7 +302,16 @@ public class JobPlacementsPanel extends JPanel {
             if (id == null) {
                 return;
             }
-            // TODO: Make sure it's unique.
+            
+            // Check if the new placement ID is unique
+            for(Placement compareplacement : boardLocation.getBoard().getPlacements()) {
+            	if (compareplacement.getId().equals(id)) {
+            		MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
+                            "The ID for the new placement already exists");
+                    return;
+            	}
+            }
+            
             Placement placement = new Placement(id);
 
             placement.setPart(Configuration.get().getParts().get(0));
@@ -301,6 +319,7 @@ public class JobPlacementsPanel extends JPanel {
 
             boardLocation.getBoard().addPlacement(placement);
             tableModel.fireTableDataChanged();
+            boardLocation.setPlaced(placement.getId(), false);
             Helpers.selectLastTableRow(table);
         }
     };
@@ -463,6 +482,7 @@ public class JobPlacementsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
                 placement.setType(type);
+                tableModel.fireTableDataChanged();
             }
         }
     };
@@ -490,6 +510,36 @@ public class JobPlacementsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
                 placement.setSide(side);
+                tableModel.fireTableDataChanged();
+            }
+        }
+    };
+    
+    public final Action setPlacedAction = new AbstractAction() {
+        {
+            putValue(NAME, "Set Placed");
+            putValue(SHORT_DESCRIPTION, "Set placement status to...");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {}
+    };
+
+    class SetPlacedAction extends AbstractAction {
+        final Boolean placed;
+
+        public SetPlacedAction(Boolean placed) {
+            this.placed = placed;
+            String name = placed ? "Placed" : "Not Placed";
+            putValue(NAME, name);
+            putValue(SHORT_DESCRIPTION, "Set placement status to " + name);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            for (Placement placement : getSelections()) {
+                boardLocation.setPlaced(placement.getId(), placed);
+                tableModel.fireTableDataChanged();   
             }
         }
     };

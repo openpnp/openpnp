@@ -194,7 +194,6 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     private Location getVisionOffsets(Head head, Location pickLocation) throws Exception {
         Logger.debug("getVisionOffsets({}, {})", head.getName(), pickLocation);
         // Find the Camera to be used for vision
-        // TODO: Consider caching this
         Camera camera = null;
         for (Camera c : head.getCameras()) {
             if (c.getVisionProvider() != null) {
@@ -204,6 +203,14 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
         if (camera == null) {
             throw new Exception("No vision capable camera found on head.");
+        }
+        
+        if (vision.getTemplateImage() == null) {
+            throw new Exception("Template image is required when vision is enabled.");
+        }
+        
+        if (vision.getAreaOfInterest().getWidth() == 0 || vision.getAreaOfInterest().getHeight() == 0) {
+            throw new Exception("Area of Interest is required when vision is enabled.");
         }
 
         head.moveToSafeZ();
@@ -355,13 +362,11 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
         return null;
     }
 

@@ -195,7 +195,6 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     @Override
     public Icon getPropertySheetHolderIcon() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -247,5 +246,26 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     public void setParkLocation(Location parkLocation) {
         this.parkLocation = parkLocation;
+    }
+
+    public boolean isCarryingPart() {
+        for (Nozzle nozzle : getNozzles()) {
+            if (nozzle.getPart() != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public double getMaxPartSpeed() {
+        double speed = 1;
+
+        for (Nozzle nozzle : getNozzles()) {
+            if (nozzle.getPart() != null) {
+                speed = Math.min(nozzle.getPart().getSpeed(), speed);
+            }
+        }
+
+        return speed;
     }
 }

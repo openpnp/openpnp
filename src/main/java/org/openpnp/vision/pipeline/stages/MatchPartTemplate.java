@@ -284,7 +284,6 @@ public class MatchPartTemplate extends CvStage {
 
         Mat result = new Mat();
 
-        // TODO: externalize type
         Imgproc.matchTemplate(mat, template, result, Imgproc.TM_CCOEFF_NORMED);
 
         MinMaxLocResult mmr = Core.minMaxLoc(result);

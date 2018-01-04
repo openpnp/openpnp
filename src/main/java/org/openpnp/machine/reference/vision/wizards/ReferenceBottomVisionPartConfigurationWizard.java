@@ -147,9 +147,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                 throw new Exception("Offset too big");
             }
             nozzle.moveTo(nozzle.getLocation()
-                                .subtract(alignmentOffset.getLocation()),
-                    nozzle.getPart()
-                          .getSpeed());
+                                .subtract(alignmentOffset.getLocation()));
             return;
         }
 
