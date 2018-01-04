@@ -83,7 +83,7 @@ public class ReferenceBottomVision implements PartAlignment {
             throws Exception {
         double angle = placementLocation.getRotation();
         if (boardLocation != null) {
-            angle = Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation)
+            angle = Utils2D.calculateFiducialCompensatedBoardPlacementLocation(boardLocation, placementLocation)
                            .getRotation();
         }
         angle = angleNorm(angle, 180.);
