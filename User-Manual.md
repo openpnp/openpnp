@@ -23,7 +23,7 @@ Prerequisites
 
 OpenPnP runs on the Java platform and requires the Java runtime version 7 or higher to run. You can download the latest version of Java from http://java.com/getjava.
 
-OpenPnP is designed to run on Mac, Windows and Linux. Other platforms may be supported due to the nature of Java, but they are not recommended. OpenPnp is written and tested on Mac and used regularly on Windows. These two platforms are recommended for the best compatibility.
+OpenPnP is designed to run on Mac, Windows and Linux. Other platforms may be supported due to the nature of Java, but they are not recommended. OpenPnP is written and tested on Mac and used regularly on Windows. These two platforms are recommended for the best compatibility.
 
 Download
 --------
