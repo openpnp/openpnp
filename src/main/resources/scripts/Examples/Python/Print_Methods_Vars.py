@@ -13,3 +13,4 @@ def print_methods_vars(element, clip=True):
       print("WARNING ... for", item, end=' ')
 
 print_methods_vars(machine.defaultHead.defaultNozzle)
+print("")
