@@ -32,7 +32,7 @@ http://www.oracle.com/technetwork/articles/java/jf14-nashorn-2126515.html
 ### Python
 Python support is included with OpenPnP, there is nothing you need to add. The engine is called Jython. Script files with the extension `.py` will be run by the Jython engine.
 
-More information about Jython can be found at http://www.jython.org/currentdocs.html.
+More information about Jython can be found at http://www.jython.org/currentdocs.html and http://www.jython.org/jythonbook/en/1.0/JythonAndJavaIntegration.html.
 
 ### Beanshell
 Beanshell support is included with OpenPnP. Script files with the extension '.bsh' are executed using Beanshell.
