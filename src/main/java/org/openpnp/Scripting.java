@@ -82,8 +82,9 @@ public class Scripting {
         String[] exampleScripts =
                 new String[] {"JavaScript/Call_Java.js", "JavaScript/Hello_World.js", "JavaScript/Print_Scripting_Info.js",
                         "JavaScript/Reset_Strip_Feeders.js", "JavaScript/Move_Machine.js", "JavaScript/Utility.js", "JavaScript/QrCodeXout.js",
-                        "Python/Print_Hallo_OpenPnP.py", "Python/Print_Methods_Vars.py",
-                        "Python/Print_Nozzle_Info.py"};
+                        "Python/call_java.py", "Python/move_machine.py", "Python/print_hallo_openpnp.py",
+                        "Python/print_method_vars.py", "Python/print_nozzle_info.py", "Python/print_scripting_info.py",
+                        "Python/use_module.py", "Python/utility.py"};
         for (String name : exampleScripts) {
             try {
                 File file = new File(examplesDir, name);
