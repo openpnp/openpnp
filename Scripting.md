@@ -90,7 +90,7 @@ Called after a placement has been completed, i.e. a part has been placed.
 | job  | [org.openpnp.model.Job](http://openpnp.github.io/openpnp/develop/org/openpnp/model/Job.html) | The Job that has just finished. |
 | jobProcessor  | [org.openpnp.spi.JobProcessor](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/JobProcessor.html) | The JobProcessor responsible for running the Job. |
 | part  | [org.openpnp.model.Part](http://openpnp.github.io/openpnp/develop/org/openpnp/model/Part.html) | The Part that has been placed. |
-| nozzle  | [org.openpnp.spi.Nozze](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Nozzle.html) | The Nozzle that placed the part. |
+| nozzle  | [org.openpnp.spi.Nozzle](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Nozzle.html) | The Nozzle that placed the part. |
 | placement  | [org.openpnp.model.Placement](http://openpnp.github.io/openpnp/develop/org/openpnp/model/Placement.html) | The Placement that was completed. |
 | placementLocation  | [org.openpnp.model.Location](http://openpnp.github.io/openpnp/develop/org/openpnp/model/Location.html) | The Location where the part was placed. This includes offset corrections. |
 | boardLocation  | [org.openpnp.model.BoardLocation](http://openpnp.github.io/openpnp/develop/org/openpnp/model/Placement.html) | The BoardLocation that the given Placement was located in. |
