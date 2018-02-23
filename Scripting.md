@@ -93,7 +93,7 @@ Called after a placement has been completed, i.e. a part has been placed.
 | nozzle  | [org.openpnp.spi.Nozzle](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Nozzle.html) | The Nozzle that placed the part. |
 | placement  | [org.openpnp.model.Placement](http://openpnp.github.io/openpnp/develop/org/openpnp/model/Placement.html) | The Placement that was completed. |
 | placementLocation  | [org.openpnp.model.Location](http://openpnp.github.io/openpnp/develop/org/openpnp/model/Location.html) | The Location where the part was placed. This includes offset corrections. |
-| boardLocation  | [org.openpnp.model.BoardLocation](http://openpnp.github.io/openpnp/develop/org/openpnp/model/Placement.html) | The BoardLocation that the given Placement was located in. |
+| boardLocation  | [org.openpnp.model.BoardLocation](http://openpnp.github.io/openpnp/develop/org/openpnp/model/BoardLocation.html) | The BoardLocation that the given Placement was located in. |
 
 Example for saving images of placed parts (for quality assurance):  
 .openpnp/scripts/events/Job.Placement.Complete.js
