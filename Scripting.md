@@ -51,7 +51,7 @@ OpenPnP exposes several global variables to the scripting environment for use in
 
 ## Scripting Events
 
-Scripting Events allow you to define scripts that will be run automatically by OpenPnP during certain events. These scripts should be placed in the `.openpnp/scripts/Events` directory. They should be named in accordance with the events described below. Some Scripting Events include additional global variables. These are described below with each event.
+Scripting Events allow you to define scripts that will be run automatically by OpenPnP during certain events. These scripts should be placed in the `.openpnp/scripts/Events` directory. They should be named in accordance with the events described below (e.g. `Job.Placement.Complete.py`). Some Scripting Events include additional global variables. These are described below with each event.
 
 ### Startup
 
