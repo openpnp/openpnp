@@ -17,7 +17,7 @@ The Scripts menu also includes a Refresh Scripts item that will manually update 
 If you place an empty file called `.ignore` in any subdirectory under the `scripts` directory then that directory will not be shown in the menu.
 
 ## Language Support
-OpenPnP supports scripts written in JavaScript out of the box and it's easy to add support for other languages. In most cases to add a language it's just a matter of finding a JAR file that implements that language and adding it to your Java classpath. See below for specifics on languages.
+OpenPnP supports scripts written in JavaScript and Python out of the box, and it's easy to add support for other languages. In most cases to add a language it's just a matter of finding a JAR file that implements that language and adding it to your Java classpath. See below for specifics on languages.
 
 ### JavaScript
 JavaScript support is included with OpenPnP, there is nothing you need to add. The engine is called Nashorn. Script files with the extension `.js` will be run by the Nashorn / JavaScript engine.
