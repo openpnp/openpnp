@@ -97,7 +97,7 @@ Called after a placement has been completed, i.e. a part has been placed.
 
 Example for saving images of placed parts (for quality assurance):  
 .openpnp/scripts/events/Job.Placement.Complete.js
-```
+```js
 // Get a reference to the camera.
 var camera = machine.defaultHead.defaultCamera;
 
@@ -137,7 +137,7 @@ Variables:
 Example:
 
 .scripts/events/Camera.BeforeSettle.js
-```
+```js
 /**
  * Controls lighting for the two cameras using two named actuators. The lights
  * for the up camera and down camera are turned on and off based on which camera
@@ -169,7 +169,7 @@ Variables:
 Example:
 
 .scripts/events/Camera.BeforeCapture.js
-```
+```js
 /**
  * Controls lighting for the two cameras using two named actuators. The lights
  * for the up camera and down camera are turned on and off based on which camera
@@ -201,7 +201,7 @@ Variables:
 Example:
 
 .scripts/events/Camera.AfterCapture.js
-```
+```js
 /**
  * Controls lighting for the two cameras using two named actuators. All
  * of the lights are turned off.
@@ -238,14 +238,14 @@ Variables:
 
 #### Call `firefox` from JavaScript:
 
-```
+```js
 Runtime = Java.type("java.lang.Runtime").getRuntime();
 Runtime.exec("firefox");
 ```
 
 #### Print a system command (e.g. "ls -l") response:
 
-```
+```js
 var imports = new JavaImporter(java.io, java.lang);
 with (imports) {
   var p = Runtime.getRuntime().exec("ls -l");
