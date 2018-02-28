@@ -67,7 +67,7 @@ See https://github.com/openpnp/openpnp/wiki/GcodeDriver#asking-for-help
 
 ## My nozzle moves (in Z) when the camera is moved.
 
-See https://github.com/openpnp/openpnp/wiki/GcodeDriver#nozzle-is-moving-when-camera-is-moved
+See https://github.com/openpnp/openpnp/wiki/GcodeDriver#nozzle-is-moving-or-turning-when-camera-is-moved
 
 ## "It would be faster to do it by hand."
 
