@@ -13,4 +13,5 @@ In OpenPnP you will need to select the `org.openpnp.machine.reference.driver.Gco
 If you are using the 4 axis Grbl fork mentioned above, there are some important considerations to make sure it works with GcodeDriver:
 
 1. In the Gcode configuration, remove any comments that begin with semicolon. For example, change `G21 ; Set millimeters mode` to `G21`. This older version of Grbl is not compatible with semicolon comments.
+As alternative change `G21; Set millimeter mode` to `G21( Set millimeter mode` and no '(' or ')' on the same line.
 2. Change Gcodes to suit Grbl. In particular, remove `M82 ; Set absolute mode for extruder` from `CONNECT_COMMAND` and change `MOVE_TO_COMMAND` to use C for the fourth axis rather than E.
