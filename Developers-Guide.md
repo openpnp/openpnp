@@ -66,7 +66,7 @@ In addition to the automated tests, it's a good idea to run a manual test using 
 
 ### JDK or JRE 8+
 
-OpenPnP is written in Java and requires Java 8 or higher to run. If you want
+OpenPnP is written in Java and requires Java 8 to run ([Java 9+ support is still in development](https://github.com/openpnp/openpnp/issues/719)). If you want
 to do development on OpenPnP or recompile it, you should install the JDK. 
 If you just want to run it you can install the smaller JRE.
 
