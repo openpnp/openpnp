@@ -1,10 +1,6 @@
-# Deprecation Note
-
-Note that this FAQ is now deprecated with the release of the OpenPnP Capture System. Please see https://github.com/openpnp/openpnp/blob/develop/CHANGES.md#2017-09-30 for more details.
-
 # USB Camera Troubleshooting FAQ 
 
-If you are using multiple USB cameras with OpenPnP you may find that it's difficult to get more than one to show an image at the same time. This is a software limitation in the libraries that OpenPnP uses to talk to cameras and is very difficult to fix. Read on for some solutions to the problems. 
+If you are having trouble using multiple USB cameras with OpenPnP, make sure that you are using the OpenPnpCaptureCamera, and not OpenCvCamera. OpenPnpCaptureCamera overcomes the issues described below. If you must use OpenCvCamera, continue reading for more information about why you might run into issues.
 
 ## I just want it to work!
 Put each camera on it's own USB host controller. This normally means that each camera needs it's own dedicated USB port but even that doesn't always solve the problem. If you look in your computer's USB device tree and all of your ports go back to one USB host controller you will need a different computer.
@@ -21,7 +17,7 @@ Most USB cameras on the market today default to uncompressed YUV video mode, whi
 If you have USB 3 specific cameras these should work. USB 2 cameras on a USB 3 port, or a USB 3 hub, will not work. USB 2 devices on a USB 3 bus share a USB 2 bus over the USB 3 cable, so they have the same limitation.
 
 ## Why is it a software limitation?
-Most cameras on the market also support MJPEG compressed video. This is **much** lower bandwidth and you can easily have 2 or more cameras on a port. Unfortunately the library we use for camera capture (OpenCV) does not have a way to tell the camera to switch to MJPEG mode so we are stuck with YUV. There is an effort happening to fix this in https://github.com/openpnp/openpnp/issues/448 and https://github.com/openpnp/opencv/issues/12.
+Most cameras on the market also support MJPEG compressed video. This is **much** lower bandwidth and you can easily have 2 or more cameras on a port. Unfortunately the library we use for camera capture (OpenCV) does not have a way to tell the camera to switch to MJPEG mode so we are stuck with YUV. There is an effort happening to fix this in 
 
 ## What are some other options?
 ONVIF IP cameras have none of these limitations. If you use these you should be able to use as many as your network will support. **Note: Links to some good ONVIF cameras here would be appreciated.**
