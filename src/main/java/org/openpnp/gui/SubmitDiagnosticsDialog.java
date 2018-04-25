@@ -343,6 +343,7 @@ public class SubmitDiagnosticsDialog extends JDialog {
                         return;
                     }
                     GistService service = new GistService();
+                    service.getClient().setCredentials("openpnp-app", "a857fc3da21d6dded57e4c5d9f871abd37157dc9");
                     gist = service.createGist(gist);
                     progressBar.setValue(progressBar.getValue() + 1);
 
