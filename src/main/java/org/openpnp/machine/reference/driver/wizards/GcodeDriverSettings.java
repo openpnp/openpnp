@@ -62,8 +62,16 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -130,12 +138,26 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         driverName.setColumns(5);
         settingsPanel.add(driverName, "8, 8");
         
-        JLabel lblNonSquarenessFactor = new JLabel("Non-Squareness Factor");
-        settingsPanel.add(lblNonSquarenessFactor, "2, 10, right, default");
+        JLabel lblNonSquarenessFactorX = new JLabel("Non-Squareness Factor X");
+        settingsPanel.add(lblNonSquarenessFactorX, "2, 10, right, default");
         
-        nonSquarenessFactorTf = new JTextField();
-        settingsPanel.add(nonSquarenessFactorTf, "4, 10, fill, default");
-        nonSquarenessFactorTf.setColumns(5);
+        nonSquarenessFactorXTf = new JTextField();
+        settingsPanel.add(nonSquarenessFactorXTf, "4, 10, fill, default");
+        nonSquarenessFactorXTf.setColumns(5);
+        
+        JLabel lblNonSquarenessFactorY = new JLabel("Non-Squareness Factor Y");
+        settingsPanel.add(lblNonSquarenessFactorY, "2, 12, right, default");
+        
+        nonSquarenessFactorYTf = new JTextField();
+        settingsPanel.add(nonSquarenessFactorYTf, "4, 12, fill, default");
+        nonSquarenessFactorYTf.setColumns(5);
+        
+        JLabel lblMaxFeedRateRot = new JLabel("Max Feed Rate Rotation [Units/Min]");
+        settingsPanel.add(lblMaxFeedRateRot, "6, 12, right, default");
+        
+        maxFeedRateRotTf = new JTextField();
+        settingsPanel.add(maxFeedRateRotTf, "8, 12, fill, default");
+        maxFeedRateRotTf.setColumns(5);
         
         JLabel lblVisualHoming = new JLabel("Visual Homing");
         settingsPanel.add(lblVisualHoming, "6, 10, right, default");
@@ -153,9 +175,11 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         
         addWrappedBinding(driver, "units", unitsCb, "selectedItem");
         addWrappedBinding(driver, "maxFeedRate", maxFeedRateTf, "text", intConverter);
+        addWrappedBinding(driver, "maxFeedRateRot", maxFeedRateRotTf, "text", intConverter);
         addWrappedBinding(driver, "backlashOffsetX", backlashOffsetXTf, "text", doubleConverter);
         addWrappedBinding(driver, "backlashOffsetY", backlashOffsetYTf, "text", doubleConverter);
-        addWrappedBinding(driver, "nonSquarenessFactor", nonSquarenessFactorTf, "text", doubleConverterFine);
+        addWrappedBinding(driver, "nonSquarenessFactorX", nonSquarenessFactorXTf, "text", doubleConverterFine);
+        addWrappedBinding(driver, "nonSquarenessFactorY", nonSquarenessFactorYTf, "text", doubleConverterFine);
         addWrappedBinding(driver, "backlashFeedRateFactor", backlashFeedRateFactorTf, "text", doubleConverter);
         addWrappedBinding(driver, "timeoutMilliseconds", commandTimeoutTf, "text", intConverter);
         addWrappedBinding(driver, "connectWaitTimeMilliseconds", connectWaitTimeTf, "text", intConverter);
@@ -163,8 +187,10 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         addWrappedBinding(driver, "visualHomingEnabled", visualHoming, "selected");
         
         ComponentDecorators.decorateWithAutoSelect(maxFeedRateTf);
+        ComponentDecorators.decorateWithAutoSelect(maxFeedRateRotTf);
         ComponentDecorators.decorateWithAutoSelect(backlashOffsetXTf);
-        ComponentDecorators.decorateWithAutoSelect(nonSquarenessFactorTf);
+        ComponentDecorators.decorateWithAutoSelect(nonSquarenessFactorXTf);
+        ComponentDecorators.decorateWithAutoSelect(nonSquarenessFactorYTf);
         ComponentDecorators.decorateWithAutoSelect(backlashOffsetYTf);
         ComponentDecorators.decorateWithAutoSelect(backlashFeedRateFactorTf);
         ComponentDecorators.decorateWithAutoSelect(commandTimeoutTf);
@@ -299,10 +325,12 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         }
     };
     private JTextField maxFeedRateTf;
+    private JTextField maxFeedRateRotTf;
     private JTextField backlashOffsetXTf;
     private JTextField backlashOffsetYTf;
     private JTextField backlashFeedRateFactorTf;
-    private JTextField nonSquarenessFactorTf;
+    private JTextField nonSquarenessFactorXTf;
+    private JTextField nonSquarenessFactorYTf;
     private JTextField commandTimeoutTf;
     private JTextField connectWaitTimeTf;
     private JComboBox unitsCb;

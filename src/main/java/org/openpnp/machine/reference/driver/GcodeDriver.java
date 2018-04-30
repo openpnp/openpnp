@@ -141,7 +141,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
 
     @Attribute(required = false)
     protected int maxFeedRate = 1000;
-    
+    @Attribute(required = false)
+    protected int maxFeedRateRot = 10000;
+	
     @Attribute(required = false)
     protected double backlashOffsetX = -1;
     
@@ -150,6 +152,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
     
     @Attribute(required = false)
     protected double nonSquarenessFactor = 0;
+    @Attribute(required = false)
+    protected double nonSquarenessFactorX = -1;
+    @Attribute(required = false)
+    protected double nonSquarenessFactorY = -1;
     
     @Attribute(required = false)
     protected double backlashFeedRateFactor = 0.1;
@@ -287,9 +293,48 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
         command = substituteVariable(command, "Name", head.getName());
         sendGcode(command, -1);
 
+            if (nonSquarenessFactorX == -1) { nonSquarenessFactorX = nonSquarenessFactor; } 
+            if (nonSquarenessFactorY == -1) { nonSquarenessFactorY =-nonSquarenessFactor; } 
+
+        // We need to specially handle X and Y axes to support the non-squareness factor.
+        Axis xAxis = null;
+        Axis yAxis = null;
+        double xHomeCoordinateNonSquare = 0;
+        double yHomeCoordinateNonSquare = 0;
         for (Axis axis : axes) {
-            axis.setCoordinate(axis.getHomeCoordinate());
+            if (axis.getType() == Axis.Type.X) {
+                xAxis = axis;
+                xHomeCoordinateNonSquare = axis.getHomeCoordinate();
+            }
+            if (axis.getType() == Axis.Type.Y) {
+                yAxis = axis;
+                yHomeCoordinateNonSquare = axis.getHomeCoordinate();
+            }
         }
+        // Compensate non-squareness factor: 
+        // We are homing to the native controller's non-square coordinate system, this does not
+        // match OpenPNP's square coordinate system, if the controller's Y home is non-zero. 
+        // The two coordinate systems coincide at Y0 only, see the non-squareness 
+        // transformation. It is not a good idea to change the transformation i.e. for the coordinate 
+        // systems to coincide at Y home, as this would break coordinates captured before this change. 
+        // In order to home the square internal coordinate system we need to account for the 
+        // non-squareness X offset here.  
+        // NOTE this changes nothing in the behavior or the coordinate system of the machine. It just
+        // sets the internal X coordinate correctly immediately after homing, so we can capture the 
+        // home location correctly. Without this compensation the discrepancy between internal and 
+        // machines coordinates was resolved with the first move, as it is done in absolute mode. 
+        double xHomeCoordinateSquare = xHomeCoordinateNonSquare - nonSquarenessFactorX*yHomeCoordinateNonSquare;
+        double yHomeCoordinateSquare = yHomeCoordinateNonSquare - nonSquarenessFactorY*xHomeCoordinateNonSquare;
+        
+        for (Axis axis : axes) {
+            	axis.setCoordinate(axis.getHomeCoordinate());
+        }
+            if (xAxis != null) {
+            	xAxis.setCoordinate(xHomeCoordinateSquare);
+	    }
+            if (yAxis != null) {
+            	yAxis.setCoordinate(yHomeCoordinateSquare);
+	    }
 
         for (ReferenceDriver driver : subDrivers) {
             driver.home(head);
@@ -309,22 +354,17 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
 
                 // homeOffset contains the offset, but we are not really concerned with that,
                 // we just reset X,Y back to the home-coordinate at this point.
-                double xHomeCoordinate = 0;
-                double yHomeCoordinate = 0;
-                for (Axis axis : axes) {
-                    if (axis.getType() == Axis.Type.X) {
-                        axis.setCoordinate(axis.getHomeCoordinate());
-                        xHomeCoordinate = axis.getHomeCoordinate();
-                    }
-                    if (axis.getType() == Axis.Type.Y) {
-                        axis.setCoordinate(axis.getHomeCoordinate());
-                        yHomeCoordinate = axis.getHomeCoordinate();
-                    }
+                if (xAxis != null) { 
+                	xAxis.setCoordinate(xHomeCoordinateSquare);
                 }
-
+                if (yAxis != null) { 
+                	yAxis.setCoordinate(yHomeCoordinateSquare);
+                }
+                
                 String g92command = getCommand(null, CommandType.POST_VISION_HOME_COMMAND);
-                g92command = substituteVariable(g92command, "X", xHomeCoordinate);
-                g92command = substituteVariable(g92command, "Y", yHomeCoordinate);
+                // make sure to use the native non-square X home coordinate.
+                g92command = substituteVariable(g92command, "X", xHomeCoordinateNonSquare);
+                g92command = substituteVariable(g92command, "Y", yHomeCoordinateNonSquare);
                 sendGcode(g92command, -1);
             }
         }
@@ -421,7 +461,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
                         zAxis == null ? 0 : zAxis.getTransformedCoordinate(hm),
                         rotationAxis == null ? 0 : rotationAxis.getTransformedCoordinate(hm))
                                 .add(hm.getHeadOffsets());
-        return location;
+        return location.convertToUnits(LengthUnit.Millimeters);
     }
 
     @Override
@@ -480,6 +520,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
             command = substituteVariable(command, "Id", hm.getId());
             command = substituteVariable(command, "Name", hm.getName());
             command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
+            command = substituteVariable(command, "FeedRateRot", maxFeedRateRot * speed);
             command = substituteVariable(command, "BacklashFeedRate", maxFeedRate * speed * backlashFeedRateFactor);
 
             /**
@@ -503,16 +544,25 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
                 includeRotation = true;
             }
 
+            if (nonSquarenessFactorX == -1) { nonSquarenessFactorX = nonSquarenessFactor; } 
+            if (nonSquarenessFactorY == -1) { nonSquarenessFactorY = -nonSquarenessFactor; } 
+            { nonSquarenessFactor = nonSquarenessFactorX; } 
+		
+
             // If Y is moving and there is a non squareness factor we also need to move X, even if
             // no move was intended for X.
-            if (includeY && nonSquarenessFactor != 0 && xAxis != null) {
+            if (includeY && nonSquarenessFactorX != 0 && xAxis != null) {
                 includeX = true;
             }
             
+            if (includeX && nonSquarenessFactorY != 0 && yAxis != null) {
+                includeY = true;
+            }
+            
             if (includeX) {
-                command = substituteVariable(command, "X", x + nonSquarenessFactor * y);
-                command = substituteVariable(command, "BacklashOffsetX", x + backlashOffsetX + nonSquarenessFactor * y); // Backlash Compensation
-                if (xAxis.getPreMoveCommand() != null) {
+                command = substituteVariable(command, "X", x + nonSquarenessFactorX * y);
+                command = substituteVariable(command, "BacklashOffsetX", x + backlashOffsetX + nonSquarenessFactorX * y); // Backlash Compensation 
+		if (xAxis.getPreMoveCommand() != null) {
                     String preMoveCommand = xAxis.getPreMoveCommand();
                     preMoveCommand = substituteVariable(preMoveCommand, "Coordinate", xAxis.getCoordinate());
                     sendGcode(preMoveCommand);
@@ -525,8 +575,8 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
             }
 
             if (includeY) {
-                command = substituteVariable(command, "Y", y);
-                command = substituteVariable(command, "BacklashOffsetY", y + backlashOffsetY); // Backlash Compensation
+                command = substituteVariable(command, "Y", y + nonSquarenessFactorY * x);
+                command = substituteVariable(command, "BacklashOffsetY", y + backlashOffsetY + nonSquarenessFactorY * x); // Backlash Compensation
                 if (yAxis.getPreMoveCommand() != null) {
                     String preMoveCommand = yAxis.getPreMoveCommand();
                     preMoveCommand = substituteVariable(preMoveCommand, "Coordinate", yAxis.getCoordinate());
@@ -613,6 +663,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
         }
 
     }
+
 
     private boolean containsMatch(List<String> responses, String regex) {
         for (String response : responses) {
@@ -806,6 +857,19 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
 
         Logger.debug("sendCommand({}, {})...", command, timeout);
 
+       if(command != null) {
+		if(command.contains("{ASC:")) { int i,j;
+			while((i=command.indexOf("{ASC:"))!=-1) {
+				j=command.substring(i).indexOf("}");
+				if(j!=-1) {
+	command=command.substring(0,i)+String.format("()%c()",parseInt(command.substring(i+5,i+j),32)				)+command.substring(i+j+1);
+				} else  {
+				   command=command.substring(0,i+1)+" "+command.substring(i+1); // escape	}
+				}
+			}
+		}
+        }
+		
         // Send the command, if one was specified
         if (command != null) {
             Logger.trace("[{}] >> {}", portName, command);
@@ -864,6 +928,36 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
         return responses;
     }
 
+	public static Integer parseInteger(String s){
+		if (s == null) { return null; }
+		s = s.trim();
+		int radix = 10;
+		if (s.startsWith("0x") || s.startsWith("0X")){
+			radix = 16;
+			s = s.substring(2);
+		}
+		if (s.startsWith("0c") || s.startsWith("0C")){
+			radix = 8;
+			s = s.substring(2);
+		}
+		if (s.startsWith("0b") || s.startsWith("0B")){
+			radix = 2;
+			s = s.substring(2);
+		}
+		try {
+			return Integer.valueOf(s, radix);
+		} catch (NumberFormatException nfx){
+			return null;
+		}
+	}
+
+	public static int parseInt(String s, int def){
+		Integer integer = parseInteger(s);
+		if (integer != null) { return integer.intValue(); }
+		return def;
+	}
+	
+	
     public void run() {
         while (!disconnectRequested) {
             String line;
@@ -1046,6 +1140,30 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
     
     public void setBacklashFeedRateFactor(double BacklashFeedRateFactor) {
         this.backlashFeedRateFactor = BacklashFeedRateFactor;
+    }
+    
+	public void setNonSquarenessFactorX(double NonSquarenessFactor) {
+        this.nonSquarenessFactorX = NonSquarenessFactor;
+    }
+    
+    public double getNonSquarenessFactorX() {
+        return this.nonSquarenessFactorX;
+    }
+    
+    public void setNonSquarenessFactorY(double NonSquarenessFactor) {
+        this.nonSquarenessFactorY = NonSquarenessFactor;
+    }
+    
+    public int getMaxFeedRateRot() {
+        return maxFeedRateRot;
+    }
+
+    public void setMaxFeedRateRot(int maxFeedRate) {
+        this.maxFeedRateRot = maxFeedRate;
+    }
+	
+    public double getNonSquarenessFactorY() {
+        return this.nonSquarenessFactorY;
     }
     
     public void setNonSquarenessFactor(double NonSquarenessFactor) {
