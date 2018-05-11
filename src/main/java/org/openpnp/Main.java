@@ -149,7 +149,7 @@ public class Main {
                 try {
                     MainFrame frame = new MainFrame(configuration);
                     frame.setVisible(true);
-                    Logger.debug(String.format("Bienvenue, Willkommen, Hello, Namaskar, Welkom to OpenPnP version %s.", Main.getVersion()));
+                    Logger.debug(String.format("Welcome to OpenPnP version %s.", Main.getVersion()));
                     configuration.getScripting().on("Startup", null);
                 }
                 catch (Exception e) {
