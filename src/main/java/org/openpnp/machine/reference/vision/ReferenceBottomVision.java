@@ -115,7 +115,7 @@ public class ReferenceBottomVision implements PartAlignment {
 
             rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
 
-            Logger.debug("Result rect {}", rect);
+            Logger.debug("Result rect ( center: {} size: {} angle: {} )", rect.center, rect.size, rect.angle);
             Location offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y)
                                           .derive(null, null, null, Double.NaN);
 
