@@ -19,6 +19,8 @@ If you rotate the nozzle while it is in view of the bottom vision camera and you
 
 Consider enabling Bottom-Vision Pre-Rotation (every component is rotated to the desired placement rotation angle in bottom vision) by setting the checkbox in Machine Setup -> Vision -> Bottom Vision -> Rotate parts prior to vision?
 
+Note that C axis in most machines cannot be homed so nozzle runout will affect the nozzle rotation/position being different every time the machine is turned on. A manual workaround here is to mark the nozzle with a label on one side and make sure it is oriented the same way every time the machine is turned on and homed.
+
 # Head Offset
 
 If all placements on a board are slightly offset in the same direction this is a good indicator that either the head-camera offset is wrong: https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Top-Camera-Setup#head-offsets or the bottom vision nozzle position is off (see below: Nozzle Center)
