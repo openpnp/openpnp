@@ -25,6 +25,10 @@ If all placements on a board are slightly offset in the same direction this is a
 
 # Bottom Vision
 
+## Camera Orientation
+
+The correct orientation for the bottom vision camera can be verified by moving the nozzle in view with the jog controls. This may sound obvious but pressing the jog-up button should move the nozzle upwards in view, pressing jog-left should move the nozzle left in view. As the bottom vision camera settings allow rotation and flipping the image on both axes this can quickly create a confusingly oriented image that will result in placement offsets going in the wrong directions.
+
 ## Nozzle Center
 
 ## Units Per Pixel
