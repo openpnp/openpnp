@@ -15,7 +15,7 @@ If your machine is up and running but your placements are not as accurate as you
 
 # Nozzle Runout
 
-If you rotate the nozzle while it is in view of the bottom vision camera and you notice the nozzle center is moving away from the center-crosshair as you turn then your nozzle suffers from runout.
+If you rotate the nozzle while it is in view of the bottom vision camera and you notice the nozzle center is moving away from the center-crosshair then your nozzle suffers from runout.
 
 Consider enabling Bottom-Vision Pre-Rotation (every component is rotated to the desired placement rotation angle in bottom vision) by setting the checkbox in Machine Setup -> Vision -> Bottom Vision -> Rotate parts prior to vision?
 
@@ -25,10 +25,15 @@ If all placements on a board are slightly offset in the same direction this is a
 
 # Bottom Vision
 
+
 ## Camera Orientation
 
 The correct orientation for the bottom vision camera can be verified by moving the nozzle in view with the jog controls. This may sound obvious but pressing the jog-up button should move the nozzle upwards in view, pressing jog-left should move the nozzle left in view. As the bottom vision camera settings allow rotation and flipping the image on both axes this can quickly create a confusingly oriented image that will result in placement offsets going in the wrong directions.
 
 ## Nozzle Center
 
+Even with accurate end stops plus optical homing of the top vision camera we see that the bottom vision nozzle location can slightly vary with every homing run. Since the nozzle center being slightly off will result in all placements being slightly off it is highly recommended to verify and if necessary correct the bottom vision nozzle center location after every homing run.
+
 ## Units Per Pixel
+
+If this value is not accurate it will result in bottom vision component offsets being under or overcompensated. Looking at vision debug images and resulting placement locations can give a clue here.
