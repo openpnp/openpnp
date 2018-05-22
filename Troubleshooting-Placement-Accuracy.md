@@ -13,12 +13,6 @@ If your machine is up and running but your placements are not as accurate as you
    * consider enabling backlash compensation: https://github.com/openpnp/openpnp/wiki/GcodeDriver#backlash-compensation
    * Make sure the PCB is lying 100% flat, very small deviations can already be visible if the top vision camera has high resolution and is close to the PCB
 
-
-# Using one Z plane
-<img src="https://user-images.githubusercontent.com/4028409/40372195-83696860-5de4-11e8-91ef-56c98dbb945f.png" width="500">
-
-It is highly recommended to have all component pick locations, PCB placement locations and 
-
 # Component Rotation Issue
 
 Small nozzle tips can also pick up larger components (chips or 1206) but have trouble rotating their heavier mass as quickly as with smaller components which can lead to larger components being placed slightly off angle. Consider using a larger nozzle tip for larger components.
@@ -82,5 +76,8 @@ Even with accurate end stops plus optical homing of the top vision camera we see
 If this value is not accurate it will result in bottom vision component offsets being under or overcompensated. Looking at vision debug images and resulting placement locations can give a clue here.
 
 As it can be a challenge to find rulers or components that can be picked up with the nozzle and held into bottom vision view we created this PCB for measuring Units Per Pixel:
+
+<img src="https://644db4de3505c40a0444-327723bce298e3ff5813fb42baeefbaa.ssl.cf1.rackcdn.com/2ce0e7fee4dfe0856b4ccf0f5458cd87.png" width="250">
+
 https://oshpark.com/shared_projects/DhjpjyLl
-https://oshpark.com/shared_projects/DhjpjyLl
+
