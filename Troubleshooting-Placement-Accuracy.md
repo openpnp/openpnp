@@ -47,7 +47,8 @@ There are other methods like using a piece of paper with a crosshair on it, usin
 If the top vision Units Per Pixel value is off it will result in:
 * fiducial check either taking longer (as the machine does not move as far as it should and will require more moves to actually hit the fiducual) or it will fail the fiducial check altogether because it cannot center the fiducials in view. 
 * strip feeder visual auto-setup not working or providing wrong results 
-* visual camera jogging not moving where the cursor is aiming 
+* visual camera jogging not moving the camera where the cursor is aiming 
+* drag feeder vision
 
 It will however have no influence on component placement accuracy.
 
