@@ -13,6 +13,10 @@ If your machine is up and running but your placements are not as accurate as you
    * consider enabling backlash compensation: https://github.com/openpnp/openpnp/wiki/GcodeDriver#backlash-compensation
    * Make sure the PCB is lying 100% flat, very small deviations can already be visible if the top vision camera has high resolution and is close to the PCB
 
+# Component Rotation Issue
+
+Small nozzle tips can also pick up larger components (chips or 1206) but have trouble rotating the heavier mass as quickly as with smaller components which can lead to larger components being placed slightly off angle. Consider using a larger nozzle tip for larger components.
+
 # Nozzle Runout
 
 If you rotate the nozzle while it is in view of the bottom vision camera and you notice the nozzle center is moving away from the center-crosshair then your nozzle suffers from runout.
