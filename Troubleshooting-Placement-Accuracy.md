@@ -15,7 +15,9 @@ If your machine is up and running but your placements are not as accurate as you
 
 # Component Rotation Issue
 
-Small nozzle tips can also pick up larger components (chips or 1206) but have trouble rotating the heavier mass as quickly as with smaller components which can lead to larger components being placed slightly off angle. Consider using a larger nozzle tip for larger components.
+Small nozzle tips can also pick up larger components (chips or 1206) but have trouble rotating their heavier mass as quickly as with smaller components which can lead to larger components being placed slightly off angle. Consider using a larger nozzle tip for larger components.
+
+If you see off angle components also with smaller parts consider enabling Bottom-Vision Pre-Rotation (every component is rotated to the desired placement rotation angle in bottom vision) by setting the checkbox in Machine Setup -> Vision -> Bottom Vision -> Rotate parts prior to vision?
 
 # Nozzle Runout
 
@@ -42,7 +44,7 @@ To benchmark if the head-camera offset is correct you can:
 
 <img src="https://user-images.githubusercontent.com/4028409/40357049-463f03f6-5dbb-11e8-8aa5-d36250614689.jpg" width="300">
 
-Obviously the bottom vision lighting should create close to 100% reproduce-able conditions and the pipeline settings itself should be as error prone as possible.
+Obviously the bottom vision lighting should create close to 100% reproduce-able conditions and the pipeline settings itself should be as error prone as possible so something like in the above image does not happen.
 
 Details: https://github.com/openpnp/openpnp/wiki/CvPipeline
 
