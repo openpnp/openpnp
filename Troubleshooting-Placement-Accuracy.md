@@ -76,7 +76,7 @@ Even with accurate end stops plus optical homing of the top vision camera we see
 
 If this value is not accurate it will result in bottom vision component offsets being under or overcompensated. Looking at vision debug images and resulting placement locations can give a clue here.
 
-As it can be a challenge to find accurate rulers that can be picked up with the nozzle and held into bottom vision view we created this PCB for measuring Units Per Pixel:
+As it can be a challenge to find accurate rulers that can be picked up with the nozzle and held into bottom vision view we created this PCB for measuring Units Per Pixel (we tried squared paper but that keeps slightly bending):
 
 <img src="https://644db4de3505c40a0444-327723bce298e3ff5813fb42baeefbaa.ssl.cf1.rackcdn.com/2ce0e7fee4dfe0856b4ccf0f5458cd87.png" width="250">
 
