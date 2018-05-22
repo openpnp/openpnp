@@ -13,6 +13,12 @@ If your machine is up and running but your placements are not as accurate as you
    * consider enabling backlash compensation: https://github.com/openpnp/openpnp/wiki/GcodeDriver#backlash-compensation
    * Make sure the PCB is lying 100% flat, very small deviations can already be visible if the top vision camera has high resolution and is close to the PCB
 
+
+# Using one Z plane
+<img src="https://user-images.githubusercontent.com/4028409/40372195-83696860-5de4-11e8-91ef-56c98dbb945f.png" width="500">
+
+It is highly recommended to have all component pick locations, PCB placement locations and 
+
 # Component Rotation Issue
 
 Small nozzle tips can also pick up larger components (chips or 1206) but have trouble rotating their heavier mass as quickly as with smaller components which can lead to larger components being placed slightly off angle. Consider using a larger nozzle tip for larger components.
@@ -44,7 +50,12 @@ There are other methods like using a piece of paper with a crosshair on it, usin
 
 ## Units Per Pixel
 
-For the top vision camera the Units Per Pixel value is not as crucial to be highly accurate as the bottom vision. If the top vision Units Per Pixel value is off it will result in fiducial check either taking longer (as the machine does not move as far as it should and will require more moves to actually hit the fiducual) or it will fail the fiducial check altogether because it cannot center the fiducials in view. Wrong Units Per Pixel value will also affect the success of a strip feeder auto-setup.
+If the top vision Units Per Pixel value is off it will result in:
+* fiducial check either taking longer (as the machine does not move as far as it should and will require more moves to actually hit the fiducual) or it will fail the fiducial check altogether because it cannot center the fiducials in view. 
+* strip feeder visual auto-setup not working or providing wrong results 
+* visual camera jogging not moving where the cursor is aiming 
+
+It will however have no influence on component placement accuracy.
 
 # Bottom Vision
 
