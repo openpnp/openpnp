@@ -44,7 +44,7 @@ There are other methods like using a piece of paper with a crosshair on it, usin
 
 ## Units Per Pixel
 
-For the top vision camera the Units Per Pixel value is not as crucial to be highly accurate as the bottom vision. If the top vision Units Per Pixel value is off it will result in fiducial check either taking longer (as the machine does not move as far as it should and will require more moves to actually hit the fiducual) or it will fail the fiducial check alltogether because it cannot center the fiducials in view. Wrong Units Per Pixel value will also affect the success of a strip feeder auto-setup.
+For the top vision camera the Units Per Pixel value is not as crucial to be highly accurate as the bottom vision. If the top vision Units Per Pixel value is off it will result in fiducial check either taking longer (as the machine does not move as far as it should and will require more moves to actually hit the fiducual) or it will fail the fiducial check altogether because it cannot center the fiducials in view. Wrong Units Per Pixel value will also affect the success of a strip feeder auto-setup.
 
 # Bottom Vision
 
