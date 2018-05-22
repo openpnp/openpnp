@@ -38,6 +38,8 @@ The correct orientation for the bottom vision camera can be verified by moving t
 
 ## Nozzle Center
 
+<img src="https://user-images.githubusercontent.com/4028409/40356160-9512c506-5db8-11e8-8e60-9b4b9cb29d8c.jpg" width="300">
+
 Even with accurate end stops plus optical homing of the top vision camera we see that the bottom vision nozzle location can slightly vary with every homing run. Since the nozzle center being slightly off will result in all placements being slightly off it is highly recommended to verify and if necessary correct the bottom vision nozzle center location after every homing run.
 
 ## Units Per Pixel
