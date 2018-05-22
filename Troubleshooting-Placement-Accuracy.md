@@ -27,10 +27,24 @@ Note that C axis in most machines cannot be homed so nozzle runout will affect t
 
 # Head Offset
 
-If all placements on a board are slightly offset in the same direction this is a good indicator that either the head-camera offset is wrong: https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Top-Camera-Setup#head-offsets or the bottom vision nozzle position is off (see below: Nozzle Center)
+If all placements on a board are slightly offset in the same direction this is a good indicator that either the head-camera offset is wrong: https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Top-Camera-Setup#head-offsets or the bottom vision nozzle position is off (see below: Nozzle Center).
+
+To benchmark if the head-camera offset is correct you can:
+* place a PCB of your choice in the machine
+* run fiducial check
+* move the camera to a component or pads that have an easy to spot center - verify the camera is pointing to the exact center
+* press the "move tool to component"
+
 
 # Bottom Vision
 
+## Pipeline
+
+<img src="https://user-images.githubusercontent.com/4028409/40357049-463f03f6-5dbb-11e8-8aa5-d36250614689.jpg" width="300">
+
+Obviously the bottom vision lighting should create close to 100% reproduce-able conditions and the pipeline settings itself should be as error prone as possible.
+
+Details: https://github.com/openpnp/openpnp/wiki/CvPipeline
 
 ## Camera Orientation
 
