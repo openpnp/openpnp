@@ -34,8 +34,11 @@ If all placements on a board are slightly offset in the same direction this is a
 To benchmark if the head-camera offset is correct you can:
 * place a PCB of your choice in the machine
 * run fiducial check
-* move the camera to a component or pads that have an easy to spot center - verify the camera is pointing to the exact center
-* press the "move tool to component"
+* choose a component or pads that have an easy to spot center, press the "Position the camera at placement's location" button, verify the camera is pointing to the exact center
+* press the "Position the tool at placement's location" button
+* see if the nozzle tip is pointing exactly at the chip/pad center (as in view with the camera before), use magnifying glass if required.
+
+There are other methods like using a piece of paper with a crosshair on it, using thin paper and making a hole into it with the nozzle tip or using rubber gum and making a marking into it with the nozzle but from my experience these methods all require more preparations and tools than the above method.
 
 
 # Bottom Vision
