@@ -80,3 +80,7 @@ Even with accurate end stops plus optical homing of the top vision camera we see
 ## Units Per Pixel
 
 If this value is not accurate it will result in bottom vision component offsets being under or overcompensated. Looking at vision debug images and resulting placement locations can give a clue here.
+
+As it can be a challenge to find rulers or components that can be picked up with the nozzle and held into bottom vision view we created this PCB for measuring Units Per Pixel:
+https://oshpark.com/shared_projects/DhjpjyLl
+https://oshpark.com/shared_projects/DhjpjyLl
