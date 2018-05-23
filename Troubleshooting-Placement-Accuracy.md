@@ -38,7 +38,9 @@ To benchmark if the head-camera offset is correct you can:
 * press the "Position the tool at placement's location" button
 * see if the nozzle tip is pointing exactly at the chip/pad center (as in view with the camera before), use magnifying glass if required.
 
-There are other methods like using a piece of paper with a crosshair on it, using thin paper and making a hole into it with the nozzle tip or using rubber gum and making a marking into it with the nozzle but from my experience these methods all require more preparations and tools than the above method.
+There are other methods like using a piece of paper with a crosshair on it, using thin paper and making a hole into it with the nozzle tip or using rubber gum/clay and making a marking into it with the nozzle but from my experience these methods all require more preparations and tools than the above method.
+
+Note that this head offset is only valid at a single z-height (your PCB height) and it is recommended to have all pick locations/feeders/strip tapes on the same z-height.
 
 # Top Vision
 
