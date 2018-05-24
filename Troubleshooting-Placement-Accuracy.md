@@ -15,8 +15,11 @@ If your machine is up and running but your placements are not as accurate as you
 
 ### Note
  PCB are not precision measurements struments or references.
- Either you setup the whole machine with the same pcb as or consider something different.
- Don't use default fiducial pipeline for this task, use HoughCircle type pipeline or the findCircle/findFiducial script.
+ Either you setup the whole machine with the same pcb or consider something different.
+ Don't use default fiducial pipeline for this task, use HoughCircle type pipeline or the findCircle/findFiducial script
+ as the default pipeline is extremly sensitive to light direction and reflections differences.
+ Always construct the reference structures itself using drawing compass/circle or creating angles by fixed length sided
+ triangles unless you don't have engeener grade references that you can use or trust. 
 
 # Component Rotation Issue
 
@@ -93,8 +96,12 @@ As it can be a challenge to find accurate rulers that can be picked up with the 
 Download PCB or order from OSHPARK:
 https://oshpark.com/shared_projects/DhjpjyLl
 
-###Previoulsy the suggested setup procedure was using Coins. 
+### Previoulsy the suggested setup procedure was using Coins. 
 Us Cent or EU 5Cent coins have the correct thickness and using the findCircle script the setup is really fast.
 Further this allow easily to correct the X and Y camera DPI resolution differences that is required to compensate
 when doing really fine pitch assembly. The diameter of the two coins are 19,05 mm and 21.25 mm .
 If you need use different Coins because of restricted FOV make sure the tickness is roughtly the same as the pcb thickness.
+To check uplooking camera position setup correctness, use US 10Cent or EU 1 or 2 Cent and place it over US 1Cent or EU 5Cent. The findCircle script with edited parameters give you out the difference.  If that works, finish by placing 
+US 1Cent or EU 5Cent and check the result with top camera using at least 15 runs and then compute the statistical offset.
+After have changed the camera position or image offset/dimension then repeate it in order to verify the accuracy until
+it is ok for you'r requirement.
