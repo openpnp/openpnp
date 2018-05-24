@@ -13,6 +13,11 @@ If your machine is up and running but your placements are not as accurate as you
    * consider enabling backlash compensation: https://github.com/openpnp/openpnp/wiki/GcodeDriver#backlash-compensation
    * Make sure the PCB is lying 100% flat, very small deviations can already be visible if the top vision camera has high resolution and is close to the PCB
 
+### Note
+ PCB are not precision measurements struments or references.
+ Either you setup the whole machine with the same pcb as or consider something different.
+ Don't use default fiducial pipeline for this task, use HoughCircle type pipeline or the findCircle/findFiducial script.
+
 # Component Rotation Issue
 
 Small nozzle tips can also pick up larger components (chips or 1206) but have trouble rotating their heavier mass as quickly as with smaller components which can lead to larger components being placed slightly off angle. Consider using a larger nozzle tip for larger components.
@@ -74,6 +79,9 @@ The correct orientation for the bottom vision camera can be verified by moving t
 
 Even with accurate end stops plus optical homing of the top vision camera we see that the bottom vision nozzle location can slightly vary with every homing run. Since the nozzle center being slightly off will result in all placements being slightly off it is highly recommended to verify and if necessary correct the bottom vision nozzle center location after every homing run.
 
+This is only required without prerotate. If there is a constant offset when prerotate is used, then the camera setup
+is wrong, center or position.
+
 ## Units Per Pixel
 
 If this value is not accurate it will result in bottom vision component offsets being under or overcompensated. Looking at vision debug images and resulting placement locations can give a clue here.
@@ -85,3 +93,8 @@ As it can be a challenge to find accurate rulers that can be picked up with the 
 Download PCB or order from OSHPARK:
 https://oshpark.com/shared_projects/DhjpjyLl
 
+###Previoulsy the suggested setup procedure was using Coins. 
+Us Cent or EU 5Cent coins have the correct thickness and using the findCircle script the setup is really fast.
+Further this allow easily to correct the X and Y camera DPI resolution differences that is required to compensate
+when doing really fine pitch assembly. The diameter of the two coins are 19,05 mm and 21.25 mm .
+If you need use different Coins because of restricted FOV make sure the tickness is roughtly the same as the pcb thickness.
