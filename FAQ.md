@@ -9,7 +9,7 @@
 * [My nozzle moves (in Z) when the camera is moved.](#my-nozzle-moves-in-z-when-the-camera-is-moved)
 * ["It would be faster to do it by hand."](#it-would-be-faster-to-do-it-by-hand)
 * [What Should I Build?](#what-should-i-build)
-* [How can I improve placement accuracy?](#Troubleshooting-Placement-Accuracy)
+* [How can I improve placement accuracy?](#how-can-i-improve-placement-accuracy)
 
 ## How do I get help?
 
@@ -91,7 +91,7 @@ While some of these reasons might fit your situation, it is important to keep in
 
 It's okay to let people know about the complexities of running a machine, but I've found that this topic tends to come up over and over again and people seem to feel the need to really pound the point home that it might cost money or time to run the machine. Make your point, but remember that there are lots of reasons to run a machine other than just building boards for a business.
 
-# What Should I Build?
+## What Should I Build?
 
 See http://openpnp.org/hardware/ for a number of options. 
 
@@ -104,9 +104,11 @@ The current recommendation for a build guideline is:
 * Yamaha CL Feeders (available on Aliexpress and [Robotdigg](https://www.robotdigg.com/product/829/CL82-or-CL84-Feeder-4-OpenPnP)) if you want auto feeders. Make sure to get a [mounting block](https://www.robotdigg.com/product/1190/Pick-and-place-machine-Feeder-mounting-block), too. 
 
 
-# How can I improve placement accuracy?
+## How can I improve placement accuracy?
 
-Getting reliable, fast and accurate results is the ultimate goal but even for sophisticated machines quite a challenge to achieve, this guide tries to give an overview of the things that can help:
+Getting reliable, fast and accurate results is the ultimate goal but even for sophisticated machines quite a challenge to achieve all the time.
+
+This guide tries to give an overview of the things to consider:
 https://github.com/openpnp/openpnp/wiki/Troubleshooting-Placement-Accuracy
 
 
