@@ -260,7 +260,9 @@ public class JobPlacementsPanel extends JPanel {
     }
     
     public void UpdateActivePlacements() {
-    	labelActivePlacements.setText(boardLocation.getActivePlacements() + " of " + boardLocation.getTotalActivePlacements() + " placements active");
+    	if (boardLocation != null) {
+    		labelActivePlacements.setText(boardLocation.getActivePlacements() + " of " + boardLocation.getTotalActivePlacements() + " placements active");
+    	}
     }
 
     public void setBoardLocation(BoardLocation boardLocation) {

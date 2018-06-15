@@ -122,6 +122,9 @@ public class BoardLocation extends AbstractModelObject {
     }
     
     public int getTotalActivePlacements(){
+    	if (board == null) {
+    		return 0;
+    	}
     	int counter = 0;
     	for(Placement placements : board.getPlacements()) {
     		// is the component on the correct boards side
@@ -137,6 +140,9 @@ public class BoardLocation extends AbstractModelObject {
     }
     
     public int getActivePlacements() {
+    	if (board == null) {
+    		return 0;
+    	}
     	int counter = 0;
     	for(Placement placements : board.getPlacements()) {
     		// is the component on the correct boards side
