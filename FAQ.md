@@ -104,9 +104,11 @@ The current recommendation for a build guideline is:
 * Yamaha CL Feeders (available on Aliexpress and [Robotdigg](https://www.robotdigg.com/product/829/CL82-or-CL84-Feeder-4-OpenPnP)) if you want auto feeders. Make sure to get a [mounting block](https://www.robotdigg.com/product/1190/Pick-and-place-machine-Feeder-mounting-block), too. 
 
 
-# Troubleshooting Placement Accuracy
+# How can I improve placement accuracy?
 
-Getting reliable, fast and accurate results is the ultimate goal:
+Getting reliable, fast and accurate results is the ultimate goal but even for sophisticated machines quite a challenge to achieve, this guide tries to give an overview of the things that can help:
 https://github.com/openpnp/openpnp/wiki/Troubleshooting-Placement-Accuracy
+
+
 ---
 Table of Contents Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
