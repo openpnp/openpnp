@@ -9,6 +9,7 @@
 * [My nozzle moves (in Z) when the camera is moved.](#my-nozzle-moves-in-z-when-the-camera-is-moved)
 * ["It would be faster to do it by hand."](#it-would-be-faster-to-do-it-by-hand)
 * [What Should I Build?](#what-should-i-build)
+* [How can I improve placement accuracy?](#Troubleshooting-Placement-Accuracy)
 
 ## How do I get help?
 
@@ -102,5 +103,10 @@ The current recommendation for a build guideline is:
 * [ELP 720p USB Cameras](http://www.elpcctv.com/hd-720p-usb-cameras-c-85_87.html) which can be purchased on Amazon, AliExpress and eBay. Lenses are standard M12 mount and can be replaced to customize for your machine's geometry.
 * Yamaha CL Feeders (available on Aliexpress and [Robotdigg](https://www.robotdigg.com/product/829/CL82-or-CL84-Feeder-4-OpenPnP)) if you want auto feeders. Make sure to get a [mounting block](https://www.robotdigg.com/product/1190/Pick-and-place-machine-Feeder-mounting-block), too. 
 
+
+# Troubleshooting Placement Accuracy
+
+Getting reliable, fast and accurate results is the ultimate goal:
+https://github.com/openpnp/openpnp/wiki/Troubleshooting-Placement-Accuracy
 ---
 Table of Contents Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
