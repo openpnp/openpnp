@@ -64,6 +64,7 @@ import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
@@ -83,7 +84,6 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     private FeedersTableModel tableModel;
     private TableRowSorter<FeedersTableModel> tableSorter;
     private JTextField searchTextField;
-    private JPanel configurationPanel;
 
     private ActionGroup feederSelectedActionGroup;
 
@@ -165,12 +165,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         table.setRowSorter(tableSorter);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-        splitPane.setRightComponent(tabbedPane);
-
-        configurationPanel = new JPanel();
-        tabbedPane.addTab("Configuration", null, configurationPanel, null);
-        configurationPanel.setLayout(new BorderLayout(0, 0));
+        JTabbedPane configurationPanel = new JTabbedPane(JTabbedPane.TOP);
+        splitPane.setRightComponent(configurationPanel);
 
         feederSelectedActionGroup = new ActionGroup(deleteFeederAction, feedFeederAction,
                 pickFeederAction, moveCameraToPickLocation, moveToolToPickLocation);
@@ -189,11 +185,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
                 configurationPanel.removeAll();
                 if (feeder != null) {
-                    Wizard wizard = feeder.getConfigurationWizard();
-                    if (wizard != null) {
-                        wizard.setWizardContainer(FeedersPanel.this);
-                        JPanel panel = wizard.getWizardPanel();
-                        configurationPanel.add(panel);
+                    PropertySheet[] propertySheets = feeder.getPropertySheets();
+                    for (PropertySheet ps : propertySheets) {
+                        configurationPanel.addTab(ps.getPropertySheetTitle(), ps.getPropertySheetPanel());
                     }
                 }
                 revalidate();
