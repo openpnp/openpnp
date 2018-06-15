@@ -100,6 +100,7 @@ public class ReferenceBottomVision implements PartAlignment {
         try (CvPipeline pipeline = partSettings.getPipeline()) {
 
             RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
+            camera=(Camera)pipeline.getProperty("camera");
 
             angle = angleNorm(angleNorm(angle)
                     + angleNorm((rect.size.width < rect.size.height) ? 90 + rect.angle : rect.angle));
@@ -115,7 +116,7 @@ public class ReferenceBottomVision implements PartAlignment {
 
             rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
 
-            Logger.debug("Result rect ( center: {} size: {} angle: {} )", rect.center, rect.size, rect.angle);
+            Logger.debug("Result rect {}", rect);
             Location offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y)
                                           .derive(null, null, null, Double.NaN);
 
@@ -140,6 +141,7 @@ public class ReferenceBottomVision implements PartAlignment {
 
         try (CvPipeline pipeline = partSettings.getPipeline()) {
             RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
+            camera=(Camera)pipeline.getProperty("camera");
     
             Logger.debug("Result rect {}", rect);
     
