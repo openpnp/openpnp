@@ -8,18 +8,11 @@ If your machine is up and running but your placements are not as accurate as you
 2. Once complete, select the first fiducial in the placements list and click the "Move Camera" button. The camera should be well centered over the fiducial.
 3. Now select the second fiducial and do the same thing.
 4. If either fiducial was not well centered the following issues could be present:
+   * if the fiducial detection failed tune the fiducial detection pipeline
    * Steps-per-mm is slightly off: https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Steps-Per-Mm
    * Consider non-squareness compensation (https://github.com/openpnp/openpnp/wiki/GcodeDriver#non-squareness-compensation)
    * consider enabling backlash compensation: https://github.com/openpnp/openpnp/wiki/GcodeDriver#backlash-compensation
    * Make sure the PCB is lying 100% flat, very small deviations can already be visible if the top vision camera has high resolution and is close to the PCB
-
-### Note
- PCB are not precision measurements struments or references.
- Either you setup the whole machine with the same pcb or consider something different.
- Don't use default fiducial pipeline for this task, use HoughCircle type pipeline or the findCircle/findFiducial script
- as the default pipeline is extremly sensitive to light direction and reflections differences.
- Always construct the reference structures itself using drawing compass/circle or creating angles by fixed length sided
- triangles unless you don't have engeener grade references that you can use or trust. 
 
 # Component Rotation Issue
 
@@ -82,8 +75,9 @@ The correct orientation for the bottom vision camera can be verified by moving t
 
 Even with accurate end stops plus optical homing of the top vision camera we see that the bottom vision nozzle location can slightly vary with every homing run. Since the nozzle center being slightly off will result in all placements being slightly off it is highly recommended to verify and if necessary correct the bottom vision nozzle center location after every homing run.
 
-This is only required without prerotate. If there is a constant offset when prerotate is used, then the camera setup
-is wrong, center or position.
+### Using Pre-Rotation  (Rotate parts prior to vision)
+
+If your nozzle has significant run-out and you enabled the "Rotate parts prior to vision" feature it is expected that the nozzle is off center in bottom vision at any rotation angle other than 0.
 
 ## Units Per Pixel
 
