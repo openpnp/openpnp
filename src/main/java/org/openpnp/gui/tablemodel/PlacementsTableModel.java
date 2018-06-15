@@ -114,7 +114,7 @@ public class PlacementsTableModel extends AbstractTableModel {
             }
             else if (columnIndex == 2) {
                 placement.setSide((Side) aValue);
-                jobPlacementsPanel.UpdateActivePlacements();
+                jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 3) {
                 LengthCellValue value = (LengthCellValue) aValue;
@@ -141,11 +141,11 @@ public class PlacementsTableModel extends AbstractTableModel {
             else if (columnIndex == 6) {
                 placement.setType((Type) aValue);
                 fireTableCellUpdated(rowIndex, 8);
-                jobPlacementsPanel.UpdateActivePlacements();
+                jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 7) {
             	boardLocation.setPlaced(placement.getId(), (Boolean) aValue);
-            	jobPlacementsPanel.UpdateActivePlacements();
+            	jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 9) {
                 placement.setCheckFids((Boolean) aValue);
@@ -202,7 +202,7 @@ public class PlacementsTableModel extends AbstractTableModel {
             case 6:
                 return placement.getType();
             case 7:
-            	jobPlacementsPanel.UpdateActivePlacements();
+            	jobPlacementsPanel.updateActivePlacements();
             	return boardLocation.getPlaced(placement.getId());
             case 8:
                 return getPlacementStatus(placement);
