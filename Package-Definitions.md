@@ -40,7 +40,7 @@ To use one of these packages in your system just copy the definition to your cli
    </footprint>
 </package>
 ```
-Resistor 0201-1206:
+## Resistor 0201-1206:
 ```
 <package version="1.1" id="R0201" description="Resistor R0201">
   <footprint units="Millimeters" body-width="0.6" body-height="0.3">
