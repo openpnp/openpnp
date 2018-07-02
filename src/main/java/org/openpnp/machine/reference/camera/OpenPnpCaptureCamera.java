@@ -58,6 +58,9 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     private int fps = 10;
 
     @Element(required=false)
+    private CapturePropertyHolder backLightCompensation = new CapturePropertyHolder(CaptureProperty.BackLightCompensation);
+
+    @Element(required=false)
     private CapturePropertyHolder brightness = new CapturePropertyHolder(CaptureProperty.Brightness);
 
     @Element(required=false)
@@ -76,8 +79,17 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     private CapturePropertyHolder gamma = new CapturePropertyHolder(CaptureProperty.Gamma);
     
     @Element(required=false)
+    private CapturePropertyHolder hue = new CapturePropertyHolder(CaptureProperty.Hue);
+
+    @Element(required=false)
+    private CapturePropertyHolder powerLineFrequency = new CapturePropertyHolder(CaptureProperty.PowerLineFrequency);
+
+    @Element(required=false)
     private CapturePropertyHolder saturation = new CapturePropertyHolder(CaptureProperty.Saturation);
     
+    @Element(required=false)
+    private CapturePropertyHolder sharpness = new CapturePropertyHolder(CaptureProperty.Sharpness);
+
     @Element(required=false)
     private CapturePropertyHolder whiteBalance = new CapturePropertyHolder(CaptureProperty.WhiteBalance);
 
@@ -89,13 +101,17 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     
     @Commit
     public void commit() {
+        backLightCompensation.setCamera(this);
         brightness.setCamera(this);
         contrast.setCamera(this);
         exposure.setCamera(this);
         focus.setCamera(this);
         gain.setCamera(this);
         gamma.setCamera(this);
+        hue.setCamera(this);
+        powerLineFrequency.setCamera(this);
         saturation.setCamera(this);
+        sharpness.setCamera(this);
         whiteBalance.setCamera(this);
         zoom.setCamera(this);
     }
@@ -226,13 +242,17 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     }
     
     private void setPropertiesStream(CaptureStream stream) {
+        backLightCompensation.setStream(stream);
         brightness.setStream(stream);
         contrast.setStream(stream);
         exposure.setStream(stream);
         focus.setStream(stream);
         gain.setStream(stream);
         gamma.setStream(stream);
+        hue.setStream(stream);
+        powerLineFrequency.setStream(stream);
         saturation.setStream(stream);
+        sharpness.setStream(stream);
         whiteBalance.setStream(stream);
         zoom.setStream(stream);
     }
@@ -317,6 +337,10 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         this.fps = fps;
     }
 
+    public CapturePropertyHolder getBackLightCompensation() {
+        return backLightCompensation;
+    }
+
     public CapturePropertyHolder getBrightness() {
         return brightness;
     }
@@ -341,8 +365,20 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         return gamma;
     }
 
+    public CapturePropertyHolder getHue() {
+        return hue;
+    }
+
+    public CapturePropertyHolder getPowerLineFrequency() {
+        return powerLineFrequency;
+    }
+
     public CapturePropertyHolder getSaturation() {
         return saturation;
+    }
+
+    public CapturePropertyHolder getSharpness() {
+        return sharpness;
     }
 
     public CapturePropertyHolder getWhiteBalance() {

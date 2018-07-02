@@ -659,6 +659,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         boardLocation,
                         placement.getLocation(), nozzle);
                 Logger.debug("Align {} with {}", part, nozzle);
+                Logger.debug("Offsets {}", plannedPlacement.alignmentOffsets);
             }
             else
             {

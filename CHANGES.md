@@ -1,6 +1,13 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-01-28
+
+* OpenPnpCapture New Properties
+
+	The OpenPnpCaptureCamera now supports new properties for backlight compensation, hue,
+	powerline frequency and sharpness. 
+
 # 2017-12-23
 
 With thanks to @mgrl:
