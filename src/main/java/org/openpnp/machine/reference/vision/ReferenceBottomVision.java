@@ -120,6 +120,7 @@ public class ReferenceBottomVision implements PartAlignment {
             Location offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y)
                                           .derive(null, null, null, Double.NaN);
 
+            Logger.debug("Final offsets {}", offsets);
             displayResult(pipeline, part, offsets, camera);
             return new PartAlignment.PartAlignmentOffset(offsets, true);
         }

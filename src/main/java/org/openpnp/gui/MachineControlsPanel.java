@@ -268,8 +268,11 @@ public class MachineControlsPanel extends JPanel {
                 Machine machine = Configuration.get().getMachine();
                 boolean enable = !machine.isEnabled();
                 try {
-                    Configuration.get().getMachine().setEnabled(enable);
-                    setEnabled(true);
+					Configuration.get().getMachine().setEnabled(enable);
+					setEnabled(true);
+					if (machine.getHomeAfterEnabled() && machine.isEnabled()) {
+						selectedTool.getHead().home();
+					}
                 }
                 catch (Exception t1) {
                     MessageBoxes.errorBox(MachineControlsPanel.this, "Enable Failure",

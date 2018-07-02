@@ -19,6 +19,7 @@
 
 package org.openpnp.machine.reference;
 
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -426,8 +427,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         fireTextStatus("Planning placements.");
 
         // Get the list of unfinished placements and sort them by part height.
+
         List<JobPlacement> jobPlacements = getPendingJobPlacements().stream()
-                .sorted(Comparator.comparing(JobPlacement::getPartHeight))
+                .sorted(Comparator.comparing(JobPlacement::getPartId))
                 .collect(Collectors.toList());
 
         if (jobPlacements.isEmpty()) {
@@ -788,6 +790,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 	        }
             
             Logger.debug("Place {} with {}", part, nozzle.getName());
+
+            File file = job.getFile();
+            Configuration.get().saveJob(job, file);
+            Configuration.get().save();
         }
 
         clearStepComplete();
