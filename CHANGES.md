@@ -1,7 +1,14 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
-# 2017-01-28
+# 2018-07-02
+
+* Machine -> Save Config
+
+	A new menu option called Machine -> Save Config does a force save of the machine.xml,
+	parts.xml, and packages.xml.
+
+# 2018-01-28
 
 * OpenPnpCapture New Properties
 
