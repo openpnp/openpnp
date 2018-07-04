@@ -18,7 +18,6 @@ import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -145,7 +144,6 @@ public class JobPlacementsPanel extends JPanel {
         JButton btnEditFeeder = new JButton(editPlacementFeederAction);
         btnEditFeeder.setHideActionText(true);
         toolBarPlacements.add(btnEditFeeder);
-        
         tableModel = new PlacementsTableModel(configuration);
 
         table = new AutoSelectTextTable(tableModel);
