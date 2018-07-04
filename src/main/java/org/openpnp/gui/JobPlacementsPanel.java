@@ -70,7 +70,7 @@ public class JobPlacementsPanel extends JPanel {
     private ActionGroup multiSelectionActionGroup;
     private ActionGroup captureAndPositionActionGroup;
     private BoardLocation boardLocation;
-    private JLabel labelActivePlacements;
+    private JobPanel jobPanel;
 
     private static Color typeColorIgnore = new Color(252, 255, 157);
     private static Color typeColorFiducial = new Color(157, 188, 255);
@@ -84,6 +84,8 @@ public class JobPlacementsPanel extends JPanel {
     private static Color jobColorComplete = new Color(157, 255, 168);
 
     public JobPlacementsPanel(JobPanel jobPanel) {
+    	this.jobPanel = jobPanel;
+    	
         Configuration configuration = Configuration.get();
 
         boardLocationSelectionActionGroup = new ActionGroup(newAction);
@@ -143,11 +145,6 @@ public class JobPlacementsPanel extends JPanel {
         JButton btnEditFeeder = new JButton(editPlacementFeederAction);
         btnEditFeeder.setHideActionText(true);
         toolBarPlacements.add(btnEditFeeder);
-        
-        toolBarPlacements.addSeparator();
-        
-        labelActivePlacements = new JLabel("");
-        toolBarPlacements.add(labelActivePlacements);
         
         tableModel = new PlacementsTableModel(configuration);
 
@@ -261,7 +258,18 @@ public class JobPlacementsPanel extends JPanel {
     
     public void updateActivePlacements() {
     	if (boardLocation != null) {
-    		labelActivePlacements.setText(boardLocation.getActivePlacements() + " of " + boardLocation.getTotalActivePlacements() + " placements active");
+    		int activePlacements = 0;
+    		int totalActivePlacements = 0;
+    		
+    		List<BoardLocation> boardLocations = this.jobPanel.getJob().getBoardLocations();
+    		for (BoardLocation boardLocation : boardLocations) {
+    			if (boardLocation.isEnabled()) {
+    				activePlacements += boardLocation.getActivePlacements();
+    				totalActivePlacements += boardLocation.getTotalActivePlacements();
+    			}
+    		}
+    		
+    		MainFrame.get().setPlacements(totalActivePlacements - activePlacements, totalActivePlacements, boardLocation.getTotalActivePlacements() - boardLocation.getActivePlacements(), boardLocation.getTotalActivePlacements());
     	}
     }
 
