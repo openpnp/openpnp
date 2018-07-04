@@ -255,20 +255,29 @@ public class JobPlacementsPanel extends JPanel {
     }
     
     public void updateActivePlacements() {
-    	if (boardLocation != null) {
-    		int activePlacements = 0;
-    		int totalActivePlacements = 0;
-    		
-    		List<BoardLocation> boardLocations = this.jobPanel.getJob().getBoardLocations();
-    		for (BoardLocation boardLocation : boardLocations) {
-    			if (boardLocation.isEnabled()) {
-    				activePlacements += boardLocation.getActivePlacements();
-    				totalActivePlacements += boardLocation.getTotalActivePlacements();
-    			}
-    		}
-    		
-    		MainFrame.get().setPlacements(totalActivePlacements - activePlacements, totalActivePlacements, boardLocation.getTotalActivePlacements() - boardLocation.getActivePlacements(), boardLocation.getTotalActivePlacements());
-    	}
+        int activePlacements = 0;
+        int totalActivePlacements = 0;
+        
+        List<BoardLocation> boardLocations = this.jobPanel.getJob().getBoardLocations();
+        for (BoardLocation boardLocation : boardLocations) {
+            if (boardLocation.isEnabled()) {
+                activePlacements += boardLocation.getActivePlacements();
+                totalActivePlacements += boardLocation.getTotalActivePlacements();
+            }
+        }
+        
+        int blTotalActivePlacements = 0;
+        int blActivePlacements = 0;
+        
+        if (boardLocation != null) {
+            blTotalActivePlacements = boardLocation.getTotalActivePlacements();
+            blActivePlacements = boardLocation.getActivePlacements();
+        }
+        
+        MainFrame.get().setPlacements(totalActivePlacements - activePlacements, 
+                totalActivePlacements, 
+                blTotalActivePlacements - blActivePlacements, 
+                blTotalActivePlacements);
     }
 
     public void setBoardLocation(BoardLocation boardLocation) {

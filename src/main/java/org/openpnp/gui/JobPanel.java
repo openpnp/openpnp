@@ -471,6 +471,7 @@ public class JobPanel extends JPanel {
         job.addPropertyChangeListener("file", titlePropertyChangeListener);
         updateTitle();
         updateJobActions();
+        getJobPlacementsPanel().updateActivePlacements();
         Configuration.get().getBus().post(new JobLoadedEvent(job));
     }
 
