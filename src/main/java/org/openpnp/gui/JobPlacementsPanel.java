@@ -69,6 +69,7 @@ public class JobPlacementsPanel extends JPanel {
     private ActionGroup multiSelectionActionGroup;
     private ActionGroup captureAndPositionActionGroup;
     private BoardLocation boardLocation;
+    private JobPanel jobPanel;
 
     private static Color typeColorIgnore = new Color(252, 255, 157);
     private static Color typeColorFiducial = new Color(157, 188, 255);
@@ -82,6 +83,8 @@ public class JobPlacementsPanel extends JPanel {
     private static Color jobColorComplete = new Color(157, 255, 168);
 
     public JobPlacementsPanel(JobPanel jobPanel) {
+    	this.jobPanel = jobPanel;
+    	
         Configuration configuration = Configuration.get();
 
         boardLocationSelectionActionGroup = new ActionGroup(newAction);
@@ -141,7 +144,6 @@ public class JobPlacementsPanel extends JPanel {
         JButton btnEditFeeder = new JButton(editPlacementFeederAction);
         btnEditFeeder.setHideActionText(true);
         toolBarPlacements.add(btnEditFeeder);
-
         tableModel = new PlacementsTableModel(configuration);
 
         table = new AutoSelectTextTable(tableModel);
@@ -155,6 +157,7 @@ public class JobPlacementsPanel extends JPanel {
         table.setDefaultRenderer(PlacementsTableModel.Status.class, new StatusRenderer());
         table.setDefaultRenderer(Placement.Type.class, new TypeRenderer());
         table.setDefaultRenderer(PartCellValue.class, new IdRenderer());
+        tableModel.setJobPlacementsPanel(this);
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -202,6 +205,7 @@ public class JobPlacementsPanel extends JPanel {
                     Placement placement = getSelection();
                     placement.setType(placement.getType() == Type.Place ? Type.Ignore : Type.Place);
                     tableModel.fireTableRowsUpdated(table.getSelectedRow(), table.getSelectedRow());
+                    updateActivePlacements();
                 }
                 else {
                     super.keyTyped(e);
@@ -236,6 +240,7 @@ public class JobPlacementsPanel extends JPanel {
     
     public void refresh() {
         tableModel.fireTableDataChanged();
+        updateActivePlacements();
     }
 
     public void selectPlacement(Placement placement) {
@@ -248,6 +253,23 @@ public class JobPlacementsPanel extends JPanel {
             }
         }
     }
+    
+    public void updateActivePlacements() {
+    	if (boardLocation != null) {
+    		int activePlacements = 0;
+    		int totalActivePlacements = 0;
+    		
+    		List<BoardLocation> boardLocations = this.jobPanel.getJob().getBoardLocations();
+    		for (BoardLocation boardLocation : boardLocations) {
+    			if (boardLocation.isEnabled()) {
+    				activePlacements += boardLocation.getActivePlacements();
+    				totalActivePlacements += boardLocation.getTotalActivePlacements();
+    			}
+    		}
+    		
+    		MainFrame.get().setPlacements(totalActivePlacements - activePlacements, totalActivePlacements, boardLocation.getTotalActivePlacements() - boardLocation.getActivePlacements(), boardLocation.getTotalActivePlacements());
+    	}
+    }
 
     public void setBoardLocation(BoardLocation boardLocation) {
         this.boardLocation = boardLocation;
@@ -259,6 +281,7 @@ public class JobPlacementsPanel extends JPanel {
             tableModel.setBoardLocation(boardLocation);
             boardLocationSelectionActionGroup.setEnabled(true);
         }
+        updateActivePlacements();
     }
 
     public Placement getSelection() {
@@ -319,6 +342,7 @@ public class JobPlacementsPanel extends JPanel {
 
             boardLocation.getBoard().addPlacement(placement);
             tableModel.fireTableDataChanged();
+            updateActivePlacements();
             boardLocation.setPlaced(placement.getId(), false);
             Helpers.selectLastTableRow(table);
         }
@@ -337,6 +361,7 @@ public class JobPlacementsPanel extends JPanel {
                 boardLocation.getBoard().removePlacement(placement);
             }
             tableModel.fireTableDataChanged();
+            updateActivePlacements();
         }
     };
 
@@ -483,6 +508,7 @@ public class JobPlacementsPanel extends JPanel {
             for (Placement placement : getSelections()) {
                 placement.setType(type);
                 tableModel.fireTableDataChanged();
+                updateActivePlacements();
             }
         }
     };
@@ -511,6 +537,7 @@ public class JobPlacementsPanel extends JPanel {
             for (Placement placement : getSelections()) {
                 placement.setSide(side);
                 tableModel.fireTableDataChanged();
+                updateActivePlacements();
             }
         }
     };
@@ -540,6 +567,7 @@ public class JobPlacementsPanel extends JPanel {
             for (Placement placement : getSelections()) {
                 boardLocation.setPlaced(placement.getId(), placed);
                 tableModel.fireTableDataChanged();   
+                updateActivePlacements();
             }
         }
     };

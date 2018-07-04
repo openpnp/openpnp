@@ -23,6 +23,7 @@ import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Desktop;
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -56,6 +57,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextPane;
@@ -515,18 +517,40 @@ public class MainFrame extends JFrame {
         contentPane.add(panelStatusAndDros, BorderLayout.SOUTH);
         panelStatusAndDros.setLayout(new FormLayout(
                 new ColumnSpec[] {ColumnSpec.decode("default:grow"), ColumnSpec.decode("8px"),
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC, 
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {RowSpec.decode("20px"),}));
 
+        
+        // Status Information
         lblStatus = new JLabel(" ");
         lblStatus.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
         panelStatusAndDros.add(lblStatus, "1, 1");
+        
+        
+        // Placement Information
+        lblPlacements = new JLabel(" Placements: 0 / 0 Total | 0 / 0 Selected Board ");
+        lblPlacements.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+        panelStatusAndDros.add(lblPlacements, "4, 1");
+        
+        
+        // Placements Progress Bar
+        prgbrPlacements = new JProgressBar();
+        prgbrPlacements.setMinimum(0);
+        prgbrPlacements.setMaximum(100);
+        prgbrPlacements.setStringPainted(true);
+        prgbrPlacements.setPreferredSize(new Dimension(200, 16));
+        prgbrPlacements.setValue(0);
+        panelStatusAndDros.add(prgbrPlacements, "6, 1");
 
+        
+        // DRO 
         droLbl = new JLabel("X 0000.0000, Y 0000.0000, Z 0000.0000, R 0000.0000");
         droLbl.setOpaque(true);
         droLbl.setFont(new Font("Monospaced", Font.PLAIN, 13));
         droLbl.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
-        panelStatusAndDros.add(droLbl, "4, 1");
+        panelStatusAndDros.add(droLbl, "8, 1");
 
         cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
@@ -754,6 +778,13 @@ public class MainFrame extends JFrame {
             lblStatus.setText(status);
         });
     }
+    
+    public void setPlacements(int CompletedPlacemnts, int TotalPlacements, int PlacementsBoard, int TotalPlacementsBoard) {
+        SwingUtilities.invokeLater(() -> {
+        	lblPlacements.setText(" Placements: " + CompletedPlacemnts + " / " + TotalPlacements + " Total | " + PlacementsBoard + " / " + TotalPlacementsBoard + " Selected Board ");
+        	prgbrPlacements.setValue((int)(((float)CompletedPlacemnts / (float)TotalPlacements) * 100.0f));
+        });
+    }
 
     public void showTab(String title) {
         int index = tabs.indexOfTab(title);
@@ -950,4 +981,6 @@ public class MainFrame extends JFrame {
     private JPanel panelStatusAndDros;
     private JLabel droLbl;
     private JLabel lblStatus;
+    private JLabel lblPlacements;
+    private JProgressBar prgbrPlacements;
 }
