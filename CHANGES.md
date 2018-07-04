@@ -1,6 +1,17 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+
+# 2018-07-04
+
+* Placement Status Indicator and Progressbar
+
+	A new panel in the bottom status bar has been added that lists the current jobs
+	total number of placements, completed number of placements and the same values 
+	for the selected board only. A progress bar shows the percentage of completed 
+	placements for the entire job. These indicators update in real-time whenever 
+	any placement/board is edited or while the job runs.
+
 # 2018-07-02
 
 * Machine -> Save Config
