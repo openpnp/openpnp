@@ -62,6 +62,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
         DISABLE_COMMAND,
         POST_VISION_HOME_COMMAND,
         HOME_COMMAND("Id", "Name"),
+        HOME_COMPLETE_REGEX(true),
         PUMP_ON_COMMAND,
         PUMP_OFF_COMMAND,
         MOVE_TO_COMMAND(true, "Id", "Name", "FeedRate", "X", "Y", "Z", "Rotation"),
@@ -285,7 +286,29 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
         String command = getCommand(null, CommandType.HOME_COMMAND);
         command = substituteVariable(command, "Id", head.getId());
         command = substituteVariable(command, "Name", head.getName());
-        sendGcode(command, -1);
+        long timeout = -1;
+        List<String> responses = sendGcode(command, timeout);
+
+        // Check home complete response against user's regex
+        String homeCompleteRegex = getCommand(null, CommandType.HOME_COMPLETE_REGEX);
+        if (homeCompleteRegex != null) {
+            if (timeout == -1) {
+                timeout = Long.MAX_VALUE;
+            }
+            if (!containsMatch(responses, homeCompleteRegex)) {
+                long t = System.currentTimeMillis();
+                boolean done = false;
+                while (!done && System.currentTimeMillis() - t < timeout) {
+                    done = containsMatch(sendCommand(null, 250), homeCompleteRegex);
+                }
+                if (!done) {
+                    // Should never get here but just in case.
+                    throw new Exception("Timed out waiting for home to complete.");
+                }
+            }
+        }
+
+
 
         // We need to specially handle X and Y axes to support the non-squareness factor.
         Axis xAxis = null;
