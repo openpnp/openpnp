@@ -160,7 +160,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
         panelPart.add(comboBoxPart, "4, 2, left, default");
 
-        lblRotationInTape = new JLabel(Configuration.get().getMachine().getUsePickRotationInsteadOfRotationInTapeForStripFeeders() ? "Pick Rotation" : "Rotation In Tape");
+        lblRotationInTape = new JLabel("Rotation In Tape");
         panelPart.add(lblRotationInTape, "2, 4, left, default");
 
         textFieldLocationRotation = new JTextField();

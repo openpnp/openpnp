@@ -30,13 +30,11 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceStripFeederConfigurationWizard;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
@@ -180,46 +178,16 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         Length y = referenceHoleToPartLinear.convertToUnits(l.getUnits());
         Point p = new Point(x.getValue(), y.getValue());
 
-		Machine machine = Configuration.get().getMachine();
-
-		if (machine.getUsePickRotationInsteadOfRotationInTapeForStripFeeders()) {
-
-			double angleCorrection = 0;
-			double angleOfStrip = Utils2D.getAngleFromPoint(lineLocations[0], lineLocations[1]);
-
-			if (angleOfStrip > 90) {
-				angleCorrection = angleOfStrip % 90;
-			}
-			else {
-				angleCorrection = angleOfStrip;
-			}
-
-			if (angleCorrection > 45) {
-				angleCorrection = 90 - angleCorrection;
-			}
-			else {
-				angleCorrection *= -1;
-			}
-
-	        // Rotate the part
-	        p = Utils2D.rotatePoint(p, angleOfStrip);
-	        l = l.add(new Location(l.getUnits(), p.x, p.y, 0, 0));
-	        l = l.derive(null, null, null, getLocation().getRotation() - angleCorrection);
-
-		} else {
-
-			// Determine the angle that the tape is at
-			double angle = Utils2D.getAngleFromPoint(lineLocations[0], lineLocations[1]);
-			// Rotate the part offsets by the angle to move it into the right
-	        // coordinate space
-	        p = Utils2D.rotatePoint(p, angle);
-	        // And add the offset to the location we calculated previously
-	        l = l.add(new Location(l.getUnits(), p.x, p.y, 0, 0));
-	        // Add in the angle of the tape plus the angle of the part in the tape
-	        // so that the part is picked at the right angle
-	        l = l.derive(null, null, null, angle + getLocation().getRotation());
-
-		}
+		// Determine the angle that the tape is at
+		double angle = Utils2D.getAngleFromPoint(lineLocations[0], lineLocations[1]);
+		// Rotate the part offsets by the angle to move it into the right
+        // coordinate space
+        p = Utils2D.rotatePoint(p, angle);
+        // And add the offset to the location we calculated previously
+        l = l.add(new Location(l.getUnits(), p.x, p.y, 0, 0));
+        // Add in the angle of the tape plus the angle of the part in the tape
+        // so that the part is picked at the right angle
+        l = l.derive(null, null, null, angle + getLocation().getRotation());
 
         // and if vision was performed, add the offsets
         if (visionEnabled && visionOffsets != null) {
