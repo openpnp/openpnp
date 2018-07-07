@@ -243,9 +243,14 @@ public class JobPanel extends JPanel {
                     // A generic table update in response to TableDataChange
                     // event
                 	updatePanelizationIconState();
-                	
                 }
-
+                if (job.getBoardLocations().size() > 0) {
+					BoardLocation boardLocation = getSelectedBoardLocation();
+					jobPlacementsPanel.setBoardLocation(boardLocation);
+                }
+                else {
+                    jobPlacementsPanel.setBoardLocation(null);
+                }
             }
         });
 

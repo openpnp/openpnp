@@ -161,6 +161,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public <T> Future<T> submit(final Callable<T> callable, final FutureCallback<T> callback);
 
+    public boolean getHomeAfterEnabled();
+
     /**
      * Submit a task to be run with access to the Machine. This is the primary entry point into
      * executing any blocking operation on the Machine. If you are doing anything that results in

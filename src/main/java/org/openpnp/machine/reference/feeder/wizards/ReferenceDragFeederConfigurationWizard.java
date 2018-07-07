@@ -80,7 +80,10 @@ public class ReferenceDragFeederConfigurationWizard
     private JTextField textFieldFeedEndZ;
     private JTextField textFieldFeedRate;
     private JLabel lblActuatorId;
+    private JLabel lblPeelOffActuatorId;
+    private JLabel lbl0402PartDetected;
     private JTextField textFieldActuatorId;
+    private JTextField textFieldPeelOffActuatorId;
     private JPanel panelGeneral;
     private JPanel panelVision;
     private JPanel panelLocations;
@@ -106,6 +109,7 @@ public class ReferenceDragFeederConfigurationWizard
     private JButton btnCancelChangeAoi;
     private JPanel panel;
     private JButton btnCancelChangeTemplateImage;
+    private JButton btnResetVisionOffsets;
 
     public ReferenceDragFeederConfigurationWizard(ReferenceDragFeeder feeder) {
         super(feeder);
@@ -121,6 +125,8 @@ public class ReferenceDragFeederConfigurationWizard
         panelFields.add(panelGeneral);
         panelGeneral.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
@@ -138,6 +144,18 @@ public class ReferenceDragFeederConfigurationWizard
         textFieldActuatorId = new JTextField();
         panelGeneral.add(textFieldActuatorId, "4, 4");
         textFieldActuatorId.setColumns(5);
+
+        lblPeelOffActuatorId = new JLabel("Peel Off Actuator Name");
+        panelGeneral.add(lblPeelOffActuatorId, "6, 4, right, default");
+
+        textFieldPeelOffActuatorId = new JTextField();
+        panelGeneral.add(textFieldPeelOffActuatorId, "8, 4");
+        textFieldPeelOffActuatorId.setColumns(5);
+
+        if (feeder.isPart0402()) {
+	        lbl0402PartDetected = new JLabel("0402 Part DETECTED");
+	        panelGeneral.add(lbl0402PartDetected, "6, 2");
+        }
 
         panelLocations = new JPanel();
         panelFields.add(panelLocations);
@@ -282,8 +300,13 @@ public class ReferenceDragFeederConfigurationWizard
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+						FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        }));
 
         lblX_1 = new JLabel("X");
         panelAoE.add(lblX_1, "2, 2");
@@ -324,6 +347,10 @@ public class ReferenceDragFeederConfigurationWizard
         cancelSelectTemplateImageAction.setEnabled(false);
         cancelSelectAoiAction.setEnabled(false);
 
+        btnResetVisionOffsets = new JButton("Reset offsets");
+        btnResetVisionOffsets.setAction(resetVisionOffsets);
+        panelAoE.add(btnResetVisionOffsets, "12, 10");
+
         contentPanel.add(panelFields);
     }
 
@@ -339,6 +366,7 @@ public class ReferenceDragFeederConfigurationWizard
 
         addWrappedBinding(feeder, "feedSpeed", textFieldFeedRate, "text", percentConverter);
         addWrappedBinding(feeder, "actuatorName", textFieldActuatorId, "text");
+        addWrappedBinding(feeder, "peelOffActuatorName", textFieldPeelOffActuatorId, "text");
 
         MutableLocationProxy feedStartLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "feedStartLocation", feedStartLocation, "location");
@@ -371,6 +399,7 @@ public class ReferenceDragFeederConfigurationWizard
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedRate);
         ComponentDecorators.decorateWithAutoSelect(textFieldActuatorId);
+        ComponentDecorators.decorateWithAutoSelect(textFieldPeelOffActuatorId);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartZ);
@@ -518,6 +547,16 @@ public class ReferenceDragFeederConfigurationWizard
                 btnChangeAoi.setAction(selectAoiAction);
                 cancelSelectAoiAction.setEnabled(false);
                 cameraView.setSelectionEnabled(false);
+            });
+        }
+    };
+
+    @SuppressWarnings("serial")
+    private Action resetVisionOffsets = new AbstractAction("Reset vision offsets") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.messageBoxOnException(() -> {
+				feeder.resetVisionOffsets();
             });
         }
     };
