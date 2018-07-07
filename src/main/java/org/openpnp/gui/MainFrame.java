@@ -461,8 +461,6 @@ public class MainFrame extends JFrame {
 
         mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
         mnCommands.add(new JMenuItem(machineControlsPanel.startStopMachineAction));
-        mnCommands.addSeparator();
-        mnCommands.add(new JMenuItem(saveConfigAction));
 
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, mask),
                 machineControlsPanel.getJogControlsPanel().yPlusAction);
@@ -777,6 +775,13 @@ public class MainFrame extends JFrame {
     public boolean saveConfig() {
         // Save the configuration
         try {
+            Preferences.userRoot().flush();
+        }
+        catch (Exception e) {
+            MessageBoxes.errorBox(MainFrame.this, "Save Preferences", e);
+        }
+        
+        try {
             configuration.save();
         }
         catch (Exception e) {
@@ -944,7 +949,7 @@ public class MainFrame extends JFrame {
         }
     };
 
-    private Action saveConfigAction = new AbstractAction("Save configuration") {
+    private Action saveConfigAction = new AbstractAction("Save Configuration") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
 			saveConfig();
@@ -959,29 +964,6 @@ public class MainFrame extends JFrame {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             quit();
-        }
-    };
-
-    private Action saveConfigAction = new AbstractAction("Save Config") {
-        {
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            try {
-                Preferences.userRoot().flush();
-            }
-            catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.this, "Save Config", e);
-            }
-
-            // Save the configuration
-            try {
-                Configuration.get().save();
-            }
-            catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.this, "Save Config", e);
-            }
         }
     };
 

@@ -200,10 +200,12 @@ public class CameraPanel extends JPanel {
                 if (rows == 0) {
                     rows = 1;
                 }
-				if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_H))
+				if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_H)) {
 					camerasPanel.setLayout(new GridLayout(rows, 0, 1, 1));
-				else
+				}
+				else {
 					camerasPanel.setLayout(new GridLayout(0, rows, 1, 1));
+				}
 
                 for (CameraView cameraView : cameraViews.values()) {
                     cameraView.setMaximumFps(maximumFps / Math.max(cameraViews.size(), 1));

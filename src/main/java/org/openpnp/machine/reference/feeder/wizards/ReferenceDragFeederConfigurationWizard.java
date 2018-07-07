@@ -152,7 +152,7 @@ public class ReferenceDragFeederConfigurationWizard
         panelGeneral.add(textFieldPeelOffActuatorId, "8, 4");
         textFieldPeelOffActuatorId.setColumns(5);
 
-        if (feeder.isPart_0402()) {
+        if (feeder.isPart0402()) {
 	        lbl0402PartDetected = new JLabel("0402 Part DETECTED");
 	        panelGeneral.add(lbl0402PartDetected, "6, 2");
         }

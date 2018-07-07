@@ -108,10 +108,12 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         }
 
         if (vision.isEnabled() && visionOffset != null) {
-			if (this.isPart_0402() && partPitch != null)
+			if (this.isPart0402() && partPitch != null) {
 				return pickLocation.subtract(visionOffset).add(partPitch);
-			else
+			}
+			else {
 				return pickLocation.subtract(visionOffset);
+			}
         }
 
         return pickLocation;
@@ -213,12 +215,14 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 	        // retract the pin
 	        actuator.actuate(false);
 
-	        if (this.isPart_0402() == true) {
+	        if (this.isPart0402() == true) {
 				// can change it to "feededCount = parts_count_userSettings;"
 				feededCount = 2;
 	        }
-        } else
+        } 
+        else {
 			Logger.debug("Multi parts drag feeder: skipping drag " + feededCount);
+        }
 
 
         head.moveToSafeZ();
@@ -231,8 +235,10 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 				if (feededCount > 0) {
 					partPitch = new Location(LengthUnit.Millimeters, partsPitchX * feededCount,
 							partsPitchY * feededCount, 0, 0);
-				} else
+				} 
+				else {
 					partPitch = null;
+				}
 			}
 
             Logger.debug("final visionOffsets " + visionOffset);
@@ -344,7 +350,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 		partPitch = null;
 	}
 
-	public boolean isPart_0402() {
+	public boolean isPart0402() {
 		return this.getPart().getPackage().getId().contains("C0402")
 				|| this.getPart().getPackage().getId().contains("R0402");
 	}
