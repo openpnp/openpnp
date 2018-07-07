@@ -791,7 +791,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Logger.debug("Place {} with {}", part, nozzle.getName());
 
             File file = job.getFile();
-            Configuration.get().saveJob(job, file);
+            if (file != null) {
+                Configuration.get().saveJob(job, file);
+            }
             Configuration.get().save();
         }
 
