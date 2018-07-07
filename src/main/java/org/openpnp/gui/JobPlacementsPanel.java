@@ -12,6 +12,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -26,11 +27,13 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.RowFilter;
 import javax.swing.UIManager;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableRowSorter;
 
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
@@ -60,10 +63,12 @@ import org.openpnp.spi.PnpJobProcessor.JobPlacement;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
 
 public class JobPlacementsPanel extends JPanel {
     private JTable table;
     private PlacementsTableModel tableModel;
+    private TableRowSorter<PlacementsTableModel> tableSorter;
     private ActionGroup boardLocationSelectionActionGroup;
     private ActionGroup singleSelectionActionGroup;
     private ActionGroup multiSelectionActionGroup;
@@ -145,9 +150,10 @@ public class JobPlacementsPanel extends JPanel {
         btnEditFeeder.setHideActionText(true);
         toolBarPlacements.add(btnEditFeeder);
         tableModel = new PlacementsTableModel(configuration);
+        tableSorter = new TableRowSorter<>(tableModel);
 
         table = new AutoSelectTextTable(tableModel);
-        table.setAutoCreateRowSorter(true);
+        table.setRowSorter(tableSorter);
         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         table.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
@@ -289,6 +295,17 @@ public class JobPlacementsPanel extends JPanel {
         else {
             tableModel.setBoardLocation(boardLocation);
             boardLocationSelectionActionGroup.setEnabled(true);
+
+            RowFilter<PlacementsTableModel, Object> rf = null;
+            // If current expression doesn't parse, don't update.
+			try {
+				rf = RowFilter.regexFilter("(?i)" + boardLocation.getSide().toString());
+			}
+            catch (PatternSyntaxException e) {
+                Logger.warn("Side sort failed", e);
+                return;
+            }
+            tableSorter.setRowFilter(rf);
         }
         updateActivePlacements();
     }

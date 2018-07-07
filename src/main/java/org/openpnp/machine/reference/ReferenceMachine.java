@@ -86,6 +86,12 @@ public class ReferenceMachine extends AbstractMachine {
     @Element(required = false)
     protected FiducialLocator fiducialLocator = new ReferenceFiducialLocator();
 
+    @Element(required = false)
+    private boolean homeAfterEnabled = false;
+
+    @Element(required = false)
+    private boolean usePickRotationInsteadOfRotationInTapeForStripFeeders = false;
+
     private boolean enabled;
 
     private List<Class<? extends Feeder>> registeredFeederClasses = new ArrayList<>();
@@ -297,5 +303,21 @@ public class ReferenceMachine extends AbstractMachine {
     @Override
     public PasteDispenseJobProcessor getPasteDispenseJobProcessor() {
         return pasteDispenseJobProcessor;
+    }
+
+    public boolean getHomeAfterEnabled() {
+        return homeAfterEnabled;
+    }
+
+    public boolean getUsePickRotationInsteadOfRotationInTapeForStripFeeders() {
+        return usePickRotationInsteadOfRotationInTapeForStripFeeders;
+    }
+
+    public void setHomeAfterEnabled(boolean newValue) {
+        this.homeAfterEnabled = newValue;
+    }
+
+    public void setUsePickRotationInsteadOfRotationInTapeForStripFeeders(boolean newValue) {
+        this.usePickRotationInsteadOfRotationInTapeForStripFeeders = newValue;
     }
 }
