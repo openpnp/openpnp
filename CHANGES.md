@@ -15,6 +15,12 @@ ones have been merged in:
 - Camera window can be split in vertical or horizontal style.
 - Job autosave after each placement. Please post to the list if this causes a performane issue
   on your machine.
+  
+ The following items have been merged but some additional work may still need to be done on them:
+  
+- Added peel off actuator option for Drag Feeder.
+- Drag Feeder improve accurance of feed, now drag distance can be adaptive with vision enabled.
+- Drag Feeder can work with 0402.
 
 Thanks @aneox for all the great work!
 
