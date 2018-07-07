@@ -66,7 +66,6 @@ import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Version;
 import org.simpleframework.xml.core.Commit;
 
 public class ReferenceMachine extends AbstractMachine {
@@ -88,9 +87,6 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Element(required = false)
     private boolean homeAfterEnabled = false;
-
-    @Element(required = false)
-    private boolean usePickRotationInsteadOfRotationInTapeForStripFeeders = false;
 
     private boolean enabled;
 
@@ -309,15 +305,7 @@ public class ReferenceMachine extends AbstractMachine {
         return homeAfterEnabled;
     }
 
-    public boolean getUsePickRotationInsteadOfRotationInTapeForStripFeeders() {
-        return usePickRotationInsteadOfRotationInTapeForStripFeeders;
-    }
-
     public void setHomeAfterEnabled(boolean newValue) {
         this.homeAfterEnabled = newValue;
-    }
-
-    public void setUsePickRotationInsteadOfRotationInTapeForStripFeeders(boolean newValue) {
-        this.usePickRotationInsteadOfRotationInTapeForStripFeeders = newValue;
     }
 }

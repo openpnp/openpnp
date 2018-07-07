@@ -163,8 +163,6 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public boolean getHomeAfterEnabled();
 
-    public boolean getUsePickRotationInsteadOfRotationInTapeForStripFeeders();
-
     /**
      * Submit a task to be run with access to the Machine. This is the primary entry point into
      * executing any blocking operation on the Machine. If you are doing anything that results in
