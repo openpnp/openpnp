@@ -244,13 +244,7 @@ public class JobPanel extends JPanel {
                     // event
                 	updatePanelizationIconState();
                 }
-                if (job.getBoardLocations().size() > 0) {
-					BoardLocation boardLocation = getSelectedBoardLocation();
-					jobPlacementsPanel.setBoardLocation(boardLocation);
-                }
-                else {
-                    jobPlacementsPanel.setBoardLocation(null);
-                }
+                jobPlacementsPanel.setBoardLocation(getSelectedBoardLocation());
             }
         });
 
