@@ -86,6 +86,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         Reset
     }
 
+    public static final String ORDER_JOB_PARTHEIGHT = "Part Height";
+    public static final String ORDER_JOB_PART = "Part";
+
     public static class PlannedPlacement {
         public final JobPlacement jobPlacement;
         public final Nozzle nozzle;
@@ -109,6 +112,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     @Attribute(required = false)
     protected boolean parkWhenComplete = false;
+
+    @Attribute(required = false)
+    protected String jobOrder = "Part Height";
 
     private FiniteStateMachine<State, Message> fsm = new FiniteStateMachine<>(State.Uninitialized);
 
@@ -426,10 +432,26 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         fireTextStatus("Planning placements.");
 
-        // Get the list of unfinished placements and sort them by part height.
-        List<JobPlacement> jobPlacements = getPendingJobPlacements().stream()
-                .sorted(Comparator.comparing(JobPlacement::getPartHeight))
-                .collect(Collectors.toList());
+        List<JobPlacement> jobPlacements;
+
+        if (this.jobOrder == ORDER_JOB_PARTHEIGHT) {
+            // Get the list of unfinished placements and sort them by part height.
+            jobPlacements = getPendingJobPlacements().stream()
+                    .sorted(Comparator.comparing(JobPlacement::getPartHeight))
+                    .collect(Collectors.toList());
+        } else {
+            if (this.jobOrder == ORDER_JOB_PART) {
+                // Get the list of unfinished placements and sort them by part.
+                jobPlacements = getPendingJobPlacements().stream()
+                        .sorted(Comparator.comparing(JobPlacement::getPartId))
+                        .collect(Collectors.toList());
+            } else {
+                // Get the list of unfinished placements and sort them by part height.
+                jobPlacements = getPendingJobPlacements().stream()
+                        .sorted(Comparator.comparing(JobPlacement::getPartHeight))
+                        .collect(Collectors.toList());
+            }
+        }
 
         if (jobPlacements.isEmpty()) {
             return;
@@ -928,6 +950,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         this.parkWhenComplete = parkWhenComplete;
     }
     
+    public String getJobOrder() {
+        return jobOrder;
+    }
+
+    public void setJobOrder(String newJobOrder) {
+        this.jobOrder = newJobOrder;
+    }
+
     public List<JobPlacement> getJobPlacementsById(String id) { 
         return jobPlacements.stream().filter((jobPlacement) -> {
             return jobPlacement.toString() == id;

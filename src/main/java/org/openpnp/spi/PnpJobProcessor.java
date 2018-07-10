@@ -34,6 +34,10 @@ public interface PnpJobProcessor extends JobProcessor {
                     .getValue();
         }
 
+        public String getPartId() {
+            return placement.getPart().getId();
+        }
+
         @Override
         public String toString() {
             return placement.getId();
