@@ -544,8 +544,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
                 String newCommand = "";
 
                 for (int i = 0; i < commandsArray.length; i ++) {
-                    if (commandsArray[i].contains("BacklashOffset"))
+                    if (commandsArray[i].contains("BacklashOffset")) {
                         continue;
+                    }
 
                     newCommand += commandsArray[i] + "\n";
                 }
