@@ -32,7 +32,7 @@ When you look at the camera image in OpenPnP it should be right side up. Dependi
 
 A Top Camera image should appear as if you are looking down at the machine. The top of the image should be away from you, the bottom of the image should be towards you.
 
-A Bottom Camera image should appear as if you are looking up from the camera towards the nozzle. The same rules as above apply. 
+A Bottom Camera image should appear as if you are looking onto a mirror laying on the floor reflecting a view up from the camera towards the nozzle. Again the top of the image should be away from you, the bottom of the image should be towards you. But because left and right should remain left and right (and it is actually a mirror image), you usually need to enable either Flip Vertical or Flip Horizontal depending on how you mounted the camera.  
 
 1. Open the Machine Setup tab and select the camera from the tree.
 2. Select the Camera Specific tab from the configuration tabs on the right.
