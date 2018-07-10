@@ -187,15 +187,19 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 			double angleCorrection = 0;
 			double angleOfStrip = Utils2D.getAngleFromPoint(lineLocations[0], lineLocations[1]);
 
-			if (angleOfStrip > 90)
+			if (angleOfStrip > 90) {
 				angleCorrection = angleOfStrip % 90;
-			else
+			}
+			else {
 				angleCorrection = angleOfStrip;
+			}
 
-			if (angleCorrection > 45)
+			if (angleCorrection > 45) {
 				angleCorrection = 90 - angleCorrection;
-			else
+			}
+			else {
 				angleCorrection *= -1;
+			}
 
 	        // Rotate the part
 	        p = Utils2D.rotatePoint(p, angleOfStrip);
