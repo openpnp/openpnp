@@ -212,39 +212,41 @@ public class JobPanel extends JPanel {
         boardLocationsTable.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
-                // One of 3 things can be happening here:
-                // First is row 0 is being edited. In normal mode, nothing
-                // special needs to be done. In Auto Panelize mode, the
-                // computed panel PCBs (that is, the ones PCB derived from
-                // the panel parameters) must be updated. The second is that
-                // row 1 or higher needs to be edited. This can only happen when
-                // NOT in autopanelize mode as the editing is blocked in the
-                // BoardLocationTableModel class. Finally, when the table wants
-                // to update itself (eg due to TableDataChange event being
-                // fired) it
-                // will set the first row to 0 and the last row to 2147483647
-                // (maxint). This is a behavior of the table...we simply detect
-                // it here to ascertain the mode
+                SwingUtilities.invokeLater(() -> {
+                    // One of 3 things can be happening here:
+                    // First is row 0 is being edited. In normal mode, nothing
+                    // special needs to be done. In Auto Panelize mode, the
+                    // computed panel PCBs (that is, the ones PCB derived from
+                    // the panel parameters) must be updated. The second is that
+                    // row 1 or higher needs to be edited. This can only happen when
+                    // NOT in autopanelize mode as the editing is blocked in the
+                    // BoardLocationTableModel class. Finally, when the table wants
+                    // to update itself (eg due to TableDataChange event being
+                    // fired) it
+                    // will set the first row to 0 and the last row to 2147483647
+                    // (maxint). This is a behavior of the table...we simply detect
+                    // it here to ascertain the mode
 
-                // Below, we check for each of these.
-                if (e.getFirstRow() == 0 && e.getLastRow() == 0) {
-                    // Here, the first row is being edited. The function below
-                    // will check if
-                    // we're in autopanelize mode and update other rows
-                    // accordingly
-                    populatePanelSettingsIntoBoardLocations();
-                }
-                else if (e.getFirstRow() > 0 && e.getLastRow() <= Integer.MAX_VALUE) {
-                    // Here, we're not in auto panelize mode (since row 1 or
-                    // higher could be edited.
-                    // Do nothing
-                }
-                else if (e.getFirstRow() == 0 && e.getLastRow() == Integer.MAX_VALUE) {
-                    // A generic table update in response to TableDataChange
-                    // event
-                	updatePanelizationIconState();
-                }
-                jobPlacementsPanel.setBoardLocation(getSelectedBoardLocation());
+                    // Below, we check for each of these.
+                    if (e.getFirstRow() == 0 && e.getLastRow() == 0) {
+                        // Here, the first row is being edited. The function below
+                        // will check if
+                        // we're in autopanelize mode and update other rows
+                        // accordingly
+                        populatePanelSettingsIntoBoardLocations();
+                    }
+                    else if (e.getFirstRow() > 0 && e.getLastRow() <= Integer.MAX_VALUE) {
+                        // Here, we're not in auto panelize mode (since row 1 or
+                        // higher could be edited.
+                        // Do nothing
+                    }
+                    else if (e.getFirstRow() == 0 && e.getLastRow() == Integer.MAX_VALUE) {
+                        // A generic table update in response to TableDataChange
+                        // event
+                        updatePanelizationIconState();
+                    }
+                    jobPlacementsPanel.setBoardLocation(getSelectedBoardLocation());
+                });
             }
         });
 
