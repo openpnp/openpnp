@@ -481,6 +481,13 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
     @Override
     public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
             throws Exception {
+
+        moveTo(hm, location, speed, false);
+    }
+
+    @Override
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, boolean skipBacklashCompensation)
+            throws Exception {
         // keep copy for calling subdrivers as to not add offset on offset
         Location locationOriginal = location;
 
@@ -531,6 +538,24 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
             }
 
             String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
+
+            if (skipBacklashCompensation) {
+                String commandsArray[] = command.split("\\n");
+                String newCommand = "";
+
+                for (int i = 0; i < commandsArray.length; i ++) {
+                    if (commandsArray[i].contains("BacklashOffset"))
+                        continue;
+
+                    newCommand += commandsArray[i] + "\n";
+                }
+
+                if (newCommand != "") {
+                    Logger.debug("Skipping backslash " + newCommand);
+                    command = newCommand;
+                }
+            }
+
             command = substituteVariable(command, "Id", hm.getId());
             command = substituteVariable(command, "Name", hm.getName());
             command = substituteVariable(command, "FeedRate", maxFeedRate * speed);

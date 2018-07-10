@@ -59,6 +59,7 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
      * @throws Exception
      */
     public void moveTo(ReferenceHeadMountable hm, Location location, double speed) throws Exception;
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, boolean skipBacklashCompensation) throws Exception;
 
     /**
      * Returns a clone of the HeadMountable's current location. It's important that the returned
