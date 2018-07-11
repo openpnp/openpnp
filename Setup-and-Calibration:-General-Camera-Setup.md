@@ -17,6 +17,15 @@
 6. Verify your camera is working, in the "Camera" window select your newly added camera from the drop down list.  If configured correctly you should see a live image from your selected camera.
 7. On the General Configuration tab click the name field in the camera table to give your camera a descriptive name. We suggest "Top Camera" and "Bottom Camera", respectively.
 
+## Delete Old Camera
+
+When you first install OpenPnP it comes with a set of defaults that simulate a machine so that you can try it out. When you start to set up OpenPnP for your real machine, you need to remove some of those defaults so they don't interfere with your machine.
+
+If you are adding a Top Camera, look to see if there is an existing Top Camera called ImageCamera. Delete it.
+
+For the Bottom Camera, you may see an existing one called SimulatedUpCamera. Delete it.
+
+
 ## Camera Type Specific Setup
 
 [[OpenCVCamera]] - USB cameras  
