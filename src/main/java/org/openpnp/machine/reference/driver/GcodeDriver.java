@@ -52,7 +52,7 @@ import org.simpleframework.xml.core.Commit;
 import com.google.common.base.Joiner;
 
 @Root
-public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runnable {
+public class GcodeDriver extends AbstractCommunications implements Named, Runnable {
     public enum CommandType {
         COMMAND_CONFIRM_REGEX,
         POSITION_REPORT_REGEX,
@@ -208,7 +208,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
     }
 
     public synchronized void connect() throws Exception {
-        super.connect();
+        super.comms.connect();
 
         connected = false;
         readerThread = new Thread(this);
@@ -811,7 +811,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
         }
 
         try {
-            super.disconnect();
+            super.comms.disconnect();
         }
         catch (Exception e) {
             Logger.error("disconnect()", e);
@@ -821,7 +821,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
 
     @Override
     public void close() throws IOException {
-        super.close();
+        super.comms.close();
 
         for (ReferenceDriver driver : subDrivers) {
             driver.close();
@@ -862,9 +862,8 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
 
         // Send the command, if one was specified
         if (command != null) {
-            Logger.trace("[{}] >> {}", portName, command);
-            output.write(command.getBytes());
-            output.write("\n".getBytes());
+            Logger.trace("[{}] >> {}", comms.getConnectionName(), command);
+            comms.writeLine(command);
         }
 
         // Collect responses till we find one with the confirmation or we timeout. Return
@@ -914,7 +913,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
         responseQueue.drainTo(responses);
 
         Logger.debug("sendCommand({} {}, {}) => {}",
-                new Object[] {portName, command, timeout == Long.MAX_VALUE ? -1 : timeout, responses});
+                new Object[] {comms.getConnectionName(), command, timeout == Long.MAX_VALUE ? -1 : timeout, responses});
         return responses;
     }
 
@@ -922,7 +921,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
         while (!disconnectRequested) {
             String line;
             try {
-                line = readLine().trim();
+                line = comms.readLine().trim();
             }
             catch (TimeoutException ex) {
                 continue;
@@ -932,7 +931,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
                 return;
             }
             line = line.trim();
-            Logger.trace("[{}] << {}", portName, line);
+            Logger.trace("[{}] << {}", comms.getConnectionName(), line);
             if (!processPositionReport(line)) {
                 responseQueue.offer(line);
             }
@@ -1020,7 +1019,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Named, Runn
                 new PropertySheetWizardAdapter(new GcodeDriverGcodes(this), "Gcode"),
                 new PropertySheetWizardAdapter(new GcodeDriverSettings(this), "General Settings"),
                 new PropertySheetWizardAdapter(new GcodeDriverConsole(this), "Console"),
-                new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Serial")
+                new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Communications")
         };
     }
     

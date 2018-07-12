@@ -16,7 +16,7 @@ import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.machine.reference.driver.AbstractSerialPortDriver;
+import org.openpnp.machine.reference.driver.AbstractCommunications;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Nozzle;
@@ -25,8 +25,10 @@ import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
-public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnable {
+public class OpenBuildsDriver extends AbstractCommunications implements Runnable {
+    public void close(){
 
+    }
 
     @Attribute(required = false)
     protected double feedRateMmPerMinute = 5000;
@@ -284,7 +286,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     }
 
     public synchronized void connect() throws Exception {
-        super.connect();
+        super.comms.connect();
 
         /**
          * Connection process notes:
@@ -406,7 +408,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         }
 
         try {
-            super.disconnect();
+            super.comms.disconnect();
         }
         catch (Exception e) {
             Logger.error("disconnect()", e);
@@ -429,8 +431,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         if (command != null) {
             Logger.debug("sendCommand({}, {})", command, timeout);
             Logger.debug(">> " + command);
-            output.write(command.getBytes());
-            output.write("\n".getBytes());
+            comms.writeLine(command);
         }
 
         String response = null;
@@ -460,7 +461,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         while (!disconnectRequested) {
             String line;
             try {
-                line = readLine().trim();
+                line = comms.readLine().trim();
             }
             catch (TimeoutException ex) {
                 continue;

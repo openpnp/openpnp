@@ -6,17 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.concurrent.TimeoutException;
 
-import javax.swing.Action;
-import javax.swing.Icon;
-
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
-import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceDriver;
-import org.openpnp.machine.reference.ReferencePasteDispenser;
-import org.openpnp.machine.reference.driver.wizards.AbstractSerialPortDriverConfigurationWizard;
-import org.openpnp.model.AbstractModelObject;
-import org.openpnp.model.Location;
-import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.machine.reference.ReferenceCommunications;
 import org.simpleframework.xml.Attribute;
 
 import jssc.SerialPort;
@@ -29,10 +19,10 @@ import java.util.regex.Pattern;
 import java.util.ArrayList;
 
 /**
- * A base class for basic SerialPort based Drivers. Includes functions for connecting,
+ * A class for SerialPort Communications. Includes functions for connecting,
  * disconnecting, reading and sending lines.
  */
-public abstract class AbstractSerialPortDriver extends AbstractModelObject implements ReferenceDriver, Closeable {
+public class SerialPortCommunications implements Closeable, ReferenceCommunications {
     public enum DataBits {
         Five(SerialPort.DATABITS_5),
         Six(SerialPort.DATABITS_6),
@@ -85,7 +75,7 @@ public abstract class AbstractSerialPortDriver extends AbstractModelObject imple
     }
 
     @Attribute(required = false)
-    protected String portName;
+    protected String portName = "";
 
     @Attribute(required = false)
     protected int baud = 115200;
@@ -108,11 +98,15 @@ public abstract class AbstractSerialPortDriver extends AbstractModelObject imple
     @Attribute(required = false)
     protected boolean setRts = false;
 
-    protected SerialPort serialPort;
-    protected SerialInputStream input;
-    protected OutputStream output;
+    @Attribute(required = false)
+    protected String name = "SerialPortCommunications";
 
-    protected synchronized void connect() throws Exception {
+
+    private SerialPort serialPort;
+    private SerialInputStream input;
+    private OutputStream output;
+
+    public synchronized void connect() throws Exception {
         disconnect();
         serialPort = new SerialPort(portName);
         serialPort.openPort();
@@ -123,7 +117,7 @@ public abstract class AbstractSerialPortDriver extends AbstractModelObject imple
         output = new SerialOutputStream(serialPort);
     }
 
-    protected synchronized void disconnect() throws Exception {
+    public synchronized void disconnect() throws Exception {
         if (serialPort != null && serialPort.isOpened()) {
             serialPort.closePort();
             input = null;
@@ -132,14 +126,14 @@ public abstract class AbstractSerialPortDriver extends AbstractModelObject imple
         }
     }
 
-    @Override
-    public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
-            Location endLocation, long dispenseTimeMilliseconds) throws Exception {
-        // Do nothing. This is just stubbed in so that it can be released
-        // without breaking every driver in the wild.
-    }
 
-    public String[] getPortNames() {
+    /**
+     * Returns an array of Strings containing the names of serial ports
+     * present on the system
+     * 
+     * @return array of Strings of serial port names
+     */
+    public static String[] getPortNames() {
 		if (SerialNativeInterface.getOsType () == SerialNativeInterface.OS_LINUX) {
 			ArrayList<String> linuxPortNames = new ArrayList<String>();
 			String pattern = ".*";
@@ -167,7 +161,7 @@ public abstract class AbstractSerialPortDriver extends AbstractModelObject imple
      * @throws TimeoutException
      * @throws IOException
      */
-    protected String readLine() throws TimeoutException, IOException {
+    public String readLine() throws TimeoutException, IOException {
         StringBuffer line = new StringBuffer();
         while (true) {
             try {
@@ -193,7 +187,17 @@ public abstract class AbstractSerialPortDriver extends AbstractModelObject imple
         }
     }
 
-    @Override
+    public void writeLine(String data) throws IOException
+    {
+        try {
+            output.write(data.getBytes());
+            output.write(lineEnding.getBytes());
+        }
+        catch (IOException ex) {
+            throw ex;
+        }
+    }
+
     public void close() throws IOException {
         try {
             disconnect();
@@ -201,6 +205,10 @@ public abstract class AbstractSerialPortDriver extends AbstractModelObject imple
         catch (Exception e) {
             throw new IOException(e);
         }
+    }
+
+    public String getConnectionName() {
+        return "serial://" + portName;
     }
 
     public String getPortName() {
@@ -267,36 +275,6 @@ public abstract class AbstractSerialPortDriver extends AbstractModelObject imple
         this.setRts = setRts;
     }
 
-    @Override
-    public Icon getPropertySheetHolderIcon() {
-        return null;
-    }
-
-    @Override
-    public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName();
-    }
-
-    @Override
-    public PropertySheetHolder[] getChildPropertySheetHolders() {
-        return null;
-    }
-
-    @Override
-    public Action[] getPropertySheetHolderActions() {
-        return null;
-    }
-
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
-    }
-
-    @Override
-    public Wizard getConfigurationWizard() {
-        return new AbstractSerialPortDriverConfigurationWizard(this);
-    }
-
     /**
      * SerialInputStream and SerialOutputStream are from the pull request referenced in:
      * https://github.com/scream3r/java-simple-serial-connector/issues/17
@@ -311,7 +289,7 @@ public abstract class AbstractSerialPortDriver extends AbstractModelObject imple
      * multiple streams for the same serial port unless you implement your own synchronization.
      * 
      * @author Charles Hache <chalz@member.fsf.org>
-     *
+     * 
      */
     public class SerialInputStream extends InputStream {
 
@@ -513,7 +491,7 @@ public abstract class AbstractSerialPortDriver extends AbstractModelObject imple
      * multiple streams for the same serial port unless you implement your own synchronization.
      * 
      * @author Charles Hache <chalz@member.fsf.org>
-     *
+     * 
      */
     public class SerialOutputStream extends OutputStream {
 
