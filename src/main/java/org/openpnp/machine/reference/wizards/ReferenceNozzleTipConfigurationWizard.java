@@ -55,6 +55,7 @@ import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 
+import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
@@ -76,6 +77,12 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JTextField textFieldChangerMidY;
     private JTextField textFieldChangerMidZ;
     private JLabel lblEndLocation;
+    private JPanel panelDwellTime;
+    private JLabel lblPickDwellTime;
+    private JLabel lblPlaceDwellTime;
+    private JLabel lblDwellTime;
+    private JTextField pickDwellTf;
+    private JTextField placeDwellTf;
     private JTextField textFieldChangerEndX;
     private JTextField textFieldChangerEndY;
     private JTextField textFieldChangerEndZ;
@@ -329,6 +336,43 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         vacuumLevelPartOff = new JTextField();
         panelVacuumSensing.add(vacuumLevelPartOff, "4, 4");
         vacuumLevelPartOff.setColumns(10);
+        
+        panelDwellTime = new JPanel();
+        panelDwellTime.setBorder(new TitledBorder(null, "Dwell Times", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panelDwellTime);
+        panelDwellTime.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+          
+        lblPickDwellTime = new JLabel("Pick Dwell Time (ms)");
+        panelDwellTime.add(lblPickDwellTime, "2, 2, right, default");
+        
+        pickDwellTf = new JTextField();
+        panelDwellTime.add(pickDwellTf, "4, 2");
+        pickDwellTf.setColumns(10);
+        
+        lblPlaceDwellTime = new JLabel("Place Dwell Time (ms)");
+        panelDwellTime.add(lblPlaceDwellTime, "2, 4, right, default");
+        
+        placeDwellTf = new JTextField();
+        panelDwellTime.add(placeDwellTf, "4, 4");
+        placeDwellTf.setColumns(10);
+        
+        CellConstraints cc = new CellConstraints();
+        lblDwellTime = new JLabel("Note: Total Dwell Time is the sum of Nozzle Dwell Time plus the Nozzle Tip Dwell Time.");
+        panelDwellTime.add(lblDwellTime, cc.xywh(2, 6, 5, 1));
+        
 
         panelCalibration = new JPanel();
         panelCalibration.setBorder(new TitledBorder(null, "Calibration", TitledBorder.LEADING,
@@ -455,8 +499,14 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         
         addWrappedBinding(nozzleTip, "vacuumLevelPartOn", vacuumLevelPartOn, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumLevelPartOff", vacuumLevelPartOff, "text", doubleConverter);
-
+        
+        addWrappedBinding(nozzleTip, "pickDwellMilliseconds", pickDwellTf, "text", intConverter);
+        addWrappedBinding(nozzleTip, "placeDwellMilliseconds", placeDwellTf, "text", intConverter);
+        
         ComponentDecorators.decorateWithAutoSelect(nameTf);
+        
+        ComponentDecorators.decorateWithAutoSelect(pickDwellTf);
+        ComponentDecorators.decorateWithAutoSelect(placeDwellTf);
         
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartY);
