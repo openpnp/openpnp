@@ -1,6 +1,17 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+
+# 2018-07-13
+
+* Dwell Times per Nozzle Tip
+
+	Pick dwell time and place dwell time has been added to nozzle tip. 
+	This means the total dwell times are now the sum of the nozzle dwell times 
+	plus nozzle tip dwell times. The idea behind this is that larger nozzle tips
+	are used to lift bigger/heavier chips and typically require a bit longer dwell
+	times in general.
+ 
 # 2018-07-08
 
 @aneox submitted a bunch of great new features. Some are still being worked on, but the following
