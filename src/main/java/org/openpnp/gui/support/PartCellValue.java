@@ -19,11 +19,7 @@
 
 package org.openpnp.gui.support;
 
-import org.openpnp.model.Configuration;
-
 public class PartCellValue implements Comparable<PartCellValue> {
-    private static Configuration configuration;
-
     private String partID;
 
     /**

@@ -19,6 +19,7 @@
 
 package org.openpnp.machine.reference;
 
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -788,6 +789,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 	        }
             
             Logger.debug("Place {} with {}", part, nozzle.getName());
+
+            File file = job.getFile();
+            if (file != null) {
+                Configuration.get().saveJob(job, file);
+            }
+            Configuration.get().save();
         }
 
         clearStepComplete();

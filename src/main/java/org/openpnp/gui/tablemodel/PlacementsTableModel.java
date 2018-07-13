@@ -196,8 +196,6 @@ public class PlacementsTableModel extends AbstractTableModel {
             case 4:
                 return new LengthCellValue(loc.getLengthY(), true);
             case 5:
-                // return String.format(Locale.US, configuration.getLengthDisplayFormat(),
-                // loc.getRotation());
                 return new RotationCellValue(loc.getRotation(), true);
             case 6:
                 return placement.getType();

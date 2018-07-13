@@ -66,7 +66,6 @@ import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Version;
 import org.simpleframework.xml.core.Commit;
 
 public class ReferenceMachine extends AbstractMachine {
@@ -85,6 +84,9 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Element(required = false)
     protected FiducialLocator fiducialLocator = new ReferenceFiducialLocator();
+
+    @Element(required = false)
+    private boolean homeAfterEnabled = false;
 
     private boolean enabled;
 
@@ -297,5 +299,13 @@ public class ReferenceMachine extends AbstractMachine {
     @Override
     public PasteDispenseJobProcessor getPasteDispenseJobProcessor() {
         return pasteDispenseJobProcessor;
+    }
+
+    public boolean getHomeAfterEnabled() {
+        return homeAfterEnabled;
+    }
+
+    public void setHomeAfterEnabled(boolean newValue) {
+        this.homeAfterEnabled = newValue;
     }
 }

@@ -1,6 +1,28 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2018-07-08
+
+@aneox submitted a bunch of great new features. Some are still being worked on, but the following
+ones have been merged in:
+
+- Filter PlacementsTableModel, show only active board side. Note that this change makes it so
+  that if you want to edit both sides of a board you have to add it to the job twice and set
+  the side.
+- Added option to AutoHome after machine enabled. To activate, need to set checkbox in machine settings.
+- Windows saves sizes and position in Multiple Windows Mode.
+- Save configuration menu button. (Moved from Machine menu to File menu)
+- Camera window can be split in vertical or horizontal style.
+- Job autosave after each placement. Please post to the list if this causes a performane issue
+  on your machine.
+  
+ The following items have been merged but some additional work may still need to be done on them:
+  
+- Added peel off actuator option for Drag Feeder.
+- Drag Feeder improve accurance of feed, now drag distance can be adaptive with vision enabled.
+- Drag Feeder can work with 0402.
+
+Thanks @aneox for all the great work!
 
 # 2018-07-04
 
