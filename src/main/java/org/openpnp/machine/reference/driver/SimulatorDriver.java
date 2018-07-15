@@ -155,6 +155,12 @@ public class SimulatorDriver implements ReferenceDriver {
         setHeadLocation(hm.getHead(), hl);
     }
 
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, boolean skipBacklashCompensation)
+            throws Exception {
+
+        moveTo(hm, location, speed, false);
+    }
+
     @Override
     public void pick(ReferenceNozzle nozzle) throws Exception {
         Logger.debug("pick({})", nozzle);

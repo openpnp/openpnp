@@ -72,6 +72,12 @@ public class TestDriver implements ReferenceDriver {
         }
     }
 
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, boolean skipBacklashCompensation)
+            throws Exception {
+
+        moveTo(hm, location, speed, false);
+    }
+
     @Override
     public Location getLocation(ReferenceHeadMountable hm) {
         return location;
@@ -125,6 +131,12 @@ public class TestDriver implements ReferenceDriver {
 
         @Override
         public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+                throws Exception {
+
+        }
+
+        @Override
+        public void moveTo(ReferenceHeadMountable hm, Location location, double speed, boolean skipBacklashCompensation)
                 throws Exception {
 
         }

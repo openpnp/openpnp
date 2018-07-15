@@ -133,6 +133,12 @@ public class NullDriver implements ReferenceDriver {
         setHeadLocation(hm.getHead(), hl);
     }
 
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, boolean skipBacklashCompensation)
+            throws Exception {
+
+        moveTo(hm, location, speed, false);
+    }
+
     /**
      * Simulates true machine movement, which takes time, by tracing the required movement lines
      * over a period of time based on the input speed.

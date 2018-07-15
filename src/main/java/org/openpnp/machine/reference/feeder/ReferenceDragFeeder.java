@@ -31,7 +31,10 @@ import javax.swing.Action;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceFeeder;
+import org.openpnp.machine.reference.ReferenceHeadMountable;
+import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceDragFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -41,6 +44,7 @@ import org.openpnp.model.Rectangle;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider;
@@ -207,10 +211,19 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 			}
 
 	        // backoff to release tension from the pin
-	        if (backoffDistance.getValue() != 0) {
-	            Location backoffLocation = Utils2D.getPointAlongLine(feedEndLocation, feedStartLocation, backoffDistance);
-	            actuator.moveTo(backoffLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
-	        }
+			if (backoffDistance.getValue() != 0) {
+			    Location backoffLocation = Utils2D.getPointAlongLine(feedEndLocation, feedStartLocation, backoffDistance);
+
+			    ReferenceDriver driver = Configuration.get().getMachine().getDriver();
+
+			    if(driver instanceof GcodeDriver) {
+			        GcodeDriver d = (GcodeDriver) driver;
+			        d.moveTo((ReferenceHeadMountable) actuator, backoffLocation, feedSpeed * actuator.getHead().getMachine().getSpeed(), true);
+			    }
+			    else {
+			        actuator.moveTo(backoffLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
+			    }
+			}
 
 	        // retract the pin
 	        actuator.actuate(false);
