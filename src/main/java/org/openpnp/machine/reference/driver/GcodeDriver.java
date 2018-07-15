@@ -188,6 +188,7 @@ public class GcodeDriver extends AbstractCommunications implements Named, Runnab
     
     @Commit
     public void commit() {
+        super.commit();
         for (GcodeDriver driver : subDrivers) {
             driver.parent = this;
         }

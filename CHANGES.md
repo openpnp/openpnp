@@ -9,6 +9,10 @@ a complete change list, only those that may directly interest or affect users.
 	communication over TCP/IP in addition to serial. This makes it possible to use Smoothieboard
 	over Ethernet now, for example. To use TCP/IP, go to your Driver settings and check the
 	Communication tab for new options.
+	
+	This change requires a migration of communication settings. This should happen automatically.
+	If it doesn't, or if you get an error on startup, please let us know and post your machine.xml
+	to the Discussion Group at https://groups.google.com/forum/#!forum/openpnp.
 
 # 2018-07-13
 
