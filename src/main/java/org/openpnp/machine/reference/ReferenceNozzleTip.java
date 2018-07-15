@@ -59,6 +59,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Attribute(required = false)
     private boolean allowIncompatiblePackages;
+    
+    @Attribute(required = false)
+    private int pickDwellMilliseconds;
+
+    @Attribute(required = false)
+    private int placeDwellMilliseconds;
 
     @Element(required = false)
     private Location changerStartLocation = new Location(LengthUnit.Millimeters);
@@ -195,6 +201,22 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     public void setAllowIncompatiblePackages(boolean allowIncompatiblePackages) {
         this.allowIncompatiblePackages = allowIncompatiblePackages;
+    }
+    
+    public int getPickDwellMilliseconds() {
+        return pickDwellMilliseconds;
+    }
+
+    public void setPickDwellMilliseconds(int pickDwellMilliseconds) {
+        this.pickDwellMilliseconds = pickDwellMilliseconds;
+    }
+
+    public int getPlaceDwellMilliseconds() {
+        return placeDwellMilliseconds;
+    }
+
+    public void setPlaceDwellMilliseconds(int placeDwellMilliseconds) {
+        this.placeDwellMilliseconds = placeDwellMilliseconds;
     }
 
     public Location getChangerStartLocation() {

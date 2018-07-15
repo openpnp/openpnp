@@ -36,6 +36,7 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceNozzle;
 
+import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
@@ -56,6 +57,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
     private JPanel panelProperties;
     private JLabel lblName;
     private JTextField nameTf;
+    private JLabel lblDwellTime;
     private JLabel lblPickDwellTime;
     private JLabel lblPlaceDwellTime;
     private JTextField pickDwellTf;
@@ -166,19 +168,21 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
                 
-                lblChangerEnabled = new JLabel("Changer Enabled?");
-                panelChanger.add(lblChangerEnabled, "2, 2, right, default");
+        lblChangerEnabled = new JLabel("Changer Enabled?");
+        panelChanger.add(lblChangerEnabled, "2, 2, right, default");
+
+        chckbxChangerEnabled = new JCheckBox("");
+        panelChanger.add(chckbxChangerEnabled, "4, 2");
         
-                chckbxChangerEnabled = new JCheckBox("");
-                panelChanger.add(chckbxChangerEnabled, "4, 2");
-                
-                lblLimitRota = new JLabel("Limit Rotation to 180º");
-                panelChanger.add(lblLimitRota, "2, 4, right, default");
-        
-                chckbxLimitRotationTo = new JCheckBox("");
-                panelChanger.add(chckbxLimitRotationTo, "4, 4");
+        lblLimitRota = new JLabel("Limit Rotation to 180º");
+        panelChanger.add(lblLimitRota, "2, 4, right, default");
+
+        chckbxLimitRotationTo = new JCheckBox("");
+        panelChanger.add(chckbxLimitRotationTo, "4, 4");
         
         lblPickDwellTime = new JLabel("Pick Dwell Time (ms)");
         panelChanger.add(lblPickDwellTime, "2, 6, right, default");
@@ -193,6 +197,11 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         placeDwellTf = new JTextField();
         panelChanger.add(placeDwellTf, "4, 8, fill, default");
         placeDwellTf.setColumns(10);
+        
+        CellConstraints cc = new CellConstraints();
+        lblDwellTime = new JLabel("Note: Total Dwell Time is the sum of Nozzle Dwell Time plus the Nozzle Tip Dwell Time.");
+        panelChanger.add(lblDwellTime, cc.xywh(2, 10, 7, 1));
+        
         
         panel = new JPanel();
         panel.setBorder(new TitledBorder(null, "Vacuum Sense", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -220,8 +229,6 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         
         invertVacuumLogicChk = new JCheckBox("");
         panel.add(invertVacuumLogicChk, "4, 4");
-
-
     }
 
     @Override

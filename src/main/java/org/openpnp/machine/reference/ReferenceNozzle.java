@@ -138,7 +138,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         this.part = part;
         getDriver().pick(this);
         getMachine().fireMachineHeadActivity(head);
-        Thread.sleep(pickDwellMilliseconds);
+        
+        // Dwell Time
+        Thread.sleep(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
 
         Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
         if (actuator != null) {
@@ -170,7 +172,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         getDriver().place(this);
         this.part = null;
         getMachine().fireMachineHeadActivity(head);
-        Thread.sleep(placeDwellMilliseconds);
+        
+        // Dwell Time
+        Thread.sleep(this.getPlaceDwellMilliseconds() + nozzleTip.getPlaceDwellMilliseconds());
 
         Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
         if (actuator != null) {
