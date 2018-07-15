@@ -299,9 +299,9 @@ public class AbstractCommunicationsConfigurationWizard extends AbstractConfigura
         addWrappedBinding(driver, "stopBits", stopBitsComboBox, "selectedItem");
         addWrappedBinding(driver, "dataBits", dataBitsComboBox, "selectedItem");
         addWrappedBinding(driver, "flowControl", flowControlComboBox, "selectedItem");
-        addWrappedBinding(driver, "setSetDtr", setDtrCheckbox, "selected");
-        addWrappedBinding(driver, "setSetRts", setRtsCheckbox, "selected");
-
+        addWrappedBinding(driver, "setDtr", setDtrCheckbox, "selected");
+        addWrappedBinding(driver, "setRts", setRtsCheckbox, "selected");        
+        
         addWrappedBinding(driver, "ipAddress", ipAddressTextField, "text");
         addWrappedBinding(driver, "port", portTextField, "text", integerConverter);
     }
