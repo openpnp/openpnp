@@ -1,6 +1,14 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2018-07-15
+
+* TCP/IP Support in GcodeDriver
+
+	Thanks to a great effort from @PeeJay, GcodeDriver (and the OpenBuilds driver) now support
+	communication over TCP/IP in addition to serial. This makes it possible to use Smoothieboard
+	over Ethernet now, for example. To use TCP/IP, go to your Driver settings and check the
+	Communication tab for new options.
 
 # 2018-07-13
 
