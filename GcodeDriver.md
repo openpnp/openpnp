@@ -156,17 +156,19 @@ No matter how well you planned your pnp machine and how well you assembled it ch
 
 The GCodeDriver can compensate such non squareness with a "Non-Squareness Factor". This factor basically tells the ratio between X offset and Y movement distance.
 
-![](https://cloud.githubusercontent.com/assets/4028409/22855667/5b24e57e-f084-11e6-8bab-6e7d2c6e32dc.jpg)
+![](https://user-images.githubusercontent.com/9963310/42752246-92e0d1a0-88ed-11e8-81a1-c46651d89eac.png)
 
 **Measurement method:**
 
-1. Put a piece of graph paper with fine grid into your PnP machine. 
-2. Align the grid with the X-Axis by moving the camera left and right until a reference grid line matches the motion path exactly.
-3. Move the camera into Y direction along a grid line by a defined distance (the further you move the more precise the measurement will be). 100mm is a good start.
-4. You will probably find that the camera has not traced the Y line exactly and now it is offset from the center of the camera. Click the DRO and use the relative coordinates to measure the offset from the line.
-5. Use the formula in the image above to calculate the Non-Squareness Factor and enter it into the GcodeDriver settings panel.
+1. Make sure the current Non-Squareness Factor in the GcodeDriver settings panel is zero.
+2. Put a piece of graph paper with fine grid into your PnP machine. 
+3. Align the grid with the X-Axis by moving the camera left and right until a reference grid line matches the motion path exactly.
+4. Move the camera into Y direction along a grid line by a defined distance (the further you move the more precise the measurement will be). 100mm is a good start.
+5. You will probably find that the camera has not traced the Y line exactly and now it is offset from the center of the camera. Click the DRO and use the relative coordinates to measure the offset from the line.
+6. Use the formula in the image above to calculate the Non-Squareness Factor. Positive factors mean a machine leaning left, negatives ones leaning right. 
+7. Enter the Non-Squareness Factor into the GcodeDriver settings panel and apply. 
+8. Repeat steps 3 to 5. This time there should be no offset. If the offset is even greater try inverting the sign of the Non-Squareness Factor. 
 
-Positive factors mean a machine leaning right, negatives ones leaning left.
 
 # Troubleshooting
 
