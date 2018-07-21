@@ -52,7 +52,7 @@ import org.simpleframework.xml.core.Commit;
 import com.google.common.base.Joiner;
 
 @Root
-public class GcodeDriver extends AbstractCommunications implements Named, Runnable {
+public class GcodeDriver extends AbstractReferenceDriver implements Named, Runnable {
     public enum CommandType {
         COMMAND_CONFIRM_REGEX,
         POSITION_REPORT_REGEX,
@@ -822,7 +822,7 @@ public class GcodeDriver extends AbstractCommunications implements Named, Runnab
 
     @Override
     public void close() throws IOException {
-        getCommunications().close();
+        super.close();
 
         for (ReferenceDriver driver : subDrivers) {
             driver.close();

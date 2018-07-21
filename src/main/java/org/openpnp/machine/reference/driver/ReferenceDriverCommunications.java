@@ -17,10 +17,8 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.machine.reference;
+package org.openpnp.machine.reference.driver;
 
-import org.simpleframework.xml.Attribute;
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
@@ -29,28 +27,15 @@ import java.util.concurrent.TimeoutException;
  *
  * This Driver interface is intended to model the minimum required functions to transfer
  * data from OpenPnP to a hardware controller.
- *
  */
-public interface ReferenceCommunications extends Closeable{
-    public enum Types {
-        SERIAL, TCP
-    }
-
-    @Attribute(required = false)
-    Types source = Types.SERIAL;
-
-    @Attribute(required = false)
+public interface ReferenceDriverCommunications {
     String lineEnding = "\n";
-
-    Boolean IsPlainText = true;
 
     void connect() throws Exception;
     void disconnect() throws Exception;
-    void close() throws IOException;
 
     public String getConnectionName();
 
     String readLine() throws TimeoutException, IOException;
     void writeLine(String data) throws IOException;
-
 }

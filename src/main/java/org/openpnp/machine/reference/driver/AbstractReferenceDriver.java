@@ -1,20 +1,20 @@
 package org.openpnp.machine.reference.driver;
 
 import java.io.Closeable;
+import java.io.IOException;
 
 import javax.swing.Action;
 import javax.swing.Icon;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceCommunications;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferencePasteDispenser;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.DataBits;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.FlowControl;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.Parity;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.StopBits;
-import org.openpnp.machine.reference.driver.wizards.AbstractCommunicationsConfigurationWizard;
+import org.openpnp.machine.reference.driver.wizards.AbstractReferenceDriverConfigurationWizard;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
@@ -23,7 +23,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
-public abstract class AbstractCommunications extends AbstractModelObject implements ReferenceDriver, Closeable {
+public abstract class AbstractReferenceDriver extends AbstractModelObject implements ReferenceDriver, Closeable {
     @Element(required = false)
     protected SerialPortCommunications serial = new SerialPortCommunications();
 
@@ -34,7 +34,7 @@ public abstract class AbstractCommunications extends AbstractModelObject impleme
     protected String communicationsType = "serial";
 
     /**
-     * The following properties are for backwards compatibility and can be removed after 2019-07-15. 
+     * TODO The following properties are for backwards compatibility and can be removed after 2019-07-15. 
      */
     @Attribute(required = false)
     protected String portName;
@@ -60,7 +60,7 @@ public abstract class AbstractCommunications extends AbstractModelObject impleme
     @Attribute(required = false)
     protected Boolean setRts = false;
     
-    public AbstractCommunications() {
+    public AbstractReferenceDriver() {
     }
     
     @Commit
@@ -86,7 +86,19 @@ public abstract class AbstractCommunications extends AbstractModelObject impleme
 
         setCommunicationsType(communicationsType);
     }
-
+    
+    @Override
+    public void close() throws IOException {
+        try {
+            disconnect();
+        }
+        catch (Exception e) {
+            throw new IOException(e);
+        }
+    }
+    
+    public abstract void disconnect() throws Exception;
+    
     public void dispense(ReferencePasteDispenser dispenser, Location startLocation, Location endLocation, long dispenseTimeMilliseconds) throws Exception {
 
     }
@@ -95,11 +107,20 @@ public abstract class AbstractCommunications extends AbstractModelObject impleme
         return communicationsType;
     }
 
-    public void setCommunicationsType(String communications) {
-        this.communicationsType = communications;
+    public void setCommunicationsType(String communicationsType) {
+        // If the communications type is changing we need to disconnect the old one first.
+        if (communicationsType == null || !communicationsType.equals(this.communicationsType)) {
+            try {
+                disconnect();
+            }
+            catch (Exception e) {
+                Logger.error(e);
+            }
+        }
+        this.communicationsType = communicationsType;
     }
     
-    public ReferenceCommunications getCommunications() {
+    protected ReferenceDriverCommunications getCommunications() {
         switch (communicationsType) {
             case "serial": {
                 return serial;
@@ -222,7 +243,7 @@ public abstract class AbstractCommunications extends AbstractModelObject impleme
 
     @Override
     public Wizard getConfigurationWizard() {
-        return new AbstractCommunicationsConfigurationWizard(this);
+        return new AbstractReferenceDriverConfigurationWizard(this);
     }
 
 }

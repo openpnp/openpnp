@@ -1,28 +1,25 @@
 package org.openpnp.machine.reference.driver;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Pattern;
 
-import org.openpnp.machine.reference.ReferenceCommunications;
 import org.simpleframework.xml.Attribute;
 
+import jssc.SerialNativeInterface;
 import jssc.SerialPort;
 import jssc.SerialPortException;
 import jssc.SerialPortList;
 import jssc.SerialPortTimeoutException;
 
-import jssc.SerialNativeInterface;
-import java.util.regex.Pattern;
-import java.util.ArrayList;
-
 /**
  * A class for SerialPort Communications. Includes functions for connecting,
  * disconnecting, reading and sending lines.
  */
-public class SerialPortCommunications implements Closeable, ReferenceCommunications {
+public class SerialPortCommunications implements ReferenceDriverCommunications {
     public enum DataBits {
         Five(SerialPort.DATABITS_5),
         Six(SerialPort.DATABITS_6),
@@ -195,15 +192,6 @@ public class SerialPortCommunications implements Closeable, ReferenceCommunicati
         }
         catch (IOException ex) {
             throw ex;
-        }
-    }
-
-    public void close() throws IOException {
-        try {
-            disconnect();
-        }
-        catch (Exception e) {
-            throw new IOException(e);
         }
     }
 

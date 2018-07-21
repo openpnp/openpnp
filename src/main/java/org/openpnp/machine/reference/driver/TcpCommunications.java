@@ -1,34 +1,20 @@
 package org.openpnp.machine.reference.driver;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.DataOutputStream;
-import java.util.concurrent.TimeoutException;
-
-import javax.swing.Action;
-import javax.swing.Icon;
-
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
-import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceCommunications;
-import org.openpnp.machine.reference.ReferenceDriver;
-import org.openpnp.machine.reference.ReferencePasteDispenser;
-import org.openpnp.machine.reference.driver.wizards.AbstractTcpDriverConfigurationWizard;
-import org.openpnp.model.AbstractModelObject;
-import org.openpnp.model.Location;
-import org.openpnp.spi.PropertySheetHolder;
-import org.simpleframework.xml.Attribute;
-
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.concurrent.TimeoutException;
+
+import org.simpleframework.xml.Attribute;
 
 /**
  * A base class for basic TCP based Drivers. Includes functions for connecting,
  * disconnecting, reading and sending lines.
  */
-public class TcpCommunications implements Closeable, ReferenceCommunications {
+public class TcpCommunications implements ReferenceDriverCommunications {
     @Attribute(required = false)
     protected String ipAddress = "127.0.0.1";
 
@@ -105,15 +91,6 @@ public class TcpCommunications implements Closeable, ReferenceCommunications {
         }
         catch (IOException ex) {
             throw ex;
-        }
-    }
-
-    public void close() throws IOException {
-        try {
-            disconnect();
-        }
-        catch (Exception e) {
-            throw new IOException(e);
         }
     }
 
