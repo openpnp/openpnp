@@ -286,7 +286,7 @@ public class OpenBuildsDriver extends AbstractCommunications implements Runnable
     }
 
     public synchronized void connect() throws Exception {
-        super.comms.connect();
+        getCommunications().connect();
 
         /**
          * Connection process notes:
@@ -408,7 +408,7 @@ public class OpenBuildsDriver extends AbstractCommunications implements Runnable
         }
 
         try {
-            super.comms.disconnect();
+            getCommunications().disconnect();
         }
         catch (Exception e) {
             Logger.error("disconnect()", e);
@@ -431,7 +431,7 @@ public class OpenBuildsDriver extends AbstractCommunications implements Runnable
         if (command != null) {
             Logger.debug("sendCommand({}, {})", command, timeout);
             Logger.debug(">> " + command);
-            comms.writeLine(command);
+            getCommunications().writeLine(command);
         }
 
         String response = null;
@@ -461,7 +461,7 @@ public class OpenBuildsDriver extends AbstractCommunications implements Runnable
         while (!disconnectRequested) {
             String line;
             try {
-                line = comms.readLine().trim();
+                line = getCommunications().readLine().trim();
             }
             catch (TimeoutException ex) {
                 continue;

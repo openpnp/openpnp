@@ -30,11 +30,9 @@ public abstract class AbstractCommunications extends AbstractModelObject impleme
     @Element(required = false)
     protected TcpCommunications tcp = new TcpCommunications();
 
-    @Attribute(required = false)
-    protected String communications = "serial";
+    @Attribute(required = false, name = "communications")
+    protected String communicationsType = "serial";
 
-    protected ReferenceCommunications comms;
-    
     /**
      * The following properties are for backwards compatibility and can be removed after 2019-07-15. 
      */
@@ -63,7 +61,6 @@ public abstract class AbstractCommunications extends AbstractModelObject impleme
     protected Boolean setRts = false;
     
     public AbstractCommunications() {
-        setCommunications(communications);
     }
     
     @Commit
@@ -86,31 +83,33 @@ public abstract class AbstractCommunications extends AbstractModelObject impleme
         this.parity = null;
         this.setDtr = null;
         this.setRts = null;
+
+        setCommunicationsType(communicationsType);
     }
 
     public void dispense(ReferencePasteDispenser dispenser, Location startLocation, Location endLocation, long dispenseTimeMilliseconds) throws Exception {
 
     }
 
-    public String getCommunications() {
-        return communications;
+    public String getCommunicationsType() {
+        return communicationsType;
     }
 
-    public void setCommunications(String communications) {
-        this.communications = communications;
-
-        switch (communications) {
+    public void setCommunicationsType(String communications) {
+        this.communicationsType = communications;
+    }
+    
+    public ReferenceCommunications getCommunications() {
+        switch (communicationsType) {
             case "serial": {
-                comms = serial;
-                break;
+                return serial;
             }
             case "tcp": {
-                comms = tcp;
-                break;
+                return tcp;
             }
             default: {
                 Logger.error("Invalid communications method attempted to be set. Defaulting to serial.");
-                comms = serial;
+                return serial;
             }
         }
     }
