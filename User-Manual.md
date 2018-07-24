@@ -15,28 +15,6 @@ Setup and Calibration
 =====================
 To setup OpenPnP with your own machine, see the [[Setup and Calibration]] guide. If you don't have a machine yet you can still work through this manual using the software in simulator mode. The software starts this way by default.
 
-Installation
-============
-
-Prerequisites
--------------
-
-OpenPnP runs on the Java platform and requires the Java runtime version 7 or higher to run. You can download the latest version of Java from http://java.com/getjava.
-
-OpenPnP is designed to run on Mac, Windows and Linux. Other platforms may be supported due to the nature of Java, but they are not recommended. OpenPnP is written and tested on Mac and used regularly on Windows. These two platforms are recommended for the best compatibility.
-
-Download
---------
-
-Visit http://openpnp.org/downloads to find out how to download the latest snapshot or release of OpenPnP.
-
-Install and Run
----------------
-
-If you are using one of the binary installers from the website, just run the installer and follow the instructions. After installation you can run OpenPnP from your operating system's applications list, i.e. Start Menu, Applications folder, etc.
-
-If you are using an archive version of OpenPnP, unzip the software into a directory of your choosing. Typically this would be the same place you keep your other applications. Inside the folder you unzipped OpenPnP to there is an `openpnp.sh` and `openpnp.bat` script. These should work for Windows, Mac and Linux. For Mac and Linux, run `openpnp.sh` and for Windows run `openpnp.bat`. After a short wait you should see the OpenPnP Main Window. If something goes wrong, visit the Troubleshooting section of this document for help.
-
 Coordinate System
 =================
 
