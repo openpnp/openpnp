@@ -3,7 +3,7 @@
 ## New User Resources
 * [[Quick Start]]
 * [[Setup and Calibration]]
-* [[User Manual]]
+* [[User Manual]] [(PDF)](https://github.com/openpnp/openpnp/files/2226367/OpenPnP.-.User.Manual.pdf)
 * [[Video Tutorials]]
 * [[FAQ]]
 * [[Getting Help]]
