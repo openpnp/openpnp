@@ -1,3 +1,13 @@
+- [Introduction](#introduction)
+- [The Basics](#the-basics)
+- [The User Interface](#the-user-interface)
+- [Job Setup](#job-setup)
+- [Running a Job](#running-a-job)
+- [Machine Setup](#machine-setup)
+- [Frequently Asked Questions](#frequently-asked-questions)
+- [Advanced Topics](#advanced-topics)
+- [Getting Help](#getting-help)
+
 # Introduction
 
 OpenPnP is an Open Source SMT pick and place system designed and built with the hobbyist in mind but with the features and power to run commercial pick and place operations. It's goal is to bring pick and place to the desktop of anyone who needs to make more than a few of something.
