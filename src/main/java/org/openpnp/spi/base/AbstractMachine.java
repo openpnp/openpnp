@@ -236,6 +236,20 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         }
     }
 
+    @Override
+    public void addSignaler(Signaler signaler) throws Exception {
+        signalers.add(signaler);
+        fireIndexedPropertyChange("signalers", signalers.size() - 1, null, signalers);
+    }
+
+    @Override
+    public void removeSignaler(Signaler signaler) {
+        int index = signalers.indexOf(signaler);
+        if (signalers.remove(signaler)) {
+            fireIndexedPropertyChange("signalers", index, signaler, null);
+        }
+    }
+
     public void fireMachineHeadActivity(Head head) {
         for (MachineListener listener : listeners) {
             listener.machineHeadActivity(this, head);
