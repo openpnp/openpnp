@@ -198,7 +198,21 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         axes = new ArrayList<>();
         axes.add(new Axis("x", Axis.Type.X, 0, "*"));
         axes.add(new Axis("y", Axis.Type.Y, 0, "*"));
-        axes.add(new Axis("z", Axis.Type.Z, 0, "*"));
+        try {
+            List<Nozzle> nozzles = Configuration.get().getMachine().getDefaultHead().getNozzles();
+            if (nozzles.size() < 1) {
+                throw new Exception("No nozzles.");
+            }
+            ArrayList<String> ids = new ArrayList<>();
+            for (Nozzle nozzle : nozzles) {
+                ids.add(nozzle.getId());
+            }
+            Axis axis = new Axis("z", Axis.Type.Z, 0, ids.toArray(new String[] {}));
+            axes.add(axis);
+        }
+        catch (Exception e) {
+            axes.add(new Axis("z", Axis.Type.Z, 0, "*"));
+        }
         axes.add(new Axis("rotation", Axis.Type.Rotation, 0, "*"));
 
         commands = new ArrayList<>();
