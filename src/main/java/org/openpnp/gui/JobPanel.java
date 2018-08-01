@@ -761,7 +761,7 @@ public class JobPanel extends JPanel {
         }
     }
 
-    public final Action openJobAction = new AbstractAction(Translations.getString("Action.Job.Open")) { //$NON-NLS-1$
+    public final Action openJobAction = new AbstractAction(Translations.getString("JobPanel.Action.Job.Open")) { //$NON-NLS-1$
         {
             putValue(MNEMONIC_KEY, KeyEvent.VK_O);
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke('O',
@@ -800,7 +800,7 @@ public class JobPanel extends JPanel {
         }
     };
 
-    public final Action newJobAction = new AbstractAction(Translations.getString("Action.Job.New")) { //$NON-NLS-1$
+    public final Action newJobAction = new AbstractAction(Translations.getString("JobPanel.Action.Job.New")) { //$NON-NLS-1$
         {
             putValue(MNEMONIC_KEY, KeyEvent.VK_N);
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke('N',
@@ -819,7 +819,7 @@ public class JobPanel extends JPanel {
         }
     };
 
-    public final Action saveJobAction = new AbstractAction(Translations.getString("Action.Job.Save")) { //$NON-NLS-1$
+    public final Action saveJobAction = new AbstractAction(Translations.getString("JobPanel.Action.Job.Save")) { //$NON-NLS-1$
         {
             putValue(MNEMONIC_KEY, KeyEvent.VK_S);
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke('S',
@@ -832,7 +832,7 @@ public class JobPanel extends JPanel {
         }
     };
 
-    public final Action saveJobAsAction = new AbstractAction(Translations.getString("Action.Job.SaveAs")) { //$NON-NLS-1$
+    public final Action saveJobAsAction = new AbstractAction(Translations.getString("JobPanel.Action.Job.SaveAs")) { //$NON-NLS-1$
         {
             putValue(MNEMONIC_KEY, KeyEvent.VK_A);
         }
@@ -1017,8 +1017,8 @@ public class JobPanel extends JPanel {
     public final Action startPauseResumeJobAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.start);
-            putValue(NAME, Translations.getString("Action.Job.Start")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("Action.Job.Start.Description")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.Start")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Start.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -1045,8 +1045,8 @@ public class JobPanel extends JPanel {
     public final Action stepJobAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.step);
-            putValue(NAME, Translations.getString("Action.Job.Step")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("Action.Job.Step.Description")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.Step")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Step.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -1060,8 +1060,8 @@ public class JobPanel extends JPanel {
     public final Action stopJobAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.stop);
-            putValue(NAME, Translations.getString("Action.Job.Stop")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("Action.Job.Stop.Description")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.Stop")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Stop.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -1074,9 +1074,9 @@ public class JobPanel extends JPanel {
     
     public final Action resetAllPlacedAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("Action.Job.ResetAllPlaced")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.ResetAllPlaced")); //$NON-NLS-1$
 //            putValue(SMALL_ICON, Icons.add);
-            putValue(SHORT_DESCRIPTION, Translations.getString("Action.Job.ResetAllPlaced.Description")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.ResetAllPlaced.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -1090,9 +1090,9 @@ public class JobPanel extends JPanel {
 
     public final Action addBoardAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("Action.Job.AddBoard")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.AddBoard")); //$NON-NLS-1$
             putValue(SMALL_ICON, Icons.add);
-            putValue(SHORT_DESCRIPTION, Translations.getString("Action.Job.AddBoard.Description")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.AddBoard.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_A);
         }
 
@@ -1102,8 +1102,8 @@ public class JobPanel extends JPanel {
 
     public final Action addNewBoardAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("Action.Job.AddBoard.NewBoard")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("Action.Job.AddBoard.NewBoard.Description")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.AddBoard.NewBoard")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.AddBoard.NewBoard.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_N);
         }
 
@@ -1144,8 +1144,8 @@ public class JobPanel extends JPanel {
 
     public final Action addExistingBoardAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("Action.Job.AddBoard.ExistingBoard")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("Action.Job.AddBoard.ExistingBoard.Description")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.AddBoard.ExistingBoard")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.AddBoard.ExistingBoard.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_E);
         }
 
@@ -1184,8 +1184,8 @@ public class JobPanel extends JPanel {
     public final Action removeBoardAction = new AbstractAction("Remove Board") { //$NON-NLS-1$
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, Translations.getString("Action.Job.RemoveBoard")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("Action.Job.RemoveBoard.Description")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.RemoveBoard")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.RemoveBoard.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_R);
         }
 
