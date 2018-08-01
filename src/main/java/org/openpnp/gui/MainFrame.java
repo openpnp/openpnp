@@ -41,6 +41,7 @@ import java.beans.PropertyChangeListener;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.prefs.Preferences;
 
@@ -86,7 +87,6 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.pmw.tinylog.Logger;
 
-import com.jgoodies.common.swing.MnemonicUtils;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
@@ -292,8 +292,8 @@ public class MainFrame extends JFrame {
         mnView.setMnemonic(KeyEvent.VK_V);
         menuBar.add(mnView);
 
+        // View -> System Units
         ButtonGroup buttonGroup = new ButtonGroup();
-
         JMenu mnUnits = new JMenu(Translations.getString("Menu.View.SystemUnits")); //$NON-NLS-1$
         mnUnits.setMnemonic(KeyEvent.VK_S);
         mnView.add(mnUnits);
@@ -311,6 +311,28 @@ public class MainFrame extends JFrame {
             menuItem.setSelected(true);
         }
         mnUnits.add(menuItem);
+        
+        // View -> Language
+        buttonGroup = new ButtonGroup();
+        JMenu mnLanguage = new JMenu(Translations.getString("Menu.View.Language")); //$NON-NLS-1$
+        mnView.add(mnLanguage);
+
+        menuItem = new JCheckBoxMenuItem(new LanguageSelectionAction(Locale.US));
+        buttonGroup.add(menuItem);
+        mnLanguage.add(menuItem);
+        
+        menuItem = new JCheckBoxMenuItem(new LanguageSelectionAction(new Locale("ru")));
+        buttonGroup.add(menuItem);
+        mnLanguage.add(menuItem);
+
+        for (int i = 0; i < mnLanguage.getItemCount(); i++) {
+            JCheckBoxMenuItem item = (JCheckBoxMenuItem) mnLanguage.getItem(i);
+            LanguageSelectionAction action = (LanguageSelectionAction) item.getAction();
+            if (action.getLocale().equals(Configuration.get().getLocale())) {
+                item.setSelected(true);
+            }
+        }
+        
 
         // Job
         //////////////////////////////////////////////////////////////////////
@@ -905,18 +927,18 @@ public class MainFrame extends JFrame {
             prefs.putInt(PREF_MACHINECONTROLS_WINDOW_HEIGHT, frameMachineControls.getSize().height);
         }
     };
-
+    
     private Action inchesUnitSelected = new AbstractAction(LengthUnit.Inches.name()) {
         {
             putValue(MNEMONIC_KEY, KeyEvent.VK_I);
         }
-
+        
         @Override
         public void actionPerformed(ActionEvent arg0) {
             configuration.setSystemUnits(LengthUnit.Inches);
-            MessageBoxes.infoBox("Notice", //$NON-NLS-1$
-                    "Please restart OpenPnP for the changes to take effect."); //$NON-NLS-1$
-        }
+          MessageBoxes.infoBox("Notice", //$NON-NLS-1$
+                  "Please restart OpenPnP for the changes to take effect."); //$NON-NLS-1$
+      }
     };
 
     private Action millimetersUnitSelected = new AbstractAction(LengthUnit.Millimeters.name()) {
@@ -1062,6 +1084,25 @@ public class MainFrame extends JFrame {
             dialog.setVisible(true);
         }
     };
+    
+    public class LanguageSelectionAction extends AbstractAction {
+        private final Locale locale;
+        
+        public LanguageSelectionAction(Locale locale) {
+            this.locale = locale;
+            this.putValue(NAME, locale.getDisplayName());
+        }
+        
+        public Locale getLocale() {
+            return locale;
+        }
+        
+        public void actionPerformed(ActionEvent arg0) {
+          configuration.setLocale(locale);
+          MessageBoxes.infoBox("Notice", //$NON-NLS-1$
+                  "Please restart OpenPnP for the changes to take effect."); //$NON-NLS-1$
+      }
+    }
     
     private JPanel panelStatusAndDros;
     private JLabel droLbl;

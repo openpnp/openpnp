@@ -21,6 +21,7 @@ package org.openpnp;
 
 import java.awt.EventQueue;
 import java.io.File;
+import java.util.Locale;
 
 import javax.swing.UIManager;
 
@@ -144,6 +145,7 @@ public class Main {
 
         Configuration.initialize(configurationDirectory);
         final Configuration configuration = Configuration.get();
+        Locale.setDefault(Configuration.get().getLocale());
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {

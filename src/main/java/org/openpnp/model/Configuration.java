@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.prefs.Preferences;
 
@@ -50,6 +51,12 @@ import com.google.common.eventbus.EventBus;
 
 public class Configuration extends AbstractModelObject {
     private static Configuration instance;
+
+    private static final String PREF_LOCALE_LANG = "Configuration.locale.lang";
+    private static final String PREF_LOCALE_LANG_DEF = "en";
+
+    private static final String PREF_LOCALE_COUNTRY = "Configuration.locale.country";
+    private static final String PREF_LOCALE_COUNTRY_DEF = "US";
 
     private static final String PREF_UNITS = "Configuration.units";
     private static final String PREF_UNITS_DEF = "Millimeters";
@@ -112,6 +119,16 @@ public class Configuration extends AbstractModelObject {
 
     public void setSystemUnits(LengthUnit lengthUnit) {
         prefs.put(PREF_UNITS, lengthUnit.name());
+    }
+
+    public Locale getLocale() {
+        return new Locale(prefs.get(PREF_LOCALE_LANG, PREF_LOCALE_LANG_DEF), 
+                prefs.get(PREF_LOCALE_COUNTRY, PREF_LOCALE_COUNTRY_DEF));
+    }
+
+    public void setLocale(Locale locale) {
+        prefs.put(PREF_LOCALE_LANG, locale.getLanguage());
+        prefs.put(PREF_LOCALE_COUNTRY, locale.getCountry());
     }
 
     public String getLengthDisplayFormat() {
