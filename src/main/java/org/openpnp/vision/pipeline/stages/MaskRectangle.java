@@ -6,6 +6,7 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
@@ -52,7 +53,7 @@ public class MaskRectangle extends CvStage {
         masked.setTo(color);
         Point low = new Point(mat.cols() / 2 - getWidth() / 2, mat.rows() / 2 - getHeight() / 2);
         Point high = new Point(mat.cols() / 2 + getWidth() / 2, mat.rows() / 2 + getHeight() / 2);
-        Core.rectangle(mask, low, high, new Scalar(255, 255, 255), -1);
+        Imgproc.rectangle(mask, low, high, new Scalar(255, 255, 255), -1);
         if (getWidth() * getHeight() < 0) {
             Core.bitwise_not(mask, mask);
         }
