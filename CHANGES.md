@@ -1,6 +1,12 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2018-08-04
+
+* OpenCV Upgraded to 3.4.2
+
+	OpenCV has been upgraded to 3.4.2, which is the latest release.
+	
 # 2018-07-15
 
 * TCP/IP Support in GcodeDriver
