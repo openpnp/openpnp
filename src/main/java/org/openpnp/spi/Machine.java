@@ -23,7 +23,6 @@ import java.io.Closeable;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
-import java.util.Collections;
 
 import org.openpnp.model.Location;
 
@@ -139,9 +138,15 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public List<Class<? extends Actuator>> getCompatibleActuatorClasses();
 
+    public List<Class<? extends Signaler>> getCompatibleSignalerClasses();
+
     public void addFeeder(Feeder feeder) throws Exception;
 
     public void removeFeeder(Feeder feeder);
+
+    public void addSignaler(Signaler signaler) throws Exception;
+
+    public void removeSignaler(Signaler signaler);
 
     public void addCamera(Camera camera) throws Exception;
 
