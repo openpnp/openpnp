@@ -3,9 +3,9 @@ package org.openpnp.vision.pipeline.stages;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.opencv.core.KeyPoint;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
-import org.opencv.features2d.KeyPoint;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result.TemplateMatch;

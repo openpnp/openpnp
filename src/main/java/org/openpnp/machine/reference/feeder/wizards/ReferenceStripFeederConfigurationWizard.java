@@ -43,9 +43,9 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.CameraViewActionEvent;
@@ -782,8 +782,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             double x = circle.x;
             double y = circle.y;
             double radius = circle.diameter / 2.0;
-            Core.circle(mat, new Point(x, y), (int) radius, FluentCv.colorToScalar(color), 2);
-            Core.circle(mat, new Point(x, y), 1, FluentCv.colorToScalar(centerColor), 2);
+            Imgproc.circle(mat, new Point(x, y), (int) radius, FluentCv.colorToScalar(color), 2);
+            Imgproc.circle(mat, new Point(x, y), 1, FluentCv.colorToScalar(centerColor), 2);
         }
     }
 
@@ -794,7 +794,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     }
 
     private void drawLine(Mat mat, Ransac.Line line, Color color, int thickness) {
-        Core.line(mat, line.a, line.b, FluentCv.colorToScalar(color), thickness);
+        Imgproc.line(mat, line.a, line.b, FluentCv.colorToScalar(color), thickness);
     }
 
     private List<Location> deriveReferenceHoles(

@@ -88,13 +88,13 @@ public class MaskModel extends CvStage {
             // convert rect for fillPoly
             poly.add(new MatOfPoint(points));
             // draw rect as poly
-            Core.fillPoly(mask, poly, new Scalar(255, 255, 255));
+            Imgproc.fillPoly(mask, poly, new Scalar(255, 255, 255));
 
         }
         else if (result.model instanceof Result.Circle) {
             // just one circle
             Result.Circle circle = (Result.Circle) result.model;
-            Core.circle(mask, new Point(circle.x, circle.y), (int) circle.diameter / 2,
+            Imgproc.circle(mask, new Point(circle.x, circle.y), (int) circle.diameter / 2,
                     new Scalar(255, 255, 255), -1);
 
         }
@@ -105,7 +105,7 @@ public class MaskModel extends CvStage {
                 // a collection of circles
                 for (int i = 0; i < multi.size(); i++) {
                     Result.Circle circle = (Result.Circle) multi.get(i);
-                    Core.circle(mask, new Point(circle.x, circle.y), (int) circle.diameter / 2,
+                    Imgproc.circle(mask, new Point(circle.x, circle.y), (int) circle.diameter / 2,
                             new Scalar(255, 255, 255), -1);
                 }
             }
@@ -120,7 +120,7 @@ public class MaskModel extends CvStage {
                     poly.clear();
                     // convert rect for fillPoly
                     poly.add(new MatOfPoint(points));
-                    Core.fillPoly(mask, poly, new Scalar(255, 255, 255));
+                    Imgproc.fillPoly(mask, poly, new Scalar(255, 255, 255));
                 }
             }
             else if (multi.get(0) instanceof MatOfPoint) {

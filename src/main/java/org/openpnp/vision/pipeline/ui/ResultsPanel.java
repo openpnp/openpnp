@@ -9,7 +9,6 @@ import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Rectangle2D;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -23,9 +22,9 @@ import javax.swing.JTextPane;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
 
+import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
-import org.opencv.features2d.KeyPoint;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result;
