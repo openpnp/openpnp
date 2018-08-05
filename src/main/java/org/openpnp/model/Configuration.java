@@ -21,6 +21,7 @@ package org.openpnp.model;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -381,6 +382,17 @@ public class Configuration extends AbstractModelObject {
         firePropertyChange("boards", null, boards);
         return board;
     }
+    
+    private static void serializeObject(Object o, File file) throws Exception {
+        Serializer serializer = createSerializer();
+        // This write forces any errors that will appear to happen before we start writing to
+        // the file, which keeps us from writing a partial configuration to the real file.
+        serializer.write(o, new ByteArrayOutputStream());
+        FileOutputStream out = new FileOutputStream(file);
+        serializer.write(o, out);
+        out.write('\n');
+        out.close();
+    }
 
     private void loadMachine(File file) throws Exception {
         Serializer serializer = createSerializer();
@@ -391,9 +403,7 @@ public class Configuration extends AbstractModelObject {
     private void saveMachine(File file) throws Exception {
         MachineConfigurationHolder holder = new MachineConfigurationHolder();
         holder.machine = machine;
-        Serializer serializer = createSerializer();
-        serializer.write(holder, new ByteArrayOutputStream());
-        serializer.write(holder, file);
+        serializeObject(holder, file);
     }
 
     private void loadPackages(File file) throws Exception {
@@ -406,11 +416,9 @@ public class Configuration extends AbstractModelObject {
     }
 
     private void savePackages(File file) throws Exception {
-        Serializer serializer = createSerializer();
         PackagesConfigurationHolder holder = new PackagesConfigurationHolder();
         holder.packages = new ArrayList<>(packages.values());
-        serializer.write(holder, new ByteArrayOutputStream());
-        serializer.write(holder, file);
+        serializeObject(holder, file);
     }
 
     private void loadParts(File file) throws Exception {
@@ -422,11 +430,9 @@ public class Configuration extends AbstractModelObject {
     }
 
     private void saveParts(File file) throws Exception {
-        Serializer serializer = createSerializer();
         PartsConfigurationHolder holder = new PartsConfigurationHolder();
         holder.parts = new ArrayList<>(parts.values());
-        serializer.write(holder, new ByteArrayOutputStream());
-        serializer.write(holder, file);
+        serializeObject(holder, file);
     }
 
     public Job loadJob(File file) throws Exception {

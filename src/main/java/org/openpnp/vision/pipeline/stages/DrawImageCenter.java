@@ -1,22 +1,20 @@
 package org.openpnp.vision.pipeline.stages;
 
-import java.io.File;
 import java.awt.Color;
 
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.Scalar;
 import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
-import org.openpnp.vision.pipeline.stages.convert.ColorConverter;
-
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.convert.Convert;
-import org.openpnp.vision.pipeline.Stage;
 import org.openpnp.vision.pipeline.Property;
+import org.openpnp.vision.pipeline.Stage;
+import org.openpnp.vision.pipeline.stages.convert.ColorConverter;
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.convert.Convert;
 
 @Stage(
   category   ="Image Processing", 
@@ -80,8 +78,8 @@ public class DrawImageCenter extends CvStage {
             int cx = (int)mat.size().width/2;
             int cy = (int)mat.size().height/2;
             Scalar c = FluentCv.colorToScalar( color == null ? FluentCv.indexedColor(0) : color);
-            Core.line(mat,new Point(cx - size/2,cy), new Point(cx + size/2,cy), c, thickness);
-            Core.line(mat,new Point(cx,cy - size/2), new Point(cx,cy + size/2), c, thickness);
+            Imgproc.line(mat,new Point(cx - size/2,cy), new Point(cx + size/2,cy), c, thickness);
+            Imgproc.line(mat,new Point(cx,cy - size/2), new Point(cx,cy + size/2), c, thickness);
         }
         return new Result(mat);
     }

@@ -25,8 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.opencv.core.Mat;
-import org.opencv.highgui.Highgui;
-import org.opencv.highgui.VideoCapture;
+import org.opencv.videoio.VideoCapture;
+import org.opencv.videoio.Videoio;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
@@ -143,13 +143,13 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
              */
             if (preferredWidth != 0) {
                 Logger.debug("Setting camera {} width to {}", this, preferredWidth);
-                fg.set(Highgui.CV_CAP_PROP_FRAME_WIDTH, preferredWidth);
-                Logger.debug("Camera {} reports width {}", this, fg.get(Highgui.CV_CAP_PROP_FRAME_WIDTH));
+                fg.set(Videoio.CV_CAP_PROP_FRAME_WIDTH, preferredWidth);
+                Logger.debug("Camera {} reports width {}", this, fg.get(Videoio.CV_CAP_PROP_FRAME_WIDTH));
             }
             if (preferredHeight != 0) {
                 Logger.debug("Setting camera {} height to {}", this, preferredHeight);
-                fg.set(Highgui.CV_CAP_PROP_FRAME_HEIGHT, preferredHeight);
-                Logger.debug("Camera {} reports height {}", this, fg.get(Highgui.CV_CAP_PROP_FRAME_HEIGHT));
+                fg.set(Videoio.CV_CAP_PROP_FRAME_HEIGHT, preferredHeight);
+                Logger.debug("Camera {} reports height {}", this, fg.get(Videoio.CV_CAP_PROP_FRAME_HEIGHT));
             }
             
             fg.open(deviceIndex);
@@ -171,13 +171,13 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
              */
             if (preferredWidth != 0) {
                 Logger.debug("Setting camera {} width to {}", this, preferredWidth);
-                fg.set(Highgui.CV_CAP_PROP_FRAME_WIDTH, preferredWidth);
-                Logger.debug("Camera {} reports width {}", this, fg.get(Highgui.CV_CAP_PROP_FRAME_WIDTH));
+                fg.set(Videoio.CV_CAP_PROP_FRAME_WIDTH, preferredWidth);
+                Logger.debug("Camera {} reports width {}", this, fg.get(Videoio.CV_CAP_PROP_FRAME_WIDTH));
             }
             if (preferredHeight != 0) {
                 Logger.debug("Setting camera {} height to {}", this, preferredHeight);
-                fg.set(Highgui.CV_CAP_PROP_FRAME_HEIGHT, preferredHeight);
-                Logger.debug("Camera {} reports height {}", this, fg.get(Highgui.CV_CAP_PROP_FRAME_HEIGHT));
+                fg.set(Videoio.CV_CAP_PROP_FRAME_HEIGHT, preferredHeight);
+                Logger.debug("Camera {} reports height {}", this, fg.get(Videoio.CV_CAP_PROP_FRAME_HEIGHT));
             }
         }
         catch (Exception e) {
