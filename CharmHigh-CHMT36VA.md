@@ -4,6 +4,17 @@ For more information about how we got here, please see: https://www.gofundme.com
 
 For more information about the CHMT36VA in general, and SparkFun's experiences with it, see: https://github.com/sparkfunX/Desktop-PickAndPlace-CHMT36VA
 
+# Project Status and Updates
+
+## 2018-08-12
+
+First week with the machine. Spent a couple days getting comfortable with the machine and the OEM software.
+
+* Fixed a small problem (with the help of factory rep) where Z was not homing correctly. Some protective film was left on the homing disk.
+* Captured serial traces of several different sessions and started building a Java based decoder to.
+* Determined that write encryption differs from read encryption - still working on figuring out read.
+* Postulated that the machine works mostly autonomous after setup. It looks like the software sends the job to the machine and the machine executes it. This may complicate an OpenPnP port.
+
 # Machine Overview
 
 The CHMT36VA is a desktop pick and place machine. It has an internal controller but requires an external PC to run.
