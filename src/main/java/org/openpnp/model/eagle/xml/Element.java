@@ -31,13 +31,13 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 public class Element {
 
     @XmlAttribute(name = "name", required = true)
-    @XmlJavaTypeAdapter(NormalizedStringAdapter.class)
+    @XmlJavaTypeAdapter(org.openpnp.model.eagle.NormalizedStringAdapter.class)
     protected String name;
     @XmlAttribute(name = "library", required = true)
-    @XmlJavaTypeAdapter(NormalizedStringAdapter.class)
+    @XmlJavaTypeAdapter(org.openpnp.model.eagle.NormalizedStringAdapter.class)
     protected String library;
     @XmlAttribute(name = "package", required = true)
-    @XmlJavaTypeAdapter(NormalizedStringAdapter.class)
+    @XmlJavaTypeAdapter(org.openpnp.model.eagle.NormalizedStringAdapter.class)
     protected String _package;
     @XmlAttribute(name = "value", required = true)
     @XmlJavaTypeAdapter(NormalizedStringAdapter.class)
