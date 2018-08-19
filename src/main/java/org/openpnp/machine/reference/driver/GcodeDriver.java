@@ -144,10 +144,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     protected int maxFeedRate = 1000;
     
     @Attribute(required = false)
-    protected double backlashOffsetX = -1;
+    protected double backlashOffsetX = 0;
     
     @Attribute(required = false)
-    protected double backlashOffsetY = -1;
+    protected double backlashOffsetY = 0;
     
     @Attribute(required = false)
     protected double nonSquarenessFactor = 0;
@@ -250,6 +250,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         sendGcode(getCommand(null, CommandType.CONNECT_COMMAND));
 
         connected = true;
+
+        //Set backlash offsets back to positive value if they were negative on load.
+        setBacklashOffsetX(backlashOffsetX);
+        setBacklashOffsetY(backlashOffsetY);
     }
 
     @Override
@@ -579,8 +583,22 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             }
             
             if (includeX) {
+                double backLashX = 0;
+                // Save some useless cpu cycles if backlash is not being used.
+                if(backlashOffsetX != 0) {
+                    // Calculate Backlash Compensation for X axis
+                    if (hm.getLocation().subtract(hm.getHeadOffsets()).getX() - x < 0) {
+                        // The head is going positive
+                        backLashX = x + backlashOffsetX;
+                    }
+                    else {
+                        // The head is going negative
+                        backLashX = x - backlashOffsetX;
+                    }
+                }
+
                 command = substituteVariable(command, "X", x + nonSquarenessFactor * y);
-                command = substituteVariable(command, "BacklashOffsetX", x + backlashOffsetX + nonSquarenessFactor * y); // Backlash Compensation
+                command = substituteVariable(command, "BacklashOffsetX", backLashX + nonSquarenessFactor * y); // Backlash Compensation
                 if (xAxis.getPreMoveCommand() != null) {
                     String preMoveCommand = xAxis.getPreMoveCommand();
                     preMoveCommand = substituteVariable(preMoveCommand, "Coordinate", xAxis.getCoordinate());
@@ -594,8 +612,22 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             }
 
             if (includeY) {
+                double backLashY = 0;
+                // Save some useless cpu cycles if backlash is not being used.
+                if(backlashOffsetY != 0) {
+                    // Calculate Backlash Compensation for Y axis
+                    if (hm.getLocation().subtract(hm.getHeadOffsets()).getY() - y < 0) {
+                        // The head is going negative
+                        backLashY = y + backlashOffsetY;
+                    }
+                    else {
+                        // The head is going positive
+                        backLashY = y - backlashOffsetY;
+                    }
+                }
+
                 command = substituteVariable(command, "Y", y);
-                command = substituteVariable(command, "BacklashOffsetY", y + backlashOffsetY); // Backlash Compensation
+                command = substituteVariable(command, "BacklashOffsetY", backLashY); // Backlash Compensation
                 if (yAxis.getPreMoveCommand() != null) {
                     String preMoveCommand = yAxis.getPreMoveCommand();
                     preMoveCommand = substituteVariable(preMoveCommand, "Coordinate", yAxis.getCoordinate());
@@ -1097,7 +1129,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
     
     public void setBacklashOffsetX(double BacklashOffsetX) {
-        this.backlashOffsetX = BacklashOffsetX;
+        this.backlashOffsetX = Math.abs(BacklashOffsetX); // Make sure its always a positive unit to deal with it easier.
     }
     
     public double getBacklashOffsetY() {
@@ -1105,7 +1137,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
     
     public void setBacklashOffsetY(double BacklashOffsetY) {
-        this.backlashOffsetY = BacklashOffsetY;
+        this.backlashOffsetY = Math.abs(BacklashOffsetY); // Make sure its always a positive unit to deal with it easier.
     }
     
     public double getBacklashFeedRateFactor() {
