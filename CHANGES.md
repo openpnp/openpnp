@@ -1,6 +1,13 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2018-08-18
+
+* Placements Comments
+
+	The Placements table (Pick and Place) now contains a user editable Comments column that is
+	saved in the board file for each Placement.
+	
 # 2018-08-04
 
 * OpenCV Upgraded to 3.4.2

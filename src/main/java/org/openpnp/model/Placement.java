@@ -63,6 +63,9 @@ public class Placement extends AbstractModelObject implements Identifiable {
 
     @Attribute
     private boolean checkFids;
+    
+    @Element(required=false)
+    private String comments;
 
     @SuppressWarnings("unused")
     private Placement() {
@@ -140,9 +143,18 @@ public class Placement extends AbstractModelObject implements Identifiable {
     {
         Object oldValue = this.checkFids;
         this.checkFids = checkFids;
-        firePropertyChange("check fids", oldValue, checkFids);
+        firePropertyChange("checkFids", oldValue, checkFids);
+    }
+    
+    public String getComments() {
+        return comments;
     }
 
+    public void setComments(String comments) {
+        Object oldValue = this.comments;
+        this.comments = comments;
+        firePropertyChange("comments", oldValue, comments);
+    }
 
     @Override
     public String toString() {
