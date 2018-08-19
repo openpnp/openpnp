@@ -33,7 +33,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 public class Package {
 
     @XmlAttribute(name = "name", required = true)
-    @XmlJavaTypeAdapter(NormalizedStringAdapter.class)
+    @XmlJavaTypeAdapter(org.openpnp.model.eagle.NormalizedStringAdapter.class)
     protected String name;
     protected Description description;
     @XmlElements({@XmlElement(name = "polygon", type = Polygon.class),

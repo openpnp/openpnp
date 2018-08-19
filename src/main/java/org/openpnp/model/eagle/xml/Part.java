@@ -30,10 +30,10 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 public class Part {
 
     @XmlAttribute(name = "name", required = true)
-    @XmlJavaTypeAdapter(NormalizedStringAdapter.class)
+    @XmlJavaTypeAdapter(org.openpnp.model.eagle.NormalizedStringAdapter.class)
     protected String name;
     @XmlAttribute(name = "library", required = true)
-    @XmlJavaTypeAdapter(NormalizedStringAdapter.class)
+    @XmlJavaTypeAdapter(org.openpnp.model.eagle.NormalizedStringAdapter.class)
     protected String library;
     @XmlAttribute(name = "deviceset", required = true)
     @XmlJavaTypeAdapter(NormalizedStringAdapter.class)
