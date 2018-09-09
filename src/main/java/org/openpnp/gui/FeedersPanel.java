@@ -223,7 +223,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
      * Activate the Feeders tab and show the Feeder for the specified Part. If none exists, prompt
      * the user to create a new one.
      * 
-     * @param feeder
+     * @param part
      */
     public void showFeederForPart(Part part) {
         mainFrame.showTab("Feeders");
@@ -324,8 +324,13 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
             configuration.getMachine().addFeeder(feeder);
             tableModel.refresh();
+
+            searchTextField.setText("");
+            search();
+
             Helpers.selectLastTableRow(table);
         }
+
         catch (Exception e) {
             MessageBoxes.errorBox(JOptionPane.getFrameForComponent(FeedersPanel.this),
                     "Feeder Error", e);
