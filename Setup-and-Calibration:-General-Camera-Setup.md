@@ -7,15 +7,15 @@
     * If you are adding a head mounted camera (down looking, fiducial), find the head in the tree on the left. Under the head look for Cameras and select it.
     * If you are adding a machine mounted camera (up looking, bottom vision), find Cameras under the root of the tree and select it.
 3. Add a camera by pressing the green plus button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg).  
-2. Select a camera driver from the provided list, try "OpenCVCamera" (USB) or "OnvifIPCamera" (IP) and press the "Accept" button. The newly added camera will show up in the camera list. **Note that as of 2017/09/30 you should use OpenPnpCaptureCamera. Documentation has not yet been updated for this. Please see https://github.com/openpnp/openpnp/blob/develop/CHANGES.md#2017-09-30 for details.**
+2. Select a camera driver from the provided list. Most users should use "OpenPnpCaptureCamera". This driver supports multiple cameras on a single USB host and works best for most installations. For other situations, try "OpenCVCamera" (USB) or "OnvifIPCamera" (IP) and press the "Accept" button. The newly added camera will show up in the camera list.
 3. Click on the name of the new camera to open it's properties.
-4. Click on the "Camera Specific" tab.
-5. In the "General" section you can configure settings specific to the type of camera (USB or IP).
+4. Click on the "Camera Specific" tab and scroll down to the "General" section. Here you can configure settings specific to the type of camera (USB or IP).
+ - OpenPnpCaptureCamera: Select the camera from the "Device" dropdown, then a format from the "Format" dropdown. **Important:** If you will be using more than one camera, select a "1bmd" or "mjpg" format and not a "yuv", "yuv2" or "2vuy" format. For more information see [[OpenPnpCaptureCamera]].
  - OpenCVCamera: Set the "USB Device Index".  Each camera connected to your computer will have a unique device index starting at index 0.
  - OnvifIPCamera: Set the "Camera IP" as &lt;IP address&gt;:&lt;port&gt;, "Username", and "Password" (optional).
  - Press the "Apply" button to have your changes applied.
-6. Verify your camera is working, in the "Camera" window select your newly added camera from the drop down list.  If configured correctly you should see a live image from your selected camera.
-7. On the General Configuration tab click the name field in the camera table to give your camera a descriptive name. We suggest "Top Camera" and "Bottom Camera", respectively.
+5. Verify your camera is working, in the "Camera" window select your newly added camera from the drop down list.  If configured correctly you should see a live image from your selected camera.
+6. On the General Configuration tab click the name field in the camera table to give your camera a descriptive name. We suggest "Top Camera" and "Bottom Camera", respectively.
 
 ## Delete Old Camera
 
@@ -28,8 +28,9 @@ For the Bottom Camera, you may see an existing one called SimulatedUpCamera. Del
 
 ## Camera Type Specific Setup
 
-[[OpenCVCamera]] - USB cameras  
-[[OnvifIPCamera]] - IP (network) cameras
+[[OpenPnpCaptureCamera]] - USB Cameras (Recommended)
+[[OpenCVCamera]] - USB Cameras (Not Recommended)
+[[OnvifIPCamera]] - IP (Network) cameras
 
 ## Lens Calibration
 
