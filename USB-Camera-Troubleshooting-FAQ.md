@@ -1,6 +1,6 @@
 # USB Camera Troubleshooting FAQ 
 
-If you are having trouble using multiple USB cameras with OpenPnP, make sure that you are using the [[OpenPnpCaptureCamera]], and not OpenCvCamera. [[OpenPnpCaptureCamera]] overcomes the issues described below. For more information about correctly configuring [[OpenPnpCaptureCamera]] for multiple cameras, visit [[OpenPnpCaptureCamera]]. If you must use OpenCvCamera, continue reading for more information about why you might run into issues.
+If you are having trouble using multiple USB cameras with OpenPnP, make sure that you are using the [[OpenPnpCaptureCamera]] driver, and not OpenCvCamera. OpenPnpCaptureCamera overcomes the issues described below. For more information about correctly configuring the driver for multiple cameras, visit the [[OpenPnpCaptureCamera page|OpenPnpCaptureCamera]]. If you must use OpenCvCamera, continue reading for more information about why you might run into issues.
 
 ## I just want it to work!
 Put each camera on it's own USB host controller. This normally means that each camera needs it's own dedicated USB port but even that doesn't always solve the problem. If you look in your computer's USB device tree and all of your ports go back to one USB host controller you will need a different computer.
