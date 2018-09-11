@@ -10,5 +10,5 @@ To configure the format for a camera:
 2. Select the Camera Specific tab.
 3. Scroll down to the General section and click the Format dropdown.
     ![screen shot 2018-09-10 at 9 03 09 pm](https://user-images.githubusercontent.com/1182323/45333843-b76ff380-b53d-11e8-9e70-82352408ce90.png)
-4. In the list of Formats, find a **compressed** format that meets you resolution and FPS needs.
+4. In the list of Formats, find a **compressed** format that meets you resolution and FPS needs. If there are no compressed formats in the dropdown you will either need to change to a different camera (see https://github.com/openpnp/openpnp/wiki/FAQ#what-should-i-build) or put each camera on it's own USB host port.
 
