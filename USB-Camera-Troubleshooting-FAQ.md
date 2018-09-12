@@ -3,7 +3,7 @@
 If you are having trouble using multiple USB cameras with OpenPnP, make sure that you are using the [[OpenPnpCaptureCamera]] driver, and not OpenCvCamera. OpenPnpCaptureCamera overcomes the issues described below. For more information about correctly configuring the driver for multiple cameras, visit the [[OpenPnpCaptureCamera page|OpenPnpCaptureCamera]]. If you must use OpenCvCamera, continue reading for more information about why you might run into issues.
 
 ## I just want it to work!
-Put each camera on it's own USB host controller. This normally means that each camera needs it's own dedicated USB port but even that doesn't always solve the problem. If you look in your computer's USB device tree and all of your ports go back to one USB host controller you will need a different computer.
+Put each camera on it's own USB host controller. This normally means that each camera needs it's own dedicated USB port but even that doesn't always solve the problem. If you look in your computer's USB device tree and all of your ports go back to one USB host controller you might be able to add an extra PCIe USB card, otherwise you will need a different computer. 
 
 ## What about USB hubs?
 Think of a USB bus like a hose connected to the faucet. You can only get as much water out as will flow through the faucet. Even if you hook a bunch of splitters to the end of the hose you aren't getting any more water. The faucet is the host controller. The hub is the splitter. 
