@@ -578,8 +578,24 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 includeX = true;
             }
             
+            // If the command has forced-output coordinate variables "XF", "YF", "ZF" and "RotationF", 
+            // always include the corresponding axis in the command.
+            // This may be employed for shared axes, where OpenPNP cannot not keep track when an axis 
+            // has physically moved behind its back through another shared axis. Consequently getCoordinate() 
+            // may not reflect the actual physical coordinate. By always forcing the axis coordinate output, 
+            // the controller will take care of restoring the shared axis' correct position, if necessary. 
+            // As we are always moving in absolute coordinates this has no ill effect if it results in no 
+            // position change after all.   
+            // Note there is no need for separate backlash compensation variables, as these are always 
+            // substituted alongside. 
+            includeX = includeX || (xAxis != null && hasVariable(command, "XF"));
+            includeY = includeX || (yAxis != null && hasVariable(command, "YF"));
+            includeZ = includeX || (zAxis != null && hasVariable(command, "ZF"));
+            includeRotation = includeX || (rotationAxis != null && hasVariable(command, "RotationF"));
+            
             if (includeX) {
                 command = substituteVariable(command, "X", x + nonSquarenessFactor * y);
+                command = substituteVariable(command, "XF", x + nonSquarenessFactor * y);
                 command = substituteVariable(command, "BacklashOffsetX", x + backlashOffsetX + nonSquarenessFactor * y); // Backlash Compensation
                 if (xAxis.getPreMoveCommand() != null) {
                     String preMoveCommand = xAxis.getPreMoveCommand();
@@ -589,12 +605,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 xAxis.setCoordinate(x);
             }
             else {
-                command = substituteVariable(command, "X", null);
+            	command = substituteVariable(command, "X", null);
+            	command = substituteVariable(command, "XF", null);
                 command = substituteVariable(command, "BacklashOffsetX", null); // Backlash Compensation
             }
 
             if (includeY) {
-                command = substituteVariable(command, "Y", y);
+            	command = substituteVariable(command, "Y", y);
+            	command = substituteVariable(command, "YF", y);
                 command = substituteVariable(command, "BacklashOffsetY", y + backlashOffsetY); // Backlash Compensation
                 if (yAxis.getPreMoveCommand() != null) {
                     String preMoveCommand = yAxis.getPreMoveCommand();
@@ -603,12 +621,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 }
             }
             else {
-                command = substituteVariable(command, "Y", null);
+            	command = substituteVariable(command, "Y", null);
+            	command = substituteVariable(command, "YF", null);
                 command = substituteVariable(command, "BacklashOffsetY", null); // Backlash Compensation
             }
 
             if (includeZ) {
-                command = substituteVariable(command, "Z", z);
+            	command = substituteVariable(command, "Z", z);
+            	command = substituteVariable(command, "ZF", z);
                 if (zAxis.getPreMoveCommand() != null) {
                     String preMoveCommand = zAxis.getPreMoveCommand();
                     preMoveCommand = substituteVariable(preMoveCommand, "Coordinate", zAxis.getCoordinate());
@@ -617,10 +637,12 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             }
             else {
                 command = substituteVariable(command, "Z", null);
+                command = substituteVariable(command, "ZF", null);
             }
 
             if (includeRotation) {
-                command = substituteVariable(command, "Rotation", rotation);
+            	command = substituteVariable(command, "Rotation", rotation);
+            	command = substituteVariable(command, "RotationF", rotation);
                 if (rotationAxis.getPreMoveCommand() != null) {
                     String preMoveCommand = rotationAxis.getPreMoveCommand();
                     preMoveCommand = substituteVariable(preMoveCommand, "Coordinate", rotationAxis.getCoordinate());
@@ -629,6 +651,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             }
             else {
                 command = substituteVariable(command, "Rotation", null);
+                command = substituteVariable(command, "RotationF", null);
             }
 
             // Only give a command when move is necessary
@@ -1013,7 +1036,25 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         matcher.appendTail(sb);
         return sb.toString();
     }
+    /**
+     * Find matches of variables in the format {Name:Format} and return true if present.
+     */
+    static protected boolean hasVariable(String command, String name) {
+        if (command == null) {
+            return false;
+        }
+        Matcher matcher = Pattern.compile("\\{(\\w+)(?::(.+?))?\\}").matcher(command);
+        while (matcher.find()) {
+            String n = matcher.group(1);
+            if (!n.equals(name)) {
+                continue;
+            }
+            return true;
+        }
+        return false;
+    }
     
+   
     @Override
     public String getPropertySheetHolderTitle() {
         return getName() == null ? "GcodeDriver" : getName();
