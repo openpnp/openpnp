@@ -511,41 +511,83 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         Axis yAxis = getAxis(hm, Axis.Type.Y);
         Axis zAxis = getAxis(hm, Axis.Type.Z);
         Axis rotationAxis = getAxis(hm, Axis.Type.Rotation);
+        
+        String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
+        
+        // If the command has forced-output coordinate variables "XF", "YF", "ZF" and "RotationF", 
+        // always include the corresponding axis in the command.
+        // This may be employed for shared physical axes, where OpenPNP cannot not keep track when an axis 
+        // has physically moved behind its back through another axis. Consequently getCoordinate() 
+        // may not reflect the actual physical coordinate. By always forcing the axis coordinate output, 
+        // the controller will take care of restoring the shared axis' correct position, if necessary. 
+        // As we are always moving in absolute coordinates this has no ill effect if it results in no 
+        // position change after all. 
+        // The same can be applied for other situations where OpenPNP may lose track of the physical 
+        // location such as with Z-probing or relative moves in custom Gcode.
+        // Note there is no need for separate backlash compensation variables, as these are always 
+        // substituted alongside. 
+        boolean includeX = (xAxis != null && hasVariable(command, "XF"));
+        boolean includeY = (yAxis != null && hasVariable(command, "YF"));
+        boolean includeZ = (zAxis != null && hasVariable(command, "ZF"));
+        boolean includeRotation = (rotationAxis != null && hasVariable(command, "RotationF"));
 
         // Handle NaNs, which means don't move this axis for this move. We set the appropriate
-        // axis reference to null, which we'll check for later.
+        // axis reference to null, which we'll check for later. If the axis is force-included 
+        // take the recorded current coordinate instead.  
+    	
+        // For each given coordinate, if the axis has a transform, transform the target coordinate
+        // to it's raw value.
         if (Double.isNaN(x)) {
-            xAxis = null;
+            if (includeX) {
+            	x = xAxis.getCoordinate();
+            }
+            else {
+            	xAxis = null;
+            }
         }
+        else if (xAxis != null && xAxis.getTransform() != null) {
+            x = xAxis.getTransform().toRaw(xAxis, hm, x);
+        }
+        
         if (Double.isNaN(y)) {
-            yAxis = null;
+        	if (includeY) {
+            	y = yAxis.getCoordinate();
+            }
+            else {
+            	yAxis = null;
+            }
         }
+        else if (yAxis != null && yAxis.getTransform() != null) {
+            y = yAxis.getTransform().toRaw(yAxis, hm, y);
+        }
+        
         if (Double.isNaN(z)) {
-            zAxis = null;
+        	if (includeZ) {
+            	z = zAxis.getCoordinate();
+            }
+            else {
+            	zAxis = null;
+            }
         }
+        else if (zAxis != null && zAxis.getTransform() != null) {
+            z = zAxis.getTransform().toRaw(zAxis, hm, z);
+        }
+        
         if (Double.isNaN(rotation)) {
-            rotationAxis = null;
+        	if (includeRotation) {
+            	rotation = rotationAxis.getCoordinate();
+            }
+            else {
+            	rotationAxis = null;
+            }
+        }
+        else if (rotationAxis != null && rotationAxis.getTransform() != null) {
+            rotation = rotationAxis.getTransform().toRaw(rotationAxis, hm, rotation);
         }
 
         // Only do something if there at least one axis included in the move
         if (xAxis != null || yAxis != null || zAxis != null || rotationAxis != null) {
 
-            // For each included axis, if the axis has a transform, transform the target coordinate
-            // to it's raw value.
-            if (xAxis != null && xAxis.getTransform() != null) {
-                x = xAxis.getTransform().toRaw(xAxis, hm, x);
-            }
-            if (yAxis != null && yAxis.getTransform() != null) {
-                y = yAxis.getTransform().toRaw(yAxis, hm, y);
-            }
-            if (zAxis != null && zAxis.getTransform() != null) {
-                z = zAxis.getTransform().toRaw(zAxis, hm, z);
-            }
-            if (rotationAxis != null && rotationAxis.getTransform() != null) {
-                rotation = rotationAxis.getTransform().toRaw(rotationAxis, hm, rotation);
-            }
-
-            String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
             command = substituteVariable(command, "Id", hm.getId());
             command = substituteVariable(command, "Name", hm.getName());
             command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
@@ -555,8 +597,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
              * NSF gets applied to X and is multiplied by Y
              * 
              */
-            
-            boolean includeX = false, includeY = false, includeZ = false, includeRotation = false;
             
             // Primary checks to see if an axis should move
             if (xAxis != null && xAxis.getCoordinate() != x) {
@@ -577,21 +617,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             if (includeY && nonSquarenessFactor != 0 && xAxis != null) {
                 includeX = true;
             }
-            
-            // If the command has forced-output coordinate variables "XF", "YF", "ZF" and "RotationF", 
-            // always include the corresponding axis in the command.
-            // This may be employed for shared axes, where OpenPNP cannot not keep track when an axis 
-            // has physically moved behind its back through another shared axis. Consequently getCoordinate() 
-            // may not reflect the actual physical coordinate. By always forcing the axis coordinate output, 
-            // the controller will take care of restoring the shared axis' correct position, if necessary. 
-            // As we are always moving in absolute coordinates this has no ill effect if it results in no 
-            // position change after all.   
-            // Note there is no need for separate backlash compensation variables, as these are always 
-            // substituted alongside. 
-            includeX = includeX || (xAxis != null && hasVariable(command, "XF"));
-            includeY = includeX || (yAxis != null && hasVariable(command, "YF"));
-            includeZ = includeX || (zAxis != null && hasVariable(command, "ZF"));
-            includeRotation = includeX || (rotationAxis != null && hasVariable(command, "RotationF"));
             
             if (includeX) {
                 command = substituteVariable(command, "X", x + nonSquarenessFactor * y);
