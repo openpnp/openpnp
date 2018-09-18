@@ -72,6 +72,9 @@ public class OpenBuildsDriver extends AbstractReferenceDriver implements Runnabl
                 pump(false);
             }
         }
+        if (connected && !enabled) {
+            disconnect();
+        }
     }
 
     @Override
