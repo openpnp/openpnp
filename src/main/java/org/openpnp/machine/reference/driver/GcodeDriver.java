@@ -272,7 +272,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             driver.setEnabled(enabled);
         }
         if (connected && !enabled) {
-            disconnect();
+        	if (!connectionKeepAlive) {
+            	disconnect();
+        	}
         }
     }
 

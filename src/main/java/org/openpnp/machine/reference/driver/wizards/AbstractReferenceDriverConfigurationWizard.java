@@ -36,7 +36,8 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
     private JPanel panelSerial;
     private JPanel panelTcp;
     private JTextField commsMethod;
-
+    private JCheckBox connectionKeepAlive;
+  
     public AbstractReferenceDriverConfigurationWizard(AbstractReferenceDriver driver) {
         this.driver = driver;
 
@@ -90,6 +91,11 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         commsMethod.setVisible(false);
         panelComms.add(commsMethod, "4, 6, fill, default");
 
+        JLabel lblConnectionKeepAlive = new JLabel("Keep Alive");
+        panelComms.add(lblConnectionKeepAlive, "2, 8, right, default");
+        
+        connectionKeepAlive = new JCheckBox("");
+        panelComms.add(connectionKeepAlive, "4, 8");
 
         //Serial config code
         panelSerial = new JPanel();
@@ -292,7 +298,8 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         IntegerConverter integerConverter = new IntegerConverter();
 
         addWrappedBinding(driver, "communicationsType", commsMethod, "text");
-
+        addWrappedBinding(driver, "connectionKeepAlive", connectionKeepAlive, "selected");
+        
         addWrappedBinding(driver, "portName", comboBoxPort, "selectedItem");
         addWrappedBinding(driver, "baud", comboBoxBaud, "selectedItem");
         addWrappedBinding(driver, "parity", parityComboBox, "selectedItem");

@@ -73,7 +73,9 @@ public class OpenBuildsDriver extends AbstractReferenceDriver implements Runnabl
             }
         }
         if (connected && !enabled) {
-            disconnect();
+            if (!connectionKeepAlive) {
+            	disconnect();
+            }
         }
     }
 
