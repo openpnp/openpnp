@@ -851,10 +851,10 @@ public class MainFrame extends JFrame {
         });
     }
     
-    public void setPlacements(int CompletedPlacemnts, int TotalPlacements, int PlacementsBoard, int TotalPlacementsBoard) {
+    public void setPlacementCompletionStatus(int totalPlacementsCompleted, int totalPlacements, int boardPlacementsCompleted, int boardPlacements) {
         SwingUtilities.invokeLater(() -> {
-        	lblPlacements.setText(" Placements: " + CompletedPlacemnts + " / " + TotalPlacements + " Total | " + PlacementsBoard + " / " + TotalPlacementsBoard + " Selected Board ");
-        	prgbrPlacements.setValue((int)(((float)CompletedPlacemnts / (float)TotalPlacements) * 100.0f));
+        	lblPlacements.setText(" Placements: " + totalPlacementsCompleted + " / " + totalPlacements + " Total | " + boardPlacementsCompleted + " / " + boardPlacements + " Selected Board ");
+        	prgbrPlacements.setValue((int)(((float)totalPlacementsCompleted / (float)totalPlacements) * 100.0f));
         });
     }
 

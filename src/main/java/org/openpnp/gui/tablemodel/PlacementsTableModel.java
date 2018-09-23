@@ -204,6 +204,9 @@ public class PlacementsTableModel extends AbstractTableModel {
             case 6:
                 return placement.getType();
             case 7:
+                // TODO STOPSHIP: Both of these are huge performance hogs and do not belong
+                // in the render process. At the least we should cache this information but it
+                // would be better if the information was updated out of band by a listener.
             	jobPlacementsPanel.updateActivePlacements();
             	return boardLocation.getPlaced(placement.getId());
             case 8:

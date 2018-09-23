@@ -162,7 +162,6 @@ public class JobPlacementsPanel extends JPanel {
         table.setDefaultRenderer(Part.class, new IdentifiableTableCellRenderer<Part>());
         table.setDefaultRenderer(PlacementsTableModel.Status.class, new StatusRenderer());
         table.setDefaultRenderer(Placement.Type.class, new TypeRenderer());
-        table.setDefaultRenderer(PartCellValue.class, new IdRenderer());
         tableModel.setJobPlacementsPanel(this);
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
@@ -260,6 +259,8 @@ public class JobPlacementsPanel extends JPanel {
         }
     }
     
+    // TODO STOPSHIP This is called all over the place and it's likely to rot - need to find
+    // a listener or something it can use.
     public void updateActivePlacements() {
         int activePlacements = 0;
         int totalActivePlacements = 0;
@@ -280,7 +281,7 @@ public class JobPlacementsPanel extends JPanel {
             blActivePlacements = boardLocation.getActivePlacements();
         }
         
-        MainFrame.get().setPlacements(totalActivePlacements - activePlacements, 
+        MainFrame.get().setPlacementCompletionStatus(totalActivePlacements - activePlacements, 
                 totalActivePlacements, 
                 blTotalActivePlacements - blActivePlacements, 
                 blTotalActivePlacements);
@@ -653,55 +654,6 @@ public class JobPlacementsPanel extends JPanel {
                 setBackground(statusColorError);
                 setText(status.toString());
             }
-        }
-    }
-
-    class IdRenderer extends DefaultTableCellRenderer {
-        // This is used just to set background color on Id cell when selected.
-        // Could not find another way to do this in.
-        public Component getTableCellRendererComponent(JTable table, Object value,
-                boolean isSelected, boolean hasFocus, int row, int column) {
-            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-
-            if (isSelected) {
-                setBackground(cellColorSelected);
-                setForeground(Color.WHITE);
-            }
-            return this;
-        }
-
-        public void setValue(Object value) {
-            String id = value.toString();
-
-            PnpJobProcessor pnpJobProcessor = Configuration.get().getMachine().getPnpJobProcessor();
-            int totalSize = pnpJobProcessor.getJobPlacementsById(id).size();
-            int completeSize =
-                    pnpJobProcessor.getJobPlacementsById(id, JobPlacement.Status.Complete).size();
-            int processingSize =
-                    pnpJobProcessor.getJobPlacementsById(id, JobPlacement.Status.Processing).size();
-
-            //
-            if (totalSize != 0) {
-                if (completeSize == totalSize) {
-                    setBackground(jobColorComplete);
-                }
-                else if (processingSize > 0) {
-                    setBackground(jobColorProcessing);
-                }
-                else {
-                    setBackground(jobColorPending);
-                }
-
-                if (totalSize > 1) {
-                    id += "  (" + completeSize + " / " + totalSize + ")";
-                }
-            }
-            else {
-                setBackground(Color.WHITE);
-            }
-
-            setForeground(Color.black);
-            setText(id);
         }
     }
 }
