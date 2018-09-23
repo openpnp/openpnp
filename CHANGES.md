@@ -1,6 +1,23 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2018-09-10
+
+* Nozzle Offset Setup Wizard
+
+	There's a new nozzle offset setup wizard in the Nozzle setup area that now makes it very easy to
+	setup nozzle offsets. This is one of the more confusing aspects of setting up OpenPnP and the new
+	wizard makes it very easy. Many thanks to @pfried for this new feature!
+	
+	See https://github.com/openpnp/openpnp/pull/765 for more information.
+
+# 2018-08-18
+
+* Placements Comments
+
+	The Placements table (Pick and Place) now contains a user editable Comments column that is
+	saved in the board file for each Placement.
+	
 # 2018-08-04
 
 * OpenCV Upgraded to 3.4.2

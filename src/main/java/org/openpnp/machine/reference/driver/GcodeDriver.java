@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -46,6 +47,7 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
 
@@ -1352,6 +1354,33 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 raw = -raw;
             }
             return raw;
+        }
+    }
+    
+    public static class OffsetTransform implements AxisTransform {
+        @ElementMap(required=false)
+        HashMap<String, Double> offsetsByHeadMountableId = new HashMap<>();
+        
+        public OffsetTransform() {
+            offsetsByHeadMountableId.put("N1", 1.);
+        }
+
+        @Override
+        public double toTransformed(Axis axis, HeadMountable hm, double rawCoordinate) {
+            Double offset = offsetsByHeadMountableId.get(hm.getId());
+            if (offset != null) {
+                return rawCoordinate + offset;
+            }
+            return rawCoordinate;
+        }
+
+        @Override
+        public double toRaw(Axis axis, HeadMountable hm, double transformedCoordinate) {
+            Double offset = offsetsByHeadMountableId.get(hm.getId());
+            if (offset != null) {
+                return transformedCoordinate - offset;
+            }
+            return transformedCoordinate;
         }
     }
 }
