@@ -12,6 +12,37 @@ See the GoFundMe page for project updates: https://www.gofundme.com/help-openpnp
 
 See https://github.com/openpnp/openpnp/tree/feature/chmt36va/src/main/java/org/openpnp/machine/chmt36va for the latest source code.
 
+# Testing
+
+**WARNING** The code is currently in alpha testing. **IT MAY BREAK YOUR MACHINE**. Running the current code is only recommended for people with experience with OpenPnP and who are willing to potentially destroy your machine.
+
+To be clear: **This code might permanently damage your machine, and your warranty is likely to be voided. I accept no responsibility for any damage you cause. Proceed at your own risk!**
+
+To run the CHMT36VA driver in OpenPnP, follow these basic instructions:
+
+1. Connect your CHMT36VA to your OpenPnP computer using the supplied USB cables. There are two - one for the camera, and one for the serial port.
+2. Download and install the test branch of OpenPnP from http://openpnp.org/test-downloads/.
+3. Start OpenPnP once, and then exit. This creates your .openpnp configuration directory. See https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located to find the location. You'll need it for the next step.
+4. Copy your CharmHigh supplied `LICENSE.smt` file to your configuration directory. Note, make sure to COPY and not move the file. Always keep a backup!
+5. Start OpenPnP again and begin to work through the [[Setup and Calibration]] Guide. When you reach the point where you need to select a driver, choose the `CHMT36VADriver`. You will be prompted to restart.
+6. Go to Machine Setup -> Driver -> CHMT36VADriver -> Communications.
+7. Select your Port, Baud: 115200, Parity: None, Data Bits: Eight, Stop Bits: One and pretty Apply.
+8. Click the green OpenPnP power button. The machine should reset and beep.
+9. Click the Home button to home the machine.
+10. Read the Warnings and Things to Try sections before doing anything else.
+
+## Warnings
+
+* Z and Rotation are not working yet.
+* No machine extents or limits are enforced, you can easily crash the head of the machine and cause permanent damage. Be careful and cautious!
+* Don't allow the drag pin to be extended for more than a few seconds at a time or it may overheat and be damaged.
+
+## Things to Try
+
+* Jog the machine in X/Y using the jog buttons.
+* Add a [Top Camera](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Top-Camera-Setup) and perform camera calibration. Try camera jogging.
+* Visit the Actuators panel and try the various Actuators. You can select different cameras, turn lights on and off, extend the drag pin, turn the pump on and off, turn on nozzle 1 and nozzle 2 vacuum, etc.
+
 # Machine Overview
 
 The CHMT36VA is a desktop pick and place machine. It has an internal controller but requires an external PC to run.
