@@ -215,6 +215,9 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
         if (connected) {
             sendCommand("set machine " + (enabled ? "on" : "off"));
         }
+        if (connected && !enabled) {
+            disconnect();
+        }
     }
 
     public synchronized void connect(String serverIp, int port) throws Exception {
