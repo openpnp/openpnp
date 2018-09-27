@@ -40,11 +40,11 @@ public class PlacementsTableModel extends AbstractTableModel {
     final Configuration configuration;
 
     private String[] columnNames =
-            new String[] {"ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Placed", "Status", "Check Fids"};
+            new String[] {"ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Placed", "Status", "Check Fids", "Comments"};
 
     private Class[] columnTypes = new Class[] {PartCellValue.class, Part.class, Side.class,
             LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, Type.class,
-            Boolean.class, Status.class, Boolean.class};
+            Boolean.class, Status.class, Boolean.class, String.class};
 
     public enum Status {
         Ready,
@@ -96,7 +96,8 @@ public class PlacementsTableModel extends AbstractTableModel {
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
         return columnIndex == 1 || columnIndex == 2 || columnIndex == 3 || columnIndex == 4
-                || columnIndex == 5 || columnIndex == 6 || columnIndex == 7 || columnIndex == 9;
+                || columnIndex == 5 || columnIndex == 6 || columnIndex == 7 || columnIndex == 9 
+                || columnIndex == 10;
     }
 
     @Override
@@ -150,6 +151,9 @@ public class PlacementsTableModel extends AbstractTableModel {
             else if (columnIndex == 9) {
                 placement.setCheckFids((Boolean) aValue);
             }
+            else if (columnIndex == 10) {
+                placement.setComments((String) aValue);
+            }
         }
         catch (Exception e) {
             // TODO: dialog, bad input
@@ -200,12 +204,17 @@ public class PlacementsTableModel extends AbstractTableModel {
             case 6:
                 return placement.getType();
             case 7:
+                // TODO STOPSHIP: Both of these are huge performance hogs and do not belong
+                // in the render process. At the least we should cache this information but it
+                // would be better if the information was updated out of band by a listener.
             	jobPlacementsPanel.updateActivePlacements();
             	return boardLocation.getPlaced(placement.getId());
             case 8:
                 return getPlacementStatus(placement);
             case 9:
                 return placement.getCheckFids();
+            case 10:
+                return placement.getComments();
             default:
                 return null;
         }

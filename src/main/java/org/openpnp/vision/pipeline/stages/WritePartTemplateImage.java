@@ -21,7 +21,7 @@ package org.openpnp.vision.pipeline.stages;
 
 import java.io.File;
 
-import org.opencv.highgui.Highgui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Feeder;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -139,7 +139,7 @@ public class WritePartTemplateImage extends CvStage {
             file = new File(filepath);
         }
         // Write template image to disk
-        Highgui.imwrite(file.getAbsolutePath(), pipeline.getWorkingImage());
+        Imgcodecs.imwrite(file.getAbsolutePath(), pipeline.getWorkingImage());
 
         return null;
     }

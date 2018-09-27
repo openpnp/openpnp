@@ -13,8 +13,8 @@ import javax.swing.Action;
 import javax.swing.JOptionPane;
 
 import org.apache.commons.io.IOUtils;
+import org.opencv.core.KeyPoint;
 import org.opencv.core.RotatedRect;
-import org.opencv.features2d.KeyPoint;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;

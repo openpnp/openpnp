@@ -2,12 +2,12 @@ package org.openpnp.vision.pipeline.stages;
 
 import java.io.File;
 
-import org.opencv.highgui.Highgui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
-import org.simpleframework.xml.Attribute;
-import org.openpnp.vision.pipeline.Stage;
 import org.openpnp.vision.pipeline.Property;
+import org.openpnp.vision.pipeline.Stage;
+import org.simpleframework.xml.Attribute;
 
 @Stage(
   category   ="Image Processing", 
@@ -31,6 +31,6 @@ public class ImageRead extends CvStage {
         if (!file.exists()) {
             return null;
         }
-        return new Result(Highgui.imread(file.getAbsolutePath()));
+        return new Result(Imgcodecs.imread(file.getAbsolutePath()));
     }
 }

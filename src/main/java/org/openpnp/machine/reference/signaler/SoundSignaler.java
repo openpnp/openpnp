@@ -94,29 +94,4 @@ public class SoundSignaler extends AbstractSignaler {
             }
         }
     }
-
-    @Override
-    public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
-    }
-
-    @Override
-    public PropertySheetHolder[] getChildPropertySheetHolders() {
-        return new PropertySheetHolder[0];
-    }
-
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[0];
-    }
-
-    @Override
-    public Action[] getPropertySheetHolderActions() {
-        return new Action[0];
-    }
-
-    @Override
-    public Icon getPropertySheetHolderIcon() {
-        return null;
-    }
 }
