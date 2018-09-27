@@ -190,7 +190,7 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
     private Action storePositionAction = new AbstractAction("Store nozzle mark position") {
         @Override
         public void actionPerformed(ActionEvent e) {
-            nozzleMarkLocation.setLocation(nozzle.getLocation());;
+            nozzleMarkLocation.setLocation(nozzle.getLocation().subtract(nozzle.getHeadOffsets()));
         }
     };
 
