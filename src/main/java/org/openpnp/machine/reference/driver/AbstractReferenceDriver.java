@@ -34,7 +34,7 @@ public abstract class AbstractReferenceDriver extends AbstractModelObject implem
     protected String communicationsType = "serial";
     
     @Attribute(required = false)
-    protected boolean connectionKeepAlive = false;
+    protected boolean connectionKeepAlive = true;
 
     /**
      * TODO The following properties are for backwards compatibility and can be removed after 2019-07-15. 
