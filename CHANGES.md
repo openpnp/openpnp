@@ -1,6 +1,19 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2018-09-26
+
+* Connection Keep Alive
+
+	Thank you to @markmaker for PR https://github.com/openpnp/openpnp/pull/767 which adds a keep
+	alive option to the drive communications configuration. This option, which is on by default,
+	can be turned off to cause OpenPnP to close the serial port or TCP port when clicking the
+	disable button. This makes it possible to connect to the serial port from another program
+	without having to exit OpenPnP.
+	
+	Note, again, that this option is on by default which is the pre-existing behavior. You can turn
+	it off if you want the new behavior.
+	 
 # 2018-09-10
 
 * Nozzle Offset Setup Wizard
