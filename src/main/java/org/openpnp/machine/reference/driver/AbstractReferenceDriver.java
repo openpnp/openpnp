@@ -32,6 +32,9 @@ public abstract class AbstractReferenceDriver extends AbstractModelObject implem
 
     @Attribute(required = false, name = "communications")
     protected String communicationsType = "serial";
+    
+    @Attribute(required = false)
+    protected boolean connectionKeepAlive = true;
 
     /**
      * TODO The following properties are for backwards compatibility and can be removed after 2019-07-15. 
@@ -85,6 +88,7 @@ public abstract class AbstractReferenceDriver extends AbstractModelObject implem
         this.setRts = null;
 
         setCommunicationsType(communicationsType);
+        setConnectionKeepAlive(connectionKeepAlive);
     }
     
     @Override
@@ -118,6 +122,14 @@ public abstract class AbstractReferenceDriver extends AbstractModelObject implem
             }
         }
         this.communicationsType = communicationsType;
+    }
+    
+    public boolean getConnectionKeepAlive() {
+    	return connectionKeepAlive;
+    }
+    
+    public void setConnectionKeepAlive(boolean connectionKeepAlive) {
+    	this.connectionKeepAlive = connectionKeepAlive;
     }
     
     protected ReferenceDriverCommunications getCommunications() {
