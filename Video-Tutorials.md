@@ -19,6 +19,7 @@ Video tutorials to help with specific tasks in OpenPnP.
 
 * [Building a new Jar File](https://www.youtube.com/watch?v=53H_vwrZz6o)
 * [Getting Started with Eclipse](https://www.youtube.com/watch?v=Ml03yALid10)
+* [Eclipse WindowBuilder Setup](https://youtu.be/bOiI6bGpINY)
 
 ## Vacuum Sensing
 
