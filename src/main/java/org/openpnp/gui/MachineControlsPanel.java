@@ -273,6 +273,7 @@ public class MachineControlsPanel extends JPanel {
 					setEnabled(true);
 					if (machine.getHomeAfterEnabled() && machine.isEnabled()) {
 						selectedTool.getHead().home();
+		                homeAction.putValue(Action.SMALL_ICON, Icons.home);
 					}
                 }
                 catch (Exception t1) {
