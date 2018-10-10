@@ -8,13 +8,14 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.TimeoutException;
 
+import org.openpnp.machine.reference.driver.ReferenceDriverCommunications.LineEndingType;
 import org.simpleframework.xml.Attribute;
 
 /**
  * A base class for basic TCP based Drivers. Includes functions for connecting,
  * disconnecting, reading and sending lines.
  */
-public class TcpCommunications implements ReferenceDriverCommunications {
+public class TcpCommunications extends ReferenceDriverCommunications {
     @Attribute(required = false)
     protected String ipAddress = "127.0.0.1";
 
@@ -87,7 +88,7 @@ public class TcpCommunications implements ReferenceDriverCommunications {
     {
         try {
             output.write(data.getBytes());
-            output.write(lineEnding.getBytes());
+            output.write(getLineEndingType().getLineEnding().getBytes());
         }
         catch (IOException ex) {
             throw ex;

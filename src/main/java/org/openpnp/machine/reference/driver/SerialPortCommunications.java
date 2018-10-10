@@ -19,7 +19,7 @@ import jssc.SerialPortTimeoutException;
  * A class for SerialPort Communications. Includes functions for connecting,
  * disconnecting, reading and sending lines.
  */
-public class SerialPortCommunications implements ReferenceDriverCommunications {
+public class SerialPortCommunications extends ReferenceDriverCommunications {
     public enum DataBits {
         Five(SerialPort.DATABITS_5),
         Six(SerialPort.DATABITS_6),
@@ -188,7 +188,7 @@ public class SerialPortCommunications implements ReferenceDriverCommunications {
     {
         try {
             output.write(data.getBytes());
-            output.write(lineEnding.getBytes());
+            output.write(getLineEndingType().getLineEnding().getBytes());
         }
         catch (IOException ex) {
             throw ex;

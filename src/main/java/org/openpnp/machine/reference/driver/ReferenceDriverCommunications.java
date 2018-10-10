@@ -22,20 +22,47 @@ package org.openpnp.machine.reference.driver;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
+import org.simpleframework.xml.Attribute;
+
 /**
  * Defines the interface for a simple communications IO driver, for example A serial port.
  *
  * This Driver interface is intended to model the minimum required functions to transfer
  * data from OpenPnP to a hardware controller.
  */
-public interface ReferenceDriverCommunications {
-    String lineEnding = "\n";
+public abstract class ReferenceDriverCommunications {
+    public enum LineEndingType {
+        CR("\r"),
+        LF("\n"),
+        CRLF("\r\n");
 
-    void connect() throws Exception;
-    void disconnect() throws Exception;
+        public final String lineEnding;
 
-    public String getConnectionName();
+        private LineEndingType(String lineEnding) {
+            this.lineEnding = lineEnding;
+        }
+        
+        public String getLineEnding() {
+            return lineEnding;
+        }
+    }
+    
+    @Attribute(required=false)
+    protected LineEndingType lineEndingType = LineEndingType.LF;
 
-    String readLine() throws TimeoutException, IOException;
-    void writeLine(String data) throws IOException;
+    abstract public void connect() throws Exception;
+    abstract public void disconnect() throws Exception;
+
+    abstract public String getConnectionName();
+
+    abstract public String readLine() throws TimeoutException, IOException;
+    abstract public void writeLine(String data) throws IOException;
+
+    public void setLineEndingType(LineEndingType lineEndingType) {
+        this.lineEndingType = lineEndingType;
+    }
+    
+    public LineEndingType getLineEndingType() {
+        return lineEndingType;
+    }
 }
