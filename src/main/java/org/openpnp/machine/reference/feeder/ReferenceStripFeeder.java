@@ -85,7 +85,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             return name;
         }
     }
-
+    
     @Element(required = false)
     private Location referenceHoleLocation = new Location(LengthUnit.Millimeters);
 
@@ -182,7 +182,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
 		Machine machine = Configuration.get().getMachine();
 
-		if (machine.getUsePickRotationInsteadOfRotationInTapeForStripFeeders()) {
+		if (machine.getProperty("isPickRotationUsedInStripFeeders") != null && (boolean)machine.getProperty("isPickRotationUsedInStripFeeders")) {
 
 			double angleCorrection = 0;
 			double angleOfStrip = Utils2D.getAngleFromPoint(lineLocations[0], lineLocations[1]);

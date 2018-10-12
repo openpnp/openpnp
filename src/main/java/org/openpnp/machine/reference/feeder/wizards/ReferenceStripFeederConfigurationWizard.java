@@ -131,6 +131,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private Location secondPartLocation;
     private List<Location> part1HoleLocations;
     private Camera autoSetupCamera;
+    
+    private boolean isPickRotationUsedInStripFeeders = false;
 
 
     public ReferenceStripFeederConfigurationWizard(ReferenceStripFeeder feeder) {
@@ -163,7 +165,14 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
         panelPart.add(comboBoxPart, "4, 2, left, default");
 
-        lblRotationInTape = new JLabel(Configuration.get().getMachine().getUsePickRotationInsteadOfRotationInTapeForStripFeeders() ? "Pick Rotation" : "Rotation In Tape");
+        if (Configuration.get().getMachine().getProperty("isPickRotationUsedInStripFeeders") == null) {
+        		Configuration.get().getMachine().setProperty("isPickRotationUsedInStripFeeders", false);
+        }
+        else {
+        		isPickRotationUsedInStripFeeders = (boolean)(Configuration.get().getMachine().getProperty("isPickRotationUsedInStripFeeders"));
+        }
+         
+        lblRotationInTape = new JLabel(isPickRotationUsedInStripFeeders ? "Pick Rotation" : "Rotation In Tape");
         panelPart.add(lblRotationInTape, "2, 4, left, default");
 
         textFieldLocationRotation = new JTextField();
@@ -344,12 +353,11 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get()
                                                                            .getLengthDisplayFormat());
 
-        Machine machine = Configuration.get().getMachine();
 
         MutableLocationProxy location = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
         addWrappedBinding(location, "rotation", textFieldLocationRotation, "text", doubleConverter);
-        addWrappedBinding(machine, "usePickRotationInsteadOfRotationInTapeForStripFeeders", checkBoxUsePickRotationInsteadOfRotationInTapeForStripFeeders, "selected");
+        addWrappedBinding(this, "isPickRotationUsedInStripFeeders", checkBoxUsePickRotationInsteadOfRotationInTapeForStripFeeders, "selected");
 
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
         addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
@@ -388,6 +396,15 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndZ);
+    }
+    
+    public boolean getIsPickRotationUsedInStripFeeders() {
+    		return isPickRotationUsedInStripFeeders;
+    }
+    
+    public void setIsPickRotationUsedInStripFeeders(boolean newValue) {
+    		isPickRotationUsedInStripFeeders = newValue;
+    		Configuration.get().getMachine().setProperty("isPickRotationUsedInStripFeeders", newValue);
     }
 
     private Action autoSetup = new AbstractAction("Auto Setup") {
