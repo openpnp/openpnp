@@ -145,9 +145,15 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
 			linuxPortNames.toArray (portNames);
 			return portNames;
 		}
-		else {
-			return SerialPortList.getPortNames();
-		}
+		else
+			if (SerialNativeInterface.getOsType () == SerialNativeInterface.OS_MAC_OS_X) {
+				String pattern = "^.*tty\\..*$";
+				Pattern rx = Pattern.compile (pattern);
+				return SerialPortList.getPortNames("/dev/", rx);
+			}
+			else {
+				return SerialPortList.getPortNames();
+			}
     }
 
     /**
