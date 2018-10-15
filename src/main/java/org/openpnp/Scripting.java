@@ -292,6 +292,7 @@ public class Scripting {
         engine.put("machine", Configuration.get().getMachine());
         engine.put("gui", MainFrame.get());
         engine.put("scripting", this);
+        engine.put(ScriptEngine.FILENAME, script.getName());
 
         if (additionalGlobals != null) {
             for (String name : additionalGlobals.keySet()) {
