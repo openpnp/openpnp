@@ -131,21 +131,23 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
      * @return array of Strings of serial port names
      */
     public static String[] getPortNames() {
-		if (SerialNativeInterface.getOsType () == SerialNativeInterface.OS_LINUX) {
-			ArrayList<String> linuxPortNames = new ArrayList<String>();
-			String pattern = ".*";
-			Pattern rx = Pattern.compile (pattern);
-			for (String portName : SerialPortList.getPortNames ("/dev/serial/by-id/", rx))  {
-				linuxPortNames.add (portName);
-			}
-			for (String portName : SerialPortList.getPortNames ())  {
-				linuxPortNames.add (portName);
-			}
-			String[] portNames = new String[linuxPortNames.size()];
-			linuxPortNames.toArray (portNames);
-			return portNames;
-		}
-		else {
+    	switch (SerialNativeInterface.getOsType()) {
+    	case SerialNativeInterface.OS_LINUX:
+    		ArrayList<String> linuxPortNames = new ArrayList<String>();
+    		String pattern = ".*";
+    		Pattern rx = Pattern.compile(pattern);
+    		for (String portName: SerialPortList.getPortNames("/dev/serial/by-id/", rx))  {
+    			linuxPortNames.add(portName);
+    		}
+    		for (String portName: SerialPortList.getPortNames())  {
+    			linuxPortNames.add(portName);
+    		}
+    		String[] portNames = new String[linuxPortNames.size()];
+    		linuxPortNames.toArray(portNames);
+    		return portNames;
+    	case SerialNativeInterface.OS_MAC_OS_X:
+    		return SerialPortList.getPortNames(Pattern.compile("tty.(serial|usbserial|wchusbserial|usbmodem).*"));
+    	default:
 			return SerialPortList.getPortNames();
 		}
     }
