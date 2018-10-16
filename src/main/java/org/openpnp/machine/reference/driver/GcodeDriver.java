@@ -20,6 +20,7 @@ import javax.swing.Action;
 import javax.swing.JOptionPane;
 
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -269,7 +270,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         }
 
         for (ReferenceDriver driver : subDrivers) {
-            driver.setEnabled(enabled);
+			try {
+				driver.setEnabled(enabled);
+			} catch (Exception e1) {
+				MessageBoxes.errorBox(MainFrame.get(), "Subdriver Enable Failure", e1.getMessage());
+			}
         }
         if (connected && !enabled) {
         	if (!connectionKeepAlive) {
