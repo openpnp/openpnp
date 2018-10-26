@@ -6,6 +6,95 @@ It seems like the protocol consist of a send / receive pattern, one or more byte
 
 ## Unkown commands
 
+### Feeders / peelers
+* Selecting feeder
+* Configuring feeder (after selecting) is:
+```
+B1 B2 00 00 00 00 00 00 B9 B10
+B1: Strength, hex between 0 and 100% (in Neoden software it's increments of 10)
+B2: Feedrate, in hex. (In Neoden software it's in steps of 4,8,12,24,32,48)
+B9: Unknown
+B10: Unknwon
+```
+
+Example dumps 
+* Feeder 21, Feedrate 4, Strength 50%:
+```
+[25/10/2018 10:34:24] Written data (COM2) 
+    3f                                                ?                
+[25/10/2018 10:34:24] Read data (COM2) 
+    0c                                                .                
+[25/10/2018 10:34:24] Written data (COM2) 
+    5b                                                [                
+[25/10/2018 10:34:24] Read data (COM2) 
+    41                                                A                
+[25/10/2018 10:34:24] Written data (COM2) 
+    ff                                                ÿ                
+[25/10/2018 10:34:24] Read data (COM2) 
+    00                                                .                
+[25/10/2018 10:34:24] Written data (COM2) 
+    5b                                                [                
+[25/10/2018 10:34:24] Read data (COM2) 
+    41                                                A                
+[25/10/2018 10:34:24] Written data (COM2) 
+    32 04 00 00 00 00 00 00 bc 3f                     2.......¼?       
+[25/10/2018 10:34:24] Read data (COM2) 
+    0c                                                .                
+[25/10/2018 10:34:24] Written data (COM2) 
+    5b                                                [                
+[25/10/2018 10:34:24] Read data (COM2) 
+    14                                                .                
+[25/10/2018 10:34:24] Written data (COM2) 
+    3f                                                ?                
+[25/10/2018 10:34:24] Read data (COM2) 
+    0c                                                .                
+[25/10/2018 10:34:24] Written data (COM2) 
+    5b                                                [                
+[25/10/2018 10:34:24] Read data (COM2) 
+    41                                                A                
+```
+* Feeder 21, Feedrate 24, Strength 100%:
+```
+    64 18 00 00 00 00 00 00 03 3f                     d........?       
+    0c                                                .                
+```
+ 
+* Feeder 30, Feedrate 4, Strength 50%:
+```
+[25/10/2018 10:39:23] Written data (COM2) 
+    3f                                                ?                
+[25/10/2018 10:39:23] Read data (COM2) 
+    0c                                                .                
+[25/10/2018 10:39:23] Written data (COM2) 
+    64                                                d                
+[25/10/2018 10:39:23] Read data (COM2) 
+    0e                                                .                
+[25/10/2018 10:39:23] Written data (COM2) 
+    ff                                                ÿ                
+[25/10/2018 10:39:23] Read data (COM2) 
+    00                                                .                
+[25/10/2018 10:39:23] Written data (COM2) 
+    64                                                d                
+[25/10/2018 10:39:23] Read data (COM2) 
+    0e                                                .                
+[25/10/2018 10:39:23] Written data (COM2) 
+    32 04 00 00 00 00 00 00 bc 3f                     2.......¼?       
+[25/10/2018 10:39:23] Read data (COM2) 
+    0c                                                .                
+[25/10/2018 10:39:23] Written data (COM2) 
+    64                                                d                
+[25/10/2018 10:39:23] Read data (COM2) 
+    1f                                                .                
+[25/10/2018 10:39:23] Written data (COM2) 
+    3f                                                ?                
+[25/10/2018 10:39:23] Read data (COM2) 
+    0c                                                .                
+[25/10/2018 10:39:23] Written data (COM2) 
+    64                                                d                
+[25/10/2018 10:39:23] Read data (COM2) 
+    4a                                                J                
+```
+
 ### Rails, forward
 * Dump of speed 100%, forward (sent, received, alternating lines, starting with sent):
 ```
