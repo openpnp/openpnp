@@ -27,7 +27,7 @@ It seems like the protocol consist of a send / receive pattern, one or more byte
     43                                                C                
 ```
 * Dump speed 90%, forward:
-````
+```
 [25/10/2018 10:15:36] Written data (COM2) 
     00 00 00 00 c9 03 0c 00 ee 09                     ....É...î.       
 [25/10/2018 10:15:36] Read data (COM2) 
