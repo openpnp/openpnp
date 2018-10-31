@@ -27,7 +27,7 @@ import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.highgui.Highgui;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
@@ -208,7 +208,7 @@ public class ReadPartTemplateImage extends CvStage {
             }
         }
         // Read template image from disk
-        Mat templateImage = Imgcodecs.imread(file.getAbsolutePath());
+        Mat templateImage = Highgui.imread(file.getAbsolutePath());
 
         width = templateImage.size().width;
         height = templateImage.size().height;

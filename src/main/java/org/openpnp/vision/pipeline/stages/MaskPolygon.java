@@ -8,7 +8,6 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
@@ -95,7 +94,7 @@ public class MaskPolygon extends CvStage {
                 try {
                     if (coords.length == 3) {
                         // A circle: the second atom is the radius
-                        Imgproc.circle(mask,
+                        Core.circle(mask,
                                 new Point(Integer.parseInt(coords[0]), Integer.parseInt(coords[1])),
                                 Integer.parseInt(coords[2]), new Scalar(255, 255, 255), -1);
                     }
@@ -106,7 +105,7 @@ public class MaskPolygon extends CvStage {
                             coord[i] = Integer.parseInt(coords[i]);
                         }
                         // calculate two opposite rectangle vertices
-                        Imgproc.rectangle(mask,
+                        Core.rectangle(mask,
                                 new Point(coord[0] - (int) coord[2] / 2,
                                         coord[1] + (int) coord[3] / 2),
                                 new Point(coord[0] + (int) coord[2] / 2,
@@ -129,7 +128,7 @@ public class MaskPolygon extends CvStage {
                                 new Point(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]));
                     }
                     poly.add(new MatOfPoint(points));
-                    Imgproc.fillPoly(mask, poly, new Scalar(255, 255, 255));
+                    Core.fillPoly(mask, poly, new Scalar(255, 255, 255));
                 }
                 catch (NumberFormatException e) {
                     Logger.error("Cannot parse number. " + e.getMessage());
