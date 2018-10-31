@@ -1,6 +1,17 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2018-10-31
+
+* OpenCV 3.4.2 Upgrade Reverted
+
+	The OpenCV upgrade has temporarily been reverted due to an issue found in the OpenCV library
+	during testing:
+	
+	https://github.com/openpnp/opencv/issues/38
+	
+	Once this issue is resolved, this patch will be re-added.
+	
 # 2018-09-26
 
 * Connection Keep Alive
