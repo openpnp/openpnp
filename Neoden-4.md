@@ -50,7 +50,41 @@ x1x2x3x4y1y2y3y4XX
 
 `x1x2x3x4` is the X-coordinate in int32, little endian, in .01mm
 `y1y2y3y4` is the Y-coordinate in int32, little endian, in .01mm
-`XX` is the checksum for the message.
+`XX` is the checksum of the message.
+
+## Nozzles
+
+### Rotating
+<pre>
+</pre>
+
+### Moving up / down
+<pre>
+42 -> 0e
+c2 -> 06
+h1h232NN00000000XX
+02 -> 02
+02 -> 46
+</pre>
+
+`XX` is the checksum of the message.
+`NN` is 01, 02, 03 or 04. For nozzles 1-4.
+`h1h2` is int16, little endian. Height of nozzle; 0000 is max retracted into head, e02e is max down.
+In the neoden software it is visualised as 12.0 -> 0.0 (12.0 being max retracted into head).
+
+
+### Blowing / sucking
+<pre>
+43 -> 0f
+c3 -> 07
+PPNN000000000000XX 
+03 -> 03
+03 -> 47
+</pre>
+
+`XX` is the checksum of the message.
+`NN` is 01, 02, 03 or 04. For nozzle 1-4.
+`PP` 01 => blow, 00 => idle, ff => max suction.
 
 ## Rails
 
