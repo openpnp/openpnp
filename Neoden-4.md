@@ -26,11 +26,13 @@ Format is:<br>
 **NOTE!** All move and homing commands are done with nozzles as high as possible. When no parts are attached nozzles are usually reset to top position before moving.
 
 ## Homing the head
-`47` -> `0b`<br>
-`c7` -> `03`<br>
-`0100000000000000XX`<br>
-`07` -> `07`<br>
-`07` -> `43`<br>
+<pre>
+47 -> 0b
+c7 -> 03
+0100000000000000XX
+07 -> 07
+07 -> 43
+</pre>
 
 `XX` is the checksom for the message.
 The other strange thing you see is that there's no response on the long array of bytes, but rather after sending a single byte right after the long array of bytes. This is the same for most (all?) long array of bytes sent.
@@ -38,12 +40,53 @@ The last write / read might be repeated, until the read is actually the correct 
 
 ## Moving the head
 
-`48` -> `05`<br>
-`c8` -> `0d`<br>
-`x1x2x3x4y1y2y3y4XX`<br>
-`08` -> `09`<br>
-`08` -> `4d`<br>
+<pre>
+48 -> 05
+c8 -> 0d
+x1x2x3x4y1y2y3y4XX
+08 -> 09
+08 -> 4d
+</pre>
 
 `x1x2x3x4` is the X-coordinate in int32, little endian, in .01mm
 `y1y2y3y4` is the Y-coordinate in int32, little endian, in .01mm
 `XX` is the checksum for the message.
+
+## Rails
+
+### Moving forward (into the machine, from Front)
+<pre>
+49 -> 04
+c9 -> 0c
+00000000c9030c00XX
+09 -> 08
+09 -> 4c
+</pre>
+
+`XX` is the checksum for the message.
+What is currently unknown is how to adjust speed on the rails.
+
+
+### Moving backward (out of the machine, to Front)
+<pre>
+49 -> 04 
+c9 -> 0c
+0000000037fcf3ffXX 
+09 -> 08
+09 -> 4c
+</pre>
+
+`XX` is the checksum for the message.
+What is currently unknown is how to adjust speed on the rails.
+
+### Stopping a move
+<pre>
+47 -> 0b
+c7 -> 03
+0002000000000000XX
+07 -> 07
+07 -> 43
+</pre>
+
+`XX` is the checksum for the message.
+Whenever you need to stop moving the rails, you issue this command.
