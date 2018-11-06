@@ -38,6 +38,8 @@ c7 -> 03
 The other strange thing you see is that there's no response on the long array of bytes, but rather after sending a single byte right after the long array of bytes. This is the same for most (all?) long array of bytes sent.
 The last write / read might be repeated, until the read is actually the correct response.
 
+**NOTE!** Home seems to be `(-437, 437)`, eg left top corner.
+
 ## Moving the head
 
 <pre>
