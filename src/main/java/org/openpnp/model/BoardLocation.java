@@ -22,6 +22,7 @@ package org.openpnp.model;
 import java.util.HashMap;
 import java.util.Map;
 import org.openpnp.model.Board.Side;
+import org.openpnp.model.Placement.Type;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
@@ -118,6 +119,46 @@ public class BoardLocation extends AbstractModelObject {
 
     public Side getSide() {
         return side;
+    }
+    
+    public int getTotalActivePlacements(){
+    	if (board == null) {
+    		return 0;
+    	}
+    	int counter = 0;
+    	for(Placement placements : board.getPlacements()) {
+    		// is the component on the correct boards side
+    		if (placements.getSide() == getSide()) {
+    			
+    			//is the component set to be placed?
+    			if (placements.getType() == Type.Place) {		
+    				counter++;
+    			}
+        	}
+    	}
+    	return counter;
+    }
+    
+    public int getActivePlacements() {
+    	if (board == null) {
+    		return 0;
+    	}
+    	int counter = 0;
+    	for(Placement placements : board.getPlacements()) {
+    		// is the component on the correct boards side
+    		if (placements.getSide() == getSide()) {
+    			
+    			//is the component set to be placed?
+    			if (placements.getType() == Type.Place) {		
+    			
+    				// has the component been placed already?
+    				if (!getPlaced(placements.getId())) {
+    					counter++;
+    				}
+    			}
+        	}
+    	}
+    	return counter;
     }
 
     public void setSide(Side side) {

@@ -48,6 +48,9 @@ import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.machine.reference.psh.ActuatorsPropertySheetHolder;
 import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
+import org.openpnp.machine.reference.psh.SignalersPropertySheetHolder;
+import org.openpnp.machine.reference.signaler.ActuatorSignaler;
+import org.openpnp.machine.reference.signaler.SoundSignaler;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
@@ -62,11 +65,11 @@ import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PasteDispenseJobProcessor;
 import org.openpnp.spi.PnpJobProcessor;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.Signaler;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Version;
 import org.simpleframework.xml.core.Commit;
 
 public class ReferenceMachine extends AbstractMachine {
@@ -85,6 +88,9 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Element(required = false)
     protected FiducialLocator fiducialLocator = new ReferenceFiducialLocator();
+
+    @Element(required = false)
+    private boolean homeAfterEnabled = false;
 
     private boolean enabled;
 
@@ -170,7 +176,7 @@ public class ReferenceMachine extends AbstractMachine {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
-        children.add(new SimplePropertySheetHolder("Signalers", getSignalers()));
+        children.add(new SignalersPropertySheetHolder(this, "Signalers", getSignalers(), null));
         children.add(new SimplePropertySheetHolder("Feeders", getFeeders()));
         children.add(new SimplePropertySheetHolder("Heads", getHeads()));
         children.add(new CamerasPropertySheetHolder(null, "Cameras", getCameras(), null));
@@ -247,6 +253,14 @@ public class ReferenceMachine extends AbstractMachine {
         return l;
     }
 
+    @Override
+    public List<Class<? extends Signaler>> getCompatibleSignalerClasses() {
+        List<Class<? extends Signaler>> l = new ArrayList<>();
+        l.add(SoundSignaler.class);
+        l.add(ActuatorSignaler.class);
+        return l;
+    }
+
     private List<Class<? extends PartAlignment>> registeredAlignmentClasses = new ArrayList<>();
 
     @Override
@@ -297,5 +311,13 @@ public class ReferenceMachine extends AbstractMachine {
     @Override
     public PasteDispenseJobProcessor getPasteDispenseJobProcessor() {
         return pasteDispenseJobProcessor;
+    }
+
+    public boolean getHomeAfterEnabled() {
+        return homeAfterEnabled;
+    }
+
+    public void setHomeAfterEnabled(boolean newValue) {
+        this.homeAfterEnabled = newValue;
     }
 }

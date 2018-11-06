@@ -43,6 +43,7 @@ import javax.swing.border.TitledBorder;
 
 import org.jdesktop.swingx.JXCollapsiblePane;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.support.CameraItem;
 import org.openpnp.gui.support.HeadMountableItem;
 import org.openpnp.gui.support.Icons;
@@ -72,7 +73,7 @@ public class MachineControlsPanel extends JPanel {
     private final JobPanel jobPanel;
 
     private static final String PREF_JOG_CONTROLS_EXPANDED =
-            "MachineControlsPanel.jogControlsExpanded";
+            "MachineControlsPanel.jogControlsExpanded"; //$NON-NLS-1$
     private static final boolean PREF_JOG_CONTROLS_EXPANDED_DEF = true;
     private Preferences prefs = Preferences.userNodeForPackage(MachineControlsPanel.class);
 
@@ -91,7 +92,7 @@ public class MachineControlsPanel extends JPanel {
      * Create the panel.
      */
     public MachineControlsPanel(Configuration configuration, JobPanel jobPanel) {
-        setBorder(new TitledBorder(null, "Machine Controls", TitledBorder.LEADING, TitledBorder.TOP,
+        setBorder(new TitledBorder(null, Translations.getString("MachineControls.Label"), TitledBorder.LEADING, TitledBorder.TOP, //$NON-NLS-1$
                 null, null));
         this.configuration = configuration;
         this.jobPanel = jobPanel;
@@ -194,7 +195,7 @@ public class MachineControlsPanel extends JPanel {
         c = l.getRotation();
 
         MainFrame.get().getDroLabel()
-                .setText(String.format("X:%-9s Y:%-9s Z:%-9s C:%-9s",
+                .setText(String.format("X:%-9s Y:%-9s Z:%-9s C:%-9s", //$NON-NLS-1$
                         String.format(Locale.US, configuration.getLengthDisplayFormat(), x),
                         String.format(Locale.US, configuration.getLengthDisplayFormat(), y),
                         String.format(Locale.US, configuration.getLengthDisplayFormat(), z),
@@ -210,15 +211,15 @@ public class MachineControlsPanel extends JPanel {
                 new JButton(collapsePane.getActionMap().get(JXCollapsiblePane.TOGGLE_ACTION));
         collapseButton.setBorderPainted(false);
         collapseButton.setHideActionText(true);
-        collapseButton.setText("");
+        collapseButton.setText(""); //$NON-NLS-1$
 
         // get the built-in toggle action
         Action collapseAction = collapseButton.getAction();
         // use the collapse/expand icons from the JTree UI
         collapseAction.putValue(JXCollapsiblePane.COLLAPSE_ICON,
-                UIManager.getIcon("Tree.expandedIcon"));
+                UIManager.getIcon("Tree.expandedIcon")); //$NON-NLS-1$
         collapseAction.putValue(JXCollapsiblePane.EXPAND_ICON,
-                UIManager.getIcon("Tree.collapsedIcon"));
+                UIManager.getIcon("Tree.collapsedIcon")); //$NON-NLS-1$
 
         jogControlsPanel = new JogControlsPanel(configuration, this);
 
@@ -226,7 +227,7 @@ public class MachineControlsPanel extends JPanel {
         add(panel);
         panel.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),}, //$NON-NLS-1$
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         comboBoxHeadMountable = new JComboBox();
@@ -239,21 +240,21 @@ public class MachineControlsPanel extends JPanel {
             }
         });
 
-        panel.add(collapseButton, "2, 2");
-        panel.add(comboBoxHeadMountable, "4, 2, fill, default");
+        panel.add(collapseButton, "2, 2"); //$NON-NLS-1$
+        panel.add(comboBoxHeadMountable, "4, 2, fill, default"); //$NON-NLS-1$
         collapsePane.add(jogControlsPanel);
         add(collapsePane);
 
         collapsePane.setCollapsed(
                 !prefs.getBoolean(PREF_JOG_CONTROLS_EXPANDED, PREF_JOG_CONTROLS_EXPANDED_DEF));
 
-        collapsePane.addPropertyChangeListener("collapsed", e -> {
+        collapsePane.addPropertyChangeListener("collapsed", e -> { //$NON-NLS-1$
             prefs.putBoolean(PREF_JOG_CONTROLS_EXPANDED, !collapsePane.isCollapsed());
         });
     }
 
     @SuppressWarnings("serial")
-    public Action startStopMachineAction = new AbstractAction("Stop", Icons.powerOn) {
+    public Action startStopMachineAction = new AbstractAction(Translations.getString("MachineControls.Action.Stop"), Icons.powerOn) { //$NON-NLS-1$
         {
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke('E',
                     Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
@@ -268,11 +269,15 @@ public class MachineControlsPanel extends JPanel {
                 Machine machine = Configuration.get().getMachine();
                 boolean enable = !machine.isEnabled();
                 try {
-                    Configuration.get().getMachine().setEnabled(enable);
-                    setEnabled(true);
+					Configuration.get().getMachine().setEnabled(enable);
+					setEnabled(true);
+					if (machine.getHomeAfterEnabled() && machine.isEnabled()) {
+						selectedTool.getHead().home();
+		                homeAction.putValue(Action.SMALL_ICON, Icons.home);
+					}
                 }
                 catch (Exception t1) {
-                    MessageBoxes.errorBox(MachineControlsPanel.this, "Enable Failure",
+                    MessageBoxes.errorBox(MachineControlsPanel.this, "Enable Failure", //$NON-NLS-1$
                             t1.getMessage());
                     setEnabled(true);
                 }
@@ -283,7 +288,7 @@ public class MachineControlsPanel extends JPanel {
     };
 
     @SuppressWarnings("serial")
-    public Action homeAction = new AbstractAction("Home", Icons.home) {
+    public Action homeAction = new AbstractAction(Translations.getString("MachineControls.Action.Home"), Icons.home) { //$NON-NLS-1$
         {
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_BACK_QUOTE,
                     Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
@@ -323,7 +328,7 @@ public class MachineControlsPanel extends JPanel {
     };
 
     private void updateStartStopButton(boolean enabled) {
-        startStopMachineAction.putValue(Action.NAME, enabled ? "Stop" : "Start");
+        startStopMachineAction.putValue(Action.NAME, enabled ? Translations.getString("MachineControls.Action.Stop") : Translations.getString("MachineControls.Action.Start")); //$NON-NLS-1$ //$NON-NLS-2$
         startStopMachineAction.putValue(Action.SMALL_ICON,
                 enabled ? Icons.powerOff : Icons.powerOn);
         homeAction.putValue(Action.SMALL_ICON, enabled ? Icons.homeWarning : Icons.home);
@@ -412,7 +417,7 @@ public class MachineControlsPanel extends JPanel {
 
             for (Head head : machine.getHeads()) {
 
-                BeanUtils.addPropertyChangeListener(head, "nozzles", (e) -> {
+                BeanUtils.addPropertyChangeListener(head, "nozzles", (e) -> { //$NON-NLS-1$
                     if (e.getOldValue() == null && e.getNewValue() != null) {
                         Nozzle nozzle = (Nozzle) e.getNewValue();
                         comboBoxHeadMountable.addItem(new NozzleItem(nozzle));
@@ -427,7 +432,7 @@ public class MachineControlsPanel extends JPanel {
                     }
                 });
 
-                BeanUtils.addPropertyChangeListener(head, "cameras", (e) -> {
+                BeanUtils.addPropertyChangeListener(head, "cameras", (e) -> { //$NON-NLS-1$
                     if (e.getOldValue() == null && e.getNewValue() != null) {
                         Camera camera = (Camera) e.getNewValue();
                         comboBoxHeadMountable.addItem(new CameraItem(camera));

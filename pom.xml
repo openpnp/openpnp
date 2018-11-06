@@ -136,9 +136,9 @@
 			<version>3.3.0</version>
 		</dependency>
 		<dependency>
-			<groupId>org.eclipse.mylyn.github</groupId>
-			<artifactId>org.eclipse.egit.github.core</artifactId>
-			<version>2.1.5</version>
+    		<groupId>com.github.kennedyoliveira</groupId>
+    		<artifactId>pastebin4j</artifactId>
+    		<version>1.2.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.mashape.unirest</groupId>

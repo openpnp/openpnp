@@ -21,6 +21,7 @@ package org.openpnp;
 
 import java.awt.EventQueue;
 import java.io.File;
+import java.util.Locale;
 
 import javax.swing.UIManager;
 
@@ -144,12 +145,13 @@ public class Main {
 
         Configuration.initialize(configurationDirectory);
         final Configuration configuration = Configuration.get();
+        Locale.setDefault(Configuration.get().getLocale());
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
                     MainFrame frame = new MainFrame(configuration);
                     frame.setVisible(true);
-                    Logger.debug(String.format("Bienvenue, Willkommen, Hello, Namaskar, Welkom to OpenPnP version %s.", Main.getVersion()));
+                    Logger.debug(String.format("Bienvenue, Bienvenido, Willkommen, Hello, Namaskar, Welkom to OpenPnP version %s.", Main.getVersion()));
                     configuration.getScripting().on("Startup", null);
                 }
                 catch (Exception e) {

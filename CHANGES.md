@@ -1,7 +1,117 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
-# 2017-01-28
+# 2018-10-31
+
+* OpenCV 3.4.2 Upgrade Reverted
+
+	The OpenCV upgrade has temporarily been reverted due to an issue found in the OpenCV library
+	during testing:
+	
+	https://github.com/openpnp/opencv/issues/38
+	
+	Once this issue is resolved, this patch will be re-added.
+	
+# 2018-09-26
+
+* Connection Keep Alive
+
+	Thank you to @markmaker for PR https://github.com/openpnp/openpnp/pull/767 which adds a keep
+	alive option to the drive communications configuration. This option, which is on by default,
+	can be turned off to cause OpenPnP to close the serial port or TCP port when clicking the
+	disable button. This makes it possible to connect to the serial port from another program
+	without having to exit OpenPnP.
+	
+	Note, again, that this option is on by default which is the pre-existing behavior. You can turn
+	it off if you want the new behavior.
+	 
+# 2018-09-10
+
+* Nozzle Offset Setup Wizard
+
+	There's a new nozzle offset setup wizard in the Nozzle setup area that now makes it very easy to
+	setup nozzle offsets. This is one of the more confusing aspects of setting up OpenPnP and the new
+	wizard makes it very easy. Many thanks to @pfried for this new feature!
+	
+	See https://github.com/openpnp/openpnp/pull/765 for more information.
+
+# 2018-08-18
+
+* Placements Comments
+
+	The Placements table (Pick and Place) now contains a user editable Comments column that is
+	saved in the board file for each Placement.
+	
+# 2018-08-04
+
+* OpenCV Upgraded to 3.4.2
+
+	OpenCV has been upgraded to 3.4.2, which is the latest release.
+	
+# 2018-07-15
+
+* TCP/IP Support in GcodeDriver
+
+	Thanks to a great effort from @PeeJay, GcodeDriver (and the OpenBuilds driver) now support
+	communication over TCP/IP in addition to serial. This makes it possible to use Smoothieboard
+	over Ethernet now, for example. To use TCP/IP, go to your Driver settings and check the
+	Communication tab for new options.
+	
+	This change requires a migration of communication settings. This should happen automatically.
+	If it doesn't, or if you get an error on startup, please let us know and post your machine.xml
+	to the Discussion Group at https://groups.google.com/forum/#!forum/openpnp.
+
+# 2018-07-13
+
+* Dwell Times per Nozzle Tip
+
+	Pick dwell time and place dwell time has been added to nozzle tip. 
+	This means the total dwell times are now the sum of the nozzle dwell times 
+	plus nozzle tip dwell times. The idea behind this is that larger nozzle tips
+	are used to lift bigger/heavier chips and typically require a bit longer dwell
+	times in general.
+ 
+# 2018-07-08
+
+@aneox submitted a bunch of great new features. Some are still being worked on, but the following
+ones have been merged in:
+
+- Filter PlacementsTableModel, show only active board side. Note that this change makes it so
+  that if you want to edit both sides of a board you have to add it to the job twice and set
+  the side.
+- Added option to AutoHome after machine enabled. To activate, need to set checkbox in machine settings.
+- Windows saves sizes and position in Multiple Windows Mode.
+- Save configuration menu button. (Moved from Machine menu to File menu)
+- Camera window can be split in vertical or horizontal style.
+- Job autosave after each placement. Please post to the list if this causes a performane issue
+  on your machine.
+  
+ The following items have been merged but some additional work may still need to be done on them:
+  
+- Added peel off actuator option for Drag Feeder.
+- Drag Feeder improve accurance of feed, now drag distance can be adaptive with vision enabled.
+- Drag Feeder can work with 0402.
+
+Thanks @aneox for all the great work!
+
+# 2018-07-04
+
+* Placement Status Indicator and Progressbar
+
+	A new panel in the bottom status bar has been added that lists the current jobs
+	total number of placements, completed number of placements and the same values 
+	for the selected board only. A progress bar shows the percentage of completed 
+	placements for the entire job. These indicators update in real-time whenever 
+	any placement/board is edited or while the job runs.
+
+# 2018-07-02
+
+* Machine -> Save Config
+
+	A new menu option called Machine -> Save Config does a force save of the machine.xml,
+	parts.xml, and packages.xml.
+
+# 2018-01-28
 
 * OpenPnpCapture New Properties
 

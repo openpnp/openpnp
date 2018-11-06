@@ -9,7 +9,9 @@ import java.awt.event.KeyEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -28,7 +30,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JCheckBox;
 
 public class GcodeDriverConsole extends AbstractConfigurationWizard {
     private final GcodeDriver driver;
@@ -143,6 +144,12 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
     }
 
     private void sendGcodeConCmd() {
+
+        // Check that machine is started before sending commands
+        if(!Configuration.get().getMachine().isEnabled()){
+            JOptionPane.showMessageDialog(null, "Please start machine before sending commands.");
+            return;
+        }
 
         String cmd = cmdLineTextField.getText();
         int moveLen = 0;

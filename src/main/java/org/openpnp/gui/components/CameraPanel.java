@@ -45,7 +45,8 @@ import org.openpnp.spi.Head;
 public class CameraPanel extends JPanel {
     private static int maximumFps = 15;
     private static final String SHOW_NONE_ITEM = "Show None";
-    private static final String SHOW_ALL_ITEM = "Show All";
+    private static final String SHOW_ALL_ITEM_H = "Show All Horizontal";
+    private static final String SHOW_ALL_ITEM_V = "Show All Vertical";
 
     private Map<Camera, CameraView> cameraViews = new LinkedHashMap<>();
 
@@ -111,7 +112,8 @@ public class CameraPanel extends JPanel {
         else if (cameraViews.size() == 2) {
             // Otherwise this is the second camera so mix in the
             // show all item.
-            camerasCombo.insertItemAt(SHOW_ALL_ITEM, 1);
+            camerasCombo.insertItemAt(SHOW_ALL_ITEM_H, 1);
+            camerasCombo.insertItemAt(SHOW_ALL_ITEM_V, 2);
         }
     }
     
@@ -154,7 +156,7 @@ public class CameraPanel extends JPanel {
      * @return
      */
     public void ensureCameraVisible(Camera camera) {
-        if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM)) {
+        if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_H) || camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_V)) {
             return;
         }
         setSelectedCamera(camera);
@@ -193,12 +195,18 @@ public class CameraPanel extends JPanel {
                 camerasPanel.add(panel);
                 selectedCameraView = null;
             }
-            else if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM)) {
+            else if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_H) || camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_V)) {
                 int rows = (int) Math.ceil(Math.sqrt(cameraViews.size()));
                 if (rows == 0) {
                     rows = 1;
                 }
-                camerasPanel.setLayout(new GridLayout(rows, 0, 1, 1));
+				if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_H)) {
+					camerasPanel.setLayout(new GridLayout(rows, 0, 1, 1));
+				}
+				else {
+					camerasPanel.setLayout(new GridLayout(0, rows, 1, 1));
+				}
+
                 for (CameraView cameraView : cameraViews.values()) {
                     cameraView.setMaximumFps(maximumFps / Math.max(cameraViews.size(), 1));
                     cameraView.setShowName(true);

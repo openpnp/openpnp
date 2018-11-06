@@ -19,6 +19,7 @@
 
 package org.openpnp.machine.reference;
 
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -788,6 +789,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 	        }
             
             Logger.debug("Place {} with {}", part, nozzle.getName());
+
+            File file = job.getFile();
+            if (file != null) {
+                Configuration.get().saveJob(job, file);
+            }
+            Configuration.get().save();
         }
 
         clearStepComplete();
@@ -921,18 +928,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         this.parkWhenComplete = parkWhenComplete;
     }
     
-    public List<JobPlacement> getJobPlacementsById(String id) { 
-        return jobPlacements.stream().filter((jobPlacement) -> {
-            return jobPlacement.toString() == id;
-        }).collect(Collectors.toList()); 
-    } 
-    
-    public List<JobPlacement> getJobPlacementsById(String id, Status status) {
-        return jobPlacements.stream().filter((jobPlacement) -> {
-            return jobPlacement.toString() == id && jobPlacement.status == status;
-        }).collect(Collectors.toList());
-    }
-
     // Sort a List<JobPlacement> by the number of nulls it contains in ascending order.
     Comparator<List<JobPlacement>> byFewestNulls = (a, b) -> {
         return Collections.frequency(a, null) - Collections.frequency(b, null);

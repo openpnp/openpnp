@@ -2,9 +2,11 @@ package org.openpnp.machine.reference.signaler;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import javax.swing.Action;
 import javax.swing.Icon;
 
@@ -14,9 +16,6 @@ import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractSignaler;
 import org.simpleframework.xml.Attribute;
-
-import sun.audio.AudioPlayer;
-import sun.audio.AudioStream;
 
 /**
  * The SoundSignaler can acoustically indicate certain states of the machine or a job processor like errors or
@@ -45,10 +44,12 @@ public class SoundSignaler extends AbstractSignaler {
                 soundStream = classLoader.getResourceAsStream(filename);
             }
 
-            AudioStream audioStream = new AudioStream(soundStream);
-            AudioPlayer.player.start(audioStream);
-
-        } catch (IOException e) {
+            Clip clip = AudioSystem.getClip();
+            AudioInputStream inputStream = AudioSystem.getAudioInputStream(soundStream);
+            clip.open(inputStream);
+            clip.start(); 
+        } 
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -92,30 +93,5 @@ public class SoundSignaler extends AbstractSignaler {
                 break;
             }
         }
-    }
-
-    @Override
-    public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
-    }
-
-    @Override
-    public PropertySheetHolder[] getChildPropertySheetHolders() {
-        return new PropertySheetHolder[0];
-    }
-
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[0];
-    }
-
-    @Override
-    public Action[] getPropertySheetHolderActions() {
-        return new Action[0];
-    }
-
-    @Override
-    public Icon getPropertySheetHolderIcon() {
-        return null;
     }
 }
