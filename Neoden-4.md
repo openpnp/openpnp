@@ -5,13 +5,13 @@ Joint effort to add OpenPnP support for the Neoden 4 PnP machine.
 The machines motion controller has the following coordinate system:
 <pre>
 Left             (Back / Top)        Right
-             (0, 0)        (0,437)
+          (-437, 437)          (0,437)
              +-------------------+
              |                   |   Feeders
 Feeders      |                   |   Up-looking camera
              |                   |   Feeders
              +-------------------+
-             (-437, 0) (-437, 437)
+          (-437, 0)            (0, 0)
                 (Front / Bottom)
 </pre>
 
