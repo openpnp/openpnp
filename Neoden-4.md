@@ -113,6 +113,56 @@ MM00000000000000XX
 <pre>
 </pre>
 
+## Feeders and peelers
+
+**NOTE!** This section is still work-in-progress.
+
+### Feeders
+Starting the feeder
+<pre>
+3f -> 0c
+xx -> yy   // xx=0x47== feeder01  yy=response
+ff -> 00
+xx -> yy   // xx and yy == same as above
+SS RR 00 00 00 00 00 00 XX
+3f -> 0c                                                .                
+56 -> 18
+3f -> 0c
+56 -> 4d
+</pre>
+
+`XX` is the checksum of the message.
+`SS` is feed strength, 32 = 50%.
+`RR` is feed rate. 04 is used for 0402, for instance.
+
+Then, getting status
+<pre>
+64 -> 0e
+24 -> 02
+24 -> 13
+a4 -> 1b 
+   -> MM 00 00 00 00 00 00 00 XX
+</pre>
+
+`XX` is the checksum of the message (read).
+`MM` when MM is 20, feeder is done.
+
+### Peelers
+<pre>
+4c -> 01
+cc -> 09
+PPRRSS0000000000XX
+0c -> 0d
+0c -> 49
+</pre>
+
+`XX` is the checksum of the message.
+`PP` is the peeler number; 0e= peeler 14.
+`RR` is the feedrate of the peeler; 10 = feedrate 16
+`SS` is the strength of the peeler; 50 = 80% strength.
+
+Seems like the peeler is always started before the feeder, when feeding components.
+
 ## Rails
 
 ### Moving forward (into the machine, from Front)
