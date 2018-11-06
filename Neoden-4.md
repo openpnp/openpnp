@@ -56,7 +56,16 @@ x1x2x3x4y1y2y3y4XX
 
 ### Rotating
 <pre>
+41 -> 0d
+c1 -> 05
+d1d232NN00000000XX
+01 -> 01
+01 -> 45
 </pre>
+
+`XX` is the checksum of the message.
+`d1d2` degrees of rotation in 0.1 units, int16, little endian. f8f8 = -1800, 0000 = 0, 0807 = 1800
+`NN` is 01, 02, 03 or 04. For Nozzles 1-4.
 
 ### Moving up / down
 <pre>
@@ -85,6 +94,24 @@ PPNN000000000000XX
 `XX` is the checksum of the message.
 `NN` is 01, 02, 03 or 04. For nozzle 1-4.
 `PP` 01 => blow, 00 => idle, ff => max suction.
+
+## Flash for camera
+
+### Down camera, mounted on head
+<pre>
+44 -> 08
+c4 -> 00
+MM00000000000000XX
+04 -> 04
+04 -> 40
+</pre>
+
+`XX` is the checksum of the message.
+`MM` is the mode 00=off, 01=mode1, 02=mode2, 03=mode3.
+
+### Up camera, between feeders
+<pre>
+</pre>
 
 ## Rails
 
