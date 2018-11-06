@@ -201,6 +201,22 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
         }
     }
 
+    public int read() throws TimeoutException, IOException {
+        try {
+            return input.read();
+        }
+        catch (IOException ex) {
+            if (ex.getCause() instanceof SerialPortTimeoutException) {
+                throw new TimeoutException(ex.getMessage());
+            }
+            throw ex;
+        }
+    }
+    
+    public void write(int d) throws IOException {
+        output.write(d);
+    }
+
     public String getConnectionName() {
         return "serial://" + portName;
     }
