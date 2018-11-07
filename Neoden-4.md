@@ -97,6 +97,20 @@ PPNN000000000000XX
 `NN` is 01, 02, 03 or 04. For nozzle 1-4.<br>
 `PP` 01 => blow, 00 => idle, ff => max suction.<br>
 
+### Status (vacuum / suction)
+<pre>
+40 -> 0c
+00 -> 11
+80 -> 19
+   -> n1 n2 n3 n4 03 00 00 00 XX
+</pre>
+
+`XX` is the checksum of the message.<br>
+`n1` is the vacuum / pressure for nozzle 1, int8. Negative is vacuum <br>
+`n2` is the vacuum / pressure for nozzle 2, int8. Negative is vacuum <br>
+`n3` is the vacuum / pressure for nozzle 3, int8. Negative is vacuum <br>
+`n4` is the vacuum / pressure for nozzle 4, int8. Negative is vacuum <br>
+
 ## Flash for camera
 
 ### Down camera, mounted on head
@@ -251,3 +265,15 @@ c7 -> 03
 
 `XX` is the checksum for the message.<br>
 Whenever you need to stop moving the rails, you issue this command.
+
+## Unknown messages
+### Unknown status message
+<pre>
+45 -> 09
+05 -> 14
+85 -> 1c
+   -> 00 03 00 14 00 00 00 00 XX
+</pre>
+
+`XX` is the checksum for the message.<br>
+This is repeated at a regular interval when running a job, or when being in the "Manual test" UI in the original application from Neoden. Currently unknown why and what it does.
