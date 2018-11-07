@@ -237,6 +237,18 @@ Seems like the peeler is always started before the feeder, when feeding componen
 
 ## Rails
 
+### Adjusting the speed of the rails
+<pre>
+46 -> 0a
+c6 -> 02
+32 09 00 SS 00 00 00 00 XX
+06 -> 06
+06 -> 42
+</pre>
+
+`XX` is the checksum for the message.<br>
+`SS` sets the speed of the rails. `14`=10%, `28`=20%, `3c`=30%, etc up to `c8`=100%.<br>
+
 ### Moving forward (into the machine, from Front)
 <pre>
 49 -> 04
@@ -247,8 +259,6 @@ c9 -> 0c
 </pre>
 
 `XX` is the checksum for the message.<br>
-What is currently unknown is how to adjust speed on the rails.
-
 
 ### Moving backward (out of the machine, to Front)
 <pre>
@@ -260,7 +270,6 @@ c9 -> 0c
 </pre>
 
 `XX` is the checksum for the message.<br>
-What is currently unknown is how to adjust speed on the rails.
 
 ### Stopping a move
 <pre>
