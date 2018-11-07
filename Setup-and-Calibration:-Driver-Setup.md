@@ -25,6 +25,8 @@ Most of the drivers in OpenPnP communicate using the serial port. Before you can
 See the pages below for additional information on setting up specific drivers within OpenPnP.
 
 * [[GcodeDriver]]: Recommended for all Gcode based controllers such as Smoothe, Grbl, TinyG, Marlin, etc.
+The Smoothie controller should not be configured in CNC (GRBL), but the 3D printer mode. 
+
 
 ## Connect
 
@@ -33,6 +35,8 @@ Now that the driver is configured, press the green power button <img src="https:
 ## Homing
 
 If your machine connected successfully it's time to home it. If you don't have home switches installed you can skip this step. To home the machine click the home button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/home.svg).
+
+A controller homing direction for XYZ axes should be set to min/min/min.
 
 ## Jogging the Machine
 ![screen shot 2016-06-18 at 10 33 18 am](https://cloud.githubusercontent.com/assets/1182323/16172512/1cf472b0-3540-11e6-987a-fff822524944.png)
