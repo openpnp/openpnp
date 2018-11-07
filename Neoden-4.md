@@ -161,11 +161,23 @@ a2 -> 1d
 `MM` when MM is 20, feeder is done / ready again.
 
 #### Unknown status #3
-Seen when using feeders: 1, 21
+Seen when using feeders: 21
 <pre>
 69 -> 02
 29 -> 1f   # repeat if response isn't 1f
 a9 -> 17
+   -> MM 00 00 00 00 00 00 00 XX
+</pre>
+
+`XX` is the checksum of the message (read).
+`MM` when MM is 20, the feeder is done / ready again.
+
+#### Unknown status #4
+Seen when using feeders: 1
+<pre>
+5c -> 02
+1c -> 1f   # repeat if response isn't 1f
+9c -> 17
    -> MM 00 00 00 00 00 00 00 XX
 </pre>
 
