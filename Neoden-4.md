@@ -127,7 +127,15 @@ MM00000000000000XX
 
 ### Up camera, between feeders
 <pre>
+47 -> 0b
+c7 -> 03
+00 00 00 00 MM 00 00 00 XX
+07 -> 07
+07 -> 43
 </pre>
+
+`XX` is the checksom for the message.<br>
+`MM` flash mode, 00 = off; 01=mode1
 
 ## Feeders and peelers
 
@@ -265,6 +273,21 @@ c7 -> 03
 
 `XX` is the checksum for the message.<br>
 Whenever you need to stop moving the rails, you issue this command.
+
+## Various functions
+
+### Buzzer
+<pre>
+47 -> 0b
+c7 -> 03
+00 00 00 00 00 ZZ 00 00 XX
+07 -> 07
+07 -> 43
+</pre>
+
+`XX` is the checksom for the message.<br>
+`ZZ` toggle buzzer; 00=off (default); 01=on until turned off.
+
 
 ## Unknown messages
 ### Unknown status message
