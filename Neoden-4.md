@@ -34,7 +34,7 @@ c7 -> 03
 07 -> 43
 </pre>
 
-`XX` is the checksom for the message.
+`XX` is the checksom for the message.<br>
 The other strange thing you see is that there's no response on the long array of bytes, but rather after sending a single byte right after the long array of bytes. This is the same for most (all?) long array of bytes sent.
 The last write / read might be repeated, until the read is actually the correct response.
 
@@ -50,9 +50,9 @@ x1x2x3x4y1y2y3y4XX
 08 -> 4d
 </pre>
 
-`x1x2x3x4` is the X-coordinate in int32, little endian, in .01mm
-`y1y2y3y4` is the Y-coordinate in int32, little endian, in .01mm
-`XX` is the checksum of the message.
+`x1x2x3x4` is the X-coordinate in int32, little endian, in .01mm<br>
+`y1y2y3y4` is the Y-coordinate in int32, little endian, in .01mm<br>
+`XX` is the checksum of the message.<br>
 
 ## Nozzles
 
@@ -65,9 +65,9 @@ d1d232NN00000000XX
 01 -> 45
 </pre>
 
-`XX` is the checksum of the message.
-`d1d2` degrees of rotation in 0.1 units, int16, little endian. f8f8 = -1800, 0000 = 0, 0807 = 1800
-`NN` is 01, 02, 03 or 04. For Nozzles 1-4.
+`XX` is the checksum of the message.<br>
+`d1d2` degrees of rotation in 0.1 units, int16, little endian. f8f8 = -1800, 0000 = 0, 0807 = 1800<br>
+`NN` is 01, 02, 03 or 04. For Nozzles 1-4.<br>
 
 ### Moving up / down
 <pre>
@@ -78,9 +78,9 @@ h1h232NN00000000XX
 02 -> 46
 </pre>
 
-`XX` is the checksum of the message.
-`NN` is 01, 02, 03 or 04. For nozzles 1-4.
-`h1h2` is int16, little endian. Height of nozzle; 0000 is max retracted into head, e02e is max down.
+`XX` is the checksum of the message.<br>
+`NN` is 01, 02, 03 or 04. For nozzles 1-4.<br>
+`h1h2` is int16, little endian. Height of nozzle; 0000 is max retracted into head, e02e is max down.<br>
 In the neoden software it is visualised as 12.0 -> 0.0 (12.0 being max retracted into head).
 
 
@@ -93,9 +93,9 @@ PPNN000000000000XX
 03 -> 47
 </pre>
 
-`XX` is the checksum of the message.
-`NN` is 01, 02, 03 or 04. For nozzle 1-4.
-`PP` 01 => blow, 00 => idle, ff => max suction.
+`XX` is the checksum of the message.<br>
+`NN` is 01, 02, 03 or 04. For nozzle 1-4.<br>
+`PP` 01 => blow, 00 => idle, ff => max suction.<br>
 
 ## Flash for camera
 
@@ -108,8 +108,8 @@ MM00000000000000XX
 04 -> 40
 </pre>
 
-`XX` is the checksum of the message.
-`MM` is the mode 00=off, 01=mode1, 02=mode2, 03=mode3.
+`XX` is the checksum of the message.<br>
+`MM` is the mode 00=off, 01=mode1, 02=mode2, 03=mode3.<br>
 
 ### Up camera, between feeders
 <pre>
@@ -132,9 +132,9 @@ SS RR 00 00 00 00 00 00 XX
 xx -> 4d    # these two until response is 4n
 </pre>
 
-`XX` is the checksum of the message.
-`SS` is feed strength, 32 = 50%.
-`RR` is feed rate. 04 is used for 0402, for instance.
+`XX` is the checksum of the message.<br>
+`SS` is feed strength, 32 = 50%.<br>
+`RR` is feed rate. 04 is used for 0402, for instance.<br>
 
 #### Unknown status #1
 Seen when using feeders: 
@@ -145,8 +145,8 @@ a4 -> 1b
    -> MM 00 00 00 00 00 00 00 XX
 </pre>
 
-`XX` is the checksum of the message (read).
-`MM` when MM is 20, feeder is done / ready again.
+`XX` is the checksum of the message (read).<br>
+`MM` when MM is 20, feeder is done / ready again.<br>
 
 #### Unknown status $2
 Seen when using feeders: 14
@@ -157,8 +157,8 @@ a2 -> 1d
    -> MM 00 00 00 00 00 00 00 XX
 </pre>
 
-`XX` is the checksum of the message (read).
-`MM` when MM is 20, feeder is done / ready again.
+`XX` is the checksum of the message (read).<br>
+`MM` when MM is 20, feeder is done / ready again.<br>
 
 #### Unknown status #3
 Seen when using feeders: 21
@@ -169,8 +169,8 @@ a9 -> 17
    -> MM 00 00 00 00 00 00 00 XX
 </pre>
 
-`XX` is the checksum of the message (read).
-`MM` when MM is 20, the feeder is done / ready again.
+`XX` is the checksum of the message (read).<br>
+`MM` when MM is 20, the feeder is done / ready again.<br>
 
 #### Unknown status #4
 Seen when using feeders: 1
@@ -181,8 +181,8 @@ Seen when using feeders: 1
    -> MM 00 00 00 00 00 00 00 XX
 </pre>
 
-`XX` is the checksum of the message (read).
-`MM` when MM is 20, the feeder is done / ready again.
+`XX` is the checksum of the message (read).<br>
+`MM` when MM is 20, the feeder is done / ready again.<br>
 
 #### Unknown status #4
 Seen when using feeders: 30
@@ -193,8 +193,8 @@ b2 -> 1e
    -> MM 00 00 00 00 00 00 00 XX
 </pre>
 
-`XX` is the checksum of the message (read).
-`MM` when MM is 20, the feeder is done / ready again.
+`XX` is the checksum of the message (read).<br>
+`MM` when MM is 20, the feeder is done / ready again.<br>
 
 
 ### Peelers
@@ -206,10 +206,10 @@ PPRRSS0000000000XX
 0c -> 49
 </pre>
 
-`XX` is the checksum of the message.
-`PP` is the peeler number; 0e= peeler 14.
-`RR` is the feedrate of the peeler; 10 = feedrate 16
-`SS` is the strength of the peeler; 50 = 80% strength.
+`XX` is the checksum of the message.<br>
+`PP` is the peeler number; 0e= peeler 14.<br>
+`RR` is the feedrate of the peeler; 10 = feedrate 16<br>
+`SS` is the strength of the peeler; 50 = 80% strength.<br>
 
 Seems like the peeler is always started before the feeder, when feeding components.
 
@@ -224,7 +224,7 @@ c9 -> 0c
 09 -> 4c
 </pre>
 
-`XX` is the checksum for the message.
+`XX` is the checksum for the message.<br>
 What is currently unknown is how to adjust speed on the rails.
 
 
@@ -237,7 +237,7 @@ c9 -> 0c
 09 -> 4c
 </pre>
 
-`XX` is the checksum for the message.
+`XX` is the checksum for the message.<br>
 What is currently unknown is how to adjust speed on the rails.
 
 ### Stopping a move
@@ -249,5 +249,5 @@ c7 -> 03
 07 -> 43
 </pre>
 
-`XX` is the checksum for the message.
+`XX` is the checksum for the message.<br>
 Whenever you need to stop moving the rails, you issue this command.
