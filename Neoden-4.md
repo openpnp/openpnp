@@ -139,60 +139,36 @@ c7 -> 03
 
 ## Feeders and peelers
 
-**NOTE!** This section is still work-in-progress.
-
 ### Feeders
 
 #### Feed a part
 <pre>
 3f -> 0c
-xx -> yy   // xx=0x47== feeder01  yy=response
+NN -> R1
 ff -> 00
-xx -> yy   // xx and yy == same as above
+NN -> R2
 SS RR 00 00 00 00 00 00 XX
 3f -> 0c    # Repeat,                                           .                
-xx -> 4d    # these two until response is 4n
+NN -> R3    # these two until response is R3
 </pre>
 
 `XX` is the checksum of the message.<br>
+`NN` is feeder number, starting at `47`==feeder 01.<br>
+`R1`, `R2´, `R3` are response codes that varies per feeder.<br>
 `SS` is feed strength, 32 = 50%.<br>
 `RR` is feed rate. 04 is used for 0402, for instance.<br>
 
-#### Unknown status #1
-Seen when using feeders: 
+### Check for status
 <pre>
-64 -> 0e
-24 -> 13  # repeat if response isn't 13
-a4 -> 1b 
+S1 -> R1
+S2 -> R2   # repeat if response isn't R2
+S3 -> R3
    -> MM 00 00 00 00 00 00 00 XX
 </pre>
 
 `XX` is the checksum of the message (read).<br>
-`MM` when MM is 20, feeder is done / ready again.<br>
-
-#### Unknown status $2
-Seen when using feeders: 14
-<pre>
-62 -> 08
-22 -> 15   # repeat if response isn't 15
-a2 -> 1d
-   -> MM 00 00 00 00 00 00 00 XX
-</pre>
-
-`XX` is the checksum of the message (read).<br>
-`MM` when MM is 20, feeder is done / ready again.<br>
-
-#### Unknown status #3
-Seen when using feeders: 21
-<pre>
-69 -> 02
-29 -> 1f   # repeat if response isn't 1f
-a9 -> 17
-   -> MM 00 00 00 00 00 00 00 XX
-</pre>
-
-`XX` is the checksum of the message (read).<br>
-`MM` when MM is 20, the feeder is done / ready again.<br>
+`S1`, `S2`, `S3`, `R1`, `R2`, `R3` are codes per feeder.<br>
+`MM` when MM is `20`, the feeder is done / ready again. It's `00` if not.<br>
 
 #### Unknown status #4
 Seen when using feeders: 1
