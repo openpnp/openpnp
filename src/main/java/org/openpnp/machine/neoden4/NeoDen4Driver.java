@@ -23,6 +23,8 @@ import org.simpleframework.xml.Root;
 
 @Root
 public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
+    // So, turns out it's just CRC16-CCITT
+    // https://www.embeddedrelated.com/showthread/msp430/29689-1.php
     static short checksumLookupTable[] = {0, (short) 0x1021, (short) 0x2042, (short) 0x3063, (short) 0x4084,
             (short) 0x50A5, (short) 0x60C6, (short) 0x70E7, (short) 0x8108, (short) 0x9129,
             (short) 0x0A14A, (short) 0x0B16B, (short) 0x0C18C, (short) 0x0D1AD, (short) 0x0E1CE,
