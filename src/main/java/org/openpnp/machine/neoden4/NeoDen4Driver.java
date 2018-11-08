@@ -172,7 +172,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
 //            machine.addActuator(a);
 //        }
         
-        ReferenceNozzle n = (ReferenceNozzle) machine.getDefaultHead().getNozzle("N1");
+        ReferenceNozzle n;
+        n = (ReferenceNozzle) machine.getDefaultHead().getNozzle("N1");
         if (n == null) {
             n = new ReferenceNozzle("N1");
             n.setName("N1");
@@ -199,6 +200,52 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
             n.setName("N4");
             machine.getDefaultHead().addNozzle(n);
         }
+        
+
+        ReferenceActuator a;
+        a = (ReferenceActuator) machine.getActuatorByName("N1-Air");
+        if (a == null) {
+            a = new ReferenceActuator();
+            a.setName("N1-Air");
+            machine.addActuator(a);
+        }
+        
+        a = (ReferenceActuator) machine.getActuatorByName("N2-Air");
+        if (a == null) {
+            a = new ReferenceActuator();
+            a.setName("N2-Air");
+            machine.addActuator(a);
+        }
+        
+        a = (ReferenceActuator) machine.getActuatorByName("N3-Air");
+        if (a == null) {
+            a = new ReferenceActuator();
+            a.setName("N3-Air");
+            machine.addActuator(a);
+        }
+        
+        a = (ReferenceActuator) machine.getActuatorByName("N4-Air");
+        if (a == null) {
+            a = new ReferenceActuator();
+            a.setName("N4-Air");
+            machine.addActuator(a);
+        }
+
+        
+        a = (ReferenceActuator) machine.getActuatorByName("Lights-Down");
+        if (a == null) {
+            a = new ReferenceActuator();
+            a.setName("Lights-Down");
+            machine.addActuator(a);
+        }
+        
+        a = (ReferenceActuator) machine.getActuatorByName("Lights-Up");
+        if (a == null) {
+            a = new ReferenceActuator();
+            a.setName("Lights-Up");
+            machine.addActuator(a);
+        }
+        
     }
     
     public synchronized void connect() throws Exception {
@@ -234,10 +281,16 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
     
     int read() throws Exception {
+        return read(true);
+    }
+    
+    int read(boolean log) throws Exception {
         while (true) {
             try {
                 int d = getCommunications().read();
-                Logger.trace(String.format("< %02x", d));
+                if (log) {
+                    Logger.trace(String.format("< %02x", d & 0xff));
+                }
                 return d;
             }
             catch (TimeoutException e) {
@@ -247,8 +300,14 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
     
     void write(int d) throws Exception {
+        write(d, true);
+    }
+    
+    void write(int d, boolean log) throws Exception {
         d = d & 0xff;
-        Logger.trace(String.format("> %02x", d));
+        if (log) {
+            Logger.trace(String.format("> %02x", d));
+        }
         getCommunications().write(d);
     }
     
@@ -260,9 +319,25 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         sb.append(String.format("%02x", checksum(b) & 0xff));
         Logger.trace("> " + sb.toString());
         for (int i = 0; i < b.length; i++) {
-            getCommunications().write(b[i] & 0xff);
+            write(b[i], false);
         }
         getCommunications().write(checksum(b) & 0xff);
+    }
+    
+    byte[] readWithChecksum(int length) throws Exception {
+        byte[] b = new byte[length];
+        for (int i = 0; i < length; i++) {
+            b[i] = (byte) (read(false) & 0xff);
+        }
+        int checksum = read(false);
+        // TODO STOPSHIP verify checksum
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < b.length; i++) {
+            sb.append(String.format("%02x", b[i] & 0xff));
+        }
+        sb.append(String.format("%02x", checksum & 0xff));
+        Logger.trace("< " + sb.toString());
+        return b;
     }
     
     int expect(int expected) throws Exception {
@@ -311,12 +386,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     
     @Override
     public void home(ReferenceHead head) throws Exception {
-//        47 -> 0b
-//        c7 -> 03
-//        0100000000000000XX
-//        07 -> 07
-//        07 -> 43        
-        
         write(0x47);
         expect(0x0b);
         
@@ -352,12 +421,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
     
     private void moveXy(double x, double y) throws Exception {
-//      48 -> 05
-//      c8 -> 0d
-//      x1x2x3x4y1y2y3y4XX
-//      08 -> 09
-//      08 -> 4d            
-      
       write(0x48);
       expect(0x05);
       
@@ -373,17 +436,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
     
     private void moveZ(int nozzle, double z) throws Exception {
-//      Z        
-//      42 -> 0e
-//      c2 -> 06
-//      h1h232NN00000000XX
-//      02 -> 02
-//      02 -> 46        
-//      XX is the checksum of the message.
-//      NN is 01, 02, 03 or 04. For nozzles 1-4.
-//      h1h2 is int16, little endian. Height of nozzle; 0000 is max retracted into head, e02e is max down.
-//      In the neoden software it is visualised as 12.0 -> 0.0 (12.0 being max retracted into head).
-        
         // In our world, 0 is max up and -12 is max down. So 0 = 0 and -12 = e02e (which is 12000)
       
         z = -z;
@@ -404,16 +456,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
     
     private void moveC(int nozzle, double c) throws Exception {
-//        41 -> 0d
-//        c1 -> 05
-//        d1d232NN00000000XX
-//        01 -> 01
-//        01 -> 45
-//
-//        XX is the checksum of the message.
-//        d1d2 degrees of rotation in 0.1 units, int16, little endian. f8f8 = -1800, 0000 = 0, 0807 = 1800
-//        NN is 01, 02, 03 or 04. For Nozzles 1-4.
-        
         write(0x41);
         expect(0x0d);
         
@@ -549,12 +591,154 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
 
     @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
-        // TODO STOPSHIP actuate
+        switch (actuator.getName()) {
+            case "N1-Air": {
+                write(0x43);
+                expect(0x0f);
+                
+                write(0xc3);
+                expect(0x07);
+                
+                byte[] b = new byte[8];
+                b[0] = (byte) value;
+                b[1] = 1;
+                writeWithChecksum(b);
+                
+                pollFor(0x03,  0x47);
+                break;
+            }
+            case "N2-Air": {
+                write(0x43);
+                expect(0x0f);
+                
+                write(0xc3);
+                expect(0x07);
+                
+                byte[] b = new byte[8];
+                b[0] = (byte) value;
+                b[1] = 2;
+                writeWithChecksum(b);
+                
+                pollFor(0x03,  0x47);
+                break;
+            }
+            case "N3-Air": {
+                write(0x43);
+                expect(0x0f);
+                
+                write(0xc3);
+                expect(0x07);
+                
+                byte[] b = new byte[8];
+                b[0] = (byte) value;
+                b[1] = 3;
+                writeWithChecksum(b);
+                
+                pollFor(0x03,  0x47);
+                break;
+            }
+            case "N4-Air": {
+                write(0x43);
+                expect(0x0f);
+                
+                write(0xc3);
+                expect(0x07);
+                
+                byte[] b = new byte[8];
+                b[0] = (byte) value;
+                b[1] = 4;
+                writeWithChecksum(b);
+                
+                pollFor(0x03,  0x47);
+                break;
+            }
+            case "Lights-Down": {
+                write(0x44);
+                expect(0x08);
+                
+                write(0xc4);
+                expect(0x00);
+                
+                byte[] b = new byte[8];
+                b[0] = (byte) value;
+                writeWithChecksum(b);
+                
+                pollFor(0x04,  0x40);
+              break;
+            }
+            case "Lights-Up": {
+                write(0x47);
+                expect(0x0b);
+                
+                write(0xc7);
+                expect(0x03);
+                
+                byte[] b = new byte[8];
+                b[4] = (byte) value;
+                writeWithChecksum(b);
+                
+                pollFor(0x07,  0x43);
+                break;
+            }
+        }
     }
     
     @Override
     public String actuatorRead(ReferenceActuator actuator) throws Exception {
-        // TODO STOPSHIP actuate
+        switch (actuator.getName()) {
+            case "N1-Air": {
+                write(0x40);
+                expect(0x0c);
+                
+                write(0x00);
+                expect(0x11);
+                
+                write(0x80);
+                expect(0x19);
+                
+                byte[] payload = readWithChecksum(8);
+                return Integer.toString(payload[0]);
+            }
+            case "N2-Air": {
+                write(0x40);
+                expect(0x0c);
+                
+                write(0x00);
+                expect(0x11);
+                
+                write(0x80);
+                expect(0x19);
+                
+                byte[] payload = readWithChecksum(8);
+                return Integer.toString(payload[1]);
+            }
+            case "N3-Air": {
+                write(0x40);
+                expect(0x0c);
+                
+                write(0x00);
+                expect(0x11);
+                
+                write(0x80);
+                expect(0x19);
+                
+                byte[] payload = readWithChecksum(8);
+                return Integer.toString(payload[2]);
+            }
+            case "N4-Air": {
+                write(0x40);
+                expect(0x0c);
+                
+                write(0x00);
+                expect(0x11);
+                
+                write(0x80);
+                expect(0x19);
+                
+                byte[] payload = readWithChecksum(8);
+                return Integer.toString(payload[3]);
+            }
+        }
         return null;
     }
 
