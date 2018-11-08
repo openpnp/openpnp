@@ -93,9 +93,117 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     private boolean connected;
     private Set<Nozzle> pickedNozzles = new HashSet<>();
     
-    double x = 0, y = 0, z = 0, rotation = 0;
+    double x = 0, y = 0;
+    double z1 = 0, z2 = 0, z3 = 0, z4 = 0;
+    double c1 = 0, c2 = 0, c3 = 0, c4 = 0;
+    
+
+    public void createMachineObjects() throws Exception {
+        // Make sure required objects exist
+        ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
+        
+//        ReferenceActuator a = (ReferenceActuator) machine.getActuatorByName("CameraUpLamp");
+//        if (a == null) {
+//            a = new ReferenceActuator();
+//            a.setName("CameraUpLamp");
+//            machine.addActuator(a);
+//        }
+//        
+//        a = (ReferenceActuator) machine.getActuatorByName("CameraDownLamp");
+//        if (a == null) {
+//            a = new ReferenceActuator();
+//            a.setName("CameraDownLamp");
+//            machine.addActuator(a);
+//        }
+//        
+//        a = (ReferenceActuator) machine.getActuatorByName("CameraSelectUp");
+//        if (a == null) {
+//            a = new ReferenceActuator();
+//            a.setName("CameraSelectUp");
+//            machine.addActuator(a);
+//        }
+//        
+//        a = (ReferenceActuator) machine.getActuatorByName("DragPin");
+//        if (a == null) {
+//            a = new ReferenceActuator();
+//            a.setName("DragPin");
+//            machine.addActuator(a);
+//        }
+//        
+//        a = (ReferenceActuator) machine.getActuatorByName("FilmPull");
+//        if (a == null) {
+//            a = new ReferenceActuator();
+//            a.setName("FilmPull");
+//            machine.addActuator(a);
+//        }
+//        
+//        a = (ReferenceActuator) machine.getActuatorByName("Pump");
+//        if (a == null) {
+//            a = new ReferenceActuator();
+//            a.setName("Pump");
+//            machine.addActuator(a);
+//        }
+//        
+//        a = (ReferenceActuator) machine.getActuatorByName("Nozzle1Vacuum");
+//        if (a == null) {
+//            a = new ReferenceActuator();
+//            a.setName("Nozzle1Vacuum");
+//            machine.addActuator(a);
+//        }
+//        
+//        a = (ReferenceActuator) machine.getActuatorByName("Nozzle2Vacuum");
+//        if (a == null) {
+//            a = new ReferenceActuator();
+//            a.setName("Nozzle2Vacuum");
+//            machine.addActuator(a);
+//        }
+//        
+//        a = (ReferenceActuator) machine.getActuatorByName("Nozzle1Down");
+//        if (a == null) {
+//            a = new ReferenceActuator();
+//            a.setName("Nozzle1Down");
+//            machine.addActuator(a);
+//        }
+//        
+//        a = (ReferenceActuator) machine.getActuatorByName("Nozzle2Down");
+//        if (a == null) {
+//            a = new ReferenceActuator();
+//            a.setName("Nozzle2Down");
+//            machine.addActuator(a);
+//        }
+        
+        ReferenceNozzle n = (ReferenceNozzle) machine.getDefaultHead().getNozzle("N1");
+        if (n == null) {
+            n = new ReferenceNozzle("N1");
+            n.setName("N1");
+            machine.getDefaultHead().addNozzle(n);
+        }
+        
+        n = (ReferenceNozzle) machine.getDefaultHead().getNozzle("N2");
+        if (n == null) {
+            n = new ReferenceNozzle("N2");
+            n.setName("N2");
+            machine.getDefaultHead().addNozzle(n);
+        }
+        
+        n = (ReferenceNozzle) machine.getDefaultHead().getNozzle("N3");
+        if (n == null) {
+            n = new ReferenceNozzle("N3");
+            n.setName("N3");
+            machine.getDefaultHead().addNozzle(n);
+        }
+        
+        n = (ReferenceNozzle) machine.getDefaultHead().getNozzle("N4");
+        if (n == null) {
+            n = new ReferenceNozzle("N4");
+            n.setName("N4");
+            machine.getDefaultHead().addNozzle(n);
+        }
+    }
     
     public synchronized void connect() throws Exception {
+        createMachineObjects();
+        
         getCommunications().connect();
 
         connected = false;
@@ -144,10 +252,17 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         getCommunications().write(d);
     }
     
-    void write(byte[] b) throws Exception {
+    void writeWithChecksum(byte[] b) throws Exception {
+        StringBuffer sb = new StringBuffer();
         for (int i = 0; i < b.length; i++) {
-            write(b[i]);
+            sb.append(String.format("%02x", b[i] & 0xff));
         }
+        sb.append(String.format("%02x", checksum(b) & 0xff));
+        Logger.trace("> " + sb.toString());
+        for (int i = 0; i < b.length; i++) {
+            getCommunications().write(b[i] & 0xff);
+        }
+        getCommunications().write(checksum(b) & 0xff);
     }
     
     int expect(int expected) throws Exception {
@@ -165,11 +280,16 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         return response;
     }
 
-    void putInt32(int d, byte[] buffer, int position) throws Exception {
-        buffer[position + 0] = (byte) ((d >> 0) & 0xff);
-        buffer[position + 1] = (byte) ((d >> 8) & 0xff);
-        buffer[position + 2] = (byte) ((d >> 16) & 0xff);
-        buffer[position + 3] = (byte) ((d >> 24) & 0xff);
+    void putInt32(int value, byte[] buffer, int position) throws Exception {
+        buffer[position + 0] = (byte) ((value >> 0) & 0xff);
+        buffer[position + 1] = (byte) ((value >> 8) & 0xff);
+        buffer[position + 2] = (byte) ((value >> 16) & 0xff);
+        buffer[position + 3] = (byte) ((value >> 24) & 0xff);
+    }
+    
+    void putInt16(int value, byte[] buffer, int position) throws Exception {
+        buffer[position + 0] = (byte) ((value >> 0) & 0xff);
+        buffer[position + 1] = (byte) ((value >> 8) & 0xff);
     }
     
     int checksum(byte[] b) {
@@ -206,8 +326,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         byte[] b = new byte[8];
         putInt32(0x01, b, 0);
         putInt32(0x00, b, 4);
-        write(b);
-        write(checksum(b));
+        writeWithChecksum(b);
         
         pollFor(0x07, 0x43);
         
@@ -219,7 +338,95 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
 
     @Override
     public Location getLocation(ReferenceHeadMountable hm) {
-        return new Location(units, x, y, z, rotation).add(hm.getHeadOffsets());
+        switch (hm.getId()) {
+            case "N1":
+                return new Location(units, x, y, z1, c1).add(hm.getHeadOffsets());
+            case "N2":
+                return new Location(units, x, y, z2, c2).add(hm.getHeadOffsets());
+            case "N3":
+                return new Location(units, x, y, z3, c3).add(hm.getHeadOffsets());
+            case "N4":
+                return new Location(units, x, y, z4, c4).add(hm.getHeadOffsets());
+        }
+        return new Location(units, x, y, 0, 0).add(hm.getHeadOffsets());
+    }
+    
+    private void moveXy(double x, double y) throws Exception {
+//      48 -> 05
+//      c8 -> 0d
+//      x1x2x3x4y1y2y3y4XX
+//      08 -> 09
+//      08 -> 4d            
+      
+      write(0x48);
+      expect(0x05);
+      
+      write(0xc8);
+      expect(0x0d);
+
+      byte[] b = new byte[8];
+      putInt32((int) (x * 100), b, 0);
+      putInt32((int) (y * 100), b, 4);
+      writeWithChecksum(b);
+      
+      pollFor(0x08, 0x4d);
+    }
+    
+    private void moveZ(int nozzle, double z) throws Exception {
+//      Z        
+//      42 -> 0e
+//      c2 -> 06
+//      h1h232NN00000000XX
+//      02 -> 02
+//      02 -> 46        
+//      XX is the checksum of the message.
+//      NN is 01, 02, 03 or 04. For nozzles 1-4.
+//      h1h2 is int16, little endian. Height of nozzle; 0000 is max retracted into head, e02e is max down.
+//      In the neoden software it is visualised as 12.0 -> 0.0 (12.0 being max retracted into head).
+        
+        // In our world, 0 is max up and -12 is max down. So 0 = 0 and -12 = e02e (which is 12000)
+      
+        z = -z;
+        
+        write(0x42);
+        expect(0x0e);
+        
+        write(0xc2);
+        expect(0x06);
+
+        byte[] b = new byte[8];
+        putInt16((int) (z * 1000.), b, 0);
+        b[2] = 0x32;
+        b[3] = (byte) nozzle;
+        writeWithChecksum(b);
+        
+        pollFor(0x02, 0x46);
+    }
+    
+    private void moveC(int nozzle, double c) throws Exception {
+//        41 -> 0d
+//        c1 -> 05
+//        d1d232NN00000000XX
+//        01 -> 01
+//        01 -> 45
+//
+//        XX is the checksum of the message.
+//        d1d2 degrees of rotation in 0.1 units, int16, little endian. f8f8 = -1800, 0000 = 0, 0807 = 1800
+//        NN is 01, 02, 03 or 04. For Nozzles 1-4.
+        
+        write(0x41);
+        expect(0x0d);
+        
+        write(0xc1);
+        expect(0x05);
+
+        byte[] b = new byte[8];
+        putInt16((int) (c * 10.), b, 0);
+        b[2] = 0x32;
+        b[3] = (byte) nozzle;
+        writeWithChecksum(b);
+        
+        pollFor(0x01, 0x45);
     }
 
     @Override
@@ -231,56 +438,88 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         double x = location.getX();
         double y = location.getY();
         double z = location.getZ();
-        double rotation = location.getRotation();
+        double c = location.getRotation();
 
         // Handle NaNs, which means don't move this axis for this move. We just copy the existing
         // coordinate.
-        if (Double.isNaN(x)) {
-            x = this.x;
-        }
-        if (Double.isNaN(y)) {
-            y = this.y;
-        }
-        if (Double.isNaN(z)) {
-            z = this.z;
-        }
-        if (Double.isNaN(rotation)) {
-            rotation = this.rotation;
-        }
-        
+        x = Double.isNaN(x) ? this.x : x;
+        y = Double.isNaN(y) ? this.y : y;
         if (x != this.x || y != this.y) {
-//            48 -> 05
-//            c8 -> 0d
-//            x1x2x3x4y1y2y3y4XX
-//            08 -> 09
-//            08 -> 4d            
-            
-            write(0x48);
-            expect(0x05);
-            
-            write(0xc8);
-            expect(0x0d);
-
-            byte[] b = new byte[8];
-            putInt32((int) (x * 100), b, 0);
-            putInt32((int) (y * 100), b, 4);
-            write(b);
-            write(checksum(b));
-            
-            pollFor(0x08, 0x4d);
+            moveXy(x, y);
             
             this.x = x;
             this.y = y;
         }
 
-        // TODO STOPSHIP
-        if (hm.getName().equals("N1")) {
-            if (z < 0) {
+        switch (hm.getId()) {
+            case "N1":
+                z = Double.isNaN(z) ? this.z1 : z;
+                z = Math.min(z, 0.);
+                z = Math.max(z, -12.);
+                if (z != this.z1) {
+                    moveZ(1, z);
+                    this.z1 = z;
+                }
                 
-            }
-        }
-        else if (hm.getName().equals("N2")) {
-            
+                c = Double.isNaN(c) ? this.c1 : c;
+                c = Math.max(c, -180.);
+                c = Math.min(c, 180.);                
+                if (c != this.c1) {
+                    moveC(1, c);
+                    this.c1 = c;
+                }
+                break;
+            case "N2":
+                z = Double.isNaN(z) ? this.z2 : z;
+                z = Math.min(z, 0.);
+                z = Math.max(z, -12.);
+                if (z != this.z2) {
+                    moveZ(2, z);
+                    this.z2 = z;
+                }
+                
+                c = Double.isNaN(c) ? this.c2 : c;
+                c = Math.max(c, -180.);
+                c = Math.min(c, 180.);                
+                if (c != this.c2) {
+                    moveC(2, c);
+                    this.c2 = c;
+                }
+                break;
+            case "N3":
+                z = Double.isNaN(z) ? this.z3 : z;
+                z = Math.min(z, 0.);
+                z = Math.max(z, -12.);
+                if (z != this.z3) {
+                    moveZ(3, z);
+                    this.z3 = z;
+                }
+                
+                c = Double.isNaN(c) ? this.c3 : c;
+                c = Math.max(c, -180.);
+                c = Math.min(c, 180.);                
+                if (c != this.c3) {
+                    moveC(3, c);
+                    this.c3 = c;
+                }
+                break;
+            case "N4":
+                z = Double.isNaN(z) ? this.z4 : z;
+                z = Math.min(z, 0.);
+                z = Math.max(z, -12.);
+                if (z != this.z4) {
+                    moveZ(4, z);
+                    this.z4 = z;
+                }
+                
+                c = Double.isNaN(c) ? this.c4 : c;
+                c = Math.max(c, -180.);
+                c = Math.min(c, 180.);                
+                if (c != this.c4) {
+                    moveC(4, c);
+                    this.c4 = c;
+                }
+                break;
         }
     }
 

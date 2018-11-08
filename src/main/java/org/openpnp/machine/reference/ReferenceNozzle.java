@@ -72,6 +72,11 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         });
     }
 
+    public ReferenceNozzle(String id) {
+        this();
+        this.id = id;
+    }
+    
     public boolean isLimitRotation() {
         return limitRotation;
     }
