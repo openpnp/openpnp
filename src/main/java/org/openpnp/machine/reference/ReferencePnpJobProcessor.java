@@ -632,8 +632,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             fireTextStatus("Picking %s from %s for %s.", part.getId(), feeder.getName(),
                     placement.getId());
             
-            ++totalPartsPlaced;
-
             // Pick
             nozzle.pick(part);
 
@@ -783,6 +781,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             // Mark the placement as "placed"
             boardLocation.setPlaced(jobPlacement.placement.getId(), true);
+            
+            ++totalPartsPlaced;
 
             plannedPlacement.stepComplete = true;
 
