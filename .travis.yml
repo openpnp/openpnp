@@ -3,7 +3,10 @@ sudo: false
 
 jdk:
 - oraclejdk8
-
+- oraclejdk9
+- openjdk10
+- oraclejdk11
+  
 env:
   global:
   - secure: Y5WwLvftJ/7KdL/MYBPuPHwzgrKbAn8QNBXCAKiZUvw80sHtrrjrCgD68UVfikl/m1v/EBnBOkMg8b38ZCPo0YON4E2jIRjOl58GH0NQ5fS58Cp6LPNMmjlSJTEtEpJak7P7ADxwWFXm4AVKeYS04mF2TbwasVs4nMYddCv8QYY=
