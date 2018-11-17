@@ -3,9 +3,9 @@ package org.openpnp.vision.pipeline.stages;
 import java.awt.Color;
 import java.util.List;
 
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.imgproc.Imgproc;
 import org.openpnp.util.HslColor;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -81,9 +81,9 @@ public class DrawCircles extends CvStage {
             Color color = this.color == null ? FluentCv.indexedColor(i) : this.color;
             Color centerColor = this.centerColor == null ? new HslColor(color).getComplementary()
                     : this.centerColor;
-            Core.circle(mat, new Point(circle.x, circle.y), (int) (circle.diameter / 2),
+            Imgproc.circle(mat, new Point(circle.x, circle.y), (int) (circle.diameter / 2),
                     FluentCv.colorToScalar(color), thickness);
-            Core.circle(mat, new Point(circle.x, circle.y), 1, FluentCv.colorToScalar(centerColor),
+            Imgproc.circle(mat, new Point(circle.x, circle.y), 1, FluentCv.colorToScalar(centerColor),
                     2);
         }
         return null;

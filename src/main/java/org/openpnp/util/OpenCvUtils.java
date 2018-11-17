@@ -193,8 +193,8 @@ public class OpenCvUtils {
             double x = circle[0];
             double y = circle[1];
             double radius = circle[2];
-            Core.circle(mat, new Point(x, y), (int) radius, new Scalar(0, 0, 255, 255), 2);
-            Core.circle(mat, new Point(x, y), 1, new Scalar(0, 255, 0, 255), 2);
+            Imgproc.circle(mat, new Point(x, y), (int) radius, new Scalar(0, 0, 255, 255), 2);
+            Imgproc.circle(mat, new Point(x, y), 1, new Scalar(0, 255, 0, 255), 2);
         }
         return mat;
     }

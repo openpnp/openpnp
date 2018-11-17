@@ -281,8 +281,8 @@ public class FluentCv {
             double x = circle[0];
             double y = circle[1];
             double radius = circle[2];
-            Core.circle(mat, new Point(x, y), (int) radius, colorToScalar(color), 2);
-            Core.circle(mat, new Point(x, y), 1, colorToScalar(centerColor), 2);
+            Imgproc.circle(mat, new Point(x, y), (int) radius, colorToScalar(color), 2);
+            Imgproc.circle(mat, new Point(x, y), 1, colorToScalar(centerColor), 2);
         }
         return store(mat, tag);
     }
@@ -734,7 +734,7 @@ public class FluentCv {
             p.y = 0;
             q.y = img.rows();
         }
-        Core.line(img, p, q, colorToScalar(color));
+        Imgproc.line(img, p, q, colorToScalar(color));
     }
 
     // From: http://stackoverflow.com/questions/23327502/opencv-how-to-draw-minarearect-in-java
@@ -743,7 +743,7 @@ public class FluentCv {
         rect.points(points);
         Scalar color_ = colorToScalar(color);
         for (int j = 0; j < 4; ++j) {
-            Core.line(mat, points[j], points[(j + 1) % 4], color_, thickness);
+            Imgproc.line(mat, points[j], points[(j + 1) % 4], color_, thickness);
         }
     }
 
