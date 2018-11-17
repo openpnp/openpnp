@@ -1,6 +1,17 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2018-11-17
+
+* OpenCV 3.4.2 Upgraded
+
+	The bug in the OpenCV library has been fixed so once again OpenPnP is upgraded to OpenCV 3.4.2.
+	
+* OpenPnP Compatible with Java 9, 10, 11.
+
+	With the upgrade of OpenCV OpenPnP is now compatible with all versions of Java after 8. This includes
+	Java 8, 9, 10, and 11. 
+
 # 2018-10-31
 
 * OpenCV 3.4.2 Upgrade Reverted
