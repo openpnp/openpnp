@@ -6,6 +6,7 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
@@ -35,7 +36,7 @@ public class MaskCircle extends CvStage {
         Scalar color = FluentCv.colorToScalar(Color.black);
         mask.setTo(color);
         masked.setTo(color);
-        Core.circle(mask, new Point(mat.cols() / 2, mat.rows() / 2),  Math.abs(diameter) / 2, new Scalar(255, 255, 255), -1);
+        Imgproc.circle(mask, new Point(mat.cols() / 2, mat.rows() / 2),  Math.abs(diameter) / 2, new Scalar(255, 255, 255), -1);
         if(diameter < 0) {
             Core.bitwise_not(mask,mask);
         }

@@ -4,13 +4,11 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
-import org.openpnp.util.OpenCvUtils;
-import org.openpnp.util.VisionUtils;
+import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
@@ -99,7 +97,7 @@ public class DrawRotatedRects extends CvStage {
 
     public void drawOrientationMark(Mat image, RotatedRect rrect, Scalar color, int thickness) {
         double markAngle = Math.toRadians(rrect.angle - 90.0);
-        Core.line(image, rrect.center,
+        Imgproc.line(image, rrect.center,
                 new Point(rrect.center.x + 1.2 * rrect.size.height / 2.0 * Math.cos(markAngle),
                         rrect.center.y + 1.2 * rrect.size.height / 2.0 * Math.sin(markAngle)),
                 color, Math.abs(thickness));
@@ -129,7 +127,7 @@ public class DrawRotatedRects extends CvStage {
             Color thecolor = (color == null ? FluentCv.indexedColor(i) : color);
             FluentCv.drawRotatedRect(mat, rect, thecolor, thickness);
             if (drawRectCenter) {
-                Core.circle(mat, rect.center, rectCenterRadius, FluentCv.colorToScalar(thecolor),
+                Imgproc.circle(mat, rect.center, rectCenterRadius, FluentCv.colorToScalar(thecolor),
                         thickness);
             }
             if (showOrientation) {
