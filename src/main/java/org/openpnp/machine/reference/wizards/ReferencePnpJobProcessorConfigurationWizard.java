@@ -21,12 +21,14 @@ package org.openpnp.machine.reference.wizards;
 
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
+import org.openpnp.machine.reference.ReferencePnpJobProcessor.JobOrderHint;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -37,6 +39,7 @@ import com.jgoodies.forms.layout.RowSpec;
 public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferencePnpJobProcessor jobProcessor;
     private JCheckBox parkWhenComplete;
+    private JComboBox comboBoxJobOrder;
 
     public ReferencePnpJobProcessorConfigurationWizard(ReferencePnpJobProcessor jobProcessor) {
         this.jobProcessor = jobProcessor;
@@ -47,18 +50,37 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelGeneral);
         panelGeneral.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.DEFAULT_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, RowSpec.decode("16px"),}));
+                new ColumnSpec[] {
+                        FormSpecs.RELATED_GAP_COLSPEC,
+                        FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC,
+                        FormSpecs.DEFAULT_COLSPEC,
+                        },
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}
+                ));
 
         JLabel lblParkWhenComplete = new JLabel("Park When Complete");
-        panelGeneral.add(lblParkWhenComplete, "1, 2, right, top");
+        panelGeneral.add(lblParkWhenComplete, "2, 2, right, top");
 
         parkWhenComplete = new JCheckBox("");
-        panelGeneral.add(parkWhenComplete, "2, 2");
+        panelGeneral.add(parkWhenComplete, "4, 2");
+
+        JLabel lblJobOrder = new JLabel("Job order");
+        panelGeneral.add(lblJobOrder, "2, 4");
+
+        comboBoxJobOrder = new JComboBox(JobOrderHint.values());
+        panelGeneral.add(comboBoxJobOrder, "4, 4");
     }
 
     @Override
     public void createBindings() {
         addWrappedBinding(jobProcessor, "parkWhenComplete", parkWhenComplete, "selected");
+        addWrappedBinding(jobProcessor, "jobOrder", comboBoxJobOrder, "selectedItem");
     }
 }

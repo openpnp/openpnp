@@ -71,6 +71,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Machine;
 import org.openpnp.util.HslColor;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
@@ -116,6 +117,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JLabel lblTapeType;
     private JComboBox comboBoxTapeType;
     private JLabel lblRotationInTape;
+    private JCheckBox checkBoxUsePickRotationInsteadOfRotationInTapeForStripFeeders;
     private JTextField textFieldLocationRotation;
     private JButton btnAutoSetup;
     private JCheckBox chckbxUseVision;
@@ -129,6 +131,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private Location secondPartLocation;
     private List<Location> part1HoleLocations;
     private Camera autoSetupCamera;
+    
+    private boolean isPickRotationUsedInStripFeeders = false;
 
 
     public ReferenceStripFeederConfigurationWizard(ReferenceStripFeeder feeder) {
@@ -141,6 +145,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         contentPanel.add(panelPart);
         panelPart.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
@@ -160,12 +165,22 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
         panelPart.add(comboBoxPart, "4, 2, left, default");
 
-        lblRotationInTape = new JLabel("Rotation In Tape");
+        if (Configuration.get().getMachine().getProperty("isPickRotationUsedInStripFeeders") == null) {
+        		Configuration.get().getMachine().setProperty("isPickRotationUsedInStripFeeders", false);
+        }
+        else {
+        		isPickRotationUsedInStripFeeders = (boolean)(Configuration.get().getMachine().getProperty("isPickRotationUsedInStripFeeders"));
+        }
+         
+        lblRotationInTape = new JLabel(isPickRotationUsedInStripFeeders ? "Pick Rotation" : "Rotation In Tape");
         panelPart.add(lblRotationInTape, "2, 4, left, default");
 
         textFieldLocationRotation = new JTextField();
         panelPart.add(textFieldLocationRotation, "4, 4, fill, default");
         textFieldLocationRotation.setColumns(4);
+
+        checkBoxUsePickRotationInsteadOfRotationInTapeForStripFeeders = new JCheckBox("Use 'Pick Rotation' approach, instead of 'Rotation in tape', for Strip Feeders?");
+        panelPart.add(checkBoxUsePickRotationInsteadOfRotationInTapeForStripFeeders, "6, 4");
 
         lblRetryCount = new JLabel("Retry Count");
         panelPart.add(lblRetryCount, "2, 6, right, default");
@@ -338,9 +353,11 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get()
                                                                            .getLengthDisplayFormat());
 
+
         MutableLocationProxy location = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
         addWrappedBinding(location, "rotation", textFieldLocationRotation, "text", doubleConverter);
+        addWrappedBinding(this, "isPickRotationUsedInStripFeeders", checkBoxUsePickRotationInsteadOfRotationInTapeForStripFeeders, "selected");
 
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
         addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
@@ -379,6 +396,15 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndZ);
+    }
+    
+    public boolean getIsPickRotationUsedInStripFeeders() {
+    		return isPickRotationUsedInStripFeeders;
+    }
+    
+    public void setIsPickRotationUsedInStripFeeders(boolean newValue) {
+    		isPickRotationUsedInStripFeeders = newValue;
+    		Configuration.get().getMachine().setProperty("isPickRotationUsedInStripFeeders", newValue);
     }
 
     private Action autoSetup = new AbstractAction("Auto Setup") {

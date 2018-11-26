@@ -87,6 +87,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         Reset
     }
 
+    public enum JobOrderHint {
+        PartHeight,
+        Part
+    }
+
     public static class PlannedPlacement {
         public final JobPlacement jobPlacement;
         public final Nozzle nozzle;
@@ -119,6 +124,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
     @Element(required = false)
     long configSaveFrequencyMs = (10 * 60 * 1000);
+
+    @Attribute(required = false)
+    protected JobOrderHint jobOrder = JobOrderHint.PartHeight;
 
     private FiniteStateMachine<State, Message> fsm = new FiniteStateMachine<>(State.Uninitialized);
 
@@ -439,10 +447,20 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         fireTextStatus("Planning placements.");
 
-        // Get the list of unfinished placements and sort them by part height.
-        List<JobPlacement> jobPlacements = getPendingJobPlacements().stream()
-                .sorted(Comparator.comparing(JobPlacement::getPartHeight))
-                .collect(Collectors.toList());
+        List<JobPlacement> jobPlacements;
+
+        if (this.jobOrder.equals(JobOrderHint.Part)) {
+        	// Get the list of unfinished placements and sort them by part.
+	        	jobPlacements = getPendingJobPlacements().stream()
+	        			.sorted(Comparator.comparing(JobPlacement::getPartId))
+	        			.collect(Collectors.toList());
+        } 
+        else {
+        	// Get the list of unfinished placements and sort them by part height.
+	        	jobPlacements = getPendingJobPlacements().stream()
+	        			.sorted(Comparator.comparing(JobPlacement::getPartHeight))
+	        			.collect(Collectors.toList());
+        }
 
         if (jobPlacements.isEmpty()) {
             return;
@@ -954,6 +972,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     public void setAutoSaveConfiguration(boolean autoSaveConfiguration) {
         this.autoSaveConfiguration = autoSaveConfiguration;
     }
+    
+    public JobOrderHint getJobOrder() {
+        return jobOrder;
+    }
+    
+    public void setJobOrder(JobOrderHint newJobOrder) {
+        this.jobOrder = newJobOrder;
+    }    
 
     private void saveJobAndConfig(boolean ignoreTimer) throws Exception {
         Logger.info("saveJobAndConfig({})", ignoreTimer);
@@ -970,6 +996,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             lastConfigSavedTimeMs = System.currentTimeMillis();
         }
     }
+    
+    
 
     // Sort a List<JobPlacement> by the number of nulls it contains in ascending order.
     Comparator<List<JobPlacement>> byFewestNulls = (a, b) -> {
