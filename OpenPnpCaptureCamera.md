@@ -12,3 +12,6 @@ To configure the format for a camera:
     ![screen shot 2018-09-10 at 9 03 09 pm](https://user-images.githubusercontent.com/1182323/45333843-b76ff380-b53d-11e8-9e70-82352408ce90.png)
 4. In the list of Formats, find a **compressed** format that meets you resolution and FPS needs. If there are no compressed formats in the dropdown you will either need to change to a different camera (see [What Should I Build](https://github.com/openpnp/openpnp/wiki/FAQ#what-should-i-build) for recommendations) or put each camera on it's own USB host port.
 
+# Troubleshooting
+
+Note that not all cameras behave as well as others. If you want to be sure of reliable operation of two cameras on a single USB host it is recommended that you use the [ELP Model USB100W03M, 720p USB Cameras](http://www.elpcctv.com/hd-720p-usb-cameras-c-85_87.html).
