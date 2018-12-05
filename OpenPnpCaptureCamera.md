@@ -14,4 +14,4 @@ To configure the format for a camera:
 
 # Troubleshooting
 
-Note that not all cameras behave as well as others. If you want to be sure of reliable operation of two cameras on a single USB host it is recommended that you use the [ELP Model USB100W03M, 720p USB Cameras](http://www.elpcctv.com/hd-720p-usb-cameras-c-85_87.html).
+Note that not all cameras behave as well as others. If you want to be sure of reliable operation of two cameras on a single USB host it is recommended that you use the [ELP Model USB100W03M, 720p USB Cameras](http://www.elpcctv.com/hd-720p-usb-cameras-c-85_87.html). See the [[Build FAQ]] for more camera recommendations.
