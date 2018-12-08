@@ -1,6 +1,18 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2018-12-08
+
+* Serial Library Change
+
+    The library that OpenPnP uses to communicate with serial ports, jSSC, has become out of date and is
+    unmaintained, so we're trying a new library. The new library is jSerialComm:
+    https://github.com/Fazecast/jSerialComm.
+	
+	This change should not affect existing users, so if you notice new problems with serial port access,
+	please file an issue or post to the mailing list.    
+    
+
 # 2018-11-17
 
 * OpenCV 3.4.2 Upgraded

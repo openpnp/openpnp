@@ -9,11 +9,7 @@ import java.util.regex.Pattern;
 
 import org.simpleframework.xml.Attribute;
 
-import jssc.SerialNativeInterface;
-import jssc.SerialPort;
-import jssc.SerialPortException;
-import jssc.SerialPortList;
-import jssc.SerialPortTimeoutException;
+import com.fazecast.jSerialComm.SerialPort;
 
 /**
  * A class for SerialPort Communications. Includes functions for connecting,
@@ -21,10 +17,10 @@ import jssc.SerialPortTimeoutException;
  */
 public class SerialPortCommunications extends ReferenceDriverCommunications {
     public enum DataBits {
-        Five(SerialPort.DATABITS_5),
-        Six(SerialPort.DATABITS_6),
-        Seven(SerialPort.DATABITS_7),
-        Eight(SerialPort.DATABITS_8);
+        Five(5),
+        Six(6),
+        Seven(7),
+        Eight(8);
 
         public final int mask;
 
@@ -34,9 +30,9 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
     }
 
     public enum StopBits {
-        One(SerialPort.STOPBITS_1),
-        OnePointFive(SerialPort.STOPBITS_1_5),
-        Two(SerialPort.STOPBITS_2);
+        One(SerialPort.ONE_STOP_BIT),
+        OnePointFive(SerialPort.ONE_POINT_FIVE_STOP_BITS),
+        Two(SerialPort.TWO_STOP_BITS);
 
         public final int mask;
 
@@ -46,9 +42,9 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
     }
 
     public enum FlowControl {
-        Off(SerialPort.FLOWCONTROL_NONE),
-        RtsCts(SerialPort.FLOWCONTROL_RTSCTS_IN | SerialPort.FLOWCONTROL_RTSCTS_OUT),
-        XonXoff(SerialPort.FLOWCONTROL_XONXOFF_IN | SerialPort.FLOWCONTROL_XONXOFF_OUT);
+        Off(SerialPort.FLOW_CONTROL_DISABLED),
+        RtsCts(SerialPort.FLOW_CONTROL_CTS_ENABLED | SerialPort.FLOW_CONTROL_RTS_ENABLED),
+        XonXoff(SerialPort.FLOW_CONTROL_XONXOFF_IN_ENABLED | SerialPort.FLOW_CONTROL_XONXOFF_OUT_ENABLED);
 
         public final int mask;
 
@@ -58,11 +54,11 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
     }
 
     public enum Parity {
-        None(SerialPort.PARITY_NONE),
-        Mark(SerialPort.PARITY_MARK),
-        Space(SerialPort.PARITY_SPACE),
-        Even(SerialPort.PARITY_EVEN),
-        Odd(SerialPort.PARITY_ODD);
+        None(SerialPort.NO_PARITY),
+        Mark(SerialPort.MARK_PARITY),
+        Space(SerialPort.SPACE_PARITY),
+        Even(SerialPort.EVEN_PARITY),
+        Odd(SerialPort.ODD_PARITY);
 
         public final int mask;
 
@@ -100,25 +96,26 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
 
 
     private SerialPort serialPort;
-    private SerialInputStream input;
-    private OutputStream output;
 
     public synchronized void connect() throws Exception {
         disconnect();
-        serialPort = new SerialPort(portName);
-        serialPort.openPort();
-        serialPort.setParams(baud, dataBits.mask, stopBits.mask, parity.mask, setRts, setDtr);
-        serialPort.setFlowControlMode(flowControl.mask);
-        input = new SerialInputStream(serialPort);
-        input.setTimeout(500);
-        output = new SerialOutputStream(serialPort);
+        serialPort = SerialPort.getCommPort(portName);
+        serialPort.openPort(0);
+        serialPort.setComPortParameters(baud, dataBits.mask, stopBits.mask, parity.mask);
+        serialPort.setFlowControl(flowControl.mask);
+        if (setDtr) {
+            serialPort.setDTR();
+        }
+        if (setRts) {
+            serialPort.setRTS();
+        }
+        serialPort.setComPortTimeouts(
+                SerialPort.TIMEOUT_READ_SEMI_BLOCKING | SerialPort.TIMEOUT_WRITE_BLOCKING, 500, 0);
     }
 
     public synchronized void disconnect() throws Exception {
-        if (serialPort != null && serialPort.isOpened()) {
+        if (serialPort != null && serialPort.isOpen()) {
             serialPort.closePort();
-            input = null;
-            output = null;
             serialPort = null;
         }
     }
@@ -131,29 +128,12 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
      * @return array of Strings of serial port names
      */
     public static String[] getPortNames() {
-		if (SerialNativeInterface.getOsType () == SerialNativeInterface.OS_LINUX) {
-			ArrayList<String> linuxPortNames = new ArrayList<String>();
-			String pattern = ".*";
-			Pattern rx = Pattern.compile (pattern);
-			for (String portName : SerialPortList.getPortNames ("/dev/serial/by-id/", rx))  {
-				linuxPortNames.add (portName);
-			}
-			for (String portName : SerialPortList.getPortNames ())  {
-				linuxPortNames.add (portName);
-			}
-			String[] portNames = new String[linuxPortNames.size()];
-			linuxPortNames.toArray (portNames);
-			return portNames;
-		}
-		else
-			if (SerialNativeInterface.getOsType () == SerialNativeInterface.OS_MAC_OS_X) {
-				String pattern = "^.*tty\\..*$";
-				Pattern rx = Pattern.compile (pattern);
-				return SerialPortList.getPortNames("/dev/", rx);
-			}
-			else {
-				return SerialPortList.getPortNames();
-			}
+        SerialPort[] ports = SerialPort.getCommPorts();
+        ArrayList<String> portNames = new ArrayList<>();
+        for (SerialPort port : ports) {
+            portNames.add(port.getSystemPortName());
+        }
+        return portNames.toArray(new String[] {});
     }
 
     /**
@@ -167,54 +147,50 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
     public String readLine() throws TimeoutException, IOException {
         StringBuffer line = new StringBuffer();
         while (true) {
-            try {
-                int ch = input.read();
-                if (ch == -1) {
-                    return null;
-                }
-                else if (ch == '\n' || ch == '\r') {
-                    if (line.length() > 0) {
-                        return line.toString();
-                    }
-                }
-                else {
-                    line.append((char) ch);
+            int ch = read();
+            if (ch == '\n' || ch == '\r') {
+                if (line.length() > 0) {
+                    return line.toString();
                 }
             }
-            catch (IOException ex) {
-                if (ex.getCause() instanceof SerialPortTimeoutException) {
-                    throw new TimeoutException(ex.getMessage());
-                }
-                throw ex;
+            else {
+                line.append((char) ch);
             }
         }
     }
 
     public void writeLine(String data) throws IOException
     {
-        try {
-            output.write(data.getBytes());
-            output.write(getLineEndingType().getLineEnding().getBytes());
+        byte[] b = data.getBytes();
+        int l = serialPort.writeBytes(b, b.length);
+        if (l == -1) {
+            throw new IOException("Write error.");
         }
-        catch (IOException ex) {
-            throw ex;
+        b = getLineEndingType().getLineEnding().getBytes();
+        l = serialPort.writeBytes(b, b.length);
+        if (l == -1) {
+            throw new IOException("Write error.");
         }
     }
 
     public int read() throws TimeoutException, IOException {
-        try {
-            return input.read();
+        byte[] b = new byte[1];
+        int l = serialPort.readBytes(b, 1);
+        if (l == -1) {
+            throw new IOException("Read error.");
         }
-        catch (IOException ex) {
-            if (ex.getCause() instanceof SerialPortTimeoutException) {
-                throw new TimeoutException(ex.getMessage());
-            }
-            throw ex;
+        if (l == 0) {
+            throw new TimeoutException("Read timeout.");
         }
+        return b[0];
     }
     
     public void write(int d) throws IOException {
-        output.write(d);
+        byte[] b = new byte[] { (byte) d };
+        int l = serialPort.writeBytes(b, 1);
+        if (l == -1) {
+            throw new IOException("Write error.");
+        }
     }
 
     public String getConnectionName() {
@@ -283,267 +259,6 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
 
     public void setSetRts(boolean setRts) {
         this.setRts = setRts;
-    }
-
-    /**
-     * SerialInputStream and SerialOutputStream are from the pull request referenced in:
-     * https://github.com/scream3r/java-simple-serial-connector/issues/17
-     * 
-     * If that pull request is ever merged we can update and remove these.
-     */
-
-    /**
-     * Class that wraps a {@link SerialPort} to provide {@link InputStream} functionality. This
-     * stream also provides support for performing blocking reads with timeouts. <br>
-     * It is instantiated by passing the constructor a {@link SerialPort} instance. Do not create
-     * multiple streams for the same serial port unless you implement your own synchronization.
-     * 
-     * @author Charles Hache <chalz@member.fsf.org>
-     * 
-     */
-    public class SerialInputStream extends InputStream {
-
-        private SerialPort serialPort;
-        private int defaultTimeout = 0;
-
-        /**
-         * Instantiates a SerialInputStream for the given {@link SerialPort} Do not create multiple
-         * streams for the same serial port unless you implement your own synchronization.
-         * 
-         * @param sp The serial port to stream.
-         */
-        public SerialInputStream(SerialPort sp) {
-            serialPort = sp;
-        }
-
-        /**
-         * Set the default timeout (ms) of this SerialInputStream. This affects subsequent calls to
-         * {@link #read()}, {@link #blockingRead(int[])}, and {@link #blockingRead(int[], int, int)}
-         * The default timeout can be 'unset' by setting it to 0.
-         * 
-         * @param time The timeout in milliseconds.
-         */
-        public void setTimeout(int time) {
-            defaultTimeout = time;
-        }
-
-        /**
-         * Reads the next byte from the port. If the timeout of this stream has been set, then this
-         * method blocks until data is available or until the timeout has been hit. If the timeout
-         * is not set or has been set to 0, then this method blocks indefinitely.
-         */
-        @Override
-        public int read() throws IOException {
-            return read(defaultTimeout);
-        }
-
-        /**
-         * The same contract as {@link #read()}, except overrides this stream's default timeout with
-         * the given timeout in milliseconds.
-         * 
-         * @param timeout The timeout in milliseconds.
-         * @return The read byte.
-         * @throws IOException On serial port error or timeout
-         */
-        public int read(int timeout) throws IOException {
-            byte[] buf = new byte[1];
-            try {
-                if (timeout > 0) {
-                    buf = serialPort.readBytes(1, timeout);
-                }
-                else {
-                    buf = serialPort.readBytes(1);
-                }
-                return buf[0];
-            }
-            catch (Exception e) {
-                throw new IOException(e);
-            }
-        }
-
-        /**
-         * Non-blocking read of up to buf.length bytes from the stream. This call behaves as
-         * read(buf, 0, buf.length) would.
-         * 
-         * @param buf The buffer to fill.
-         * @return The number of bytes read, which can be 0.
-         * @throws IOException on error.
-         */
-        @Override
-        public int read(byte[] buf) throws IOException {
-            return read(buf, 0, buf.length);
-        }
-
-        /**
-         * Non-blocking read of up to length bytes from the stream. This method returns what is
-         * immediately available in the input buffer.
-         * 
-         * @param buf The buffer to fill.
-         * @param offset The offset into the buffer to start copying data.
-         * @param length The maximum number of bytes to read.
-         * @return The actual number of bytes read, which can be 0.
-         * @throws IOException on error.
-         */
-        @Override
-        public int read(byte[] buf, int offset, int length) throws IOException {
-
-            if (buf.length < offset + length) {
-                length = buf.length - offset;
-            }
-
-            int available = this.available();
-
-            if (available > length) {
-                available = length;
-            }
-
-            try {
-                byte[] readBuf = serialPort.readBytes(available);
-                System.arraycopy(readBuf, 0, buf, offset, length);
-                return readBuf.length;
-            }
-            catch (Exception e) {
-                throw new IOException(e);
-            }
-        }
-
-        /**
-         * Blocks until buf.length bytes are read, an error occurs, or the default timeout is hit
-         * (if specified). This behaves as blockingRead(buf, 0, buf.length) would.
-         * 
-         * @param buf The buffer to fill with data.
-         * @return The number of bytes read.
-         * @throws IOException On error or timeout.
-         */
-        public int blockingRead(byte[] buf) throws IOException {
-            return blockingRead(buf, 0, buf.length, defaultTimeout);
-        }
-
-        /**
-         * The same contract as {@link #blockingRead(byte[])} except overrides this stream's default
-         * timeout with the given one.
-         * 
-         * @param buf The buffer to fill.
-         * @param timeout The timeout in milliseconds.
-         * @return The number of bytes read.
-         * @throws IOException On error or timeout.
-         */
-        public int blockingRead(byte[] buf, int timeout) throws IOException {
-            return blockingRead(buf, 0, buf.length, timeout);
-        }
-
-        /**
-         * Blocks until length bytes are read, an error occurs, or the default timeout is hit (if
-         * specified). Saves the data into the given buffer at the specified offset. If the stream's
-         * timeout is not set, behaves as {@link #read(byte[], int, int)} would.
-         * 
-         * @param buf The buffer to fill.
-         * @param offset The offset in buffer to save the data.
-         * @param length The number of bytes to read.
-         * @return the number of bytes read.
-         * @throws IOException on error or timeout.
-         */
-        public int blockingRead(byte[] buf, int offset, int length) throws IOException {
-            return blockingRead(buf, offset, length, defaultTimeout);
-        }
-
-        /**
-         * The same contract as {@link #blockingRead(byte[], int, int)} except overrides this
-         * stream's default timeout with the given one.
-         * 
-         * @param buf The buffer to fill.
-         * @param offset Offset in the buffer to start saving data.
-         * @param length The number of bytes to read.
-         * @param timeout The timeout in milliseconds.
-         * @return The number of bytes read.
-         * @throws IOException On error or timeout.
-         */
-        public int blockingRead(byte[] buf, int offset, int length, int timeout)
-                throws IOException {
-            if (buf.length < offset + length) {
-                throw new IOException("Not enough buffer space for serial data");
-            }
-
-            if (timeout < 1) {
-                return read(buf, offset, length);
-            }
-
-            try {
-                byte[] readBuf = serialPort.readBytes(length, timeout);
-                System.arraycopy(readBuf, 0, buf, offset, length);
-                return readBuf.length;
-            }
-            catch (Exception e) {
-                throw new IOException(e);
-            }
-        }
-
-        @Override
-        public int available() throws IOException {
-            int ret;
-            try {
-                ret = serialPort.getInputBufferBytesCount();
-                if (ret >= 0) {
-                    return ret;
-                }
-                throw new IOException("Error checking available bytes from the serial port.");
-            }
-            catch (Exception e) {
-                throw new IOException("Error checking available bytes from the serial port.");
-            }
-        }
-
-    }
-
-    /**
-     * Class that wraps a {@link SerialPort} to provide {@link OutputStream} functionality. <br>
-     * It is instantiated by passing the constructor a {@link SerialPort} instance. Do not create
-     * multiple streams for the same serial port unless you implement your own synchronization.
-     * 
-     * @author Charles Hache <chalz@member.fsf.org>
-     * 
-     */
-    public class SerialOutputStream extends OutputStream {
-
-        SerialPort serialPort;
-
-        /**
-         * Instantiates a SerialOutputStream for the given {@link SerialPort} Do not create multiple
-         * streams for the same serial port unless you implement your own synchronization.
-         * 
-         * @param sp The serial port to stream.
-         */
-        public SerialOutputStream(SerialPort sp) {
-            serialPort = sp;
-        }
-
-        @Override
-        public void write(int b) throws IOException {
-            try {
-                serialPort.writeInt(b);
-            }
-            catch (SerialPortException e) {
-                throw new IOException(e);
-            }
-        }
-
-        @Override
-        public void write(byte[] b) throws IOException {
-            write(b, 0, b.length);
-
-        }
-
-        @Override
-        public void write(byte[] b, int off, int len) throws IOException {
-            byte[] buffer = new byte[len];
-            System.arraycopy(b, off, buffer, 0, len);
-            try {
-                serialPort.writeBytes(buffer);
-            }
-            catch (SerialPortException e) {
-                throw new IOException(e);
-            }
-        }
     }
 }
 
