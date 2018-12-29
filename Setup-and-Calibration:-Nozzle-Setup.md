@@ -41,6 +41,7 @@ Nozzle Head Offsets tell OpenPnP where your nozzles are in relation to the other
 5. Find the Nozzle in the Machine Setup tab and find the Offsets fields in the panel on the right. It's on the second tab titled "Untitled".
 6. Set the offsets to the X, Y and Z shown in the DROs. Press Apply. Note: For many machines it's not necessary to set the Z offset. It's only used in more complex setups.
 7. For each additional Nozzle you need to setup, follow this same process.
+**NOTE Do not set any extruder offsets in your motion controller.
 
 ## Selecting a Nozzle
 If you have multiple nozzles on your machine, you can select the one you want to work with in OpenPnP by selecting it from the tools dropdown in the Machine Controls panel. The nozzle that is selected here is the one that will be used whenever you tell the machine to move a nozzle.
