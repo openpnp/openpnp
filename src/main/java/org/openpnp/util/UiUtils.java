@@ -12,6 +12,11 @@ import org.openpnp.model.Configuration;
 
 import com.google.common.util.concurrent.FutureCallback;
 
+import javafx.event.EventHandler;
+import javafx.scene.Node;
+import javafx.scene.control.Tooltip;
+import javafx.scene.input.MouseEvent;
+
 public class UiUtils {
     /**
      * Functional interface for a Runnable that can throw an Exception but returns no value. Splits
@@ -101,5 +106,22 @@ public class UiUtils {
         }
     }
 
-
+    // From http://stackoverflow.com/questions/26854301/control-javafx-tooltip-delay
+    public static void bindTooltip(final Node node, final Tooltip tooltip) {
+        node.setOnMouseMoved(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                // +15 moves the tooltip 15 pixels below the mouse cursor;
+                // if you don't change the y coordinate of the tooltip, you
+                // will see constant screen flicker
+                tooltip.show(node, event.getScreenX(), event.getScreenY() + 15);
+            }
+        });
+        node.setOnMouseExited(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                tooltip.hide();
+            }
+        });
+    }
 }

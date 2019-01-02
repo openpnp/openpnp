@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
@@ -55,9 +56,9 @@
 			<version>2.1</version>
 		</dependency>
 		<dependency>
-  			<groupId>com.fazecast</groupId>
-  			<artifactId>jSerialComm</artifactId>
-  			<version>[2.0.0,3.0.0)</version>
+			<groupId>com.fazecast</groupId>
+			<artifactId>jSerialComm</artifactId>
+			<version>[2.0.0,3.0.0)</version>
 		</dependency>
 		<dependency>
 			<groupId>org.swinglabs.swingx</groupId>
@@ -136,9 +137,9 @@
 			<version>3.3.0</version>
 		</dependency>
 		<dependency>
-    		<groupId>com.github.kennedyoliveira</groupId>
-    		<artifactId>pastebin4j</artifactId>
-    		<version>1.2.1</version>
+			<groupId>com.github.kennedyoliveira</groupId>
+			<artifactId>pastebin4j</artifactId>
+			<version>1.2.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.mashape.unirest</groupId>
@@ -166,31 +167,56 @@
 			<version>0.0.12</version>
 		</dependency>
 		<dependency>
-		    <groupId>javax.xml.bind</groupId>
-    		<artifactId>jaxb-api</artifactId>
-    		<version>2.2.11</version>
+			<groupId>javax.xml.bind</groupId>
+			<artifactId>jaxb-api</artifactId>
+			<version>2.2.11</version>
 		</dependency>
 		<dependency>
-		    <groupId>com.sun.xml.bind</groupId>
-    		<artifactId>jaxb-core</artifactId>
-    		<version>2.2.11</version>
+			<groupId>com.sun.xml.bind</groupId>
+			<artifactId>jaxb-core</artifactId>
+			<version>2.2.11</version>
 		</dependency>
 		<dependency>
-    		<groupId>com.sun.xml.bind</groupId>
-    		<artifactId>jaxb-impl</artifactId>
-    	<version>2.2.11</version>
+			<groupId>com.sun.xml.bind</groupId>
+			<artifactId>jaxb-impl</artifactId>
+			<version>2.2.11</version>
 		</dependency>
 		<dependency>
-    		<groupId>javax.activation</groupId>
-    		<artifactId>activation</artifactId>
-    		<version>1.1.1</version>
+			<groupId>javax.activation</groupId>
+			<artifactId>activation</artifactId>
+			<version>1.1.1</version>
 		</dependency>
- 		<dependency>
-        	<groupId>javax.xml.ws</groupId>
-        	<artifactId>jaxws-api</artifactId>
-        	<version>2.3.0</version>
-    	</dependency>
-   	</dependencies>
+		<dependency>
+			<groupId>javax.xml.ws</groupId>
+			<artifactId>jaxws-api</artifactId>
+			<version>2.3.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-base</artifactId>
+			<version>11</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-controls</artifactId>
+			<version>11</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-fxml</artifactId>
+			<version>11</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-swing</artifactId>
+			<version>11</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-media</artifactId>
+			<version>11</version>
+		</dependency>
+	</dependencies>
 	<build>
 		<plugins>
 			<!-- Used to specify that the Maven Eclipse task should download sources 
@@ -233,8 +259,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.1</version>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
+					<source>11</source>
+					<target>11</target>
 					<mainClass>org.openpnp.app.Main</mainClass>
 					<excludes>
 						<!-- <exclude>**/zippy/**</exclude> -->
@@ -365,7 +391,8 @@
 		</plugins>
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
 					<artifactId>lifecycle-mapping</artifactId>
