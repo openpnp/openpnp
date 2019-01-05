@@ -30,19 +30,24 @@ If you have more than one nozzle tip on your machine:
 5. To use the machine with the nozzle tip you just created you need to load it onto the nozzle. Press the load button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/nozzletip-load.svg) to do this.
 
 ## Head Offsets
-Nozzle Head Offsets tell OpenPnP where your nozzles are in relation to the other objects on your head. In an earlier step we set the Camera Head Offsets to zero, making the top camera the origin of the head. Now we'll tell OpenPnP how far the nozzle is from the camera in real world units.
+Nozzle head offsets tell OpenPnP where the nozzles are in relation to the other objects on your head. In an earlier step we set the Camera Head Offsets to zero, making the top camera the origin of the head. Now we'll tell OpenPnP how far the nozzles are from the camera in real world units. The following steps have to be repeated for each nozzle attached to the head.
 
-![screen shot 2016-06-18 at 11 24 59 am](https://cloud.githubusercontent.com/assets/1182323/16172909/5247ebd4-3547-11e6-9dfa-8d63af3d66cd.png)
+![nozzle offset in machine configuration](https://user-images.githubusercontent.com/3868450/50729987-9910b200-1143-11e9-9d13-dd234b91d97e.PNG)
 
-1. Place something on the bed of the machine that can be marked by the nozzle. A piece of a small, flattened blob of putty or clay will work. [Silly Putty](http://amzn.to/263ZnKm) works perfectly. This is our target.
-2. Jog the machine so that the primary Nozzle is over the target and then lower the nozzle until it makes a clear mark on the target.
-3. Click the X, Y and Z, DRO one time each. They will turn blue and show 0.000. They are now in relative coordinate mode and will show the distance you have moved since clicking them until you click them again.
-4. Jog the machine so that the top camera is over the mark on the target, perfectly centered and in focus.
-5. Find the Nozzle in the Machine Setup tab and find the Offsets fields in the panel on the right. It's on the second tab titled "Untitled".
-6. Set the offsets to the X, Y and Z shown in the DROs. Press Apply. Note: For many machines it's not necessary to set the Z offset. It's only used in more complex setups.
-7. For each additional Nozzle you need to setup, follow this same process.
+The offsets have to be determined very accurate in order for best placement results. There is a wizard integrated into OpenPnP that guides you through the process.
 
-IMPORTANT! Do not set any extruder or tool offsets in your motion controller for the nozzle(s).
+![openpnp nozzle offset wizard](https://user-images.githubusercontent.com/3868450/50702952-c29de080-1052-11e9-9d0d-324d68daa401.PNG)
+1. In the wizard select the downlooking camera you are referring to.
+2. Put a little clay, [Silly Putty](http://amzn.to/263ZnKm) or flour on an old PCB that can be marked by the nozzle. A piece of a small, flattened blob of putty or clay will work as well as flour. Whatever object you have chosen, this is our target.
+3. Jog the nozzle tip so that the primary nozzle tip is over the target.
+4. Lower the nozzle until it makes a clear mark on the target.
+5. Now rotate the nozzle by 360°, to exclude possible nozzle tip runout from the measurement. Raise the nozzle tip to park position in z direction. Store the nozzle mark position by clicking the button.
+6. Jog the machine so that the camera is over the marked target, perfectly centered and in focus. In that position click the button "calculate nozzle offset". It will be displayed in the textfields below.
+7. Confirm that the calculated offsets are valid.
+8. Hit apply. You may want to repeat that whole process with a new mark to validate measurements.
+
+For each nozzle you need to setup, follow this same process.
+IMPORTANT! Do not set any extruder or tool offsets in your motion controller for the nozzle(s), this is handled by OpenPnP as it needs to know these distances anyway.
 
 ## Selecting a Nozzle
 If you have multiple nozzles on your machine, you can select the one you want to work with in OpenPnP by selecting it from the tools dropdown in the Machine Controls panel. The nozzle that is selected here is the one that will be used whenever you tell the machine to move a nozzle.
