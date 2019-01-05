@@ -77,7 +77,7 @@ OpenPnP's Main Window is laid out in sections. The main sections are the Machine
 
 ## Machine Controls
 
-![screen shot 2017-01-09 at 7 59 34 pm](https://cloud.githubusercontent.com/assets/1182323/21791132/78884716-d6a6-11e6-8579-fe2021c927b5.png)
+![screen shot 2017-01-09 at 7 59 34 pm](https://user-images.githubusercontent.com/3868450/50724837-fd0b8a00-10f3-11e9-86b1-71244eddf206.png)
 
 The Machine Controls are your interface to interacting with the machine. From here you can:
 
