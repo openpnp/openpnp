@@ -124,7 +124,7 @@ public class LensCalibration {
         double rms;
 
         if (lensModel == LensModel.Fisheye) {
-            // TODO:
+            // TODO: Uncomment code once we upgrade to OpenCV 3+
             throw new Error(lensModel + " LensModel not yet supported. OpenCV 3+ needed.");
             // Mat _rvecs, _tvecs;
             // rms = fisheye::calibrate(objectPoints, imagePoints, imageSize, cameraMatrix,
@@ -206,10 +206,10 @@ public class LensCalibration {
                 }
                 break;
             case CirclesGrid:
-                found = Calib3d.findCirclesGridDefault(mat, patternSize, imagePoints);
+                found = Calib3d.findCirclesGrid(mat, patternSize, imagePoints);
                 break;
             case AsymmetricCirclesGrid:
-                found = Calib3d.findCirclesGridDefault(mat, patternSize, imagePoints,
+                found = Calib3d.findCirclesGrid(mat, patternSize, imagePoints,
                         Calib3d.CALIB_CB_ASYMMETRIC_GRID);
                 break;
         }

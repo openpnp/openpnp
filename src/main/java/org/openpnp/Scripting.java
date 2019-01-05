@@ -1,7 +1,9 @@
 package org.openpnp;
 
 import java.awt.Desktop;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FileReader;
 import java.nio.file.FileSystems;
@@ -22,6 +24,7 @@ import javax.script.ScriptEngineManager;
 import javax.swing.AbstractAction;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.KeyStroke;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -53,6 +56,7 @@ public class Scripting {
             }
         }
         
+        // Hack to fix BSH on Windows. See https://github.com/openpnp/openpnp/issues/462
         manager.registerEngineExtension("bsh", new BshScriptEngineFactory());
         manager.registerEngineExtension("java", new BshScriptEngineFactory());
         extensions.add("bsh");
@@ -76,10 +80,23 @@ public class Scripting {
         File examplesDir = new File(getScriptsDirectory(), "Examples");
         examplesDir.mkdirs();
         String[] exampleScripts =
-                new String[] {"JavaScript/Call_Java.js", "JavaScript/Hello_World.js", "JavaScript/Print_Scripting_Info.js",
-                        "JavaScript/Reset_Strip_Feeders.js", "JavaScript/Move_Machine.js", "JavaScript/Utility.js", "JavaScript/QrCodeXout.js",
-                        "Python/Print_Hallo_OpenPnP.py", "Python/Print_Methods_Vars.py",
-                        "Python/Print_Nozzle_Info.py"};
+                new String[] {
+                        "JavaScript/Call_Java.js", 
+                        "JavaScript/Hello_World.js", 
+                        "JavaScript/Move_Machine.js", 
+                        "JavaScript/Print_Scripting_Info.js",
+                        "JavaScript/QrCodeXout.js",
+                        "JavaScript/Reset_Strip_Feeders.js", 
+                        "JavaScript/Utility.js", 
+                        "Python/call_java.py", 
+                        "Python/move_machine.py", 
+                        "Python/print_hallo_openpnp.py",
+                        "Python/print_methods_vars.py", 
+                        "Python/print_nozzle_info.py", 
+                        "Python/print_scripting_info.py",
+                        "Python/use_module.py", 
+                        "Python/utility.py"
+                        };
         for (String name : exampleScripts) {
             try {
                 File file = new File(examplesDir, name);
@@ -131,12 +148,20 @@ public class Scripting {
         // Add a separator and the Refresh Scripts and Open Scripts Directory items
         menu.addSeparator();
         menu.add(new AbstractAction("Refresh Scripts") {
+            {
+                putValue(MNEMONIC_KEY, KeyEvent.VK_R);
+            }
+
             @Override
             public void actionPerformed(ActionEvent e) {
                 synchronizeMenu(menu, getScriptsDirectory());
             }
         });
         menu.add(new AbstractAction("Open Scripts Directory") {
+            {
+                putValue(MNEMONIC_KEY, KeyEvent.VK_O);
+            }
+
             @Override
             public void actionPerformed(ActionEvent e) {
                 UiUtils.messageBoxOnException(() -> {
@@ -267,6 +292,7 @@ public class Scripting {
         engine.put("machine", Configuration.get().getMachine());
         engine.put("gui", MainFrame.get());
         engine.put("scripting", this);
+        engine.put(ScriptEngine.FILENAME, script.getName());
 
         if (additionalGlobals != null) {
             for (String name : additionalGlobals.keySet()) {

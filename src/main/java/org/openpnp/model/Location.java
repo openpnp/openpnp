@@ -119,6 +119,45 @@ public class Location {
                 + Math.pow(this.y - location.getY(), 2) + Math.pow(this.z - location.getZ(), 2)));
     }
 
+    /**
+     * Returns the distance between this Location and the infinite line defined by the Locations a and b,
+     * in the units of this Location.
+     * From http://www.ahristov.com/tutorial/geometry-games/point-line-distance.html
+     * @return
+     */
+    public double getLinearDistanceToLine(Location A, Location B) {
+        A = A.convertToUnits(getUnits());
+        B = B.convertToUnits(getUnits());
+        double normalLength = Math.sqrt((B.x - A.x) * (B.x - A.x) + (B.y - A.y) * (B.y - A.y));
+        return Math.abs((this.x - A.x) * (B.y - A.y) - (this.y - A.y) * (B.x - A.x)) / normalLength;
+    }
+
+    /**
+     * Returns the distance between this Location and the line segment defined by the Locations a and b,
+     * in the units of this Location.
+     * From Real Time Collision Detection p/130
+     * @return
+     */
+    public double getLinearDistanceToLineSegment(Location A, Location B) {
+        A = A.convertToUnits(getUnits());
+        B = B.convertToUnits(getUnits());
+
+        org.opencv.core.Point ab = new org.opencv.core.Point(B.x - A.x, B.y - A.y);
+        org.opencv.core.Point ap = new org.opencv.core.Point(this.x - A.x, this.y - A.y);
+        org.opencv.core.Point bp = new org.opencv.core.Point(this.x - B.x, this.y - B.y);
+        // Handle cases where P projects outside of AB
+        double e = ap.dot(ab);
+        if (e <= 0.0) {
+            return Math.sqrt(ap.dot(ap));
+        }
+        double f = ab.dot(ab);
+        if (e >= f) {
+            return Math.sqrt(bp.dot(bp));
+        }
+        // P projects onto AB
+        return Math.sqrt(ap.dot(ap) - e * e / f);
+    }
+
     public Length getLengthX() {
         return new Length(x, units);
     }
@@ -281,6 +320,22 @@ public class Location {
 
     public Point getXyPoint() {
         return new Point(getX(), getY());
+    }
+    
+    /**
+     * Checks if targetLocation is contained in current location given the current location represents a rectangular item with the origin in originLocation.
+     */
+    public boolean containsLocation(Location originLocation, Location targetLocation) {
+    	Location target = targetLocation.convertToUnits(this.units);
+    	double x = target.getX();
+    	double y = target.getY();
+    	Location origin = originLocation.convertToUnits(this.units);
+    	double x1 = origin.getX();
+    	double y1 = origin.getY();
+    	double x2 = x1 + getX();
+    	double y2 = y1 + getY();
+    	
+    	return (x >= x1) && (x <= x2) && (y > y1) && (y < y2);
     }
 
     /**

@@ -16,7 +16,7 @@ import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.machine.reference.driver.AbstractSerialPortDriver;
+import org.openpnp.machine.reference.driver.AbstractReferenceDriver;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Nozzle;
@@ -25,9 +25,7 @@ import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
-public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnable {
-
-
+public class OpenBuildsDriver extends AbstractReferenceDriver implements Runnable {
     @Attribute(required = false)
     protected double feedRateMmPerMinute = 5000;
 
@@ -72,6 +70,11 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
                 n2Exhaust(false);
                 led(false);
                 pump(false);
+            }
+        }
+        if (connected && !enabled) {
+            if (!connectionKeepAlive) {
+            	disconnect();
             }
         }
     }
@@ -284,7 +287,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     }
 
     public synchronized void connect() throws Exception {
-        super.connect();
+        getCommunications().connect();
 
         /**
          * Connection process notes:
@@ -406,7 +409,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         }
 
         try {
-            super.disconnect();
+            getCommunications().disconnect();
         }
         catch (Exception e) {
             Logger.error("disconnect()", e);
@@ -429,8 +432,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         if (command != null) {
             Logger.debug("sendCommand({}, {})", command, timeout);
             Logger.debug(">> " + command);
-            output.write(command.getBytes());
-            output.write("\n".getBytes());
+            getCommunications().writeLine(command);
         }
 
         String response = null;
@@ -460,7 +462,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         while (!disconnectRequested) {
             String line;
             try {
-                line = readLine().trim();
+                line = getCommunications().readLine().trim();
             }
             catch (TimeoutException ex) {
                 continue;
@@ -506,13 +508,11 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
         return null;
     }
 

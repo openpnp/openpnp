@@ -69,6 +69,7 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.XmlSerialize;
+import org.pmw.tinylog.Logger;
 
 @SuppressWarnings("serial")
 public class CameraView extends JComponent implements CameraListener {
@@ -195,21 +196,14 @@ public class CameraView extends JComponent implements CameraListener {
     private boolean dragJogging = false;
     
     private MouseEvent dragJoggingTarget = null;
-
+    
+    long lastFrameReceivedTime = 0;
+    MovingAverage fpsAverage = new MovingAverage(24);
+    double fps = 0;
+    
     public CameraView() {
         setBackground(Color.black);
         setOpaque(true);
-
-        String reticlePref = prefs.get(PREF_RETICLE, null);
-        try {
-            Reticle reticle = (Reticle) XmlSerialize.deserialize(reticlePref);
-            setDefaultReticle(reticle);
-        }
-        catch (Exception e) {
-            // Logger.warn("Warning: Unable to load Reticle preference");
-        }
-
-        popupMenu = new CameraViewPopupMenu(this);
 
         addMouseListener(mouseListener);
         addMouseMotionListener(mouseMotionListener);
@@ -233,6 +227,10 @@ public class CameraView extends JComponent implements CameraListener {
                 }
             }
         }, 0, 50, TimeUnit.MILLISECONDS);
+    }
+    
+    private String getReticlePrefKey() {
+        return PREF_RETICLE + "." + camera.getId();
     }
 
     public CameraView(int maximumFps) {
@@ -276,6 +274,24 @@ public class CameraView extends JComponent implements CameraListener {
         if (this.camera != null) {
             this.camera.startContinuousCapture(this, maximumFps);
         }
+        // load the reticle pref, if any
+        try {
+            String reticleXml = prefs.get(getReticlePrefKey(), null);
+            Reticle reticle = (Reticle) XmlSerialize.deserialize(reticleXml);
+            setDefaultReticle(reticle);
+        }
+        catch (Exception e) {
+            Logger.debug("Failed to load camera specific reticle, checking default.");
+            try {
+                String reticleXml = prefs.get(PREF_RETICLE, null);
+                Reticle reticle = (Reticle) XmlSerialize.deserialize(reticleXml);
+                setDefaultReticle(reticle);
+            }
+            catch (Exception e1) {
+                Logger.debug("No reticle preference found.");
+            }
+        }
+
     }
 
     public Camera getCamera() {
@@ -293,7 +309,7 @@ public class CameraView extends JComponent implements CameraListener {
     public void setDefaultReticle(Reticle reticle) {
         setReticle(DEFAULT_RETICLE_KEY, reticle);
 
-        prefs.put(PREF_RETICLE, XmlSerialize.serialize(reticle));
+        prefs.put(getReticlePrefKey(), XmlSerialize.serialize(reticle));
         try {
             prefs.flush();
         }
@@ -458,6 +474,8 @@ public class CameraView extends JComponent implements CameraListener {
                         || camera.getUnitsPerPixel() != lastUnitsPerPixel)) {
             calculateScalingData();
         }
+        fps = 1000.0 / fpsAverage.next(System.currentTimeMillis() - lastFrameReceivedTime);
+        lastFrameReceivedTime = System.currentTimeMillis();
         repaint();
     }
 
@@ -624,8 +642,6 @@ public class CameraView extends JComponent implements CameraListener {
         if (selectionTextDelegate != null) {
             String text = selectionTextDelegate.getSelectionText(this);
             if (text != null) {
-                // TODO: Be awesome like Apple and move the overlay inside
-                // the rect if it goes past the edge of the window
                 drawTextOverlay(g2d, (int) (rx + rw + 6), (int) (ry + rh + 6), text);
             }
         }
@@ -812,8 +828,11 @@ public class CameraView extends JComponent implements CameraListener {
         if (image == null) {
             return;
         }
-        String text = String.format("Resolution: %d x %d\nZoom: %d%%\nHistogram:", image.getWidth(),
-                image.getHeight(), (int) (zoom * 100));
+        String text = String.format("Resolution: %d x %d\nZoom: %d%%\nFPS: %.1f\nHistogram:", 
+                image.getWidth(),
+                image.getHeight(), 
+                (int) (zoom * 100),
+                fps);
         Insets insets = new Insets(10, 10, 10, 10);
         int interLineSpacing = 4;
         int cornerRadius = 8;
@@ -1298,7 +1317,7 @@ public class CameraView extends JComponent implements CameraListener {
         @Override
         public void mousePressed(MouseEvent e) {
             if (e.isPopupTrigger()) {
-                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                new CameraViewPopupMenu(CameraView.this).show(e.getComponent(), e.getX(), e.getY());
                 return;
             }
             else if (e.isShiftDown()) {
@@ -1312,7 +1331,7 @@ public class CameraView extends JComponent implements CameraListener {
         @Override
         public void mouseReleased(MouseEvent e) {
             if (e.isPopupTrigger()) {
-                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                new CameraViewPopupMenu(CameraView.this).show(e.getComponent(), e.getX(), e.getY());
                 return;
             }
             else if (isDragJogging()) {
@@ -1376,4 +1395,28 @@ public class CameraView extends JComponent implements CameraListener {
                     return text;
                 }
             };
+            
+    // From https://stackoverflow.com/questions/3793400/is-there-a-function-in-java-to-get-moving-average/42407811#42407811
+    static class MovingAverage {
+        private long [] window;
+        private int n, insert;
+        private long sum;
+
+        public MovingAverage(int size) {
+            window = new long[size];
+            insert = 0;
+            sum = 0;
+        }
+
+        public double next(long val) {
+            if (n < window.length)  {
+                n++;
+            }
+            sum -= window[insert];
+            sum += val;
+            window[insert] = val;
+            insert = (insert + 1) % window.length;
+            return (double)sum / n;
+        }
+    }            
 }

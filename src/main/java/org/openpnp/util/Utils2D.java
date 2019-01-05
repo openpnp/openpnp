@@ -80,6 +80,12 @@ public class Utils2D {
         return new Point(point.getX() * scaleX, point.getY() * scaleY);
     }
 
+    public static Location calculateFiducialCompensatedBoardPlacementLocation(BoardLocation bl,
+            Location placementLocation) {
+        return calculateBoardPlacementLocation(bl.getFiducialCompensatedBoardLocation(), bl.getSide(),
+                bl.getBoard().getDimensions().getX(), placementLocation);
+    }
+
     public static Location calculateBoardPlacementLocation(BoardLocation bl,
             Location placementLocation) {
         return calculateBoardPlacementLocation(bl.getLocation(), bl.getSide(),

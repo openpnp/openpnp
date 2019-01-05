@@ -8,6 +8,7 @@ import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.machine.reference.driver.test.TestDriver;
 import org.openpnp.machine.reference.driver.test.TestDriver.TestDriverDelegate;
 import org.openpnp.model.Board;
@@ -97,7 +98,9 @@ public class BasicJobTest {
         delegate.expectMove("Move N2 to R2, Safe-Z", n2,
                 new Location(LengthUnit.Millimeters, 00, 20, 0, 90), 1.0);
 
-        JobProcessor jobProcessor = machine.getPnpJobProcessor();
+        ReferencePnpJobProcessor jobProcessor = (ReferencePnpJobProcessor) machine.getPnpJobProcessor();
+        jobProcessor.setAutoSaveJob(false);
+        jobProcessor.setAutoSaveConfiguration(false);
         machine.setEnabled(true);
         jobProcessor.initialize(job);
         while (jobProcessor.next());
@@ -215,13 +218,11 @@ public class BasicJobTest {
 
         @Override
         public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
-            // TODO Auto-generated method stub
             super.actuate(actuator, on);
         }
 
         @Override
         public void actuate(ReferenceActuator actuator, double value) throws Exception {
-            // TODO Auto-generated method stub
             super.actuate(actuator, value);
         }
 

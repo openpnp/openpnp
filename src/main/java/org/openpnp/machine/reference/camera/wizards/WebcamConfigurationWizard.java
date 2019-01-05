@@ -70,7 +70,7 @@ public class WebcamConfigurationWizard extends ReferenceCameraConfigurationWizar
             deviceIds = camera.getDeviceIds().toArray(new String[] {});
         }
         catch (Exception e) {
-            // TODO:
+            // TODO: Show an error to the use when we can't get the list of device IDs
         }
         comboBoxDeviceId = new JComboBox(deviceIds);
         panelGeneral.add(comboBoxDeviceId, "4, 2, left, default");

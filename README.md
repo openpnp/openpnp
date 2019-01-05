@@ -1,3 +1,5 @@
+![OpenPNP Logo](https://raw.githubusercontent.com/openpnp/openpnp-logo/develop/logo_small.png)
+
 # OpenPnP
 
 Open Source SMT Pick and Place Hardware and Software
@@ -22,6 +24,7 @@ you can [use this web based one](http://webchat.freenode.net/?channels=openpnp)
 ## Contributing
 
 [![Build Status](https://travis-ci.org/openpnp/openpnp.svg?branch=develop)](https://travis-ci.org/openpnp/openpnp)
+[![Bountysource](https://img.shields.io/bountysource/team/openpnp/activity.svg)](https://www.bountysource.com/teams/openpnp/bounties)
 [![Help Wanted](https://img.shields.io/github/issues-raw/openpnp/openpnp/help-wanted.svg?label=help-wanted&colorB=5319e7)](https://github.com/openpnp/openpnp/labels/help-wanted)
 [![Bugs](https://img.shields.io/github/issues-raw/openpnp/openpnp/bug.svg?label=bugs&colorB=D9472F)](https://github.com/openpnp/openpnp/labels/bug)
 [![Feature Requests](https://img.shields.io/github/issues-raw/openpnp/openpnp/feature-request.svg?label=feature-requests&colorB=bfd4f2)](https://github.com/openpnp/openpnp/labels/feature-request)

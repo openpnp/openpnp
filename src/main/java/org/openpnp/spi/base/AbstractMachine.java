@@ -24,6 +24,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Signaler;
+import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.IdentifiableList;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -62,6 +63,9 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     @ElementList(required = false)
     protected IdentifiableList<Actuator> actuators = new IdentifiableList<>();
+
+    @ElementList(required = false)
+    protected IdentifiableList<PartAlignment> partAlignments = new IdentifiableList<>();
 
     @Element(required = false)
     protected Location discardLocation = new Location(LengthUnit.Millimeters);
@@ -134,6 +138,11 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @Override
     public Camera getCamera(String id) {
         return cameras.get(id);
+    }
+
+    @Override
+    public List<PartAlignment> getPartAlignments() {
+        return Collections.unmodifiableList(partAlignments);
     }
 
     @Override
@@ -227,6 +236,20 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         }
     }
 
+    @Override
+    public void addSignaler(Signaler signaler) throws Exception {
+        signalers.add(signaler);
+        fireIndexedPropertyChange("signalers", signalers.size() - 1, null, signalers);
+    }
+
+    @Override
+    public void removeSignaler(Signaler signaler) {
+        int index = signalers.indexOf(signaler);
+        if (signalers.remove(signaler)) {
+            fireIndexedPropertyChange("signalers", index, signaler, null);
+        }
+    }
+
     public void fireMachineHeadActivity(Head head) {
         for (MachineListener listener : listeners) {
             listener.machineHeadActivity(this, head);
@@ -265,7 +288,6 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     @Override
     public Icon getPropertySheetHolderIcon() {
-        // TODO Auto-generated method stub
         return null;
     }
 

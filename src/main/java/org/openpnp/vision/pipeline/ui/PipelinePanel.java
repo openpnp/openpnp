@@ -40,8 +40,7 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.vision.pipeline.CvStage;
 
-import com.l2fprod.common.propertysheet.Property;
-import com.l2fprod.common.propertysheet.PropertySheetPanel;
+import com.l2fprod.common.propertysheet.*;
 
 public class PipelinePanel extends JPanel {
     private final CvPipelineEditor editor;
@@ -49,11 +48,13 @@ public class PipelinePanel extends JPanel {
     private JTable stagesTable;
     private StagesTableModel stagesTableModel;
     private PropertySheetPanel propertySheetPanel;
+    private PipelinePropertySheetTable pipelinePropertySheetTable;
 
     public PipelinePanel(CvPipelineEditor editor) {
         this.editor = editor;
 
-        propertySheetPanel = new PropertySheetPanel();
+        pipelinePropertySheetTable = new PipelinePropertySheetTable(this);
+        propertySheetPanel = new PropertySheetPanel(pipelinePropertySheetTable);
         propertySheetPanel.setDescriptionVisible(true);
 
         setLayout(new BorderLayout(0, 0));
@@ -120,21 +121,8 @@ public class PipelinePanel extends JPanel {
                 }
                 CvStage stage = getSelectedStage();
                 editor.stageSelected(stage);
-                if (stage == null) {
-                    propertySheetPanel.setProperties(new Property[] {});
-                    descriptionTa.setText("");
-                }
-                else {
-                    try {
-                        propertySheetPanel.setBeanInfo(stage.getBeanInfo());
-                        propertySheetPanel.readFromObject(stage);
-                        descriptionTa.setText(stage.getDescription());
-                        descriptionTa.setCaretPosition(0);
-                    }
-                    catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                }
+                refreshDescription();
+                refreshProperties();
             }
         });
 
@@ -166,23 +154,54 @@ public class PipelinePanel extends JPanel {
         
         splitPaneMain.setResizeWeight(0.5);
         splitPaneStages.setResizeWeight(0.80);
-
-        // Listen for editing events in the properties and process the pipeline to update the
-        // results.
-        propertySheetPanel.getTable().addPropertyChangeListener(new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent e) {
-                if ("tableCellEditor".equals(e.getPropertyName())) {
-                    if (!propertySheetPanel.getTable().isEditing()) {
-                        // editing has ended for a cell, save the values
-                        propertySheetPanel.writeToObject(getSelectedStage());
-                        editor.process();
-                    }
-                }
-            }
-        });
     }
 
+    public void onStagePropertySheetValueChanged(Object aValue, int row, int column) {
+        // editing has ended for a cell, save the values
+        refreshDescription();
+
+        // Don't use propertySheetPanel.writeToObject(stage) as it will cause infinitely recursive setValueAt() calls
+        // due to it calling getTable().commitEditing() (which is what called this function originally)
+        PropertySheetTableModel propertySheetTableModel = propertySheetPanel.getTable().getSheetModel();
+        PropertySheetTableModel.Item propertySheetElement = propertySheetTableModel.getPropertySheetElement(row);
+        Property property = propertySheetElement.getProperty();
+        property.writeToObject(getSelectedStage());
+
+        editor.process();
+    }
+    
+    private void refreshProperties() {
+        CvStage stage = getSelectedStage();
+        if (stage == null) {
+            propertySheetPanel.setProperties(new Property[] {});
+        }
+        else {
+            try {
+                propertySheetPanel.setBeanInfo(stage.getBeanInfo());
+                propertySheetPanel.readFromObject(stage);
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+    
+    private void refreshDescription() {
+        CvStage stage = getSelectedStage();
+        if (stage == null) {
+            descriptionTa.setText("");
+        }
+        else {
+            try {
+                descriptionTa.setText(stage.getDescription());
+                descriptionTa.setCaretPosition(0);
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+    
     public CvStage getSelectedStage() {
         int index = stagesTable.getSelectedRow();
         if (index == -1) {

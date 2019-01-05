@@ -39,7 +39,9 @@ public class Placement extends AbstractModelObject implements Identifiable {
     }
 
     /**
-     * History: 1.0: Initial revision. 1.1: Replaced Boolean place with Type type. Deprecated place.
+     * History: 1.0: Initial revision. 
+     * 1.1: Replaced Boolean place with Type type. Deprecated place.
+     * 1.2: Removed glue attribute.
      */
     @Version(revision = 1.2)
     private double version;
@@ -59,13 +61,11 @@ public class Placement extends AbstractModelObject implements Identifiable {
 
     private Part part;
 
-    // TODO: Remove after July 1, 2017.
-    @Deprecated
-    @Attribute(required=false)
-    private Boolean glue = null;
-    
     @Attribute
     private boolean checkFids;
+    
+    @Element(required=false)
+    private String comments;
 
     @SuppressWarnings("unused")
     private Placement() {
@@ -91,7 +91,6 @@ public class Placement extends AbstractModelObject implements Identifiable {
         if (getPart() == null) {
             setPart(Configuration.get().getPart(partId));
         }
-        glue = null;
     }
 
     public Part getPart() {
@@ -144,9 +143,18 @@ public class Placement extends AbstractModelObject implements Identifiable {
     {
         Object oldValue = this.checkFids;
         this.checkFids = checkFids;
-        firePropertyChange("check fids", oldValue, checkFids);
+        firePropertyChange("checkFids", oldValue, checkFids);
+    }
+    
+    public String getComments() {
+        return comments;
     }
 
+    public void setComments(String comments) {
+        Object oldValue = this.comments;
+        this.comments = comments;
+        firePropertyChange("comments", oldValue, comments);
+    }
 
     @Override
     public String toString() {

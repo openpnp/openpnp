@@ -55,15 +55,16 @@ import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 
+import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.SwingConstants;
 
 public class ReferenceNozzleTipConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceNozzleTip nozzleTip;
     private JPanel panelChanger;
-    private JLabel lblX_1;
     private JLabel lblY_1;
     private JLabel lblZ_1;
     private LocationButtonsPanel changerStartLocationButtonsPanel;
@@ -76,6 +77,12 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JTextField textFieldChangerMidY;
     private JTextField textFieldChangerMidZ;
     private JLabel lblEndLocation;
+    private JPanel panelDwellTime;
+    private JLabel lblPickDwellTime;
+    private JLabel lblPlaceDwellTime;
+    private JLabel lblDwellTime;
+    private JTextField pickDwellTf;
+    private JTextField placeDwellTf;
     private JTextField textFieldChangerEndX;
     private JTextField textFieldChangerEndY;
     private JTextField textFieldChangerEndZ;
@@ -107,6 +114,15 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JPanel panel;
     private JLabel lblName;
     private JTextField nameTf;
+    private JTextField textFieldChangerStartToMidSpeed;
+    private JTextField textFieldChangerMidToMid2Speed;
+    private JTextField textFieldChangerMid2ToEndSpeed;
+    private JLabel lblSpeed;
+    private JLabel lblX;
+    private JLabel lblSpeed1_2;
+    private JLabel lblSpeed2_3;
+    private JLabel lblSpeed3_4;
+
 
     public ReferenceNozzleTipConfigurationWizard(ReferenceNozzleTip nozzleTip) {
         this.nozzleTip = nozzleTip;
@@ -154,37 +170,51 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelChanger);
         panelChanger.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-
-        lblX_1 = new JLabel("X");
-        panelChanger.add(lblX_1, "4, 2");
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,},
+        	new RowSpec[] {
+        		FormSpecs.RELATED_GAP_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,
+        		FormSpecs.RELATED_GAP_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblX = new JLabel("X");
+        panelChanger.add(lblX, "4, 2");
 
         lblY_1 = new JLabel("Y");
         panelChanger.add(lblY_1, "6, 2");
 
         lblZ_1 = new JLabel("Z");
         panelChanger.add(lblZ_1, "8, 2");
-
+        
+        lblSpeed = new JLabel("Speed");
+        panelChanger.add(lblSpeed, "10, 2");
+        
+        lblSpeed1_2 = new JLabel("1 ↔ 2");
+        panelChanger.add(lblSpeed1_2, "8, 5, right, default");
+        
+        lblSpeed2_3 = new JLabel("2 ↔ 3");
+        panelChanger.add(lblSpeed2_3, "8, 7, right, default");
+        
+        lblSpeed3_4 = new JLabel("3 ↔ 4");
+        panelChanger.add(lblSpeed3_4, "8, 9, right, default");
+        
         lblStartLocation = new JLabel("First Location");
         panelChanger.add(lblStartLocation, "2, 4, right, default");
 
@@ -199,11 +229,16 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         textFieldChangerStartZ = new JTextField();
         panelChanger.add(textFieldChangerStartZ, "8, 4, fill, default");
         textFieldChangerStartZ.setColumns(5);
+        
+        textFieldChangerStartToMidSpeed = new JTextField();
+        textFieldChangerStartToMidSpeed.setToolTipText("Speed between First location and Second location");
+        panelChanger.add(textFieldChangerStartToMidSpeed, "10, 5, fill, default");
+        textFieldChangerStartToMidSpeed.setColumns(5);
 
         changerStartLocationButtonsPanel = new LocationButtonsPanel(textFieldChangerStartX,
                 textFieldChangerStartY, textFieldChangerStartZ, (JTextField) null);
         changerStartLocationButtonsPanel.setShowPositionToolNoSafeZ(true);
-        panelChanger.add(changerStartLocationButtonsPanel, "10, 4, fill, default");
+        panelChanger.add(changerStartLocationButtonsPanel, "12, 4, fill, default");
 
         lblMiddleLocation = new JLabel("Second Location");
         panelChanger.add(lblMiddleLocation, "2, 6, right, default");
@@ -219,11 +254,16 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         textFieldChangerMidZ = new JTextField();
         panelChanger.add(textFieldChangerMidZ, "8, 6, fill, default");
         textFieldChangerMidZ.setColumns(5);
+        
+        textFieldChangerMidToMid2Speed = new JTextField();
+        textFieldChangerMidToMid2Speed.setToolTipText("Speed between Second location and Third location");
+        textFieldChangerMidToMid2Speed.setColumns(5);
+        panelChanger.add(textFieldChangerMidToMid2Speed, "10, 7, fill, default");
 
         changerMidLocationButtonsPanel = new LocationButtonsPanel(textFieldChangerMidX,
                 textFieldChangerMidY, textFieldChangerMidZ, (JTextField) null);
         changerMidLocationButtonsPanel.setShowPositionToolNoSafeZ(true);
-        panelChanger.add(changerMidLocationButtonsPanel, "10, 6, fill, default");
+        panelChanger.add(changerMidLocationButtonsPanel, "12, 6, fill, default");
         
         lblMiddleLocation_1 = new JLabel("Third Location");
         panelChanger.add(lblMiddleLocation_1, "2, 8, right, default");
@@ -240,9 +280,14 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         textFieldMidZ2.setColumns(5);
         panelChanger.add(textFieldMidZ2, "8, 8, fill, default");
         
+        textFieldChangerMid2ToEndSpeed = new JTextField();
+        textFieldChangerMid2ToEndSpeed.setToolTipText("Speed between Third location and Last location");
+        textFieldChangerMid2ToEndSpeed.setColumns(5);
+        panelChanger.add(textFieldChangerMid2ToEndSpeed, "10, 9, fill, default");
+        
         changerMidButtons2 = new LocationButtonsPanel(textFieldMidX2, textFieldMidY2, textFieldMidZ2, (JTextField) null);
         changerMidButtons2.setShowPositionToolNoSafeZ(true);
-        panelChanger.add(changerMidButtons2, "10, 8, fill, default");
+        panelChanger.add(changerMidButtons2, "12, 8, fill, default");
 
         lblEndLocation = new JLabel("Last Location");
         panelChanger.add(lblEndLocation, "2, 10, right, default");
@@ -262,7 +307,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         changerEndLocationButtonsPanel = new LocationButtonsPanel(textFieldChangerEndX,
                 textFieldChangerEndY, textFieldChangerEndZ, (JTextField) null);
         changerEndLocationButtonsPanel.setShowPositionToolNoSafeZ(true);
-        panelChanger.add(changerEndLocationButtonsPanel, "10, 10, fill, default");
+        panelChanger.add(changerEndLocationButtonsPanel, "12, 10, fill, default");
         
         panelVacuumSensing = new JPanel();
         panelVacuumSensing.setBorder(new TitledBorder(null, "Vacuum Sensing", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -291,6 +336,43 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         vacuumLevelPartOff = new JTextField();
         panelVacuumSensing.add(vacuumLevelPartOff, "4, 4");
         vacuumLevelPartOff.setColumns(10);
+        
+        panelDwellTime = new JPanel();
+        panelDwellTime.setBorder(new TitledBorder(null, "Dwell Times", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panelDwellTime);
+        panelDwellTime.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+          
+        lblPickDwellTime = new JLabel("Pick Dwell Time (ms)");
+        panelDwellTime.add(lblPickDwellTime, "2, 2, right, default");
+        
+        pickDwellTf = new JTextField();
+        panelDwellTime.add(pickDwellTf, "4, 2");
+        pickDwellTf.setColumns(10);
+        
+        lblPlaceDwellTime = new JLabel("Place Dwell Time (ms)");
+        panelDwellTime.add(lblPlaceDwellTime, "2, 4, right, default");
+        
+        placeDwellTf = new JTextField();
+        panelDwellTime.add(placeDwellTf, "4, 4");
+        placeDwellTf.setColumns(10);
+        
+        CellConstraints cc = new CellConstraints();
+        lblDwellTime = new JLabel("Note: Total Dwell Time is the sum of Nozzle Dwell Time plus the Nozzle Tip Dwell Time.");
+        panelDwellTime.add(lblDwellTime, cc.xywh(2, 6, 5, 1));
+        
 
         panelCalibration = new JPanel();
         panelCalibration.setBorder(new TitledBorder(null, "Calibration", TitledBorder.LEADING,
@@ -355,6 +437,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         });
     }
 
+   
     @Override
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
@@ -375,6 +458,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 lengthConverter);
         addWrappedBinding(changerStartLocation, "lengthZ", textFieldChangerStartZ, "text",
                 lengthConverter);
+        addWrappedBinding(nozzleTip, "changerStartToMidSpeed", textFieldChangerStartToMidSpeed, "text",
+                doubleConverter);
 
         MutableLocationProxy changerMidLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, nozzleTip, "changerMidLocation", changerMidLocation,
@@ -385,6 +470,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 lengthConverter);
         addWrappedBinding(changerMidLocation, "lengthZ", textFieldChangerMidZ, "text",
                 lengthConverter);
+        addWrappedBinding(nozzleTip, "changerMidToMid2Speed", textFieldChangerMidToMid2Speed, "text",
+                doubleConverter);
 
         MutableLocationProxy changerMidLocation2 = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, nozzleTip, "changerMidLocation2", changerMidLocation2,
@@ -395,6 +482,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 lengthConverter);
         addWrappedBinding(changerMidLocation2, "lengthZ", textFieldMidZ2, "text",
                 lengthConverter);
+        addWrappedBinding(nozzleTip, "changerMid2ToEndSpeed", textFieldChangerMid2ToEndSpeed, "text",
+                doubleConverter);
 
         MutableLocationProxy changerEndLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, nozzleTip, "changerEndLocation", changerEndLocation,
@@ -410,25 +499,34 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         
         addWrappedBinding(nozzleTip, "vacuumLevelPartOn", vacuumLevelPartOn, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumLevelPartOff", vacuumLevelPartOff, "text", doubleConverter);
-
+        
+        addWrappedBinding(nozzleTip, "pickDwellMilliseconds", pickDwellTf, "text", intConverter);
+        addWrappedBinding(nozzleTip, "placeDwellMilliseconds", placeDwellTf, "text", intConverter);
+        
         ComponentDecorators.decorateWithAutoSelect(nameTf);
+        
+        ComponentDecorators.decorateWithAutoSelect(pickDwellTf);
+        ComponentDecorators.decorateWithAutoSelect(placeDwellTf);
         
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartToMidSpeed);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerMidX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerMidY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerMidZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerMidToMid2Speed);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldMidX2);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldMidY2);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldMidZ2);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerMid2ToEndSpeed);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerEndX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerEndY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerEndZ);
-        
+           
         ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOn);
         ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOff);
     }

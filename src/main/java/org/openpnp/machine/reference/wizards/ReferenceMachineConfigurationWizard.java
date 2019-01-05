@@ -1,6 +1,7 @@
 package org.openpnp.machine.reference.wizards;
 
 import javax.swing.JComboBox;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -15,6 +16,7 @@ import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.machine.neoden4.NeoDen4Driver;
 import org.openpnp.machine.openbuilds.OpenBuildsDriver;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceMachine;
@@ -22,6 +24,7 @@ import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.LinuxCNC;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.model.Configuration;
+import org.simpleframework.xml.Element;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -30,8 +33,9 @@ import com.jgoodies.forms.layout.RowSpec;
 
 public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWizard {
 
-    final private ReferenceMachine machine;
+	private final ReferenceMachine machine;
     private JComboBox comboBoxDriver;
+    private JCheckBox checkBoxHomeAfterEnabled;
     private String driverClassName;
     private JTextField discardXTf;
     private JTextField discardYTf;
@@ -45,20 +49,32 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
-        panelGeneral.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
         JLabel lblDriver = new JLabel("Driver");
         panelGeneral.add(lblDriver, "2, 2");
 
         comboBoxDriver = new JComboBox();
-        panelGeneral.add(comboBoxDriver, "4, 2");
+        panelGeneral.add(comboBoxDriver, "2, 4");
+
+        checkBoxHomeAfterEnabled = new JCheckBox("Home after ENABLED?");
+        panelGeneral.add(checkBoxHomeAfterEnabled, "2, 6");
 
         comboBoxDriver.addItem(NullDriver.class.getCanonicalName());
         comboBoxDriver.addItem(GcodeDriver.class.getCanonicalName());
         comboBoxDriver.addItem(LinuxCNC.class.getCanonicalName());
         comboBoxDriver.addItem(OpenBuildsDriver.class.getCanonicalName());
+        comboBoxDriver.addItem(NeoDen4Driver.class.getCanonicalName());
 
         JPanel panelLocations = new JPanel();
         panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
@@ -123,6 +139,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         LengthConverter lengthConverter = new LengthConverter();
 
         addWrappedBinding(this, "driverClassName", comboBoxDriver, "selectedItem");
+        addWrappedBinding(machine, "homeAfterEnabled", checkBoxHomeAfterEnabled, "selected");
 
         MutableLocationProxy discardLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, machine, "discardLocation", discardLocation, "location");

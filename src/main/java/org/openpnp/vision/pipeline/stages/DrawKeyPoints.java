@@ -1,12 +1,13 @@
 package org.openpnp.vision.pipeline.stages;
 
 import java.awt.Color;
+import java.util.Collections;
 import java.util.List;
 
+import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.features2d.Features2d;
-import org.opencv.features2d.KeyPoint;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
@@ -51,7 +52,17 @@ public class DrawKeyPoints extends CvStage {
             return null;
         }
         Mat mat = pipeline.getWorkingImage();
-        List<KeyPoint> keyPoints = (List<KeyPoint>) result.model;
+        Object model = result.model;
+        List<KeyPoint> keyPoints;
+        if (model == null ){
+            return null;
+        }
+        else if (model instanceof KeyPoint) {
+            keyPoints = Collections.singletonList((KeyPoint) model);
+        }
+        else {
+            keyPoints = (List<KeyPoint>) result.model;
+        }
         MatOfKeyPoint matOfKeyPoints = new MatOfKeyPoint();
         matOfKeyPoints.fromList(keyPoints);
         if (color == null) {

@@ -242,7 +242,6 @@ public class SimulatorDriver implements ReferenceDriver {
 
     @Override
     public Wizard getConfigurationWizard() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -253,7 +252,6 @@ public class SimulatorDriver implements ReferenceDriver {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -264,19 +262,16 @@ public class SimulatorDriver implements ReferenceDriver {
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public Icon getPropertySheetHolderIcon() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public void close() throws IOException {
-        // TODO Auto-generated method stub
 
     }
 }

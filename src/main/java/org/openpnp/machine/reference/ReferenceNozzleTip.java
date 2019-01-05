@@ -13,8 +13,8 @@ import javax.swing.Action;
 import javax.swing.JOptionPane;
 
 import org.apache.commons.io.IOUtils;
+import org.opencv.core.KeyPoint;
 import org.opencv.core.RotatedRect;
-import org.opencv.features2d.KeyPoint;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
@@ -37,30 +37,57 @@ import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage.Result;
-import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.core.Commit;
 
 public class ReferenceNozzleTip extends AbstractNozzleTip {
-
-
+    // TODO Remove after October 1, 2017.
+    @Element(required = false)
+    private Double changerStartSpeed = null;
+    @Element(required = false)
+    private Double changerMidSpeed = null;
+    @Element(required = false)
+    private Double changerMidSpeed2 = null;
+    @Element(required = false)
+    private Double changerEndSpeed = null;
+    // END TODO Remove after October 1, 2017.
+    
     @ElementList(required = false, entry = "id")
     private Set<String> compatiblePackageIds = new HashSet<>();
 
     @Attribute(required = false)
     private boolean allowIncompatiblePackages;
+    
+    @Attribute(required = false)
+    private int pickDwellMilliseconds;
+
+    @Attribute(required = false)
+    private int placeDwellMilliseconds;
 
     @Element(required = false)
     private Location changerStartLocation = new Location(LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private double changerStartToMidSpeed = 1D;
+    
     @Element(required = false)
     private Location changerMidLocation = new Location(LengthUnit.Millimeters);
+    
+    @Element(required = false)
+    private double changerMidToMid2Speed = 1D;
+    
     @Element(required = false)
     private Location changerMidLocation2;
+    
+    @Element(required = false)
+    private double changerMid2ToEndSpeed = 1D;
+    
     @Element(required = false)
     private Location changerEndLocation = new Location(LengthUnit.Millimeters);
+    
+    
     @Element(required = false)
     private Calibration calibration = new Calibration();
 
@@ -93,6 +120,25 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                  */
                 if (changerMidLocation2 == null) {
                     changerMidLocation2 = changerMidLocation.derive(null, null, null, null);
+                }
+                /*
+                 * Backwards compatibility for speed settings.
+                 *  Map the old variables to new one if present in machine.xlm and null the old ones
+                 *  */
+                if (changerStartSpeed != null) {
+                 changerStartToMidSpeed = changerStartSpeed;
+                 changerStartSpeed = null;
+            	}
+                if (changerMidSpeed != null) {
+                	changerMidToMid2Speed = changerMidSpeed;
+                	changerMidSpeed = null;
+                }
+                if (changerMidSpeed2 !=null) {
+                	changerMid2ToEndSpeed = changerMidSpeed2;
+                	changerMidSpeed2 = null;
+                }
+                if (changerEndSpeed != null) {
+                	changerEndSpeed = null;
                 }
             }
         });
@@ -136,7 +182,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -156,6 +201,22 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     public void setAllowIncompatiblePackages(boolean allowIncompatiblePackages) {
         this.allowIncompatiblePackages = allowIncompatiblePackages;
+    }
+    
+    public int getPickDwellMilliseconds() {
+        return pickDwellMilliseconds;
+    }
+
+    public void setPickDwellMilliseconds(int pickDwellMilliseconds) {
+        this.pickDwellMilliseconds = pickDwellMilliseconds;
+    }
+
+    public int getPlaceDwellMilliseconds() {
+        return placeDwellMilliseconds;
+    }
+
+    public void setPlaceDwellMilliseconds(int placeDwellMilliseconds) {
+        this.placeDwellMilliseconds = placeDwellMilliseconds;
     }
 
     public Location getChangerStartLocation() {
@@ -189,6 +250,30 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public void setChangerEndLocation(Location changerEndLocation) {
         this.changerEndLocation = changerEndLocation;
     }
+    
+    public double getChangerStartToMidSpeed() {
+        return changerStartToMidSpeed;
+    }
+
+    public void setChangerStartToMidSpeed(double changerStartToMidSpeed) {
+        this.changerStartToMidSpeed = changerStartToMidSpeed;
+    }
+
+    public double getChangerMidToMid2Speed() {
+        return changerMidToMid2Speed;
+    }
+
+    public void setChangerMidToMid2Speed(double changerMidToMid2Speed) {
+        this.changerMidToMid2Speed = changerMidToMid2Speed;
+    }
+
+    public double getChangerMid2ToEndSpeed() {
+        return changerMid2ToEndSpeed;
+    }
+
+    public void setChangerMid2ToEndSpeed(double changerMid2ToEndSpeed) {
+        this.changerMid2ToEndSpeed = changerMid2ToEndSpeed;
+    }
 
     private Nozzle getParentNozzle() {
         for (Head head : Configuration.get().getMachine().getHeads()) {
@@ -202,7 +287,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
         return null;
     }
-
+	
     public double getVacuumLevelPartOn() {
         return vacuumLevelPartOn;
     }
@@ -379,42 +464,44 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
         private Location findCircle() throws Exception {
             Camera camera = VisionUtils.getBottomVisionCamera();
-            pipeline.setCamera(camera);
-            pipeline.process();
-            Location location;
-            Object result = pipeline.getResult("result").model;
-            if (result instanceof List) {
-                if (((List) result).get(0) instanceof Result.Circle) {
-                    List<Result.Circle> circles = (List<Result.Circle>) result;
-                    List<Location> locations = circles.stream().map(circle -> {
-                        return VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y);
-                    }).sorted((a, b) -> {
-                        double a1 =
-                                a.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
-                        double b1 =
-                                b.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
-                        return Double.compare(a1, b1);
-                    }).collect(Collectors.toList());
-                    location = locations.get(0);
+            try (CvPipeline pipeline = getPipeline()) {
+                pipeline.setProperty("camera", camera);
+                pipeline.process();
+                Location location;
+                Object result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
+                if (result instanceof List) {
+                    if (((List) result).get(0) instanceof Result.Circle) {
+                        List<Result.Circle> circles = (List<Result.Circle>) result;
+                        List<Location> locations = circles.stream().map(circle -> {
+                            return VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y);
+                        }).sorted((a, b) -> {
+                            double a1 =
+                                    a.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                            double b1 =
+                                    b.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                            return Double.compare(a1, b1);
+                        }).collect(Collectors.toList());
+                        location = locations.get(0);
+                    }
+                    else if (((List) result).get(0) instanceof KeyPoint) {
+                        KeyPoint keyPoint = ((List<KeyPoint>) result).get(0);
+                        location = VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x, keyPoint.pt.y);
+                    }
+                    else {
+                        throw new Exception("Unrecognized result " + result);
+                    }
                 }
-                else if (((List) result).get(0) instanceof KeyPoint) {
-                    KeyPoint keyPoint = ((List<KeyPoint>) result).get(0);
-                    location = VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x, keyPoint.pt.y);
+                else if (result instanceof RotatedRect) {
+                    RotatedRect rect = (RotatedRect) result;
+                    location = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
                 }
                 else {
                     throw new Exception("Unrecognized result " + result);
                 }
+                MainFrame.get().get().getCameraViews().getCameraView(camera).showFilteredImage(
+                        OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
+                return location;
             }
-            else if (result instanceof RotatedRect) {
-                RotatedRect rect = (RotatedRect) result;
-                location = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
-            }
-            else {
-                throw new Exception("Unrecognized result " + result);
-            }
-            MainFrame.get().get().getCameraViews().getCameraView(camera).showFilteredImage(
-                    OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
-            return location;
         }
 
         /**
@@ -472,7 +559,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
 
         public CvPipeline getPipeline() throws Exception {
-            pipeline.setCamera(VisionUtils.getBottomVisionCamera());
+            pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
             return pipeline;
         }
 

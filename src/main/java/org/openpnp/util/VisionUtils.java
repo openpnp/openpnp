@@ -3,12 +3,19 @@ package org.openpnp.util;
 import java.awt.image.BufferedImage;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PartAlignment;
+import org.pmw.tinylog.Logger;
 
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.MultiFormatReader;
@@ -17,6 +24,8 @@ import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
 
 public class VisionUtils {
+    public static String PIPELINE_RESULTS_NAME = "results";
+    
     /**
      * Given pixel coordinates within the frame of the Camera's image, get the offsets from Camera
      * center to the coordinates in Camera space and units. The resulting value is the distance the
@@ -127,6 +136,32 @@ public class VisionUtils {
         }
         catch (Exception e) {
             return null;
+        }
+    }
+    
+    public static PartAlignment.PartAlignmentOffset findPartAlignmentOffsets(PartAlignment p, Part part, BoardLocation boardLocation, Location placementLocation, Nozzle nozzle) throws Exception {
+        try {
+            Map<String, Object> globals = new HashMap<>();
+            globals.put("part", part);
+            globals.put("nozzle", nozzle);
+            Configuration.get().getScripting().on("Vision.PartAlignment.Before", globals);
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+        }
+        try {
+            return p.findOffsets(part, boardLocation, placementLocation, nozzle);
+        }
+        finally {
+            try {
+                Map<String, Object> globals = new HashMap<>();
+                globals.put("part", part);
+                globals.put("nozzle", nozzle);
+                Configuration.get().getScripting().on("Vision.PartAlignment.After", globals);
+            }
+            catch (Exception e) {
+                Logger.warn(e);
+            }
         }
     }
 }

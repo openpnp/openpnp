@@ -23,6 +23,7 @@ import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Desktop;
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -40,6 +41,7 @@ import java.beans.PropertyChangeListener;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.prefs.Preferences;
 
@@ -56,6 +58,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextPane;
@@ -66,6 +69,7 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.importer.DipTraceImporter;
@@ -93,18 +97,36 @@ import com.jgoodies.forms.layout.RowSpec;
  */
 @SuppressWarnings("serial")
 public class MainFrame extends JFrame {
-    private static final String PREF_WINDOW_X = "MainFrame.windowX";
+    private static final String PREF_WINDOW_X = "MainFrame.windowX"; //$NON-NLS-1$
     private static final int PREF_WINDOW_X_DEF = 0;
-    private static final String PREF_WINDOW_Y = "MainFrame.windowY";
+    private static final String PREF_WINDOW_Y = "MainFrame.windowY"; //$NON-NLS-1$
     private static final int PREF_WINDOW_Y_DEF = 0;
-    private static final String PREF_WINDOW_WIDTH = "MainFrame.windowWidth";
+    private static final String PREF_WINDOW_WIDTH = "MainFrame.windowWidth"; //$NON-NLS-1$
     private static final int PREF_WINDOW_WIDTH_DEF = 1024;
-    private static final String PREF_WINDOW_HEIGHT = "MainFrame.windowHeight";
+    private static final String PREF_WINDOW_HEIGHT = "MainFrame.windowHeight"; //$NON-NLS-1$
     private static final int PREF_WINDOW_HEIGHT_DEF = 768;
-    private static final String PREF_DIVIDER_POSITION = "MainFrame.dividerPosition";
+    private static final String PREF_DIVIDER_POSITION = "MainFrame.dividerPosition"; //$NON-NLS-1$
     private static final int PREF_DIVIDER_POSITION_DEF = -1;
-    private static final String PREF_WINDOW_STYLE_MULTIPLE = "MainFrame.windowStyleMultiple";
+    private static final String PREF_WINDOW_STYLE_MULTIPLE = "MainFrame.windowStyleMultiple"; //$NON-NLS-1$
     private static final boolean PREF_WINDOW_STYLE_MULTIPLE_DEF = false;
+
+    private static final String PREF_CAMERA_WINDOW_X = "CameraFrame.windowX"; //$NON-NLS-1$
+    private static final int PREF_CAMERA_WINDOW_X_DEF = 0;
+    private static final String PREF_CAMERA_WINDOW_Y = "CameraFrame.windowY"; //$NON-NLS-1$
+    private static final int PREF_CAMERA_WINDOW_Y_DEF = 0;
+    private static final String PREF_CAMERA_WINDOW_WIDTH = "CameraFrame.windowWidth"; //$NON-NLS-1$
+    private static final int PREF_CAMERA_WINDOW_WIDTH_DEF = 800;
+    private static final String PREF_CAMERA_WINDOW_HEIGHT = "CameraFrame.windowHeight"; //$NON-NLS-1$
+    private static final int PREF_CAMERA_WINDOW_HEIGHT_DEF = 600;
+
+    private static final String PREF_MACHINECONTROLS_WINDOW_X = "MachineControlsFrame.windowX"; //$NON-NLS-1$
+    private static final int PREF_MACHINECONTROLS_WINDOW_X_DEF = 0;
+    private static final String PREF_MACHINECONTROLS_WINDOW_Y = "MachineControlsFrame.windowY"; //$NON-NLS-1$
+    private static final int PREF_MACHINECONTROLS_WINDOW_Y_DEF = 0;
+    private static final String PREF_MACHINECONTROLS_WINDOW_WIDTH = "MachineControlsFrame.windowWidth"; //$NON-NLS-1$
+    private static final int PREF_MACHINECONTROLS_WINDOW_WIDTH_DEF = 490;
+    private static final String PREF_MACHINECONTROLS_WINDOW_HEIGHT = "MachineControlsFrame.windowHeight"; //$NON-NLS-1$
+    private static final int PREF_MACHINECONTROLS_WINDOW_HEIGHT_DEF = 340;
 
     private final Configuration configuration;
 
@@ -119,6 +141,8 @@ public class MainFrame extends JFrame {
     private JPanel panelCameraAndInstructions;
     private JPanel panelMachine;
     private MachineSetupPanel machineSetupPanel;
+    private JDialog frameCamera;
+    private JDialog frameMachineControls;
 
     public static MainFrame get() {
         return mainFrame;
@@ -208,7 +232,7 @@ public class MainFrame extends JFrame {
                 prefs.getInt(PREF_WINDOW_Y, PREF_WINDOW_Y_DEF),
                 prefs.getInt(PREF_WINDOW_WIDTH, PREF_WINDOW_WIDTH_DEF),
                 prefs.getInt(PREF_WINDOW_HEIGHT, PREF_WINDOW_HEIGHT_DEF));
-        jobPanel = new JobPanel(configuration, this, machineControlsPanel);
+        jobPanel = new JobPanel(configuration, this);
         partsPanel = new PartsPanel(configuration, this);
         packagesPanel = new PackagesPanel(configuration, this);
         feedersPanel = new FeedersPanel(configuration, this);
@@ -219,7 +243,8 @@ public class MainFrame extends JFrame {
 
         // File
         //////////////////////////////////////////////////////////////////////
-        JMenu mnFile = new JMenu("File");
+        JMenu mnFile = new JMenu(Translations.getString("Menu.File")); //$NON-NLS-1$
+        mnFile.setMnemonic(KeyEvent.VK_F);
         menuBar.add(mnFile);
 
         mnFile.add(new JMenuItem(jobPanel.newJobAction));
@@ -230,12 +255,15 @@ public class MainFrame extends JFrame {
         mnFile.addSeparator();
         mnFile.add(new JMenuItem(jobPanel.saveJobAction));
         mnFile.add(new JMenuItem(jobPanel.saveJobAsAction));
+        mnFile.addSeparator();
+        mnFile.add(new JMenuItem(saveConfigAction));
 
 
         // File -> Import
         //////////////////////////////////////////////////////////////////////
         mnFile.addSeparator();
-        mnImport = new JMenu("Import Board");
+        mnImport = new JMenu(Translations.getString("Menu.File.ImportBoard")); //$NON-NLS-1$
+        mnImport.setMnemonic(KeyEvent.VK_I);
         mnFile.add(mnImport);
 
 
@@ -246,7 +274,8 @@ public class MainFrame extends JFrame {
 
         // Edit
         //////////////////////////////////////////////////////////////////////
-        JMenu mnEdit = new JMenu("Edit");
+        JMenu mnEdit = new JMenu(Translations.getString("Menu.Edit")); //$NON-NLS-1$
+        mnEdit.setMnemonic(KeyEvent.VK_E);
         menuBar.add(mnEdit);
 
         JMenu mnEditAddBoard = new JMenu(jobPanel.addBoardAction);
@@ -259,12 +288,14 @@ public class MainFrame extends JFrame {
 
         // View
         //////////////////////////////////////////////////////////////////////
-        JMenu mnView = new JMenu("View");
+        JMenu mnView = new JMenu(Translations.getString("Menu.View")); //$NON-NLS-1$
+        mnView.setMnemonic(KeyEvent.VK_V);
         menuBar.add(mnView);
 
+        // View -> System Units
         ButtonGroup buttonGroup = new ButtonGroup();
-
-        JMenu mnUnits = new JMenu("System Units");
+        JMenu mnUnits = new JMenu(Translations.getString("Menu.View.SystemUnits")); //$NON-NLS-1$
+        mnUnits.setMnemonic(KeyEvent.VK_S);
         mnView.add(mnUnits);
 
         JMenuItem menuItem;
@@ -280,30 +311,64 @@ public class MainFrame extends JFrame {
             menuItem.setSelected(true);
         }
         mnUnits.add(menuItem);
+        
+        // View -> Language
+        buttonGroup = new ButtonGroup();
+        JMenu mnLanguage = new JMenu(Translations.getString("Menu.View.Language")); //$NON-NLS-1$
+        mnView.add(mnLanguage);
 
-        // Job Control
+        menuItem = new JCheckBoxMenuItem(new LanguageSelectionAction(Locale.US));
+        buttonGroup.add(menuItem);
+        mnLanguage.add(menuItem);
+        
+        menuItem = new JCheckBoxMenuItem(new LanguageSelectionAction(new Locale("ru")));
+        buttonGroup.add(menuItem);
+        mnLanguage.add(menuItem);
+
+        menuItem = new JCheckBoxMenuItem(new LanguageSelectionAction(new Locale("es")));
+        buttonGroup.add(menuItem);
+        mnLanguage.add(menuItem);
+
+        for (int i = 0; i < mnLanguage.getItemCount(); i++) {
+            JCheckBoxMenuItem item = (JCheckBoxMenuItem) mnLanguage.getItem(i);
+            LanguageSelectionAction action = (LanguageSelectionAction) item.getAction();
+            if (action.getLocale().equals(Configuration.get().getLocale())) {
+                item.setSelected(true);
+            }
+        }
+        
+
+        // Job
         //////////////////////////////////////////////////////////////////////
-        JMenu mnJob = new JMenu("Job Control");
+        JMenu mnJob = new JMenu(Translations.getString("Menu.Job")); //$NON-NLS-1$
+        mnJob.setMnemonic(KeyEvent.VK_J);
         menuBar.add(mnJob);
 
         mnJob.add(new JMenuItem(jobPanel.startPauseResumeJobAction));
         mnJob.add(new JMenuItem(jobPanel.stepJobAction));
         mnJob.add(new JMenuItem(jobPanel.stopJobAction));
+        
+        mnJob.addSeparator();
+        
+        mnJob.add(new JMenuItem(jobPanel.resetAllPlacedAction));
 
         // Machine
         //////////////////////////////////////////////////////////////////////
-        JMenu mnCommands = new JMenu("Machine");
+        JMenu mnCommands = new JMenu(Translations.getString("Menu.Machine")); //$NON-NLS-1$
+        mnCommands.setMnemonic(KeyEvent.VK_M);
         menuBar.add(mnCommands);
         mnCommands.addSeparator();
 
         // Scripts
         /////////////////////////////////////////////////////////////////////
-        mnScripts = new JMenu("Scripts");
+        mnScripts = new JMenu(Translations.getString("Menu.Scripts")); //$NON-NLS-1$
+        mnScripts.setMnemonic(KeyEvent.VK_S);
         menuBar.add(mnScripts);
 
         // Windows
         /////////////////////////////////////////////////////////////////////
-        mnWindows = new JMenu("Window");
+        mnWindows = new JMenu(Translations.getString("Menu.Window")); //$NON-NLS-1$
+        mnWindows.setMnemonic(KeyEvent.VK_W);
         menuBar.add(mnWindows);
 
         JCheckBoxMenuItem windowStyleMultipleMenuItem =
@@ -315,7 +380,8 @@ public class MainFrame extends JFrame {
 
         // Help
         /////////////////////////////////////////////////////////////////////
-        JMenu mnHelp = new JMenu("Help");
+        JMenu mnHelp = new JMenu(Translations.getString("Menu.Help")); //$NON-NLS-1$
+        mnHelp.setMnemonic(KeyEvent.VK_H);
         menuBar.add(mnHelp);
         if (!macOsXMenus) {
             mnHelp.add(new JMenuItem(aboutAction));
@@ -370,7 +436,7 @@ public class MainFrame extends JFrame {
         panelInstructions = new JPanel();
         panelInstructions.setVisible(false);
         panelCameraAndInstructions.setLayout(new BorderLayout(0, 0));
-        panelInstructions.setBorder(panelInstructionsBorder = new TitledBorder(null, "Instructions",
+        panelInstructions.setBorder(panelInstructionsBorder = new TitledBorder(null, Translations.getString("General.Instructions"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         panelCameraAndInstructions.add(panelInstructions, BorderLayout.SOUTH);
         panelInstructions.setLayout(new BorderLayout(0, 0));
@@ -386,7 +452,7 @@ public class MainFrame extends JFrame {
         flowLayout_2.setHgap(0);
         panelInstructionActions.add(panel_2, BorderLayout.SOUTH);
 
-        btnInstructionsCancel = new JButton("Cancel");
+        btnInstructionsCancel = new JButton(Translations.getString("General.Cancel")); //$NON-NLS-1$
         btnInstructionsCancel.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
                 if (instructionsCancelActionListener != null) {
@@ -396,7 +462,7 @@ public class MainFrame extends JFrame {
         });
         panel_2.add(btnInstructionsCancel);
 
-        btnInstructionsNext = new JButton("Next");
+        btnInstructionsNext = new JButton(Translations.getString("General.Next")); //$NON-NLS-1$
         btnInstructionsNext.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
                 if (instructionsProceedActionListener != null) {
@@ -411,13 +477,13 @@ public class MainFrame extends JFrame {
         panel_1.setLayout(new BorderLayout(0, 0));
 
         lblInstructions = new JTextPane();
-        lblInstructions.setFont(new Font("Lucida Grande", Font.PLAIN, 14));
-        lblInstructions.setBackground(UIManager.getColor("Panel.background"));
-        lblInstructions.setContentType("text/html");
+        lblInstructions.setFont(new Font("Lucida Grande", Font.PLAIN, 14)); //$NON-NLS-1$
+        lblInstructions.setBackground(UIManager.getColor("Panel.background")); //$NON-NLS-1$
+        lblInstructions.setContentType("text/html"); //$NON-NLS-1$
         lblInstructions.setEditable(false);
         panel_1.add(lblInstructions);
 
-        machineControlsPanel = new MachineControlsPanel(configuration);
+        machineControlsPanel = new MachineControlsPanel(configuration, jobPanel);
         panelMachine.add(machineControlsPanel, BorderLayout.SOUTH);
 
         mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
@@ -443,13 +509,39 @@ public class MainFrame extends JFrame {
                 machineControlsPanel.getJogControlsPanel().lowerIncrementAction);
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, mask),
                 machineControlsPanel.getJogControlsPanel().raiseIncrementAction);
-
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_H, mask),
+                machineControlsPanel.homeAction);
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
+                jobPanel.startPauseResumeJobAction); // Ctrl-Shift-R for Start
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
+                jobPanel.stepJobAction); // Ctrl-Shift-S for Step
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
+                jobPanel.stopJobAction); // Ctrl-Shift-A for Stop
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_P, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
+                machineControlsPanel.getJogControlsPanel().xyParkAction); // Ctrl-Shift-P for xyPark
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_L, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
+                machineControlsPanel.getJogControlsPanel().zParkAction); // Ctrl-Shift-P for zPark
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
+                machineControlsPanel.getJogControlsPanel().safezAction); // Ctrl-Shift-Z for safezAction
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
+                machineControlsPanel.getJogControlsPanel().discardAction); // Ctrl-Shift-D for discard
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F1, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
+                machineControlsPanel.getJogControlsPanel().setIncrement1Action);
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F2, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
+                machineControlsPanel.getJogControlsPanel().setIncrement2Action);
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F3, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
+                machineControlsPanel.getJogControlsPanel().setIncrement3Action);
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F4, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
+                machineControlsPanel.getJogControlsPanel().setIncrement4Action);
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F5, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
+                machineControlsPanel.getJogControlsPanel().setIncrement5Action);
+				
         tabs = new JTabbedPane(JTabbedPane.TOP);
         splitPaneMachineAndTabs.setRightComponent(tabs);
 
         splitPaneMachineAndTabs
                 .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
-        splitPaneMachineAndTabs.addPropertyChangeListener("dividerLocation",
+        splitPaneMachineAndTabs.addPropertyChangeListener("dividerLocation", //$NON-NLS-1$
                 new PropertyChangeListener() {
                     @Override
                     public void propertyChange(PropertyChangeEvent evt) {
@@ -458,34 +550,56 @@ public class MainFrame extends JFrame {
                     }
                 });
 
-        tabs.addTab("Job", null, jobPanel, null);
-        tabs.addTab("Parts", null, partsPanel, null);
-        tabs.addTab("Packages", null, packagesPanel, null);
-        tabs.addTab("Feeders", null, feedersPanel, null);
-        tabs.addTab("Machine Setup", null, machineSetupPanel, null);
+        tabs.addTab("Job", null, jobPanel, null); //$NON-NLS-1$
+        tabs.addTab("Parts", null, partsPanel, null); //$NON-NLS-1$
+        tabs.addTab("Packages", null, packagesPanel, null); //$NON-NLS-1$
+        tabs.addTab("Feeders", null, feedersPanel, null); //$NON-NLS-1$
+        tabs.addTab("Machine Setup", null, machineSetupPanel, null); //$NON-NLS-1$
 
         LogPanel logPanel = new LogPanel();
-        tabs.addTab("Log", null, logPanel, null);
+        tabs.addTab("Log", null, logPanel, null); //$NON-NLS-1$
 
         panelStatusAndDros = new JPanel();
         panelStatusAndDros.setBorder(null);
         contentPane.add(panelStatusAndDros, BorderLayout.SOUTH);
         panelStatusAndDros.setLayout(new FormLayout(
-                new ColumnSpec[] {ColumnSpec.decode("default:grow"), ColumnSpec.decode("8px"),
+                new ColumnSpec[] {ColumnSpec.decode("default:grow"), ColumnSpec.decode("8px"), //$NON-NLS-1$ //$NON-NLS-2$
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC, 
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {RowSpec.decode("20px"),}));
+                new RowSpec[] {RowSpec.decode("20px"),})); //$NON-NLS-1$
 
-        lblStatus = new JLabel(" ");
+        
+        // Status Information
+        lblStatus = new JLabel(" "); //$NON-NLS-1$
         lblStatus.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
-        panelStatusAndDros.add(lblStatus, "1, 1");
+        panelStatusAndDros.add(lblStatus, "1, 1"); //$NON-NLS-1$
+        
+        
+        // Placement Information
+        lblPlacements = new JLabel(" Placements: 0 / 0 Total | 0 / 0 Selected Board "); //$NON-NLS-1$
+        lblPlacements.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+        panelStatusAndDros.add(lblPlacements, "4, 1"); //$NON-NLS-1$
+        
+        
+        // Placements Progress Bar
+        prgbrPlacements = new JProgressBar();
+        prgbrPlacements.setMinimum(0);
+        prgbrPlacements.setMaximum(100);
+        prgbrPlacements.setStringPainted(true);
+        prgbrPlacements.setPreferredSize(new Dimension(200, 16));
+        prgbrPlacements.setValue(0);
+        panelStatusAndDros.add(prgbrPlacements, "6, 1"); //$NON-NLS-1$
 
-        droLbl = new JLabel("X 0000.0000, Y 0000.0000, Z 0000.0000, R 0000.0000");
+        
+        // DRO 
+        droLbl = new JLabel("X 0000.0000, Y 0000.0000, Z 0000.0000, R 0000.0000"); //$NON-NLS-1$
         droLbl.setOpaque(true);
-        droLbl.setFont(new Font("Monospaced", Font.PLAIN, 13));
+        droLbl.setFont(new Font("Monospaced", Font.PLAIN, 13)); //$NON-NLS-1$
         droLbl.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
-        panelStatusAndDros.add(droLbl, "4, 1");
+        panelStatusAndDros.add(droLbl, "8, 1"); //$NON-NLS-1$
 
-        cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING,
+        cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING, //$NON-NLS-1$
                 TitledBorder.TOP, null, null));
         panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
 
@@ -499,14 +613,14 @@ public class MainFrame extends JFrame {
         }
         catch (Exception e) {
             e.printStackTrace();
-            MessageBoxes.errorBox(this, "Configuration Load Error",
-                    "There was a problem loading the configuration. The reason was:<br/><br/>"
-                            + e.getMessage() + "<br/><br/>"
-                            + "Please check your configuration files and try again. They are located at: "
+            MessageBoxes.errorBox(this, "Configuration Load Error", //$NON-NLS-1$
+                    "There was a problem loading the configuration. The reason was:<br/><br/>" //$NON-NLS-1$
+                            + e.getMessage() + "<br/><br/>" //$NON-NLS-1$
+                            + "Please check your configuration files and try again. They are located at: " //$NON-NLS-1$
                             + configuration.getConfigurationDirectory().getAbsolutePath()
-                            + "<br/><br/>"
-                            + "If you would like to start with a fresh configuration, just delete the entire directory at the location above.<br/><br/>"
-                            + "OpenPnP will now exit.");
+                            + "<br/><br/>" //$NON-NLS-1$
+                            + "If you would like to start with a fresh configuration, just delete the entire directory at the location above.<br/><br/>" //$NON-NLS-1$
+                            + "OpenPnP will now exit."); //$NON-NLS-1$
             System.exit(1);
         }
         splitWindows();
@@ -523,21 +637,47 @@ public class MainFrame extends JFrame {
     public void splitWindows() {
         if (prefs.getBoolean(PREF_WINDOW_STYLE_MULTIPLE, PREF_WINDOW_STYLE_MULTIPLE_DEF)) {
             // pin panelCameraAndInstructions to a separate JFrame
-            JDialog frameCamera = new JDialog(this, "OpenPnp - Camera", false);
+            frameCamera = new JDialog(this, "OpenPnp - Camera", false); //$NON-NLS-1$
             // as of today no smart way found to get an adjusted size
             // ... so main window size is used for the camera window
-            frameCamera.setSize(getFrames()[0].getSize());
             frameCamera.add(panelCameraAndInstructions);
             frameCamera.setVisible(true);
+            frameCamera.addComponentListener(cameraWindowListener);
+
+            if (prefs.getInt(PREF_CAMERA_WINDOW_WIDTH, 50) < 50) {
+                prefs.putInt(PREF_CAMERA_WINDOW_WIDTH, PREF_CAMERA_WINDOW_WIDTH_DEF);
+            }
+
+            if (prefs.getInt(PREF_CAMERA_WINDOW_HEIGHT, 50) < 50) {
+                prefs.putInt(PREF_CAMERA_WINDOW_HEIGHT, PREF_CAMERA_WINDOW_HEIGHT_DEF);
+            }
+
+            frameCamera.setBounds(prefs.getInt(PREF_CAMERA_WINDOW_X, PREF_CAMERA_WINDOW_X_DEF),
+                    prefs.getInt(PREF_CAMERA_WINDOW_Y, PREF_CAMERA_WINDOW_Y_DEF),
+                    prefs.getInt(PREF_CAMERA_WINDOW_WIDTH, PREF_CAMERA_WINDOW_WIDTH_DEF),
+                    prefs.getInt(PREF_CAMERA_WINDOW_HEIGHT, PREF_CAMERA_WINDOW_HEIGHT_DEF));
 
             // pin machineControlsPanel to a separate JFrame
-            JDialog frameMachineControls = new JDialog(this, "OpenPnp - Machine Controls", false);
+            frameMachineControls = new JDialog(this, "OpenPnp - Machine Controls", false); //$NON-NLS-1$
             // as of today no smart way found to get an adjusted size
             // ... so hardcoded values used (usually not a good idea)
             frameMachineControls.add(machineControlsPanel);
             frameMachineControls.setVisible(true);
             frameMachineControls.pack();
+            frameMachineControls.addComponentListener(machineControlsWindowListener);
 
+            if (prefs.getInt(PREF_MACHINECONTROLS_WINDOW_WIDTH, 50) < 50) {
+                prefs.putInt(PREF_MACHINECONTROLS_WINDOW_WIDTH, PREF_MACHINECONTROLS_WINDOW_WIDTH_DEF);
+            }
+
+            if (prefs.getInt(PREF_MACHINECONTROLS_WINDOW_HEIGHT, 50) < 50) {
+                prefs.putInt(PREF_MACHINECONTROLS_WINDOW_HEIGHT, PREF_MACHINECONTROLS_WINDOW_HEIGHT_DEF);
+            }
+
+            frameMachineControls.setBounds(prefs.getInt(PREF_MACHINECONTROLS_WINDOW_X, PREF_MACHINECONTROLS_WINDOW_X_DEF),
+                    prefs.getInt(PREF_MACHINECONTROLS_WINDOW_Y, PREF_MACHINECONTROLS_WINDOW_Y_DEF),
+                    prefs.getInt(PREF_MACHINECONTROLS_WINDOW_WIDTH, PREF_MACHINECONTROLS_WINDOW_WIDTH_DEF),
+                    prefs.getInt(PREF_MACHINECONTROLS_WINDOW_HEIGHT, PREF_MACHINECONTROLS_WINDOW_HEIGHT_DEF));
             // move the splitPaneDivider to position 0 to fill the gap of the
             // relocated panels 'panelCameraAndInstructions' & 'machineControlsPanel'
             splitPaneMachineAndTabs.setDividerLocation(0);
@@ -554,7 +694,7 @@ public class MainFrame extends JFrame {
     
     public boolean isInstallerAvailable() {
         try {
-            Class.forName("com.install4j.api.launcher.ApplicationLauncher");
+            Class.forName("com.install4j.api.launcher.ApplicationLauncher"); //$NON-NLS-1$
             return true;
         }
         catch (Throwable e) {
@@ -593,6 +733,7 @@ public class MainFrame extends JFrame {
             {
                 putValue(NAME, boardImporter.getImporterName());
                 putValue(SHORT_DESCRIPTION, boardImporter.getImporterDescription());
+                putValue(MNEMONIC_KEY, KeyEvent.VK_I);
             }
 
             @Override
@@ -624,16 +765,16 @@ public class MainFrame extends JFrame {
     }
 
     public boolean registerForMacOSXEvents() {
-        if ((System.getProperty("os.name").toLowerCase().startsWith("mac os x"))) {
+        if ((System.getProperty("os.name").toLowerCase().startsWith("mac os x"))) { //$NON-NLS-1$ //$NON-NLS-2$
             try {
                 // Generate and register the OSXAdapter, passing it a hash of
                 // all the methods we wish to
                 // use as delegates for various
                 // com.apple.eawt.ApplicationListener methods
                 OSXAdapter.setQuitHandler(this,
-                        getClass().getDeclaredMethod("quit", (Class[]) null));
+                        getClass().getDeclaredMethod("quit", (Class[]) null)); //$NON-NLS-1$
                 OSXAdapter.setAboutHandler(this,
-                        getClass().getDeclaredMethod("about", (Class[]) null));
+                        getClass().getDeclaredMethod("about", (Class[]) null)); //$NON-NLS-1$
                 // OSXAdapter.setPreferencesHandler(this, getClass()
                 // .getDeclaredMethod("preferences", (Class[]) null));
                 // OSXAdapter.setFileHandler(
@@ -642,7 +783,7 @@ public class MainFrame extends JFrame {
                 // new Class[] { String.class }));
             }
             catch (Exception e) {
-                System.err.println("Error while loading the OSXAdapter:");
+                System.err.println("Error while loading the OSXAdapter:"); //$NON-NLS-1$
                 e.printStackTrace();
             }
             return true;
@@ -658,8 +799,34 @@ public class MainFrame extends JFrame {
         dialog.setVisible(true);
     }
 
+    public boolean saveConfig() {
+        // Save the configuration
+        try {
+            Preferences.userRoot().flush();
+        }
+        catch (Exception e) {
+            MessageBoxes.errorBox(MainFrame.this, "Save Preferences", e); //$NON-NLS-1$
+        }
+        
+        try {
+            configuration.save();
+        }
+        catch (Exception e) {
+			String message = "There was a problem saving the configuration. The reason was:\n\n" + e.getMessage() //$NON-NLS-1$
+					+ "\n\n"; //$NON-NLS-1$
+			message = message.replaceAll("\n", "<br/>"); //$NON-NLS-1$ //$NON-NLS-2$
+			message = message.replaceAll("\r", ""); //$NON-NLS-1$ //$NON-NLS-2$
+			message = "<html><body width=\"400\">" + message + "</body></html>"; //$NON-NLS-1$ //$NON-NLS-2$
+			JOptionPane.showMessageDialog(this, message, "Configuration Save Error", JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+			return false;
+        }
+
+        Logger.debug("Config saved successfully!"); //$NON-NLS-1$
+        return true;
+    }
+
     public boolean quit() {
-        Logger.info("Shutting down...");
+        Logger.info("Shutting down..."); //$NON-NLS-1$
         try {
             Preferences.userRoot().flush();
         }
@@ -672,12 +839,12 @@ public class MainFrame extends JFrame {
             configuration.save();
         }
         catch (Exception e) {
-            String message = "There was a problem saving the configuration. The reason was:\n\n"
-                    + e.getMessage() + "\n\nDo you want to quit without saving?";
-            message = message.replaceAll("\n", "<br/>");
-            message = message.replaceAll("\r", "");
-            message = "<html><body width=\"400\">" + message + "</body></html>";
-            int result = JOptionPane.showConfirmDialog(this, message, "Configuration Save Error",
+            String message = "There was a problem saving the configuration. The reason was:\n\n" //$NON-NLS-1$
+                    + e.getMessage() + "\n\nDo you want to quit without saving?"; //$NON-NLS-1$
+            message = message.replaceAll("\n", "<br/>"); //$NON-NLS-1$ //$NON-NLS-2$
+            message = message.replaceAll("\r", ""); //$NON-NLS-1$ //$NON-NLS-2$
+            message = "<html><body width=\"400\">" + message + "</body></html>"; //$NON-NLS-1$ //$NON-NLS-2$
+            int result = JOptionPane.showConfirmDialog(this, message, "Configuration Save Error", //$NON-NLS-1$
                     JOptionPane.YES_NO_OPTION);
             if (result != JOptionPane.YES_OPTION) {
                 return false;
@@ -700,7 +867,7 @@ public class MainFrame extends JFrame {
         catch (Exception e) {
             e.printStackTrace();
         }
-        Logger.info("Shutdown complete, exiting.");
+        Logger.info("Shutdown complete, exiting."); //$NON-NLS-1$
         System.exit(0);
         return true;
     }
@@ -708,6 +875,13 @@ public class MainFrame extends JFrame {
     public void setStatus(String status) {
         SwingUtilities.invokeLater(() -> {
             lblStatus.setText(status);
+        });
+    }
+    
+    public void setPlacementCompletionStatus(int totalPlacementsCompleted, int totalPlacements, int boardPlacementsCompleted, int boardPlacements) {
+        SwingUtilities.invokeLater(() -> {
+            lblPlacements.setText(String.format(" Placements: %d / %d Total | %d / %d Selected Board ", totalPlacementsCompleted, totalPlacements, boardPlacementsCompleted, boardPlacements));
+        	prgbrPlacements.setValue((int)(((float)totalPlacementsCompleted / (float)totalPlacements) * 100.0f));
         });
     }
 
@@ -730,25 +904,65 @@ public class MainFrame extends JFrame {
         }
     };
 
+    private ComponentListener cameraWindowListener = new ComponentAdapter() {
+        @Override
+        public void componentMoved(ComponentEvent e) {
+            prefs.putInt(PREF_CAMERA_WINDOW_X, frameCamera.getLocation().x);
+            prefs.putInt(PREF_CAMERA_WINDOW_Y, frameCamera.getLocation().y);
+        }
+
+        @Override
+        public void componentResized(ComponentEvent e) {
+            prefs.putInt(PREF_CAMERA_WINDOW_WIDTH, frameCamera.getSize().width);
+            prefs.putInt(PREF_CAMERA_WINDOW_HEIGHT, frameCamera.getSize().height);
+        }
+    };
+
+    private ComponentListener machineControlsWindowListener = new ComponentAdapter() {
+        @Override
+        public void componentMoved(ComponentEvent e) {
+            prefs.putInt(PREF_MACHINECONTROLS_WINDOW_X, frameMachineControls.getLocation().x);
+            prefs.putInt(PREF_MACHINECONTROLS_WINDOW_Y, frameMachineControls.getLocation().y);
+        }
+
+        @Override
+        public void componentResized(ComponentEvent e) {
+            prefs.putInt(PREF_MACHINECONTROLS_WINDOW_WIDTH, frameMachineControls.getSize().width);
+            prefs.putInt(PREF_MACHINECONTROLS_WINDOW_HEIGHT, frameMachineControls.getSize().height);
+        }
+    };
+    
     private Action inchesUnitSelected = new AbstractAction(LengthUnit.Inches.name()) {
+        {
+            putValue(MNEMONIC_KEY, KeyEvent.VK_I);
+        }
+        
         @Override
         public void actionPerformed(ActionEvent arg0) {
             configuration.setSystemUnits(LengthUnit.Inches);
-            MessageBoxes.infoBox("Notice",
-                    "Please restart OpenPnP for the changes to take effect.");
-        }
+          MessageBoxes.infoBox("Notice", //$NON-NLS-1$
+                  "Please restart OpenPnP for the changes to take effect."); //$NON-NLS-1$
+      }
     };
 
     private Action millimetersUnitSelected = new AbstractAction(LengthUnit.Millimeters.name()) {
+        {
+            putValue(MNEMONIC_KEY, KeyEvent.VK_M);
+        }
+
         @Override
         public void actionPerformed(ActionEvent arg0) {
             configuration.setSystemUnits(LengthUnit.Millimeters);
-            MessageBoxes.infoBox("Notice",
-                    "Please restart OpenPnP for the changes to take effect.");
+            MessageBoxes.infoBox("Notice", //$NON-NLS-1$
+                    "Please restart OpenPnP for the changes to take effect."); //$NON-NLS-1$
         }
     };
 
-    private Action windowStyleMultipleSelected = new AbstractAction("Multiple Window Style") {
+    private Action windowStyleMultipleSelected = new AbstractAction("Multiple Window Style") { //$NON-NLS-1$
+        {
+            putValue(MNEMONIC_KEY, KeyEvent.VK_M);
+        }
+
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (mnWindows.getItem(0).isSelected()) {
@@ -757,95 +971,114 @@ public class MainFrame extends JFrame {
             else {
                 prefs.putBoolean(PREF_WINDOW_STYLE_MULTIPLE, false);
             }
-            MessageBoxes.infoBox("Windows Style Changed",
-                    "Window style has been changed. Please restart OpenPnP to see the changes.");
+            MessageBoxes.infoBox("Windows Style Changed", //$NON-NLS-1$
+                    "Window style has been changed. Please restart OpenPnP to see the changes."); //$NON-NLS-1$
         }
     };
 
-    private Action quitAction = new AbstractAction("Exit") {
+    private Action saveConfigAction = new AbstractAction(Translations.getString("Menu.File.SaveConfiguration")) { //$NON-NLS-1$
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+			saveConfig();
+        }
+    };
+
+    private Action quitAction = new AbstractAction(Translations.getString("Menu.File.Exit")) { //$NON-NLS-1$
+        {
+            putValue(MNEMONIC_KEY, KeyEvent.VK_X);
+        }
+
         @Override
         public void actionPerformed(ActionEvent arg0) {
             quit();
         }
     };
 
-    private Action aboutAction = new AbstractAction("About") {
+    private Action aboutAction = new AbstractAction(Translations.getString("Menu.Help.About")) { //$NON-NLS-1$
+        {
+            putValue(MNEMONIC_KEY, KeyEvent.VK_A);
+        }
+
         @Override
         public void actionPerformed(ActionEvent arg0) {
             about();
         }
     };
     
-    private Action checkForUpdatesAction = new AbstractAction("Check For Updates...") {
+    private Action checkForUpdatesAction = new AbstractAction(Translations.getString("Menu.Help.CheckForUpdates")) { //$NON-NLS-1$
+        {
+            putValue(MNEMONIC_KEY, KeyEvent.VK_U);
+        }
+
         @Override
         public void actionPerformed(ActionEvent arg0) {
             try {
-                Class applicationLauncher = Class.forName("com.install4j.api.launcher.ApplicationLauncher");
-                Class callback = Class.forName("com.install4j.api.launcher.ApplicationLauncher$Callback");
-                Method launchApplication = applicationLauncher.getMethod("launchApplication", String.class, String[].class, boolean.class, callback);
-                launchApplication.invoke(null, "125", null, false, null);
+                Class applicationLauncher = Class.forName("com.install4j.api.launcher.ApplicationLauncher"); //$NON-NLS-1$
+                Class callback = Class.forName("com.install4j.api.launcher.ApplicationLauncher$Callback"); //$NON-NLS-1$
+                Method launchApplication = applicationLauncher.getMethod("launchApplication", String.class, String[].class, boolean.class, callback); //$NON-NLS-1$
+                launchApplication.invoke(null, "125", null, false, null); //$NON-NLS-1$
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.this, "Unable to launch update application.", e);
+                MessageBoxes.errorBox(MainFrame.this, "Unable to launch update application.", e); //$NON-NLS-1$
             }
         }
     };
     
-    private Action quickStartLinkAction = new AbstractAction("Quick Start") {
+    private Action quickStartLinkAction = new AbstractAction(Translations.getString("Menu.Help.QuickStart")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            String uri = "https://github.com/openpnp/openpnp/wiki/Quick-Start";
-            try {
-                if (Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().browse(new URI(uri));
-                }
-                else {
-                    throw new Exception("Not supported.");
-                }
-            }
-            catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri);
-            }
-        }
-    };
-    
-    private Action setupAndCalibrationLinkAction = new AbstractAction("Setup and Calibration") {
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            String uri = "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration";
+            String uri = "https://github.com/openpnp/openpnp/wiki/Quick-Start"; //$NON-NLS-1$
             try {
                 if (Desktop.isDesktopSupported()) {
                     Desktop.getDesktop().browse(new URI(uri));
                 }
                 else {
-                    throw new Exception("Not supported.");
+                    throw new Exception("Not supported."); //$NON-NLS-1$
                 }
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri);
+                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri); //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
     };
     
-    private Action userManualLinkAction = new AbstractAction("User Manual") {
+    private Action setupAndCalibrationLinkAction = new AbstractAction(Translations.getString("Menu.Help.SetupAndCalibration")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            String uri = "https://github.com/openpnp/openpnp/wiki/User-Manual";
+            String uri = "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration"; //$NON-NLS-1$
             try {
                 if (Desktop.isDesktopSupported()) {
                     Desktop.getDesktop().browse(new URI(uri));
                 }
                 else {
-                    throw new Exception("Not supported.");
+                    throw new Exception("Not supported."); //$NON-NLS-1$
                 }
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri);
+                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri); //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
     };
     
-    private Action submitDiagnosticsAction = new AbstractAction("Submit Diagnostics") {
+    private Action userManualLinkAction = new AbstractAction(Translations.getString("Menu.Help.UserManual")) { //$NON-NLS-1$
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            String uri = "https://github.com/openpnp/openpnp/wiki/User-Manual"; //$NON-NLS-1$
+            try {
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().browse(new URI(uri));
+                }
+                else {
+                    throw new Exception("Not supported."); //$NON-NLS-1$
+                }
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+        }
+    };
+    
+    private Action submitDiagnosticsAction = new AbstractAction(Translations.getString("Menu.Help.SubmitDiagnostics")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             SubmitDiagnosticsDialog dialog = new SubmitDiagnosticsDialog();
@@ -856,7 +1089,28 @@ public class MainFrame extends JFrame {
         }
     };
     
+    public class LanguageSelectionAction extends AbstractAction {
+        private final Locale locale;
+        
+        public LanguageSelectionAction(Locale locale) {
+            this.locale = locale;
+            this.putValue(NAME, locale.getDisplayName());
+        }
+        
+        public Locale getLocale() {
+            return locale;
+        }
+        
+        public void actionPerformed(ActionEvent arg0) {
+          configuration.setLocale(locale);
+          MessageBoxes.infoBox("Notice", //$NON-NLS-1$
+                  "Please restart OpenPnP for the changes to take effect."); //$NON-NLS-1$
+      }
+    }
+    
     private JPanel panelStatusAndDros;
     private JLabel droLbl;
     private JLabel lblStatus;
+    private JLabel lblPlacements;
+    private JProgressBar prgbrPlacements;
 }

@@ -12,7 +12,7 @@ import org.openpnp.vision.pipeline.Property;
 
 @Stage(
   category   ="Image Processing", 
-  description="Capture an image from the relevant to the pipeline camera.")
+  description="Capture an image from the pipeline camera.")
 
 public class ImageCapture extends CvStage {
     @Attribute
@@ -29,7 +29,7 @@ public class ImageCapture extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        Camera camera = pipeline.getCamera();
+        Camera camera = (Camera) pipeline.getProperty("camera");
         if (camera == null) {
             throw new Exception("No Camera set on pipeline.");
         }

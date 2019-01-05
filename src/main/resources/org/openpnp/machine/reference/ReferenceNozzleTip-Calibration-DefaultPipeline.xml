@@ -6,9 +6,9 @@
       <cv-stage class="org.openpnp.vision.pipeline.stages.MaskCircle" name="3" enabled="true" diameter="200"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.Threshold" name="2" enabled="true" threshold="190" auto="true" invert="false"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.MaskCircle" name="5" enabled="true" diameter="100"/>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.SimpleBlobDetector" name="result" enabled="true"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.SimpleBlobDetector" name="results" enabled="true" threshold-step="10.0" threshold-min="50.0" threshold-max="220.0" repeatability="2" dist-between-blobs="10.0" color="true" color-value="0.0" area="true" area-min="25.0" area-max="5000.0" circularity="false" circularity-min="0.800000011920929" circularity-max="-1.0" inertia="true" inertia-ratio-min="0.10000000149011612" inertia-ratio-max="-1.0" convexity="true" convexity-min="0.949999988079071" convexity-max="-1.0"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ImageRecall" name="0" enabled="true" image-stage-name="9"/>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.DrawKeyPoints" name="7" enabled="true" key-points-stage-name="result">
+      <cv-stage class="org.openpnp.vision.pipeline.stages.DrawKeyPoints" name="7" enabled="true" key-points-stage-name="results">
          <color r="255" g="0" b="204" a="255"/>
       </cv-stage>
    </stages>

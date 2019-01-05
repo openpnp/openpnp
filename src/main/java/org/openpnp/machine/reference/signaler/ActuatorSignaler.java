@@ -1,27 +1,25 @@
 package org.openpnp.machine.reference.signaler;
 
-import javax.swing.Action;
-import javax.swing.Icon;
-
 import org.openpnp.ConfigurationListener;
-import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
-import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractSignaler;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.Persist;
 
 /**
  * An ActuatorSignaler can signal certain device or job states by using a machine actuator e.g. signaling lights
  */
 public class ActuatorSignaler extends AbstractSignaler {
 
-    protected ReferenceMachine machine;
+    protected Machine machine;
     protected Actuator actuator;
 
-    @Attribute(required = true)
+    @Attribute(required = false)
     protected String actuatorId;
 
     @Attribute(required = false)
@@ -34,10 +32,17 @@ public class ActuatorSignaler extends AbstractSignaler {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
-                machine = (ReferenceMachine) configuration.getMachine();
+                machine = configuration.getMachine();
                 actuator = machine.getActuator(actuatorId);
             }
         });
+    }
+    
+    @Persist
+    public void persist() {
+        if (actuator != null) {
+            actuatorId = actuator.getId();
+        }
     }
 
     @Override
@@ -69,29 +74,28 @@ public class ActuatorSignaler extends AbstractSignaler {
             }
         }
     }
-
-    @Override
-    public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+    
+    public Actuator getActuator() {
+        return actuator;
     }
 
-    @Override
-    public PropertySheetHolder[] getChildPropertySheetHolders() {
-        return new PropertySheetHolder[0];
+    public void setActuator(Actuator actuator) {
+        this.actuator = actuator;
     }
 
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[0];
+    public AbstractJobProcessor.State getJobState() {
+        return jobState;
     }
 
-    @Override
-    public Action[] getPropertySheetHolderActions() {
-        return new Action[0];
+    public void setJobState(AbstractJobProcessor.State jobState) {
+        this.jobState = jobState;
     }
 
-    @Override
-    public Icon getPropertySheetHolderIcon() {
-        return null;
+    public AbstractMachine.State getMachineState() {
+        return machineState;
+    }
+
+    public void setMachineState(AbstractMachine.State machineState) {
+        this.machineState = machineState;
     }
 }

@@ -117,4 +117,17 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
     public Machine getMachine();
     
     public Location getParkLocation();
+
+    /**
+     * Returns true if any nozzle on the Head is currently carrying a part.
+     * @return
+     */
+    public boolean isCarryingPart(); 
+
+    /**
+     * Returns the maximum speed percentage allowed by any parts being carried
+     * by the Nozzles on the Head. The slowest part will dictate the max.
+     * @return
+     */
+	public double getMaxPartSpeed(); 
 }

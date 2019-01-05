@@ -115,136 +115,114 @@ public class TestDriver implements ReferenceDriver {
 
         @Override
         public Wizard getConfigurationWizard() {
-            // TODO Auto-generated method stub
             return null;
         }
 
         @Override
         public void home(ReferenceHead head) throws Exception {
-            // TODO Auto-generated method stub
 
         }
 
         @Override
         public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
                 throws Exception {
-            // TODO Auto-generated method stub
 
         }
 
         @Override
         public Location getLocation(ReferenceHeadMountable hm) {
-            // TODO Auto-generated method stub
             return null;
         }
 
         @Override
         public void pick(ReferenceNozzle nozzle) throws Exception {
-            // TODO Auto-generated method stub
 
         }
 
         @Override
         public void place(ReferenceNozzle nozzle) throws Exception {
-            // TODO Auto-generated method stub
 
         }
 
         @Override
         public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
-            // TODO Auto-generated method stub
 
         }
 
         @Override
         public void actuate(ReferenceActuator actuator, double value) throws Exception {
-            // TODO Auto-generated method stub
 
         }
 
         @Override
         public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
                 Location endLocation, long dispenseTimeMilliseconds) throws Exception {
-            // TODO Auto-generated method stub
 
         }
 
         @Override
         public void setEnabled(boolean enabled) throws Exception {
-            // TODO Auto-generated method stub
 
         }
 
         @Override
         public String getPropertySheetHolderTitle() {
-            // TODO Auto-generated method stub
             return null;
         }
 
         @Override
         public PropertySheetHolder[] getChildPropertySheetHolders() {
-            // TODO Auto-generated method stub
             return null;
         }
 
         @Override
         public PropertySheet[] getPropertySheets() {
-            // TODO Auto-generated method stub
             return null;
         }
 
         @Override
         public Action[] getPropertySheetHolderActions() {
-            // TODO Auto-generated method stub
             return null;
         }
 
         @Override
         public Icon getPropertySheetHolderIcon() {
-            // TODO Auto-generated method stub
             return null;
         }
 
         @Override
         public void close() throws IOException {
-            // TODO Auto-generated method stub
 
         }
     }
 
     @Override
     public String getPropertySheetHolderTitle() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public Icon getPropertySheetHolderIcon() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public void close() throws IOException {
-        // TODO Auto-generated method stub
 
     }
 }

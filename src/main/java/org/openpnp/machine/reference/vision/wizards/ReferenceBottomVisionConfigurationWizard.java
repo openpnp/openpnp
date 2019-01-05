@@ -30,6 +30,7 @@ import com.jgoodies.forms.layout.RowSpec;
 public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceBottomVision bottomVision;
     private JCheckBox enabledCheckbox;
+    private JCheckBox preRotCheckbox;
 
     public ReferenceBottomVisionConfigurationWizard(ReferenceBottomVision bottomVision) {
         this.bottomVision = bottomVision;
@@ -44,6 +45,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblEnabled = new JLabel("Enabled?");
@@ -87,8 +89,9 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
                     for (PartSettings partSettings : bottomVision.getPartSettingsByPartId()
-                            .values()) {
-                        partSettings.setPipeline(bottomVision.getPipeline().clone());
+                                                                 .values()) {
+                        partSettings.setPipeline(bottomVision.getPipeline()
+                                                             .clone());
                     }
                     MessageBoxes.infoBox("Parts Reset",
                             "All custom part pipelines have been reset.");
@@ -96,21 +99,36 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
             }
         });
         panel.add(btnResetAllTo, "8, 4");
+
+        JLabel lblPreRot = new JLabel("Rotate parts prior to vision?");
+        panel.add(lblPreRot, "2, 6");
+
+        preRotCheckbox = new JCheckBox("");
+        panel.add(preRotCheckbox, "4, 6");
     }
 
     private void editPipeline() throws Exception {
         CvPipeline pipeline = bottomVision.getPipeline();
-        pipeline.setCamera(VisionUtils.getBottomVisionCamera());
+        pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
+		pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), "Bottom Vision Pipeline");
-        dialog.getContentPane().setLayout(new BorderLayout());
-        dialog.getContentPane().add(editor);
+        dialog.getContentPane()
+              .setLayout(new BorderLayout());
+        dialog.getContentPane()
+              .add(editor);
         dialog.setSize(1024, 768);
         dialog.setVisible(true);
     }
 
     @Override
+    public String getWizardName() {
+        return "ReferenceBottomVision";
+    }
+
+    @Override
     public void createBindings() {
         addWrappedBinding(bottomVision, "enabled", enabledCheckbox, "selected");
+        addWrappedBinding(bottomVision, "preRotate", preRotCheckbox, "selected");
     }
 }
