@@ -125,20 +125,20 @@ public class JogControlsPanel extends JPanel {
     private void setUnits(LengthUnit units) {
         if (units == LengthUnit.Millimeters) {
             Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<>();
-            incrementsLabels.put(1, new JLabel("0.01 " + units.getShortName())); //$NON-NLS-1$
-            incrementsLabels.put(2, new JLabel("0.1 " + units.getShortName())); //$NON-NLS-1$
-            incrementsLabels.put(3, new JLabel("1.0 " + units.getShortName())); //$NON-NLS-1$
-            incrementsLabels.put(4, new JLabel("10 " + units.getShortName())); //$NON-NLS-1$
-            incrementsLabels.put(5, new JLabel("100 " + units.getShortName())); //$NON-NLS-1$
+            incrementsLabels.put(1, new JLabel("0.01")); //$NON-NLS-1$
+            incrementsLabels.put(2, new JLabel("0.1")); //$NON-NLS-1$
+            incrementsLabels.put(3, new JLabel("1.0")); //$NON-NLS-1$
+            incrementsLabels.put(4, new JLabel("10")); //$NON-NLS-1$
+            incrementsLabels.put(5, new JLabel("100")); //$NON-NLS-1$
             sliderIncrements.setLabelTable(incrementsLabels);
         }
         else if (units == LengthUnit.Inches) {
             Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<>();
-            incrementsLabels.put(1, new JLabel("0.001 " + units.getShortName())); //$NON-NLS-1$
-            incrementsLabels.put(2, new JLabel("0.01 " + units.getShortName())); //$NON-NLS-1$
-            incrementsLabels.put(3, new JLabel("0.1 " + units.getShortName())); //$NON-NLS-1$
-            incrementsLabels.put(4, new JLabel("1.0 " + units.getShortName())); //$NON-NLS-1$
-            incrementsLabels.put(5, new JLabel("10.0 " + units.getShortName())); //$NON-NLS-1$
+            incrementsLabels.put(1, new JLabel("0.001")); //$NON-NLS-1$
+            incrementsLabels.put(2, new JLabel("0.01")); //$NON-NLS-1$
+            incrementsLabels.put(3, new JLabel("0.1")); //$NON-NLS-1$
+            incrementsLabels.put(4, new JLabel("1.0")); //$NON-NLS-1$
+            incrementsLabels.put(5, new JLabel("10.0")); //$NON-NLS-1$
             sliderIncrements.setLabelTable(incrementsLabels);
         }
         else {
@@ -326,6 +326,7 @@ public class JogControlsPanel extends JPanel {
         // so the dialog looks right while editing.
         homeButton.setIcon(Icons.home);
         homeButton.setHideActionText(true);
+        homeButton.setToolTipText("<html>" + Translations.getString("JogControlsPanel.Label.HomeIcon.Description") + "</html>"); //$NON-NLS-1$
         panelControls.add(homeButton, "2, 2"); //$NON-NLS-1$
 
         JLabel lblXy = new JLabel("X/Y"); //$NON-NLS-1$
@@ -338,11 +339,11 @@ public class JogControlsPanel extends JPanel {
         lblZ.setFont(new Font("Lucida Grande", Font.PLAIN, 22)); //$NON-NLS-1$
         panelControls.add(lblZ, "14, 2"); //$NON-NLS-1$
 
-        JLabel lblDistance = new JLabel(Translations.getString("JogControlsPanel.Label.Distance")); //$NON-NLS-1$
+        JLabel lblDistance = new JLabel("<html>" + Translations.getString("JogControlsPanel.Label.Distance") + "<br>[" + configuration.getSystemUnits().getShortName() + "/deg]</html>"); //$NON-NLS-1$
         lblDistance.setFont(new Font("Lucida Grande", Font.PLAIN, 10)); //$NON-NLS-1$
         panelControls.add(lblDistance, "18, 2, center, center"); //$NON-NLS-1$
 
-        JLabel lblSpeed = new JLabel(Translations.getString("JogControlsPanel.Label.Speed")); //$NON-NLS-1$
+        JLabel lblSpeed = new JLabel("<html>" + Translations.getString("JogControlsPanel.Label.Speed") + "<br>[%]</html>"); //$NON-NLS-1$
         lblSpeed.setFont(new Font("Lucida Grande", Font.PLAIN, 10)); //$NON-NLS-1$
         panelControls.add(lblSpeed, "20, 2, center, center"); //$NON-NLS-1$
 
@@ -385,6 +386,7 @@ public class JogControlsPanel extends JPanel {
         JButton positionNozzleBtn = new JButton(machineControlsPanel.targetToolAction);
         positionNozzleBtn.setIcon(Icons.centerTool);
         positionNozzleBtn.setHideActionText(true);
+        positionNozzleBtn.setToolTipText(Translations.getString("JogControlsPanel.Action.positionSelectedNozzle"));
         panelControls.add(positionNozzleBtn, "22, 4"); //$NON-NLS-1$
 
         JButton buttonStartStop = new JButton(machineControlsPanel.startStopMachineAction);
@@ -419,6 +421,7 @@ public class JogControlsPanel extends JPanel {
         JButton positionCameraBtn = new JButton(machineControlsPanel.targetCameraAction);
         positionCameraBtn.setIcon(Icons.centerCamera);
         positionCameraBtn.setHideActionText(true);
+        positionCameraBtn.setToolTipText(Translations.getString("JogControlsPanel.Action.positionCamera"));
         panelControls.add(positionCameraBtn, "22, 8"); //$NON-NLS-1$
 
         JLabel lblC = new JLabel("C"); //$NON-NLS-1$
