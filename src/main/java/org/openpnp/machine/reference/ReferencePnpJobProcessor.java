@@ -972,6 +972,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     public void setAutoSaveConfiguration(boolean autoSaveConfiguration) {
         this.autoSaveConfiguration = autoSaveConfiguration;
     }
+
+    public long getConfigSaveFrequencyMs() {
+        return configSaveFrequencyMs;
+    }
     
     public JobOrderHint getJobOrder() {
         return jobOrder;
