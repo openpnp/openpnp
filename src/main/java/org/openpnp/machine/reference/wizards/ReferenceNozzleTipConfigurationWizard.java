@@ -379,7 +379,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 TitledBorder.TOP, null, null));
         // TODO: Removing panel until this feature is actually working.
         // See: https://github.com/openpnp/openpnp/issues/235
-//        contentPanel.add(panelCalibration);
+        contentPanel.add(panelCalibration);
         panelCalibration.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.DEFAULT_COLSPEC,},
