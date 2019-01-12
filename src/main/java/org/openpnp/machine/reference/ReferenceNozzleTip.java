@@ -2,8 +2,8 @@ package org.openpnp.machine.reference;
 
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -372,7 +372,22 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 return angle + " " + offset;
             }
         }
+        
+        public static class NozzleEccentricity {
+            final Location runoutCenter;
+            final double runoutRadius;
 
+            public NozzleEccentricity(Location runoutCenter, double runoutRadius) {
+                this.runoutCenter = runoutCenter;
+                this.runoutRadius = runoutRadius;
+            }
+
+            @Override
+            public String toString() {
+                return runoutCenter + " " + runoutRadius;
+            }
+        }
+        
         @Element(required = false)
         private CvPipeline pipeline = createDefaultPipeline();
 
@@ -383,8 +398,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         private boolean enabled;
         
         private boolean calibrating;
-
-        List<CalibrationOffset> offsets;
+        
+        private NozzleEccentricity nozzleEccentricity = null;
 
         public void calibrate(ReferenceNozzleTip nozzleTip) throws Exception {
             if (!isEnabled()) {
@@ -393,40 +408,73 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             try {
                 calibrating = true;
                 
-                reset();
+            	reset();
 
                 Nozzle nozzle = nozzleTip.getParentNozzle();
                 Camera camera = VisionUtils.getBottomVisionCamera();
 
                 // Move to the camera with an angle of 0.
-                Location location = camera.getLocation();
-                location = location.derive(null, null, null, 0d);
-                MovableUtils.moveToLocationAtSafeZ(nozzle, location);
-                for (int i = 0; i < 3; i++) {
-                    // Locate the nozzle offsets.
-                    Location offset = findCircle();
+                Location cameraLocation = camera.getLocation();
+                // This is our baseline location
+                Location measureBaseLocation = cameraLocation.derive(null, null, null, 0d);
+                
+                // move nozzle to the camera location at zero degree
+                MovableUtils.moveToLocationAtSafeZ(nozzle, measureBaseLocation);
 
-                    // Subtract the offsets and move to that position to center the nozzle.
-                    location = location.subtract(offset);
-                    nozzle.moveTo(location);
-                }
-                // This is our baseline location and should have the nozzle well centered over the
-                // camera.
-                Location startLocation = location;
-
-                // Now we rotate the nozzle 360 degrees at calibration.angleIncrement steps, find the
-                // nozzle using the camera and record the offsets.
-                List<CalibrationOffset> offsets = new ArrayList<>();
+                // capture nozzle tip positions and add them to a list
+                List<CalibrationOffset> nozzleTipMeasuredLocations = new ArrayList<>();
                 for (double i = 0; i < 360; i += angleIncrement) {
-                    location = startLocation.derive(null, null, null, i);
-                    nozzle.moveTo(location);
+                	// Now we rotate the nozzle 360 degrees at calibration.angleIncrement steps and store the positions
+                    Location measureLocation = measureBaseLocation.derive(null, null, null, i);
+                    nozzle.moveTo(measureLocation);
                     Location offset = findCircle();
-                    offsets.add(new CalibrationOffset(offset, i));
+                    nozzleTipMeasuredLocations.add(new CalibrationOffset(offset, i));
                 }
-
+                
+                // calc circle that describes the runout path
+                // assumption: it's an ideal circle - must be one. really?
+                /* so some refs to fit an circle function to xy-points sorted by easy to more complex:
+                 * https://de.mathworks.com/matlabcentral/fileexchange/22642-circle-fit-kasa-method
+                 * https://de.mathworks.com/matlabcentral/fileexchange/5557-circle-fit
+                 * https://de.mathworks.com/matlabcentral/fileexchange/22643-circle-fit-pratt-method
+                 * https://de.mathworks.com/matlabcentral/fileexchange/22678-circle-fit-taubin-method
+                 * 
+                 * starting with the implementation of kasa method
+                 */
+                // calc centroid of rotation (that is the rotational axis)
+                double xCentroid=0;
+                double yCentroid=0;
+                double avgRadius=0;
+                
+                
+                Iterator<CalibrationOffset> nozzleTipMeasuredLocationsIterator = nozzleTipMeasuredLocations.iterator();
+        		while (nozzleTipMeasuredLocationsIterator.hasNext()) {
+        			CalibrationOffset measuredLocation = nozzleTipMeasuredLocationsIterator.next();
+        			//System.out.println(measuredLocation);
+        			xCentroid += measuredLocation.offset.getX();
+        			yCentroid += measuredLocation.offset.getY();
+        			
+        		}
+        		xCentroid = xCentroid / (double)nozzleTipMeasuredLocations.size();
+        		yCentroid = yCentroid / (double)nozzleTipMeasuredLocations.size();
+        		
+        		//calc radius of the circle
+        		nozzleTipMeasuredLocationsIterator=nozzleTipMeasuredLocations.iterator();
+        		while (nozzleTipMeasuredLocationsIterator.hasNext()) {
+        			CalibrationOffset measuredLocation = nozzleTipMeasuredLocationsIterator.next();
+        			avgRadius += Math.sqrt( Math.pow( (measuredLocation.offset.getX()-xCentroid), 2) + Math.pow( (measuredLocation.offset.getY()-yCentroid), 2));
+        		}
+        		avgRadius = avgRadius / (double)nozzleTipMeasuredLocations.size();
+    			
+                // calc the circle the runout has followed
+                // now we got a representation of the runout by xyCentroid + Radius
+                //result: 
+                //R+center -> from that the x-y-offsets can be recalculated at any angle...
+                
+                
                 // The nozzle tip is now calibrated and calibration.getCalibratedOffset() can be
                 // used.
-                this.offsets = offsets;
+                this.nozzleEccentricity = new NozzleEccentricity(cameraLocation.derive(xCentroid, yCentroid, 0.0, 0.0), avgRadius);
                 
                 nozzle.moveToSafeZ();
             }
@@ -447,19 +495,16 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             while (angle > 360) {
                 angle -= 360;
             }
-            List<CalibrationOffset> offsets = getOffsetPairForAngle(angle);
-            CalibrationOffset a = offsets.get(0);
-            CalibrationOffset b = offsets.get(1);
-            Location offsetA = a.offset;
-            Location offsetB = b.offset.convertToUnits(a.offset.getUnits());
-
-            double ratio = (angle - a.angle) / (b.angle - a.angle);
-            double deltaX = offsetB.getX() - offsetA.getX();
-            double deltaY = offsetB.getY() - offsetA.getY();
-            double offsetX = offsetA.getX() + (deltaX * ratio);
-            double offsetY = offsetA.getY() + (deltaY * ratio);
-
-            return new Location(offsetA.getUnits(), offsetX, offsetY, 0, 0);
+            angle -= 180;
+            angle = Math.toRadians(angle);
+            
+            /* convert from polar coords to xy cartesian offset values
+             * https://blog.demofox.org/2013/10/12/converting-to-and-from-polar-spherical-coordinates-made-easy/
+             */
+            double offsetX = nozzleEccentricity.runoutCenter.getX() + nozzleEccentricity.runoutRadius * Math.cos(angle);
+            double offsetY = nozzleEccentricity.runoutCenter.getY() + nozzleEccentricity.runoutRadius * Math.sin(angle);
+        	
+            return new Location(nozzleEccentricity.runoutCenter.getUnits(), offsetX, offsetY, 0, 0);
         }
 
         private Location findCircle() throws Exception {
@@ -504,25 +549,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
         }
 
-        /**
-         * Find the two closest offsets to the angle being requested. The offsets start at angle 0
-         * and go to angle 360 - angleIncrement in angleIncrement steps.
-         */
-        private List<CalibrationOffset> getOffsetPairForAngle(double angle) {
-            CalibrationOffset a = null, b = null;
-            if (angle >= offsets.get(offsets.size() - 1).angle) {
-                return Arrays.asList(offsets.get(offsets.size() - 1), offsets.get(0));
-            }
-            for (int i = 0; i < offsets.size(); i++) {
-                if (angle < offsets.get(i + 1).angle) {
-                    a = offsets.get(i);
-                    b = offsets.get(i + 1);
-                    break;
-                }
-            }
-            return Arrays.asList(a, b);
-        }
-
         public static CvPipeline createDefaultPipeline() {
             try {
                 String xml = IOUtils.toString(ReferenceNozzleTip.class
@@ -535,11 +561,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
 
         public void reset() {
-            offsets = null;
+        	nozzleEccentricity = null;
         }
 
         public boolean isCalibrated() {
-            return offsets != null && !offsets.isEmpty();
+            return nozzleEccentricity != null;
         }
         
         public boolean isCalibrating() {

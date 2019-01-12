@@ -230,7 +230,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             nozzleTip.getCalibration().calibrate(nozzleTip);
         }
 
-        Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
         if (limitRotation && !Double.isNaN(location.getRotation())
                 && Math.abs(location.getRotation()) > 180) {
             if (location.getRotation() < 0) {
@@ -240,10 +239,13 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 location = location.derive(null, null, null, location.getRotation() - 360);
             }
         }
+
         if (nozzleTip != null && nozzleTip.getCalibration().isCalibrated()) {
             location = location.subtract(
                     nozzleTip.getCalibration().getCalibratedOffset(location.getRotation()));
             Logger.debug("{}.moveTo({}, {}) (corrected)", getName(), location, speed);
+        } else {
+        	Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
         }
         getDriver().moveTo(this, location, getHead().getMaxPartSpeed() * speed);
         getMachine().fireMachineHeadActivity(head);
@@ -343,6 +345,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public Location getLocation() {
         Location location = getDriver().getLocation(this);
         if (nozzleTip != null && nozzleTip.getCalibration().isCalibrated()) {
+        	//TODO: check the DRO for consistancy... should this be commented?
             Location offset =
                     nozzleTip.getCalibration().getCalibratedOffset(location.getRotation());
             location = location.add(offset);
