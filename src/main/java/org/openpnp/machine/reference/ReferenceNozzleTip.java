@@ -36,6 +36,7 @@ import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -434,12 +435,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                     Location measureLocation = measureBaseLocation.derive(null, null, null, i);
                     nozzle.moveTo(measureLocation);
                     Location offset = findCircle();
+                    System.out.println("measured offset: " + offset);
                     nozzleTipMeasuredLocations.add(offset);
+                    //TODO: catch case, no location was found in pipeline and show an error
                 }
                 
                 // do the math to fit the circle:
-                this.nozzleEccentricity = this.calcCircleSimple(nozzleTipMeasuredLocations);
-                Logger.debug("calculated nozzleEccentricity: {}", this.nozzleEccentricity);
                 this.nozzleEccentricity = this.calcCircleFitKasa(nozzleTipMeasuredLocations);
                 Logger.debug("calculated nozzleEccentricity: {}", this.nozzleEccentricity);
                 
@@ -448,43 +449,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             finally {
                 calibrating = false;
             }
-        }
-        
-        public Circle calcCircleSimple(List<Location> nozzleTipMeasuredLocations) {
-    	    
-            // calc centroid of rotation (that is the rotational axis)
-            double xCentroid=0;
-            double yCentroid=0;
-            double avgRadius=0;
-            
-            
-            Iterator<Location> nozzleTipMeasuredLocationsIterator = nozzleTipMeasuredLocations.iterator();
-    		while (nozzleTipMeasuredLocationsIterator.hasNext()) {
-    			Location measuredLocation = nozzleTipMeasuredLocationsIterator.next();
-    			//System.out.println(measuredLocation);
-    			xCentroid += measuredLocation.getX();
-    			yCentroid += measuredLocation.getY();
-    		}
-    		xCentroid = xCentroid / (double)nozzleTipMeasuredLocations.size();
-    		yCentroid = yCentroid / (double)nozzleTipMeasuredLocations.size();
-    		
-    		//calc radius of the circle
-    		nozzleTipMeasuredLocationsIterator=nozzleTipMeasuredLocations.iterator();
-    		while (nozzleTipMeasuredLocationsIterator.hasNext()) {
-    			Location measuredLocation = nozzleTipMeasuredLocationsIterator.next();
-    			avgRadius += Math.sqrt( Math.pow( (measuredLocation.getX()-xCentroid), 2) + Math.pow( (measuredLocation.getY()-yCentroid), 2));
-    		}
-    		avgRadius = avgRadius / (double)nozzleTipMeasuredLocations.size();
-			
-            // calc the circle the runout has followed
-            Circle nozzleEccentricity = null;
-            nozzleEccentricity = new Circle(xCentroid, yCentroid, avgRadius);
-            // now we got a representation of the runout by xyCentroid + Radius
-            
-            // The nozzle tip is now calibrated and calibration.getCalibratedOffset() can be
-            // used.
-
-        	return nozzleEccentricity;
         }
         
         public Circle calcCircleFitKasa(List<Location> nozzleTipMeasuredLocations) {
@@ -559,15 +523,21 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             while (angle > 360) {
                 angle -= 360;
             }
-            angle -= 180;
             angle = Math.toRadians(angle);
             
             /* convert from polar coords to xy cartesian offset values
              * https://blog.demofox.org/2013/10/12/converting-to-and-from-polar-spherical-coordinates-made-easy/
              */
-            double offsetX = nozzleEccentricity.centerX + nozzleEccentricity.radius * Math.cos(angle);
-            double offsetY = nozzleEccentricity.centerY + nozzleEccentricity.radius * Math.sin(angle);
+            double offsetX = nozzleEccentricity.centerX + (nozzleEccentricity.radius * Math.cos(angle));
+            double offsetY = nozzleEccentricity.centerY + (nozzleEccentricity.radius * Math.sin(angle));
         	
+            /*
+             * thought: the eccentricity-values (centerX/Y) are the offset to the downlooking cam and can be an hint for
+             * a) the nozzle-head-offset not 100% correct(?)
+             * b) ...?
+             * should that values be included in correction or make these things worse?
+             */
+            
             return new Location(LengthUnit.Millimeters, offsetX, offsetY, 0, 0);
         }
 
@@ -577,9 +547,14 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 pipeline.setProperty("camera", camera);
                 pipeline.process();
                 Location location;
+                
                 Object result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
                 if (result instanceof List) {
                     if (((List) result).get(0) instanceof Result.Circle) {
+                    	Result.Circle circle = ((List<Result.Circle>) result).get(0);
+                    	//TODO: has this list to be sorted? best match should be taken. but what is the best match? in best case, the pipeline returns always just one result
+                        location = VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y);
+                        /*
                         List<Result.Circle> circles = (List<Result.Circle>) result;
                         List<Location> locations = circles.stream().map(circle -> {
                             return VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y);
@@ -590,7 +565,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                                     b.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
                             return Double.compare(a1, b1);
                         }).collect(Collectors.toList());
-                        location = locations.get(0);
+                        location = locations.get(0);*/
                     }
                     else if (((List) result).get(0) instanceof KeyPoint) {
                         KeyPoint keyPoint = ((List<KeyPoint>) result).get(0);
