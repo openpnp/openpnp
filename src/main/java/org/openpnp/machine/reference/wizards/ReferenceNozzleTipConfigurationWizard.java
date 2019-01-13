@@ -51,6 +51,7 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Location;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
@@ -100,6 +101,16 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JButton btnCalibrate;
     private JButton btnReset;
     private JLabel lblEnabled;
+
+    private JLabel ___lblX_1;
+    private JLabel ___lblY_1;
+    private JLabel ___lblZ_1;
+    private JLabel ___lblR_1;
+    private JTextField ___textFieldOffsetX;
+    private JTextField ___textFieldOffsetY;
+    private JTextField ___textFieldOffsetZ;
+    private JTextField ___textFieldOffsetR;
+
     private JCheckBox calibrationEnabledCheckbox;
     private JLabel lblMiddleLocation_1;
     private JTextField textFieldMidX2;
@@ -375,14 +386,20 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         
 
         panelCalibration = new JPanel();
-        panelCalibration.setBorder(new TitledBorder(null, "Calibration", TitledBorder.LEADING,
+        panelCalibration.setBorder(new TitledBorder(null, "Calibration (experimental)", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
-        // TODO: Removing panel until this feature is actually working.
         // See: https://github.com/openpnp/openpnp/issues/235
-//        contentPanel.add(panelCalibration);
+        contentPanel.add(panelCalibration);
         panelCalibration.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC,},
+                        FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC,FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC,FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC,FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC,FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC,FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC,FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC,FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         RowSpec.decode("23px"), FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
@@ -419,6 +436,63 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
             }
         });
         panelCalibration.add(btnEditPipeline, "3, 7, left, top");
+
+        // Calibration measurement @ 0deg (offset nozzle <--> nozzle-tip)
+        ___lblX_1 = new JLabel(" X ");
+       panelCalibration.add(___lblX_1, "5, 2, left, default");
+        ___lblY_1 = new JLabel(" Y ");
+        panelCalibration.add(___lblY_1, "7, 2, left, default");
+        ___lblZ_1 = new JLabel(" Z ");
+        panelCalibration.add(___lblZ_1, "9, 2, left, default");
+        ___lblR_1 = new JLabel(" Rotation ");
+        panelCalibration.add(___lblR_1, "11, 2, left, default");
+        
+        ___textFieldOffsetX = new JTextField();
+        panelCalibration.add(___textFieldOffsetX, "5, 3, fill, default");
+        ___textFieldOffsetX.setColumns(10);
+        ___textFieldOffsetX.setEditable(false);    
+        ___textFieldOffsetY = new JTextField();
+        panelCalibration.add(___textFieldOffsetY, "7, 3, fill, default");
+        ___textFieldOffsetY.setColumns(10);
+        ___textFieldOffsetY.setEditable(false);    
+        ___textFieldOffsetZ = new JTextField();
+        panelCalibration.add(___textFieldOffsetZ, "9, 3, fill, default");
+        ___textFieldOffsetZ.setColumns(10);
+        ___textFieldOffsetZ.setEditable(false);    
+        ___textFieldOffsetR = new JTextField();
+        panelCalibration.add(___textFieldOffsetR, "11, 3, fill, default");
+        ___textFieldOffsetR.setColumns(10);        
+        ___textFieldOffsetR.setEditable(false);    
+
+        // show Calibration values at 0 degree
+        showCalibrationValuesAtRot(0.0);
+    }
+    
+    private void showCalibrationValuesAtRot(double rot)
+    {
+        String s1;
+        if (nozzleTip.getCalibration().isCalibrated()) {
+            // nozzle tip is calibrated ... show values at 0 degree
+            Location offset=nozzleTip.getCalibration().getCalibratedOffset(rot);
+            s1=Double.toString(offset.getLengthX().getValue());
+            if (s1.length()>9) {s1=s1.substring(0,9);}
+            ___textFieldOffsetX.setText(s1);
+            s1=Double.toString(offset.getLengthY().getValue());
+            if (s1.length()>9) {s1=s1.substring(0,9);}
+            ___textFieldOffsetY.setText(s1);   
+            s1=Double.toString(offset.getLengthZ().getValue());
+            if (s1.length()>9) {s1=s1.substring(0,9);}
+            ___textFieldOffsetZ.setText(s1);
+        } else {
+            // nozzle tip is not calibrated ... show 0 as default values
+            // because there offset applied (... which is the same as 0)
+            ___textFieldOffsetX.setText("0 (uncal.)");
+            ___textFieldOffsetY.setText("0 (uncal.)");
+            ___textFieldOffsetZ.setText("0 (uncal.)");
+        }        
+        s1=Double.toString(rot);
+        if (s1.length()>9) {s1=s1.substring(0,9);}
+        ___textFieldOffsetR.setText(s1);
     }
 
     private void editCalibrationPipeline() throws Exception {
@@ -434,6 +508,12 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private void calibrate() {
         UiUtils.submitUiMachineTask(() -> {
             nozzleTip.getCalibration().calibrate(nozzleTip);
+
+            // update of values placed right after calling calibrate() in this
+            // calibrate() method to prevent a separate async update after
+            // the calibration.
+            // note: calibrate() is started as thread by submitUiMachineTask()
+            showCalibrationValuesAtRot(0.0);    
         });
     }
 

@@ -37,6 +37,7 @@ import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage.Result;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -376,8 +377,15 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         @Element(required = false)
         private CvPipeline pipeline = createDefaultPipeline();
 
+        // TODO fields have to be added to the calibration panel
         @Attribute(required = false)
         private double angleIncrement = 15;
+        @Attribute(required = false)
+        private double angleStart = 0;
+        @Attribute(required = false)
+        private double angleStop = 360;
+        @Attribute(required = false)
+        private int angleAverage = 1;
         
         @Attribute(required = false)
         private boolean enabled;
@@ -393,6 +401,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             try {
                 calibrating = true;
                 
+                // delete old offsets, because it is used to derive calibration state.
                 reset();
 
                 Nozzle nozzle = nozzleTip.getParentNozzle();
@@ -402,37 +411,50 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 Location location = camera.getLocation();
                 location = location.derive(null, null, null, 0d);
                 MovableUtils.moveToLocationAtSafeZ(nozzle, location);
-                for (int i = 0; i < 3; i++) {
-                    // Locate the nozzle offsets.
-                    Location offset = findCircle();
 
-                    // Subtract the offsets and move to that position to center the nozzle.
-                    location = location.subtract(offset);
-                    nozzle.moveTo(location);
-                }
-                // This is our baseline location and should have the nozzle well centered over the
-                // camera.
+                // 2019-01-13 ... initial measurement (0degree) removed
+                // This is our baseline location
                 Location startLocation = location;
 
-                // Now we rotate the nozzle 360 degrees at calibration.angleIncrement steps, find the
-                // nozzle using the camera and record the offsets.
+                // Now we rotate nozzle from start to stop at calibration.angleIncrement steps,
+                // find the nozzle using the camera and record the offsets.
                 List<CalibrationOffset> offsets = new ArrayList<>();
-                for (double i = 0; i < 360; i += angleIncrement) {
+                // Due to float number comparison angleIncrement*0.1 added
+                for (double i = angleStart; i < (angleStop+angleIncrement*0.1); i += angleIncrement) {
                     location = startLocation.derive(null, null, null, i);
                     nozzle.moveTo(location);
-                    Location offset = findCircle();
+                    // 2019_01_05
+                    // https://github.com/openpnp/openpnp/issues/235#issuecomment-429617753
+                    // Finally the initial measurement above has been removed.
+                    // It simplifies this section.
+                    Location offset = findCircleAveraged(angleAverage);
+                    offset=offset.add(startLocation).subtract(camera.getLocation());
+
                     offsets.add(new CalibrationOffset(offset, i));
+                }
+                // TODO remove this pretty verbose in later releases
+                // Debug output the size of the calibration list and the calibration data
+                Logger.debug("offsets.size() = {}", offsets.size());
+                for (int ii = 0; ii < offsets.size(); ii += 1)
+                {
+                    Logger.debug("offsets.get({}) = {}", ii, offsets.get(ii).toString());
                 }
 
                 // The nozzle tip is now calibrated and calibration.getCalibratedOffset() can be
                 // used.
                 this.offsets = offsets;
                 
-                nozzle.moveToSafeZ();
             }
             finally {
+                // 2019_01_05 Return back to 0degree rotation if exception or limited rotation.
+                Nozzle nozzle = nozzleTip.getParentNozzle();
+                Camera camera = VisionUtils.getBottomVisionCamera();
+                nozzle.moveTo(camera.getLocation().derive(null, null, null, 0d));
+                nozzle.moveToSafeZ();
+
                 calibrating = false;
             }
+
         }
 
         public Location getCalibratedOffset(double angle) {
@@ -440,11 +462,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
             }
 
-            // Make sure the angle is between 0 and 360.
-            while (angle < 0) {
+            // TODO If (angleStop-angleStart)<360 add handling for non-valid numbers
+            // 2019_01_06 Keep angle in the specified/limited range ... if possible
+            while (angle < angleStart) {
                 angle += 360;
             }
-            while (angle > 360) {
+            while (angle > angleStop) {
                 angle -= 360;
             }
             List<CalibrationOffset> offsets = getOffsetPairForAngle(angle);
@@ -453,7 +476,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             Location offsetA = a.offset;
             Location offsetB = b.offset.convertToUnits(a.offset.getUnits());
 
-            double ratio = (angle - a.angle) / (b.angle - a.angle);
+            // TODO Better solution than the workaround seems to be recommended.
+            // 2019_01_05 workaround sets ratio=1.0 in case of divide-by-0
+            double ratio = 1.0;
+            if ((b.angle - a.angle)!=0) {
+                ratio = (angle - a.angle) / (b.angle - a.angle);
+            }
             double deltaX = offsetB.getX() - offsetA.getX();
             double deltaY = offsetB.getY() - offsetA.getY();
             double offsetX = offsetA.getX() + (deltaX * ratio);
@@ -462,6 +490,21 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             return new Location(offsetA.getUnits(), offsetX, offsetY, 0, 0);
         }
 
+        private Location findCircleAveraged(int avg) throws Exception {
+            // With difficult light conditions single measurement error may
+            // randomly exceed 0.1mm.
+            // Locate the 1st nozzle offsets.
+            Location offset = findCircle();
+            // ... and add the remaining kk_max-1 measurements
+            for (int kk = 0; kk < avg-1; kk++) {
+                offset = offset.add(findCircle());
+            }
+            // scale xyz-offset by 1.0/avg after accumulation, rot set to 0deg
+            // It is assumed (for now) there is no circular error/offset.
+            offset=offset.multiply(1.0/avg, 1.0/avg, 1.0/avg, 0d);
+            return offset;
+        }
+        
         private Location findCircle() throws Exception {
             Camera camera = VisionUtils.getBottomVisionCamera();
             try (CvPipeline pipeline = getPipeline()) {
@@ -469,6 +512,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 pipeline.process();
                 Location location;
                 Object result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
+                if (0==((List) result).size()) {
+                    throw new Exception("No results from vision ... ((List)result).size()=0");                    
+                }
                 if (result instanceof List) {
                     if (((List) result).get(0) instanceof Result.Circle) {
                         List<Result.Circle> circles = (List<Result.Circle>) result;
@@ -498,8 +544,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 else {
                     throw new Exception("Unrecognized result " + result);
                 }
+                // 2019_01_06 view time increased (0.25s->5.25s, does not seem to delay next image)
                 MainFrame.get().get().getCameraViews().getCameraView(camera).showFilteredImage(
-                        OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
+                        OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 5250);
                 return location;
             }
         }
