@@ -441,15 +441,15 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                     // b) ignore that if there are still enough points (has to be checked afterwards) 
                 }
                 
-                System.out.println("measured offsets: " + nozzleTipMeasuredLocations);
+                System.out.println("[runoutFix]measured offsets: " + nozzleTipMeasuredLocations);
                 
             	// the measured offsets describe a circle with the rotational axis as the center, the runout is the circle radius
                 this.nozzleEccentricity = this.calcCircleFitKasa(nozzleTipMeasuredLocations);
-                Logger.debug("calculated nozzleEccentricity: {}", this.nozzleEccentricity);
+                Logger.debug("[runoutFix]calculated nozzleEccentricity: {}", this.nozzleEccentricity);
                 
                 // now calc the phase shift for angle mapping on moves
                 this.phaseShift = this.calcPhaseShift(nozzleTipMeasuredLocations);
-                Logger.debug("calculated phaseShift: {}", this.phaseShift);
+                Logger.debug("[runoutFix]calculated phaseShift: {}", this.phaseShift);
                 
                 nozzle.moveToSafeZ();
             }
@@ -493,7 +493,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         		// atan2 outputs angles from -PI to +PI. If one wants positive values, one needs to add +PI to negative values
         		if(differenceAngle<0) differenceAngle += 360;
         		
-        		System.out.println("differenceAngle " + differenceAngle);
+        		System.out.println("[runoutFix]differenceAngle " + differenceAngle);
         		
         		// sum up all differenceAngles to build the average later
         		differenceAngleMean += differenceAngle;
@@ -501,7 +501,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         	
     		// calc the average
         	phaseShift = differenceAngleMean / nozzleTipMeasuredLocations.size();
-        	System.out.println("phaseShift " + phaseShift);
+        	System.out.println("[runoutFix]phaseShift " + phaseShift);
         	
         	return phaseShift;
         }
