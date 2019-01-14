@@ -391,18 +391,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         private Circle nozzleEccentricity = null;
         double phaseShift;
 
-        // calc circle that describes the runout path
-        // assumption: it's an ideal circle - must be one. really?
-        /* so some refs to fit an circle function to xy-points sorted by easy to more complex:
-         * https://de.mathworks.com/matlabcentral/fileexchange/22642-circle-fit-kasa-method
-         * https://de.mathworks.com/matlabcentral/fileexchange/5557-circle-fit
-         * https://de.mathworks.com/matlabcentral/fileexchange/22643-circle-fit-pratt-method
-         * https://de.mathworks.com/matlabcentral/fileexchange/22678-circle-fit-taubin-method
-         * and about (java) implementations:
-         * https://github.com/mdoube/BoneJ/blob/master/src/org/doube/geometry/FitCircle.java
-         * here an java example: (chap 14.8 fits a circle) http://commons.apache.org/proper/commons-math/userguide/leastsquares.html
-         * https://pdfs.semanticscholar.org/faac/44067f04abf10af7dd583fca0c35c5937f95.pdf
-         * http://people.cas.uab.edu/~mosya/cl/CPPcircle.html
+        
+        /* The reworked calibration routine will fit a circle into the runout nozzle path.
+         * the center of the circle represents the rotational axis, the radius of the circle is the runout
+         * so some refs to fit an circle function to xy-points sorted by easy to more complex:
          */
         public void calibrate(ReferenceNozzleTip nozzleTip) throws Exception {
         	/* TODO:
@@ -497,10 +489,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         		
         		// the difference is the phaseShift
         		double differenceAngle = angle-measuredAngle;
-        		System.out.println("differenceAngle " + differenceAngle);
         		
         		// atan2 outputs angles from -PI to +PI. If one wants positive values, one needs to add +PI to negative values
         		if(differenceAngle<0) differenceAngle += 360;
+        		
+        		System.out.println("differenceAngle " + differenceAngle);
         		
         		// sum up all differenceAngles to build the average later
         		differenceAngleMean += differenceAngle;
@@ -514,7 +507,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
         
         public Circle calcCircleFitKasa(List<Location> nozzleTipMeasuredLocations) {
-        	// java port of http://people.cas.uab.edu/~mosya/cl/CPPcircle.html
+        	/* 
+        	 * this function fits a circle my means of the Kasa Method to the given List<Location>.
+        	 * this is a java port of http://people.cas.uab.edu/~mosya/cl/CPPcircle.html 
+        	 * The Kasa method should work well for this purpose since the measured locations are captured along a full circle
+        	 */
     		int n;
 
     	    double Xi,Yi,Zi;
@@ -619,19 +616,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                     if (((List) result).get(0) instanceof Result.Circle) {
                     	Result.Circle circle = ((List<Result.Circle>) result).get(0);
                     	//TODO: has this list to be sorted? best match should be taken. but what is the best match? in best case, the pipeline returns always just one result
+                    	//in every case: one can't use the shortest distance to the camera center any more, since that will not be the best match
                         location = VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y);
-                        /*
-                        List<Result.Circle> circles = (List<Result.Circle>) result;
-                        List<Location> locations = circles.stream().map(circle -> {
-                            return VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y);
-                        }).sorted((a, b) -> {
-                            double a1 =
-                                    a.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
-                            double b1 =
-                                    b.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
-                            return Double.compare(a1, b1);
-                        }).collect(Collectors.toList());
-                        location = locations.get(0);*/
+                        
                     }
                     else if (((List) result).get(0) instanceof KeyPoint) {
                         KeyPoint keyPoint = ((List<KeyPoint>) result).get(0);
