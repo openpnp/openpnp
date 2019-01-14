@@ -590,6 +590,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             
             /* convert from polar coords to xy cartesian offset values
              * https://blog.demofox.org/2013/10/12/converting-to-and-from-polar-spherical-coordinates-made-easy/
+             * TODO: check whether the centerX/Y value should not be added here. maybe this introduces an error if the position of the bottom camera is not set well?
              */
             double offsetX = nozzleEccentricity.centerX + (nozzleEccentricity.radius * Math.cos(angle));
             double offsetY = nozzleEccentricity.centerY + (nozzleEccentricity.radius * Math.sin(angle));
