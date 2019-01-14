@@ -102,14 +102,14 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JButton btnReset;
     private JLabel lblEnabled;
 
-    private JLabel ___lblX_1;
-    private JLabel ___lblY_1;
-    private JLabel ___lblZ_1;
-    private JLabel ___lblR_1;
-    private JTextField ___textFieldOffsetX;
-    private JTextField ___textFieldOffsetY;
-    private JTextField ___textFieldOffsetZ;
-    private JTextField ___textFieldOffsetR;
+    private JLabel lblCalibOffsetX;
+    private JLabel lblCalibOffsetY;
+    private JLabel lblCalibOffsetZ;
+    private JLabel lblCalibOffsetR;
+    private JTextField textFieldCalibOffsetX;
+    private JTextField textFieldCalibOffsetY;
+    private JTextField textFieldCalibOffsetZ;
+    private JTextField textFieldCalibOffsetR;
 
     private JCheckBox calibrationEnabledCheckbox;
     private JLabel lblMiddleLocation_1;
@@ -438,31 +438,31 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         panelCalibration.add(btnEditPipeline, "3, 7, left, top");
 
         // Calibration measurement @ 0deg (offset nozzle <--> nozzle-tip)
-        ___lblX_1 = new JLabel(" X ");
-       panelCalibration.add(___lblX_1, "5, 2, left, default");
-        ___lblY_1 = new JLabel(" Y ");
-        panelCalibration.add(___lblY_1, "7, 2, left, default");
-        ___lblZ_1 = new JLabel(" Z ");
-        panelCalibration.add(___lblZ_1, "9, 2, left, default");
-        ___lblR_1 = new JLabel(" Rotation ");
-        panelCalibration.add(___lblR_1, "11, 2, left, default");
+        lblCalibOffsetX = new JLabel(" X ");
+       panelCalibration.add(lblCalibOffsetX, "5, 2, left, default");
+        lblCalibOffsetY = new JLabel(" Y ");
+        panelCalibration.add(lblCalibOffsetY, "7, 2, left, default");
+        lblCalibOffsetZ = new JLabel(" Z ");
+        panelCalibration.add(lblCalibOffsetZ, "9, 2, left, default");
+        lblCalibOffsetR = new JLabel(" Rotation ");
+        panelCalibration.add(lblCalibOffsetR, "11, 2, left, default");
         
-        ___textFieldOffsetX = new JTextField();
-        panelCalibration.add(___textFieldOffsetX, "5, 3, fill, default");
-        ___textFieldOffsetX.setColumns(10);
-        ___textFieldOffsetX.setEditable(false);    
-        ___textFieldOffsetY = new JTextField();
-        panelCalibration.add(___textFieldOffsetY, "7, 3, fill, default");
-        ___textFieldOffsetY.setColumns(10);
-        ___textFieldOffsetY.setEditable(false);    
-        ___textFieldOffsetZ = new JTextField();
-        panelCalibration.add(___textFieldOffsetZ, "9, 3, fill, default");
-        ___textFieldOffsetZ.setColumns(10);
-        ___textFieldOffsetZ.setEditable(false);    
-        ___textFieldOffsetR = new JTextField();
-        panelCalibration.add(___textFieldOffsetR, "11, 3, fill, default");
-        ___textFieldOffsetR.setColumns(10);        
-        ___textFieldOffsetR.setEditable(false);    
+        textFieldCalibOffsetX = new JTextField();
+        panelCalibration.add(textFieldCalibOffsetX, "5, 3, fill, default");
+        textFieldCalibOffsetX.setColumns(10);
+        textFieldCalibOffsetX.setEditable(false);    
+        textFieldCalibOffsetY = new JTextField();
+        panelCalibration.add(textFieldCalibOffsetY, "7, 3, fill, default");
+        textFieldCalibOffsetY.setColumns(10);
+        textFieldCalibOffsetY.setEditable(false);    
+        textFieldCalibOffsetZ = new JTextField();
+        panelCalibration.add(textFieldCalibOffsetZ, "9, 3, fill, default");
+        textFieldCalibOffsetZ.setColumns(10);
+        textFieldCalibOffsetZ.setEditable(false);    
+        textFieldCalibOffsetR = new JTextField();
+        panelCalibration.add(textFieldCalibOffsetR, "11, 3, fill, default");
+        textFieldCalibOffsetR.setColumns(10);        
+        textFieldCalibOffsetR.setEditable(false);    
 
         // show Calibration values at 0 degree
         showCalibrationValuesAtRot(0.0);
@@ -476,23 +476,23 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
             Location offset=nozzleTip.getCalibration().getCalibratedOffset(rot);
             s1=Double.toString(offset.getLengthX().getValue());
             if (s1.length()>9) {s1=s1.substring(0,9);}
-            ___textFieldOffsetX.setText(s1);
+            textFieldCalibOffsetX.setText(s1);
             s1=Double.toString(offset.getLengthY().getValue());
             if (s1.length()>9) {s1=s1.substring(0,9);}
-            ___textFieldOffsetY.setText(s1);   
+            textFieldCalibOffsetY.setText(s1);   
             s1=Double.toString(offset.getLengthZ().getValue());
             if (s1.length()>9) {s1=s1.substring(0,9);}
-            ___textFieldOffsetZ.setText(s1);
+            textFieldCalibOffsetZ.setText(s1);
         } else {
             // nozzle tip is not calibrated ... show 0 as default values
             // because there offset applied (... which is the same as 0)
-            ___textFieldOffsetX.setText("0 (uncal.)");
-            ___textFieldOffsetY.setText("0 (uncal.)");
-            ___textFieldOffsetZ.setText("0 (uncal.)");
+            textFieldCalibOffsetX.setText("0 (uncal.)");
+            textFieldCalibOffsetY.setText("0 (uncal.)");
+            textFieldCalibOffsetZ.setText("0 (uncal.)");
         }        
         s1=Double.toString(rot);
         if (s1.length()>9) {s1=s1.substring(0,9);}
-        ___textFieldOffsetR.setText(s1);
+        textFieldCalibOffsetR.setText(s1);
     }
 
     private void editCalibrationPipeline() throws Exception {
