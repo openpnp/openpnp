@@ -491,7 +491,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         		double differenceAngle = angle-measuredAngle;
         		
         		// atan2 outputs angles from -PI to +PI. If one wants positive values, one needs to add +PI to negative values
-        		if(differenceAngle<0) differenceAngle += 360;
+        		if(differenceAngle<0) {
+        			differenceAngle += 360;
+        		}
         		
         		System.out.println("[runoutFix]differenceAngle " + differenceAngle);
         		
@@ -514,10 +516,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         	 */
     		int n;
 
-    	    double Xi,Yi,Zi;
-    	    double Mxy,Mxx,Myy,Mxz,Myz;
-    	    double B,C,G11,G12,G22,D1,D2;
-    	    double meanX=0.0, meanY=0.0;
+    	    double kasaXi,kasaYi,kasaZi;
+    	    double kasaMxy,kasaMxx,kasaMyy,kasaMxz,kasaMyz;
+    	    double kasaB,kasaC,kasaG11,kasaG12,kasaG22,kasaD1,kasaD2;
+    	    double kasaMeanX=0.0, kasaMeanY=0.0;
     	    
     	    Circle nozzleEccentricity = null;
     	    n = nozzleTipMeasuredLocations.size();
@@ -525,45 +527,45 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             Iterator<Location> nozzleTipMeasuredLocationsIterator = nozzleTipMeasuredLocations.iterator();
     		while (nozzleTipMeasuredLocationsIterator.hasNext()) {
     			Location measuredLocation = nozzleTipMeasuredLocationsIterator.next();
-    			meanX += measuredLocation.getX();
-    			meanY += measuredLocation.getY();
+    			kasaMeanX += measuredLocation.getX();
+    			kasaMeanY += measuredLocation.getY();
     		}
-    		meanX = meanX / (double)nozzleTipMeasuredLocations.size();
-    		meanY = meanY / (double)nozzleTipMeasuredLocations.size();
+    		kasaMeanX = kasaMeanX / (double)nozzleTipMeasuredLocations.size();
+    		kasaMeanY = kasaMeanY / (double)nozzleTipMeasuredLocations.size();
     		
-    	    Mxx=Myy=Mxy=Mxz=Myz=0.;
+    	    kasaMxx=kasaMyy=kasaMxy=kasaMxz=kasaMyz=0.;
 
     	    for (int i = 0; i < n; i++) {
-    	        Xi = nozzleTipMeasuredLocations.get(i).getX() - meanX;   //  centered x-coordinates
-    	        Yi = nozzleTipMeasuredLocations.get(i).getY() - meanY;   //  centered y-coordinates
-    	        Zi = Xi*Xi + Yi*Yi;
+    	        kasaXi = nozzleTipMeasuredLocations.get(i).getX() - kasaMeanX;   //  centered x-coordinates
+    	        kasaYi = nozzleTipMeasuredLocations.get(i).getY() - kasaMeanY;   //  centered y-coordinates
+    	        kasaZi = kasaXi*kasaXi + kasaYi*kasaYi;
 
-    	        Mxx += Xi*Xi;
-    	        Myy += Yi*Yi;
-    	        Mxy += Xi*Yi;
-    	        Mxz += Xi*Zi;
-    	        Myz += Yi*Zi;
+    	        kasaMxx += kasaXi*kasaXi;
+    	        kasaMyy += kasaYi*kasaYi;
+    	        kasaMxy += kasaXi*kasaYi;
+    	        kasaMxz += kasaXi*kasaZi;
+    	        kasaMyz += kasaYi*kasaZi;
     	    }
-    	    Mxx /= n;
-    	    Myy /= n;
-    	    Mxy /= n;
-    	    Mxz /= n;
-    	    Myz /= n;
+    	    kasaMxx /= n;
+    	    kasaMyy /= n;
+    	    kasaMxy /= n;
+    	    kasaMxz /= n;
+    	    kasaMyz /= n;
 
 	    	// solving system of equations by Cholesky factorization
-    	    G11 = Math.sqrt(Mxx);
-    	    G12 = Mxy / G11;
-    	    G22 = Math.sqrt(Myy - G12 * G12);
+    	    kasaG11 = Math.sqrt(kasaMxx);
+    	    kasaG12 = kasaMxy / kasaG11;
+    	    kasaG22 = Math.sqrt(kasaMyy - kasaG12 * kasaG12);
 
-    	    D1 = Mxz / G11;
-    	    D2 = (Myz - D1*G12)/G22;
+    	    kasaD1 = kasaMxz / kasaG11;
+    	    kasaD2 = (kasaMyz - kasaD1*kasaG12)/kasaG22;
 
     	    // computing parameters of the fitting circle
-    	    C = D2/G22/2.0;
-    	    B = (D1 - G12*C)/G11/2.0;
+    	    kasaC = kasaD2/kasaG22/2.0;
+    	    kasaB = (kasaD1 - kasaG12*kasaC)/kasaG11/2.0;
     	    
     	    // assembling the output
-    	    nozzleEccentricity = new Circle( B + meanX, C + meanY, Math.sqrt(B*B + C*C + Mxx + Myy));
+    	    nozzleEccentricity = new Circle( kasaB + kasaMeanX, kasaC + kasaMeanY, Math.sqrt(kasaB*kasaB + kasaC*kasaC + kasaMxx + kasaMyy));
             
     	    return nozzleEccentricity;
         }
