@@ -364,6 +364,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             final double centerX;
             final double centerY;
             final double radius;
+            double phaseShift;
 
             public Circle(double centerX, double centerY, double radius) {
                 this.centerX = centerX;
@@ -444,11 +445,50 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 this.nozzleEccentricity = this.calcCircleFitKasa(nozzleTipMeasuredLocations);
                 Logger.debug("calculated nozzleEccentricity: {}", this.nozzleEccentricity);
                 
+                // now calc the phase shift for angle mapping on moves
+                this.nozzleEccentricity.phaseShift = this.calcPhaseShift(nozzleTipMeasuredLocations);
+                
                 nozzle.moveToSafeZ();
             }
             finally {
                 calibrating = false;
             }
+        }
+        
+        public double calcPhaseShift(List<Location> nozzleTipMeasuredLocations) {
+        	double phaseShift = 0;
+        	
+        	//List<Double> angles = new ArrayList<>();
+        	//List<Double> measuredAngles = new ArrayList<>();
+        	double angle=0;
+        	double measuredAngle=0;
+        	double differenceAngleMean=0;
+        	List<Double> differenceAngles = new ArrayList<>();
+        	
+        	for (int i = 0; i < 24; i += 1) {
+        		Location measuredLocation = nozzleTipMeasuredLocations.get(i);
+        		//angles.add(i * angleIncrement);
+        		angle = i * angleIncrement;
+        		
+        		Location centeredLocation = measuredLocation.subtract(new Location(LengthUnit.Millimeters,this.nozzleEccentricity.centerX,this.nozzleEccentricity.centerY,0.,0.));
+        		
+        		//measuredAngles.add( Math.atan2(centeredLocation.getY(), centeredLocation.getX()) );
+        		measuredAngle=Math.toDegrees(Math.atan2(centeredLocation.getY(), centeredLocation.getX()));
+        		
+        		//differenceAngles.add(angle-measuredAngle);
+        		double differenceAngle = angle-measuredAngle;
+        		System.out.println("differenceAngle " + differenceAngle);
+        		//norm
+        		if(differenceAngle>360) differenceAngle -= 360;
+        		if(differenceAngle<0) differenceAngle += 360;
+        		
+        		differenceAngleMean += differenceAngle;
+        		
+    		}
+    		
+        	phaseShift=differenceAngleMean / 24;
+        	System.out.println("phaseShift " + phaseShift);
+        	return phaseShift;
         }
         
         public Circle calcCircleFitKasa(List<Location> nozzleTipMeasuredLocations) {
@@ -523,6 +563,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             while (angle > 360) {
                 angle -= 360;
             }
+            
+            //add phase shift
+            angle = angle - this.nozzleEccentricity.phaseShift;
+            
             angle = Math.toRadians(angle);
             
             /* convert from polar coords to xy cartesian offset values
