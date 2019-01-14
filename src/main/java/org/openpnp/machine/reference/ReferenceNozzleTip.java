@@ -364,7 +364,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             final double centerX;
             final double centerY;
             final double radius;
-            double phaseShift;
 
             public Circle(double centerX, double centerY, double radius) {
                 this.centerX = centerX;
@@ -390,7 +389,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         private boolean calibrating;
         
         private Circle nozzleEccentricity = null;
-
+        double phaseShift;
 
         // calc circle that describes the runout path
         // assumption: it's an ideal circle - must be one. really?
@@ -406,11 +405,13 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
          * http://people.cas.uab.edu/~mosya/cl/CPPcircle.html
          */
         public void calibrate(ReferenceNozzleTip nozzleTip) throws Exception {
-        	/* TODO
-        	 * check whether it works correct for limited head movement (+-180°)
+        	/* TODO:
+        	 * a) check whether it works correct for limited head movement (+-180°)
+        	 * b) for 
         	 */
         	
             if (!isEnabled()) {
+            	reset();
                 return;
             }
             try {
@@ -426,27 +427,37 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 // This is our baseline location
                 Location measureBaseLocation = cameraLocation.derive(null, null, null, 0d);
                 
-                // move nozzle to the camera location at zero degree
+                // move nozzle to the camera location at zero degree - the nozzle must not necessarily be at the center
                 MovableUtils.moveToLocationAtSafeZ(nozzle, measureBaseLocation);
 
-                // capture nozzle tip positions and add them to a list
+                // Capture nozzle tip positions and add them to a list. For these calcs the camera location is considered to be 0/0
                 List<Location> nozzleTipMeasuredLocations = new ArrayList<>();
-                for (double i = 0; i < 360; i += angleIncrement) {
-                	// Now we rotate the nozzle 360 degrees at calibration.angleIncrement steps and store the positions
-                    Location measureLocation = measureBaseLocation.derive(null, null, null, i);
+                for (double measureAngle = 0; measureAngle < 360; measureAngle += angleIncrement) {	// hint: if nozzle is limited to +-180° this is respected in .moveTo automatically
+                	// rotate nozzle to measurement angle
+                    Location measureLocation = measureBaseLocation.derive(null, null, null, measureAngle);
                     nozzle.moveTo(measureLocation);
+                    
+                    // detect the nozzle tip
                     Location offset = findCircle();
-                    System.out.println("measured offset: " + offset);
+                    offset = offset.derive(null, null, null, measureAngle);		// for later usage in the algorithm, the measureAngle is stored to the offset location 
+                    
+                    // add offset to array
                     nozzleTipMeasuredLocations.add(offset);
-                    //TODO: catch case, no location was found in pipeline and show an error
+                    
+                    //TODO: catch case, no location was found (currently error message shows just a "0") in pipeline and
+                    // a) show an error or
+                    // b) ignore that if there are still enough points (has to be checked afterwards) 
                 }
                 
-                // do the math to fit the circle:
+                System.out.println("measured offsets: " + nozzleTipMeasuredLocations);
+                
+            	// the measured offsets describe a circle with the rotational axis as the center, the runout is the circle radius
                 this.nozzleEccentricity = this.calcCircleFitKasa(nozzleTipMeasuredLocations);
                 Logger.debug("calculated nozzleEccentricity: {}", this.nozzleEccentricity);
                 
                 // now calc the phase shift for angle mapping on moves
-                this.nozzleEccentricity.phaseShift = this.calcPhaseShift(nozzleTipMeasuredLocations);
+                this.phaseShift = this.calcPhaseShift(nozzleTipMeasuredLocations);
+                Logger.debug("calculated phaseShift: {}", this.phaseShift);
                 
                 nozzle.moveToSafeZ();
             }
@@ -456,38 +467,49 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
         
         public double calcPhaseShift(List<Location> nozzleTipMeasuredLocations) {
+        	/*
+        	 * The phaseShift is calculated to map the angle the nozzle is located mechanically at
+        	 * (that is what openpnp shows in the DRO) to the angle, the nozzle tip is located wrt. to the
+        	 * centered circle runout path.
+        	 * With the phaseShift available, the calibration offset can be calculated analytically for every
+        	 * location/rotation even if not captured while measured (stepped by angleIncrement)
+        	 * 
+        	 */
         	double phaseShift = 0;
         	
-        	//List<Double> angles = new ArrayList<>();
-        	//List<Double> measuredAngles = new ArrayList<>();
         	double angle=0;
         	double measuredAngle=0;
         	double differenceAngleMean=0;
-        	List<Double> differenceAngles = new ArrayList<>();
         	
-        	for (int i = 0; i < 24; i += 1) {
-        		Location measuredLocation = nozzleTipMeasuredLocations.get(i);
-        		//angles.add(i * angleIncrement);
-        		angle = i * angleIncrement;
+
+            Iterator<Location> nozzleTipMeasuredLocationsIterator = nozzleTipMeasuredLocations.iterator();
+    		while (nozzleTipMeasuredLocationsIterator.hasNext()) {
+    			Location measuredLocation = nozzleTipMeasuredLocationsIterator.next();
+    			
+    			// get the measurement rotation
+        		angle = measuredLocation.getRotation();		// the angle at which the measurement was made was stored to the nozzleTipMeasuredLocation into the rotation attribute
         		
+        		// move the offset-location by the centerY/centerY. by this all offset-locations are wrt. the 0/0 origin
         		Location centeredLocation = measuredLocation.subtract(new Location(LengthUnit.Millimeters,this.nozzleEccentricity.centerX,this.nozzleEccentricity.centerY,0.,0.));
         		
-        		//measuredAngles.add( Math.atan2(centeredLocation.getY(), centeredLocation.getX()) );
+        		// calculate the angle, the nozzle tip is located at
         		measuredAngle=Math.toDegrees(Math.atan2(centeredLocation.getY(), centeredLocation.getX()));
         		
-        		//differenceAngles.add(angle-measuredAngle);
+        		// the difference is the phaseShift
         		double differenceAngle = angle-measuredAngle;
         		System.out.println("differenceAngle " + differenceAngle);
-        		//norm
-        		if(differenceAngle>360) differenceAngle -= 360;
+        		
+        		// atan2 outputs angles from -PI to +PI. If one wants positive values, one needs to add +PI to negative values
         		if(differenceAngle<0) differenceAngle += 360;
         		
+        		// sum up all differenceAngles to build the average later
         		differenceAngleMean += differenceAngle;
-        		
     		}
-    		
-        	phaseShift=differenceAngleMean / 24;
+        	
+    		// calc the average
+        	phaseShift = differenceAngleMean / nozzleTipMeasuredLocations.size();
         	System.out.println("phaseShift " + phaseShift);
+        	
         	return phaseShift;
         }
         
@@ -565,7 +587,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
             
             //add phase shift
-            angle = angle - this.nozzleEccentricity.phaseShift;
+            angle = angle - this.phaseShift;
             
             angle = Math.toRadians(angle);
             
