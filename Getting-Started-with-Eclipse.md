@@ -20,7 +20,13 @@
 14. Expand the openpnp project and look for the `src/main/java folder`. Under this folder expand the `org.openpnp` folder and look for `Main.java`.
 15. Right click `Main.java` and from the menu select Run As -> Java Application.
 16. After a few seconds OpenPnP will start. Close OpenPnP.
-17. You can now edit files in Eclipse and the changes will automatically compile. To run OpenPnP again with your changes just click the green Run button in the toolbar. The button is a green circle with a white right facing arrow in it.
+17. You can now edit files in Eclipse, the changes will automatically be hot swapped if enabled "Project" -> "Build Automatically". If function signatures were changed hot swap does not apply and you need to rerun OpenPnP with your changes, just click the green Run button in the toolbar. The button is a green circle with a white right facing arrow in it.
+
+## Additional steps if you want to contribute
+1. You need to run the tests by executing "Maven test". Maven test needs the full JDK be installed (not only JRE).
+2. Download an install the JDK.
+3. Add the environment in eclipse:
+![jdk-env](https://user-images.githubusercontent.com/3868450/51134165-166cae80-1837-11e9-933e-2a6fbf1301ac.PNG)
 
 * <sup>1</sup> It is possible to later change so your clone is pointing to your fork at Github.
 * <sup>2</sup> You cannot directly push your changes to OpenPnP, it must go through your own fork.
