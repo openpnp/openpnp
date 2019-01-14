@@ -386,7 +386,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                         FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblEnabled = new JLabel("Enabled?");
+        lblEnabled = new JLabel("Enable (EXPERIMENTAL!)");
         panelCalibration.add(lblEnabled, "2, 2, right, default");
 
         calibrationEnabledCheckbox = new JCheckBox("");
