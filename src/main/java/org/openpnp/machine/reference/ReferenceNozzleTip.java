@@ -399,20 +399,23 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         public void calibrate(ReferenceNozzleTip nozzleTip) throws Exception {
         	/* TODO:
         	 * a) check whether it works correct for limited head movement (+-180°)
-        	 * b) for 
+        	 * b) add plausibility checks
+        	 * c) if one measurement fails, one could retry of skip that silently if enough valid measurements are still available 
         	 */
         	
             if (!isEnabled()) {
             	reset();
                 return;
             }
+            
+
+            Nozzle nozzle = nozzleTip.getParentNozzle();
+            Camera camera = VisionUtils.getBottomVisionCamera();
+            
             try {
                 calibrating = true;
                 
             	reset();
-
-                Nozzle nozzle = nozzleTip.getParentNozzle();
-                Camera camera = VisionUtils.getBottomVisionCamera();
 
                 // Move to the camera with an angle of 0.
                 Location cameraLocation = camera.getLocation();
@@ -455,6 +458,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
             finally {
                 calibrating = false;
+             
+                // after processing the nozzle returns to safe-z
+                nozzle.moveToSafeZ();
             }
         }
         
@@ -574,8 +580,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     	    return nozzleEccentricity;
         }
 
+        /*
+         * While calibrating the nozzle a circle was fitted to the runout path of the tip.
+         * here the offset is reconstructed in XY-cartesian coordinates to be applied in moveTo commands.
+         */
         public Location getCalibratedOffset(double angle) {
-        	//R+center -> from that the x-y-offsets can be recalculated at any angle...
+        	
     	    
             if (!isEnabled() || !isCalibrated()) {
                 return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
@@ -618,14 +628,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
              */
             double offsetX = /*nozzleEccentricity.centerX +*/ (nozzleEccentricity.radius * Math.cos(angle));
             double offsetY = /*nozzleEccentricity.centerY +*/ (nozzleEccentricity.radius * Math.sin(angle));
-        	
-            /*
-             * thought: the eccentricity-values (centerX/Y) are the offset to the downlooking cam and can be an hint for
-             * a) the nozzle-head-offset not 100% correct(?)
-             * b) ...?
-             * should that values be included in correction or make these things worse?
-             */
-            
+
             return new Location(LengthUnit.Millimeters, offsetX, offsetY, 0, 0);
         }
 
