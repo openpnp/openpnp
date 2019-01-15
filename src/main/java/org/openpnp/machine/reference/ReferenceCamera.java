@@ -541,8 +541,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(new CameraConfigurationWizard(this), "General Configuration"),
-                new PropertySheetWizardAdapter(getConfigurationWizard(), "Camera Specific"),
-                new PropertySheetWizardAdapter(visionProvider.getConfigurationWizard(), "Vision Provider")};
+                new PropertySheetWizardAdapter(getConfigurationWizard(), "Camera Specific")};
     }
     
     @Override

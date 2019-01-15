@@ -21,6 +21,7 @@ package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 import org.openpnp.CameraListener;
@@ -40,9 +41,8 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
-public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
+public class OpenPnpCaptureCamera extends ReferenceCamera {
     private OpenPnpCapture capture = new OpenPnpCapture();
-    private Thread thread;
     
     private CaptureDevice device;
     private CaptureFormat format;
@@ -55,7 +55,8 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     private Integer formatId;
     
     @Attribute(required=false)
-    private int fps = 10;
+    @Deprecated
+    private Integer fps = null;
 
     @Element(required=false)
     private CapturePropertyHolder backLightCompensation = new CapturePropertyHolder(CaptureProperty.BackLightCompensation);
@@ -95,6 +96,8 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
 
     @Element(required=false)
     private CapturePropertyHolder zoom = new CapturePropertyHolder(CaptureProperty.Zoom);
+    
+    HashMap<CameraListener, CaptureWorker> workers = new HashMap<CameraListener, CaptureWorker>();
 
     public OpenPnpCaptureCamera() {
     }
@@ -122,59 +125,139 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
 
     @Override
     public synchronized BufferedImage internalCapture() {
-        if (thread == null) {
-            open();
-        }
+        ensureOpen();
         try {
+            /**
+             * If there is already a frame buffered, we don't want it, so we take whatever is
+             * buffered and toss it. This ensures hasNewFrame gets reset so that we can wait
+             * on the frame to arrive. Note that because hasNewframe, capture, and submitBuffer
+             * all lock on the same buffer there is the chance that we throw away a buffer
+             * that was just captured, but this is acceptable. We should only be blocked
+             * for the time it takes to copy the memory, which should be well under 1ms
+             * and then we are blocked for the time to capture a frame, which we expected
+             * anyway. 
+             * 
+             * So, this is all basically working now. But if there are multiple listeners they
+             * are gonna fight for images. We only ever have one so who cares, but maybe we care?
+             * 
+             * Also, it seems like the old FPS setting was just fine, based on all this?
+             * 
+             * TODO STOPSHIP Can we actually just stream 30 FPS to the screen without blowing
+             * up the CPU? Check and see. And if not, why? And also if not, can other programs?
+             * 
+             * From measurements:
+             * hasNewFrame/capture takes ~5
+             * !hasNewFrame takes ~20
+             * capture takes ~3
+             * transform takes ~0
+             * 
+             * and in the thread, capture takes about 30 and callback takes 0
+             * which makes sense, cause the callback just stores the image and
+             * calls repaint, which happens on a different thread
+             * 
+             * 15 FPS is about 50-55% CPU
+             * Turning off frameReceived saves about 10%
+             * 1 degree of rotation adds about 5%
+             * undistort adds about 10%
+             * flip adds maybe 2%
+             * 
+             * OBS uses about 13% to stream 30 FPS, but no effects at all
+             * Still, like a quarter of what we use
+             * 
+             * Turning off the first capture and busy loop gets down to about 34%
+             * Turn off transform and frameReceived gets down to about 20.
+             */
+            
+            if (stream.hasNewFrame()) {
+                stream.capture();
+            }
+            
+            while (!stream.hasNewFrame()) {
+            }
+            
             BufferedImage img = stream.capture();
-            return transformImage(img);
+            
+            img = transformImage(img);
+
+            return img;
         }
         catch (Exception e) {
             e.printStackTrace();
             return null;
         }
+
+    }
+    
+    private synchronized void ensureOpen() {
+        if (stream == null) {
+            open();
+        }
+    }
+    
+    class CaptureWorker implements Runnable {
+        final CameraListener listener;
+        final int maximumFps;
+        final Thread thread;
+        
+        public CaptureWorker(CameraListener listener, int maximumFps) {
+            this.listener = listener;
+            this.maximumFps = maximumFps;
+            thread = new Thread(this);
+            thread.setDaemon(true);
+            thread.start();
+        }
+        
+        public void run() {
+            while (!Thread.interrupted()) {
+                ensureOpen();
+                
+                BufferedImage img = internalCapture();
+                
+                listener.frameReceived(img);
+                
+                try {
+                    Thread.sleep((long) (1000. / maximumFps));
+                }
+                catch (InterruptedException e) {
+                    break;
+                }
+            }
+        }
+        
+        public void stop() {
+            thread.interrupt();
+            try {
+                thread.join();
+            }
+            catch (Exception e) {
+                
+            }
+        }
     }
 
     @Override
     public synchronized void startContinuousCapture(CameraListener listener, int maximumFps) {
-        if (thread == null) {
-            open();
+        System.out.println("start " + listener + " " + maximumFps);
+        CaptureWorker worker = workers.get(listener);
+        if (worker != null) {
+            worker.stop();
         }
-        super.startContinuousCapture(listener, maximumFps);
+        worker = new CaptureWorker(listener, maximumFps);
+        workers.put(listener, worker);
+    }
+    
+    @Override
+    public void stopContinuousCapture(CameraListener listener) {
+        System.out.println("stop " + listener);
+        super.stopContinuousCapture(listener);
+        CaptureWorker worker = workers.get(listener);
+        if (worker != null) {
+            worker.stop();
+        }
+        workers.remove(listener);
     }
 
-    public void run() {
-        while (!Thread.interrupted()) {
-            try {
-                BufferedImage image = internalCapture();
-                if (image != null) {
-                    broadcastCapture(image);
-                }
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                Thread.sleep(1000 / fps);
-            }
-            catch (InterruptedException e) {
-                break;
-            }
-        }
-    }
-
-    public void open() {
-        if (thread != null) {
-            thread.interrupt();
-            try {
-                thread.join(3000);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            thread = null;
-        }
-        
+    public synchronized void open() {
         if (stream != null) {
             try {
                 stream.close();
@@ -236,12 +319,9 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             e.printStackTrace();
             return;
         }
-        thread = new Thread(this);
-        thread.setDaemon(true);
-        thread.start();
     }
     
-    private void setPropertiesStream(CaptureStream stream) {
+    private synchronized void setPropertiesStream(CaptureStream stream) {
         backLightCompensation.setStream(stream);
         brightness.setStream(stream);
         contrast.setStream(stream);
@@ -258,17 +338,11 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     }
 
     @Override
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
         super.close();
         
-        if (thread != null) {
-            thread.interrupt();
-            try {
-                thread.join(3000);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
+        for (CaptureWorker worker : workers.values()) {
+            worker.stop();
         }
         
         if (stream != null) {
@@ -329,14 +403,6 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         firePropertyChange("format", null, format);
     }
     
-    public int getFps() {
-        return fps;
-    }
-
-    public void setFps(int fps) {
-        this.fps = fps;
-    }
-
     public CapturePropertyHolder getBackLightCompensation() {
         return backLightCompensation;
     }

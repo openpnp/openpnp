@@ -84,8 +84,6 @@ public class OpenPnpCaptureCameraConfigurationWizard extends ReferenceCameraConf
     private JCheckBox whiteBalanceAuto;
     private JCheckBox gainAuto;
     private JSlider gainSlider;
-    private JLabel lblFps;
-    private JTextField fps;
     private JTextField exposureValue;
     private JTextField whiteBalanceValue;
     private JTextField focusValue;
@@ -221,8 +219,6 @@ public class OpenPnpCaptureCameraConfigurationWizard extends ReferenceCameraConf
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblDevice = new JLabel("Device");
@@ -237,352 +233,345 @@ public class OpenPnpCaptureCameraConfigurationWizard extends ReferenceCameraConf
         formatCb = new JComboBox();
         panel.add(formatCb, "4, 4, 15, 1, fill, default");
 
-        lblFps = new JLabel("FPS");
-        panel.add(lblFps, "2, 6, right, default");
-
-        fps = new JTextField();
-        panel.add(fps, "4, 6, 15, 1");
-        fps.setColumns(10);
-
         lblAuto = new JLabel("Auto");
-        panel.add(lblAuto, "4, 8, center, default");
+        panel.add(lblAuto, "4, 6, center, default");
 
         lblMin_1 = new JLabel("Min");
-        panel.add(lblMin_1, "8, 8, center, default");
+        panel.add(lblMin_1, "8, 6, center, default");
 
         lblValue = new JLabel("Value");
-        panel.add(lblValue, "12, 8, 3, 1, center, default");
+        panel.add(lblValue, "12, 6, 3, 1, center, default");
 
         lblMax = new JLabel("Max");
-        panel.add(lblMax, "18, 8, center, default");
+        panel.add(lblMax, "18, 6, center, default");
 
         lblDefault = new JLabel("Default");
-        panel.add(lblDefault, "22, 8");
+        panel.add(lblDefault, "22, 6");
 
         brightness = new JLabel("Brightness");
-        panel.add(brightness, "2, 10, right, default");
+        panel.add(brightness, "2, 8, right, default");
 
         brightnessAuto = new JCheckBox("");
-        panel.add(brightnessAuto, "4, 10");
+        panel.add(brightnessAuto, "4, 8");
 
         brightnessMin = new JLabel("min");
-        panel.add(brightnessMin, "8, 10");
+        panel.add(brightnessMin, "8, 8");
 
         brightnessSlider = new JSlider();
         brightnessSlider.setPaintTicks(true);
         brightnessSlider.setPaintLabels(true);
-        panel.add(brightnessSlider, "12, 10");
+        panel.add(brightnessSlider, "12, 8");
 
         brightnessValue = new JTextField();
         brightnessValue.setText("00000");
         brightnessValue.setColumns(5);
-        panel.add(brightnessValue, "14, 10, center, default");
+        panel.add(brightnessValue, "14, 8, center, default");
 
         brightnessMax = new JLabel("max");
-        panel.add(brightnessMax, "18, 10");
+        panel.add(brightnessMax, "18, 8");
 
         brightnessDefault = new JLabel("def");
-        panel.add(brightnessDefault, "22, 10");
+        panel.add(brightnessDefault, "22, 8");
         
         backLightCompensation = new JLabel("Backlight Compensation");
-        panel.add(backLightCompensation, "2, 12, right, default");
+        panel.add(backLightCompensation, "2, 10, right, default");
         
         backLightCompensationAuto = new JCheckBox("");
-        panel.add(backLightCompensationAuto, "4, 12");
+        panel.add(backLightCompensationAuto, "4, 10");
         
         backLightCompensationMin = new JLabel("min");
-        panel.add(backLightCompensationMin, "8, 12");
+        panel.add(backLightCompensationMin, "8, 10");
         
         backLightCompensationSlider = new JSlider();
         backLightCompensationSlider.setPaintTicks(true);
         backLightCompensationSlider.setPaintLabels(true);
-        panel.add(backLightCompensationSlider, "12, 12");
+        panel.add(backLightCompensationSlider, "12, 10");
         
         backLightCompensationValue = new JTextField();
         backLightCompensationValue.setText("00000");
         backLightCompensationValue.setColumns(5);
-        panel.add(backLightCompensationValue, "14, 12, center, default");
+        panel.add(backLightCompensationValue, "14, 10, center, default");
         
         backLightCompensationMax = new JLabel("max");
-        panel.add(backLightCompensationMax, "18, 12");
+        panel.add(backLightCompensationMax, "18, 10");
         
         backLightCompensationDefault = new JLabel("def");
-        panel.add(backLightCompensationDefault, "22, 12");
+        panel.add(backLightCompensationDefault, "22, 10");
 
         contrast = new JLabel("Contrast");
-        panel.add(contrast, "2, 14, right, default");
+        panel.add(contrast, "2, 12, right, default");
 
         contrastAuto = new JCheckBox("");
-        panel.add(contrastAuto, "4, 14");
+        panel.add(contrastAuto, "4, 12");
 
         contrastMin = new JLabel("min");
-        panel.add(contrastMin, "8, 14");
+        panel.add(contrastMin, "8, 12");
 
         contrastSlider = new JSlider();
         contrastSlider.setPaintTicks(true);
         contrastSlider.setPaintLabels(true);
-        panel.add(contrastSlider, "12, 14");
+        panel.add(contrastSlider, "12, 12");
 
         contrastValue = new JTextField();
         contrastValue.setText("00000");
         contrastValue.setColumns(5);
-        panel.add(contrastValue, "14, 14, center, default");
+        panel.add(contrastValue, "14, 12, center, default");
 
         contrastMax = new JLabel("max");
-        panel.add(contrastMax, "18, 14");
+        panel.add(contrastMax, "18, 12");
 
         contrastDefault = new JLabel("def");
-        panel.add(contrastDefault, "22, 14");
+        panel.add(contrastDefault, "22, 12");
 
         exposure = new JLabel("Exposure");
-        panel.add(exposure, "2, 16, right, default");
+        panel.add(exposure, "2, 14, right, default");
 
         exposureAuto = new JCheckBox("");
-        panel.add(exposureAuto, "4, 16, center, default");
+        panel.add(exposureAuto, "4, 14, center, default");
 
         exposureMin = new JLabel("min");
-        panel.add(exposureMin, "8, 16, center, default");
+        panel.add(exposureMin, "8, 14, center, default");
 
         exposureSlider = new JSlider();
         exposureSlider.setPaintLabels(true);
         exposureSlider.setPaintTicks(true);
-        panel.add(exposureSlider, "12, 16, center, default");
+        panel.add(exposureSlider, "12, 14, center, default");
 
         exposureValue = new JTextField();
         exposureValue.setText("00000");
-        panel.add(exposureValue, "14, 16, center, default");
+        panel.add(exposureValue, "14, 14, center, default");
         exposureValue.setColumns(5);
 
         exposureMax = new JLabel("max");
-        panel.add(exposureMax, "18, 16, center, default");
+        panel.add(exposureMax, "18, 14, center, default");
 
         exposureDefault = new JLabel("def");
-        panel.add(exposureDefault, "22, 16");
+        panel.add(exposureDefault, "22, 14");
 
         focusDefault = new JLabel("def");
-        panel.add(focusDefault, "22, 18");
+        panel.add(focusDefault, "22, 16");
 
         gainDefault = new JLabel("def");
-        panel.add(gainDefault, "22, 20");
+        panel.add(gainDefault, "22, 18");
 
         gamma = new JLabel("Gamma");
-        panel.add(gamma, "2, 22, right, default");
+        panel.add(gamma, "2, 20, right, default");
 
         gammaAuto = new JCheckBox("");
-        panel.add(gammaAuto, "4, 22");
+        panel.add(gammaAuto, "4, 20");
 
         gammaMin = new JLabel("min");
-        panel.add(gammaMin, "8, 22");
+        panel.add(gammaMin, "8, 20");
 
         gammaSlider = new JSlider();
         gammaSlider.setPaintTicks(true);
         gammaSlider.setPaintLabels(true);
-        panel.add(gammaSlider, "12, 22");
+        panel.add(gammaSlider, "12, 20");
 
         gammaValue = new JTextField();
         gammaValue.setText("00000");
         gammaValue.setColumns(5);
-        panel.add(gammaValue, "14, 22, center, default");
+        panel.add(gammaValue, "14, 20, center, default");
 
         gammaMax = new JLabel("max");
-        panel.add(gammaMax, "18, 22");
+        panel.add(gammaMax, "18, 20");
 
         gammaDefault = new JLabel("def");
-        panel.add(gammaDefault, "22, 22");
+        panel.add(gammaDefault, "22, 20");
         
         hue = new JLabel("Hue");
-        panel.add(hue, "2, 24, right, default");
+        panel.add(hue, "2, 22, right, default");
         
         hueAuto = new JCheckBox("");
-        panel.add(hueAuto, "4, 24");
+        panel.add(hueAuto, "4, 22");
         
         hueMin = new JLabel("min");
-        panel.add(hueMin, "8, 24");
+        panel.add(hueMin, "8, 22");
         
         hueSlider = new JSlider();
         hueSlider.setPaintTicks(true);
         hueSlider.setPaintLabels(true);
-        panel.add(hueSlider, "12, 24");
+        panel.add(hueSlider, "12, 22");
         
         hueValue = new JTextField();
         hueValue.setText("00000");
         hueValue.setColumns(5);
-        panel.add(hueValue, "14, 24, center, default");
+        panel.add(hueValue, "14, 22, center, default");
         
         hueMax = new JLabel("max");
-        panel.add(hueMax, "18, 24");
+        panel.add(hueMax, "18, 22");
         
         hueDefault = new JLabel("def");
-        panel.add(hueDefault, "22, 24");
+        panel.add(hueDefault, "22, 22");
         
         powerLineFrequency = new JLabel("Power Line Freq.");
-        panel.add(powerLineFrequency, "2, 26, right, default");
+        panel.add(powerLineFrequency, "2, 24, right, default");
         
         powerLineFrequencyAuto = new JCheckBox("");
-        panel.add(powerLineFrequencyAuto, "4, 26");
+        panel.add(powerLineFrequencyAuto, "4, 24");
         
         powerLineFrequencyMin = new JLabel("min");
-        panel.add(powerLineFrequencyMin, "8, 26");
+        panel.add(powerLineFrequencyMin, "8, 24");
         
         powerLineFrequencySlider = new JSlider();
         powerLineFrequencySlider.setPaintTicks(true);
         powerLineFrequencySlider.setPaintLabels(true);
-        panel.add(powerLineFrequencySlider, "12, 26");
+        panel.add(powerLineFrequencySlider, "12, 24");
         
         powerLineFrequencyValue = new JTextField();
         powerLineFrequencyValue.setText("00000");
         powerLineFrequencyValue.setColumns(5);
-        panel.add(powerLineFrequencyValue, "14, 26, center, default");
+        panel.add(powerLineFrequencyValue, "14, 24, center, default");
         
         powerLineFrequencyMax = new JLabel("max");
-        panel.add(powerLineFrequencyMax, "18, 26");
+        panel.add(powerLineFrequencyMax, "18, 24");
         
         powerLineFrequencyDefault = new JLabel("def");
-        panel.add(powerLineFrequencyDefault, "22, 26");
+        panel.add(powerLineFrequencyDefault, "22, 24");
 
         saturation = new JLabel("Saturation");
-        panel.add(saturation, "2, 28, right, default");
+        panel.add(saturation, "2, 26, right, default");
 
         saturationAuto = new JCheckBox("");
-        panel.add(saturationAuto, "4, 28");
+        panel.add(saturationAuto, "4, 26");
 
         saturationMin = new JLabel("min");
-        panel.add(saturationMin, "8, 28");
+        panel.add(saturationMin, "8, 26");
 
         saturationSlider = new JSlider();
         saturationSlider.setPaintTicks(true);
         saturationSlider.setPaintLabels(true);
-        panel.add(saturationSlider, "12, 28");
+        panel.add(saturationSlider, "12, 26");
 
         saturationValue = new JTextField();
         saturationValue.setText("00000");
         saturationValue.setColumns(5);
-        panel.add(saturationValue, "14, 28, center, default");
+        panel.add(saturationValue, "14, 26, center, default");
 
         saturationMax = new JLabel("max");
-        panel.add(saturationMax, "18, 28");
+        panel.add(saturationMax, "18, 26");
 
         saturationDefault = new JLabel("def");
-        panel.add(saturationDefault, "22, 28");
+        panel.add(saturationDefault, "22, 26");
         
         sharpness = new JLabel("Sharpness");
-        panel.add(sharpness, "2, 30, right, default");
+        panel.add(sharpness, "2, 28, right, default");
         
         sharpnessAuto = new JCheckBox("");
-        panel.add(sharpnessAuto, "4, 30");
+        panel.add(sharpnessAuto, "4, 28");
         
         sharpnessMin = new JLabel("min");
-        panel.add(sharpnessMin, "8, 30");
+        panel.add(sharpnessMin, "8, 28");
         
         sharpnessSlider = new JSlider();
         sharpnessSlider.setPaintTicks(true);
         sharpnessSlider.setPaintLabels(true);
-        panel.add(sharpnessSlider, "12, 30");
+        panel.add(sharpnessSlider, "12, 28");
         
         sharpnessValue = new JTextField();
         sharpnessValue.setText("00000");
         sharpnessValue.setColumns(5);
-        panel.add(sharpnessValue, "14, 30, center, default");
+        panel.add(sharpnessValue, "14, 28, center, default");
         
         sharpnessMax = new JLabel("max");
-        panel.add(sharpnessMax, "18, 30");
+        panel.add(sharpnessMax, "18, 28");
         
         sharpnessDefault = new JLabel("def");
-        panel.add(sharpnessDefault, "22, 30");
+        panel.add(sharpnessDefault, "22, 28");
 
         whiteBalance = new JLabel("White Balance");
-        panel.add(whiteBalance, "2, 32, right, default");
+        panel.add(whiteBalance, "2, 30, right, default");
 
         whiteBalanceAuto = new JCheckBox("");
-        panel.add(whiteBalanceAuto, "4, 32, center, default");
+        panel.add(whiteBalanceAuto, "4, 30, center, default");
 
         whiteBalanceMin = new JLabel("min");
-        panel.add(whiteBalanceMin, "8, 32, center, default");
+        panel.add(whiteBalanceMin, "8, 30, center, default");
 
         whiteBalanceSlider = new JSlider();
         whiteBalanceSlider.setPaintTicks(true);
         whiteBalanceSlider.setPaintLabels(true);
-        panel.add(whiteBalanceSlider, "12, 32, center, default");
+        panel.add(whiteBalanceSlider, "12, 30, center, default");
 
         whiteBalanceValue = new JTextField();
         whiteBalanceValue.setText("00000");
         whiteBalanceValue.setColumns(5);
-        panel.add(whiteBalanceValue, "14, 32, center, default");
+        panel.add(whiteBalanceValue, "14, 30, center, default");
 
         whiteBalanceMax = new JLabel("max");
-        panel.add(whiteBalanceMax, "18, 32, center, default");
+        panel.add(whiteBalanceMax, "18, 30, center, default");
 
         focus = new JLabel("Focus");
-        panel.add(focus, "2, 18, right, default");
+        panel.add(focus, "2, 16, right, default");
 
         focusAuto = new JCheckBox("");
-        panel.add(focusAuto, "4, 18, center, default");
+        panel.add(focusAuto, "4, 16, center, default");
 
         focusMin = new JLabel("min");
-        panel.add(focusMin, "8, 18, center, default");
+        panel.add(focusMin, "8, 16, center, default");
 
         focusSlider = new JSlider();
         focusSlider.setPaintTicks(true);
         focusSlider.setPaintLabels(true);
-        panel.add(focusSlider, "12, 18, center, default");
+        panel.add(focusSlider, "12, 16, center, default");
 
         focusValue = new JTextField();
         focusValue.setText("00000");
         focusValue.setColumns(5);
-        panel.add(focusValue, "14, 18, center, default");
+        panel.add(focusValue, "14, 16, center, default");
 
         focusMax = new JLabel("max");
-        panel.add(focusMax, "18, 18, center, default");
+        panel.add(focusMax, "18, 16, center, default");
 
         whiteBalanceDefault = new JLabel("def");
-        panel.add(whiteBalanceDefault, "22, 32");
+        panel.add(whiteBalanceDefault, "22, 30");
 
         zoom = new JLabel("Zoom");
-        panel.add(zoom, "2, 34, right, default");
+        panel.add(zoom, "2, 32, right, default");
 
         zoomAuto = new JCheckBox("");
-        panel.add(zoomAuto, "4, 34, center, default");
+        panel.add(zoomAuto, "4, 32, center, default");
 
         zoomMin = new JLabel("min");
-        panel.add(zoomMin, "8, 34, center, default");
+        panel.add(zoomMin, "8, 32, center, default");
 
         zoomSlider = new JSlider();
         zoomSlider.setPaintTicks(true);
         zoomSlider.setPaintLabels(true);
-        panel.add(zoomSlider, "12, 34, center, default");
+        panel.add(zoomSlider, "12, 32, center, default");
 
         zoomValue = new JTextField();
         zoomValue.setText("00000");
         zoomValue.setColumns(5);
-        panel.add(zoomValue, "14, 34, center, default");
+        panel.add(zoomValue, "14, 32, center, default");
 
         zoomMax = new JLabel("max");
-        panel.add(zoomMax, "18, 34, center, default");
+        panel.add(zoomMax, "18, 32, center, default");
 
         gain = new JLabel("Gain");
-        panel.add(gain, "2, 20, right, default");
+        panel.add(gain, "2, 18, right, default");
 
         gainAuto = new JCheckBox("");
-        panel.add(gainAuto, "4, 20, center, default");
+        panel.add(gainAuto, "4, 18, center, default");
 
         gainMin = new JLabel("min");
-        panel.add(gainMin, "8, 20, center, default");
+        panel.add(gainMin, "8, 18, center, default");
 
         gainSlider = new JSlider();
         gainSlider.setPaintTicks(true);
         gainSlider.setPaintLabels(true);
-        panel.add(gainSlider, "12, 20, center, default");
+        panel.add(gainSlider, "12, 18, center, default");
 
         gainValue = new JTextField();
         gainValue.setText("00000");
         gainValue.setColumns(5);
-        panel.add(gainValue, "14, 20, center, default");
+        panel.add(gainValue, "14, 18, center, default");
 
         gainMax = new JLabel("max");
-        panel.add(gainMax, "18, 20, center, default");
+        panel.add(gainMax, "18, 18, center, default");
 
         zoomDefault = new JLabel("def");
-        panel.add(zoomDefault, "22, 34");
+        panel.add(zoomDefault, "22, 32");
 
         deviceCb.addActionListener(l -> {
             formatCb.removeAllItems();
@@ -604,12 +593,8 @@ public class OpenPnpCaptureCameraConfigurationWizard extends ReferenceCameraConf
     public void createBindings() {
         super.createBindings();
 
-        IntegerConverter intConverter = new IntegerConverter();
-
         addWrappedBinding(camera, "device", deviceCb, "selectedItem");
         addWrappedBinding(camera, "format", formatCb, "selectedItem");
-
-        addWrappedBinding(camera, "fps", fps, "text", intConverter);
 
         bindProperty("backLightCompensation", backLightCompensationAuto, backLightCompensationMin, 
                 backLightCompensationMax, backLightCompensationSlider,
@@ -633,8 +618,6 @@ public class OpenPnpCaptureCameraConfigurationWizard extends ReferenceCameraConf
         bindProperty("whiteBalance", whiteBalanceAuto, whiteBalanceMin, whiteBalanceMax,
                 whiteBalanceSlider, whiteBalance, whiteBalanceValue, whiteBalanceDefault);
         bindProperty("zoom", zoomAuto, zoomMin, zoomMax, zoomSlider, zoom, zoomValue, zoomDefault);
-
-        ComponentDecorators.decorateWithAutoSelect(fps);
     }
 
     private void bindProperty(String property, JCheckBox auto, JLabel min, JLabel max,
