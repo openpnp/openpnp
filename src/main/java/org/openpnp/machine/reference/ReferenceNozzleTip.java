@@ -596,10 +596,25 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             
             /* convert from polar coords to xy cartesian offset values
              * https://blog.demofox.org/2013/10/12/converting-to-and-from-polar-spherical-coordinates-made-easy/
-             * TODO: check whether the centerX/Y value should not be added here. maybe this introduces an error if the position of the bottom camera is not set well?
+             * 
+			 * TODO: check whether the centerX/Y value should not be added here. maybe this introduces an error if the position of the bottom camera is not set well?
+			 * TODO done: okay, if the bottom camera position is not 100% correct, then adding .centerXY introduces an error while placing parts
+			 * Looking to the nozzle tip through the bottom camera of course shows a well centered nozzle if .centerXY would be added to the offset.
+			 * But the goal was to cancel out the runout only.
+			 * How did I test whether .centerXY should be added or not?
+			 *  - Modified the bottom camera position by x -= 1mm.
+			 *  - Calibrated the nozzle tip
+			 *  - went to a placement location
+			 *  - nozzle tip was off by 1 mm
+			 * 
+			 * In general of course, the bottom camera position should be calibrated well, otherwise the visioned parts align not well on pcb.
+			 * Note:
+			 *  - Maybe one day some fancy algorithm can hint the user if bottom cam / nozzle offset or similar seems to be off...
+			 *  - For what can the .centerXY values be useful?
+			 *      
              */
-            double offsetX = nozzleEccentricity.centerX + (nozzleEccentricity.radius * Math.cos(angle));
-            double offsetY = nozzleEccentricity.centerY + (nozzleEccentricity.radius * Math.sin(angle));
+            double offsetX = /*nozzleEccentricity.centerX +*/ (nozzleEccentricity.radius * Math.cos(angle));
+            double offsetY = /*nozzleEccentricity.centerY +*/ (nozzleEccentricity.radius * Math.sin(angle));
         	
             /*
              * thought: the eccentricity-values (centerX/Y) are the offset to the downlooking cam and can be an hint for
