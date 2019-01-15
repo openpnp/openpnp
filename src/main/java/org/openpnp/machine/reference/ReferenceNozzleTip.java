@@ -381,7 +381,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         private CvPipeline pipeline = createDefaultPipeline();
 
         @Attribute(required = false)
-        private double angleIncrement = 15;
+        private double angleIncrement = 60;
         
         @Attribute(required = false)
         private boolean enabled;
@@ -598,7 +598,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
              * https://blog.demofox.org/2013/10/12/converting-to-and-from-polar-spherical-coordinates-made-easy/
              * 
 			 * TODO: check whether the centerX/Y value should not be added here. maybe this introduces an error if the position of the bottom camera is not set well?
-			 * TODO done: okay, if the bottom camera position is not 100% correct, then adding .centerXY introduces an error while placing parts
+			 * TODO done: okay, if the bottom camera position is not 100% correct, then adding .centerXY introduces an error while placing parts,
+			 * since all locations are then tied to the bottom camera as reference.
 			 * Looking to the nozzle tip through the bottom camera of course shows a well centered nozzle if .centerXY would be added to the offset.
 			 * But the goal was to cancel out the runout only.
 			 * How did I test whether .centerXY should be added or not?
@@ -611,7 +612,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 			 * Note:
 			 *  - Maybe one day some fancy algorithm can hint the user if bottom cam / nozzle offset or similar seems to be off...
 			 *  - For what can the .centerXY values be useful?
-			 *      
+			 * 
+ 			 * Think about it more, maybe the centerXY should be included again, since otherwise the parts placed with vision enabled would be placed wrong - and that's not the case.
+ 			 * So would one benefit more from including the .centerXY to the offset? 
              */
             double offsetX = /*nozzleEccentricity.centerX +*/ (nozzleEccentricity.radius * Math.cos(angle));
             double offsetY = /*nozzleEccentricity.centerY +*/ (nozzleEccentricity.radius * Math.sin(angle));
