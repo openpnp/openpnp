@@ -491,8 +491,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         		double differenceAngle = angle-measuredAngle;
         		
         		// atan2 outputs angles from -PI to +PI. If one wants positive values, one needs to add +PI to negative values
-        		if(differenceAngle<0) {
+        		if(differenceAngle < 0) {
         			differenceAngle += 360;
+        		}
+        		if(differenceAngle > 360) {
+        			// since calculating the difference angle in some circumstances the angle can be bigger than 360 -> subtract
+        			differenceAngle -= 360;
         		}
         		
         		System.out.println("[runoutFix]differenceAngle " + differenceAngle);
