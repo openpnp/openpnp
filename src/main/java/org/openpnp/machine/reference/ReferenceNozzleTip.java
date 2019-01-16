@@ -625,9 +625,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 			 * 
  			 * Think about it more, maybe the centerXY should be included again, since otherwise the parts placed with vision enabled would be placed wrong - and that's not the case.
  			 * So would one benefit more from including the .centerXY to the offset? 
+ 			 * -> okay, added the centerXY values again, since that is what bottom vision would do and it's what the user expects. it aligns the parts as if they were visioned.
+ 			 * (this whole comment might go away later)
              */
-            double offsetX = /*nozzleEccentricity.centerX +*/ (nozzleEccentricity.radius * Math.cos(angle));
-            double offsetY = /*nozzleEccentricity.centerY +*/ (nozzleEccentricity.radius * Math.sin(angle));
+            double offsetX = nozzleEccentricity.centerX + (nozzleEccentricity.radius * Math.cos(angle));
+            double offsetY = nozzleEccentricity.centerY + (nozzleEccentricity.radius * Math.sin(angle));
 
             return new Location(LengthUnit.Millimeters, offsetX, offsetY, 0, 0);
         }
