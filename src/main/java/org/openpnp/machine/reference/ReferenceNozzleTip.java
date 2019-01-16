@@ -2,6 +2,7 @@ package org.openpnp.machine.reference;
 
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -484,10 +485,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 
                 Logger.debug("[runoutFix]calculated nozzleEccentricity: {}", this.toString());
 	        }
-			
-            public double getPhaseShift() {
-				return phaseShift;
-			}
 
             private void calcPhaseShift(List<Location> nozzleTipMeasuredLocations) {
             	/*
@@ -573,7 +570,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         	/* TODO:
         	 * a) check whether it works correct for limited head movement (+-180°)
         	 * b) add plausibility checks
-        	 * c) if one measurement fails, one could retry of skip that silently if enough valid measurements are still available 
+        	 * c) if one measurement fails, one could retry or skip that silently if enough valid measurements are still available 
         	 */
         	
             if (!isEnabled()) {
@@ -598,6 +595,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 // move nozzle to the camera location at zero degree - the nozzle must not necessarily be at the center
                 MovableUtils.moveToLocationAtSafeZ(nozzle, measureBaseLocation);
 
+
+                HashMap<String, Object> params = new HashMap<>();
+                params.put("nozzle", nozzle);
+                params.put("camera", camera);
+                Configuration.get().getScripting().on("NozzleCalibration.Starting", params);
+                
                 // Capture nozzle tip positions and add them to a list. For these calcs the camera location is considered to be 0/0
                 List<Location> nozzleTipMeasuredLocations = new ArrayList<>();
                 for (double measureAngle = 0; measureAngle < 360; measureAngle += angleIncrement) {	// hint: if nozzle is limited to +-180° this is respected in .moveTo automatically
@@ -618,6 +621,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 }
                 
                 System.out.println("[runoutFix]measured offsets: " + nozzleTipMeasuredLocations);
+                
+                Configuration.get().getScripting().on("NozzleCalibration.Finished", params);
                 
             	
                 this.nozzleEccentricity = new ModelRunout(nozzleTipMeasuredLocations);
