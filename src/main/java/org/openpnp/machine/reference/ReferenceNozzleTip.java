@@ -360,17 +360,191 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Root
     public static class Calibration {
-        public static class Circle {
-            final double centerX;
-            final double centerY;
-            final double radius;
+        public static class ModelRunout {
+        	List<Location> nozzleTipMeasuredLocations;
+        	
+            double centerX;
+            double centerY;
+            double radius;
+            
+            double phaseShift;
 
-            public Circle(double centerX, double centerY, double radius) {
-                this.centerX = centerX;
-                this.centerY = centerY;
-                this.radius = radius;
+			public ModelRunout(List<Location> nozzleTipMeasuredLocations) {
+				//store data for possible later usage
+				this.nozzleTipMeasuredLocations = nozzleTipMeasuredLocations;
+				
+				// first calculate the circle fit and store the values to centerXY and radius
+				// the measured offsets describe a circle with the rotational axis as the center, the runout is the circle radius
+				this.calcCircleFitKasa(nozzleTipMeasuredLocations);
+				
+				// afterwards calc the phaseShift angle mapping
+				this.calcPhaseShift(nozzleTipMeasuredLocations);
+				
+
+                
             }
+			
+			/* function to calc the model based offset in cartesian coordinates */
+			public Location getOffset(double angle) {
 
+	            //add phase shift
+	            angle = angle - this.phaseShift;
+	            
+	            angle = Math.toRadians(angle);
+	            
+	            /* convert from polar coords to xy cartesian offset values
+	             * https://blog.demofox.org/2013/10/12/converting-to-and-from-polar-spherical-coordinates-made-easy/
+	             * 
+				 * TODO: check whether the centerX/Y value should not be added here. maybe this introduces an error if the position of the bottom camera is not set well?
+				 * TODO done: okay, if the bottom camera position is not 100% correct, then adding .centerXY introduces an error while placing parts,
+				 * since all locations are then tied to the bottom camera as reference.
+				 * Looking to the nozzle tip through the bottom camera of course shows a well centered nozzle if .centerXY would be added to the offset.
+				 * But the goal was to cancel out the runout only.
+				 * How did I test whether .centerXY should be added or not?
+				 *  - Modified the bottom camera position by x -= 1mm.
+				 *  - Calibrated the nozzle tip
+				 *  - went to a placement location
+				 *  - nozzle tip was off by 1 mm
+				 * 
+				 * In general of course, the bottom camera position should be calibrated well, otherwise the visioned parts align not well on pcb.
+				 * Note:
+				 *  - Maybe one day some fancy algorithm can hint the user if bottom cam / nozzle offset or similar seems to be off...
+				 *  - For what can the .centerXY values be useful?
+				 * 
+	 			 * Think about it more, maybe the centerXY should be included again, since otherwise the parts placed with vision enabled would be placed wrong - and that's not the case.
+	 			 * So would one benefit more from including the .centerXY to the offset? 
+	 			 * -> okay, added the centerXY values again, since that is what bottom vision would do and it's what the user expects. it aligns the parts as if they were visioned.
+	 			 * (this whole comment might go away later)
+	             */
+	            double offsetX = this.centerX + (this.radius * Math.cos(angle));
+	            double offsetY = this.centerY + (this.radius * Math.sin(angle));
+
+	            return new Location(LengthUnit.Millimeters, offsetX, offsetY, 0, 0);
+			}
+			
+	        private void calcCircleFitKasa(List<Location> nozzleTipMeasuredLocations) {
+	        	/* 
+	        	 * this function fits a circle my means of the Kasa Method to the given List<Location>.
+	        	 * this is a java port of http://people.cas.uab.edu/~mosya/cl/CPPcircle.html 
+	        	 * The Kasa method should work well for this purpose since the measured locations are captured along a full circle
+	        	 */
+	    		int n;
+
+	    	    double kasaXi,kasaYi,kasaZi;
+	    	    double kasaMxy,kasaMxx,kasaMyy,kasaMxz,kasaMyz;
+	    	    double kasaB,kasaC,kasaG11,kasaG12,kasaG22,kasaD1,kasaD2;
+	    	    double kasaMeanX=0.0, kasaMeanY=0.0;
+	    	    
+	    	    n = nozzleTipMeasuredLocations.size();
+
+	            Iterator<Location> nozzleTipMeasuredLocationsIterator = nozzleTipMeasuredLocations.iterator();
+	    		while (nozzleTipMeasuredLocationsIterator.hasNext()) {
+	    			Location measuredLocation = nozzleTipMeasuredLocationsIterator.next();
+	    			kasaMeanX += measuredLocation.getX();
+	    			kasaMeanY += measuredLocation.getY();
+	    		}
+	    		kasaMeanX = kasaMeanX / (double)nozzleTipMeasuredLocations.size();
+	    		kasaMeanY = kasaMeanY / (double)nozzleTipMeasuredLocations.size();
+	    		
+	    	    kasaMxx=kasaMyy=kasaMxy=kasaMxz=kasaMyz=0.;
+
+	    	    for (int i = 0; i < n; i++) {
+	    	        kasaXi = nozzleTipMeasuredLocations.get(i).getX() - kasaMeanX;   //  centered x-coordinates
+	    	        kasaYi = nozzleTipMeasuredLocations.get(i).getY() - kasaMeanY;   //  centered y-coordinates
+	    	        kasaZi = kasaXi*kasaXi + kasaYi*kasaYi;
+
+	    	        kasaMxx += kasaXi*kasaXi;
+	    	        kasaMyy += kasaYi*kasaYi;
+	    	        kasaMxy += kasaXi*kasaYi;
+	    	        kasaMxz += kasaXi*kasaZi;
+	    	        kasaMyz += kasaYi*kasaZi;
+	    	    }
+	    	    kasaMxx /= n;
+	    	    kasaMyy /= n;
+	    	    kasaMxy /= n;
+	    	    kasaMxz /= n;
+	    	    kasaMyz /= n;
+
+		    	// solving system of equations by Cholesky factorization
+	    	    kasaG11 = Math.sqrt(kasaMxx);
+	    	    kasaG12 = kasaMxy / kasaG11;
+	    	    kasaG22 = Math.sqrt(kasaMyy - kasaG12 * kasaG12);
+
+	    	    kasaD1 = kasaMxz / kasaG11;
+	    	    kasaD2 = (kasaMyz - kasaD1*kasaG12)/kasaG22;
+
+	    	    // computing parameters of the fitting circle
+	    	    kasaC = kasaD2/kasaG22/2.0;
+	    	    kasaB = (kasaD1 - kasaG12*kasaC)/kasaG11/2.0;
+	    	    
+	    	    // assembling the output
+	    	    this.centerX = kasaB + kasaMeanX;
+                this.centerY = kasaC + kasaMeanY;
+                this.radius = Math.sqrt(kasaB*kasaB + kasaC*kasaC + kasaMxx + kasaMyy);
+                
+                Logger.debug("[runoutFix]calculated nozzleEccentricity: {}", this.toString());
+	        }
+			
+            public double getPhaseShift() {
+				return phaseShift;
+			}
+
+            private void calcPhaseShift(List<Location> nozzleTipMeasuredLocations) {
+            	/*
+            	 * The phaseShift is calculated to map the angle the nozzle is located mechanically at
+            	 * (that is what openpnp shows in the DRO) to the angle, the nozzle tip is located wrt. to the
+            	 * centered circle runout path.
+            	 * With the phaseShift available, the calibration offset can be calculated analytically for every
+            	 * location/rotation even if not captured while measured (stepped by angleIncrement)
+            	 * 
+            	 */
+            	double phaseShift = 0;
+            	
+            	double angle=0;
+            	double measuredAngle=0;
+            	double differenceAngleMean=0;
+            	
+
+                Iterator<Location> nozzleTipMeasuredLocationsIterator = nozzleTipMeasuredLocations.iterator();
+        		while (nozzleTipMeasuredLocationsIterator.hasNext()) {
+        			Location measuredLocation = nozzleTipMeasuredLocationsIterator.next();
+        			
+        			// get the measurement rotation
+            		angle = measuredLocation.getRotation();		// the angle at which the measurement was made was stored to the nozzleTipMeasuredLocation into the rotation attribute
+            		
+            		// move the offset-location by the centerY/centerY. by this all offset-locations are wrt. the 0/0 origin
+            		Location centeredLocation = measuredLocation.subtract(new Location(LengthUnit.Millimeters,this.centerX,this.centerY,0.,0.));
+            		
+            		// calculate the angle, the nozzle tip is located at
+            		measuredAngle=Math.toDegrees(Math.atan2(centeredLocation.getY(), centeredLocation.getX()));
+            		
+            		// the difference is the phaseShift
+            		double differenceAngle = angle-measuredAngle;
+            		
+            		// atan2 outputs angles from -PI to +PI. If one wants positive values, one needs to add +PI to negative values
+            		if(differenceAngle < 0) {
+            			differenceAngle += 360;
+            		}
+            		if(differenceAngle > 360) {
+            			// since calculating the difference angle in some circumstances the angle can be bigger than 360 -> subtract
+            			differenceAngle -= 360;
+            		}
+            		
+            		System.out.println("[runoutFix]differenceAngle " + differenceAngle);
+            		
+            		// sum up all differenceAngles to build the average later
+            		differenceAngleMean += differenceAngle;
+        		}
+            	
+        		// calc the average
+            	phaseShift = differenceAngleMean / nozzleTipMeasuredLocations.size();
+                
+            	this.phaseShift = phaseShift;
+            	
+            	Logger.debug("[runoutFix]calculated phaseShift: {}", this.phaseShift);
+            }
+            
+            
             @Override
             public String toString() {
                 return "centerX: " + centerX + " centerY: " + centerY + " radius: " + radius;
@@ -388,8 +562,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         
         private boolean calibrating;
         
-        private Circle nozzleEccentricity = null;
-        double phaseShift;
+        private ModelRunout nozzleEccentricity = null;
 
         
         /* The reworked calibration routine will fit a circle into the runout nozzle path.
@@ -446,15 +619,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 
                 System.out.println("[runoutFix]measured offsets: " + nozzleTipMeasuredLocations);
                 
-            	// the measured offsets describe a circle with the rotational axis as the center, the runout is the circle radius
-                this.nozzleEccentricity = this.calcCircleFitKasa(nozzleTipMeasuredLocations);
-                Logger.debug("[runoutFix]calculated nozzleEccentricity: {}", this.nozzleEccentricity);
+            	
+                this.nozzleEccentricity = new ModelRunout(nozzleTipMeasuredLocations);
                 
-                // now calc the phase shift for angle mapping on moves
-                this.phaseShift = this.calcPhaseShift(nozzleTipMeasuredLocations);
-                Logger.debug("[runoutFix]calculated phaseShift: {}", this.phaseShift);
-                
-                nozzle.moveToSafeZ();
             }
             finally {
                 calibrating = false;
@@ -464,122 +631,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
         }
         
-        public double calcPhaseShift(List<Location> nozzleTipMeasuredLocations) {
-        	/*
-        	 * The phaseShift is calculated to map the angle the nozzle is located mechanically at
-        	 * (that is what openpnp shows in the DRO) to the angle, the nozzle tip is located wrt. to the
-        	 * centered circle runout path.
-        	 * With the phaseShift available, the calibration offset can be calculated analytically for every
-        	 * location/rotation even if not captured while measured (stepped by angleIncrement)
-        	 * 
-        	 */
-        	double phaseShift = 0;
-        	
-        	double angle=0;
-        	double measuredAngle=0;
-        	double differenceAngleMean=0;
-        	
-
-            Iterator<Location> nozzleTipMeasuredLocationsIterator = nozzleTipMeasuredLocations.iterator();
-    		while (nozzleTipMeasuredLocationsIterator.hasNext()) {
-    			Location measuredLocation = nozzleTipMeasuredLocationsIterator.next();
-    			
-    			// get the measurement rotation
-        		angle = measuredLocation.getRotation();		// the angle at which the measurement was made was stored to the nozzleTipMeasuredLocation into the rotation attribute
-        		
-        		// move the offset-location by the centerY/centerY. by this all offset-locations are wrt. the 0/0 origin
-        		Location centeredLocation = measuredLocation.subtract(new Location(LengthUnit.Millimeters,this.nozzleEccentricity.centerX,this.nozzleEccentricity.centerY,0.,0.));
-        		
-        		// calculate the angle, the nozzle tip is located at
-        		measuredAngle=Math.toDegrees(Math.atan2(centeredLocation.getY(), centeredLocation.getX()));
-        		
-        		// the difference is the phaseShift
-        		double differenceAngle = angle-measuredAngle;
-        		
-        		// atan2 outputs angles from -PI to +PI. If one wants positive values, one needs to add +PI to negative values
-        		if(differenceAngle < 0) {
-        			differenceAngle += 360;
-        		}
-        		if(differenceAngle > 360) {
-        			// since calculating the difference angle in some circumstances the angle can be bigger than 360 -> subtract
-        			differenceAngle -= 360;
-        		}
-        		
-        		System.out.println("[runoutFix]differenceAngle " + differenceAngle);
-        		
-        		// sum up all differenceAngles to build the average later
-        		differenceAngleMean += differenceAngle;
-    		}
-        	
-    		// calc the average
-        	phaseShift = differenceAngleMean / nozzleTipMeasuredLocations.size();
-        	System.out.println("[runoutFix]phaseShift " + phaseShift);
-        	
-        	return phaseShift;
-        }
-        
-        public Circle calcCircleFitKasa(List<Location> nozzleTipMeasuredLocations) {
-        	/* 
-        	 * this function fits a circle my means of the Kasa Method to the given List<Location>.
-        	 * this is a java port of http://people.cas.uab.edu/~mosya/cl/CPPcircle.html 
-        	 * The Kasa method should work well for this purpose since the measured locations are captured along a full circle
-        	 */
-    		int n;
-
-    	    double kasaXi,kasaYi,kasaZi;
-    	    double kasaMxy,kasaMxx,kasaMyy,kasaMxz,kasaMyz;
-    	    double kasaB,kasaC,kasaG11,kasaG12,kasaG22,kasaD1,kasaD2;
-    	    double kasaMeanX=0.0, kasaMeanY=0.0;
-    	    
-    	    Circle nozzleEccentricity = null;
-    	    n = nozzleTipMeasuredLocations.size();
-
-            Iterator<Location> nozzleTipMeasuredLocationsIterator = nozzleTipMeasuredLocations.iterator();
-    		while (nozzleTipMeasuredLocationsIterator.hasNext()) {
-    			Location measuredLocation = nozzleTipMeasuredLocationsIterator.next();
-    			kasaMeanX += measuredLocation.getX();
-    			kasaMeanY += measuredLocation.getY();
-    		}
-    		kasaMeanX = kasaMeanX / (double)nozzleTipMeasuredLocations.size();
-    		kasaMeanY = kasaMeanY / (double)nozzleTipMeasuredLocations.size();
-    		
-    	    kasaMxx=kasaMyy=kasaMxy=kasaMxz=kasaMyz=0.;
-
-    	    for (int i = 0; i < n; i++) {
-    	        kasaXi = nozzleTipMeasuredLocations.get(i).getX() - kasaMeanX;   //  centered x-coordinates
-    	        kasaYi = nozzleTipMeasuredLocations.get(i).getY() - kasaMeanY;   //  centered y-coordinates
-    	        kasaZi = kasaXi*kasaXi + kasaYi*kasaYi;
-
-    	        kasaMxx += kasaXi*kasaXi;
-    	        kasaMyy += kasaYi*kasaYi;
-    	        kasaMxy += kasaXi*kasaYi;
-    	        kasaMxz += kasaXi*kasaZi;
-    	        kasaMyz += kasaYi*kasaZi;
-    	    }
-    	    kasaMxx /= n;
-    	    kasaMyy /= n;
-    	    kasaMxy /= n;
-    	    kasaMxz /= n;
-    	    kasaMyz /= n;
-
-	    	// solving system of equations by Cholesky factorization
-    	    kasaG11 = Math.sqrt(kasaMxx);
-    	    kasaG12 = kasaMxy / kasaG11;
-    	    kasaG22 = Math.sqrt(kasaMyy - kasaG12 * kasaG12);
-
-    	    kasaD1 = kasaMxz / kasaG11;
-    	    kasaD2 = (kasaMyz - kasaD1*kasaG12)/kasaG22;
-
-    	    // computing parameters of the fitting circle
-    	    kasaC = kasaD2/kasaG22/2.0;
-    	    kasaB = (kasaD1 - kasaG12*kasaC)/kasaG11/2.0;
-    	    
-    	    // assembling the output
-    	    nozzleEccentricity = new Circle( kasaB + kasaMeanX, kasaC + kasaMeanY, Math.sqrt(kasaB*kasaB + kasaC*kasaC + kasaMxx + kasaMyy));
-            
-    	    return nozzleEccentricity;
-        }
-
         /*
          * While calibrating the nozzle a circle was fitted to the runout path of the tip.
          * here the offset is reconstructed in XY-cartesian coordinates to be applied in moveTo commands.
@@ -599,39 +650,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 angle -= 360;
             }
             
-            //add phase shift
-            angle = angle - this.phaseShift;
+            return this.nozzleEccentricity.getOffset(angle);
             
-            angle = Math.toRadians(angle);
-            
-            /* convert from polar coords to xy cartesian offset values
-             * https://blog.demofox.org/2013/10/12/converting-to-and-from-polar-spherical-coordinates-made-easy/
-             * 
-			 * TODO: check whether the centerX/Y value should not be added here. maybe this introduces an error if the position of the bottom camera is not set well?
-			 * TODO done: okay, if the bottom camera position is not 100% correct, then adding .centerXY introduces an error while placing parts,
-			 * since all locations are then tied to the bottom camera as reference.
-			 * Looking to the nozzle tip through the bottom camera of course shows a well centered nozzle if .centerXY would be added to the offset.
-			 * But the goal was to cancel out the runout only.
-			 * How did I test whether .centerXY should be added or not?
-			 *  - Modified the bottom camera position by x -= 1mm.
-			 *  - Calibrated the nozzle tip
-			 *  - went to a placement location
-			 *  - nozzle tip was off by 1 mm
-			 * 
-			 * In general of course, the bottom camera position should be calibrated well, otherwise the visioned parts align not well on pcb.
-			 * Note:
-			 *  - Maybe one day some fancy algorithm can hint the user if bottom cam / nozzle offset or similar seems to be off...
-			 *  - For what can the .centerXY values be useful?
-			 * 
- 			 * Think about it more, maybe the centerXY should be included again, since otherwise the parts placed with vision enabled would be placed wrong - and that's not the case.
- 			 * So would one benefit more from including the .centerXY to the offset? 
- 			 * -> okay, added the centerXY values again, since that is what bottom vision would do and it's what the user expects. it aligns the parts as if they were visioned.
- 			 * (this whole comment might go away later)
-             */
-            double offsetX = nozzleEccentricity.centerX + (nozzleEccentricity.radius * Math.cos(angle));
-            double offsetY = nozzleEccentricity.centerY + (nozzleEccentricity.radius * Math.sin(angle));
-
-            return new Location(LengthUnit.Millimeters, offsetX, offsetY, 0, 0);
         }
 
         private Location findCircle() throws Exception {
