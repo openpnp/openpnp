@@ -643,28 +643,18 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 if (result instanceof List) {
                     if (((List) result).get(0) instanceof Result.Circle) {
                     	Result.Circle circle = ((List<Result.Circle>) result).get(0);
-                    	//TODO: has this list to be sorted? best match should be taken. but what is the best match? in best case, the pipeline returns always just one result
-                    	//in every case: one can't use the shortest distance to the camera center any more, since that will not be the best match
+                    	//TODO: the user has to be informed, that the pipeline should return only one result. this can be ensured by proper setting the pipeline (min/max nozzle diameter e.g.)
                         location = VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y);
-                        
-                    }
-                    else if (((List) result).get(0) instanceof KeyPoint) {
-                        KeyPoint keyPoint = ((List<KeyPoint>) result).get(0);
-                        location = VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x, keyPoint.pt.y);
                     }
                     else {
                         throw new Exception("Unrecognized result " + result);
                     }
                 }
-                else if (result instanceof RotatedRect) {
-                    RotatedRect rect = (RotatedRect) result;
-                    location = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
-                }
                 else {
                     throw new Exception("Unrecognized result " + result);
                 }
                 MainFrame.get().get().getCameraViews().getCameraView(camera).showFilteredImage(
-                        OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
+                        OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 1000);
                 return location;
             }
         }
