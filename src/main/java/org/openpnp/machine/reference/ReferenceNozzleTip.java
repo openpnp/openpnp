@@ -364,10 +364,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Root
     public static class Calibration {
-        public enum Looking {
-            Down, Up
-        }
-        
         public static interface RunoutCompensation {
 
             Location getOffset(double angle);
