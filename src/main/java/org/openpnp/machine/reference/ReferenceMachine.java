@@ -116,20 +116,22 @@ public class ReferenceMachine extends AbstractMachine {
     }
 
     public ReferenceMachine() {
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+        Configuration.get()
+                     .addListener(new ConfigurationListener.Adapter() {
 
-            @Override
-            public void configurationLoaded(Configuration configuration) throws Exception {
-                // move any single partAlignments into our list
-                if (partAlignment != null) {
-                    partAlignments.add(partAlignment);
-                    partAlignment = null;
-                }
-                if (partAlignments.isEmpty()) {
-                    partAlignments.add(new ReferenceBottomVision());
-                }
-            }
-        });
+                         @Override
+                         public void configurationLoaded(Configuration configuration)
+                                 throws Exception {
+                             // move any single partAlignments into our list
+                             if (partAlignment != null) {
+                                 partAlignments.add(partAlignment);
+                                 partAlignment = null;
+                             }
+                             if (partAlignments.isEmpty()) {
+                                 partAlignments.add(new ReferenceBottomVision());
+                             }
+                         }
+                     });
     }
 
     @Override
@@ -144,16 +146,19 @@ public class ReferenceMachine extends AbstractMachine {
             try {
                 driver.setEnabled(true);
                 this.enabled = true;
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 fireMachineEnableFailed(e.getMessage());
                 throw e;
             }
             fireMachineEnabled();
-        } else {
+        }
+        else {
             try {
                 driver.setEnabled(false);
                 this.enabled = false;
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 fireMachineDisableFailed(e.getMessage());
                 throw e;
             }
@@ -182,7 +187,8 @@ public class ReferenceMachine extends AbstractMachine {
         children.add(new SimplePropertySheetHolder("Heads", getHeads()));
         children.add(new CamerasPropertySheetHolder(null, "Cameras", getCameras(), null));
         children.add(new ActuatorsPropertySheetHolder(null, "Actuators", getActuators(), null));
-        children.add(new SimplePropertySheetHolder("Driver", Collections.singletonList(getDriver())));
+        children.add(
+                new SimplePropertySheetHolder("Driver", Collections.singletonList(getDriver())));
         children.add(new SimplePropertySheetHolder("Job Processors",
                 Arrays.asList(getPnpJobProcessor()/* , getPasteDispenseJobProcessor() */)));
 
@@ -202,7 +208,7 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] { new PropertySheetWizardAdapter(getConfigurationWizard()) };
+        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
     }
 
     public void registerFeederClass(Class<? extends Feeder> cls) {
@@ -272,13 +278,15 @@ public class ReferenceMachine extends AbstractMachine {
     public void close() throws IOException {
         try {
             driver.close();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
         for (Camera camera : getCameras()) {
             try {
                 camera.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -286,7 +294,8 @@ public class ReferenceMachine extends AbstractMachine {
             for (Camera camera : head.getCameras()) {
                 try {
                     camera.close();
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     e.printStackTrace();
                 }
             }

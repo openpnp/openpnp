@@ -43,13 +43,15 @@ public class ReferenceHead extends AbstractHead {
     protected ReferenceDriver driver;
 
     public ReferenceHead() {
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationLoaded(Configuration configuration) throws Exception {
-                machine = (ReferenceMachine) configuration.getMachine();
-                driver = machine.getDriver();
-            }
-        });
+        Configuration.get()
+                     .addListener(new ConfigurationListener.Adapter() {
+                         @Override
+                         public void configurationLoaded(Configuration configuration)
+                                 throws Exception {
+                             machine = (ReferenceMachine) configuration.getMachine();
+                             driver = machine.getDriver();
+                         }
+                     });
     }
 
     @Override
@@ -84,7 +86,7 @@ public class ReferenceHead extends AbstractHead {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] { new PropertySheetWizardAdapter(getConfigurationWizard()) };
+        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
     }
 
     @Override
