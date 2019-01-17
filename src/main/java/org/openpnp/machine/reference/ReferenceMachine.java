@@ -94,7 +94,7 @@ public class ReferenceMachine extends AbstractMachine {
 
     private boolean enabled;
 
-    private boolean isHomed;
+    private boolean isHomed = false;
 
     private List<Class<? extends Feeder>> registeredFeederClasses = new ArrayList<>();
 
@@ -102,7 +102,7 @@ public class ReferenceMachine extends AbstractMachine {
     protected void commit() {
         super.commit();
     }
-    
+
     public ReferenceDriver getDriver() {
         return driver;
     }
@@ -115,12 +115,11 @@ public class ReferenceMachine extends AbstractMachine {
         this.driver = driver;
     }
 
-    public ReferenceMachine()
-    {
+    public ReferenceMachine() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
 
             @Override
-             public void configurationLoaded(Configuration configuration) throws Exception {
+            public void configurationLoaded(Configuration configuration) throws Exception {
                 // move any single partAlignments into our list
                 if (partAlignment != null) {
                     partAlignments.add(partAlignment);
@@ -145,24 +144,21 @@ public class ReferenceMachine extends AbstractMachine {
             try {
                 driver.setEnabled(true);
                 this.enabled = true;
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 fireMachineEnableFailed(e.getMessage());
                 throw e;
             }
             fireMachineEnabled();
-        }
-        else {
+        } else {
             try {
                 driver.setEnabled(false);
                 this.enabled = false;
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 fireMachineDisableFailed(e.getMessage());
                 throw e;
             }
             fireMachineDisabled("User requested stop.");
-            
+
             // remove homed-flag if machine is disabled
             this.setHomed(false);
         }
@@ -186,14 +182,12 @@ public class ReferenceMachine extends AbstractMachine {
         children.add(new SimplePropertySheetHolder("Heads", getHeads()));
         children.add(new CamerasPropertySheetHolder(null, "Cameras", getCameras(), null));
         children.add(new ActuatorsPropertySheetHolder(null, "Actuators", getActuators(), null));
-        children.add(
-                new SimplePropertySheetHolder("Driver", Collections.singletonList(getDriver())));
+        children.add(new SimplePropertySheetHolder("Driver", Collections.singletonList(getDriver())));
         children.add(new SimplePropertySheetHolder("Job Processors",
                 Arrays.asList(getPnpJobProcessor()/* , getPasteDispenseJobProcessor() */)));
 
         List<PropertySheetHolder> vision = new ArrayList<>();
-        for (PartAlignment alignment : getPartAlignments())
-        {
+        for (PartAlignment alignment : getPartAlignments()) {
             vision.add(alignment);
         }
         vision.add(getFiducialLocator());
@@ -208,7 +202,7 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
+        return new PropertySheet[] { new PropertySheetWizardAdapter(getConfigurationWizard()) };
     }
 
     public void registerFeederClass(Class<? extends Feeder> cls) {
@@ -242,7 +236,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(SimulatedUpCamera.class);
         return l;
     }
-    
+
     @Override
     public List<Class<? extends Nozzle>> getCompatibleNozzleClasses() {
         List<Class<? extends Nozzle>> l = new ArrayList<>();
@@ -272,24 +266,19 @@ public class ReferenceMachine extends AbstractMachine {
     public void home() throws Exception {
         Logger.debug("home");
         super.home();
-
-        // if homing went well, set machine homed-flag true
-        this.setHomed(true);
     }
 
     @Override
     public void close() throws IOException {
         try {
             driver.close();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         for (Camera camera : getCameras()) {
             try {
                 camera.close();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -297,14 +286,12 @@ public class ReferenceMachine extends AbstractMachine {
             for (Camera camera : head.getCameras()) {
                 try {
                     camera.close();
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
     }
-
 
     @Override
     public FiducialLocator getFiducialLocator() {
@@ -329,13 +316,14 @@ public class ReferenceMachine extends AbstractMachine {
         this.homeAfterEnabled = newValue;
     }
 
-	@Override
-	public boolean isHomed() {
-		return this.isHomed;
-	}
+    @Override
+    public boolean isHomed() {
+        return this.isHomed;
+    }
 
-	@Override
-	public void setHomed(boolean isHomed) {
-		this.isHomed = isHomed;
-	}
+    @Override
+    public void setHomed(boolean isHomed) {
+        Logger.debug("setHomed({})", isHomed);
+        this.isHomed = isHomed;
+    }
 }

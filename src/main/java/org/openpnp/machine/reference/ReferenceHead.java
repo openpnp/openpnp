@@ -39,7 +39,6 @@ import org.pmw.tinylog.Logger;
 
 public class ReferenceHead extends AbstractHead {
 
-
     protected ReferenceMachine machine;
     protected ReferenceDriver driver;
 
@@ -58,6 +57,9 @@ public class ReferenceHead extends AbstractHead {
         Logger.debug("{}.home()", getName());
         driver.home(this);
         machine.fireMachineHeadActivity(this);
+
+        // if homing went well, set machine homed-flag true
+        machine.setHomed(true);
     }
 
     @Override
@@ -82,7 +84,7 @@ public class ReferenceHead extends AbstractHead {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
+        return new PropertySheet[] { new PropertySheetWizardAdapter(getConfigurationWizard()) };
     }
 
     @Override
