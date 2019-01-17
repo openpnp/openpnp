@@ -43,6 +43,9 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
+import org.openpnp.machine.reference.wizards.ReferenceCameraCalibrationConfigurationWizard;
+import org.openpnp.machine.reference.wizards.ReferenceCameraPositionConfigurationWizard;
+import org.openpnp.machine.reference.wizards.ReferenceCameraTransformsConfigurationWizard;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -541,7 +544,11 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(new CameraConfigurationWizard(this), "General Configuration"),
-                new PropertySheetWizardAdapter(getConfigurationWizard(), "Camera Specific")};
+                new PropertySheetWizardAdapter(getConfigurationWizard(), "Device Settings"),
+                new PropertySheetWizardAdapter(new ReferenceCameraPositionConfigurationWizard(this), "Position"),
+                new PropertySheetWizardAdapter(new ReferenceCameraCalibrationConfigurationWizard(this), "Lens Calibration"),
+                new PropertySheetWizardAdapter(new ReferenceCameraTransformsConfigurationWizard(this), "Image Transforms"),
+        };
     }
     
     @Override

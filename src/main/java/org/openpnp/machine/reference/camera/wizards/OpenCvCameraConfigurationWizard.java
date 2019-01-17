@@ -38,12 +38,12 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera.OpenCvCaptureProperty;
 import org.openpnp.machine.reference.camera.OpenCvCamera.OpenCvCapturePropertyValue;
-import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -54,7 +54,7 @@ import com.jgoodies.forms.layout.RowSpec;
  * TODO: newly added properties don't get set on first apply
  */
 @SuppressWarnings("serial")
-public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfigurationWizard {
+public class OpenCvCameraConfigurationWizard extends AbstractConfigurationWizard {
     private final OpenCvCamera camera;
 
     private JPanel panelGeneral;
@@ -65,8 +65,6 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
     private boolean dirty = false;
 
     public OpenCvCameraConfigurationWizard(OpenCvCamera camera) {
-        super(camera);
-
         this.camera = camera;
 
         panelGeneral = new JPanel();
@@ -284,7 +282,6 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
     @Override
     public void createBindings() {
         IntegerConverter intConverter = new IntegerConverter();
-        super.createBindings();
         addWrappedBinding(camera, "preferredWidth", textFieldPreferredWidth, "text", intConverter);
         addWrappedBinding(camera, "preferredHeight", textFieldPreferredHeight, "text",
                 intConverter);
