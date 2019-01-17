@@ -124,7 +124,9 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     public synchronized BufferedImage internalCapture() {
         ensureOpen();
         try {
-            while (!stream.hasNewFrame());
+            while (!stream.hasNewFrame()) {
+                
+            }
             BufferedImage img = stream.capture();
             return transformImage(img);
         }
