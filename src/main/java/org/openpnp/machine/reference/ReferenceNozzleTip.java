@@ -1,7 +1,9 @@
 package org.openpnp.machine.reference;
 
 import java.awt.event.ActionEvent;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -361,7 +363,82 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Root
     public static class Calibration {
-        public static class ModelRunout {
+        public static interface RunoutCompensation {
+
+            Location getOffset(double angle);
+            
+            double getMeanRunout();
+            Location getAxisOffset();
+        }
+        
+        public static class TableBasedRunoutCompensation implements RunoutCompensation {
+            List<Location> nozzleTipMeasuredLocations;
+
+
+            public TableBasedRunoutCompensation(List<Location> nozzleTipMeasuredLocations) {
+                //store data for later usage
+                this.nozzleTipMeasuredLocations = nozzleTipMeasuredLocations;
+                
+            }
+
+            public Location getOffset(double angle) {
+                
+                // find the two angles in the measurements, that angle is between
+                List<Location> offsets = getOffsetPairForAngle(angle);
+                
+                // the xy-offset is available via getX/getY. the angle is available via getRotation() - it's stored this way because then a simple Location type is sufficient
+                Location offsetA = offsets.get(0);
+                Location offsetB = offsets.get(1).convertToUnits(offsetA.getUnits());    // could this conversion be omitted?
+
+                double ratio = 1.0;     // TODO Better solution than the workaround seems to be recommended.
+                if ( (offsetB.getRotation() - offsetA.getRotation()) != 0 ) {
+                    ratio = (angle - offsetA.getRotation()) / (offsetB.getRotation() - offsetA.getRotation());
+                }
+                double deltaX = offsetB.getX() - offsetA.getX();
+                double deltaY = offsetB.getY() - offsetA.getY();
+                double offsetX = offsetA.getX() + (deltaX * ratio);
+                double offsetY = offsetA.getY() + (deltaY * ratio);
+
+                return new Location(offsetA.getUnits(), offsetX, offsetY, 0, 0);
+            }
+            
+            /**
+             * Find the two closest offsets to the angle being requested. The offsets start at angle 0
+             * and go to angle 360 - angleIncrement in angleIncrement steps.
+             */
+            private List<Location> getOffsetPairForAngle(double angle) {
+                Location a = null, b = null;
+                
+                // angle asked for is the last in the table?
+                if (angle >= nozzleTipMeasuredLocations.get(nozzleTipMeasuredLocations.size() - 1).getRotation()) {
+                    return Arrays.asList(nozzleTipMeasuredLocations.get(nozzleTipMeasuredLocations.size() - 1), nozzleTipMeasuredLocations.get(0));
+                }
+                
+                for (int i = 0; i < nozzleTipMeasuredLocations.size(); i++) {
+                    if (angle < nozzleTipMeasuredLocations.get(i + 1).getRotation()) {
+                        a = nozzleTipMeasuredLocations.get(i);
+                        b = nozzleTipMeasuredLocations.get(i + 1);
+                        break;
+                    }
+                }
+                return Arrays.asList(a, b);
+            }
+
+            @Override
+            public double getMeanRunout() {
+                // TODO Auto-generated method stub
+                return 0;
+            }
+
+            @Override
+            public Location getAxisOffset() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+        }
+
+        public static class ModelBasedRunoutCompensation implements RunoutCompensation {
         	List<Location> nozzleTipMeasuredLocations;
         	
             double centerX;
@@ -370,7 +447,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             
             double phaseShift;
 
-			public ModelRunout(List<Location> nozzleTipMeasuredLocations) {
+			public ModelBasedRunoutCompensation(List<Location> nozzleTipMeasuredLocations) {
 				//store data for possible later usage
 				this.nozzleTipMeasuredLocations = nozzleTipMeasuredLocations;
 				
@@ -380,9 +457,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 				
 				// afterwards calc the phaseShift angle mapping
 				this.calcPhaseShift(nozzleTipMeasuredLocations);
-				
-
-                
             }
 			
 			/* function to calc the model based offset in cartesian coordinates */
@@ -546,6 +620,17 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             public String toString() {
                 return "centerX: " + centerX + " centerY: " + centerY + " radius: " + radius;
             }
+
+            @Override
+            public double getMeanRunout() {
+                // the radius of the circle is the runout
+                return this.radius;
+            }
+
+            @Override
+            public Location getAxisOffset() {
+                return new Location(LengthUnit.Millimeters,centerX,centerY,0.,0.);
+            }
         }
         
         @Element(required = false)
@@ -553,14 +638,21 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
         @Attribute(required = false)
         private double angleIncrement = 60;
+        @Attribute(required = false)
+        private double angleStart = 0;
+        @Attribute(required = false)
+        private double angleStop = 360;
         
         @Attribute(required = false)
         private boolean enabled;
         
         private boolean calibrating;
         
-        private ModelRunout nozzleEccentricity = null;
-
+        private RunoutCompensation runoutCompensation = null;
+        
+        @Attribute(required = false)
+        private String runoutCompensationAlgorithm = "modelBased";      // modelBased or tableBased? Two implementations are available
+        
         
         /* The reworked calibration routine will fit a circle into the runout nozzle path.
          * the center of the circle represents the rotational axis, the radius of the circle is the runout
@@ -573,12 +665,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         	 * c) if one measurement fails, one could retry or skip that silently if enough valid measurements are still available 
         	 */
         	
-            if (!isEnabled()) {
+            if (!isEnabled() /* || !isHomed() */) {     // TODO: add a check to prevent calibration if not homed yet (insert after #806)
             	reset();
                 return;
             }
             
-
             Nozzle nozzle = nozzleTip.getParentNozzle();
             Camera camera = VisionUtils.getBottomVisionCamera();
             
@@ -603,7 +694,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 
                 // Capture nozzle tip positions and add them to a list. For these calcs the camera location is considered to be 0/0
                 List<Location> nozzleTipMeasuredLocations = new ArrayList<>();
-                for (double measureAngle = 0; measureAngle < 360; measureAngle += angleIncrement) {	// hint: if nozzle is limited to +-180° this is respected in .moveTo automatically
+                if ( angleStop >= 360 ) {
+                    angleStop = 360 - angleIncrement;    // The last capture can be omitted if angleStop is 360°, because it equals 0° and has already been taken. If angleStop is lower than 360° it has to be captured.
+                }
+                for (double measureAngle = angleStart; measureAngle <= angleStop; measureAngle += angleIncrement) {	// hint: if nozzle is limited to +-180° this is respected in .moveTo automatically
                 	// rotate nozzle to measurement angle
                     Location measureLocation = measureBaseLocation.derive(null, null, null, measureAngle);
                     nozzle.moveTo(measureLocation);
@@ -624,13 +718,19 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 
                 Configuration.get().getScripting().on("NozzleCalibration.Finished", params);
                 
-            	
-                this.nozzleEccentricity = new ModelRunout(nozzleTipMeasuredLocations);
+            	if (this.runoutCompensationAlgorithm == "modelBased") {
+            	    this.runoutCompensation = new ModelBasedRunoutCompensation(nozzleTipMeasuredLocations);
+            	} else {
+            	    this.runoutCompensation = new TableBasedRunoutCompensation(nozzleTipMeasuredLocations);
+            	}
                 
             }
             finally {
                 calibrating = false;
              
+                // go to camera position (now offset-corrected). prevents the user from being irritated if it's not exactly centered
+                nozzle.moveTo(camera.getLocation().derive(null, null, null, 0d));
+                
                 // after processing the nozzle returns to safe-z
                 nozzle.moveToSafeZ();
             }
@@ -641,8 +741,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
          * here the offset is reconstructed in XY-cartesian coordinates to be applied in moveTo commands.
          */
         public Location getCalibratedOffset(double angle) {
-        	
-    	    
             if (!isEnabled() || !isCalibrated()) {
                 return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
             }
@@ -655,7 +753,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 angle -= 360;
             }
             
-            return this.nozzleEccentricity.getOffset(angle);
+            return this.runoutCompensation.getOffset(angle);
             
         }
 
@@ -667,6 +765,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 Location location;
                 
                 Object result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
+                
+                // are there any results from the pipeline?
+                if (0==((List) result).size()) {
+                    throw new Exception("No results from vision. Check pipeline.");                    
+                }
+                
                 if (result instanceof List) {
                     if (((List) result).get(0) instanceof Result.Circle) {
                     	Result.Circle circle = ((List<Result.Circle>) result).get(0);
@@ -680,8 +784,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 else {
                     throw new Exception("Unrecognized result " + result);
                 }
+                
+                //show result from pipeline in camera view
                 MainFrame.get().get().getCameraViews().getCameraView(camera).showFilteredImage(
                         OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 1000);
+                
                 return location;
             }
         }
@@ -698,11 +805,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
 
         public void reset() {
-        	nozzleEccentricity = null;
+        	runoutCompensation = null;
         }
 
         public boolean isCalibrated() {
-            return nozzleEccentricity != null;
+            return runoutCompensation != null;
         }
         
         public boolean isCalibrating() {
