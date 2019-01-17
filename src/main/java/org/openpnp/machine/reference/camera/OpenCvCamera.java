@@ -87,11 +87,11 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     }
 
     @Override
-    public synchronized void startContinuousCapture(CameraListener listener, int maximumFps) {
+    public synchronized void startContinuousCapture(CameraListener listener) {
         if (thread == null) {
             initCamera();
         }
-        super.startContinuousCapture(listener, maximumFps);
+        super.startContinuousCapture(listener);
     }
 
     public void run() {

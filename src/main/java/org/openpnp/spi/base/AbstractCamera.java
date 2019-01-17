@@ -125,13 +125,13 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     }
 
     @Override
-    public void startContinuousCapture(CameraListener listener, int maximumFps) {
-        listeners.add(new ListenerEntry(listener, maximumFps));
+    public void startContinuousCapture(CameraListener listener) {
+        listeners.add(new ListenerEntry(listener));
     }
 
     @Override
     public void stopContinuousCapture(CameraListener listener) {
-        listeners.remove(new ListenerEntry(listener, 0));
+        listeners.remove(new ListenerEntry(listener));
     }
 
     @Override
@@ -208,11 +208,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
 
     protected void broadcastCapture(BufferedImage img) {
         for (ListenerEntry listener : new ArrayList<>(listeners)) {
-            if (listener.lastFrameSent < (System.currentTimeMillis()
-                    - (1000 / listener.maximumFps))) {
-                listener.listener.frameReceived(img);
-                listener.lastFrameSent = System.currentTimeMillis();
-            }
+            listener.listener.frameReceived(img);
         }
     }
 
@@ -246,12 +242,10 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     
     protected class ListenerEntry {
         public CameraListener listener;
-        public int maximumFps;
         public long lastFrameSent;
 
-        public ListenerEntry(CameraListener listener, int maximumFps) {
+        public ListenerEntry(CameraListener listener) {
             this.listener = listener;
-            this.maximumFps = maximumFps;
         }
 
         @Override

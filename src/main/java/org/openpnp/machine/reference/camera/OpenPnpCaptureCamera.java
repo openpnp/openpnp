@@ -21,7 +21,6 @@ package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 
 import org.openpnp.CameraListener;
@@ -41,67 +40,65 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
-public class OpenPnpCaptureCamera extends ReferenceCamera {
+public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     private OpenPnpCapture capture = new OpenPnpCapture();
-    
+    private Thread thread;
+
     private CaptureDevice device;
     private CaptureFormat format;
     private CaptureStream stream;
-    
-    @Attribute(required=false)
-    private String uniqueId;
-    
-    @Attribute(required=false)
-    private Integer formatId;
-    
-    @Attribute(required=false)
-    @Deprecated
-    private Integer fps = null;
 
-    @Element(required=false)
+    @Attribute(required = false)
+    private String uniqueId;
+
+    @Attribute(required = false)
+    private Integer formatId;
+
+    @Attribute(required = false)
+    private int fps = 10;
+
+    @Element(required = false)
     private CapturePropertyHolder backLightCompensation = new CapturePropertyHolder(CaptureProperty.BackLightCompensation);
 
-    @Element(required=false)
+    @Element(required = false)
     private CapturePropertyHolder brightness = new CapturePropertyHolder(CaptureProperty.Brightness);
 
-    @Element(required=false)
+    @Element(required = false)
     private CapturePropertyHolder contrast = new CapturePropertyHolder(CaptureProperty.Contrast);
 
-    @Element(required=false)
+    @Element(required = false)
     private CapturePropertyHolder exposure = new CapturePropertyHolder(CaptureProperty.Exposure);
 
-    @Element(required=false)
+    @Element(required = false)
     private CapturePropertyHolder focus = new CapturePropertyHolder(CaptureProperty.Focus);
 
-    @Element(required=false)
+    @Element(required = false)
     private CapturePropertyHolder gain = new CapturePropertyHolder(CaptureProperty.Gain);
-    
-    @Element(required=false)
+
+    @Element(required = false)
     private CapturePropertyHolder gamma = new CapturePropertyHolder(CaptureProperty.Gamma);
-    
-    @Element(required=false)
+
+    @Element(required = false)
     private CapturePropertyHolder hue = new CapturePropertyHolder(CaptureProperty.Hue);
 
-    @Element(required=false)
+    @Element(required = false)
     private CapturePropertyHolder powerLineFrequency = new CapturePropertyHolder(CaptureProperty.PowerLineFrequency);
 
-    @Element(required=false)
+    @Element(required = false)
     private CapturePropertyHolder saturation = new CapturePropertyHolder(CaptureProperty.Saturation);
-    
-    @Element(required=false)
+
+    @Element(required = false)
     private CapturePropertyHolder sharpness = new CapturePropertyHolder(CaptureProperty.Sharpness);
 
-    @Element(required=false)
+    @Element(required = false)
     private CapturePropertyHolder whiteBalance = new CapturePropertyHolder(CaptureProperty.WhiteBalance);
 
-    @Element(required=false)
+    @Element(required = false)
     private CapturePropertyHolder zoom = new CapturePropertyHolder(CaptureProperty.Zoom);
-    
-    HashMap<CameraListener, CaptureWorker> workers = new HashMap<CameraListener, CaptureWorker>();
 
     public OpenPnpCaptureCamera() {
     }
-    
+
     @Commit
     public void commit() {
         backLightCompensation.setCamera(this);
@@ -118,7 +115,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
         whiteBalance.setCamera(this);
         zoom.setCamera(this);
     }
-    
+
     public List<CaptureDevice> getCaptureDevices() {
         return capture.getDevices();
     }
@@ -127,137 +124,64 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
     public synchronized BufferedImage internalCapture() {
         ensureOpen();
         try {
-            /**
-             * If there is already a frame buffered, we don't want it, so we take whatever is
-             * buffered and toss it. This ensures hasNewFrame gets reset so that we can wait
-             * on the frame to arrive. Note that because hasNewframe, capture, and submitBuffer
-             * all lock on the same buffer there is the chance that we throw away a buffer
-             * that was just captured, but this is acceptable. We should only be blocked
-             * for the time it takes to copy the memory, which should be well under 1ms
-             * and then we are blocked for the time to capture a frame, which we expected
-             * anyway. 
-             * 
-             * So, this is all basically working now. But if there are multiple listeners they
-             * are gonna fight for images. We only ever have one so who cares, but maybe we care?
-             * 
-             * Also, it seems like the old FPS setting was just fine, based on all this?
-             * 
-             * TODO STOPSHIP Can we actually just stream 30 FPS to the screen without blowing
-             * up the CPU? Check and see. And if not, why? And also if not, can other programs?
-             * 
-             * From measurements:
-             * hasNewFrame/capture takes ~5
-             * !hasNewFrame takes ~20
-             * capture takes ~3
-             * transform takes ~0
-             * 
-             * and in the thread, capture takes about 30 and callback takes 0
-             * which makes sense, cause the callback just stores the image and
-             * calls repaint, which happens on a different thread
-             * 
-             * 15 FPS is about 50-55% CPU
-             * Turning off frameReceived saves about 10%
-             * 1 degree of rotation adds about 5%
-             * undistort adds about 10%
-             * flip adds maybe 2%
-             * 
-             * OBS uses about 13% to stream 30 FPS, but no effects at all
-             * Still, like a quarter of what we use
-             * 
-             * Turning off the first capture and busy loop gets down to about 34%
-             * Turn off transform and frameReceived gets down to about 20.
-             */
-            
-            if (stream.hasNewFrame()) {
-                stream.capture();
-            }
-            
-            while (!stream.hasNewFrame()) {
-            }
-            
+            while (!stream.hasNewFrame());
             BufferedImage img = stream.capture();
-            
-            img = transformImage(img);
-
-            return img;
+            return transformImage(img);
         }
         catch (Exception e) {
             e.printStackTrace();
             return null;
         }
+    }
 
+    @Override
+    public synchronized void startContinuousCapture(CameraListener listener) {
+        if (thread == null) {
+            open();
+        }
+        super.startContinuousCapture(listener);
+    }
+
+    public void run() {
+        while (!Thread.interrupted()) {
+            try {
+                ensureOpen();
+                if (stream.hasNewFrame()) {
+                    BufferedImage img = stream.capture();
+                    img = transformImage(img);
+                    broadcastCapture(img);
+                }
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+            try {
+                Thread.sleep(1000 / fps);
+            }
+            catch (InterruptedException e) {
+                break;
+            }
+        }
     }
     
-    private synchronized void ensureOpen() {
-        if (stream == null) {
+    public synchronized void ensureOpen() {
+        if (thread == null) {
             open();
         }
     }
-    
-    class CaptureWorker implements Runnable {
-        final CameraListener listener;
-        final int maximumFps;
-        final Thread thread;
-        
-        public CaptureWorker(CameraListener listener, int maximumFps) {
-            this.listener = listener;
-            this.maximumFps = maximumFps;
-            thread = new Thread(this);
-            thread.setDaemon(true);
-            thread.start();
-        }
-        
-        public void run() {
-            while (!Thread.interrupted()) {
-                ensureOpen();
-                
-                BufferedImage img = internalCapture();
-                
-                listener.frameReceived(img);
-                
-                try {
-                    Thread.sleep((long) (1000. / maximumFps));
-                }
-                catch (InterruptedException e) {
-                    break;
-                }
-            }
-        }
-        
-        public void stop() {
+
+    public void open() {
+        if (thread != null) {
             thread.interrupt();
             try {
-                thread.join();
+                thread.join(3000);
             }
             catch (Exception e) {
-                
+                e.printStackTrace();
             }
+            thread = null;
         }
-    }
 
-    @Override
-    public synchronized void startContinuousCapture(CameraListener listener, int maximumFps) {
-        System.out.println("start " + listener + " " + maximumFps);
-        CaptureWorker worker = workers.get(listener);
-        if (worker != null) {
-            worker.stop();
-        }
-        worker = new CaptureWorker(listener, maximumFps);
-        workers.put(listener, worker);
-    }
-    
-    @Override
-    public void stopContinuousCapture(CameraListener listener) {
-        System.out.println("stop " + listener);
-        super.stopContinuousCapture(listener);
-        CaptureWorker worker = workers.get(listener);
-        if (worker != null) {
-            worker.stop();
-        }
-        workers.remove(listener);
-    }
-
-    public synchronized void open() {
         if (stream != null) {
             try {
                 stream.close();
@@ -268,7 +192,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
         }
         stream = null;
         setPropertiesStream(stream);
-        
+
         // If a device and format are not set, see if we can read them from the stored
         // properties. This will only happen during startup.
         if (device == null && format == null) {
@@ -284,7 +208,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
                 Logger.warn("No camera found with ID {} for camera {}", uniqueId, getName());
                 return;
             }
-            
+
             if (formatId == null) {
                 return;
             }
@@ -297,8 +221,8 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
                 Logger.warn("No format found with ID {} for camera {}", formatId, getName());
             }
         }
-        
-        
+
+
         if (device == null) {
             Logger.debug("open called with null device");
             return;
@@ -307,11 +231,11 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
             Logger.debug("open called with null format");
             return;
         }
-        
+
         try {
             width = null;
             height = null;
-            
+
             stream = device.openStream(format);
             setPropertiesStream(stream);
         }
@@ -319,9 +243,12 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
             e.printStackTrace();
             return;
         }
+        thread = new Thread(this);
+        thread.setDaemon(true);
+        thread.start();
     }
-    
-    private synchronized void setPropertiesStream(CaptureStream stream) {
+
+    private void setPropertiesStream(CaptureStream stream) {
         backLightCompensation.setStream(stream);
         brightness.setStream(stream);
         contrast.setStream(stream);
@@ -338,13 +265,19 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
     }
 
     @Override
-    public synchronized void close() throws IOException {
+    public void close() throws IOException {
         super.close();
-        
-        for (CaptureWorker worker : workers.values()) {
-            worker.stop();
+
+        if (thread != null) {
+            thread.interrupt();
+            try {
+                thread.join(3000);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-        
+
         if (stream != null) {
             try {
                 stream.close();
@@ -357,7 +290,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
 
         capture.close();
     }
-    
+
     @Override
     public Wizard getConfigurationWizard() {
         return new OpenPnpCaptureCameraConfigurationWizard(this);
@@ -402,7 +335,15 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
         }
         firePropertyChange("format", null, format);
     }
-    
+
+    public int getFps() {
+        return fps;
+    }
+
+    public void setFps(int fps) {
+        this.fps = fps;
+    }
+
     public CapturePropertyHolder getBackLightCompensation() {
         return backLightCompensation;
     }
@@ -426,7 +367,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
     public CapturePropertyHolder getGain() {
         return gain;
     }
-    
+
     public CapturePropertyHolder getGamma() {
         return gamma;
     }
@@ -456,25 +397,25 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
     }
 
     public static class CapturePropertyHolder extends AbstractModelObject {
-        @Attribute(required=false)
+        @Attribute(required = false)
         private CaptureProperty property;
 
-        @Attribute(required=false)
+        @Attribute(required = false)
         private Integer value;
 
-        @Attribute(required=false)
+        @Attribute(required = false)
         private Boolean auto;
-        
+
         private CaptureStream stream;
-        
+
         public CapturePropertyHolder(CaptureProperty property) {
             this.property = property;
         }
-        
+
         public CapturePropertyHolder() {
             this(null);
         }
-        
+
         public void setCamera(OpenPnpCaptureCamera camera) {
             camera.addPropertyChangeListener("device", e -> {
                 firePropertyChange("supported", null, isSupported());
@@ -483,7 +424,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
                 firePropertyChange("supported", null, isSupported());
             });
         }
-        
+
         public void setStream(CaptureStream stream) {
             this.stream = stream;
             if (stream == null) {
@@ -503,7 +444,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
             firePropertyChange("value", null, getValue());
             firePropertyChange("auto", null, isAuto());
         }
-        
+
         public int getMin() {
             try {
                 PropertyLimits limits = stream.getPropertyLimits(property);
@@ -513,7 +454,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
                 return 0;
             }
         }
-        
+
         public int getMax() {
             try {
                 PropertyLimits limits = stream.getPropertyLimits(property);
@@ -523,7 +464,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
                 return 0;
             }
         }
-        
+
         public int getDefault() {
             try {
                 PropertyLimits limits = stream.getPropertyLimits(property);
@@ -533,7 +474,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
                 return 0;
             }
         }
-        
+
         public boolean isAuto() {
             try {
                 return this.auto = stream.getAutoProperty(property);
@@ -542,7 +483,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
                 return false;
             }
         }
-        
+
         public void setAuto(boolean auto) {
             try {
                 stream.setAutoProperty(property, auto);
@@ -552,7 +493,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
             catch (Exception e) {
             }
         }
-        
+
         public void setValue(int value) {
             try {
                 stream.setProperty(property, value);
@@ -562,7 +503,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
             catch (Exception e) {
             }
         }
-        
+
         public int getValue() {
             try {
                 return this.value = stream.getProperty(property);
@@ -571,7 +512,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
                 return 0;
             }
         }
-        
+
         public boolean isSupported() {
             try {
                 stream.getPropertyLimits(property);
@@ -581,7 +522,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera {
                 return false;
             }
         }
-        
+
         public boolean isAutoSupported() {
             try {
                 stream.getAutoProperty(property);
