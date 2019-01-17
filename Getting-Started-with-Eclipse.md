@@ -19,16 +19,18 @@
 13. The openpnp project will now appear in the Package Explorer. Right click on the project "openpnp" and in the menu select Configure -> Convert to Maven Project. Eclipse will download any resources that it needs and build the project.
 14. Expand the openpnp project and look for the `src/main/java folder`. Under this folder expand the `org.openpnp` folder and look for `Main.java`.
 15. Right click `Main.java` and from the menu select Run As -> Java Application.
-16. After a few seconds OpenPnP will start. Close OpenPnP.
+16. After a few seconds OpenPnP will start.
 17. You can now edit files in Eclipse, the changes will automatically be hot swapped if enabled "Project" -> "Build Automatically". If function signatures were changed hot swap does not apply and you need to rerun OpenPnP with your changes, just click the green Run button in the toolbar. The button is a green circle with a white right facing arrow in it.
-
-## Additional steps if you want to contribute
-1. You need to run the tests by executing "Maven test". Maven test needs the full JDK + GIT be installed (not only JRE).
-2. Download and install the JDK.
-3. Download and install GIT.
-3. Add the JDK to the environments in eclipse:
-![jdk-env](https://user-images.githubusercontent.com/3868450/51134165-166cae80-1837-11e9-933e-2a6fbf1301ac.PNG)
-
+18. Close OpenPnP
 * <sup>1</sup> It is possible to later change so your clone is pointing to your fork at Github.
 * <sup>2</sup> You cannot directly push your changes to OpenPnP, it must go through your own fork.
+
+
+## Additional steps if you want to contribute
+1. Ensure you have the automatic code formatter for eclipse activated. See the [coding style-section in the developers guide to download a preconfigured settings file](https://github.com/openpnp/openpnp/wiki/Developers-Guide#coding-style).
+2. You need to run tests by executing "Maven test". Maven test needs the full JDK + GIT be installed (not only JRE).
+    * Download and install the JDK.
+    * Download and install GIT.
+5. Add the JDK to the environments in eclipse:
+![jdk-env](https://user-images.githubusercontent.com/3868450/51134165-166cae80-1837-11e9-933e-2a6fbf1301ac.PNG)
 
