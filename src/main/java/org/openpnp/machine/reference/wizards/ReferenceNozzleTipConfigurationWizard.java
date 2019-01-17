@@ -52,9 +52,7 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
-import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.model.Configuration;
-import org.openpnp.spi.Camera;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
@@ -64,7 +62,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.SwingConstants;
 
 public class ReferenceNozzleTipConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceNozzleTip nozzleTip;
