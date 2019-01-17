@@ -33,6 +33,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.base.AbstractNozzleTip;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
@@ -363,6 +364,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Root
     public static class Calibration {
+        public enum Looking {
+            Down, Up
+        }
+        
         public static interface RunoutCompensation {
 
             Location getOffset(double angle);
@@ -650,9 +655,20 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         
         private RunoutCompensation runoutCompensation = null;
         
+        public enum RunoutCompensationAlgorithm {
+            modelBased, tableBased
+        }
         @Attribute(required = false)
-        private String runoutCompensationAlgorithm = "modelBased";      // modelBased or tableBased? Two implementations are available
-        
+        private RunoutCompensationAlgorithm runoutCompensationAlgorithm = RunoutCompensationAlgorithm.modelBased;      // modelBased or tableBased? Two implementations are available
+
+        public RunoutCompensationAlgorithm getRunoutCompensationAlgorithm() {
+            return this.runoutCompensationAlgorithm;
+        }
+
+        public void setRunoutCompensationAlgorithm(RunoutCompensationAlgorithm runoutCompensationAlgorithm) {
+            this.runoutCompensationAlgorithm = runoutCompensationAlgorithm;
+        }
+
         
         /* The reworked calibration routine will fit a circle into the runout nozzle path.
          * the center of the circle represents the rotational axis, the radius of the circle is the runout
@@ -718,7 +734,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 
                 Configuration.get().getScripting().on("NozzleCalibration.Finished", params);
                 
-            	if (this.runoutCompensationAlgorithm == "modelBased") {
+            	if (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.modelBased) {
             	    this.runoutCompensation = new ModelBasedRunoutCompensation(nozzleTipMeasuredLocations);
             	} else {
             	    this.runoutCompensation = new TableBasedRunoutCompensation(nozzleTipMeasuredLocations);
@@ -802,6 +818,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             catch (Exception e) {
                 throw new Error(e);
             }
+        }
+
+        public void resetPipeline() {
+            pipeline = createDefaultPipeline();
         }
 
         public void reset() {

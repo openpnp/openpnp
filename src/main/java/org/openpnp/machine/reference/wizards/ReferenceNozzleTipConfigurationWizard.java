@@ -29,6 +29,7 @@ import java.util.Set;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -38,6 +39,7 @@ import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
 
+import org.apache.commons.io.IOUtils;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
@@ -50,7 +52,9 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.Camera;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
@@ -97,6 +101,10 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<>();
     private JPanel panelCalibration;
     private JButton btnEditPipeline;
+    private JButton btnResetPipeline;
+
+    private JLabel lblCompensationAlgorithm;
+    private JComboBox compensationAlgorithmCb;
     private JButton btnCalibrate;
     private JButton btnReset;
     private JLabel lblEnabled;
@@ -375,22 +383,31 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         
 
         panelCalibration = new JPanel();
-        panelCalibration.setBorder(new TitledBorder(null, "Calibration", TitledBorder.LEADING,
+        panelCalibration.setBorder(new TitledBorder(null, "Calibration (EXPERIMENTAL!)", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelCalibration);
         panelCalibration.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                new ColumnSpec[] {
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.DEFAULT_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         RowSpec.decode("23px"), FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblEnabled = new JLabel("Enable (EXPERIMENTAL!)");
+        lblEnabled = new JLabel("Enable");
         panelCalibration.add(lblEnabled, "2, 2, right, default");
 
         calibrationEnabledCheckbox = new JCheckBox("");
         panelCalibration.add(calibrationEnabledCheckbox, "3, 2, left, default");
+
+        lblCompensationAlgorithm = new JLabel("Compensation Algorithm (TODO, add action)");
+        panelCalibration.add(lblCompensationAlgorithm, "2, 4, right, default");
+        
+        compensationAlgorithmCb = new JComboBox(ReferenceNozzleTip.Calibration.RunoutCompensationAlgorithm.values());
+        panelCalibration.add(compensationAlgorithmCb, "3, 4");
 
         btnCalibrate = new JButton("Calibrate");
         btnCalibrate.addActionListener(new ActionListener() {
@@ -398,15 +415,15 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 calibrate();
             }
         });
-        panelCalibration.add(btnCalibrate, "3, 3");
+        panelCalibration.add(btnCalibrate, "3, 5");
 
-        btnReset = new JButton("Reset");
+        btnReset = new JButton("Reset Compensation Data");
         btnReset.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 nozzleTip.getCalibration().reset();
             }
         });
-        panelCalibration.add(btnReset, "3, 5");
+        panelCalibration.add(btnReset, "3, 7");
 
         btnEditPipeline = new JButton("Edit Pipeline");
         btnEditPipeline.addActionListener(new ActionListener() {
@@ -416,7 +433,19 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 });
             }
         });
-        panelCalibration.add(btnEditPipeline, "3, 7, left, top");
+        panelCalibration.add(btnEditPipeline, "3, 9, left, top");
+        
+        btnResetPipeline = new JButton("Reset Pipeline (TODO: new default pipeline)");
+        btnResetPipeline.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                resetCalibrationPipeline();
+            }
+        });
+        panelCalibration.add(btnResetPipeline, "4, 9, left, top");
+    }
+    
+    private void resetCalibrationPipeline() {
+        nozzleTip.getCalibration().resetPipeline();
     }
 
     private void editCalibrationPipeline() throws Exception {
