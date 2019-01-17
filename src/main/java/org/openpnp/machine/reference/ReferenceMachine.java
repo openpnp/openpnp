@@ -94,6 +94,8 @@ public class ReferenceMachine extends AbstractMachine {
 
     private boolean enabled;
 
+    private boolean isHomed;
+
     private List<Class<? extends Feeder>> registeredFeederClasses = new ArrayList<>();
 
     @Commit
@@ -160,6 +162,9 @@ public class ReferenceMachine extends AbstractMachine {
                 throw e;
             }
             fireMachineDisabled("User requested stop.");
+            
+            // remove homed-flag if machine is disabled
+            this.setHomed(false);
         }
     }
 
@@ -267,6 +272,9 @@ public class ReferenceMachine extends AbstractMachine {
     public void home() throws Exception {
         Logger.debug("home");
         super.home();
+
+        // if homing went well, set machine homed-flag true
+        this.setHomed(true);
     }
 
     @Override
@@ -320,4 +328,14 @@ public class ReferenceMachine extends AbstractMachine {
     public void setHomeAfterEnabled(boolean newValue) {
         this.homeAfterEnabled = newValue;
     }
+
+	@Override
+	public boolean isHomed() {
+		return this.isHomed;
+	}
+
+	@Override
+	public void setHomed(boolean isHomed) {
+		this.isHomed = isHomed;
+	}
 }
