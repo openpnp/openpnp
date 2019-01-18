@@ -107,6 +107,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JButton btnCalibrate;
     private JButton btnReset;
     private JLabel lblEnabled;
+    private JLabel lblCalibrationInfo;
+    private JLabel lblCalibrationResults;
     private JCheckBox calibrationEnabledCheckbox;
     private JLabel lblMiddleLocation_1;
     private JTextField textFieldMidX2;
@@ -382,13 +384,14 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         
 
         panelCalibration = new JPanel();
-        panelCalibration.setBorder(new TitledBorder(null, "Calibration (EXPERIMENTAL!)", TitledBorder.LEADING,
+        panelCalibration.setBorder(new TitledBorder(null, "Calibration (EXPERIMENTAL!, HELP LINK HERE)", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelCalibration);
         panelCalibration.setLayout(new FormLayout(
                 new ColumnSpec[] {
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                        FormSpecs.DEFAULT_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
@@ -449,6 +452,14 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
             }
         });
         panelCalibration.add(btnResetPipeline, "4, 11, left, top");
+        
+
+        lblCalibrationInfo = new JLabel("Calibration Information");
+        panelCalibration.add(lblCalibrationInfo, "6, 2, left, default");
+
+        lblCalibrationResults = new JLabel(nozzleTip.getCalibration().getRunoutCompensationInformation());
+        panelCalibration.add(lblCalibrationResults, "6, 4, left, default");
+       
     }
     
     private void resetCalibrationPipeline() {

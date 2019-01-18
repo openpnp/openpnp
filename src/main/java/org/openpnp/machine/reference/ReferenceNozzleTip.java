@@ -368,8 +368,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
             Location getOffset(double angle);
             
-            double getMeanRunout();
             Location getAxisOffset();
+            
+            @Override
+            String toString();
         }
         
         public static class TableBasedRunoutCompensation implements RunoutCompensation {
@@ -426,17 +428,15 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
 
             @Override
-            public double getMeanRunout() {
-                // TODO Auto-generated method stub
-                return 0;
+            public String toString() {
+                return "0° offset x: " + nozzleTipMeasuredLocations.get(0).getX() + ", offset y:  " + nozzleTipMeasuredLocations.get(0).getY();
             }
 
             @Override
             public Location getAxisOffset() {
-                // TODO Auto-generated method stub
+                // axis offset is not available with this algorithm
                 return null;
             }
-
         }
 
         public static class ModelBasedRunoutCompensation implements RunoutCompensation {
@@ -623,12 +623,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
 
             @Override
-            public double getMeanRunout() {
-                // the radius of the circle is the runout
-                return this.radius;
-            }
-
-            @Override
             public Location getAxisOffset() {
                 return new Location(LengthUnit.Millimeters,centerX,centerY,0.,0.);
             }
@@ -679,6 +673,13 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             this.runoutCompensationAlgorithm = runoutCompensationAlgorithm;
         }
 
+        public String getRunoutCompensationInformation() {
+            if(isCalibrated()) {
+                return runoutCompensation.toString();
+            } else {
+                return "not calibrated yet";
+            }
+        }
         
         /* The reworked calibration routine will fit a circle into the runout nozzle path.
          * the center of the circle represents the rotational axis, the radius of the circle is the runout
