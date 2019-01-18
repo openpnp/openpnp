@@ -19,6 +19,7 @@
 
 package org.openpnp.machine.reference.camera.wizards;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +29,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
+import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
@@ -36,16 +38,19 @@ import org.openpnp.capture.CaptureDevice;
 import org.openpnp.capture.CaptureFormat;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.camera.OpenCvCamera.OpenCvCapturePropertyValue;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
+import org.openpnp.model.Configuration;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.border.EtchedBorder;
-import java.awt.Color;
+import javax.swing.SwingConstants;
+import javax.swing.JTextArea;
+import javax.swing.UIManager;
 
 @SuppressWarnings("serial")
 public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurationWizard {
@@ -171,8 +176,12 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("left:default"),},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -181,21 +190,22 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
                 lblDevice = new JLabel("Device");
-                panelGeneral.add(lblDevice, "2, 2");
+                panelGeneral.add(lblDevice, "2, 2, right, default");
                 
                         deviceCb = new JComboBox();
                         panelGeneral.add(deviceCb, "4, 2");
                         
                                 lblFormat = new JLabel("Format");
-                                panelGeneral.add(lblFormat, "2, 4");
+                                panelGeneral.add(lblFormat, "2, 4, right, default");
                                 
                                         formatCb = new JComboBox();
                                         panelGeneral.add(formatCb, "4, 4");
                                         
-                                                lblFps = new JLabel("FPS");
-                                                panelGeneral.add(lblFps, "2, 6");
+                                                lblFps = new JLabel("Preview FPS");
+                                                panelGeneral.add(lblFps, "2, 6, right, default");
                                                 
                                                         fps = new JTextField();
+                                                        fps.setToolTipText("<html>\nFrame rate for live camera view. Lower uses less CPU and does not affect vision speed.\n<br>0 will update the camera view only when vision or machine movement happens.\n<br>10 FPS is a good starting point.\n</html>\n");
                                                         panelGeneral.add(fps, "4, 6");
                                                         fps.setColumns(10);
                         
@@ -614,11 +624,12 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
     @Override
     public void createBindings() {
         IntegerConverter intConverter = new IntegerConverter();
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
         addWrappedBinding(camera, "device", deviceCb, "selectedItem");
         addWrappedBinding(camera, "format", formatCb, "selectedItem");
 
-        addWrappedBinding(camera, "fps", fps, "text", intConverter);
+        addWrappedBinding(camera, "fps", fps, "text", doubleConverter);
 
         bindProperty("backLightCompensation", backLightCompensationAuto, backLightCompensationMin, 
                 backLightCompensationMax, backLightCompensationSlider,

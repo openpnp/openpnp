@@ -144,6 +144,46 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     public VisionProvider getVisionProvider() {
         return visionProvider;
     }
+    
+    private BufferedImage autoSettleAndCapture() {
+        long t = System.currentTimeMillis();
+        while (true) {
+            // Capture an image, convert to Mat and convert to gray.
+            BufferedImage image = capture();
+            Mat mat = OpenCvUtils.toMat(image);
+            Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
+            
+            // If this is the first time through the loop then assign the new image to
+            // the lastSettleMat and loop again. We need at least two images to check.
+            // to lastSettleMat and 
+            if (lastSettleMat == null) {
+                lastSettleMat = mat;
+                continue;
+            }
+            
+            // Take the absdiff of the two images and get the max changed pixel.
+            Mat diff = new Mat();
+            Core.absdiff(lastSettleMat, mat, diff);
+            MinMaxLocResult result = Core.minMaxLoc(diff);
+            Logger.debug("autoSettleAndCapture auto settle score: " + result.maxVal);
+            diff.release();
+
+            // Release the lastSettleMat and store the new image as the lastSettleMat.
+            lastSettleMat.release();
+            lastSettleMat = mat;
+
+            // If the image changed at least a bit (due to noise) and and less than our
+            // threshold, we have a winner. The check for > 0 is to ensure that we're not just
+            // receiving a duplicate frame from the camera. Every camera has at least a little
+            // noise so we're just checking that at least one pixel changed by 1 bit.
+            if (result.maxVal > 0 && result.maxVal < Math.abs(getSettleTimeMs())) {
+                lastSettleMat.release();
+                lastSettleMat = null;
+                Logger.debug("autoSettleAndCapture in {} ms", System.currentTimeMillis() - t);
+                return image;
+            }
+        }
+    }
 
     public BufferedImage settleAndCapture() {
         try {
@@ -166,43 +206,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
             return capture();
         }
         else {
-            long t = System.currentTimeMillis();
-            while (true) {
-                // Capture an image, convert to Mat and convert to gray.
-                BufferedImage image = capture();
-                Mat mat = OpenCvUtils.toMat(image);
-                Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
-                
-                // If this is the first time through the loop then assign the new image to
-                // the lastSettleMat and loop again. We need at least two images to check.
-                // to lastSettleMat and 
-                if (lastSettleMat == null) {
-                    lastSettleMat = mat;
-                    continue;
-                }
-                
-                // Take the absdiff of the two images and get the max changed pixel.
-                Mat diff = new Mat();
-                Core.absdiff(lastSettleMat, mat, diff);
-                MinMaxLocResult result = Core.minMaxLoc(diff);
-                Logger.debug("settleAndCapture auto settle score: " + result.maxVal);
-                diff.release();
-
-                // Release the lastSettleMat and store the new image as the lastSettleMat.
-                lastSettleMat.release();
-                lastSettleMat = mat;
-
-                // If the image changed at least a bit (due to noise) and and less than our
-                // threshold, we have a winner. The check for > 0 is to ensure that we're not just
-                // receiving a duplicate frame from the camera. Every camera has at least a little
-                // noise so we're just checking that at least one pixel changed by 1 bit.
-                if (result.maxVal > 0 && result.maxVal < Math.abs(getSettleTimeMs())) {
-                    lastSettleMat.release();
-                    lastSettleMat = null;
-                    Logger.debug("settleAndCapture auto settled in {} ms", System.currentTimeMillis() - t);
-                    return image;
-                }
-            }
+            return autoSettleAndCapture();
         }
     }
 
