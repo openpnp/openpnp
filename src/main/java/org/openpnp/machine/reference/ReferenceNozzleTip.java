@@ -753,13 +753,14 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 
             }
             finally {
-                calibrating = false;
-             
                 // go to camera position (now offset-corrected). prevents the user from being irritated if it's not exactly centered
                 nozzle.moveTo(camera.getLocation().derive(null, null, null, 0d));
                 
                 // after processing the nozzle returns to safe-z
                 nozzle.moveToSafeZ();
+                
+                // setting to false in the very end to prevent endless calibration repetitions if calibration was not successful (pipeline not well or similar) and the nozzle is commanded afterwards somewhere else (where the calibration is asked for again ...)
+                calibrating = false;
             }
         }
         
