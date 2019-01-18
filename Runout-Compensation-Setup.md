@@ -14,7 +14,7 @@ There are two algorithms available. Normally you would choose the new model base
   * list of differences, features, limitations, TODO
 
 ## Pipeline
-The pipeline should detect the nozzle tip in a very stable way. Here is a suggestion how to adapt the default pipeline for your needs:
+The pipeline should detect the nozzle tip in a very stable way. Further it should return only exactly ONE result, not many points. Here is a suggestion how to adapt the default pipeline for your needs:
 ![pipeline1](https://user-images.githubusercontent.com/3868450/51399985-8c2e8e00-1b47-11e9-9cf0-c20e6b3cf8ad.PNG)
 ![pipeline2](https://user-images.githubusercontent.com/3868450/51399987-8c2e8e00-1b47-11e9-8c37-0f9d9148300d.PNG)
 ![pipeline3](https://user-images.githubusercontent.com/3868450/51399984-8c2e8e00-1b47-11e9-92df-b6ac2bddb79b.PNG)
