@@ -400,7 +400,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         calibrationEnabledCheckbox = new JCheckBox("");
         panelCalibration.add(calibrationEnabledCheckbox, "3, 2, left, default");
 
-        lblCompensationAlgorithm = new JLabel("Compensation Algorithm (TODO, add action)");
+        lblCompensationAlgorithm = new JLabel("Compensation Algorithm");
         panelCalibration.add(lblCompensationAlgorithm, "2, 4, right, default");
         
         compensationAlgorithmCb = new JComboBox(ReferenceNozzleTip.Calibration.RunoutCompensationAlgorithm.values());
@@ -432,7 +432,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         });
         panelCalibration.add(btnEditPipeline, "3, 9, left, top");
         
-        btnResetPipeline = new JButton("Reset Pipeline (TODO: new default pipeline)");
+        btnResetPipeline = new JButton("Reset Pipeline");
         btnResetPipeline.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 resetCalibrationPipeline();
@@ -520,6 +520,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 lengthConverter);
         
         addWrappedBinding(nozzleTip.getCalibration(), "enabled", calibrationEnabledCheckbox, "selected");
+        addWrappedBinding(nozzleTip.getCalibration(), "runoutCompensationAlgorithm", compensationAlgorithmCb, "selectedItem");
         
         addWrappedBinding(nozzleTip, "vacuumLevelPartOn", vacuumLevelPartOn, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumLevelPartOff", vacuumLevelPartOff, "text", doubleConverter);
