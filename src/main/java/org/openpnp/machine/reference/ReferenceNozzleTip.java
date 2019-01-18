@@ -607,22 +607,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         @Element(required = false)
         private CvPipeline pipeline = createDefaultPipeline();
 
-
-        public enum AngleIncrements {
-            fifteen(15.), thirty(30.), sixty(60.), ninety(90.), hundredtwenty(120.);
-            
-            private double value;
-            
-            public double getValue() {
-                return this.value;
-            }
-
-            private AngleIncrements(double value) {
-                    this.value = value;
-            }
-        }
         @Attribute(required = false)
-        private AngleIncrements angleIncrement = AngleIncrements.sixty;
+        private double angleIncrement = 60;
         @Attribute(required = false)
         private double angleStart = 0;
         @Attribute(required = false)
@@ -693,9 +679,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 // Capture nozzle tip positions and add them to a list. For these calcs the camera location is considered to be 0/0
                 List<Location> nozzleTipMeasuredLocations = new ArrayList<>();
                 if ( angleStop >= 360 ) {
-                    angleStop = 360 - angleIncrement.value;    // The last capture can be omitted if angleStop is 360°, because it equals 0° and has already been taken. If angleStop is lower than 360° it has to be captured.
+                    angleStop = 360 - angleIncrement;    // The last capture can be omitted if angleStop is 360°, because it equals 0° and has already been taken. If angleStop is lower than 360° it has to be captured.
                 }
-                for (double measureAngle = angleStart; measureAngle <= angleStop; measureAngle += angleIncrement.value) {	// hint: if nozzle is limited to +-180° this is respected in .moveTo automatically
+                for (double measureAngle = angleStart; measureAngle <= angleStop; measureAngle += angleIncrement) {	// hint: if nozzle is limited to +-180° this is respected in .moveTo automatically
                 	// rotate nozzle to measurement angle
                     Location measureLocation = measureBaseLocation.derive(null, null, null, measureAngle);
                     nozzle.moveTo(measureLocation);
@@ -814,11 +800,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             return calibrating;
         }
         
-        public AngleIncrements getAngleIncrement() {
+        public double getAngleIncrement() {
             return angleIncrement;
         }
 
-        public void setAngleIncrement(AngleIncrements angleIncrement) {
+        public void setAngleIncrement(double angleIncrement) {
             this.angleIncrement = angleIncrement;
         }
 
