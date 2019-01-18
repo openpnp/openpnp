@@ -31,9 +31,9 @@ import javax.swing.border.TitledBorder;
 
 import org.onvif.ver10.schema.VideoResolution;
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.camera.OnvifIPCamera;
-import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -41,14 +41,12 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurationWizard {
+public class OnvifIPCameraConfigurationWizard extends AbstractConfigurationWizard {
     private final OnvifIPCamera camera;
 
     private JPanel panelGeneral;
 
     public OnvifIPCameraConfigurationWizard(OnvifIPCamera camera) {
-        super(camera);
-
         this.camera = camera;
 
         panelGeneral = new JPanel();
@@ -173,7 +171,6 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
     @Override
     public void createBindings() {
         IntegerConverter intConverter = new IntegerConverter();
-        super.createBindings();
         addWrappedBinding(camera, "preferredResolution", cboSupportedResolutions, "selectedItem");
         addWrappedBinding(camera, "resizeWidth", resizeWidthTextField, "text", intConverter);
         addWrappedBinding(camera, "resizeHeight", resizeHeightTextField, "text", intConverter);

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.openpnp.CameraListener;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.capture.CaptureDevice;
 import org.openpnp.capture.CaptureFormat;
 import org.openpnp.capture.CaptureProperty;
@@ -34,6 +35,10 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.OpenPnpCaptureCameraConfigurationWizard;
 import org.openpnp.model.AbstractModelObject;
+import org.openpnp.model.Configuration;
+import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.PropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -43,62 +48,91 @@ import org.simpleframework.xml.core.Commit;
 public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     private OpenPnpCapture capture = new OpenPnpCapture();
     private Thread thread;
-    
+
     private CaptureDevice device;
     private CaptureFormat format;
     private CaptureStream stream;
-    
-    @Attribute(required=false)
-    private String uniqueId;
-    
-    @Attribute(required=false)
-    private Integer formatId;
-    
-    @Attribute(required=false)
-    private int fps = 10;
 
-    @Element(required=false)
+    @Attribute(required = false)
+    private String uniqueId;
+
+    @Attribute(required = false)
+    private Integer formatId;
+
+    @Attribute(required = false)
+    private double fps = 10.;
+
+    @Element(required = false)
     private CapturePropertyHolder backLightCompensation = new CapturePropertyHolder(CaptureProperty.BackLightCompensation);
 
-    @Element(required=false)
+    @Element(required = false)
     private CapturePropertyHolder brightness = new CapturePropertyHolder(CaptureProperty.Brightness);
 
-    @Element(required=false)
+    @Element(required = false)
     private CapturePropertyHolder contrast = new CapturePropertyHolder(CaptureProperty.Contrast);
 
-    @Element(required=false)
+    @Element(required = false)
     private CapturePropertyHolder exposure = new CapturePropertyHolder(CaptureProperty.Exposure);
 
-    @Element(required=false)
+    @Element(required = false)
     private CapturePropertyHolder focus = new CapturePropertyHolder(CaptureProperty.Focus);
 
-    @Element(required=false)
+    @Element(required = false)
     private CapturePropertyHolder gain = new CapturePropertyHolder(CaptureProperty.Gain);
-    
-    @Element(required=false)
+
+    @Element(required = false)
     private CapturePropertyHolder gamma = new CapturePropertyHolder(CaptureProperty.Gamma);
-    
-    @Element(required=false)
+
+    @Element(required = false)
     private CapturePropertyHolder hue = new CapturePropertyHolder(CaptureProperty.Hue);
 
-    @Element(required=false)
+    @Element(required = false)
     private CapturePropertyHolder powerLineFrequency = new CapturePropertyHolder(CaptureProperty.PowerLineFrequency);
 
-    @Element(required=false)
+    @Element(required = false)
     private CapturePropertyHolder saturation = new CapturePropertyHolder(CaptureProperty.Saturation);
-    
-    @Element(required=false)
+
+    @Element(required = false)
     private CapturePropertyHolder sharpness = new CapturePropertyHolder(CaptureProperty.Sharpness);
 
-    @Element(required=false)
+    @Element(required = false)
     private CapturePropertyHolder whiteBalance = new CapturePropertyHolder(CaptureProperty.WhiteBalance);
 
-    @Element(required=false)
+    @Element(required = false)
     private CapturePropertyHolder zoom = new CapturePropertyHolder(CaptureProperty.Zoom);
+    
+    // Calling notifyAll on this object will wake the stream thread for one loop to broadcast
+    // a new image.
+    private Object captureNotifier = new Object();
 
     public OpenPnpCaptureCamera() {
+        // TODO Seems silly this has to be in every implementation. Should Camera implement MachineListener
+        // and every camera gets added as a listener automatically? And we codify the notifyCapture()
+        // system in some way? Seems like the entire broadcast system should move into a base class?
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationComplete(Configuration configuration) throws Exception {
+                Configuration.get().getMachine().addListener(new MachineListener.Adapter() {
+                    public void notifyCapture() {
+                        synchronized(captureNotifier) {
+                            captureNotifier.notifyAll();
+                        }
+                    }
+                    
+                    @Override
+                    public void machineHeadActivity(Machine machine, Head head) {
+                        notifyCapture();
+                    }
+
+                    @Override
+                    public void machineEnabled(Machine machine) {
+                        notifyCapture();
+                    }
+                });
+            }
+        });
     }
-    
+
     @Commit
     public void commit() {
         backLightCompensation.setCamera(this);
@@ -115,18 +149,35 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         whiteBalance.setCamera(this);
         zoom.setCamera(this);
     }
-    
+
     public List<CaptureDevice> getCaptureDevices() {
         return capture.getDevices();
     }
 
     @Override
     public synchronized BufferedImage internalCapture() {
-        if (thread == null) {
-            open();
-        }
+        ensureOpen();
         try {
+            while (!stream.hasNewFrame()) {
+                
+            }
             BufferedImage img = stream.capture();
+            img = transformImage(img);
+            /**
+             * We don't ever want to "waste" an image. So even if the thread is running at a low
+             * frame rate, if we've been forced to capture an image we broadcast it.
+             * 
+             * TODO Note that it would be better to do this in ReferenceCamera.capture(), but the
+             * other camera implementations still call internalCapture() from their thread, which
+             * would cause the image to broadcast twice. Eventually they should be refactored as
+             * this one was, to capture frames directly in the loop rather than calling
+             * internalCapture().
+             * 
+             * And further, note that the *reason* the thread doesn't call internalCapture() on
+             * this implementation is due to the hasNewFrame() busy loop up there. We don't want
+             * the thread busy looping and eating tons of CPU.
+             */
+            broadcastCapture(img);
             return transformImage(img);
         }
         catch (Exception e) {
@@ -136,30 +187,43 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     }
 
     @Override
-    public synchronized void startContinuousCapture(CameraListener listener, int maximumFps) {
-        if (thread == null) {
-            open();
-        }
-        super.startContinuousCapture(listener, maximumFps);
+    public synchronized void startContinuousCapture(CameraListener listener) {
+        ensureOpen();
+        super.startContinuousCapture(listener);
     }
 
     public void run() {
         while (!Thread.interrupted()) {
             try {
-                BufferedImage image = internalCapture();
-                if (image != null) {
-                    broadcastCapture(image);
+                ensureOpen();
+                if (stream.hasNewFrame()) {
+                    BufferedImage img = stream.capture();
+                    img = transformImage(img);
+                    broadcastCapture(img);
                 }
             }
             catch (Exception e) {
                 e.printStackTrace();
             }
             try {
-                Thread.sleep(1000 / fps);
+                synchronized(captureNotifier) {
+                    if (fps == 0) {
+                        captureNotifier.wait();
+                    }
+                    else {
+                        captureNotifier.wait((long) (1000. / fps));
+                    }
+                }
             }
             catch (InterruptedException e) {
                 break;
             }
+        }
+    }
+    
+    public synchronized void ensureOpen() {
+        if (thread == null) {
+            open();
         }
     }
 
@@ -174,7 +238,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             }
             thread = null;
         }
-        
+
         if (stream != null) {
             try {
                 stream.close();
@@ -185,7 +249,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         }
         stream = null;
         setPropertiesStream(stream);
-        
+
         // If a device and format are not set, see if we can read them from the stored
         // properties. This will only happen during startup.
         if (device == null && format == null) {
@@ -201,7 +265,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
                 Logger.warn("No camera found with ID {} for camera {}", uniqueId, getName());
                 return;
             }
-            
+
             if (formatId == null) {
                 return;
             }
@@ -214,8 +278,8 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
                 Logger.warn("No format found with ID {} for camera {}", formatId, getName());
             }
         }
-        
-        
+
+
         if (device == null) {
             Logger.debug("open called with null device");
             return;
@@ -224,11 +288,11 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             Logger.debug("open called with null format");
             return;
         }
-        
+
         try {
             width = null;
             height = null;
-            
+
             stream = device.openStream(format);
             setPropertiesStream(stream);
         }
@@ -240,7 +304,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         thread.setDaemon(true);
         thread.start();
     }
-    
+
     private void setPropertiesStream(CaptureStream stream) {
         backLightCompensation.setStream(stream);
         brightness.setStream(stream);
@@ -260,7 +324,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     @Override
     public void close() throws IOException {
         super.close();
-        
+
         if (thread != null) {
             thread.interrupt();
             try {
@@ -270,7 +334,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
                 e.printStackTrace();
             }
         }
-        
+
         if (stream != null) {
             try {
                 stream.close();
@@ -283,7 +347,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
 
         capture.close();
     }
-    
+
     @Override
     public Wizard getConfigurationWizard() {
         return new OpenPnpCaptureCameraConfigurationWizard(this);
@@ -328,12 +392,12 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         }
         firePropertyChange("format", null, format);
     }
-    
-    public int getFps() {
+
+    public double getFps() {
         return fps;
     }
 
-    public void setFps(int fps) {
+    public void setFps(double fps) {
         this.fps = fps;
     }
 
@@ -360,7 +424,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     public CapturePropertyHolder getGain() {
         return gain;
     }
-    
+
     public CapturePropertyHolder getGamma() {
         return gamma;
     }
@@ -390,25 +454,25 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     }
 
     public static class CapturePropertyHolder extends AbstractModelObject {
-        @Attribute(required=false)
+        @Attribute(required = false)
         private CaptureProperty property;
 
-        @Attribute(required=false)
+        @Attribute(required = false)
         private Integer value;
 
-        @Attribute(required=false)
+        @Attribute(required = false)
         private Boolean auto;
-        
+
         private CaptureStream stream;
-        
+
         public CapturePropertyHolder(CaptureProperty property) {
             this.property = property;
         }
-        
+
         public CapturePropertyHolder() {
             this(null);
         }
-        
+
         public void setCamera(OpenPnpCaptureCamera camera) {
             camera.addPropertyChangeListener("device", e -> {
                 firePropertyChange("supported", null, isSupported());
@@ -417,7 +481,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
                 firePropertyChange("supported", null, isSupported());
             });
         }
-        
+
         public void setStream(CaptureStream stream) {
             this.stream = stream;
             if (stream == null) {
@@ -437,7 +501,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             firePropertyChange("value", null, getValue());
             firePropertyChange("auto", null, isAuto());
         }
-        
+
         public int getMin() {
             try {
                 PropertyLimits limits = stream.getPropertyLimits(property);
@@ -447,7 +511,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
                 return 0;
             }
         }
-        
+
         public int getMax() {
             try {
                 PropertyLimits limits = stream.getPropertyLimits(property);
@@ -457,7 +521,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
                 return 0;
             }
         }
-        
+
         public int getDefault() {
             try {
                 PropertyLimits limits = stream.getPropertyLimits(property);
@@ -467,7 +531,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
                 return 0;
             }
         }
-        
+
         public boolean isAuto() {
             try {
                 return this.auto = stream.getAutoProperty(property);
@@ -476,7 +540,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
                 return false;
             }
         }
-        
+
         public void setAuto(boolean auto) {
             try {
                 stream.setAutoProperty(property, auto);
@@ -486,7 +550,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             catch (Exception e) {
             }
         }
-        
+
         public void setValue(int value) {
             try {
                 stream.setProperty(property, value);
@@ -496,7 +560,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             catch (Exception e) {
             }
         }
-        
+
         public int getValue() {
             try {
                 return this.value = stream.getProperty(property);
@@ -505,7 +569,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
                 return 0;
             }
         }
-        
+
         public boolean isSupported() {
             try {
                 stream.getPropertyLimits(property);
@@ -515,7 +579,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
                 return false;
             }
         }
-        
+
         public boolean isAutoSupported() {
             try {
                 stream.getAutoProperty(property);

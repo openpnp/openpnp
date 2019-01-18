@@ -106,11 +106,6 @@ public class CameraView extends JComponent implements CameraListener {
      */
     private BufferedImage lastFrame;
 
-    /**
-     * The maximum frames per second that we'll display.
-     */
-    private int maximumFps;
-
     private LinkedHashMap<Object, Reticle> reticles = new LinkedHashMap<>();
 
     private JPopupMenu popupMenu;
@@ -233,11 +228,6 @@ public class CameraView extends JComponent implements CameraListener {
         return PREF_RETICLE + "." + camera.getId();
     }
 
-    public CameraView(int maximumFps) {
-        this();
-        setMaximumFps(maximumFps);
-    }
-
     public void addActionListener(CameraViewActionListener listener) {
         if (!actionListeners.contains(listener)) {
             actionListeners.add(listener);
@@ -248,22 +238,6 @@ public class CameraView extends JComponent implements CameraListener {
         return actionListeners.remove(listener);
     }
 
-    public void setMaximumFps(int maximumFps) {
-        this.maximumFps = maximumFps;
-        // turn off capture for the camera we are replacing, if any
-        if (this.camera != null) {
-            this.camera.stopContinuousCapture(this);
-        }
-        // turn on capture for the new camera
-        if (this.camera != null) {
-            this.camera.startContinuousCapture(this, maximumFps);
-        }
-    }
-
-    public int getMaximumFps() {
-        return maximumFps;
-    }
-
     public void setCamera(Camera camera) {
         // turn off capture for the camera we are replacing, if any
         if (this.camera != null) {
@@ -272,7 +246,7 @@ public class CameraView extends JComponent implements CameraListener {
         this.camera = camera;
         // turn on capture for the new camera
         if (this.camera != null) {
-            this.camera.startContinuousCapture(this, maximumFps);
+            this.camera.startContinuousCapture(this);
         }
         // load the reticle pref, if any
         try {
