@@ -381,7 +381,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             public TableBasedRunoutCompensation(List<Location> nozzleTipMeasuredLocations) {
                 //store data for later usage
                 this.nozzleTipMeasuredLocations = nozzleTipMeasuredLocations;
-                
             }
 
             public Location getOffset(double angle) {
@@ -468,30 +467,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 	            
 	            angle = Math.toRadians(angle);
 	            
-	            /* convert from polar coords to xy cartesian offset values
-	             * https://blog.demofox.org/2013/10/12/converting-to-and-from-polar-spherical-coordinates-made-easy/
-	             * 
-				 * TODO: check whether the centerX/Y value should not be added here. maybe this introduces an error if the position of the bottom camera is not set well?
-				 * TODO done: okay, if the bottom camera position is not 100% correct, then adding .centerXY introduces an error while placing parts,
-				 * since all locations are then tied to the bottom camera as reference.
-				 * Looking to the nozzle tip through the bottom camera of course shows a well centered nozzle if .centerXY would be added to the offset.
-				 * But the goal was to cancel out the runout only.
-				 * How did I test whether .centerXY should be added or not?
-				 *  - Modified the bottom camera position by x -= 1mm.
-				 *  - Calibrated the nozzle tip
-				 *  - went to a placement location
-				 *  - nozzle tip was off by 1 mm
-				 * 
-				 * In general of course, the bottom camera position should be calibrated well, otherwise the visioned parts align not well on pcb.
-				 * Note:
-				 *  - Maybe one day some fancy algorithm can hint the user if bottom cam / nozzle offset or similar seems to be off...
-				 *  - For what can the .centerXY values be useful?
-				 * 
-	 			 * Think about it more, maybe the centerXY should be included again, since otherwise the parts placed with vision enabled would be placed wrong - and that's not the case.
-	 			 * So would one benefit more from including the .centerXY to the offset? 
-	 			 * -> okay, added the centerXY values again, since that is what bottom vision would do and it's what the user expects. it aligns the parts as if they were visioned.
-	 			 * (this whole comment might go away later)
-	             */
+	            // convert from polar coords to xy cartesian offset values
 	            double offsetX = this.centerX + (this.radius * Math.cos(angle));
 	            double offsetY = this.centerY + (this.radius * Math.sin(angle));
 
@@ -681,15 +657,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
         }
         
-        /* The reworked calibration routine will fit a circle into the runout nozzle path.
-         * the center of the circle represents the rotational axis, the radius of the circle is the runout
-         * so some refs to fit an circle function to xy-points sorted by easy to more complex:
-         */
         public void calibrate(ReferenceNozzleTip nozzleTip) throws Exception {
-        	/* TODO:
-        	 * a) check whether it works correct for limited head movement (+-180°)
-        	 * b) add plausibility checks
-        	 * c) if one measurement fails, one could retry or skip that silently if enough valid measurements are still available 
+        	/* TODO, possible later refinement:
+        	 * a) add plausibility checks
+        	 * b) if one measurement fails, one could retry or skip that silently if enough valid measurements are still available (possible only for modelBased algorithm) 
         	 */
         	
             if (!isEnabled() /* || !isHomed() */) {     // TODO: add a check to prevent calibration if not homed yet (insert after #806)
@@ -735,10 +706,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                     
                     // add offset to array
                     nozzleTipMeasuredLocations.add(offset);
-                    
-                    //TODO: catch case, no location was found (currently error message shows just a "0") in pipeline and
-                    // a) show an error or
-                    // b) ignore that if there are still enough points (has to be checked afterwards) 
                 }
                 
                 System.out.println("[runoutFix]measured offsets: " + nozzleTipMeasuredLocations);
@@ -802,7 +769,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 if (result instanceof List) {
                     if (((List) result).get(0) instanceof Result.Circle) {
                     	Result.Circle circle = ((List<Result.Circle>) result).get(0);
-                    	//TODO: the user has to be informed, that the pipeline should return only one result. this can be ensured by proper setting the pipeline (min/max nozzle diameter e.g.)
                         location = VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y);
                     }
                     else {
