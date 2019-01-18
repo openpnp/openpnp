@@ -652,7 +652,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
         }
         @Attribute(required = false)
-        public AngleIncrements angleIncrement = AngleIncrements.sixty;
+        private AngleIncrements angleIncrement = AngleIncrements.sixty;
         @Attribute(required = false)
         private double angleStart = 0;
         @Attribute(required = false)
@@ -846,6 +846,14 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             return calibrating;
         }
         
+        public AngleIncrements getAngleIncrement() {
+            return angleIncrement;
+        }
+
+        public void setAngleIncrement(AngleIncrements angleIncrement) {
+            this.angleIncrement = angleIncrement;
+        }
+
         public boolean isEnabled() {
             return enabled;
         }
