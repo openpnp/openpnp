@@ -22,4 +22,35 @@ The pipeline should detect the nozzle tip in a very stable way. Further it shoul
 Most relevant parameters: threshold value, mask circle diameter, houghcircle diameter max/min
 
 
-NOTE: include the new events Calibration.before and after in the eventpage and add examples (with exposure...)
+
+# Move to Event-Page after PR merge
+### NozzleCalibration.Starting
+
+Called before nozzle is calibrated. The other camera-events (beforeSette, .beforeCapture and .afterCapture) are fired while processing, too.
+
+| Name  | Type | Description |
+| ------------- | ------------- | -------------- |
+| nozzle  | [org.openpnp.spi.Nozzle](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Nozzle.html) | The Nozzle that is being calibrated. |
+| camera  | [org.openpnp.spi.Camera](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Camera.html) | The Camera which will be used to capture an image. |
+
+Example for adapting the camera exposure:  
+.openpnp/scripts/events/NozzleCalibration.Starting.js
+```js
+// TODO -> get from @netzmark
+```
+
+
+### NozzleCalibration.Finished
+
+Called after nozzle calibration finished.
+
+| Name  | Type | Description |
+| ------------- | ------------- | -------------- |
+| nozzle  | [org.openpnp.spi.Nozzle](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Nozzle.html) | The Nozzle that was calibrated. |
+| camera  | [org.openpnp.spi.Camera](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Camera.html) | The Camera which will be used to capture an image. |
+
+Example for adapting the camera exposure:  
+.openpnp/scripts/events/NozzleCalibration.Finished.js
+```js
+// TODO -> get from @netzmark
+```
