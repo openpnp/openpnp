@@ -102,6 +102,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
 
     private JLabel lblCompensationAlgorithm;
     private JComboBox compensationAlgorithmCb;
+    private JLabel lblAngleIncrements;
+    private JComboBox angleIncrementsCb;
     private JButton btnCalibrate;
     private JButton btnReset;
     private JLabel lblEnabled;
@@ -390,6 +392,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 new RowSpec[] {
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         RowSpec.decode("23px"), FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
@@ -399,12 +402,19 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
 
         calibrationEnabledCheckbox = new JCheckBox("");
         panelCalibration.add(calibrationEnabledCheckbox, "3, 2, left, default");
-
+        
         lblCompensationAlgorithm = new JLabel("Compensation Algorithm");
         panelCalibration.add(lblCompensationAlgorithm, "2, 4, right, default");
         
         compensationAlgorithmCb = new JComboBox(ReferenceNozzleTip.Calibration.RunoutCompensationAlgorithm.values());
         panelCalibration.add(compensationAlgorithmCb, "3, 4");
+        
+        lblAngleIncrements = new JLabel("angle increments (°)");
+        panelCalibration.add(lblAngleIncrements, "2, 6, right, default");
+        
+        angleIncrementsCb = new JComboBox(ReferenceNozzleTip.Calibration.AngleIncrements.values());
+        panelCalibration.add(angleIncrementsCb, "3, 6");
+
 
         btnCalibrate = new JButton("Calibrate");
         btnCalibrate.addActionListener(new ActionListener() {
@@ -412,7 +422,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 calibrate();
             }
         });
-        panelCalibration.add(btnCalibrate, "3, 5");
+        panelCalibration.add(btnCalibrate, "3, 7");
 
         btnReset = new JButton("Reset Compensation Data");
         btnReset.addActionListener(new ActionListener() {
@@ -420,7 +430,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 nozzleTip.getCalibration().reset();
             }
         });
-        panelCalibration.add(btnReset, "3, 7");
+        panelCalibration.add(btnReset, "4, 7");
 
         btnEditPipeline = new JButton("Edit Pipeline");
         btnEditPipeline.addActionListener(new ActionListener() {
@@ -430,7 +440,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 });
             }
         });
-        panelCalibration.add(btnEditPipeline, "3, 9, left, top");
+        panelCalibration.add(btnEditPipeline, "3, 11, left, top");
         
         btnResetPipeline = new JButton("Reset Pipeline");
         btnResetPipeline.addActionListener(new ActionListener() {
@@ -438,7 +448,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 resetCalibrationPipeline();
             }
         });
-        panelCalibration.add(btnResetPipeline, "4, 9, left, top");
+        panelCalibration.add(btnResetPipeline, "4, 11, left, top");
     }
     
     private void resetCalibrationPipeline() {
@@ -521,6 +531,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         
         addWrappedBinding(nozzleTip.getCalibration(), "enabled", calibrationEnabledCheckbox, "selected");
         addWrappedBinding(nozzleTip.getCalibration(), "runoutCompensationAlgorithm", compensationAlgorithmCb, "selectedItem");
+        addWrappedBinding(nozzleTip.getCalibration(), "angleIncrement", angleIncrementsCb, "selectedItem");
         
         addWrappedBinding(nozzleTip, "vacuumLevelPartOn", vacuumLevelPartOn, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumLevelPartOff", vacuumLevelPartOff, "text", doubleConverter);
