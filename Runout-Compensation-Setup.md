@@ -20,3 +20,6 @@ The pipeline should detect the nozzle tip in a very stable way. Further it shoul
 ![pipeline3](https://user-images.githubusercontent.com/3868450/51399984-8c2e8e00-1b47-11e9-92df-b6ac2bddb79b.PNG)
 
 Most relevant parameters: threshold value, mask circle diameter, houghcircle diameter max/min
+
+
+NOTE: include the new events Calibration.before and after in the eventpage and add examples (with exposure...)
