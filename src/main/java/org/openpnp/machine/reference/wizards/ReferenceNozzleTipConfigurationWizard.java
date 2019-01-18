@@ -384,7 +384,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         
 
         panelCalibration = new JPanel();
-        panelCalibration.setBorder(new TitledBorder(null, "Calibration (EXPERIMENTAL!, HELP LINK HERE)", TitledBorder.LEADING,
+        panelCalibration.setBorder(new TitledBorder(null, "Calibration (EXPERIMENTAL!)", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelCalibration);
         panelCalibration.setLayout(new FormLayout(
