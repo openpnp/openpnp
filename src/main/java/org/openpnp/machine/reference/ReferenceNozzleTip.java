@@ -647,8 +647,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         	 * c) polish the gui 
         	 */
         	
-            if (!isEnabled() /* || !isHomed() */) {     // TODO: add a check to prevent calibration if not homed yet (insert after #806)
-            	reset();
+            if ( !isEnabled() ) {
+                return;
+            }
+            
+            if ( !Configuration.get().getMachine().isHomed() ) {
+                Logger.trace("[runoutFix]Machine not yet homed, nozzle tip calibration request aborted");
                 return;
             }
             
