@@ -177,6 +177,9 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     @Override
     public void home() throws Exception {
+        // if one rehomes, the isHomed flag has to be removed
+        this.setHomed(false);
+        
         for (Head head : heads) {
             head.home();
         }
