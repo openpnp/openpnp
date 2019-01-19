@@ -270,8 +270,16 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Override
     public void home() throws Exception {
-        Logger.debug("home");
+        Logger.debug("homing machine");
+        
+        // if one rehomes, the isHomed flag has to be removed
+        this.setHomed(false);
+        
         super.home();
+
+        // if homing went well, set machine homed-flag true
+        this.setHomed(true);
+        
     }
 
     @Override
