@@ -532,7 +532,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 this.centerY = kasaC + kasaMeanY;
                 this.radius = Math.sqrt(kasaB*kasaB + kasaC*kasaC + kasaMxx + kasaMyy);
                 
-                Logger.debug("[runoutFix]calculated nozzleEccentricity: {}", this.toString());
+                Logger.debug("[nozzleTipCalibration]calculated nozzleEccentricity: {}", this.toString());
 	        }
 
             private void calcPhaseShift(List<Location> nozzleTipMeasuredLocations) {
@@ -575,7 +575,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             			differenceAngle -= 360;
             		}
             		
-            		Logger.trace("[runoutFix]differenceAngle: {}", differenceAngle);
+            		Logger.trace("[nozzleTipCalibration]differenceAngle: {}", differenceAngle);
             		
             		// sum up all differenceAngles to build the average later
             		differenceAngleMean += differenceAngle;
@@ -586,7 +586,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 
             	this.phaseShift = phaseShift;
             	
-            	Logger.debug("[runoutFix]calculated phaseShift: {}", this.phaseShift);
+            	Logger.debug("[nozzleTipCalibration]calculated phaseShift: {}", this.phaseShift);
             }
             
             
@@ -652,7 +652,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
             
             if ( !Configuration.get().getMachine().isHomed() ) {
-                Logger.trace("[runoutFix]Machine not yet homed, nozzle tip calibration request aborted");
+                Logger.trace("[nozzleTipCalibration]Machine not yet homed, nozzle tip calibration request aborted");
                 return;
             }
             
@@ -687,7 +687,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                     angleSubdivisions--;
                 }
                 
-                Logger.debug("[runoutFix]starting measurement; angleStart: {}, angleStop: {}, angleIncrement: {}, angleSubdivisions: {}", angleStart, angleStop, angleIncrement, angleSubdivisions);
+                Logger.debug("[nozzleTipCalibration]starting measurement; angleStart: {}, angleStop: {}, angleIncrement: {}, angleSubdivisions: {}", angleStart, angleStop, angleIncrement, angleSubdivisions);
                 
                 // Capture nozzle tip positions and add them to a list. For these calcs the camera location is considered to be 0/0
                 List<Location> nozzleTipMeasuredLocations = new ArrayList<>();
@@ -695,7 +695,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                     // calc the current measurement-angle
                     double measureAngle = angleStart + (i * angleIncrement); 
                     
-                    Logger.debug("[runoutFix]i: {}, measureAngle: {}", i, measureAngle);
+                    Logger.debug("[nozzleTipCalibration]i: {}, measureAngle: {}", i, measureAngle);
                     
                 	// rotate nozzle to measurement angle
                     Location measureLocation = measureBaseLocation.derive(null, null, null, measureAngle);
@@ -708,7 +708,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                     // add offset to array
                     nozzleTipMeasuredLocations.add(offset);
                     
-                    Logger.trace("[runoutFix]measured offset: {}", offset);
+                    Logger.trace("[nozzleTipCalibration]measured offset: {}", offset);
                     
                 }
                 
