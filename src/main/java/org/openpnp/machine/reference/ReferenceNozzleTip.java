@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import javax.swing.AbstractAction;
@@ -425,8 +426,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
             @Override
             public String toString() {
-                //TODO: use String.format
-                return "0° offset x: " + nozzleTipMeasuredLocations.get(0).getX() + ", offset y:  " + nozzleTipMeasuredLocations.get(0).getY();
+                return String.format(Locale.US, "0° offset x: %f, offset y: %f", nozzleTipMeasuredLocations.get(0).getX(), nozzleTipMeasuredLocations.get(0).getY());
             }
 
             @Override
@@ -592,8 +592,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             
             @Override
             public String toString() {
-                //TODO
-                return "centerX: " + centerX + " centerY: " + centerY + " radius: " + radius;
+                return String.format(Locale.US, "centerX: %f, centerY: %f, runout: %f", centerX, centerY, radius);
             }
 
             @Override
