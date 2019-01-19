@@ -326,7 +326,7 @@ public class JogControlsPanel extends JPanel {
         // so the dialog looks right while editing.
         homeButton.setIcon(Icons.home);
         homeButton.setHideActionText(true);
-        homeButton.setToolTipText("<html>" + Translations.getString("JogControlsPanel.Label.HomeIcon.Description") + "</html>"); //$NON-NLS-1$
+        homeButton.setToolTipText(Translations.getString("JogControlsPanel.homeButton.toolTipText")); //$NON-NLS-1$ //$NON-NLS-1$
         panelControls.add(homeButton, "2, 2"); //$NON-NLS-1$
 
         JLabel lblXy = new JLabel("X/Y"); //$NON-NLS-1$

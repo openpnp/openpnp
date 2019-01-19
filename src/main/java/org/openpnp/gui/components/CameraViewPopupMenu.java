@@ -51,10 +51,8 @@ public class CameraViewPopupMenu extends JPopupMenu {
         this.cameraView = cameraView;
 
         reticleMenu = createReticleMenu();
-        JMenu maxFpsMenu = createMaxFpsMenu();
 
         add(reticleMenu);
-        add(maxFpsMenu);
 
         JCheckBoxMenuItem chkShowImageInfo = new JCheckBoxMenuItem(showImageInfoAction);
         chkShowImageInfo.setSelected(cameraView.isShowImageInfo());
@@ -75,47 +73,6 @@ public class CameraViewPopupMenu extends JPopupMenu {
                         (CrosshairReticle) cameraView.getDefaultReticle()));
             }
         }
-    }
-
-    private JMenu createMaxFpsMenu() {
-        ButtonGroup buttonGroup = new ButtonGroup();
-        JMenu menu = new JMenu("Maximum FPS");
-        JRadioButtonMenuItem menuItem;
-
-        menuItem = new JRadioButtonMenuItem("1");
-        menuItem.addActionListener(maxFpsAction);
-        buttonGroup.add(menuItem);
-        menu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("5");
-        menuItem.addActionListener(maxFpsAction);
-        buttonGroup.add(menuItem);
-        menu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("10");
-        menuItem.addActionListener(maxFpsAction);
-        buttonGroup.add(menuItem);
-        menu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("15");
-        menuItem.addActionListener(maxFpsAction);
-        buttonGroup.add(menuItem);
-        menu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("24");
-        menuItem.addActionListener(maxFpsAction);
-        buttonGroup.add(menuItem);
-        menu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("30");
-        menuItem.addActionListener(maxFpsAction);
-        buttonGroup.add(menuItem);
-        menu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("45");
-        menuItem.addActionListener(maxFpsAction);
-        buttonGroup.add(menuItem);
-        menu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("60");
-        menuItem.addActionListener(maxFpsAction);
-        buttonGroup.add(menuItem);
-        menu.add(menuItem);
-
-        return menu;
     }
 
     private JMenu createReticleMenu() {
@@ -496,14 +453,6 @@ public class CameraViewPopupMenu extends JPopupMenu {
             JMenu optionsMenu = createFiducialReticleOptionsMenu(reticle);
             setReticleOptionsMenu(optionsMenu);
             cameraView.setDefaultReticle(reticle);
-        }
-    };
-
-    private Action maxFpsAction = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            int maximumFps = Integer.parseInt(e.getActionCommand());
-            cameraView.setMaximumFps(maximumFps);
         }
     };
 }

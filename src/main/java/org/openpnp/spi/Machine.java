@@ -105,6 +105,11 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public boolean isEnabled();
 
     /**
+     * Returns whether the Machine is homed
+     */
+    public boolean isHomed();
+
+    /**
      * Attempts to bring the Machine to a ready state or attempts to immediately stop it depending
      * on the value of enabled.
      * 
@@ -125,6 +130,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
      * isEnabled() should return false until setEnabled(true) is successfully called again.
      */
     public void setEnabled(boolean enabled) throws Exception;
+    
+    public void setHomed(boolean homed);
 
     public void addListener(MachineListener listener);
 
