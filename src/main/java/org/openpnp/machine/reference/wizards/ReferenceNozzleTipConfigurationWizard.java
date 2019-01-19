@@ -27,6 +27,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -48,12 +50,18 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Location;
+import org.openpnp.spi.Camera;
+import org.openpnp.spi.HeadMountable;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 
@@ -99,6 +107,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JPanel panelCalibration;
     private JButton btnEditPipeline;
     private JButton btnResetPipeline;
+    private JButton buttonCenterTool;
 
     private JLabel lblCompensationAlgorithm;
     private JComboBox compensationAlgorithmCb;
@@ -426,6 +435,12 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
             }
         });
         panelCalibration.add(btnCalibrate, "3, 7");
+        
+
+        buttonCenterTool = new JButton(positionToolAction);
+        buttonCenterTool.setHideActionText(true);
+        panelCalibration.add(buttonCenterTool, "2,7");
+
 
         btnReset = new JButton("Reset Compensation Data");
         btnReset.addActionListener(new ActionListener() {
@@ -461,6 +476,27 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         panelCalibration.add(lblCalibrationResults, "6, 4, left, default");
        
     }
+    
+
+    @SuppressWarnings("serial")     // Question is this allowed? This is stolen code from LocationButtonsPanel
+    private Action positionToolAction = new AbstractAction("Position Tool", Icons.centerTool) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Position the tool over the bottom camera.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                HeadMountable nozzle = nozzleTip.getParentNozzle();
+                Camera camera = VisionUtils.getBottomVisionCamera();
+                Location location = camera.getLocation();
+
+                MovableUtils.moveToLocationAtSafeZ(nozzle, location);
+            });
+        }
+    };
+
     
     private void resetCalibrationPipeline() {
         nozzleTip.getCalibration().resetPipeline();

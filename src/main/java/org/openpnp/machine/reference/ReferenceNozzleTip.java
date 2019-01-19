@@ -281,7 +281,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         this.changerMid2ToEndSpeed = changerMid2ToEndSpeed;
     }
 
-    private Nozzle getParentNozzle() {
+    public Nozzle getParentNozzle() {
         for (Head head : Configuration.get().getMachine().getHeads()) {
             for (Nozzle nozzle : head.getNozzles()) {
                 for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
