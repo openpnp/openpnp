@@ -39,19 +39,18 @@ import org.pmw.tinylog.Logger;
 
 public class ReferenceHead extends AbstractHead {
 
+
     protected ReferenceMachine machine;
     protected ReferenceDriver driver;
 
     public ReferenceHead() {
-        Configuration.get()
-                     .addListener(new ConfigurationListener.Adapter() {
-                         @Override
-                         public void configurationLoaded(Configuration configuration)
-                                 throws Exception {
-                             machine = (ReferenceMachine) configuration.getMachine();
-                             driver = machine.getDriver();
-                         }
-                     });
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationLoaded(Configuration configuration) throws Exception {
+                machine = (ReferenceMachine) configuration.getMachine();
+                driver = machine.getDriver();
+            }
+        });
     }
 
     @Override
@@ -59,9 +58,6 @@ public class ReferenceHead extends AbstractHead {
         Logger.debug("{}.home()", getName());
         driver.home(this);
         machine.fireMachineHeadActivity(this);
-
-        // if homing went well, set machine homed-flag true
-        machine.setHomed(true);
     }
 
     @Override
