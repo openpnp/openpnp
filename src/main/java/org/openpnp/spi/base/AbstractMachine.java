@@ -180,6 +180,9 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         for (Head head : heads) {
             head.home();
         }
+        
+        // if homing went well, set machine homed-flag true
+        this.setHomed(true);
     }
 
     @Override
