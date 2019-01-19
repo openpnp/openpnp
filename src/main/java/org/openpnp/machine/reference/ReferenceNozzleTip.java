@@ -666,16 +666,15 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 Location cameraLocation = camera.getLocation();
                 // This is our baseline location
                 Location measureBaseLocation = cameraLocation.derive(null, null, null, 0d);
-                
-                // move nozzle to the camera location at zero degree - the nozzle must not necessarily be at the center
-                MovableUtils.moveToLocationAtSafeZ(nozzle, measureBaseLocation);
-
 
                 HashMap<String, Object> params = new HashMap<>();
                 params.put("nozzle", nozzle);
                 params.put("camera", camera);
                 Configuration.get().getScripting().on("NozzleCalibration.Starting", params);
                 
+                // move nozzle to the camera location at zero degree - the nozzle must not necessarily be at the center
+                MovableUtils.moveToLocationAtSafeZ(nozzle, measureBaseLocation);
+
                 // Capture nozzle tip positions and add them to a list. For these calcs the camera location is considered to be 0/0
                 List<Location> nozzleTipMeasuredLocations = new ArrayList<>();
                 if ( angleStop >= 360 ) {
