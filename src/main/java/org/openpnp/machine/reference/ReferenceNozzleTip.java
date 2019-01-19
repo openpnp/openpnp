@@ -763,11 +763,15 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 if (0==((List) result).size()) {
                     throw new Exception("No results from vision. Check pipeline.");                    
                 }
-                
+
                 if (result instanceof List) {
                     if (((List) result).get(0) instanceof Result.Circle) {
-                    	Result.Circle circle = ((List<Result.Circle>) result).get(0);
+                        Result.Circle circle = ((List<Result.Circle>) result).get(0);
                         location = VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y);
+                    }
+                    else if (((List) result).get(0) instanceof KeyPoint) {
+                        KeyPoint keyPoint = ((List<KeyPoint>) result).get(0);
+                        location = VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x, keyPoint.pt.y);
                     }
                     else {
                         throw new Exception("Unrecognized result " + result);
@@ -776,7 +780,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 else {
                     throw new Exception("Unrecognized result " + result);
                 }
-                
+
                 //show result from pipeline in camera view
                 MainFrame.get().get().getCameraViews().getCameraView(camera).showFilteredImage(
                         OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 1000);
