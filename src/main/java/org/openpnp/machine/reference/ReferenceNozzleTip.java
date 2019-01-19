@@ -1,7 +1,6 @@
 package org.openpnp.machine.reference;
 
 import java.awt.event.ActionEvent;
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -9,7 +8,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -17,7 +15,6 @@ import javax.swing.JOptionPane;
 
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.KeyPoint;
-import org.opencv.core.RotatedRect;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
@@ -428,6 +425,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
             @Override
             public String toString() {
+                //TODO: use String.format
                 return "0° offset x: " + nozzleTipMeasuredLocations.get(0).getX() + ", offset y:  " + nozzleTipMeasuredLocations.get(0).getY();
             }
 
@@ -552,7 +550,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             	double measuredAngle=0;
             	double differenceAngleMean=0;
             	
-
                 Iterator<Location> nozzleTipMeasuredLocationsIterator = nozzleTipMeasuredLocations.iterator();
         		while (nozzleTipMeasuredLocationsIterator.hasNext()) {
         			Location measuredLocation = nozzleTipMeasuredLocationsIterator.next();
@@ -578,7 +575,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             			differenceAngle -= 360;
             		}
             		
-            		System.out.println("[runoutFix]differenceAngle " + differenceAngle);
+            		Logger.trace("[runoutFix]differenceAngle: {}", differenceAngle);
             		
             		// sum up all differenceAngles to build the average later
             		differenceAngleMean += differenceAngle;
@@ -595,6 +592,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             
             @Override
             public String toString() {
+                //TODO
                 return "centerX: " + centerX + " centerY: " + centerY + " radius: " + radius;
             }
 
@@ -608,7 +606,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         private CvPipeline pipeline = createDefaultPipeline();
 
         @Attribute(required = false)
-        private double angleIncrement = 60;
+        private int angleSubdivisions = 6;
         @Attribute(required = false)
         private double angleStart = 0;
         @Attribute(required = false)
@@ -646,7 +644,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         public void calibrate(ReferenceNozzleTip nozzleTip) throws Exception {
         	/* TODO, possible later refinement:
         	 * a) add plausibility checks
-        	 * b) if one measurement fails, one could retry or skip that silently if enough valid measurements are still available (possible only for modelBased algorithm) 
+        	 * b) if one measurement fails, one could retry or skip that silently if enough valid measurements are still available (possible only for modelBased algorithm)
+        	 * c) polish the gui 
         	 */
         	
             if (!isEnabled() /* || !isHomed() */) {     // TODO: add a check to prevent calibration if not homed yet (insert after #806)
@@ -675,12 +674,26 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 // move nozzle to the camera location at zero degree - the nozzle must not necessarily be at the center
                 MovableUtils.moveToLocationAtSafeZ(nozzle, measureBaseLocation);
 
+                // determine the resulting angleIncrements
+                double angleIncrement = ( angleStop - angleStart ) / this.angleSubdivisions;
+                
+                // determine the number of measurements to be made
+                int angleSubdivisions = this.angleSubdivisions;
+                if(angleStart == 0 && angleStop == 360) {
+                    // on a normal machine start is at 0°, stop would be at 360°. since the nozzle tip is at the same position then, the last measurement can be omitted
+                    angleSubdivisions--;
+                }
+                
+                Logger.debug("[runoutFix]starting measurement; angleStart: {}, angleStop: {}, angleIncrement: {}, angleSubdivisions: {}", angleStart, angleStop, angleIncrement, angleSubdivisions);
+                
                 // Capture nozzle tip positions and add them to a list. For these calcs the camera location is considered to be 0/0
                 List<Location> nozzleTipMeasuredLocations = new ArrayList<>();
-                if ( angleStop >= 360 ) {
-                    angleStop = 360 - angleIncrement;    // The last capture can be omitted if angleStop is 360°, because it equals 0° and has already been taken. If angleStop is lower than 360° it has to be captured.
-                }
-                for (double measureAngle = angleStart; measureAngle <= angleStop; measureAngle += angleIncrement) {	// hint: if nozzle is limited to +-180° this is respected in .moveTo automatically
+                for (int i = 0; i <= angleSubdivisions; i++) {
+                    // calc the current measurement-angle
+                    double measureAngle = angleStart + (i * angleIncrement); 
+                    
+                    Logger.debug("[runoutFix]i: {}, measureAngle: {}", i, measureAngle);
+                    
                 	// rotate nozzle to measurement angle
                     Location measureLocation = measureBaseLocation.derive(null, null, null, measureAngle);
                     nozzle.moveTo(measureLocation);
@@ -691,9 +704,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                     
                     // add offset to array
                     nozzleTipMeasuredLocations.add(offset);
+                    
+                    Logger.trace("[runoutFix]measured offset: {}", offset);
+                    
                 }
-                
-                System.out.println("[runoutFix]measured offsets: " + nozzleTipMeasuredLocations);
                 
                 Configuration.get().getScripting().on("NozzleCalibration.Finished", params);
                 
@@ -799,12 +813,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             return calibrating;
         }
         
-        public double getAngleIncrement() {
-            return angleIncrement;
+        public int getAngleSubdivisions() {
+            return angleSubdivisions;
         }
 
-        public void setAngleIncrement(double angleIncrement) {
-            this.angleIncrement = angleIncrement;
+        public void setAngleSubdivisions(int angleSubdivisions) {
+            this.angleSubdivisions = angleSubdivisions;
         }
 
         public boolean isEnabled() {

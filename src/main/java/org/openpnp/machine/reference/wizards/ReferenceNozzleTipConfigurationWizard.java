@@ -415,13 +415,13 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         calibrationEnabledCheckbox = new JCheckBox("");
         panelCalibration.add(calibrationEnabledCheckbox, "3, 2, left, default");
         
-        lblCompensationAlgorithm = new JLabel("Compensation Algorithm");
+        lblCompensationAlgorithm = new JLabel("Compensation algorithm");
         panelCalibration.add(lblCompensationAlgorithm, "2, 4, right, default");
         
         compensationAlgorithmCb = new JComboBox(ReferenceNozzleTip.Calibration.RunoutCompensationAlgorithm.values());
         panelCalibration.add(compensationAlgorithmCb, "3, 4");
         
-        lblAngleIncrements = new JLabel("angle increments (°)");
+        lblAngleIncrements = new JLabel("angle division (-)");
         panelCalibration.add(lblAngleIncrements, "2, 6, right, default");
         
         angleIncrementsTf = new JTextField();
@@ -578,7 +578,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         
         addWrappedBinding(nozzleTip.getCalibration(), "enabled", calibrationEnabledCheckbox, "selected");
         addWrappedBinding(nozzleTip.getCalibration(), "runoutCompensationAlgorithm", compensationAlgorithmCb, "selectedItem");
-        addWrappedBinding(nozzleTip.getCalibration(), "angleIncrement", angleIncrementsTf, "text", doubleConverter);
+        addWrappedBinding(nozzleTip.getCalibration(), "angleSubdivisions", angleIncrementsTf, "text", intConverter);
         
         addWrappedBinding(nozzleTip, "vacuumLevelPartOn", vacuumLevelPartOn, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumLevelPartOff", vacuumLevelPartOff, "text", doubleConverter);
