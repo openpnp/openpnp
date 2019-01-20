@@ -345,7 +345,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public Location getLocation() {
         Location location = getDriver().getLocation(this);
         if (nozzleTip != null && nozzleTip.getCalibration().isCalibrated()) {
-        	//TODO: check the DRO for consistancy... should this be commented?
             Location offset =
                     nozzleTip.getCalibration().getCalibratedOffset(location.getRotation());
             location = location.add(offset);
