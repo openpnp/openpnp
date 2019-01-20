@@ -403,8 +403,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
             
             /**
-             * Find the two closest offsets to the angle being requested. The offsets start at angle 0
-             * and go to angle 360 - angleIncrement in angleIncrement steps.
+             * Find the two closest offsets to the angle being requested. The offsets start at first measurement at angleStart
+             * and go to angleStop
              */
             private List<Location> getOffsetPairForAngle(double angle) {
                 Location a = null, b = null;
@@ -567,10 +567,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             		double differenceAngle = angle-measuredAngle;
             		
             		// atan2 outputs angles from -PI to +PI. If one wants positive values, one needs to add +PI to negative values
-            		if(differenceAngle < 0) {
+            		if(differenceAngle < -180) {
             			differenceAngle += 360;
             		}
-            		if(differenceAngle > 360) {
+            		if(differenceAngle > 180) {
             			// since calculating the difference angle in some circumstances the angle can be bigger than 360 -> subtract
             			differenceAngle -= 360;
             		}
@@ -607,9 +607,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         @Attribute(required = false)
         private int angleSubdivisions = 6;
         @Attribute(required = false)
-        private double angleStart = 0;
+        private double angleStart = -180;
         @Attribute(required = false)
-        private double angleStop = 360;
+        private double angleStop = 180;
         
         @Attribute(required = false)
         private boolean enabled;
@@ -682,7 +682,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 
                 // determine the number of measurements to be made
                 int angleSubdivisions = this.angleSubdivisions;
-                if(angleStart == 0 && angleStop == 360) {
+                if(angleStart == -180 && angleStop == 180) {
                     // on a normal machine start is at 0°, stop would be at 360°. since the nozzle tip is at the same position then, the last measurement can be omitted
                     angleSubdivisions--;
                 }
@@ -742,11 +742,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
             }
 
-            // Make sure the angle is between 0 and 360.
-            while (angle < 0) {
+            // Make sure the angle is between -180 and 180 - angles can get larger/smaller as +-180 if limitation to 180 degrees is disabled
+            while (angle < 180) {
                 angle += 360;
             }
-            while (angle > 360) {
+            while (angle > 180) {
                 angle -= 360;
             }
             
