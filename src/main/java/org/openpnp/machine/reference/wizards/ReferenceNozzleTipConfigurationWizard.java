@@ -579,6 +579,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         addWrappedBinding(nozzleTip.getCalibration(), "enabled", calibrationEnabledCheckbox, "selected");
         addWrappedBinding(nozzleTip.getCalibration(), "runoutCompensationAlgorithm", compensationAlgorithmCb, "selectedItem");
         addWrappedBinding(nozzleTip.getCalibration(), "angleSubdivisions", angleIncrementsTf, "text", intConverter);
+        bind(UpdateStrategy.READ, nozzleTip.getCalibration(), "runoutCompensationInformation", lblCalibrationResults,
+                "text");
         
         addWrappedBinding(nozzleTip, "vacuumLevelPartOn", vacuumLevelPartOn, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumLevelPartOff", vacuumLevelPartOff, "text", doubleConverter);

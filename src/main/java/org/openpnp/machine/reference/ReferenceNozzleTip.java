@@ -22,6 +22,7 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleTipConfigurationWizard;
+import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -361,7 +362,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     };
 
     @Root
-    public static class Calibration {
+    public static class Calibration extends AbstractModelObject{
         public static interface RunoutCompensation {
 
             Location getOffset(double angle);
@@ -730,6 +731,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 
                 // setting to false in the very end to prevent endless calibration repetitions if calibration was not successful (pipeline not well or similar) and the nozzle is commanded afterwards somewhere else (where the calibration is asked for again ...)
                 calibrating = false;
+                
+                // inform UI about new information available
+                firePropertyChange("runoutCompensationInformation", null, null);
             }
         }
         
@@ -810,6 +814,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
         public void reset() {
         	runoutCompensation = null;
+        	
+        	// inform UI about removed information
+            firePropertyChange("runoutCompensationInformation", null, null);
         }
 
         public boolean isCalibrated() {
