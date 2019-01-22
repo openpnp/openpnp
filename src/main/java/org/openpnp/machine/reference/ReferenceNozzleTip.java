@@ -657,6 +657,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 return;
             }
             
+            if ( this.isCalibrating() ) {
+                Logger.trace("[nozzleTipCalibration]Calibration aborted due to another running calibration");
+                return;
+            }
+            
+            
             Nozzle nozzle = nozzleTip.getParentNozzle();
             Camera camera = VisionUtils.getBottomVisionCamera();
             
