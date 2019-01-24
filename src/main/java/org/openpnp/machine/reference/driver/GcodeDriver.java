@@ -537,6 +537,23 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         boolean includeY = (yAxis != null && hasVariable(command, "YF"));
         boolean includeZ = (zAxis != null && hasVariable(command, "ZF"));
         boolean includeRotation = (rotationAxis != null && hasVariable(command, "RotationF"));
+        
+        // There is an exception to the above, if this is a moveToSafeZ(). The safe Z move does not count as 
+        // a real move in the sense that the headmountable (usually a nozzle) is selected for real work. 
+        // Consequently the coordinates should not be restored/forced in this case.
+        boolean isMoveToSafeZ = (
+        		Double.isNaN(x) 
+        		&& Double.isNaN(y) 
+        		&& Double.isNaN(rotation) 
+        		&& (! Double.isNaN(z)) 
+        		&& (z == hm.getSafeZ().getValue())); 
+        
+        if (isMoveToSafeZ) {
+        	// do not include the forced XF, YF, RotationF variables
+        	includeX = false;
+        	includeY = false;
+        	includeRotation = false;
+        }
 
         // Handle NaNs, which means don't move this axis for this move. We set the appropriate
         // axis reference to null, which we'll check for later. If the axis is force-included 

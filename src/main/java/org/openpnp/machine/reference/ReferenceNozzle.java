@@ -411,10 +411,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         return getName() + " " + getId();
     }
 
+    @Override
     public Length getSafeZ() {
         return safeZ;
     }
 
+    @Override
     public void setSafeZ(Length safeZ) {
         this.safeZ = safeZ;
     }

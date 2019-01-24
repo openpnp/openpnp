@@ -8,6 +8,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
@@ -57,6 +58,15 @@ public class VisionUtilsTest {
         @Override
         public void moveToSafeZ(double speed) throws Exception {
 
+        }
+        
+        @Override
+        public Length getSafeZ() {
+            return new Length(Double.NaN, LengthUnit.Millimeters);
+        }
+
+        @Override
+        public void setSafeZ(Length safeZ) {
         }
 
         @Override

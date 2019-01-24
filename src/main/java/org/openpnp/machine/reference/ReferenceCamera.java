@@ -529,10 +529,12 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         return getDriver().getLocation(this);
     }
 
+    @Override
     public Length getSafeZ() {
         return safeZ;
     }
 
+    @Override
     public void setSafeZ(Length safeZ) {
         this.safeZ = safeZ;
     }
