@@ -362,7 +362,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     };
 
     @Root
-    public static class Calibration extends AbstractModelObject{
+    public static class Calibration extends AbstractModelObject {
         public static interface RunoutCompensation {
 
             Location getOffset(double angle);

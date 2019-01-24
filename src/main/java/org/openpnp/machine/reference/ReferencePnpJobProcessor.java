@@ -558,7 +558,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             fireTextStatus("Changing nozzle tip on nozzle %s.", nozzle.getId());
 
             // Otherwise find a compatible tip and load it
-            NozzleTip nozzleTip = findNozzleTip(nozzle, part);
+            ReferenceNozzleTip nozzleTip = (ReferenceNozzleTip) findNozzleTip(nozzle, part);
             fireTextStatus("Change NozzleTip on Nozzle %s to %s.", 
                     nozzle.getId(), 
                     nozzleTip.getName());   
@@ -566,6 +566,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     new Object[] {nozzle, nozzle.getNozzleTip(), nozzleTip});
             nozzle.unloadNozzleTip();
             nozzle.loadNozzleTip(nozzleTip);
+            
+            if (nozzleTip != null && nozzleTip.getCalibration().isCalibrationNeeded()) {
+                Logger.debug("[nozzleTipCalibration]Calibrating nozzle tip {}", nozzleTip);
+                nozzleTip.getCalibration()
+                         .calibrate(nozzleTip);
+            }
 
             // Mark this step as complete
             plannedPlacement.stepComplete = true;
