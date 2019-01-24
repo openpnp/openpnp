@@ -373,6 +373,24 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         // Discard any currently picked parts
         discardAll(head);
         
+
+        // calibrating nozzle tips currently on head
+        fireTextStatus("Calibrating nozzle tips");
+        for (Head head : Configuration.get()
+                                      .getMachine()
+                                      .getHeads()) {
+            for (Nozzle nozzle : head.getNozzles()) {
+                ReferenceNozzleTip nozzleTip = (ReferenceNozzleTip) nozzle.getNozzleTip();
+                if (nozzleTip != null && nozzleTip.getCalibration().isCalibrationNeeded()) {
+                    Logger.debug("[nozzleTipCalibration]Calibrating nozzle tip {}", nozzleTip);
+                    nozzleTip.getCalibration()
+                             .calibrate(nozzleTip);
+                }
+            }
+        }
+
+
+        
         HashMap<String, Object> params = new HashMap<>();
         params.put("job", job);
         params.put("jobProcessor", this);

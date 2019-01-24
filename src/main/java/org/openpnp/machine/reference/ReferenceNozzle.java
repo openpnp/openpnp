@@ -224,12 +224,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             location = location.derive(null, null, null, currentLocation.getRotation());
         }
 
-        // Check calibration.
-        if (nozzleTip != null && nozzleTip.getCalibration().isCalibrationNeeded()) {
-            Logger.debug("NozzleTip is not yet calibrated, calibrating now.");
-            nozzleTip.getCalibration().calibrate(nozzleTip);
-        }
-
         if (limitRotation && !Double.isNaN(location.getRotation())
                 && Math.abs(location.getRotation()) > 180) {
             if (location.getRotation() < 0) {
