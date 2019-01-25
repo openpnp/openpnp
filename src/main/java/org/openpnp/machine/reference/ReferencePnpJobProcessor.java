@@ -66,6 +66,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     enum State {
         Uninitialized,
         PreFlight,
+        TipCalibration,
         FiducialCheck,
         Plan,
         ChangeNozzleTip,
@@ -148,9 +149,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     public ReferencePnpJobProcessor() {
         fsm.add(State.Uninitialized, Message.Initialize, State.PreFlight, this::doInitialize);
 
-        fsm.add(State.PreFlight, Message.Next, State.FiducialCheck, this::doPreFlight,
+        fsm.add(State.PreFlight, Message.Next, State.TipCalibration, this::doPreFlight,
                 Message.Next);
         fsm.add(State.PreFlight, Message.Abort, State.Cleanup, Message.Next);
+        
+        fsm.add(State.TipCalibration, Message.Next, State.FiducialCheck, this::doTipCalibration, Message.Next);
+        fsm.add(State.TipCalibration, Message.Skip, State.FiducialCheck, Message.Next);
+        fsm.add(State.TipCalibration, Message.Abort, State.Cleanup, Message.Next);
 
         fsm.add(State.FiducialCheck, Message.Next, State.Plan, this::doFiducialCheck, Message.Next);
         fsm.add(State.FiducialCheck, Message.Skip, State.Plan, Message.Next);
@@ -160,10 +165,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         fsm.add(State.Plan, Message.Abort, State.Cleanup, Message.Next);
         fsm.add(State.Plan, Message.Complete, State.Cleanup, Message.Next);
 
-        fsm.add(State.ChangeNozzleTip, Message.Next, State.Feed, this::doChangeNozzleTip,
-                Message.Next);
-        fsm.add(State.ChangeNozzleTip, Message.Skip, State.ChangeNozzleTip, this::doSkip,
-                Message.Next);
+        fsm.add(State.ChangeNozzleTip, Message.Next, State.Feed, this::doChangeNozzleTip, Message.Next);
+        fsm.add(State.ChangeNozzleTip, Message.Skip, State.ChangeNozzleTip, this::doSkip, Message.Next);
         fsm.add(State.ChangeNozzleTip, Message.Abort, State.Cleanup, Message.Next);
 
         fsm.add(State.Feed, Message.Next, State.Align, this::doFeedAndPick, Message.Next);
@@ -373,9 +376,17 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         // Discard any currently picked parts
         discardAll(head);
         
+        HashMap<String, Object> params = new HashMap<>();
+        params.put("job", job);
+        params.put("jobProcessor", this);
+        Configuration.get().getScripting().on("Job.Starting", params);
+    }
+    
+    protected void doTipCalibration() throws Exception {
+        fireTextStatus("Performing calibration routine.");
+        
 
         // calibrating nozzle tips currently on head
-        fireTextStatus("Calibrating nozzle tips");
         for (Head head : Configuration.get()
                                       .getMachine()
                                       .getHeads()) {
@@ -389,12 +400,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
         }
 
-
         
-        HashMap<String, Object> params = new HashMap<>();
-        params.put("job", job);
-        params.put("jobProcessor", this);
-        Configuration.get().getScripting().on("Job.Starting", params);
     }
 
     protected void doFiducialCheck() throws Exception {
@@ -567,12 +573,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             nozzle.unloadNozzleTip();
             nozzle.loadNozzleTip(nozzleTip);
             
-            if (nozzleTip != null && nozzleTip.getCalibration().isCalibrationNeeded()) {
-                Logger.debug("[nozzleTipCalibration]Calibrating nozzle tip {}", nozzleTip);
+            // calibrate nozzle after change
+            if (nozzleTip != null) {
+                Logger.debug("[nozzleTipCalibration]Calibrating nozzle tip after changed {}", nozzleTip);
                 nozzleTip.getCalibration()
                          .calibrate(nozzleTip);
             }
-
+            
             // Mark this step as complete
             plannedPlacement.stepComplete = true;
         }
