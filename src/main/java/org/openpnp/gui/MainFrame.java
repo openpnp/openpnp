@@ -391,6 +391,8 @@ public class MainFrame extends JFrame {
         mnHelp.add(setupAndCalibrationLinkAction);
         mnHelp.add(userManualLinkAction);
         mnHelp.addSeparator();
+        mnHelp.add(changeLogAction);
+        mnHelp.addSeparator();
         mnHelp.add(submitDiagnosticsAction);
         if (isInstallerAvailable()) {
             mnHelp.add(new JMenuItem(checkForUpdatesAction));
@@ -1066,6 +1068,24 @@ public class MainFrame extends JFrame {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             String uri = "https://github.com/openpnp/openpnp/wiki/User-Manual"; //$NON-NLS-1$
+            try {
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().browse(new URI(uri));
+                }
+                else {
+                    throw new Exception("Not supported."); //$NON-NLS-1$
+                }
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+        }
+    };
+    
+    private Action changeLogAction = new AbstractAction(Translations.getString("Menu.Help.ChangeLog")) { //$NON-NLS-1$
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            String uri = "https://github.com/openpnp/openpnp/blob/develop/CHANGES.md"; //$NON-NLS-1$
             try {
                 if (Desktop.isDesktopSupported()) {
                     Desktop.getDesktop().browse(new URI(uri));
