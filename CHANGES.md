@@ -1,6 +1,18 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-01-18
+
+* Runout Compensation Feature Enabled
+
+    There has been worked on issue #235 in pull request #804 to fix the nozzle runout compensation.
+    It was a new runout compensation algorithm implemented. That algorithm is the new default but it
+    coexists with the improved algorithm that was in the OpenPnP code before already.
+    
+    The feature was tested on two machines, but things are different on others. If you encounter any
+    problems file an issue. Information on how to use this feature you will find in the wiki at
+    https://github.com/openpnp/openpnp/wiki/Runout-Compensation-Setup
+    
 # 2018-12-08
 
 * Serial Library Change

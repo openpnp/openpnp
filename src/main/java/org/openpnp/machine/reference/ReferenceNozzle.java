@@ -224,13 +224,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             location = location.derive(null, null, null, currentLocation.getRotation());
         }
 
-        // Check calibration.
-        if (nozzleTip != null && nozzleTip.getCalibration().isCalibrationNeeded()) {
-            Logger.debug("NozzleTip is not yet calibrated, calibrating now.");
-            nozzleTip.getCalibration().calibrate(nozzleTip);
-        }
-
-        Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
         if (limitRotation && !Double.isNaN(location.getRotation())
                 && Math.abs(location.getRotation()) > 180) {
             if (location.getRotation() < 0) {
@@ -240,10 +233,13 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 location = location.derive(null, null, null, location.getRotation() - 360);
             }
         }
+
         if (nozzleTip != null && nozzleTip.getCalibration().isCalibrated()) {
-            location = location.subtract(
-                    nozzleTip.getCalibration().getCalibratedOffset(location.getRotation()));
-            Logger.debug("{}.moveTo({}, {}) (corrected)", getName(), location, speed);
+            Location correctionOffset = nozzleTip.getCalibration().getCalibratedOffset(location.getRotation());
+            location = location.subtract(correctionOffset);
+            Logger.debug("{}.moveTo({}, {}) (corrected by subtr. offset: {})", getName(), location, speed, correctionOffset);
+        } else {
+            Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
         }
         getDriver().moveTo(this, location, getHead().getMaxPartSpeed() * speed);
         getMachine().fireMachineHeadActivity(head);
