@@ -1,4 +1,4 @@
-package org.openpnp;
+package org.openpnp.util;
 
 import java.awt.Color;
 import java.awt.Frame;

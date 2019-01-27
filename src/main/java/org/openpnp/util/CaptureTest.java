@@ -1,4 +1,4 @@
-package org.openpnp;
+package org.openpnp.util;
 
 import java.awt.BorderLayout;
 import java.awt.Graphics;
