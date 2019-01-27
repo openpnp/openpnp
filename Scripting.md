@@ -234,6 +234,54 @@ Variables:
 | part  | [org.openpnp.model.Part](http://openpnp.github.io/openpnp/develop/org/openpnp/model/Part.html) | The Part being aligned. |
 | nozzle  | [org.openpnp.spi.Nozzle](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Nozzle.html) | The The Nozzle that the part is on. |
 
+### NozzleCalibration.Starting
+
+Called before nozzle is calibrated. The other camera-events (beforeSette, .beforeCapture and .afterCapture) are fired while processing, too.
+
+| Name  | Type | Description |
+| ------------- | ------------- | -------------- |
+| nozzle  | [org.openpnp.spi.Nozzle](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Nozzle.html) | The Nozzle that is being calibrated. |
+| camera  | [org.openpnp.spi.Camera](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Camera.html) | The Camera which will be used to capture an image. |
+
+Example for adapting the camera exposure:  
+.openpnp/scripts/events/NozzleCalibration.Starting.js
+```js
+//
+//This is the script to change the value of the Bottom Camera on demand.
+//I use it to increase the "sensitivity" of the camera while the nozzle calibration
+//process then decrease it when calibration is done.
+//Actuators in last section can be used to control the lightning for the calibration time.
+//
+ 
+import org.pmw.tinylog.Logger;
+loc = org.openpnp.util.VisionUtils.getBottomVisionCamera().getExposure();
+value = 4; // put here the value you want to set. Expos values are negative but use positive here.
+
+prevExpValue = loc.getValue();
+loc.setValue(-value);
+//newExpValue = loc.getValue(); //commented to dont rummage in the camera settings memory more than need
+
+//gui.setStatus(("BottomVision Exposure changed from: "+ prevExpValue) + (" to: " + newExpValue));
+gui.setStatus(("BottomVision Exposure changed from: "+ prevExpValue) + (" to: -" + value));
+//Logger.debug(("BottomVision Exposure changed from: "+ prevExpValue) + (" to: " + newExpValue));
+Logger.debug(("BottomVision Exposure changed from: "+ prevExpValue) + (" to: -" + value));
+
+actuator = machine.getActuatorByName("DownCamLights");	
+actuator.actuate(false); //to turn downlooking lightning OFF
+//actuator.actuate(true); //to turn downlooking lightning ON
+```
+
+
+### NozzleCalibration.Finished
+
+Called after nozzle calibration finished.
+
+| Name  | Type | Description |
+| ------------- | ------------- | -------------- |
+| nozzle  | [org.openpnp.spi.Nozzle](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Nozzle.html) | The Nozzle that was calibrated. |
+| camera  | [org.openpnp.spi.Camera](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Camera.html) | The Camera which will be used to capture an image. |
+
+
 ## Examples Running System Commands from JavaScript
 
 #### Call `firefox` from JavaScript:
