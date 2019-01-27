@@ -1,4 +1,4 @@
-# What is Runout and Runout Compensation? (WORK IN PROGRESS)
+# What is Runout and Runout Compensation?
 See the animations below. Left side is without compensation, right side is compensation enabled. The compensation algorithm removes the eccentricity of the nozzle tip to gain better placement accuracy. The following is about how to setup that feature.
 ![nozzle tip without compensation](https://user-images.githubusercontent.com/3868450/51180932-110c7400-18ca-11e9-8518-aff180ec30d5.gif)
 ![runout compensated](https://user-images.githubusercontent.com/3868450/51181050-5df04a80-18ca-11e9-887b-b25f2942505b.gif)
@@ -52,35 +52,3 @@ Most relevant parameters: threshold value, mask circle diameter, houghcircle dia
 ### Samsung CP40
 ANYBODY?
 
-
-# Move to Event-Page after PR merge
-### NozzleCalibration.Starting
-
-Called before nozzle is calibrated. The other camera-events (beforeSette, .beforeCapture and .afterCapture) are fired while processing, too.
-
-| Name  | Type | Description |
-| ------------- | ------------- | -------------- |
-| nozzle  | [org.openpnp.spi.Nozzle](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Nozzle.html) | The Nozzle that is being calibrated. |
-| camera  | [org.openpnp.spi.Camera](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Camera.html) | The Camera which will be used to capture an image. |
-
-Example for adapting the camera exposure:  
-.openpnp/scripts/events/NozzleCalibration.Starting.js
-```js
-// TODO -> get from @netzmark
-```
-
-
-### NozzleCalibration.Finished
-
-Called after nozzle calibration finished.
-
-| Name  | Type | Description |
-| ------------- | ------------- | -------------- |
-| nozzle  | [org.openpnp.spi.Nozzle](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Nozzle.html) | The Nozzle that was calibrated. |
-| camera  | [org.openpnp.spi.Camera](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Camera.html) | The Camera which will be used to capture an image. |
-
-Example for adapting the camera exposure:  
-.openpnp/scripts/events/NozzleCalibration.Finished.js
-```js
-// TODO -> get from @netzmark
-```
