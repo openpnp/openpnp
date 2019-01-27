@@ -21,7 +21,6 @@ package org.openpnp.machine.reference.wizards;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -29,9 +28,7 @@ import java.util.Set;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -41,7 +38,6 @@ import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
 
-import org.apache.commons.io.IOUtils;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
@@ -104,21 +100,6 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private PackagesTableModel tableModel;
 
     private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<>();
-    private JPanel panelCalibration;
-    private JButton btnEditPipeline;
-    private JButton btnResetPipeline;
-    private JButton buttonCenterTool;
-
-    private JLabel lblCompensationAlgorithm;
-    private JComboBox compensationAlgorithmCb;
-    private JLabel lblAngleIncrements;
-    private JTextField angleIncrementsTf;
-    private JButton btnCalibrate;
-    private JButton btnReset;
-    private JLabel lblEnabled;
-    private JLabel lblCalibrationInfo;
-    private JLabel lblCalibrationResults;
-    private JCheckBox calibrationEnabledCheckbox;
     private JLabel lblMiddleLocation_1;
     private JTextField textFieldMidX2;
     private JTextField textFieldMidY2;
@@ -390,90 +371,6 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         CellConstraints cc = new CellConstraints();
         lblDwellTime = new JLabel("Note: Total Dwell Time is the sum of Nozzle Dwell Time plus the Nozzle Tip Dwell Time.");
         panelDwellTime.add(lblDwellTime, cc.xywh(2, 6, 5, 1));
-        
-
-        panelCalibration = new JPanel();
-        panelCalibration.setBorder(new TitledBorder(null, "Calibration (EXPERIMENTAL!)", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
-        contentPanel.add(panelCalibration);
-        panelCalibration.setLayout(new FormLayout(
-                new ColumnSpec[] {
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        RowSpec.decode("23px"), FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
-
-        lblEnabled = new JLabel("Enable");
-        panelCalibration.add(lblEnabled, "2, 2, right, default");
-
-        calibrationEnabledCheckbox = new JCheckBox("");
-        panelCalibration.add(calibrationEnabledCheckbox, "3, 2, left, default");
-        
-        lblCompensationAlgorithm = new JLabel("Compensation algorithm");
-        panelCalibration.add(lblCompensationAlgorithm, "2, 4, right, default");
-        
-        compensationAlgorithmCb = new JComboBox(ReferenceNozzleTip.Calibration.RunoutCompensationAlgorithm.values());
-        panelCalibration.add(compensationAlgorithmCb, "3, 4");
-        
-        lblAngleIncrements = new JLabel("angle division (-)");
-        panelCalibration.add(lblAngleIncrements, "2, 6, right, default");
-        
-        angleIncrementsTf = new JTextField();
-        panelCalibration.add(angleIncrementsTf, "3, 6");
-        angleIncrementsTf.setColumns(10);
-
-        btnCalibrate = new JButton("Calibrate");
-        btnCalibrate.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                calibrate();
-            }
-        });
-        panelCalibration.add(btnCalibrate, "3, 7");
-        
-
-        buttonCenterTool = new JButton(positionToolAction);
-        buttonCenterTool.setHideActionText(true);
-        panelCalibration.add(buttonCenterTool, "2,7");
-
-
-        btnReset = new JButton("Reset Compensation Data");
-        btnReset.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                nozzleTip.getCalibration().reset();
-            }
-        });
-        panelCalibration.add(btnReset, "4, 7");
-
-        btnEditPipeline = new JButton("Edit Pipeline");
-        btnEditPipeline.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                UiUtils.messageBoxOnException(() -> {
-                    editCalibrationPipeline();
-                });
-            }
-        });
-        panelCalibration.add(btnEditPipeline, "3, 11, left, top");
-        
-        btnResetPipeline = new JButton("Reset Pipeline");
-        btnResetPipeline.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                resetCalibrationPipeline();
-            }
-        });
-        panelCalibration.add(btnResetPipeline, "4, 11, left, top");
-        
-
-        lblCalibrationInfo = new JLabel("Calibration Information");
-        panelCalibration.add(lblCalibrationInfo, "6, 2, left, default");
-
-        lblCalibrationResults = new JLabel(nozzleTip.getCalibration().getRunoutCompensationInformation());
-        panelCalibration.add(lblCalibrationResults, "6, 4, left, default");
        
     }
     
@@ -497,11 +394,6 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         }
     };
 
-    
-    private void resetCalibrationPipeline() {
-        nozzleTip.getCalibration().resetPipeline();
-    }
-
     private void editCalibrationPipeline() throws Exception {
         CvPipeline pipeline = nozzleTip.getCalibration().getPipeline();
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
@@ -510,12 +402,6 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         dialog.getContentPane().add(editor);
         dialog.setSize(1024, 768);
         dialog.setVisible(true);
-    }
-
-    private void calibrate() {
-        UiUtils.submitUiMachineTask(() -> {
-            nozzleTip.getCalibration().calibrate(nozzleTip);
-        });
     }
 
    
@@ -575,12 +461,6 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 lengthConverter);
         addWrappedBinding(changerEndLocation, "lengthZ", textFieldChangerEndZ, "text",
                 lengthConverter);
-        
-        addWrappedBinding(nozzleTip.getCalibration(), "enabled", calibrationEnabledCheckbox, "selected");
-        addWrappedBinding(nozzleTip.getCalibration(), "runoutCompensationAlgorithm", compensationAlgorithmCb, "selectedItem");
-        addWrappedBinding(nozzleTip.getCalibration(), "angleSubdivisions", angleIncrementsTf, "text", intConverter);
-        bind(UpdateStrategy.READ, nozzleTip.getCalibration(), "runoutCompensationInformation", lblCalibrationResults,
-                "text");
         
         addWrappedBinding(nozzleTip, "vacuumLevelPartOn", vacuumLevelPartOn, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumLevelPartOff", vacuumLevelPartOff, "text", doubleConverter);

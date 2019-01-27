@@ -21,6 +21,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.wizards.ReferenceNozzleTipCalibrationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleTipConfigurationWizard;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
@@ -32,14 +33,12 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.base.AbstractNozzleTip;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -197,7 +196,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(getConfigurationWizard()),
+                new PropertySheetWizardAdapter(new ReferenceNozzleTipCalibrationWizard(this), "Calibration")
+                };
     }
 
     public boolean isAllowIncompatiblePackages() {
@@ -427,7 +429,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
             @Override
             public String toString() {
-                return String.format(Locale.US, "0° offset x: %f, offset y: %f", nozzleTipMeasuredLocations.get(0).getX(), nozzleTipMeasuredLocations.get(0).getY());
+                return String.format(Locale.US, "0° Offset %f, %f", nozzleTipMeasuredLocations.get(0).getX(), nozzleTipMeasuredLocations.get(0).getY());
             }
 
             @Override
@@ -593,7 +595,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             
             @Override
             public String toString() {
-                return String.format(Locale.US, "centerX: %f, centerY: %f, runout: %f", centerX, centerY, radius);
+                return String.format(Locale.US, "Center %f, %f, Runout %f", centerX, centerY, radius);
             }
 
             @Override
@@ -620,10 +622,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         private RunoutCompensation runoutCompensation = null;
         
         public enum RunoutCompensationAlgorithm {
-            modelBased, tableBased
+            Model, Table
         }
         @Attribute(required = false)
-        private RunoutCompensationAlgorithm runoutCompensationAlgorithm = RunoutCompensationAlgorithm.modelBased;      // modelBased or tableBased? Two implementations are available
+        private RunoutCompensationAlgorithm runoutCompensationAlgorithm = RunoutCompensationAlgorithm.Model;      // modelBased or tableBased? Two implementations are available
 
         public RunoutCompensationAlgorithm getRunoutCompensationAlgorithm() {
             return this.runoutCompensationAlgorithm;
@@ -637,7 +639,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             if(isCalibrated()) {
                 return runoutCompensation.toString();
             } else {
-                return "not calibrated yet";
+                return "Uncalibrated";
             }
         }
         
@@ -715,7 +717,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 
                 Configuration.get().getScripting().on("NozzleCalibration.Finished", params);
                 
-            	if (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.modelBased) {
+            	if (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.Model) {
             	    this.runoutCompensation = new ModelBasedRunoutCompensation(nozzleTipMeasuredLocations);
             	} else {
             	    this.runoutCompensation = new TableBasedRunoutCompensation(nozzleTipMeasuredLocations);
