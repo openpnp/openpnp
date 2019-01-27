@@ -383,24 +383,21 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
     
     protected void doTipCalibration() throws Exception {
-        fireTextStatus("Performing calibration routine.");
+        fireTextStatus("Performing nozzle tip calibration.");
         
-
         // calibrating nozzle tips currently on head
-        for (Head head : Configuration.get()
-                                      .getMachine()
-                                      .getHeads()) {
+        for (Head head : machine.getHeads()) {
             for (Nozzle nozzle : head.getNozzles()) {
-                ReferenceNozzleTip nozzleTip = (ReferenceNozzleTip) nozzle.getNozzleTip();
-                if (nozzleTip != null && nozzleTip.getCalibration().isCalibrationNeeded()) {
-                    Logger.debug("[nozzleTipCalibration]Calibrating nozzle tip {}", nozzleTip);
-                    nozzleTip.getCalibration()
-                             .calibrate(nozzleTip);
+                NozzleTip nozzleTip = nozzle.getNozzleTip();
+                if (nozzleTip == null) {
+                    continue;
+                }
+                if (!nozzleTip.isCalibrated()) {
+                    Logger.debug("Calibrating nozzle tip {}", nozzleTip);
+                    nozzleTip.calibrate();
                 }
             }
         }
-
-        
     }
 
     protected void doFiducialCheck() throws Exception {
@@ -564,7 +561,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             fireTextStatus("Changing nozzle tip on nozzle %s.", nozzle.getId());
 
             // Otherwise find a compatible tip and load it
-            ReferenceNozzleTip nozzleTip = (ReferenceNozzleTip) findNozzleTip(nozzle, part);
+            NozzleTip nozzleTip = findNozzleTip(nozzle, part);
             fireTextStatus("Change NozzleTip on Nozzle %s to %s.", 
                     nozzle.getId(), 
                     nozzleTip.getName());   
@@ -575,9 +572,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             // calibrate nozzle after change
             if (nozzleTip != null) {
-                Logger.debug("[nozzleTipCalibration]Calibrating nozzle tip after changed {}", nozzleTip);
-                nozzleTip.getCalibration()
-                         .calibrate(nozzleTip);
+                Logger.debug("Calibrating nozzle tip {} after change.", nozzleTip);
+                nozzleTip.calibrate();
             }
             
             // Mark this step as complete

@@ -314,6 +314,14 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public Calibration getCalibration() {
         return calibration;
     }
+    
+    public void calibrate() throws Exception {
+        getCalibration().calibrate(this);
+    }
+    
+    public boolean isCalibrated() {
+        return getCalibration().isCalibrated();
+    }
 
     public Action loadAction = new AbstractAction("Load") {
         {
@@ -624,6 +632,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         public enum RunoutCompensationAlgorithm {
             Model, Table
         }
+        
         @Attribute(required = false)
         private RunoutCompensationAlgorithm runoutCompensationAlgorithm = RunoutCompensationAlgorithm.Model;      // modelBased or tableBased? Two implementations are available
 
@@ -841,10 +850,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             return enabled;
         }
         
-        public boolean isCalibrationNeeded() {
-            return isEnabled() && !isCalibrated() && !isCalibrating();
-        }
-
         public void setEnabled(boolean enabled) {
             this.enabled = enabled;
         }
