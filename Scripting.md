@@ -244,7 +244,7 @@ Called before nozzle is calibrated. The other camera-events (beforeSette, .befor
 | camera  | [org.openpnp.spi.Camera](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Camera.html) | The Camera which will be used to capture an image. |
 
 Example for adapting the camera exposure:  
-.openpnp/scripts/events/NozzleCalibration.Starting.js
+.openpnp/scripts/events/NozzleCalibration.Starting.bsh
 ```js
 //
 //This is the script to change the value of the Bottom Camera on demand.
