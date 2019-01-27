@@ -55,7 +55,7 @@ If you encounter runout on nozzle tips, this may lead to parts placed at offset 
 ![nozzle tip without compensation](https://user-images.githubusercontent.com/3868450/51180932-110c7400-18ca-11e9-8518-aff180ec30d5.gif)
 ![runout compensated](https://user-images.githubusercontent.com/3868450/51181050-5df04a80-18ca-11e9-887b-b25f2942505b.gif)
 
-Setup of the {runout compensation feature is described on a separate page](https://github.com/openpnp/openpnp/wiki/Runout-Compensation-Setup)
+Setup of the [runout compensation feature is described on a separate page](https://github.com/openpnp/openpnp/wiki/Runout-Compensation-Setup)
 
 
 ## Selecting a Nozzle
