@@ -272,7 +272,7 @@ public class MachineControlsPanel extends JPanel {
 					Configuration.get().getMachine().setEnabled(enable);
 					setEnabled(true);
 					if (machine.getHomeAfterEnabled() && machine.isEnabled()) {
-						selectedTool.getHead().home();
+						machine.home();
 		                homeAction.putValue(Action.SMALL_ICON, Icons.home);
 					}
                 }
@@ -297,7 +297,8 @@ public class MachineControlsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                selectedTool.getHead().home();
+                Machine machine = Configuration.get().getMachine();
+                machine.home();
                 homeAction.putValue(Action.SMALL_ICON, Icons.home);
             });
         }

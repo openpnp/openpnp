@@ -36,8 +36,8 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.camera.ImageCamera;
-import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -45,7 +45,7 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class ImageCameraConfigurationWizard extends ReferenceCameraConfigurationWizard {
+public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard {
     private final ImageCamera camera;
 
     private JPanel panelGeneral;
@@ -54,8 +54,6 @@ public class ImageCameraConfigurationWizard extends ReferenceCameraConfiguration
     private JButton btnBrowse;
 
     public ImageCameraConfigurationWizard(ImageCamera camera) {
-        super(camera);
-
         this.camera = camera;
 
         panelGeneral = new JPanel();
@@ -81,7 +79,6 @@ public class ImageCameraConfigurationWizard extends ReferenceCameraConfiguration
 
     @Override
     public void createBindings() {
-        super.createBindings();
         addWrappedBinding(camera, "sourceUri", textFieldSourceUrl, "text");
         ComponentDecorators.decorateWithAutoSelect(textFieldSourceUrl);
     }

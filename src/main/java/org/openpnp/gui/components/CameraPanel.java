@@ -101,7 +101,7 @@ public class CameraPanel extends JPanel {
     }
 
     public void addCamera(Camera camera) {
-        CameraView cameraView = new CameraView(maximumFps / Math.max(cameraViews.size(), 1));
+        CameraView cameraView = new CameraView();
         cameraView.setCamera(camera);
         cameraViews.put(camera, cameraView);
         camerasCombo.addItem(new CameraItem(camera));
@@ -208,7 +208,6 @@ public class CameraPanel extends JPanel {
 				}
 
                 for (CameraView cameraView : cameraViews.values()) {
-                    cameraView.setMaximumFps(maximumFps / Math.max(cameraViews.size(), 1));
                     cameraView.setShowName(true);
                     camerasPanel.add(cameraView);
                     if (cameraViews.size() == 1) {
@@ -228,7 +227,6 @@ public class CameraPanel extends JPanel {
                 camerasPanel.setLayout(new BorderLayout());
                 Camera camera = ((CameraItem) camerasCombo.getSelectedItem()).getCamera();
                 CameraView cameraView = getCameraView(camera);
-                cameraView.setMaximumFps(maximumFps);
                 cameraView.setShowName(false);
                 camerasPanel.add(cameraView);
 

@@ -28,8 +28,8 @@ import javax.swing.JPanel;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.camera.Webcams;
-import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
 
 import com.github.sarxos.webcam.WebcamDiscoveryEvent;
 import com.github.sarxos.webcam.WebcamDiscoveryListener;
@@ -40,7 +40,7 @@ import com.jgoodies.forms.layout.RowSpec;
 
 
 
-public class WebcamConfigurationWizard extends ReferenceCameraConfigurationWizard
+public class WebcamConfigurationWizard extends AbstractConfigurationWizard
         implements WebcamDiscoveryListener {
     private final Webcams camera;
 
@@ -49,7 +49,6 @@ public class WebcamConfigurationWizard extends ReferenceCameraConfigurationWizar
     private JCheckBox chckbxGray;
 
     public WebcamConfigurationWizard(Webcams camera) {
-        super(camera);
         this.camera = camera;
 
         panelGeneral = new JPanel();
@@ -81,7 +80,6 @@ public class WebcamConfigurationWizard extends ReferenceCameraConfigurationWizar
 
     @Override
     public void createBindings() {
-        super.createBindings();
         // The order of the properties is important. We want all the booleans
         // to be set before we set the driver because setting the driver
         // applies all the settings.
