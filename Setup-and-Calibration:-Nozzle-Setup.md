@@ -49,6 +49,15 @@ The offsets have to be determined very accurate in order for best placement resu
 For each nozzle you need to setup, follow this same process.
 IMPORTANT! Do not set any extruder or tool offsets in your motion controller for the nozzle(s), this is handled by OpenPnP as it needs to know these distances anyway.
 
+## Nozzle Tip Runout Calibration
+If you encounter runout on nozzle tips, this may lead to parts placed at offset and mispicks. Nozzle Tip Runout Compensation may help to improve the machines placement accuracy by measuring the offset and apply it dynamically while moving the nozzle tip at any angle. See the comparison in the following animations. Left side is compensation disabled, right side enabled.
+
+![nozzle tip without compensation](https://user-images.githubusercontent.com/3868450/51180932-110c7400-18ca-11e9-8518-aff180ec30d5.gif)
+![runout compensated](https://user-images.githubusercontent.com/3868450/51181050-5df04a80-18ca-11e9-887b-b25f2942505b.gif)
+
+Setup of the {runout compensation feature is described on a separate page](https://github.com/openpnp/openpnp/wiki/Runout-Compensation-Setup)
+
+
 ## Selecting a Nozzle
 If you have multiple nozzles on your machine, you can select the one you want to work with in OpenPnP by selecting it from the tools dropdown in the Machine Controls panel. The nozzle that is selected here is the one that will be used whenever you tell the machine to move a nozzle.
 
