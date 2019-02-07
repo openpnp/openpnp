@@ -2,6 +2,8 @@ package org.openpnp.machine.reference;
 
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -288,6 +290,18 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
             Logger.debug("{}.loadNozzleTip({}): Finished",
                     new Object[] {getName(), nozzleTip.getName()});
+            
+            try {
+                Map<String, Object> globals = new HashMap<>();
+                globals.put("head", getHead());
+                globals.put("nozzle", this);
+                Configuration.get()
+                             .getScripting()
+                             .on("NozzleTip.Loaded", globals);
+            }
+            catch (Exception e) {
+                Logger.warn(e);
+            }
         }
         
         this.nozzleTip = nt;
@@ -323,6 +337,18 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             moveToSafeZ(getHead().getMachine().getSpeed());
 
             Logger.debug("{}.unloadNozzleTip(): Finished", getName());
+            
+            try {
+                Map<String, Object> globals = new HashMap<>();
+                globals.put("head", getHead());
+                globals.put("nozzle", this);
+                Configuration.get()
+                             .getScripting()
+                             .on("NozzleTip.Unloaded", globals);
+            }
+            catch (Exception e) {
+                Logger.warn(e);
+            }
         }
         
         nozzleTip = null;
