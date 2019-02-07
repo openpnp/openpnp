@@ -281,6 +281,27 @@ Called after nozzle calibration finished.
 | nozzle  | [org.openpnp.spi.Nozzle](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Nozzle.html) | The Nozzle that was calibrated. |
 | camera  | [org.openpnp.spi.Camera](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Camera.html) | The Camera which will be used to capture an image. |
 
+### NozzleTip.Loaded
+
+Called after a new NozzleTip has been loaded.
+
+Variables:
+
+| Name  | Type | Description |
+| ------------- | ------------- | -------------- |
+| head  | [org.openpnp.spi.Head](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Head.html) | The Head the NozzleTip belongs to. |
+| nozzle  | [org.openpnp.spi.Nozzle](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Nozzle.html) | The Nozzle the new NozzleTip was loaded in. |
+
+### NozzleTip.Unloaded
+
+Called after a NozzleTip has been unloaded.
+
+Variables:
+
+| Name  | Type | Description |
+| ------------- | ------------- | -------------- |
+| head  | [org.openpnp.spi.Head](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Head.html) | The Head the NozzleTip belongs to. |
+| nozzle  | [org.openpnp.spi.Nozzle](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Nozzle.html) | The Nozzle the NozzleTip was unloaded from. |
 
 ## Examples Running System Commands from JavaScript
 
