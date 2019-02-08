@@ -45,6 +45,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceNozzleTip extends AbstractNozzleTip {
     // TODO Remove after October 1, 2017.
@@ -635,6 +636,18 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         
         @Attribute(required = false)
         private RunoutCompensationAlgorithm runoutCompensationAlgorithm = RunoutCompensationAlgorithm.Model;      // modelBased or tableBased? Two implementations are available
+
+        /**
+         * TODO Left for backward compatibility. Unused. Can be removed after Feb 7, 2020.
+         */
+        @Deprecated
+        @Attribute(required=false)
+        private Double angleIncrement = null;
+        
+        @Commit
+        public void commit() {
+            angleIncrement = null;
+        }
 
         public RunoutCompensationAlgorithm getRunoutCompensationAlgorithm() {
             return this.runoutCompensationAlgorithm;
