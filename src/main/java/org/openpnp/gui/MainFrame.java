@@ -78,6 +78,7 @@ import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
 import org.openpnp.gui.importer.KicadPosImporter;
 import org.openpnp.gui.importer.NamedCSVImporter;
 import org.openpnp.gui.importer.SolderPasteGerberImporter;
+import org.openpnp.gui.importer.LabcenterProteusImporter; //
 import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
@@ -389,6 +390,8 @@ public class MainFrame extends JFrame {
         mnHelp.add(quickStartLinkAction);
         mnHelp.add(setupAndCalibrationLinkAction);
         mnHelp.add(userManualLinkAction);
+        mnHelp.addSeparator();
+        mnHelp.add(changeLogAction);
         mnHelp.addSeparator();
         mnHelp.add(submitDiagnosticsAction);
         if (isInstallerAvailable()) {
@@ -707,6 +710,7 @@ public class MainFrame extends JFrame {
     }
 
     private void registerBoardImporters() {
+    	registerBoardImporter(LabcenterProteusImporter.class);
         registerBoardImporter(EagleBoardImporter.class);
         registerBoardImporter(EagleMountsmdUlpImporter.class);
         registerBoardImporter(KicadPosImporter.class);
@@ -1064,6 +1068,24 @@ public class MainFrame extends JFrame {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             String uri = "https://github.com/openpnp/openpnp/wiki/User-Manual"; //$NON-NLS-1$
+            try {
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().browse(new URI(uri));
+                }
+                else {
+                    throw new Exception("Not supported."); //$NON-NLS-1$
+                }
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+        }
+    };
+    
+    private Action changeLogAction = new AbstractAction(Translations.getString("Menu.Help.ChangeLog")) { //$NON-NLS-1$
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            String uri = "https://github.com/openpnp/openpnp/blob/develop/CHANGES.md"; //$NON-NLS-1$
             try {
                 if (Desktop.isDesktopSupported()) {
                     Desktop.getDesktop().browse(new URI(uri));

@@ -125,7 +125,7 @@ public class VisionUtilsTest {
         }
 
         @Override
-        public void startContinuousCapture(CameraListener listener, int maximumFps) {
+        public void startContinuousCapture(CameraListener listener) {
 
         }
 

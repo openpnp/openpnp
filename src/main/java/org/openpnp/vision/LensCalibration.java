@@ -206,10 +206,10 @@ public class LensCalibration {
                 }
                 break;
             case CirclesGrid:
-                found = Calib3d.findCirclesGridDefault(mat, patternSize, imagePoints);
+                found = Calib3d.findCirclesGrid(mat, patternSize, imagePoints);
                 break;
             case AsymmetricCirclesGrid:
-                found = Calib3d.findCirclesGridDefault(mat, patternSize, imagePoints,
+                found = Calib3d.findCirclesGrid(mat, patternSize, imagePoints,
                         Calib3d.CALIB_CB_ASYMMETRIC_GRID);
                 break;
         }

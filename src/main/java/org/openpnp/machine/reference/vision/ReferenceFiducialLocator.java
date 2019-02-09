@@ -11,7 +11,7 @@ import javax.swing.Action;
 import javax.swing.Icon;
 
 import org.apache.commons.io.IOUtils;
-import org.opencv.features2d.KeyPoint;
+import org.opencv.core.KeyPoint;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -21,7 +21,6 @@ import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
 import org.openpnp.model.Part;
@@ -30,7 +29,6 @@ import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.VisionProvider.TemplateMatch;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
@@ -101,12 +99,26 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             throw new Exception("Unable to locate second fiducial.");
         }
 
+        // Convert everything to the same units so the below math is correct.
+        Location placementLocationA = placementA.getLocation();
+        Location placementLocationB = placementB.getLocation().convertToUnits(placementLocationA.getUnits());
+        actualLocationA = actualLocationA.convertToUnits(placementLocationA.getUnits());
+        actualLocationB = actualLocationB.convertToUnits(placementLocationA.getUnits());
+        
         // Calculate the linear distance between the ideal points and the
         // located points. If they differ by more than a few percent we
         // probably made a mistake.
-        double fidDistance =
-                Math.abs(placementA.getLocation().getLinearDistanceTo(placementB.getLocation()));
+        double fidDistance = Math.abs(placementLocationA.getLinearDistanceTo(placementLocationB));
+        Logger.debug("Project output distance fiducial A to fiducial B is: {}{}.", 
+                fidDistance, placementLocationA.getUnits().getShortName());
+        
         double visionDistance = Math.abs(actualLocationA.getLinearDistanceTo(actualLocationB));
+        Logger.debug("Measured distance fiducial A to fiducial B is: {}{}.", 
+                visionDistance, placementLocationA.getUnits().getShortName());
+        
+        double distortionFactor = Math.abs(fidDistance / visionDistance);
+        Logger.debug("Board size distortion factor is: {}%.", distortionFactor);
+        
         if (Math.abs(fidDistance - visionDistance) > fidDistance * 0.01) {
             throw new Exception("Located fiducials are more than 1% away from expected.");
         }

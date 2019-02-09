@@ -25,12 +25,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.Action;
-
 import org.openpnp.CameraListener;
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.WebcamConfigurationWizard;
 import org.openpnp.spi.PropertySheetHolder;
@@ -90,11 +86,11 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
     }
 
     @Override
-    public synchronized void startContinuousCapture(CameraListener listener, int maximumFps) {
+    public synchronized void startContinuousCapture(CameraListener listener) {
         if (thread == null) {
             setDeviceId(deviceId);
         }
-        super.startContinuousCapture(listener, maximumFps);
+        super.startContinuousCapture(listener);
     }
 
     private BufferedImage lastImage = null;

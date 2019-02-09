@@ -64,7 +64,7 @@ public class Main {
             .addWriter(new ConsoleWriter(System.out, System.err))
             .activate();
         Configurator.currentConfig()
-            .formatPattern("{date:yyyy-MM-dd HH:mm:ss} {class_name} {level}: {message}")
+            .formatPattern("{date:yyyy-MM-dd HH:mm:ss.SSS} {class_name} {level}: {message}")
             .activate();
 
         // Redirect the stdout and stderr to the LogPanel
@@ -151,7 +151,7 @@ public class Main {
                 try {
                     MainFrame frame = new MainFrame(configuration);
                     frame.setVisible(true);
-                    Logger.debug(String.format("Bienvenue, Bienvenido, Willkommen, Hello, Namaskar, Welkom to OpenPnP version %s.", Main.getVersion()));
+                    Logger.debug(String.format("Bienvenue, Bienvenido, Willkommen, Hello, Namaskar, Welkom, to OpenPnP version %s.", Main.getVersion()));
                     configuration.getScripting().on("Startup", null);
                 }
                 catch (Exception e) {

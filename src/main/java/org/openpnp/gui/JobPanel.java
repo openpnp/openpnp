@@ -1272,9 +1272,9 @@ public class JobPanel extends JPanel {
             new AbstractAction("Move Camera To Board Location") { //$NON-NLS-1$
                 {
                     putValue(SMALL_ICON, Icons.centerCameraMoveNext);
-                    putValue(NAME, "Move Camera To Board Location and Move to the Next Board"); //$NON-NLS-1$
+                    putValue(NAME, "Move Camera to the Next Board"); //$NON-NLS-1$
                     putValue(SHORT_DESCRIPTION,
-                            "Position the camera at the board's location and move to the next board."); //$NON-NLS-1$
+                            "Position the camera at the next board's location."); //$NON-NLS-1$
                 }
 
                 @Override
@@ -1283,16 +1283,16 @@ public class JobPanel extends JPanel {
                         // Need to keep current focus owner so that the space bar can be
                         // used after the initial click. Otherwise, button focus is lost
                         // when table is updated
-                        Component comp = MainFrame.get().getFocusOwner();
-                        HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
+                    	Component comp = MainFrame.get().getFocusOwner();
+                    	Helpers.selectNextTableRow(boardLocationsTable);
+                    	comp.requestFocus();
+                       HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                         Camera camera = tool.getHead().getDefaultCamera();
                         MainFrame.get().getCameraViews().ensureCameraVisible(camera);
                         Location location = getSelectedBoardLocation().getLocation();
+                        
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
-                        Helpers.selectNextTableRow(boardLocationsTable);
-                        if (comp != null) {
-                            comp.requestFocus();
-                        }
+                       
                     });
                 }
             };

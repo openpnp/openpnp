@@ -1,6 +1,41 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-01-18
+
+* Runout Compensation Feature Enabled
+
+    There has been worked on issue #235 in pull request #804 to fix the nozzle runout compensation.
+    It was a new runout compensation algorithm implemented. That algorithm is the new default but it
+    coexists with the improved algorithm that was in the OpenPnP code before already.
+    
+    The feature was tested on two machines, but things are different on others. If you encounter any
+    problems file an issue. Information on how to use this feature you will find in the wiki at
+    https://github.com/openpnp/openpnp/wiki/Runout-Compensation-Setup
+    
+# 2018-12-08
+
+* Serial Library Change
+
+    The library that OpenPnP uses to communicate with serial ports, jSSC, has become out of date and is
+    unmaintained, so we're trying a new library. The new library is jSerialComm:
+    https://github.com/Fazecast/jSerialComm.
+	
+	This change should not affect existing users, so if you notice new problems with serial port access,
+	please file an issue or post to the mailing list.    
+    
+
+# 2018-11-17
+
+* OpenCV 3.4.2 Upgraded
+
+	The bug in the OpenCV library has been fixed so once again OpenPnP is upgraded to OpenCV 3.4.2.
+	
+* OpenPnP Compatible with Java 9, 10, 11.
+
+	With the upgrade of OpenCV OpenPnP is now compatible with all versions of Java after 8. This includes
+	Java 8, 9, 10, and 11. 
+
 # 2018-10-31
 
 * OpenCV 3.4.2 Upgrade Reverted

@@ -75,9 +75,9 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
     }
 
     @Override
-    public synchronized void startContinuousCapture(CameraListener listener, int maximumFps) {
+    public synchronized void startContinuousCapture(CameraListener listener) {
         start();
-        super.startContinuousCapture(listener, maximumFps);
+        super.startContinuousCapture(listener);
     }
 
     @Override

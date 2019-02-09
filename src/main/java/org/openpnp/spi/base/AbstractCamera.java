@@ -10,6 +10,10 @@ import java.util.Set;
 
 import javax.swing.Icon;
 
+import org.opencv.core.Core;
+import org.opencv.core.Core.MinMaxLocResult;
+import org.opencv.core.Mat;
+import org.opencv.imgproc.Imgproc;
 import org.openpnp.CameraListener;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Icons;
@@ -20,6 +24,7 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.VisionProvider;
+import org.openpnp.util.OpenCvUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -52,6 +57,8 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     protected Integer height;
     
     private boolean headSet = false;
+    
+    private Mat lastSettleMat = null;
 
     public AbstractCamera() {
         this.id = Configuration.createId("CAM");
@@ -118,13 +125,13 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     }
 
     @Override
-    public void startContinuousCapture(CameraListener listener, int maximumFps) {
-        listeners.add(new ListenerEntry(listener, maximumFps));
+    public void startContinuousCapture(CameraListener listener) {
+        listeners.add(new ListenerEntry(listener));
     }
 
     @Override
     public void stopContinuousCapture(CameraListener listener) {
-        listeners.remove(new ListenerEntry(listener, 0));
+        listeners.remove(new ListenerEntry(listener));
     }
 
     @Override
@@ -137,9 +144,48 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     public VisionProvider getVisionProvider() {
         return visionProvider;
     }
+    
+    private BufferedImage autoSettleAndCapture() {
+        long t = System.currentTimeMillis();
+        while (true) {
+            // Capture an image, convert to Mat and convert to gray.
+            BufferedImage image = capture();
+            Mat mat = OpenCvUtils.toMat(image);
+            Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
+            
+            // If this is the first time through the loop then assign the new image to
+            // the lastSettleMat and loop again. We need at least two images to check.
+            // to lastSettleMat and 
+            if (lastSettleMat == null) {
+                lastSettleMat = mat;
+                continue;
+            }
+            
+            // Take the absdiff of the two images and get the max changed pixel.
+            Mat diff = new Mat();
+            Core.absdiff(lastSettleMat, mat, diff);
+            MinMaxLocResult result = Core.minMaxLoc(diff);
+            Logger.debug("autoSettleAndCapture auto settle score: " + result.maxVal);
+            diff.release();
+
+            // Release the lastSettleMat and store the new image as the lastSettleMat.
+            lastSettleMat.release();
+            lastSettleMat = mat;
+
+            // If the image changed at least a bit (due to noise) and and less than our
+            // threshold, we have a winner. The check for > 0 is to ensure that we're not just
+            // receiving a duplicate frame from the camera. Every camera has at least a little
+            // noise so we're just checking that at least one pixel changed by 1 bit.
+            if (result.maxVal > 0 && result.maxVal < Math.abs(getSettleTimeMs())) {
+                lastSettleMat.release();
+                lastSettleMat = null;
+                Logger.debug("autoSettleAndCapture in {} ms", System.currentTimeMillis() - t);
+                return image;
+            }
+        }
+    }
 
     public BufferedImage settleAndCapture() {
-
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("camera", this);
@@ -150,22 +196,23 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         }
         
     	
-        try {
-            Thread.sleep(getSettleTimeMs());
-        }
-        catch (Exception e) {
+        if (getSettleTimeMs() >= 0) {
+            try {
+                Thread.sleep(getSettleTimeMs());
+            }
+            catch (Exception e) {
 
+            }
+            return capture();
         }
-        return capture();
+        else {
+            return autoSettleAndCapture();
+        }
     }
 
     protected void broadcastCapture(BufferedImage img) {
         for (ListenerEntry listener : new ArrayList<>(listeners)) {
-            if (listener.lastFrameSent < (System.currentTimeMillis()
-                    - (1000 / listener.maximumFps))) {
-                listener.listener.frameReceived(img);
-                listener.lastFrameSent = System.currentTimeMillis();
-            }
+            listener.listener.frameReceived(img);
         }
     }
 
@@ -199,12 +246,10 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     
     protected class ListenerEntry {
         public CameraListener listener;
-        public int maximumFps;
         public long lastFrameSent;
 
-        public ListenerEntry(CameraListener listener, int maximumFps) {
+        public ListenerEntry(CameraListener listener) {
             this.listener = listener;
-            this.maximumFps = maximumFps;
         }
 
         @Override

@@ -58,6 +58,9 @@ public abstract class ReferenceDriverCommunications {
     abstract public String readLine() throws TimeoutException, IOException;
     abstract public void writeLine(String data) throws IOException;
 
+    abstract public int read() throws TimeoutException, IOException;
+    abstract public void write(int d) throws IOException;
+    
     public void setLineEndingType(LineEndingType lineEndingType) {
         this.lineEndingType = lineEndingType;
     }
