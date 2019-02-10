@@ -440,7 +440,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
             @Override
             public String toString() {
-                return String.format(Locale.US, "%i° Offset %f, %f", nozzleTipMeasuredLocations.get(0).getRotation(), nozzleTipMeasuredLocations.get(0).getX(), nozzleTipMeasuredLocations.get(0).getY());
+                return String.format(Locale.US, "%d°-offset x=%f, y=%f", (int)nozzleTipMeasuredLocations.get(0).getRotation(), nozzleTipMeasuredLocations.get(0).getX(), nozzleTipMeasuredLocations.get(0).getY());
             }
 
             @Override
@@ -453,9 +453,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         public static class ModelBasedRunoutCompensation implements RunoutCompensation {
         	List<Location> nozzleTipMeasuredLocations;
         	
-            double centerX;
-            double centerY;
-            double radius;
+            double centerX = 0;
+            double centerY = 0;
+            double radius = 0;
             
             double phaseShift;
 
@@ -542,9 +542,23 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 	    	    kasaB = (kasaD1 - kasaG12*kasaC)/kasaG11/2.0;
 	    	    
 	    	    // assembling the output
-	    	    this.centerX = kasaB + kasaMeanX;
-                this.centerY = kasaC + kasaMeanY;
-                this.radius = Math.sqrt(kasaB*kasaB + kasaC*kasaC + kasaMxx + kasaMyy);
+	    	    Double centerX = kasaB + kasaMeanX;
+                Double centerY = kasaC + kasaMeanY;
+                Double radius = Math.sqrt(kasaB*kasaB + kasaC*kasaC + kasaMxx + kasaMyy);
+                
+                // saving output if valid
+                // the values are NaN if all given nozzleTipMeasuredLocations are the same (this is the case probably only on a simulated machine with nulldriver)
+                if ( !centerX.isNaN() && !centerY.isNaN() && !radius.isNaN() ) {
+                    // values valid
+                    this.centerX = centerX;
+                    this.centerY = centerY;
+                    this.radius = radius;
+                } else {
+                    // nozzletip has zero runout and constant offset to bottom camera
+                    this.centerX = nozzleTipMeasuredLocations.get(0).getX();
+                    this.centerY = nozzleTipMeasuredLocations.get(0).getY();
+                    this.radius = 0;
+                }
                 
                 Logger.debug("[nozzleTipCalibration]calculated nozzleEccentricity: {}", this.toString());
 	        }
@@ -650,6 +664,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         public void commit() {
             angleIncrement = null;
         }
+        
+        private Double offsetThreshold = 3.;
 
         public RunoutCompensationAlgorithm getRunoutCompensationAlgorithm() {
             return this.runoutCompensationAlgorithm;
@@ -823,8 +839,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 Iterator<Location> locationsIterator = locations.iterator();
                 while (locationsIterator.hasNext()) {
                     Location location = locationsIterator.next();
-                    if (location.getLinearDistanceTo(0., 0.) > 1) {
-                        locations.remove(location);
+                    if (location.getLinearDistanceTo(0., 0.) > offsetThreshold) {
+                        locationsIterator.remove();
+                        Logger.trace("[nozzleTipCalibration]Removed offset location {} from results; measured distance {} exceeds offsetThreshold {}", location, location.getLinearDistanceTo(0., 0.), offsetThreshold);
                     }
                 }
                 
@@ -843,7 +860,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                     // - invalid measurements above threshold are removed from results already and
                     // - locations is sorted by distance to the camera. 
                     // Assumption is that the smallest offset is the valid one.
-                    Logger.info("[nozzleTipCalibration]Got more than one result from pipeline. For best performance tweak pipeline to return exactly one result only.");
+                    Logger.info("[nozzleTipCalibration]Got more than one result from pipeline. For best performance tweak pipeline to return exactly one result only. First location from the following set is taken as valid: " + locations);
                 }
                 
                 // finally return the location at index (0) which is either a) the only one or b) the one with the smallest offset to bottom cam if locations.size>1 
