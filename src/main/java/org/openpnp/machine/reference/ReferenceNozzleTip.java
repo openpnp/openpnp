@@ -3,6 +3,8 @@ package org.openpnp.machine.reference;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -438,7 +440,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
             @Override
             public String toString() {
-                return String.format(Locale.US, "0° Offset %f, %f", nozzleTipMeasuredLocations.get(0).getX(), nozzleTipMeasuredLocations.get(0).getY());
+                return String.format(Locale.US, "%i° Offset %f, %f", nozzleTipMeasuredLocations.get(0).getRotation(), nozzleTipMeasuredLocations.get(0).getX(), nozzleTipMeasuredLocations.get(0).getY());
             }
 
             @Override
@@ -787,37 +789,65 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             try (CvPipeline pipeline = getPipeline()) {
                 pipeline.setProperty("camera", camera);
                 pipeline.process();
-                Location location;
-                
-                Object result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
-                
-                // are there any results from the pipeline?
-                if (0==((List) result).size()) {
-                    throw new Exception("No results from vision. Check pipeline.");                    
-                }
+                List<Location> locations = new ArrayList<>();
 
-                if (result instanceof List) {
-                    if (((List) result).get(0) instanceof Result.Circle) {
-                        Result.Circle circle = ((List<Result.Circle>) result).get(0);
-                        location = VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y);
-                    }
-                    else if (((List) result).get(0) instanceof KeyPoint) {
-                        KeyPoint keyPoint = ((List<KeyPoint>) result).get(0);
-                        location = VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x, keyPoint.pt.y);
-                    }
-                    else {
-                        throw new Exception("Unrecognized result " + result);
-                    }
-                }
-                else {
-                    throw new Exception("Unrecognized result " + result);
-                }
+                Object results = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
 
                 //show result from pipeline in camera view
                 MainFrame.get().get().getCameraViews().getCameraView(camera).showFilteredImage(
                         OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 1000);
                 
-                return location;
+                // are there any results from the pipeline?
+                if (0==((List) results).size()) {
+                    throw new Exception("No results from vision. Check pipeline.");                    
+                }
+
+                // add all results from pipeline to a Location-list post processing
+                if (results instanceof List) {
+                    for (Object result : (List) results) {
+                        if ((result) instanceof Result.Circle) {
+                            Result.Circle circle = ((Result.Circle) result);
+                            locations.add(VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y));
+                        }
+                        else if ((result) instanceof KeyPoint) {
+                            KeyPoint keyPoint = ((KeyPoint) result);
+                            locations.add(VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x, keyPoint.pt.y));
+                        }
+                        else {
+                            throw new Exception("Unrecognized result " + result);
+                        }
+                      }
+                }
+                
+                // remove all results that are above threshold
+                Iterator<Location> locationsIterator = locations.iterator();
+                while (locationsIterator.hasNext()) {
+                    Location location = locationsIterator.next();
+                    if (location.getLinearDistanceTo(0., 0.) > 1) {
+                        locations.remove(location);
+                    }
+                }
+                
+                // sort locations ascending. locations.get(0) is smallest distance to 0/0
+                Collections.sort(locations, new Comparator<Location>(){
+                    public int compare(Location s1, Location s2) {
+                        return Double.compare(s1.getLinearDistanceTo(0., 0.), s2.getLinearDistanceTo(0., 0.));
+                    }
+                });
+                
+                // check for a valid resultset
+                if (locations.size() == 0) {
+                    throw new Exception("No valid results from pipeline within threshold");
+                } else if (locations.size() > 1) {
+                    // one could throw an exception here, but we just log an info for now since
+                    // - invalid measurements above threshold are removed from results already and
+                    // - locations is sorted by distance to the camera. 
+                    // Assumption is that the smallest offset is the valid one.
+                    Logger.info("[nozzleTipCalibration]Got more than one result from pipeline. For best performance tweak pipeline to return exactly one result only.");
+                }
+                
+                // finally return the location at index (0) which is either a) the only one or b) the one with the smallest offset to bottom cam if locations.size>1 
+                return locations.get(0);
             }
         }
 
