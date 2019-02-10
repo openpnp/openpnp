@@ -542,7 +542,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 	    	    kasaB = (kasaD1 - kasaG12*kasaC)/kasaG11/2.0;
 	    	    
 	    	    // assembling the output
-	    	    Double centerX = kasaB + kasaMeanX;
+                Double centerX = kasaB + kasaMeanX;
                 Double centerY = kasaC + kasaMeanY;
                 Double radius = Math.sqrt(kasaB*kasaB + kasaC*kasaC + kasaMxx + kasaMyy);
                 
