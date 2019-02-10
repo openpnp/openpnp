@@ -1,6 +1,25 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-02-09
+
+## Breaking Changes Coming Soon
+
+A number of breaking changes are coming soon in the develop / Latest branch. These changes will
+likely break configurations and potentially require re-setup and re-calibration of machines.
+
+If you are seeing this message it means you are currently running the develop / Latest branch.
+In the coming weeks, if you automatically update on this branch you are likely to receive
+these breaking changes.
+
+If you are running a production machine and do not wish to follow along with these latest
+developments, please download and install the master / Stable branch from:
+
+http://openpnp.org/downloads/
+
+Stable has been updated as of today and will not be updated again until these breaking changes
+have been fully tested and released.
+
 # 2019-01-18
 
 * Runout Compensation Feature Enabled
