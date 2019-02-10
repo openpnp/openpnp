@@ -665,7 +665,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             angleIncrement = null;
         }
         
-        private Double offsetThreshold = 3.;
+        // max allowed linear distance wrt bottom camera
+        private Double offsetThreshold = 1.5;
 
         public RunoutCompensationAlgorithm getRunoutCompensationAlgorithm() {
             return this.runoutCompensationAlgorithm;
