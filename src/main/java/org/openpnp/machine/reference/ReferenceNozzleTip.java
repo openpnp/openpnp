@@ -665,8 +665,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             angleIncrement = null;
         }
         
-        // max allowed linear distance wrt bottom camera
-        private Double offsetThreshold = 1.5;
+        // Max allowed linear distance w.r.t. bottom camera for an offset measurement - measurements above threshold are removed from pipelines results 
+        @Attribute(required = false)
+        private Double offsetThreshold = 0.5;
 
         public RunoutCompensationAlgorithm getRunoutCompensationAlgorithm() {
             return this.runoutCompensationAlgorithm;
@@ -685,12 +686,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
         
         public void calibrate(ReferenceNozzleTip nozzleTip) throws Exception {
-        	/* TODO, possible later refinement:
-        	 * a) add plausibility checks
-        	 * b) if one measurement fails, one could retry or skip that silently if enough valid measurements are still available (possible only for modelBased algorithm)
-        	 * c) polish the gui 
-        	 */
-        	
             if ( !isEnabled() ) {
                 return;
             }
@@ -846,25 +841,17 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                     }
                 }
                 
-                // sort locations ascending. locations.get(0) is smallest distance to 0/0
-                Collections.sort(locations, new Comparator<Location>(){
-                    public int compare(Location s1, Location s2) {
-                        return Double.compare(s1.getLinearDistanceTo(0., 0.), s2.getLinearDistanceTo(0., 0.));
-                    }
-                });
-                
                 // check for a valid resultset
                 if (locations.size() == 0) {
                     throw new Exception("No valid results from pipeline within threshold");
                 } else if (locations.size() > 1) {
                     // one could throw an exception here, but we just log an info for now since
                     // - invalid measurements above threshold are removed from results already and
-                    // - locations is sorted by distance to the camera. 
-                    // Assumption is that the smallest offset is the valid one.
+                    // - we expect the best match delivered from pipeline to be the first on the list.
                     Logger.info("[nozzleTipCalibration]Got more than one result from pipeline. For best performance tweak pipeline to return exactly one result only. First location from the following set is taken as valid: " + locations);
                 }
                 
-                // finally return the location at index (0) which is either a) the only one or b) the one with the smallest offset to bottom cam if locations.size>1 
+                // finally return the location at index (0) which is either a) the only one or b) the one best matching the nozzle tip
                 return locations.get(0);
             }
         }
@@ -898,13 +885,21 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         public boolean isCalibrating() {
             return calibrating;
         }
-        
+
         public int getAngleSubdivisions() {
             return angleSubdivisions;
         }
 
         public void setAngleSubdivisions(int angleSubdivisions) {
             this.angleSubdivisions = angleSubdivisions;
+        }
+
+        public double getOffsetThreshold() {
+            return offsetThreshold;
+        }
+
+        public void setOffsetThreshold(double offsetThreshold) {
+            this.offsetThreshold = offsetThreshold;
         }
 
         public boolean isEnabled() {
