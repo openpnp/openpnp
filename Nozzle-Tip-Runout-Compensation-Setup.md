@@ -12,9 +12,10 @@ You can setup the runout compensation feature per nozzle tip. This allows you to
 5. Edit the pipeline. Best is a pipeline that returns only exactly one result. You can use DetectHoughCircles and SimpleBlobDetector to find the nozzle tip.
 6. Click apply.
 7. Click calibrate.
-8. When process is finished you may want to check that the nozzle is well centered over the bottom camera. Click bottom cam for that and rotate the nozzle.
+8. If the nozzle has more runout as defined in offset threshold textfield, the calibration fails. This is a simple check to remove obviously invalid measurements from the pipeline's results. Best value would be little higher than max. seen runout for the tip.
+9. When process is finished you may want to check that the nozzle is well centered over the bottom camera. Click bottom cam for that and rotate the nozzle.
 
-![calibration-panel](https://user-images.githubusercontent.com/3868450/51801932-9be35c00-2244-11e9-8e1a-3b9bdab3d3dc.PNG)
+![calibration-panel](https://user-images.githubusercontent.com/3868450/52634215-e90f3100-2ec6-11e9-99bf-7daaaf049fc6.PNG)
 
 ## Algorithm
 There are two algorithms available. Normally you would choose the new model based algorithm, it's set default. The graphic shows the working priciple of both implemented algorithms:
