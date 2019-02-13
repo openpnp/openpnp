@@ -1,7 +1,8 @@
 # What is Runout and Runout Compensation?
-See the animations below. Left side is without compensation, right side is compensation enabled. The compensation algorithm removes the eccentricity of the nozzle tip to gain better placement accuracy. The following is about how to setup that feature.
-![nozzle tip without compensation](https://user-images.githubusercontent.com/3868450/51180932-110c7400-18ca-11e9-8518-aff180ec30d5.gif)
-![runout compensated](https://user-images.githubusercontent.com/3868450/51181050-5df04a80-18ca-11e9-887b-b25f2942505b.gif)
+See the animations below. Left side is without compensation, right side is compensation enabled. The compensation algorithm removes the eccentricity of the nozzle tip to gain better placement accuracy. The following is about how to setup that feature. See the difference with a 3d printed demo-nozzle tip:
+
+![runout compensated](https://user-images.githubusercontent.com/3868450/52703637-161f1a80-2f7f-11e9-9e15-68b40c6df9f4.gif)
+![nozzle tip without compensation](https://user-images.githubusercontent.com/3868450/52703638-161f1a80-2f7f-11e9-8e5d-746018b3beb5.gif)
 
 # Setup Panel
 You can setup the runout compensation feature per nozzle tip. This allows you to tune the pipeline well to the different nozzle tips' diameter sizes.
@@ -33,7 +34,10 @@ There are two algorithms available. Normally you would choose the new model base
 The table-based algorithm is still available since it can be used if the mechanics of the machine can't turn the nozzle full 360°. In this case circle fitting may suffer accuracy, but it's tested well for a range of 200°. Since this is very rare, the model-based algorithm is the default and recommended.
 
 ## Pipeline
-The pipeline should detect the nozzle tip in a very stable way. Further it should return only exactly ONE result, not many points. Here are suggestions how to adapt the default pipeline for your needs. Its not every aspect of the pipelines described here. Just parts that might be helpful for nozzle detection.
+The pipeline should detect the nozzle tip in a very stable way. Further it should return best only exactly ONE result, not many points. Here are suggestions how to adapt the default pipeline for your needs. Its not every aspect of the pipelines described here. Just parts that might be helpful for nozzle detection. Find the following animation of a successful measurement with the detected houghcircles overlaid:
+
+![calibration-working](https://user-images.githubusercontent.com/3868450/52703639-16b7b100-2f7f-11e9-9c2d-d4e9d95464d2.gif)
+
 
 ### Juki-Nozzles
 
