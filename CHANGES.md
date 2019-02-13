@@ -1,6 +1,29 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-02-12
+
+## Breaking Change: Park System
+
+**Please reset your park locations!**
+
+The Park system has had a number of breaking changes made. They are:
+
+* Park XY now always parks the head at the same location, regardless of what tool is selected in
+  the jog control dropdown. This ensures that if you choose a park location with one tool selected
+  and then attempt to park with a different tool selected you don't crash the head. This is
+  primarily a safety improvement.
+* Z and Rotation have been removed from the park head configuration since these are each specific
+  to the tool being parked.
+* Park Z now parks the selected tool at Safe Z instead of the Z entered in the head configuration.
+* Park Rotation now parks the selected tool's rotation at 0 instead of the Rotation entered in the
+  head configuration.
+
+The overall goal and result of these changes is to ensure that park always parks at the exact same
+location no matter what tool is selected.
+
+See https://github.com/openpnp/openpnp/issues/279 for more information. 
+
 # 2019-02-09
 
 ## Breaking Changes Coming Soon

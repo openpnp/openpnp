@@ -26,26 +26,35 @@ import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
-import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.DoubleConverter;
+import org.openpnp.gui.support.Helpers;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
+import org.openpnp.model.Location;
+import org.openpnp.spi.Camera;
+import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
+import java.awt.event.ActionEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
+
 @SuppressWarnings("serial")
 public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceHead head;
     private JTextField parkX;
     private JTextField parkY;
-    private JTextField parkZ;
-    private JTextField parkC;
 
 
     public ReferenceHeadConfigurationWizard(ReferenceHead head) {
@@ -56,10 +65,6 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                 null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -80,12 +85,6 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         JLabel lblY = new JLabel("Y");
         panel.add(lblY, "6, 2, center, default");
 
-        JLabel lblZ = new JLabel("Z");
-        panel.add(lblZ, "8, 2, center, default");
-
-        JLabel lblRotation = new JLabel("Rotation");
-        panel.add(lblRotation, "10, 2, center, default");
-
         JLabel lblParkLocation = new JLabel("Park Location");
         panel.add(lblParkLocation, "2, 4, right, default");
 
@@ -96,35 +95,38 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         parkY = new JTextField();
         parkY.setColumns(5);
         panel.add(parkY, "6, 4, fill, default");
-
-        parkZ = new JTextField();
-        parkZ.setColumns(5);
-        panel.add(parkZ, "8, 4, fill, default");
-
-        parkC = new JTextField();
-        parkC.setColumns(5);
-        panel.add(parkC, "10, 4, fill, default");
         
-        LocationButtonsPanel locationButtonsPanel = new LocationButtonsPanel(parkX, parkY, parkZ, parkC);
-        panel.add(locationButtonsPanel, "12, 4");
+        JButton btnNewButton = new JButton(captureCameraCoordinatesAction);
+        btnNewButton.setHideActionText(true);
+        panel.add(btnNewButton, "8, 4");
     }
 
     @Override
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
-        DoubleConverter doubleConverter =
-                new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
         MutableLocationProxy parkLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, head, "parkLocation", parkLocation, "location");
         addWrappedBinding(parkLocation, "lengthX", parkX, "text", lengthConverter);
         addWrappedBinding(parkLocation, "lengthY", parkY, "text", lengthConverter);
-        addWrappedBinding(parkLocation, "lengthZ", parkZ, "text", lengthConverter);
-        addWrappedBinding(parkLocation, "rotation", parkC, "text", doubleConverter);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(parkX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(parkY);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(parkZ);
-        ComponentDecorators.decorateWithAutoSelect(parkC);
     }
+    
+    private Action captureCameraCoordinatesAction =
+            new AbstractAction("Get Camera Coordinates", Icons.captureCamera) {
+                {
+                    putValue(Action.SHORT_DESCRIPTION,
+                            "Capture the location that the camera is centered on.");
+                }
+
+                @Override
+                public void actionPerformed(ActionEvent arg0) {
+                    UiUtils.messageBoxOnException(() -> {
+                        Location l = head.getDefaultCamera().getLocation();
+                        Helpers.copyLocationIntoTextFields(l, parkX, parkY, null, null);
+                    });
+                }
+            };
 }
