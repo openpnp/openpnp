@@ -24,6 +24,11 @@ location no matter what tool is selected.
 
 See https://github.com/openpnp/openpnp/issues/279 for more information. 
 
+## New Feature: XY Soft Limits
+
+You can now set soft limits for X and Y moves in head configuration. When limits are set and
+enabled any attempted moves outside of the limits will fail and an error will be shown.
+
 # 2019-02-09
 
 ## Breaking Changes Coming Soon

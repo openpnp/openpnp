@@ -243,7 +243,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         } else {
             Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
         }
-        getDriver().moveTo(this, location, getHead().getMaxPartSpeed() * speed);
+        ((ReferenceHead) getHead()).moveTo(this, location, getHead().getMaxPartSpeed() * speed);
         getMachine().fireMachineHeadActivity(head);
     }
 

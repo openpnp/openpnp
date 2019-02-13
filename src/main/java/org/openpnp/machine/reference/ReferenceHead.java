@@ -31,15 +31,13 @@ import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
 import org.openpnp.machine.reference.psh.NozzlesPropertySheetHolder;
 import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
 import org.openpnp.model.Configuration;
-import org.openpnp.spi.Nozzle;
+import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractHead;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.pmw.tinylog.Logger;
 
 public class ReferenceHead extends AbstractHead {
-
-
     protected ReferenceMachine machine;
     protected ReferenceDriver driver;
 
@@ -95,9 +93,37 @@ public class ReferenceHead extends AbstractHead {
         Logger.debug("{}.moveToSafeZ({})", getName(), speed);
         super.moveToSafeZ(speed);
     }
+    
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed) throws Exception {
+        if (isSoftLimitsEnabled()) {
+            /**
+             * Since minLocation and maxLocation are captured with the Camera's coordinates, we need
+             * to know where the Camera will land, not the HeadMountable.
+             */
+            Location cameraLocation = location.subtract(hm.getHeadOffsets());
+            cameraLocation = cameraLocation.add(((ReferenceCamera) getDefaultCamera()).getHeadOffsets());
+            Location minLocation = this.minLocation.convertToUnits(cameraLocation.getUnits());
+            Location maxLocation = this.maxLocation.convertToUnits(cameraLocation.getUnits());
+            if (cameraLocation.getX() < minLocation.getX() || cameraLocation.getX() > maxLocation.getX() ||
+                    cameraLocation.getY() < minLocation.getY() || cameraLocation.getY() > maxLocation.getY()) {
+                throw new Exception(String.format("Can't move %s to %s, outside of soft limits on head %s.",
+                        hm.getName(), location, getName()));
+            }
+        }
+        getDriver().moveTo(hm, location, speed);
+        getMachine().fireMachineHeadActivity(this);
+    }
 
     @Override
     public String toString() {
         return getName();
+    }
+    
+    ReferenceDriver getDriver() {
+        return getMachine().getDriver();
+    }
+    
+    public ReferenceMachine getMachine() {
+        return (ReferenceMachine) Configuration.get().getMachine();
     }
 }
