@@ -62,6 +62,14 @@ This command has special handling for the X, Y, Z and Rotation variables. If the
 | Z              | Double   | The calculated Z position for the move. |
 | Rotation       | Double   | The calculated C or Rotation position for the move in deg. |
 | FeedRate       | Double   | The calculated feed rate for the move. |
+| XIncreasing    | Boolean  | Sent only if the move includes an X component and the value is increasing. |
+| XIncreasing    | Boolean  | Sent only if the move includes an X component and the value is increasing. |
+| YIncreasing    | Boolean  | Sent only if the move includes an Y component and the value is increasing. |
+| YIncreasing    | Boolean  | Sent only if the move includes an Y component and the value is increasing. |
+| ZIncreasing    | Boolean  | Sent only if the move includes an Z component and the value is increasing. |
+| ZIncreasing    | Boolean  | Sent only if the move includes an Z component and the value is increasing. |
+| RotationIncreasing    | Boolean  | Sent only if the move includes an Rotation component and the value is increasing. |
+| RotationIncreasing    | Boolean  | Sent only if the move includes an Rotation component and the value is increasing. |
 
 Example:
 ```
