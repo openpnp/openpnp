@@ -1,6 +1,15 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-02-14
+
+## New GcodeDriver Variables
+
+Some new GcodeDriver variables have been added for the MOVE_TO command. The new variables are used
+for heads where the controller needs to know the direction of motion to choose the right output.
+
+More information at: https://github.com/openpnp/openpnp/wiki/GcodeDriver:-Command-Reference#move_to_command
+
 # 2019-02-12
 
 ## Breaking Change: Park System
