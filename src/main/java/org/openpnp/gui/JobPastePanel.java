@@ -354,6 +354,9 @@ public class JobPastePanel extends JPanel {
 
     static class TypeRenderer extends DefaultTableCellRenderer {
         public void setValue(Object value) {
+            if (value == null) {
+                return;
+            }
             Type type = (Type) value;
             setText(type.name());
             if (type == Type.Paste) {

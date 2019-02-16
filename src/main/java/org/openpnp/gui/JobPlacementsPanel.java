@@ -600,6 +600,9 @@ public class JobPlacementsPanel extends JPanel {
 
     static class TypeRenderer extends DefaultTableCellRenderer {
         public void setValue(Object value) {
+            if (value == null) {
+                return;
+            }
             Type type = (Type) value;
             setText(type.name());
             if (type == Type.Fiducial) {
@@ -622,6 +625,9 @@ public class JobPlacementsPanel extends JPanel {
 
     static class StatusRenderer extends DefaultTableCellRenderer {
         public void setValue(Object value) {
+            if (value == null) {
+                return;
+            }
             Status status = (Status) value;
             if (status == Status.Ready) {
                 setBorder(new LineBorder(getBackground()));
