@@ -12,6 +12,7 @@ import javax.swing.JOptionPane;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.psh.NozzleTipsPropertySheetHolder;
@@ -419,6 +420,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
+            if (getHead().getNozzles().size() == 1) {
+                MessageBoxes.errorBox(null, "Error: Nozzle Not Deleted", "Can't delete last nozzle. There must be at least one nozzle.");
+                return;
+            }
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
                     "Are you sure you want to delete " + getName() + "?",
                     "Delete " + getName() + "?", JOptionPane.YES_NO_OPTION);
