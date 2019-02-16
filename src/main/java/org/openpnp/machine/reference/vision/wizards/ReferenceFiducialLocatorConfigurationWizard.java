@@ -3,6 +3,7 @@ package org.openpnp.machine.reference.vision.wizards;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -25,15 +26,16 @@ import org.openpnp.model.Footprint;
 import org.openpnp.model.Footprint.Pad;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
+import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.stages.SetResult;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.SwingConstants;
 
 public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceFiducialLocator fiducialLocator;
@@ -59,8 +61,6 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -112,6 +112,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
             }
         });
         panel.add(btnResetAllTo, "8, 2");
+        
         JLabel lblRepeatFiducialRecognition = new JLabel("Repeat Recognition");
         panel.add(lblRepeatFiducialRecognition, "2, 4");
         
@@ -126,6 +127,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
 
         enabledAveragingCheckbox = new JCheckBox("");
         panel.add(enabledAveragingCheckbox, "4, 6");
+
     }
     
     private void editPipeline() throws Exception {
