@@ -117,10 +117,10 @@ public class OpenCvVisionProvider implements VisionProvider {
             match.score = resultMat.get(y, x)[0] / maxVal;
 
             if (LogUtils.isDebugEnabled()) {
-                Core.rectangle(debugMat, new org.opencv.core.Point(x, y),
+                Imgproc.rectangle(debugMat, new org.opencv.core.Point(x, y),
                         new org.opencv.core.Point(x + templateMat.cols(), y + templateMat.rows()),
                         new Scalar(255));
-                Core.putText(debugMat, "" + match.score,
+                Imgproc.putText(debugMat, "" + match.score,
                         new org.opencv.core.Point(x + templateMat.cols(), y + templateMat.rows()),
                         Core.FONT_HERSHEY_PLAIN, 1.0, new Scalar(255));
             }
@@ -184,7 +184,7 @@ public class OpenCvVisionProvider implements VisionProvider {
             org.opencv.core.Point matchLoc) {
         if (LogUtils.isDebugEnabled()) {
             try {
-                Core.rectangle(roiImage, matchLoc,
+                Imgproc.rectangle(roiImage, matchLoc,
                         new org.opencv.core.Point(matchLoc.x + templateImage.cols(),
                                 matchLoc.y + templateImage.rows()),
                         new Scalar(0, 255, 0));

@@ -19,14 +19,15 @@
 
 package org.openpnp.machine.reference;
 
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -57,6 +58,7 @@ import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 @Root
@@ -64,6 +66,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     enum State {
         Uninitialized,
         PreFlight,
+        TipCalibration,
         FiducialCheck,
         Plan,
         ChangeNozzleTip,
@@ -81,7 +84,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         Complete,
         Abort,
         Skip,
+        IgnoreContinue,
         Reset
+    }
+
+    public enum JobOrderHint {
+        PartHeight,
+        Part
     }
 
     public static class PlannedPlacement {
@@ -107,6 +116,18 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     @Attribute(required = false)
     protected boolean parkWhenComplete = false;
+    
+    @Element(required = false)
+    protected boolean autoSaveJob = true;
+    
+    @Element(required = false)
+    boolean autoSaveConfiguration = true;
+    
+    @Element(required = false)
+    long configSaveFrequencyMs = (10 * 60 * 1000);
+
+    @Attribute(required = false)
+    protected JobOrderHint jobOrder = JobOrderHint.PartHeight;
 
     private FiniteStateMachine<State, Message> fsm = new FiniteStateMachine<>(State.Uninitialized);
 
@@ -120,17 +141,21 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     protected List<PlannedPlacement> plannedPlacements = new ArrayList<>();
 
-    protected Map<BoardLocation, Location> boardLocationFiducialOverrides = new HashMap<>();
-    
     long startTime;
     int totalPartsPlaced;
-
+    
+    long lastConfigSavedTimeMs = 0;
+    
     public ReferencePnpJobProcessor() {
         fsm.add(State.Uninitialized, Message.Initialize, State.PreFlight, this::doInitialize);
 
-        fsm.add(State.PreFlight, Message.Next, State.FiducialCheck, this::doPreFlight,
+        fsm.add(State.PreFlight, Message.Next, State.TipCalibration, this::doPreFlight,
                 Message.Next);
         fsm.add(State.PreFlight, Message.Abort, State.Cleanup, Message.Next);
+        
+        fsm.add(State.TipCalibration, Message.Next, State.FiducialCheck, this::doTipCalibration, Message.Next);
+        fsm.add(State.TipCalibration, Message.Skip, State.FiducialCheck, Message.Next);
+        fsm.add(State.TipCalibration, Message.Abort, State.Cleanup, Message.Next);
 
         fsm.add(State.FiducialCheck, Message.Next, State.Plan, this::doFiducialCheck, Message.Next);
         fsm.add(State.FiducialCheck, Message.Skip, State.Plan, Message.Next);
@@ -140,14 +165,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         fsm.add(State.Plan, Message.Abort, State.Cleanup, Message.Next);
         fsm.add(State.Plan, Message.Complete, State.Cleanup, Message.Next);
 
-        fsm.add(State.ChangeNozzleTip, Message.Next, State.Feed, this::doChangeNozzleTip,
-                Message.Next);
-        fsm.add(State.ChangeNozzleTip, Message.Skip, State.ChangeNozzleTip, this::doSkip,
-                Message.Next);
+        fsm.add(State.ChangeNozzleTip, Message.Next, State.Feed, this::doChangeNozzleTip, Message.Next);
+        fsm.add(State.ChangeNozzleTip, Message.Skip, State.ChangeNozzleTip, this::doSkip, Message.Next);
         fsm.add(State.ChangeNozzleTip, Message.Abort, State.Cleanup, Message.Next);
 
         fsm.add(State.Feed, Message.Next, State.Align, this::doFeedAndPick, Message.Next);
         fsm.add(State.Feed, Message.Skip, State.Feed, this::doSkip, Message.Next);
+        fsm.add(State.Feed, Message.IgnoreContinue, State.Feed, this::doIgnoreContinue, Message.Next);
         fsm.add(State.Feed, Message.Abort, State.Cleanup, Message.Next);
 
         // TODO: See notes on doFeedAndPick()
@@ -161,6 +185,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         fsm.add(State.Align, Message.Next, State.Place, this::doAlign, Message.Next);
         fsm.add(State.Align, Message.Skip, State.Align, this::doSkip, Message.Next);
+        fsm.add(State.Align, Message.IgnoreContinue, State.Align, this::doIgnoreContinue, Message.Next);
         fsm.add(State.Align, Message.Abort, State.Cleanup, Message.Next);
 
         fsm.add(State.Place, Message.Next, State.Plan, this::doPlace);
@@ -215,6 +240,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     public synchronized void skip() throws Exception {
         fsm.send(Message.Skip);
     }
+    
+    public synchronized void ignoreContinue() throws Exception {
+        fsm.send(Message.IgnoreContinue);
+    }
 
     /*
      * TODO Due to the Align Skip issue I think we'd be better off replacing this API with
@@ -234,6 +263,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      */
     public boolean canSkip() {
         return fsm.canSend(Message.Skip);
+    }
+
+    public boolean canIgnoreContinue() {
+        return fsm.canSend(Message.IgnoreContinue);
     }
 
     /**
@@ -264,12 +297,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     protected void doPreFlight() throws Exception {
         startTime = System.currentTimeMillis();
         totalPartsPlaced = 0;
+        saveJobAndConfig(true);
         
         // Create some shortcuts for things that won't change during the run
         this.machine = Configuration.get().getMachine();
         this.head = this.machine.getDefaultHead();
         this.jobPlacements.clear();
-        this.boardLocationFiducialOverrides.clear();
+        
 
         fireTextStatus("Checking job for setup errors.");
 
@@ -278,6 +312,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             if (!boardLocation.isEnabled()) {
                 continue;
             }
+            
+            // clear locationFiducialOverrides
+            boardLocation.clearLocationFiducialOverrides();            
             
             // Check for ID duplicates - throw error if any are found
             HashSet<String> idlist = new HashSet<String>();
@@ -344,6 +381,24 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         params.put("jobProcessor", this);
         Configuration.get().getScripting().on("Job.Starting", params);
     }
+    
+    protected void doTipCalibration() throws Exception {
+        fireTextStatus("Performing nozzle tip calibration.");
+        
+        // calibrating nozzle tips currently on head
+        for (Head head : machine.getHeads()) {
+            for (Nozzle nozzle : head.getNozzles()) {
+                NozzleTip nozzleTip = nozzle.getNozzleTip();
+                if (nozzleTip == null) {
+                    continue;
+                }
+                if (!nozzleTip.isCalibrated()) {
+                    Logger.debug("Calibrating nozzle tip {}", nozzleTip);
+                    nozzleTip.calibrate();
+                }
+            }
+        }
+    }
 
     protected void doFiducialCheck() throws Exception {
         fireTextStatus("Performing fiducial checks.");
@@ -356,7 +411,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         	BoardLocation boardLocation = job.getBoardLocations().get(0);
         	
         	Location location = locator.locateBoard(boardLocation, p.isCheckFiducials());
-        	boardLocationFiducialOverrides.put(boardLocation, location);
+        	boardLocation.setLocationFiducialOverrides(location);
         	Logger.debug("Panel Fiducial check for {}", boardLocation);
         }
         
@@ -368,7 +423,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 continue;
             }
             Location location = locator.locateBoard(boardLocation);
-            boardLocationFiducialOverrides.put(boardLocation, location);
+            boardLocation.setLocationFiducialOverrides(location);
             Logger.debug("Fiducial check for {}", boardLocation);
         }
     }
@@ -379,7 +434,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
         
         Location location = locator.locateBoard(boardLocation);
-        boardLocationFiducialOverrides.put(boardLocation, location);
+        boardLocation.setLocationFiducialOverrides(location);
         Logger.debug("Fiducial check for {}", boardLocation);
     }
 
@@ -413,10 +468,20 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         fireTextStatus("Planning placements.");
 
-        // Get the list of unfinished placements and sort them by part height.
-        List<JobPlacement> jobPlacements = getPendingJobPlacements().stream()
-                .sorted(Comparator.comparing(JobPlacement::getPartHeight))
-                .collect(Collectors.toList());
+        List<JobPlacement> jobPlacements;
+
+        if (this.jobOrder.equals(JobOrderHint.Part)) {
+        	// Get the list of unfinished placements and sort them by part.
+	        	jobPlacements = getPendingJobPlacements().stream()
+	        			.sorted(Comparator.comparing(JobPlacement::getPartId))
+	        			.collect(Collectors.toList());
+        } 
+        else {
+        	// Get the list of unfinished placements and sort them by part height.
+	        	jobPlacements = getPendingJobPlacements().stream()
+	        			.sorted(Comparator.comparing(JobPlacement::getPartHeight))
+	        			.collect(Collectors.toList());
+        }
 
         if (jobPlacements.isEmpty()) {
             return;
@@ -497,11 +562,20 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             // Otherwise find a compatible tip and load it
             NozzleTip nozzleTip = findNozzleTip(nozzle, part);
-            Logger.debug("Change nozzle tip on {} from {} to {}",
+            fireTextStatus("Change NozzleTip on Nozzle %s to %s.", 
+                    nozzle.getId(), 
+                    nozzleTip.getName());   
+            Logger.debug("Change NozzleTip on Nozzle {} from {} to {}",
                     new Object[] {nozzle, nozzle.getNozzleTip(), nozzleTip});
             nozzle.unloadNozzleTip();
             nozzle.loadNozzleTip(nozzleTip);
-
+            
+            // calibrate nozzle after change
+            if (nozzleTip != null) {
+                Logger.debug("Calibrating nozzle tip {} after change.", nozzleTip);
+                nozzleTip.calibrate();
+            }
+            
             // Mark this step as complete
             plannedPlacement.stepComplete = true;
         }
@@ -603,8 +677,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             fireTextStatus("Picking %s from %s for %s.", part.getId(), feeder.getName(),
                     placement.getId());
             
-            ++totalPartsPlaced;
-
             // Pick
             nozzle.pick(part);
 
@@ -631,14 +703,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Nozzle nozzle = plannedPlacement.nozzle;
             JobPlacement jobPlacement = plannedPlacement.jobPlacement;
             Placement placement = jobPlacement.placement;
+            BoardLocation boardLocation = jobPlacement.boardLocation;
             Part part = placement.getPart();
             fireTextStatus("Aligning %s for %s.", part.getId(), placement.getId());
 
             PartAlignment partAlignment = findPartAligner(machine, part);
 
-            // Check if there is a fiducial override for the board location and if so, use it.
-            BoardLocation boardLocation = getFiducialCompensatedBoardLocation(jobPlacement.boardLocation);
-            
             if(partAlignment!=null) {
                 plannedPlacement.alignmentOffsets = VisionUtils.findPartAlignmentOffsets(
                         partAlignment,
@@ -646,6 +716,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         boardLocation,
                         placement.getLocation(), nozzle);
                 Logger.debug("Align {} with {}", part, nozzle);
+                Logger.debug("Offsets {}", plannedPlacement.alignmentOffsets);
             }
             else
             {
@@ -675,10 +746,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
 
             // Check if there is a fiducial override for the board location and if so, use it.
-            boardLocation = getFiducialCompensatedBoardLocation(boardLocation);
-
             Location placementLocation =
-                    Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation());
+                    Utils2D.calculateFiducialCompensatedBoardPlacementLocation(boardLocation, placement.getLocation());
 
             // If there are alignment offsets update the placement location with them
             if (plannedPlacement.alignmentOffsets != null) {
@@ -725,6 +794,22 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             placementLocation = placementLocation.add(new Location(part.getHeight().getUnits(), 0,
                     0, part.getHeight().getValue(), 0));
 
+            try {
+	            HashMap<String, Object> params = new HashMap<>();
+	            params.put("job", job);
+	            params.put("jobProcessor", this);
+	            params.put("part", part);
+	            params.put("nozzle", nozzle);
+	            params.put("placement", placement);
+	            params.put("boardLocation", boardLocation);
+	            params.put("placementLocation", placementLocation);
+	            params.put("alignmentOffsets", plannedPlacement.alignmentOffsets);
+            Configuration.get().getScripting().on("Job.Placement.BeforeAssembly", params);
+	        }
+	        catch (Exception e) {
+	            Logger.warn(e);
+	        }
+            
             // Move to the placement location
             MovableUtils.moveToLocationAtSafeZ(nozzle, placementLocation);
 
@@ -741,20 +826,29 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             // Mark the placement as "placed"
             boardLocation.setPlaced(jobPlacement.placement.getId(), true);
+            
+            ++totalPartsPlaced;
 
             plannedPlacement.stepComplete = true;
 
-            HashMap<String, Object> params = new HashMap<>();
-            params.put("job", job);
-            params.put("jobProcessor", this);
-            params.put("part", part);
-            params.put("nozzle", nozzle);
-            params.put("placement", placement);
-            params.put("boardLocation", boardLocation);
-            params.put("placementLocation", placementLocation);
-            Configuration.get().getScripting().on("Job.Placement.Complete", params);
+            try {
+	            HashMap<String, Object> params = new HashMap<>();
+	            params.put("job", job);
+	            params.put("jobProcessor", this);
+	            params.put("part", part);
+	            params.put("nozzle", nozzle);
+	            params.put("placement", placement);
+	            params.put("boardLocation", boardLocation);
+	            params.put("placementLocation", placementLocation);
+	            Configuration.get().getScripting().on("Job.Placement.Complete", params);
+	        }
+	        catch (Exception e) {
+	            Logger.warn(e);
+	        }
             
             Logger.debug("Place {} with {}", part, nozzle.getName());
+
+            saveJobAndConfig(false);
         }
 
         clearStepComplete();
@@ -774,7 +868,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         if (parkWhenComplete) {
             fireTextStatus("Park nozzle.");
-            MovableUtils.moveToLocationAtSafeZ(head.getDefaultNozzle(), head.getParkLocation());
+            MovableUtils.park(head);
         }
         
         double dtSec = (System.currentTimeMillis() - startTime)/1000.0;
@@ -788,8 +882,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         Configuration.get().getScripting().on("Job.Finished", params);
         
         fireTextStatus("Job finished - placed %s parts in %s sec. (%s CPH)", totalPartsPlaced, df.format(dtSec), df.format(totalPartsPlaced / (dtSec / 3600.0)));
+     
+        saveJobAndConfig(true);
     }
-
+    
     protected void doReset() throws Exception {
         this.job = null;
     }
@@ -802,15 +898,63 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      */
     protected void doSkip() throws Exception {
         if (plannedPlacements.size() > 0) {
-            PlannedPlacement plannedPlacement = plannedPlacements.remove(0);
-            JobPlacement jobPlacement = plannedPlacement.jobPlacement;
-            Nozzle nozzle = plannedPlacement.nozzle;
-            discard(nozzle);
-            jobPlacement.status = Status.Skipped;
-            Logger.debug("Skipped {}", jobPlacement.placement);
+            
+            // get iterator to avoid ConcurrentModificationException (list is modified within iteration)
+            Iterator<PlannedPlacement> plannedPlacementIter = plannedPlacements.iterator();
+            
+            // iterate through planned placement in this cycle (number of planned placements ==
+            // number of nozzles)
+            while (plannedPlacementIter.hasNext()) {
+                PlannedPlacement plannedPlacement=plannedPlacementIter.next();
+                JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+                
+                if (plannedPlacement.stepComplete) {
+                    // go over placements having the current step already completed
+                    continue;
+                }
+
+                // remove the placement to be skipped from list
+                plannedPlacementIter.remove();
+
+                // discard
+                Nozzle nozzle = plannedPlacement.nozzle;
+                discard(nozzle);
+
+                jobPlacement.status = Status.Skipped;
+                Logger.debug("Skipped {}", jobPlacement.placement);
+
+                // stop iterating through plannedPlacements, since only one part is handled at a time
+                break;
+                
+            }
         }
     }
-
+    
+    /**
+     * Mark the currently processing step as complete in the list of PlannedPlacement to ignore an raised error and go on assembly
+     * 
+     * @throws Exception
+     */
+    protected void doIgnoreContinue() throws Exception {
+        if (plannedPlacements.size() > 0) {
+            for (PlannedPlacement plannedPlacement : plannedPlacements) {
+                if (plannedPlacement.stepComplete) {
+                    // go over placements having the current step already completed
+                    continue;
+                }
+                
+                JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+                
+                //mark current step as completed successfully done
+                plannedPlacement.stepComplete = true;
+                Logger.debug("Ignored Error and Continued for {}", jobPlacement.placement);
+                
+                // stop iterating through plannedPlacements since only one error is handled at a time
+                break;
+            }
+        }
+    }
+    
     protected void clearStepComplete() {
         for (PlannedPlacement plannedPlacement : plannedPlacements) {
             plannedPlacement.stepComplete = false;
@@ -840,17 +984,51 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         this.parkWhenComplete = parkWhenComplete;
     }
     
-    public List<JobPlacement> getJobPlacementsById(String id) { 
-        return jobPlacements.stream().filter((jobPlacement) -> {
-            return jobPlacement.toString() == id;
-        }).collect(Collectors.toList()); 
-    } 
-    
-    public List<JobPlacement> getJobPlacementsById(String id, Status status) {
-        return jobPlacements.stream().filter((jobPlacement) -> {
-            return jobPlacement.toString() == id && jobPlacement.status == status;
-        }).collect(Collectors.toList());
+    public boolean isAutoSaveJob() {
+        return autoSaveJob;
     }
+
+    public void setAutoSaveJob(boolean autoSaveJob) {
+        this.autoSaveJob = autoSaveJob;
+    }
+
+    public boolean isAutoSaveConfiguration() {
+        return autoSaveConfiguration;
+    }
+
+    public void setAutoSaveConfiguration(boolean autoSaveConfiguration) {
+        this.autoSaveConfiguration = autoSaveConfiguration;
+    }
+
+    public long getConfigSaveFrequencyMs() {
+        return configSaveFrequencyMs;
+    }
+    
+    public JobOrderHint getJobOrder() {
+        return jobOrder;
+    }
+    
+    public void setJobOrder(JobOrderHint newJobOrder) {
+        this.jobOrder = newJobOrder;
+    }    
+
+    private void saveJobAndConfig(boolean ignoreTimer) throws Exception {
+        Logger.info("saveJobAndConfig({})", ignoreTimer);
+        if (autoSaveJob) {
+            Logger.info("Auto saving job.");
+            File file = job.getFile();
+            if (file != null) {
+                Configuration.get().saveJob(job, file);
+            }
+        }
+        if (autoSaveConfiguration && (ignoreTimer || System.currentTimeMillis() > lastConfigSavedTimeMs + configSaveFrequencyMs)) {
+            Logger.info("Auto saving config.");
+            Configuration.get().save();
+            lastConfigSavedTimeMs = System.currentTimeMillis();
+        }
+    }
+    
+    
 
     // Sort a List<JobPlacement> by the number of nulls it contains in ascending order.
     Comparator<List<JobPlacement>> byFewestNulls = (a, b) -> {
@@ -879,16 +1057,4 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         return countA - countB;
     };
-    
-    BoardLocation getFiducialCompensatedBoardLocation(BoardLocation boardLocation) {
-        // Check if there is a fiducial override for the board location and if so, use it.
-        if (boardLocationFiducialOverrides.containsKey(boardLocation)) {
-            BoardLocation boardLocation2 = new BoardLocation(boardLocation.getBoard());
-            boardLocation2.setSide(boardLocation.getSide());
-            boardLocation2.setLocation(boardLocationFiducialOverrides.get(boardLocation));
-            return boardLocation2;
-        }
-        return boardLocation;
-    }
-
 }

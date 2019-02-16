@@ -62,6 +62,7 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
         Complete,
         Abort,
         Skip,
+        IgnoreContinue,
         Reset
     }
 
@@ -172,11 +173,19 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
     public synchronized void skip() throws Exception {
         fsm.send(Message.Skip);
     }
+    
+    public synchronized void ignoreContinue() throws Exception {
+        fsm.send(Message.IgnoreContinue);
+    }
 
 
     public boolean canSkip() {
         return fsm.canSend(Message.Skip);
     }
+
+	public boolean canIgnoreContinue() {
+		return fsm.canSend(Message.IgnoreContinue);
+	}
 
     /**
      * Validate that there is a job set before allowing it to start.
@@ -325,6 +334,7 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
     protected boolean isJobComplete() {
         return jobDispenses.isEmpty();
     }
+
 
     /*
     @Override

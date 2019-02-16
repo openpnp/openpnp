@@ -106,11 +106,6 @@ public class CameraView extends JComponent implements CameraListener {
      */
     private BufferedImage lastFrame;
 
-    /**
-     * The maximum frames per second that we'll display.
-     */
-    private int maximumFps;
-
     private LinkedHashMap<Object, Reticle> reticles = new LinkedHashMap<>();
 
     private JPopupMenu popupMenu;
@@ -205,8 +200,6 @@ public class CameraView extends JComponent implements CameraListener {
         setBackground(Color.black);
         setOpaque(true);
 
-        popupMenu = new CameraViewPopupMenu(this);
-
         addMouseListener(mouseListener);
         addMouseMotionListener(mouseMotionListener);
         addComponentListener(componentListener);
@@ -235,11 +228,6 @@ public class CameraView extends JComponent implements CameraListener {
         return PREF_RETICLE + "." + camera.getId();
     }
 
-    public CameraView(int maximumFps) {
-        this();
-        setMaximumFps(maximumFps);
-    }
-
     public void addActionListener(CameraViewActionListener listener) {
         if (!actionListeners.contains(listener)) {
             actionListeners.add(listener);
@@ -250,22 +238,6 @@ public class CameraView extends JComponent implements CameraListener {
         return actionListeners.remove(listener);
     }
 
-    public void setMaximumFps(int maximumFps) {
-        this.maximumFps = maximumFps;
-        // turn off capture for the camera we are replacing, if any
-        if (this.camera != null) {
-            this.camera.stopContinuousCapture(this);
-        }
-        // turn on capture for the new camera
-        if (this.camera != null) {
-            this.camera.startContinuousCapture(this, maximumFps);
-        }
-    }
-
-    public int getMaximumFps() {
-        return maximumFps;
-    }
-
     public void setCamera(Camera camera) {
         // turn off capture for the camera we are replacing, if any
         if (this.camera != null) {
@@ -274,7 +246,7 @@ public class CameraView extends JComponent implements CameraListener {
         this.camera = camera;
         // turn on capture for the new camera
         if (this.camera != null) {
-            this.camera.startContinuousCapture(this, maximumFps);
+            this.camera.startContinuousCapture(this);
         }
         // load the reticle pref, if any
         try {
@@ -1110,7 +1082,7 @@ public class CameraView extends JComponent implements CameraListener {
             dir.mkdirs();
             DateFormat df = new SimpleDateFormat("YYYY-MM-dd_HH.mm.ss.SSS");
             File file = new File(dir, camera.getName() + "_" + df.format(new Date()) + ".png");
-            ImageIO.write(lastFrame, "png", file);
+            ImageIO.write(camera.capture(), "png", file);
         }
         catch (Exception e1) {
             e1.printStackTrace();
@@ -1319,7 +1291,7 @@ public class CameraView extends JComponent implements CameraListener {
         @Override
         public void mousePressed(MouseEvent e) {
             if (e.isPopupTrigger()) {
-                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                new CameraViewPopupMenu(CameraView.this).show(e.getComponent(), e.getX(), e.getY());
                 return;
             }
             else if (e.isShiftDown()) {
@@ -1333,7 +1305,7 @@ public class CameraView extends JComponent implements CameraListener {
         @Override
         public void mouseReleased(MouseEvent e) {
             if (e.isPopupTrigger()) {
-                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                new CameraViewPopupMenu(CameraView.this).show(e.getComponent(), e.getX(), e.getY());
                 return;
             }
             else if (isDragJogging()) {

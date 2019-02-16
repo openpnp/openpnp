@@ -49,6 +49,8 @@ public class MessageBoxes {
         Logger.debug("{}: {}", title, cause);
         message = message.replaceAll("\n", "<br/>");
         message = message.replaceAll("\r", "");
+        message = message.replaceAll("<", "&lt;");
+        message = message.replaceAll(">", "&gt;");
         message = "<html><body width=\"400\">" + message + "</body></html>";
         JOptionPane.showMessageDialog(parent, message, title, JOptionPane.ERROR_MESSAGE);
     }

@@ -34,6 +34,10 @@ public interface PartAlignment extends Identifiable, Named, PropertySheetHolder 
             location=loc;
             preRotated=PreRotated;
         }
+
+        public String toString() {
+            return "offset ( location: " + location.toString() + " pre-rotated" + Boolean.toString(preRotated) + ")";
+        }
     }
 
     /**

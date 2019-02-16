@@ -80,10 +80,23 @@ public class Scripting {
         File examplesDir = new File(getScriptsDirectory(), "Examples");
         examplesDir.mkdirs();
         String[] exampleScripts =
-                new String[] {"JavaScript/Call_Java.js", "JavaScript/Hello_World.js", "JavaScript/Print_Scripting_Info.js",
-                        "JavaScript/Reset_Strip_Feeders.js", "JavaScript/Move_Machine.js", "JavaScript/Utility.js", "JavaScript/QrCodeXout.js",
-                        "Python/Print_Hallo_OpenPnP.py", "Python/Print_Methods_Vars.py",
-                        "Python/Print_Nozzle_Info.py"};
+                new String[] {
+                        "JavaScript/Call_Java.js", 
+                        "JavaScript/Hello_World.js", 
+                        "JavaScript/Move_Machine.js", 
+                        "JavaScript/Print_Scripting_Info.js",
+                        "JavaScript/QrCodeXout.js",
+                        "JavaScript/Reset_Strip_Feeders.js", 
+                        "JavaScript/Utility.js", 
+                        "Python/call_java.py", 
+                        "Python/move_machine.py", 
+                        "Python/print_hallo_openpnp.py",
+                        "Python/print_methods_vars.py", 
+                        "Python/print_nozzle_info.py", 
+                        "Python/print_scripting_info.py",
+                        "Python/use_module.py", 
+                        "Python/utility.py"
+                        };
         for (String name : exampleScripts) {
             try {
                 File file = new File(examplesDir, name);
@@ -279,6 +292,7 @@ public class Scripting {
         engine.put("machine", Configuration.get().getMachine());
         engine.put("gui", MainFrame.get());
         engine.put("scripting", this);
+        engine.put(ScriptEngine.FILENAME, script.getName());
 
         if (additionalGlobals != null) {
             for (String name : additionalGlobals.keySet()) {

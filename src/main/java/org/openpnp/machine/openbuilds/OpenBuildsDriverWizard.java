@@ -1,8 +1,8 @@
 package org.openpnp.machine.openbuilds;
 
-import org.openpnp.machine.reference.driver.wizards.AbstractSerialPortDriverConfigurationWizard;
+import org.openpnp.machine.reference.driver.wizards.AbstractReferenceDriverConfigurationWizard;
 
-public class OpenBuildsDriverWizard extends AbstractSerialPortDriverConfigurationWizard {
+public class OpenBuildsDriverWizard extends AbstractReferenceDriverConfigurationWizard {
     private final OpenBuildsDriver driver;
 
     public OpenBuildsDriverWizard(OpenBuildsDriver driver) {

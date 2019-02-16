@@ -68,13 +68,11 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     public BufferedImage settleAndCapture();
 
     /**
-     * Registers a listener to receive continuous images from the camera at a rate less than or
-     * equal to maximumFps images per second.
+     * Registers a listener to receive continuous images from the camera.
      * 
      * @param listener
-     * @param maximumFps
      */
-    public void startContinuousCapture(CameraListener listener, int maximumFps);
+    public void startContinuousCapture(CameraListener listener);
 
     /**
      * Requests that the continuous capture be stopped for the previously registered listener. If

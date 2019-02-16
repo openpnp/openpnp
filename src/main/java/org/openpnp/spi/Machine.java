@@ -23,7 +23,6 @@ import java.io.Closeable;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
-import java.util.Collections;
 
 import org.openpnp.model.Location;
 
@@ -106,6 +105,11 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public boolean isEnabled();
 
     /**
+     * Returns whether the Machine is homed
+     */
+    public boolean isHomed();
+
+    /**
      * Attempts to bring the Machine to a ready state or attempts to immediately stop it depending
      * on the value of enabled.
      * 
@@ -126,6 +130,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
      * isEnabled() should return false until setEnabled(true) is successfully called again.
      */
     public void setEnabled(boolean enabled) throws Exception;
+    
+    public void setHomed(boolean homed);
 
     public void addListener(MachineListener listener);
 
@@ -139,9 +145,15 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public List<Class<? extends Actuator>> getCompatibleActuatorClasses();
 
+    public List<Class<? extends Signaler>> getCompatibleSignalerClasses();
+
     public void addFeeder(Feeder feeder) throws Exception;
 
     public void removeFeeder(Feeder feeder);
+
+    public void addSignaler(Signaler signaler) throws Exception;
+
+    public void removeSignaler(Signaler signaler);
 
     public void addCamera(Camera camera) throws Exception;
 
@@ -160,6 +172,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public <T> Future<T> submit(Callable<T> callable);
 
     public <T> Future<T> submit(final Callable<T> callable, final FutureCallback<T> callback);
+
+    public boolean getHomeAfterEnabled();
 
     /**
      * Submit a task to be run with access to the Machine. This is the primary entry point into

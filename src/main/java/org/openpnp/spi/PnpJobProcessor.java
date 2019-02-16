@@ -1,16 +1,10 @@
 package org.openpnp.spi;
 
-import java.util.List;
-
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Placement;
 
 public interface PnpJobProcessor extends JobProcessor {
-
-    public List<JobPlacement> getJobPlacementsById(String id);
-
-    public List<JobPlacement> getJobPlacementsById(String id, JobPlacement.Status status);
 
     public static class JobPlacement {
         public enum Status {
@@ -32,6 +26,10 @@ public interface PnpJobProcessor extends JobProcessor {
         public double getPartHeight() {
             return placement.getPart().getHeight().convertToUnits(LengthUnit.Millimeters)
                     .getValue();
+        }
+
+        public String getPartId() {
+            return placement.getPart().getId();
         }
 
         @Override

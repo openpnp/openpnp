@@ -1,6 +1,7 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -13,10 +14,8 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
@@ -33,9 +32,7 @@ import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 
 import org.apache.commons.io.FileUtils;
-import org.eclipse.egit.github.core.Gist;
-import org.eclipse.egit.github.core.GistFile;
-import org.eclipse.egit.github.core.service.GistService;
+import org.onvif.ver10.device.wsdl.GetSystemSupportInformation;
 import org.openpnp.Main;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.imgur.Imgur;
@@ -47,11 +44,17 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.pmw.tinylog.Logger;
 
+import com.github.kennedyoliveira.pastebin4j.AccountCredentials;
+import com.github.kennedyoliveira.pastebin4j.Paste;
+import com.github.kennedyoliveira.pastebin4j.PasteBin;
+import com.github.kennedyoliveira.pastebin4j.PasteExpiration;
+import com.github.kennedyoliveira.pastebin4j.PasteVisibility;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import java.awt.Color;
+import javax.swing.border.SoftBevelBorder;
+import javax.swing.border.BevelBorder;
 
 public class SubmitDiagnosticsDialog extends JDialog {
 
@@ -129,7 +132,7 @@ public class SubmitDiagnosticsDialog extends JDialog {
             txtpnToSubmitA.setBackground(UIManager.getColor("Label.background"));
             txtpnToSubmitA.setEditable(false);
             txtpnToSubmitA.setText(
-                    "Describe the problem you are experiencing below, select the checkboxes to include content that will help the developers resolve your issue, then click send.\n\nWhen the upload finishes your browser will open. You can copy the URL to share it.\n\nBe aware that the information you send may be visible to the OpenPnP community, so you should not include private or proprietary information.");
+                    "Describe the problem you are experiencing below, select the checkboxes to include content that will help the developers resolve your issue, then click send.\n\nWhen the upload finishes your browser will open to Pastebin. You may be prompted to enter a captcha to complete the process - this is normal. You can then copy the URL to share it.\n\nBe aware that the information you send may be visible to the OpenPnP community, so you should not include private or proprietary information.");
             contentPanel.add(txtpnToSubmitA, "2, 6, 3, 1, fill, fill");
         }
         {
@@ -147,6 +150,7 @@ public class SubmitDiagnosticsDialog extends JDialog {
         }
         {
             descriptionTa = new JTextArea();
+            descriptionTa.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
             descriptionTa.setColumns(60);
             descriptionTa.setRows(10);
             contentPanel.add(descriptionTa, "2, 14, 3, 1, fill, fill");
@@ -241,40 +245,37 @@ public class SubmitDiagnosticsDialog extends JDialog {
                 try {
                     Configuration.get().save();
 
-                    List<GistFile> files = new ArrayList<>();
                     List<File> images = new ArrayList<>();
                     File configDir = Configuration.get().getConfigurationDirectory();
                     File logDir = new File(configDir, "log");
                     File visionDir = new File(logDir, "vision");
+                    String content = "";
                     if (includeMachineXmlChk.isSelected()) {
-                        files.add(createGistFile(new File(configDir, "machine.xml")));
+                        content += createPasteStringFromFile(new File(configDir, "machine.xml"));
                     }
                     if (includePartsXmlChk.isSelected()) {
-                        files.add(createGistFile(new File(configDir, "parts.xml")));
+                        content += createPasteStringFromFile(new File(configDir, "parts.xml"));
                     }
                     if (includePackagesXmlChk.isSelected()) {
-                        files.add(createGistFile(new File(configDir, "packages.xml")));
+                        content += createPasteStringFromFile(new File(configDir, "packages.xml"));
                     }
                     if (includeLogChk.isSelected()) {
-                        files.add(createGistFile(new File(logDir, "OpenPnP.log")));
+                        content += createPasteStringFromFile(new File(logDir, "OpenPnP.log"));
                     }
                     if (includeSystemInfoChk.isSelected()) {
-                        GistFile gistFile = new GistFile();
-                        gistFile.setContent(getSystemInfo());
-                        gistFile.setFilename("SystemInfo.txt");
-                        files.add(gistFile);
+                        content += String.format("**** %s ****\n\n%s\n\n", "SystemInfo.txt", getSystemInfo());
                     }
                     if (includeJobChk.isSelected()) {
                         File file = File.createTempFile("OpenPnp-Diagnostics", ".job.xml");
                         Job job = MainFrame.get().getJobTab().getJob();
                         Configuration.get().saveJob(job, file);
-                        files.add(createGistFile(file));
+                        content += createPasteStringFromFile(file);
                         HashSet<Board> boards = new HashSet<>();
                         for (BoardLocation bl : job.getBoardLocations()) {
                             boards.add(bl.getBoard());
                         }
                         for (Board board : boards) {
-                            files.add(createGistFile(board.getFile()));
+                            content += createPasteStringFromFile(board.getFile());
                         }
                     }
                     if (includeScreenShotChk.isSelected() && screenShot != null) {
@@ -303,7 +304,7 @@ public class SubmitDiagnosticsDialog extends JDialog {
                         }
                     }
 
-                    // Image count + the album + the gist
+                    // Image count + the album + the paste
                     progressBar.setMaximum(images.size() + (images.isEmpty() ? 0 : 1) + 1);
                     progressBar.setValue(1);
 
@@ -327,27 +328,24 @@ public class SubmitDiagnosticsDialog extends JDialog {
                                 albumImages.toArray(new Image[] {}));
                         progressBar.setValue(progressBar.getValue() + 1);
                     }
+                    
+                    final PasteBin pasteBin =
+                            new PasteBin(new AccountCredentials("37ccaf49071a6226ad8f96efdfa9e936"));
 
-                    Gist gist = new Gist();
-                    gist.setDescription(String.format("OpenPnP Diagnostics: %s; Images: %s",
+                    // Basic creation
+                    final Paste paste = new Paste();
+
+                    paste.setTitle("OpenPnP Diagnostics");
+                    paste.setExpiration(PasteExpiration.ONE_MONTH);
+                    paste.setVisibility(PasteVisibility.UNLISTED);
+                    paste.setContent(String.format("OpenPnP Diagnostics\n\nImages: %s\n\nDescription: %s\n\nFiles:\n\n%s",
+                            album == null ? "None" : "http://imgur.com/a/" + album.id,
                             descriptionTa.getText(),
-                            album == null ? "None" : "http://imgur.com/a/" + album.id));
-                    Map<String, GistFile> gistFiles = new HashMap<>();
-                    for (GistFile gistFile : files) {
-                        gistFiles.put(gistFile.getFilename(), gistFile);
-                    }
-                    gist.setFiles(gistFiles);
-                    gist.setPublic(false);
+                            content));
 
-                    if (Thread.interrupted()) {
-                        return;
-                    }
-                    GistService service = new GistService();
-                    gist = service.createGist(gist);
+                    final String url = pasteBin.createPaste(paste);
+
                     progressBar.setValue(progressBar.getValue() + 1);
-
-
-                    String url = gist.getHtmlUrl();
 
                     if (Thread.interrupted()) {
                         return;
@@ -406,11 +404,8 @@ public class SubmitDiagnosticsDialog extends JDialog {
         return sb.toString();
     }
 
-    static GistFile createGistFile(File file) throws Exception {
-        GistFile gistFile = new GistFile();
-        gistFile.setContent(FileUtils.readFileToString(file));
-        gistFile.setFilename(file.getName());
-        return gistFile;
+    static String createPasteStringFromFile(File file) throws Exception {
+        return String.format("**** %s ****\n\n%s\n\n", file.getName(), FileUtils.readFileToString(file));
     }
 
     public static interface ProgressCallback {

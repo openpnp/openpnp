@@ -21,13 +21,13 @@ package org.openpnp.machine.reference.wizards;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.JButton;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -46,20 +46,26 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Location;
+import org.openpnp.spi.Camera;
+import org.openpnp.spi.HeadMountable;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 
+import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.SwingConstants;
 
 public class ReferenceNozzleTipConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceNozzleTip nozzleTip;
@@ -76,6 +82,12 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JTextField textFieldChangerMidY;
     private JTextField textFieldChangerMidZ;
     private JLabel lblEndLocation;
+    private JPanel panelDwellTime;
+    private JLabel lblPickDwellTime;
+    private JLabel lblPlaceDwellTime;
+    private JLabel lblDwellTime;
+    private JTextField pickDwellTf;
+    private JTextField placeDwellTf;
     private JTextField textFieldChangerEndX;
     private JTextField textFieldChangerEndY;
     private JTextField textFieldChangerEndZ;
@@ -88,12 +100,6 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private PackagesTableModel tableModel;
 
     private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<>();
-    private JPanel panelCalibration;
-    private JButton btnEditPipeline;
-    private JButton btnCalibrate;
-    private JButton btnReset;
-    private JLabel lblEnabled;
-    private JCheckBox calibrationEnabledCheckbox;
     private JLabel lblMiddleLocation_1;
     private JTextField textFieldMidX2;
     private JTextField textFieldMidY2;
@@ -329,53 +335,64 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         vacuumLevelPartOff = new JTextField();
         panelVacuumSensing.add(vacuumLevelPartOff, "4, 4");
         vacuumLevelPartOff.setColumns(10);
-
-        panelCalibration = new JPanel();
-        panelCalibration.setBorder(new TitledBorder(null, "Calibration", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
-        // TODO: Removing panel until this feature is actually working.
-        // See: https://github.com/openpnp/openpnp/issues/235
-//        contentPanel.add(panelCalibration);
-        panelCalibration.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        RowSpec.decode("23px"), FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
-
-        lblEnabled = new JLabel("Enabled?");
-        panelCalibration.add(lblEnabled, "2, 2, right, default");
-
-        calibrationEnabledCheckbox = new JCheckBox("");
-        panelCalibration.add(calibrationEnabledCheckbox, "3, 2, left, default");
-
-        btnCalibrate = new JButton("Calibrate");
-        btnCalibrate.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                calibrate();
-            }
-        });
-        panelCalibration.add(btnCalibrate, "3, 3");
-
-        btnReset = new JButton("Reset");
-        btnReset.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                nozzleTip.getCalibration().reset();
-            }
-        });
-        panelCalibration.add(btnReset, "3, 5");
-
-        btnEditPipeline = new JButton("Edit Pipeline");
-        btnEditPipeline.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                UiUtils.messageBoxOnException(() -> {
-                    editCalibrationPipeline();
-                });
-            }
-        });
-        panelCalibration.add(btnEditPipeline, "3, 7, left, top");
+        
+        panelDwellTime = new JPanel();
+        panelDwellTime.setBorder(new TitledBorder(null, "Dwell Times", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panelDwellTime);
+        panelDwellTime.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+          
+        lblPickDwellTime = new JLabel("Pick Dwell Time (ms)");
+        panelDwellTime.add(lblPickDwellTime, "2, 2, right, default");
+        
+        pickDwellTf = new JTextField();
+        panelDwellTime.add(pickDwellTf, "4, 2");
+        pickDwellTf.setColumns(10);
+        
+        lblPlaceDwellTime = new JLabel("Place Dwell Time (ms)");
+        panelDwellTime.add(lblPlaceDwellTime, "2, 4, right, default");
+        
+        placeDwellTf = new JTextField();
+        panelDwellTime.add(placeDwellTf, "4, 4");
+        placeDwellTf.setColumns(10);
+        
+        CellConstraints cc = new CellConstraints();
+        lblDwellTime = new JLabel("Note: Total Dwell Time is the sum of Nozzle Dwell Time plus the Nozzle Tip Dwell Time.");
+        panelDwellTime.add(lblDwellTime, cc.xywh(2, 6, 5, 1));
+       
     }
+    
+
+    @SuppressWarnings("serial")     // Question is this allowed? This is stolen code from LocationButtonsPanel
+    private Action positionToolAction = new AbstractAction("Position Tool", Icons.centerTool) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Position the tool over the bottom camera.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                HeadMountable nozzle = nozzleTip.getParentNozzle();
+                Camera camera = VisionUtils.getBottomVisionCamera();
+                Location location = camera.getLocation();
+
+                MovableUtils.moveToLocationAtSafeZ(nozzle, location);
+            });
+        }
+    };
 
     private void editCalibrationPipeline() throws Exception {
         CvPipeline pipeline = nozzleTip.getCalibration().getPipeline();
@@ -385,12 +402,6 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         dialog.getContentPane().add(editor);
         dialog.setSize(1024, 768);
         dialog.setVisible(true);
-    }
-
-    private void calibrate() {
-        UiUtils.submitUiMachineTask(() -> {
-            nozzleTip.getCalibration().calibrate(nozzleTip);
-        });
     }
 
    
@@ -451,12 +462,16 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         addWrappedBinding(changerEndLocation, "lengthZ", textFieldChangerEndZ, "text",
                 lengthConverter);
         
-        addWrappedBinding(nozzleTip.getCalibration(), "enabled", calibrationEnabledCheckbox, "selected");
-        
         addWrappedBinding(nozzleTip, "vacuumLevelPartOn", vacuumLevelPartOn, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumLevelPartOff", vacuumLevelPartOff, "text", doubleConverter);
-
+        
+        addWrappedBinding(nozzleTip, "pickDwellMilliseconds", pickDwellTf, "text", intConverter);
+        addWrappedBinding(nozzleTip, "placeDwellMilliseconds", placeDwellTf, "text", intConverter);
+        
         ComponentDecorators.decorateWithAutoSelect(nameTf);
+        
+        ComponentDecorators.decorateWithAutoSelect(pickDwellTf);
+        ComponentDecorators.decorateWithAutoSelect(placeDwellTf);
         
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartY);

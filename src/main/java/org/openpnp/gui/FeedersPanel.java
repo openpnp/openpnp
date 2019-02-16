@@ -64,6 +64,7 @@ import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
@@ -83,7 +84,6 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     private FeedersTableModel tableModel;
     private TableRowSorter<FeedersTableModel> tableSorter;
     private JTextField searchTextField;
-    private JPanel configurationPanel;
 
     private ActionGroup feederSelectedActionGroup;
 
@@ -165,12 +165,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         table.setRowSorter(tableSorter);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-        splitPane.setRightComponent(tabbedPane);
-
-        configurationPanel = new JPanel();
-        tabbedPane.addTab("Configuration", null, configurationPanel, null);
-        configurationPanel.setLayout(new BorderLayout(0, 0));
+        JTabbedPane configurationPanel = new JTabbedPane(JTabbedPane.TOP);
+        splitPane.setRightComponent(configurationPanel);
 
         feederSelectedActionGroup = new ActionGroup(deleteFeederAction, feedFeederAction,
                 pickFeederAction, moveCameraToPickLocation, moveToolToPickLocation);
@@ -189,11 +185,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
                 configurationPanel.removeAll();
                 if (feeder != null) {
-                    Wizard wizard = feeder.getConfigurationWizard();
-                    if (wizard != null) {
-                        wizard.setWizardContainer(FeedersPanel.this);
-                        JPanel panel = wizard.getWizardPanel();
-                        configurationPanel.add(panel);
+                    PropertySheet[] propertySheets = feeder.getPropertySheets();
+                    for (PropertySheet ps : propertySheets) {
+                        configurationPanel.addTab(ps.getPropertySheetTitle(), ps.getPropertySheetPanel());
                     }
                 }
                 revalidate();
@@ -229,19 +223,25 @@ public class FeedersPanel extends JPanel implements WizardContainer {
      * Activate the Feeders tab and show the Feeder for the specified Part. If none exists, prompt
      * the user to create a new one.
      * 
-     * @param feeder
+     * @param part
      */
     public void showFeederForPart(Part part) {
         mainFrame.showTab("Feeders");
+        searchTextField.setText("");
+        search();
 
-        Feeder feeder = findFeeder(part);
+        Feeder feeder = findFeeder(part, true);
+        // Prefer enabled feeders but fall back to disabled ones.
         if (feeder == null) {
+            feeder = findFeeder(part, false);
+        }
+        if (feeder == null) {            
             newFeeder(part);
         }
         else {
             table.getSelectionModel().clearSelection();
             for (int i = 0; i < tableModel.getRowCount(); i++) {
-                if (tableModel.getFeeder(i).getPart() == part) {
+                if (tableModel.getFeeder(i) == feeder) {
                     int index = table.convertRowIndexToView(i);
                     table.getSelectionModel().setSelectionInterval(index, index);
                     table.scrollRectToVisible(new Rectangle(table.getCellRect(index, 0, true)));
@@ -251,10 +251,11 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         }
     }
 
-    private Feeder findFeeder(Part part) {
+    private Feeder findFeeder(Part part, boolean enabled) {
         for (int i = 0; i < tableModel.getRowCount(); i++) {
-            if (tableModel.getFeeder(i).getPart() == part) {
-                return tableModel.getFeeder(i);
+            Feeder feeder = tableModel.getFeeder(i); 
+            if (feeder.getPart() == part && feeder.isEnabled() == enabled) {
+                return feeder;
             }
         }
         return null;
@@ -323,8 +324,13 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
             configuration.getMachine().addFeeder(feeder);
             tableModel.refresh();
+
+            searchTextField.setText("");
+            search();
+
             Helpers.selectLastTableRow(table);
         }
+
         catch (Exception e) {
             MessageBoxes.errorBox(JOptionPane.getFrameForComponent(FeedersPanel.this),
                     "Feeder Error", e);

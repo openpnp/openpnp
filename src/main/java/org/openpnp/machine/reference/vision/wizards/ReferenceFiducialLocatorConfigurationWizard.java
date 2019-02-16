@@ -3,7 +3,6 @@ package org.openpnp.machine.reference.vision.wizards;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -11,10 +10,13 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator.PartSettings;
@@ -23,21 +25,22 @@ import org.openpnp.model.Footprint;
 import org.openpnp.model.Footprint.Pad;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
-import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.stages.SetResult;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.SwingConstants;
 
 public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceFiducialLocator fiducialLocator;
     private static Part defaultPart = createDefaultPart();
-    private JCheckBox chckbxUseAffineTransfor;
+    
+    JCheckBox enabledAveragingCheckbox; 
+    JTextField textFieldRepeatFiducialRecognition;
 
     public ReferenceFiducialLocatorConfigurationWizard(ReferenceFiducialLocator fiducialLocator) {
         this.fiducialLocator = fiducialLocator;
@@ -56,6 +59,10 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -105,9 +112,20 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
             }
         });
         panel.add(btnResetAllTo, "8, 2");
+        JLabel lblRepeatFiducialRecognition = new JLabel("Repeat Recognition");
+        panel.add(lblRepeatFiducialRecognition, "2, 4");
         
-        chckbxUseAffineTransfor = new JCheckBox("Use Affine Transform");
-        panel.add(chckbxUseAffineTransfor, "2, 4, 5, 1");
+        textFieldRepeatFiducialRecognition = new JTextField();
+        textFieldRepeatFiducialRecognition.setToolTipText("To dial-in on fiducials the recognition is repeated several times, but at least 3 times. (default: 3)");
+        panel.add(textFieldRepeatFiducialRecognition, "4, 4");
+        textFieldRepeatFiducialRecognition.setColumns(2);
+
+        JLabel lblEnabledAveraging = new JLabel("Average Matches?");
+        lblEnabledAveraging.setToolTipText("Finally calculates the arithmetic average over all matches (except the first). Needs 3 or more repeated recognitions to work.");
+        panel.add(lblEnabledAveraging, "2, 6");
+
+        enabledAveragingCheckbox = new JCheckBox("");
+        panel.add(enabledAveragingCheckbox, "4, 6");
     }
     
     private void editPipeline() throws Exception {
@@ -144,7 +162,12 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
 
     @Override
     public void createBindings() {
-        addWrappedBinding(fiducialLocator, "useAffineTransform", chckbxUseAffineTransfor, "selected");
+    	IntegerConverter intConverter = new IntegerConverter();
+    	
+    	addWrappedBinding(fiducialLocator, "enabledAveraging", enabledAveragingCheckbox, "selected");
+    	addWrappedBinding(fiducialLocator, "repeatFiducialRecognition", textFieldRepeatFiducialRecognition, "text", intConverter);
+    	
+    	ComponentDecorators.decorateWithAutoSelect(textFieldRepeatFiducialRecognition);
     }
     
     @Override

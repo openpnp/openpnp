@@ -29,7 +29,6 @@ import java.net.URL;
 import java.util.List;
 
 import javax.imageio.ImageIO;
-import javax.swing.Action;
 import javax.xml.soap.SOAPException;
 
 import org.onvif.ver10.device.wsdl.GetDeviceInformationResponse;
@@ -124,11 +123,11 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
     }
 
     @Override
-    public synchronized void startContinuousCapture(CameraListener listener, int maximumFps) {
+    public synchronized void startContinuousCapture(CameraListener listener) {
         if (thread == null) {
             initCamera();
         }
-        super.startContinuousCapture(listener, maximumFps);
+        super.startContinuousCapture(listener);
     }
 
     public void run() {

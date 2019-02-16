@@ -46,7 +46,9 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.WrapLayout;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -124,24 +126,24 @@ public class JogControlsPanel extends JPanel {
     private void setUnits(LengthUnit units) {
         if (units == LengthUnit.Millimeters) {
             Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<>();
-            incrementsLabels.put(1, new JLabel("0.01 " + units.getShortName()));
-            incrementsLabels.put(2, new JLabel("0.1 " + units.getShortName()));
-            incrementsLabels.put(3, new JLabel("1.0 " + units.getShortName()));
-            incrementsLabels.put(4, new JLabel("10 " + units.getShortName()));
-            incrementsLabels.put(5, new JLabel("100 " + units.getShortName()));
+            incrementsLabels.put(1, new JLabel("0.01")); //$NON-NLS-1$
+            incrementsLabels.put(2, new JLabel("0.1")); //$NON-NLS-1$
+            incrementsLabels.put(3, new JLabel("1.0")); //$NON-NLS-1$
+            incrementsLabels.put(4, new JLabel("10")); //$NON-NLS-1$
+            incrementsLabels.put(5, new JLabel("100")); //$NON-NLS-1$
             sliderIncrements.setLabelTable(incrementsLabels);
         }
         else if (units == LengthUnit.Inches) {
             Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<>();
-            incrementsLabels.put(1, new JLabel("0.001 " + units.getShortName()));
-            incrementsLabels.put(2, new JLabel("0.01 " + units.getShortName()));
-            incrementsLabels.put(3, new JLabel("0.1 " + units.getShortName()));
-            incrementsLabels.put(4, new JLabel("1.0 " + units.getShortName()));
-            incrementsLabels.put(5, new JLabel("10.0 " + units.getShortName()));
+            incrementsLabels.put(1, new JLabel("0.001")); //$NON-NLS-1$
+            incrementsLabels.put(2, new JLabel("0.01")); //$NON-NLS-1$
+            incrementsLabels.put(3, new JLabel("0.1")); //$NON-NLS-1$
+            incrementsLabels.put(4, new JLabel("1.0")); //$NON-NLS-1$
+            incrementsLabels.put(5, new JLabel("10.0")); //$NON-NLS-1$
             sliderIncrements.setLabelTable(incrementsLabels);
         }
         else {
-            throw new Error("setUnits() not implemented for " + units);
+            throw new Error("setUnits() not implemented for " + units); //$NON-NLS-1$
         }
         machineControlsPanel.updateDros();
     }
@@ -155,7 +157,7 @@ public class JogControlsPanel extends JPanel {
         }
         else {
             throw new Error(
-                    "getJogIncrement() not implemented for " + configuration.getSystemUnits());
+                    "getJogIncrement() not implemented for " + configuration.getSystemUnits()); //$NON-NLS-1$
         }
     }
 
@@ -221,8 +223,8 @@ public class JogControlsPanel extends JPanel {
                             targetLocation, new Length(1.0, l.getUnits()));
                     if (!safe) {
                         throw new Exception(
-                                "Nozzle would crash into board: " + boardLocation.toString() + "\n" +
-                                "To disable the board protection go to the \"Safety\" tab in the \"Machine Controls\" panel.");
+                                "Nozzle would crash into board: " + boardLocation.toString() + "\n" + //$NON-NLS-1$ //$NON-NLS-2$
+                                "To disable the board protection go to the \"Safety\" tab in the \"Machine Controls\" panel."); //$NON-NLS-1$
                     }
                 }
             }
@@ -274,20 +276,6 @@ public class JogControlsPanel extends JPanel {
         return (alpha > 0.0) && (beta > 0.0) && (gamma > 0.0);
     }
 
-    private void park(boolean xy, boolean z, boolean c) {
-        UiUtils.submitUiMachineTask(() -> {
-            HeadMountable tool = machineControlsPanel.getSelectedTool();
-            Location location = tool.getLocation();
-            Location parkLocation = tool.getHead()
-                                        .getParkLocation();
-            parkLocation = parkLocation.convertToUnits(location.getUnits());
-            location = location.derive(xy ? parkLocation.getX() : null,
-                    xy ? parkLocation.getY() : null, z ? parkLocation.getZ() : null,
-                    c ? parkLocation.getRotation() : null);
-            MovableUtils.moveToLocationAtSafeZ(tool, location);
-        });
-    }
-
     private void createUi() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
@@ -298,7 +286,7 @@ public class JogControlsPanel extends JPanel {
         add(tabbedPane_1);
 
         JPanel panelControls = new JPanel();
-        tabbedPane_1.addTab("Jog", null, panelControls, null);
+        tabbedPane_1.addTab("Jog", null, panelControls, null); //$NON-NLS-1$
         panelControls.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
@@ -325,28 +313,29 @@ public class JogControlsPanel extends JPanel {
         // so the dialog looks right while editing.
         homeButton.setIcon(Icons.home);
         homeButton.setHideActionText(true);
-        panelControls.add(homeButton, "2, 2");
+        homeButton.setToolTipText(Translations.getString("JogControlsPanel.homeButton.toolTipText")); //$NON-NLS-1$ //$NON-NLS-1$
+        panelControls.add(homeButton, "2, 2"); //$NON-NLS-1$
 
-        JLabel lblXy = new JLabel("X/Y");
-        lblXy.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
+        JLabel lblXy = new JLabel("X/Y"); //$NON-NLS-1$
+        lblXy.setFont(new Font("Lucida Grande", Font.PLAIN, 22)); //$NON-NLS-1$
         lblXy.setHorizontalAlignment(SwingConstants.CENTER);
-        panelControls.add(lblXy, "8, 2, fill, default");
+        panelControls.add(lblXy, "8, 2, fill, default"); //$NON-NLS-1$
 
-        JLabel lblZ = new JLabel("Z");
+        JLabel lblZ = new JLabel("Z"); //$NON-NLS-1$
         lblZ.setHorizontalAlignment(SwingConstants.CENTER);
-        lblZ.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
-        panelControls.add(lblZ, "14, 2");
+        lblZ.setFont(new Font("Lucida Grande", Font.PLAIN, 22)); //$NON-NLS-1$
+        panelControls.add(lblZ, "14, 2"); //$NON-NLS-1$
 
-        JLabel lblDistance = new JLabel("Distance");
-        lblDistance.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
-        panelControls.add(lblDistance, "18, 2, center, center");
+        JLabel lblDistance = new JLabel("<html>" + Translations.getString("JogControlsPanel.Label.Distance") + "<br>[" + configuration.getSystemUnits().getShortName() + "/deg]</html>"); //$NON-NLS-1$
+        lblDistance.setFont(new Font("Lucida Grande", Font.PLAIN, 10)); //$NON-NLS-1$
+        panelControls.add(lblDistance, "18, 2, center, center"); //$NON-NLS-1$
 
-        JLabel lblSpeed = new JLabel("Speed %");
-        lblSpeed.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
-        panelControls.add(lblSpeed, "20, 2, center, center");
+        JLabel lblSpeed = new JLabel("<html>" + Translations.getString("JogControlsPanel.Label.Speed") + "<br>[%]</html>"); //$NON-NLS-1$
+        lblSpeed.setFont(new Font("Lucida Grande", Font.PLAIN, 10)); //$NON-NLS-1$
+        panelControls.add(lblSpeed, "20, 2, center, center"); //$NON-NLS-1$
 
         sliderIncrements = new JSlider();
-        panelControls.add(sliderIncrements, "18, 3, 1, 10");
+        panelControls.add(sliderIncrements, "18, 3, 1, 10"); //$NON-NLS-1$
         sliderIncrements.setOrientation(SwingConstants.VERTICAL);
         sliderIncrements.setMajorTickSpacing(1);
         sliderIncrements.setValue(1);
@@ -357,11 +346,11 @@ public class JogControlsPanel extends JPanel {
 
         JButton yPlusButton = new JButton(yPlusAction);
         yPlusButton.setHideActionText(true);
-        panelControls.add(yPlusButton, "8, 4");
+        panelControls.add(yPlusButton, "8, 4"); //$NON-NLS-1$
 
         JButton zUpButton = new JButton(zPlusAction);
         zUpButton.setHideActionText(true);
-        panelControls.add(zUpButton, "14, 4");
+        panelControls.add(zUpButton, "14, 4"); //$NON-NLS-1$
 
         speedSlider = new JSlider();
         speedSlider.setValue(100);
@@ -371,7 +360,7 @@ public class JogControlsPanel extends JPanel {
         speedSlider.setSnapToTicks(true);
         speedSlider.setPaintLabels(true);
         speedSlider.setOrientation(SwingConstants.VERTICAL);
-        panelControls.add(speedSlider, "20, 4, 1, 9");
+        panelControls.add(speedSlider, "20, 4, 1, 9"); //$NON-NLS-1$
         speedSlider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
@@ -384,61 +373,63 @@ public class JogControlsPanel extends JPanel {
         JButton positionNozzleBtn = new JButton(machineControlsPanel.targetToolAction);
         positionNozzleBtn.setIcon(Icons.centerTool);
         positionNozzleBtn.setHideActionText(true);
-        panelControls.add(positionNozzleBtn, "22, 4");
+        positionNozzleBtn.setToolTipText(Translations.getString("JogControlsPanel.Action.positionSelectedNozzle"));
+        panelControls.add(positionNozzleBtn, "22, 4"); //$NON-NLS-1$
 
         JButton buttonStartStop = new JButton(machineControlsPanel.startStopMachineAction);
         buttonStartStop.setIcon(Icons.powerOn);
-        panelControls.add(buttonStartStop, "2, 6");
+        panelControls.add(buttonStartStop, "2, 6"); //$NON-NLS-1$
         buttonStartStop.setHideActionText(true);
 
         JButton xMinusButton = new JButton(xMinusAction);
         xMinusButton.setHideActionText(true);
-        panelControls.add(xMinusButton, "6, 6");
+        panelControls.add(xMinusButton, "6, 6"); //$NON-NLS-1$
 
         JButton homeXyButton = new JButton(xyParkAction);
         homeXyButton.setHideActionText(true);
-        panelControls.add(homeXyButton, "8, 6");
+        panelControls.add(homeXyButton, "8, 6"); //$NON-NLS-1$
 
         JButton xPlusButton = new JButton(xPlusAction);
         xPlusButton.setHideActionText(true);
-        panelControls.add(xPlusButton, "10, 6");
+        panelControls.add(xPlusButton, "10, 6"); //$NON-NLS-1$
 
         JButton homeZButton = new JButton(zParkAction);
         homeZButton.setHideActionText(true);
-        panelControls.add(homeZButton, "14, 6");
+        panelControls.add(homeZButton, "14, 6"); //$NON-NLS-1$
 
         JButton yMinusButton = new JButton(yMinusAction);
         yMinusButton.setHideActionText(true);
-        panelControls.add(yMinusButton, "8, 8");
+        panelControls.add(yMinusButton, "8, 8"); //$NON-NLS-1$
 
         JButton zDownButton = new JButton(zMinusAction);
         zDownButton.setHideActionText(true);
-        panelControls.add(zDownButton, "14, 8");
+        panelControls.add(zDownButton, "14, 8"); //$NON-NLS-1$
 
         JButton positionCameraBtn = new JButton(machineControlsPanel.targetCameraAction);
         positionCameraBtn.setIcon(Icons.centerCamera);
         positionCameraBtn.setHideActionText(true);
-        panelControls.add(positionCameraBtn, "22, 8");
+        positionCameraBtn.setToolTipText(Translations.getString("JogControlsPanel.Action.positionCamera"));
+        panelControls.add(positionCameraBtn, "22, 8"); //$NON-NLS-1$
 
-        JLabel lblC = new JLabel("C");
+        JLabel lblC = new JLabel("C"); //$NON-NLS-1$
         lblC.setHorizontalAlignment(SwingConstants.CENTER);
-        lblC.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
-        panelControls.add(lblC, "4, 12");
+        lblC.setFont(new Font("Lucida Grande", Font.PLAIN, 22)); //$NON-NLS-1$
+        panelControls.add(lblC, "4, 12"); //$NON-NLS-1$
 
         JButton counterclockwiseButton = new JButton(cPlusAction);
         counterclockwiseButton.setHideActionText(true);
-        panelControls.add(counterclockwiseButton, "6, 12");
+        panelControls.add(counterclockwiseButton, "6, 12"); //$NON-NLS-1$
 
         JButton homeCButton = new JButton(cParkAction);
         homeCButton.setHideActionText(true);
-        panelControls.add(homeCButton, "8, 12");
+        panelControls.add(homeCButton, "8, 12"); //$NON-NLS-1$
 
         JButton clockwiseButton = new JButton(cMinusAction);
         clockwiseButton.setHideActionText(true);
-        panelControls.add(clockwiseButton, "10, 12");
+        panelControls.add(clockwiseButton, "10, 12"); //$NON-NLS-1$
 
         JPanel panelSpecial = new JPanel();
-        tabbedPane_1.addTab("Special", null, panelSpecial, null);
+        tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Special"), null, panelSpecial, null); //$NON-NLS-1$
         FlowLayout flowLayout_1 = (FlowLayout) panelSpecial.getLayout();
         flowLayout_1.setAlignment(FlowLayout.LEFT);
 
@@ -449,21 +440,21 @@ public class JogControlsPanel extends JPanel {
         panelSpecial.add(btnDiscard);
 
         panelActuators = new JPanel();
-        tabbedPane_1.addTab("Actuators", null, panelActuators, null);
-        panelActuators.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
+        tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Actuators"), null, panelActuators, null); //$NON-NLS-1$
+        panelActuators.setLayout(new WrapLayout(WrapLayout.LEFT));
 
         panelDispensers = new JPanel();
-        tabbedPane_1.addTab("Dispense", null, panelDispensers, null);
+        tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Dispense"), null, panelDispensers, null); //$NON-NLS-1$
         FlowLayout flowLayout = (FlowLayout) panelDispensers.getLayout();
         flowLayout.setAlignment(FlowLayout.LEFT);
         
         JPanel panelSafety = new JPanel();
-        tabbedPane_1.addTab("Safety", null, panelSafety, null);
+        tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Safety"), null, panelSafety, null); //$NON-NLS-1$
         panelSafety.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
 
-        boardProtectionOverrideCheck = new JCheckBox("Override Board Protection");
-        boardProtectionOverrideCheck.setToolTipText("Disable protection of the nozzle jogging closer than 1mm to any loaded board.");
-        panelSafety.add(boardProtectionOverrideCheck, "1, 1");
+        boardProtectionOverrideCheck = new JCheckBox(Translations.getString("JogControlsPanel.Label.OverrideBoardProtection")); //$NON-NLS-1$
+        boardProtectionOverrideCheck.setToolTipText(Translations.getString("JogControlsPanel.Label.OverrideBoardProtection.Description")); //$NON-NLS-1$
+        panelSafety.add(boardProtectionOverrideCheck, "1, 1"); //$NON-NLS-1$
     }
 
     private FocusTraversalPolicy focusPolicy = new FocusTraversalPolicy() {
@@ -503,7 +494,7 @@ public class JogControlsPanel extends JPanel {
     }
 
     @SuppressWarnings("serial")
-    public Action yPlusAction = new AbstractAction("Y+", Icons.arrowUp) {
+    public Action yPlusAction = new AbstractAction("Y+", Icons.arrowUp) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             jog(0, 1, 0, 0);
@@ -511,7 +502,7 @@ public class JogControlsPanel extends JPanel {
     };
 
     @SuppressWarnings("serial")
-    public Action yMinusAction = new AbstractAction("Y-", Icons.arrowDown) {
+    public Action yMinusAction = new AbstractAction("Y-", Icons.arrowDown) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             jog(0, -1, 0, 0);
@@ -519,7 +510,7 @@ public class JogControlsPanel extends JPanel {
     };
 
     @SuppressWarnings("serial")
-    public Action xPlusAction = new AbstractAction("X+", Icons.arrowRight) {
+    public Action xPlusAction = new AbstractAction("X+", Icons.arrowRight) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             jog(1, 0, 0, 0);
@@ -527,7 +518,7 @@ public class JogControlsPanel extends JPanel {
     };
 
     @SuppressWarnings("serial")
-    public Action xMinusAction = new AbstractAction("X-", Icons.arrowLeft) {
+    public Action xMinusAction = new AbstractAction("X-", Icons.arrowLeft) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             jog(-1, 0, 0, 0);
@@ -535,7 +526,7 @@ public class JogControlsPanel extends JPanel {
     };
 
     @SuppressWarnings("serial")
-    public Action zPlusAction = new AbstractAction("Z+", Icons.arrowUp) {
+    public Action zPlusAction = new AbstractAction("Z+", Icons.arrowUp) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             jog(0, 0, 1, 0);
@@ -543,7 +534,7 @@ public class JogControlsPanel extends JPanel {
     };
 
     @SuppressWarnings("serial")
-    public Action zMinusAction = new AbstractAction("Z-", Icons.arrowDown) {
+    public Action zMinusAction = new AbstractAction("Z-", Icons.arrowDown) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             jog(0, 0, -1, 0);
@@ -551,7 +542,7 @@ public class JogControlsPanel extends JPanel {
     };
 
     @SuppressWarnings("serial")
-    public Action cPlusAction = new AbstractAction("C+", Icons.rotateCounterclockwise) {
+    public Action cPlusAction = new AbstractAction("C+", Icons.rotateCounterclockwise) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             jog(0, 0, 0, 1);
@@ -559,7 +550,7 @@ public class JogControlsPanel extends JPanel {
     };
 
     @SuppressWarnings("serial")
-    public Action cMinusAction = new AbstractAction("C-", Icons.rotateClockwise) {
+    public Action cMinusAction = new AbstractAction("C-", Icons.rotateClockwise) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             jog(0, 0, 0, -1);
@@ -567,31 +558,41 @@ public class JogControlsPanel extends JPanel {
     };
 
     @SuppressWarnings("serial")
-    public Action xyParkAction = new AbstractAction("Park XY", Icons.park) {
+    public Action xyParkAction = new AbstractAction(Translations.getString("JogControlsPanel.Action.ParkXY"), Icons.park) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            park(true, false, false);
+            UiUtils.submitUiMachineTask(() -> {
+                MovableUtils.park(machineControlsPanel.getSelectedTool().getHead());
+            });
         }
     };
 
     @SuppressWarnings("serial")
-    public Action zParkAction = new AbstractAction("Park Z", Icons.park) {
+    public Action zParkAction = new AbstractAction(Translations.getString("JogControlsPanel.Action.ParkZ"), Icons.park) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            park(false, true, false);
+            UiUtils.submitUiMachineTask(() -> {
+                HeadMountable hm = machineControlsPanel.getSelectedTool();
+                hm.moveToSafeZ();
+            });
         }
     };
 
     @SuppressWarnings("serial")
-    public Action cParkAction = new AbstractAction("Park C", Icons.park) {
+    public Action cParkAction = new AbstractAction(Translations.getString("JogControlsPanel.Action.ParkC"), Icons.park) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            park(false, false, true);
+            UiUtils.submitUiMachineTask(() -> {
+                HeadMountable hm = machineControlsPanel.getSelectedTool();
+                Location location = hm.getLocation();
+                location = location.derive(null, null, null, 0.);
+                hm.moveTo(location);
+            });
         }
     };
 
     @SuppressWarnings("serial")
-    public Action safezAction = new AbstractAction("Head Safe Z") {
+    public Action safezAction = new AbstractAction(Translations.getString("JogControlsPanel.Action.HeadSafeZ")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -604,7 +605,7 @@ public class JogControlsPanel extends JPanel {
     };
 
     @SuppressWarnings("serial")
-    public Action discardAction = new AbstractAction("Discard") {
+    public Action discardAction = new AbstractAction(Translations.getString("JogControlsPanel.Action.Discard")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -621,7 +622,7 @@ public class JogControlsPanel extends JPanel {
     };
 
     @SuppressWarnings("serial")
-    public Action raiseIncrementAction = new AbstractAction("Raise Jog Increment") {
+    public Action raiseIncrementAction = new AbstractAction(Translations.getString("JogControlsPanel.Action.RaiseJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(
@@ -630,7 +631,7 @@ public class JogControlsPanel extends JPanel {
     };
 
     @SuppressWarnings("serial")
-    public Action lowerIncrementAction = new AbstractAction("Lower Jog Increment") {
+    public Action lowerIncrementAction = new AbstractAction(Translations.getString("JogControlsPanel.Action.LowerJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(
@@ -639,35 +640,35 @@ public class JogControlsPanel extends JPanel {
     };
 	
     @SuppressWarnings("serial")
-    public Action setIncrement1Action = new AbstractAction("First Jog Increment") {
+    public Action setIncrement1Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.FirstJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(1);
 		}
     };
     @SuppressWarnings("serial")
-    public Action setIncrement2Action = new AbstractAction("Second Jog Increment") {
+    public Action setIncrement2Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.SecondJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(2);
 		}
     };
     @SuppressWarnings("serial")
-    public Action setIncrement3Action = new AbstractAction("Third Jog Increment") {
+    public Action setIncrement3Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.ThirdJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(3);
 		}
     };
     @SuppressWarnings("serial")
-    public Action setIncrement4Action = new AbstractAction("Fourth Jog Increment") {
+    public Action setIncrement4Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.FourthJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(4);
 		}
     };
     @SuppressWarnings("serial")
-    public Action setIncrement5Action = new AbstractAction("Fifth Jog Increment") {
+    public Action setIncrement5Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.FifthJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(5);
@@ -678,7 +679,7 @@ public class JogControlsPanel extends JPanel {
     private void addActuator(Actuator actuator) {
         String name = actuator.getHead() == null ? actuator.getName() : actuator.getHead()
                                                                                 .getName()
-                + ":" + actuator.getName();
+                + ":" + actuator.getName(); //$NON-NLS-1$
         JButton actuatorButton = new JButton(name);
         actuatorButton.addActionListener((e) -> {
             ActuatorControlDialog dlg = new ActuatorControlDialog(actuator);
@@ -687,11 +688,11 @@ public class JogControlsPanel extends JPanel {
             dlg.setLocationRelativeTo(JogControlsPanel.this);
             dlg.setVisible(true);
         });
-        BeanUtils.addPropertyChangeListener(actuator, "name", e -> {
+        BeanUtils.addPropertyChangeListener(actuator, "name", e -> { //$NON-NLS-1$
             actuatorButton.setText(
                     actuator.getHead() == null ? actuator.getName() : actuator.getHead()
                                                                               .getName()
-                            + ":" + actuator.getName());
+                            + ":" + actuator.getName()); //$NON-NLS-1$
         });
         panelActuators.add(actuatorButton);
         actuatorButtons.put(actuator, actuatorButton);
@@ -723,7 +724,7 @@ public class JogControlsPanel extends JPanel {
                 }
                 for (final PasteDispenser dispenser : head.getPasteDispensers()) {
                     final JButton dispenserButton =
-                            new JButton(head.getName() + ":" + dispenser.getName());
+                            new JButton(head.getName() + ":" + dispenser.getName()); //$NON-NLS-1$
                     dispenserButton.setFocusable(false);
                     dispenserButton.addActionListener((e) -> {
                         UiUtils.submitUiMachineTask(() -> {
@@ -745,9 +746,9 @@ public class JogControlsPanel extends JPanel {
                 }
             };
 
-            BeanUtils.addPropertyChangeListener(machine, "actuators", listener);
+            BeanUtils.addPropertyChangeListener(machine, "actuators", listener); //$NON-NLS-1$
             for (Head head : machine.getHeads()) {
-                BeanUtils.addPropertyChangeListener(head, "actuators", listener);
+                BeanUtils.addPropertyChangeListener(head, "actuators", listener); //$NON-NLS-1$
             }
 
 

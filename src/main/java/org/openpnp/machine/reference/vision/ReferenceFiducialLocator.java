@@ -12,7 +12,7 @@ import javax.swing.Action;
 import javax.swing.Icon;
 
 import org.apache.commons.io.IOUtils;
-import org.opencv.features2d.KeyPoint;
+import org.opencv.core.KeyPoint;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -53,21 +53,17 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
-    
-    protected boolean useAffineTransform = false;
 
+    @Attribute(required = false)
+    protected boolean enabledAveraging = false;
+    
+    @Attribute(required = false)
+    protected int repeatFiducialRecognition = 3;
+    
     public Location locateBoard(BoardLocation boardLocation) throws Exception {
         return locateBoard(boardLocation, false);
     }
     
-    public boolean isUseAffineTransform() {
-        return useAffineTransform;
-    }
-
-    public void setUseAffineTransform(boolean useAffineTransform) {
-        this.useAffineTransform = useAffineTransform;
-    }
-
     public Location locateBoard(BoardLocation boardLocation, boolean checkPanel) throws Exception {
         IdentifiableList<Placement> fiducials;
 
@@ -88,8 +84,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         }
 
         boardLocation.setPlacementTransform(null);
-        if (useAffineTransform) {
-            
+        if (fiducials.size() >= 3) {
             Placement fid1 = fiducials.get(0);
             Placement fid2 = fiducials.get(1);
             Placement fid3 = fiducials.get(2);
@@ -117,6 +112,9 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             Location fid2Loc = fid2.getLocation().convertToUnits(LengthUnit.Millimeters);
             Location fid3Loc = fid3.getLocation().convertToUnits(LengthUnit.Millimeters);
             
+            // I don't think units will be handled right here. I think we need to store the
+            // units so we can convert when calculating the final positions.
+            
             AffineTransform tx = Utils2D.deriveAffineTransform(
                     fid1Loc.getX(), fid1Loc.getY(), 
                     fid2Loc.getX(), fid2Loc.getY(), 
@@ -127,7 +125,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             
             boardLocation.setPlacementTransform(tx);
             
-            return boardLocation.getLocation();
+            return Utils2D.calculateBoardPlacementLocation(boardLocation, new Location(LengthUnit.Millimeters));
         }
         else {
             // Find the two that are most distant from each other
@@ -148,16 +146,27 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                 throw new Exception("Unable to locate second fiducial.");
             }
     
+            // Convert everything to the same units so the below math is correct.
+            Location placementLocationA = placementA.getLocation();
+            Location placementLocationB = placementB.getLocation().convertToUnits(placementLocationA.getUnits());
+            actualLocationA = actualLocationA.convertToUnits(placementLocationA.getUnits());
+            actualLocationB = actualLocationB.convertToUnits(placementLocationA.getUnits());
+            
             // Calculate the linear distance between the ideal points and the
             // located points. If they differ by more than a few percent we
             // probably made a mistake.
-            double expectedDistance =
-                    Math.abs(placementA.getLocation().getLinearDistanceTo(placementB.getLocation()));
-            double measuredDistance = Math.abs(actualLocationA.getLinearDistanceTo(actualLocationB));
-            Logger.debug("Distance between fids: expected {}, measured {}", 
-                    expectedDistance, 
-                    measuredDistance);
-            if (Math.abs(expectedDistance - measuredDistance) > expectedDistance * 0.01) {
+            double fidDistance = Math.abs(placementLocationA.getLinearDistanceTo(placementLocationB));
+            Logger.debug("Project output distance fiducial A to fiducial B is: {}{}.", 
+                    fidDistance, placementLocationA.getUnits().getShortName());
+            
+            double visionDistance = Math.abs(actualLocationA.getLinearDistanceTo(actualLocationB));
+            Logger.debug("Measured distance fiducial A to fiducial B is: {}{}.", 
+                    visionDistance, placementLocationA.getUnits().getShortName());
+            
+            double distortionFactor = Math.abs(fidDistance / visionDistance);
+            Logger.debug("Board size distortion factor is: {}%.", distortionFactor);
+            
+            if (Math.abs(fidDistance - visionDistance) > fidDistance * 0.01) {
                 throw new Exception("Located fiducials are more than 1% away from expected.");
             }
             
@@ -236,65 +245,99 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                     "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials.",
                     pkg.getId()));
         }
+        
+        int repeatFiducialRecognition = 3;
+        if ( this.repeatFiducialRecognition > 3 ) {
+        	repeatFiducialRecognition = this.repeatFiducialRecognition;
+        }
 
         Logger.debug("Looking for {} at {}", part.getId(), location);
         MovableUtils.moveToLocationAtSafeZ(camera, location);
 
         PartSettings partSettings = getPartSettings(part);
-        CvPipeline pipeline = partSettings.getPipeline();
+        List<Location> matchedLocations = new ArrayList<Location>();
         
-        MovableUtils.moveToLocationAtSafeZ(camera, location);
+        try (CvPipeline pipeline = partSettings.getPipeline()) {
+            MovableUtils.moveToLocationAtSafeZ(camera, location);
 
-        pipeline.setProperty("camera", camera);
-        pipeline.setProperty("part", part);
-        pipeline.setProperty("package", pkg);
-        pipeline.setProperty("footprint", footprint);
-        
-        for (int i = 0; i < 3; i++) {
-            List<KeyPoint> keypoints;
-            try {
-                // Perform vision operation
-                pipeline.process();
-                
-                // Get the results
-                keypoints = (List<KeyPoint>) pipeline.getResult("results").getModel();
-            }
-            catch (Exception e) {
-                Logger.debug(e);
-                return null;
-            }
+            pipeline.setProperty("camera", camera);
+            pipeline.setProperty("part", part);
+            pipeline.setProperty("package", pkg);
+            pipeline.setProperty("footprint", footprint);
             
-            if (keypoints == null || keypoints.isEmpty()) {
-                Logger.debug("No matches found!");
-                return null;
-            }
-            
-            // Convert to Locations
-            List<Location> locations = new ArrayList<Location>();
-            for (KeyPoint keypoint : keypoints) {
-                locations.add(VisionUtils.getPixelLocation(camera, keypoint.pt.x, keypoint.pt.y));
-            }
-            
-            System.out.println(locations);
-            
-            // Sort by distance from center.
-            Collections.sort(locations, new Comparator<Location>() {
-                @Override
-                public int compare(Location o1, Location o2) {
-                    double d1 = o1.getLinearDistanceTo(camera.getLocation());
-                    double d2 = o2.getLinearDistanceTo(camera.getLocation());
-                    return Double.compare(d1, d2);
+            for (int i = 0; i < repeatFiducialRecognition; i++) {
+                List<KeyPoint> keypoints;
+                try {
+                    // Perform vision operation
+                    pipeline.process();
+                    
+                    // Get the results
+                    keypoints = (List<KeyPoint>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).getModel();
                 }
-            });
+                catch (Exception e) {
+                    Logger.debug(e);
+                    return null;
+                }
+                
+                if (keypoints == null || keypoints.isEmpty()) {
+                    Logger.debug("No matches found!");
+                    return null;
+                }
+                
+                // Convert to Locations
+                List<Location> locations = new ArrayList<Location>();
+                for (KeyPoint keypoint : keypoints) {
+                    locations.add(VisionUtils.getPixelLocation(camera, keypoint.pt.x, keypoint.pt.y));
+                }
+                
+                // Sort by distance from center.
+                Collections.sort(locations, new Comparator<Location>() {
+                    @Override
+                    public int compare(Location o1, Location o2) {
+                        double d1 = o1.getLinearDistanceTo(camera.getLocation());
+                        double d2 = o2.getLinearDistanceTo(camera.getLocation());
+                        return Double.compare(d1, d2);
+                    }
+                });
+                
+                // And use the closest result
+                location = locations.get(0);
+                
+                Logger.debug("{} located at {}", part.getId(), location);
+                // Move to where we actually found the fid
+                camera.moveTo(location);
+    
+                if (i > 0) {
+                	//to average, keep a list of all matches except the first, since its probably most off
+                	matchedLocations.add(location);
+                }
             
-            // And use the closest result
-            location = locations.get(0);
-            
-            Logger.debug("{} located at {}", part.getId(), location);
-            // Move to where we actually found the fid
+                Logger.debug("{} located at {}", part.getId(), location);
+                // Move to where we actually found the fid
+                camera.moveTo(location);
+            }
+        }
+        
+        if (this.enabledAveraging && matchedLocations.size() >= 2) {
+            // the arithmetic average is calculated if user wishes to do so and there were at least
+            // 2 matches
+            double sumX = 0;
+            double sumY = 0;
+
+            for (Location matchedLocation : matchedLocations) {
+                sumX += matchedLocation.getX();
+                sumY += matchedLocation.getY();
+            }
+
+            // update the location to the arithmetic average
+            location = location.derive(sumX / matchedLocations.size(),
+                    sumY / matchedLocations.size(), null, null);
+
+            Logger.debug("{} averaged location is at {}", part.getId(), location);
+
             camera.moveTo(location);
         }
-
+        
         return location;
     }
     
@@ -339,6 +382,22 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             }
         }
         return fiducials;
+    }
+
+    public boolean isEnabledAveraging() {
+        return enabledAveraging;
+    }
+
+    public void setEnabledAveraging(boolean enabledAveraging) {
+        this.enabledAveraging = enabledAveraging;
+    }
+
+    public int getRepeatFiducialRecognition() {
+    	return this.repeatFiducialRecognition;
+    }
+    
+    public void setRepeatFiducialRecognition(int repeatFiducialRecognition) {
+        this.repeatFiducialRecognition = repeatFiducialRecognition;
     }
     
     public CvPipeline getPipeline() {

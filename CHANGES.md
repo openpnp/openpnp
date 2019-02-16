@@ -1,6 +1,423 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-02-14
+
+## New GcodeDriver Variables
+
+Some new GcodeDriver variables have been added for the MOVE_TO command. The new variables are used
+for heads where the controller needs to know the direction of motion to choose the right output.
+
+More information at: https://github.com/openpnp/openpnp/wiki/GcodeDriver:-Command-Reference#move_to_command
+
+# 2019-02-12
+
+## Breaking Change: Park System
+
+**Please reset your park locations!**
+
+The Park system has had a number of breaking changes made. They are:
+
+* Park XY now always parks the head at the same location, regardless of what tool is selected in
+  the jog control dropdown. This ensures that if you choose a park location with one tool selected
+  and then attempt to park with a different tool selected you don't crash the head. This is
+  primarily a safety improvement.
+* Z and Rotation have been removed from the park head configuration since these are each specific
+  to the tool being parked.
+* Park Z now parks the selected tool at Safe Z instead of the Z entered in the head configuration.
+* Park Rotation now parks the selected tool's rotation at 0 instead of the Rotation entered in the
+  head configuration.
+
+The overall goal and result of these changes is to ensure that park always parks at the exact same
+location no matter what tool is selected.
+
+See https://github.com/openpnp/openpnp/issues/279 for more information. 
+
+## New Feature: XY Soft Limits
+
+You can now set soft limits for X and Y moves in head configuration. When limits are set and
+enabled any attempted moves outside of the limits will fail and an error will be shown.
+
+# 2019-02-09
+
+## Breaking Changes Coming Soon
+
+A number of breaking changes are coming soon in the develop / Latest branch. These changes will
+likely break configurations and potentially require re-setup and re-calibration of machines.
+
+If you are seeing this message it means you are currently running the develop / Latest branch.
+In the coming weeks, if you automatically update on this branch you are likely to receive
+these breaking changes.
+
+If you are running a production machine and do not wish to follow along with these latest
+developments, please download and install the master / Stable branch from:
+
+http://openpnp.org/downloads/
+
+Stable has been updated as of today and will not be updated again until these breaking changes
+have been fully tested and released.
+
+# 2019-01-18
+
+* Runout Compensation Feature Enabled
+
+    There has been worked on issue #235 in pull request #804 to fix the nozzle runout compensation.
+    It was a new runout compensation algorithm implemented. That algorithm is the new default but it
+    coexists with the improved algorithm that was in the OpenPnP code before already.
+    
+    The feature was tested on two machines, but things are different on others. If you encounter any
+    problems file an issue. Information on how to use this feature you will find in the wiki at
+    https://github.com/openpnp/openpnp/wiki/Runout-Compensation-Setup
+    
+# 2018-12-08
+
+* Serial Library Change
+
+    The library that OpenPnP uses to communicate with serial ports, jSSC, has become out of date and is
+    unmaintained, so we're trying a new library. The new library is jSerialComm:
+    https://github.com/Fazecast/jSerialComm.
+	
+	This change should not affect existing users, so if you notice new problems with serial port access,
+	please file an issue or post to the mailing list.    
+    
+
+# 2018-11-17
+
+* OpenCV 3.4.2 Upgraded
+
+	The bug in the OpenCV library has been fixed so once again OpenPnP is upgraded to OpenCV 3.4.2.
+	
+* OpenPnP Compatible with Java 9, 10, 11.
+
+	With the upgrade of OpenCV OpenPnP is now compatible with all versions of Java after 8. This includes
+	Java 8, 9, 10, and 11. 
+
+# 2018-10-31
+
+* OpenCV 3.4.2 Upgrade Reverted
+
+	The OpenCV upgrade has temporarily been reverted due to an issue found in the OpenCV library
+	during testing:
+	
+	https://github.com/openpnp/opencv/issues/38
+	
+	Once this issue is resolved, this patch will be re-added.
+	
+# 2018-09-26
+
+* Connection Keep Alive
+
+	Thank you to @markmaker for PR https://github.com/openpnp/openpnp/pull/767 which adds a keep
+	alive option to the drive communications configuration. This option, which is on by default,
+	can be turned off to cause OpenPnP to close the serial port or TCP port when clicking the
+	disable button. This makes it possible to connect to the serial port from another program
+	without having to exit OpenPnP.
+	
+	Note, again, that this option is on by default which is the pre-existing behavior. You can turn
+	it off if you want the new behavior.
+	 
+# 2018-09-10
+
+* Nozzle Offset Setup Wizard
+
+	There's a new nozzle offset setup wizard in the Nozzle setup area that now makes it very easy to
+	setup nozzle offsets. This is one of the more confusing aspects of setting up OpenPnP and the new
+	wizard makes it very easy. Many thanks to @pfried for this new feature!
+	
+	See https://github.com/openpnp/openpnp/pull/765 for more information.
+
+# 2018-08-18
+
+* Placements Comments
+
+	The Placements table (Pick and Place) now contains a user editable Comments column that is
+	saved in the board file for each Placement.
+	
+# 2018-08-04
+
+* OpenCV Upgraded to 3.4.2
+
+	OpenCV has been upgraded to 3.4.2, which is the latest release.
+	
+# 2018-07-15
+
+* TCP/IP Support in GcodeDriver
+
+	Thanks to a great effort from @PeeJay, GcodeDriver (and the OpenBuilds driver) now support
+	communication over TCP/IP in addition to serial. This makes it possible to use Smoothieboard
+	over Ethernet now, for example. To use TCP/IP, go to your Driver settings and check the
+	Communication tab for new options.
+	
+	This change requires a migration of communication settings. This should happen automatically.
+	If it doesn't, or if you get an error on startup, please let us know and post your machine.xml
+	to the Discussion Group at https://groups.google.com/forum/#!forum/openpnp.
+
+# 2018-07-13
+
+* Dwell Times per Nozzle Tip
+
+	Pick dwell time and place dwell time has been added to nozzle tip. 
+	This means the total dwell times are now the sum of the nozzle dwell times 
+	plus nozzle tip dwell times. The idea behind this is that larger nozzle tips
+	are used to lift bigger/heavier chips and typically require a bit longer dwell
+	times in general.
+ 
+# 2018-07-08
+
+@aneox submitted a bunch of great new features. Some are still being worked on, but the following
+ones have been merged in:
+
+- Filter PlacementsTableModel, show only active board side. Note that this change makes it so
+  that if you want to edit both sides of a board you have to add it to the job twice and set
+  the side.
+- Added option to AutoHome after machine enabled. To activate, need to set checkbox in machine settings.
+- Windows saves sizes and position in Multiple Windows Mode.
+- Save configuration menu button. (Moved from Machine menu to File menu)
+- Camera window can be split in vertical or horizontal style.
+- Job autosave after each placement. Please post to the list if this causes a performane issue
+  on your machine.
+  
+ The following items have been merged but some additional work may still need to be done on them:
+  
+- Added peel off actuator option for Drag Feeder.
+- Drag Feeder improve accurance of feed, now drag distance can be adaptive with vision enabled.
+- Drag Feeder can work with 0402.
+
+Thanks @aneox for all the great work!
+
+# 2018-07-04
+
+* Placement Status Indicator and Progressbar
+
+	A new panel in the bottom status bar has been added that lists the current jobs
+	total number of placements, completed number of placements and the same values 
+	for the selected board only. A progress bar shows the percentage of completed 
+	placements for the entire job. These indicators update in real-time whenever 
+	any placement/board is edited or while the job runs.
+
+# 2018-07-02
+
+* Machine -> Save Config
+
+	A new menu option called Machine -> Save Config does a force save of the machine.xml,
+	parts.xml, and packages.xml.
+
+# 2018-01-28
+
+* OpenPnpCapture New Properties
+
+	The OpenPnpCaptureCamera now supports new properties for backlight compensation, hue,
+	powerline frequency and sharpness. 
+
+# 2017-12-23
+
+With thanks to @mgrl:
+
+* Bugfix: Discard correct nozzle on skip part
+
+	If an error raised while job run (vacuum sense/bottom aligning failed), the first nozzle was cleared always
+	regardless which nozzle failed in a multi nozzle setup.	This is fixed now.w
+	
+	See:
+		* https://groups.google.com/d/msg/openpnp/x249mhevB3U/DSJg2fyVBAAJ
+		* https://github.com/openpnp/openpnp/pull/693
+		
+* Bugfix: Setting placed flag correctly (fixes #663)
+
+	There is now a fix having the placed flag set correctly if fiducials checking is enabled.
+	
+	See:
+		* https://groups.google.com/forum/#!topic/openpnp/4MKg7JaUTAk
+		* https://github.com/openpnp/openpnp/issues/663
+		
+* Enhancement: Added option to ignore error and continue assembly
+	
+	To handle errors in a running job, next to Try Again, Skip and Abort there is a new option "ignore and continue".
+	It continues a running job as if no error has been occurred (e.g. vacuum check/bottom vision failed).
+
+	See:
+		* https://groups.google.com/forum/#!topic/openpnp/x249mhevB3U 
+		* https://github.com/openpnp/openpnp/pull/688
+
+* Bugfix: A feeder feeder with no part assigned doesn't throw an NullPointerException if try to edit pipeline due to missing part name 
+
+	See:
+		* https://github.com/openpnp/openpnp/pull/689
+	
+# 2017-11-20
+
+* Manual NozzleTip Changing Fixes
+
+	Thanks to @netzmark there is now a fix for manual nozzle tip changing. Now, if you do not
+	have auto changing turned on, when the job attempts to change nozzles, the job will be
+	paused and you will be shown a message indicating the change.
+	
+	See:
+		* https://groups.google.com/d/msgid/openpnp/00ead7a9-e7d5-49e8-856c-2a403208058d%40googlegroups.com?utm_medium=email&utm_source=footer
+		* https://github.com/openpnp/openpnp/issues/118
+		* https://github.com/openpnp/openpnp/issues/526
+	
+# 2017-10-26
+
+* Fiducial Locator Retry and Averaging
+
+	With thanks to @mgrl, retry count on the fiducial locator, which was previously fixed at
+	3 is now configurable in Machine Setup -> Vision -> Fiducial Locator.
+	
+	In addition, a new option is added which allows averaging the results from the retries. This
+	helps alleviate some jitter that happens as the results shift with the movement of the
+	camera. 
+
+* ReferenceLoosePartFeeder Improvements
+
+	There is a new default pipeline that performs well for non-polarized, rectangular
+	components such as resistors and capacitors. 
+	
+	It attempts to include the electrodes as well as the bodies to better recognize rectangular
+	parts and it performs landscape orientation on the results so that there is a deterministic
+	orientation for rectangular parts.
+	
+	The camera feedback is now only shown at the end of the process, and for a longer
+	time. This better represents what OpenPnP is "seeing" before it picks the part.
+	
+	The feeder's rotation defined on it's location is now added to the final rotation so that
+	you can set the orientation you want parts picked in.
+	
+* New CvPipeline Stage: OrientRotatedRects
+
+	The new stage ensures the orientation of RotatedRects is set to either landscape or
+	portrait. This is used in the above pipeline. 
+	
+	In addition, you can set a flag to negate the angle of the RotatedRects. This is 
+	primarily used when converting from the output of MinAreaRect to what OpenPnP expects for 
+	Locations.
+
+
+# 2017-10-25
+
+* CvPipeline Editor Model Info
+
+	The pipeline editor will now show some information about any identified models it finds
+	as you move the mouse around the result window. 
+	
+	For instance, if the result you are viewing
+	includes a List<RotatedRect> and you mouse over the center of one of them in the image view,
+	you will see the description of that RotatedRect in the status field. 
+	
+	This is very helpful for learning more about what is happening in your pipelines and makes it
+	easy to debug model data.
+	
+	This feature currently works for RotatedRect, Circle, and KeyPoint models, and Lists of the
+	same.
+	
+	This video shows the feature in action: https://www.youtube.com/watch?v=sHuUPtJNIXw
+	
+* New CvPipeline Stage: Add
+
+	A new stage has been added for use in pipelines. The stage is called Add and it simply
+	outputs the sum of two previous images. This is used in a new Loose Part Feeder pipeline
+	that will be released soon.
+	
+* CvPipeline Standalone Editor Pipeline Restore
+
+	The  CvPipeline Standalone Editor will now save and restore the last pipeline you were
+	working on, similar to how the last directory you were working on is saved.
+
+# 2017-10-24
+
+* CvPipeline Memory Usage Improvements
+
+	CvPipeline now implements AutoClosable and all of the code that uses it has been updated to
+	release after use. This should greatly improve memory usage on large jobs with many parts.
+	
+* ReferenceBottomVision Improved Error Messages
+
+	ReferenceBottomVision will now throw specific error messages for common pipeline setup errors
+	such as an improperly named result stage or an invalid result type.
+	 
+# 2017-10-21
+
+* GcodeDriver Axis Pre Move Command Coordinate Variable
+
+	Pre Move Command in GcodeDriver Axes now has a Coordinate variable which can be used to reset
+	an axis' position before moving it. This can be used in controller firmwares that do not
+	support individual variables for multiple axes. In particular, this makes it possible to
+	use Marlin with multiple rotation axes by using a Pre Move Command like
+	`T0G92E{Coordinate:%.4f}`
+	
+# 2017-10-18
+
+* Vision Usability Improvements
+
+	As a result of the discussion in https://groups.google.com/d/msgid/openpnp/7029bade-fa16-46e5-8c2d-d9e22105c5fe%40googlegroups.com?utm_medium=email&utm_source=footer several changes have been made to
+	the vision pipeline system.
+	
+	* ReferenceBottomVision now looks for it's results in a stage named "results", like the
+	other primary vision operations. It also falls back to "result" for backwards compatibility.
+	* ReferenceBottomVision now has improved error messages when a result is not found, or when
+	the result in not in the correct format. This should help users as they experiment with
+	new pipelines.
+	* Vision operations all now reference a common name to avoid mistakes like this in the future.
+
+# 2017-10-05
+
+* OpenPnpCaptureCamera Updates
+
+	* Implemented the rest of the camera properties.
+	* Camera properties now refresh when changing device or format.
+	* Auto disabled state now reflects if auto is supported.
+	* Added display of default value.
+
+# 2017-09-30
+
+* Major Update: New Camera Capture System!
+
+	OpenPnP now has it's very own, custom written camera capture system written specifically to
+	solve all of the problems that have plagued camera capture since the beginning of this project!
+	
+	openpnp-capture is a brand new capture library written by Niels Moseley (@trcwm) specifically
+	for OpenPnP. Using this library we are now finally able to do things like run multiple USB
+	cameras on a single port/hub, manage camera properties such as exposure, focus and white
+	balance and select camera data formats to make intelligent choices based on quality, size, 
+	frame rate, etc.
+	
+	Two of the biggest difficulties with capture in OpenPnP from the start have been the
+	inability to run multiple cameras over a single USB port/hub and the inability to control
+	manual exposure. The first is important because many people use OpenPnP with laptops
+	which may have a limited number of ports. The second is important because most commercial
+	USB cameras default to auto exposure and this causes problems with vision as the camera
+	adjusts the exposure to compensate for differences in the image.
+	
+	Using the new library, you can now set up your lighting and choose the exact exposure that
+	works best for your machine, and you will know that it won't change just because the
+	camera is looking at something else.
+	
+	To use the new feature, add a new camera using the OpenPnpCaptureCamera and see the General
+	Settings tab to select a device, format and property settings.
+	
+	I want to give a HUGE shout out and thank you to Niels for all his incredibly hard work
+	on the new capture library over the past couple months. He wrote a robust and expansive library
+	for video capture for all three major operating systems in a very short period of time,
+	knocking out feature after feature faster than I could integrate them into OpenPnP. This is
+	an invaluable contribution to the project and will really push OpenPnP forward in it's
+	computer vision abilities. Thank you Niels!
+	
+	For more information about the capture library itself, see:
+	https://github.com/openpnp/openpnp-capture
+	
+	For information about the Java and Maven bindings for the capture library, see:
+	https://github.com/openpnp/openpnp-capture-java
+	
+	Finally, be aware that there are some known issues:
+	* When you switch the selected device, the wizard doesn't reload the properties. To work
+	around, simply click to another wizard and then click back. To be fixed soon. 
+	* Brightness, contrast, saturation, gamma properties not yet implemented in OpenPnP. These
+	properties were recently added to the capture library but have not yet been implemented
+	in OpenPnp. 
+	
+	If you run into any other issues, please file a bug report or post to the mailing list. Your
+	feedback will help us make this new feature even better! 
+
 # 2017-09-21
 
 * Ctrl-Shift-L Hotkey Added for Park Z

@@ -2,7 +2,7 @@ package org.openpnp.vision.pipeline.stages;
 
 import java.io.File;
 
-import org.opencv.highgui.Highgui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.openpnp.model.Configuration;
 import org.openpnp.util.LogUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -42,7 +42,7 @@ public class ImageWriteDebug extends CvStage {
             return null;
         }
         File file = Configuration.get().createResourceFile(getClass(), prefix, suffix);
-        Highgui.imwrite(file.getAbsolutePath(), pipeline.getWorkingImage());
+        Imgcodecs.imwrite(file.getAbsolutePath(), pipeline.getWorkingImage());
         return null;
     }
 }

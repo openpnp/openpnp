@@ -31,11 +31,11 @@
 			<color r="255" g="255" b="255" a="255" />
 		</cv-stage>
 		<cv-stage class="org.openpnp.vision.pipeline.stages.MinAreaRect"
-			name="result" enabled="true" threshold-min="100" threshold-max="255" />
+			name="results" enabled="true" threshold-min="100" threshold-max="255" />
 		<cv-stage class="org.openpnp.vision.pipeline.stages.ImageRecall"
 			name="14" enabled="true" image-stage-name="0" />
 		<cv-stage class="org.openpnp.vision.pipeline.stages.DrawRotatedRects"
-			name="8" enabled="true" rotated-rects-stage-name="result" thickness="2" />
+			name="8" enabled="true" rotated-rects-stage-name="results" thickness="2" />
 		<cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug"
 			name="15" enabled="true" prefix="bv_result_" suffix=".png" />
 	</stages>
