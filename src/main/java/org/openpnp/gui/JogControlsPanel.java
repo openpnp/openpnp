@@ -48,6 +48,7 @@ import javax.swing.event.ChangeListener;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.WrapLayout;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -440,7 +441,7 @@ public class JogControlsPanel extends JPanel {
 
         panelActuators = new JPanel();
         tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Actuators"), null, panelActuators, null); //$NON-NLS-1$
-        panelActuators.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
+        panelActuators.setLayout(new WrapLayout(WrapLayout.LEFT));
 
         panelDispensers = new JPanel();
         tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Dispense"), null, panelDispensers, null); //$NON-NLS-1$
