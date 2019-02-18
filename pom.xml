@@ -161,6 +161,11 @@
 			<version>1.9.3</version>
 		</dependency>
 		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-math3</artifactId>
+			<version>3.6.1</version>
+		</dependency>
+		<dependency>
 			<groupId>org.openpnp</groupId>
 			<artifactId>openpnp-capture-java</artifactId>
 			<version>0.0.17</version>

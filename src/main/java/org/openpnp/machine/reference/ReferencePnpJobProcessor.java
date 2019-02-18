@@ -313,9 +313,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 continue;
             }
             
-            // clear locationFiducialOverrides
-            boardLocation.clearLocationFiducialOverrides();            
-            
             // Check for ID duplicates - throw error if any are found
             HashSet<String> idlist = new HashSet<String>();
             for (Placement placement : boardLocation.getBoard().getPlacements()) {
@@ -410,8 +407,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         	
         	BoardLocation boardLocation = job.getBoardLocations().get(0);
         	
-        	Location location = locator.locateBoard(boardLocation, p.isCheckFiducials());
-        	boardLocation.setLocationFiducialOverrides(location);
+        	locator.locateBoard(boardLocation, p.isCheckFiducials());
         	Logger.debug("Panel Fiducial check for {}", boardLocation);
         }
         
@@ -422,8 +418,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             if (!boardLocation.isCheckFiducials()) {
                 continue;
             }
-            Location location = locator.locateBoard(boardLocation);
-            boardLocation.setLocationFiducialOverrides(location);
+            locator.locateBoard(boardLocation);
             Logger.debug("Fiducial check for {}", boardLocation);
         }
     }
@@ -433,8 +428,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
         
-        Location location = locator.locateBoard(boardLocation);
-        boardLocation.setLocationFiducialOverrides(location);
+        locator.locateBoard(boardLocation);
         Logger.debug("Fiducial check for {}", boardLocation);
     }
 
@@ -747,7 +741,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             // Check if there is a fiducial override for the board location and if so, use it.
             Location placementLocation =
-                    Utils2D.calculateFiducialCompensatedBoardPlacementLocation(boardLocation, placement.getLocation());
+                    Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation());
 
             // If there are alignment offsets update the placement location with them
             if (plannedPlacement.alignmentOffsets != null) {

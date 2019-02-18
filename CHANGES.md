@@ -1,6 +1,42 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-02-18
+
+## Major Change: Fiducial System (Affine Transforms)
+
+The fiducial system has undergone extensive changes to support compensating for scale and shear
+in boards. When three or more fiducials are available, three will be used during the fiducial
+check and this data is used to calculate much better positions for placements. This should
+result in an overall accuracy improvement when using three fiducials.
+
+In addition, the two fiducial system is now using the same code, minus shear processing, so
+it should show an improvement in accuracy as well when using two fiducials. The difference will
+not be as significant as when using three.
+
+Note that board locations are no longer updated when performing fiducial checks. The fiducial
+data is used in real time to calculate placement positions, rather than relying on the board
+location. This means that if you perform a fiducial check and then move to the board location,
+the board may not look perfectly aligned, but when you move to a placement it will be correct.
+
+The fiducial check will still position the camera over the located board origin at the end of
+the process so that there can be visual verification of success.
+
+In general, users should not notice any differences in using the new system aside from overall
+better accuracy.
+
+Related issues:
+* https://github.com/openpnp/openpnp/issues/648
+* https://github.com/openpnp/openpnp/issues/791
+
+This above changes are complete. There are a few remaining related tasks which are:
+* Implement transform for the two point board locator.
+* Add an indication to the user when a board has been located.
+* Verify compatibility with panels.
+* Implement inverted transform in calculateBoardPlacementLocationInverse so that manual training
+  benefits from the transform.
+
+
 # 2019-02-14
 
 ## New GcodeDriver Variables

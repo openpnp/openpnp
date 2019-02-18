@@ -1343,7 +1343,6 @@ public class JobPanel extends JPanel {
             UiUtils.submitUiMachineTask(() -> {
                 Location location = Configuration.get().getMachine().getFiducialLocator()
                         .locateBoard(getSelectedBoardLocation());
-                getSelectedBoardLocation().setLocation(location);
                 refreshSelectedBoardRow();
                 HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
