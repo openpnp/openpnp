@@ -23,11 +23,12 @@ package org.openpnp.util;
 
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
-import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Length;
@@ -35,7 +36,6 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
-import org.pmw.tinylog.Logger;
 
 
 public class Utils2D {
@@ -89,23 +89,19 @@ public class Utils2D {
         return new Point(point.getX() * scaleX, point.getY() * scaleY);
     }
 
-    public static Location calculateFiducialCompensatedBoardPlacementLocation(BoardLocation bl,
-            Location placementLocation) {
-        return calculateBoardPlacementLocation(bl.getFiducialCompensatedBoardLocation(), bl.getSide(),
-                bl.getBoard().getDimensions().getX(), placementLocation);
-    }
-
     public static Location calculateBoardPlacementLocation(BoardLocation bl,
             Location placementLocation) {
         if (bl.getPlacementTransform() != null) {
-            Logger.debug("Using placement transform {}", bl.getPlacementTransform());
             AffineTransform tx = bl.getPlacementTransform();
             placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
             Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
             p = tx.transform(p, null);
-            Location l = new Location(LengthUnit.Millimeters, p.getX(), p.getY(), 0, bl.getLocation().getRotation());
+            Location l = new Location(LengthUnit.Millimeters, 
+                    p.getX(), 
+                    p.getY(), 
+                    0, 
+                    bl.getLocation().getRotation() + placementLocation.getRotation());
             l = l.convertToUnits(placementLocation.getUnits());
-            Logger.debug("{} -> {}", placementLocation, l);
             return l;
         }
         else {
@@ -269,31 +265,102 @@ public class Utils2D {
         return angle;
     }
     
+    public static double distance(Point2D.Double a, Point2D.Double b) {
+        return (Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2)));
+    }
+    
     // https://stackoverflow.com/questions/21270892/generate-affinetransform-from-3-points
     public static AffineTransform deriveAffineTransform(
-            double oldX1, double oldY1,
-            double oldX2, double oldY2,
-            double oldX3, double oldY3,
-            double newX1, double newY1,
-            double newX2, double newY2,
-            double newX3, double newY3) {
+            double sourceX1, double sourceY1,
+            double sourceX2, double sourceY2,
+            double sourceX3, double sourceY3,
+            double destX1, double destY1,
+            double destX2, double destY2,
+            double destX3, double destY3) {
+        RealMatrix source = MatrixUtils.createRealMatrix(new double[][] {
+            {sourceX1, sourceX2, sourceX3}, 
+            {sourceY1, sourceY2, sourceY3}, 
+            {1, 1, 1}
+        });
 
-        double[][] oldData = { {oldX1, oldX2, oldX3}, {oldY1, oldY2, oldY3}, {1, 1, 1} };
-        RealMatrix oldMatrix = MatrixUtils.createRealMatrix(oldData);
+        RealMatrix dest = MatrixUtils.createRealMatrix(new double[][] { 
+            {destX1, destX2, destX3}, 
+            {destY1, destY2, destY3} 
+        });
 
-        double[][] newData = { {newX1, newX2, newX3}, {newY1, newY2, newY3} };
-        RealMatrix newMatrix = MatrixUtils.createRealMatrix(newData);
+        RealMatrix inverse = new LUDecomposition(source).getSolver().getInverse();
+        RealMatrix transform = dest.multiply(inverse);
 
-        RealMatrix inverseOld = new LUDecomposition(oldMatrix).getSolver().getInverse();
-        RealMatrix transformationMatrix = newMatrix.multiply(inverseOld);
-
-        double m00 = transformationMatrix.getEntry(0, 0);
-        double m01 = transformationMatrix.getEntry(0, 1);
-        double m02 = transformationMatrix.getEntry(0, 2);
-        double m10 = transformationMatrix.getEntry(1, 0);
-        double m11 = transformationMatrix.getEntry(1, 1);
-        double m12 = transformationMatrix.getEntry(1, 2);
+        double m00 = transform.getEntry(0, 0);
+        double m01 = transform.getEntry(0, 1);
+        double m02 = transform.getEntry(0, 2);
+        double m10 = transform.getEntry(1, 0);
+        double m11 = transform.getEntry(1, 1);
+        double m12 = transform.getEntry(1, 2);
 
         return new AffineTransform(m00, m10, m01, m11, m02, m12);       
-    }        
+    }  
+    
+    // Best keywords: transformation matrix between two line segments
+    // https://stackoverflow.com/questions/42328398/transformation-matrix-between-two-line-segments
+    public static AffineTransform deriveAffineTransform(
+            double sourceX1, double sourceY1,
+            double sourceX2, double sourceY2,
+            double destX1, double destY1,
+            double destX2, double destY2) {
+        Point2D.Double a = new Point2D.Double(sourceX1, sourceY1);
+        Point2D.Double b = new Point2D.Double(sourceX2, sourceY2);
+        Point2D.Double c = new Point2D.Double(destX1, destY1);
+        Point2D.Double d = new Point2D.Double(destX2, destY2);
+        
+        double len_ab = distance(a, b);
+        double len_cd = distance(c, d);
+        double scale = len_cd / len_ab;
+        
+        double r = Math.atan2(d.y - c.y, d.x - c.x) - Math.atan2(b.y - a.y, b.x - a.x);
+        
+        AffineTransform tx = new AffineTransform();
+        tx.translate(c.x, c.y);
+        tx.rotate(r);
+        tx.scale(scale, scale);
+        tx.translate(-a.x, -a.y);
+        return tx;
+    }  
+    
+    /**
+     * Calculate the area of a triangle. Returns 0 if the triangle is degenerate.
+     * @param p1
+     * @param p2
+     * @param p3
+     * @return
+     */
+    public static double triangleArea(Placement p1, Placement p2, Placement p3) {
+        double a = p1.getLocation().getLinearDistanceTo(p2.getLocation());
+        double b = p2.getLocation().getLinearDistanceTo(p3.getLocation());
+        double c = p3.getLocation().getLinearDistanceTo(p1.getLocation());
+        double s = (a + b + c) / 2.;
+        return Math.sqrt(s * (s - a) * (s - b) * (s - c));
+    }
+    
+    public static List<Placement> mostDistantPair(List<Placement> points) {
+        Placement maxA = null, maxB = null;
+        double max = 0;
+        for (Placement a : points) {
+            for (Placement b : points) {
+                if (a == b) {
+                    continue;
+                }
+                double d = a.getLocation().getLinearDistanceTo(b.getLocation());
+                if (d > max) {
+                    maxA = a;
+                    maxB = b;
+                    max = d;
+                }
+            }
+        }
+        ArrayList<Placement> results = new ArrayList<>();
+        results.add(maxA);
+        results.add(maxB);
+        return results;
+    }
 }

@@ -2,11 +2,13 @@ package org.openpnp.machine.reference.vision;
 
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.Action;
 import javax.swing.Icon;
@@ -28,11 +30,13 @@ import org.openpnp.model.Panel;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
+import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.QuickHull;
 import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -41,6 +45,8 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
+
+import com.google.common.collect.Sets;
 
 /**
  * Implements an algorithm for finding a set of fiducials on a board and returning the correct
@@ -65,7 +71,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
     }
     
     public Location locateBoard(BoardLocation boardLocation, boolean checkPanel) throws Exception {
-        IdentifiableList<Placement> fiducials;
+        List<Placement> fiducials;
 
         if (checkPanel) {
             Panel panel = MainFrame.get().getJobTab().getJob().getPanels()
@@ -76,110 +82,172 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             fiducials = getFiducials(boardLocation);
         }
 
-
         if (fiducials.size() < 2) {
             throw new Exception(String.format(
                     "The board side contains only %d placements marked as fiducials, but at least 2 are required.",
                     fiducials.size()));
         }
 
+        // Get the best two or three fiducials from the total list of fiducials. If we can find
+        // three good ones we can calculate translation, rotation, scale, and shear. If we only
+        // find two we can calculate translation and rotation only.
+        fiducials = getBestFiducials(fiducials);
+
+        // Clear the current transform so it doesn't potentially send us to the wrong spot
+        // to find the fiducials.
         boardLocation.setPlacementTransform(null);
-        if (fiducials.size() >= 3) {
-            Placement fid1 = fiducials.get(0);
-            Placement fid2 = fiducials.get(1);
-            Placement fid3 = fiducials.get(2);
-            
-            Location fid1RealLoc = getFiducialLocation(boardLocation, fid1);
-            if (fid1RealLoc == null) {
-                throw new Exception("Unable to locate " + fid1.getId());
-            }
 
-            Location fid2RealLoc = getFiducialLocation(boardLocation, fid2);
-            if (fid2RealLoc == null) {
-                throw new Exception("Unable to locate " + fid2.getId());
+        // Sort the fiducials by distance so that we don't make unoptimized moves while finding
+        // them.
+        fiducials.sort(new Comparator<Placement>() {
+            @Override
+            public int compare(Placement o1, Placement o2) {
+                Location base = new Location(LengthUnit.Millimeters);
+                double delta = base.getLinearDistanceTo(o1.getLocation()) - base.getLinearDistanceTo(o2.getLocation());
+                return (int) Math.signum(delta);
             }
-
-            Location fid3RealLoc = getFiducialLocation(boardLocation, fid3);
-            if (fid3RealLoc == null) {
-                throw new Exception("Unable to locate " + fid3.getId());
+        });
+        
+        // Find each fiducial and store it's location
+        Map<Placement, Location> locations = new HashMap<>();
+        for (Placement fiducial : fiducials) {
+            Location location = getFiducialLocation(boardLocation, fiducial);
+            if (location == null) {
+                throw new Exception("Unable to locate " + fiducial.getId());
             }
-            
-            fid1RealLoc = fid1RealLoc.convertToUnits(LengthUnit.Millimeters);
-            fid2RealLoc = fid2RealLoc.convertToUnits(LengthUnit.Millimeters);
-            fid3RealLoc = fid3RealLoc.convertToUnits(LengthUnit.Millimeters);
-            
-            Location fid1Loc = fid1.getLocation().convertToUnits(LengthUnit.Millimeters);
-            Location fid2Loc = fid2.getLocation().convertToUnits(LengthUnit.Millimeters);
-            Location fid3Loc = fid3.getLocation().convertToUnits(LengthUnit.Millimeters);
-            
-            // I don't think units will be handled right here. I think we need to store the
-            // units so we can convert when calculating the final positions.
-            
-            AffineTransform tx = Utils2D.deriveAffineTransform(
-                    fid1Loc.getX(), fid1Loc.getY(), 
-                    fid2Loc.getX(), fid2Loc.getY(), 
-                    fid3Loc.getX(), fid3Loc.getY(), 
-                    fid1RealLoc.getX(), fid1RealLoc.getY(), 
-                    fid2RealLoc.getX(), fid2RealLoc.getY(), 
-                    fid3RealLoc.getX(), fid3RealLoc.getY());
-            
-            boardLocation.setPlacementTransform(tx);
-            
-            return Utils2D.calculateBoardPlacementLocation(boardLocation, new Location(LengthUnit.Millimeters));
+            locations.put(fiducial, location);
+            Logger.debug("Found {} at {}", fiducial, location);
+        }
+        
+        // Convert everything to mm.
+        List<Location> sourceLocations = new ArrayList<>();
+        List<Location> destLocations = new ArrayList<>();
+        for (Placement placement : locations.keySet()) {
+            sourceLocations.add(placement.getLocation().convertToUnits(LengthUnit.Millimeters));
+            destLocations.add(locations.get(placement).convertToUnits(LengthUnit.Millimeters));
+        }
+        
+        // Calculate the transform.
+        AffineTransform tx = null;
+        if (destLocations.size() == 2) {
+            Location source0 = sourceLocations.get(0);
+            Location source1 = sourceLocations.get(1);
+            Location dest0 = destLocations.get(0);
+            Location dest1 = destLocations.get(1);
+            tx = Utils2D.deriveAffineTransform(
+                    source0.getX(), source0.getY(), 
+                    source1.getX(), source1.getY(), 
+                    dest0.getX(), dest0.getY(),
+                    dest1.getX(), dest1.getY());
+        }
+        else if (destLocations.size() == 3) {
+            Location source0 = sourceLocations.get(0);
+            Location source1 = sourceLocations.get(1);
+            Location source2 = sourceLocations.get(2);
+            Location dest0 = destLocations.get(0);
+            Location dest1 = destLocations.get(1);
+            Location dest2 = destLocations.get(2);
+            tx = Utils2D.deriveAffineTransform(
+                    source0.getX(), source0.getY(), 
+                    source1.getX(), source1.getY(), 
+                    source2.getX(), source2.getY(),
+                    dest0.getX(), dest0.getY(),
+                    dest1.getX(), dest1.getY(),
+                    dest2.getX(), dest2.getY());
         }
         else {
-            // Find the two that are most distant from each other
-            List<Placement> mostDistant = getMostDistantPlacements(fiducials);
-    
-            Placement placementA = mostDistant.get(0);
-            Placement placementB = mostDistant.get(1);
-    
-            Logger.debug("Chose {} and {}", placementA.getId(), placementB.getId());
-    
-            // Run the fiducial check on each and get their actual locations
-            Location actualLocationA = getFiducialLocation(boardLocation, placementA);
-            if (actualLocationA == null) {
-                throw new Exception("Unable to locate first fiducial.");
-            }
-            Location actualLocationB = getFiducialLocation(boardLocation, placementB);
-            if (actualLocationB == null) {
-                throw new Exception("Unable to locate second fiducial.");
-            }
-    
-            // Convert everything to the same units so the below math is correct.
-            Location placementLocationA = placementA.getLocation();
-            Location placementLocationB = placementB.getLocation().convertToUnits(placementLocationA.getUnits());
-            actualLocationA = actualLocationA.convertToUnits(placementLocationA.getUnits());
-            actualLocationB = actualLocationB.convertToUnits(placementLocationA.getUnits());
-            
-            // Calculate the linear distance between the ideal points and the
-            // located points. If they differ by more than a few percent we
-            // probably made a mistake.
-            double fidDistance = Math.abs(placementLocationA.getLinearDistanceTo(placementLocationB));
-            Logger.debug("Project output distance fiducial A to fiducial B is: {}{}.", 
-                    fidDistance, placementLocationA.getUnits().getShortName());
-            
-            double visionDistance = Math.abs(actualLocationA.getLinearDistanceTo(actualLocationB));
-            Logger.debug("Measured distance fiducial A to fiducial B is: {}{}.", 
-                    visionDistance, placementLocationA.getUnits().getShortName());
-            
-            double distortionFactor = Math.abs(fidDistance / visionDistance);
-            Logger.debug("Board size distortion factor is: {}%.", distortionFactor);
-            
-            if (Math.abs(fidDistance - visionDistance) > fidDistance * 0.01) {
-                throw new Exception("Located fiducials are more than 1% away from expected.");
-            }
-            
-            Location location = Utils2D.calculateBoardLocation(boardLocation, placementA, placementB,
-                    actualLocationA, actualLocationB);
-    
-            location = location.derive(null, null,
-                    boardLocation.getLocation().convertToUnits(location.getUnits()).getZ(), null);
-            
-            return location;
+            throw new Exception(String.format("Expected 2 or 3 fiducial results, not %d. This is a programmer error. Please tell a programmer.",
+                    destLocations.size()));
         }
+        
+        // Set the transform.
+        boardLocation.setPlacementTransform(tx);
+        Logger.info("Fiducial results: scale ({}, {}), translate ({}, {}), shear ({}, {})",
+                tx.getScaleX(), tx.getScaleY(),
+                tx.getTranslateX(), tx.getTranslateY(),
+                tx.getShearX(), tx.getShearY());
+        
+        // TODO STOPSHIP Check if the results make sense and throw an error if they don't.
+        // Probably need to let the user specify some limits.
+        
+        // Return the compensated board location
+        Location result = Utils2D.calculateBoardPlacementLocation(boardLocation, new Location(LengthUnit.Millimeters));
+        result = result.convertToUnits(boardLocation.getLocation().getUnits());
+        result = result.derive(null, null, boardLocation.getLocation().getZ(), null);
+        return result;
     }
+    
+    /**
+     * Gets the best fiducials from the given list. If there are at least three fiducials that are
+     * non-colinear, the three that are most distant from one another will be returned.
+     * Otherwise the two most distant ones will be returned. If there are less than three
+     * fiducials in the list altogether then the list is returned unchanged.
+     * 
+     * Note that given the above rules, the returned list can contain 0, 1, 2, or 3 fiducials. No
+     * other number of results will be returned.
+     * 
+     * @param fiducials
+     * @return
+     */
+    public static List<Placement> getBestFiducials(List<Placement> fiducials) {
+        // If there are less than three fiducials there's nothing we can do.
+        if (fiducials.size() < 3) {
+            return fiducials;
+        }
 
+        // Get the convex hull set, which represents the outer bounds of all
+        // the points. This is primarily an optimization to cut down on the number
+        // of checks we need to perform below.
+        try {
+            // quickHull requires Points, and we have Placements, so we need to convert the
+            // Placements to Points and we also need to be able to map the results back
+            // to Placements when it's finished. So, we create a map, pass the keys
+            // and then unmap it when it's done.
+            Map<Point, Placement> pointsToPlacements = new HashMap<>();
+            for (Placement placement : fiducials) {
+                Point point = placement.getLocation()
+                                       .convertToUnits(LengthUnit.Millimeters)
+                                       .getXyPoint();
+                pointsToPlacements.put(point, placement);
+            }
+            List<Point> points = QuickHull.quickHull(new ArrayList<>(pointsToPlacements.keySet()));
+            fiducials = new ArrayList<>();
+            for (Point point : points) {
+                fiducials.add(pointsToPlacements.get(point));
+            }
+        }
+        catch (Exception e) {
+            // Quick Hull will fail if all of the points share an X coordinate. Knowing this,
+            // we don't bother to check ahead of time and just handle it here. In this case
+            // there is no point continuing, so we just return the two most distant points.
+            return Utils2D.mostDistantPair(fiducials);
+        }
+
+        // Now, for each set of 3 unique points in the list of points, calculate the area of
+        // the triangle. The largest is our answer.
+        Placement[] bestPoints = null;
+        double bestArea = 0;
+        for (Set<Placement> tri : Sets.powerSet(Sets.newHashSet(fiducials))) {
+            if (tri.size() != 3) {
+                continue;
+            }
+            Placement[] triPoints = tri.toArray(new Placement[] {});
+            double a = Utils2D.triangleArea(triPoints[0], triPoints[1], triPoints[2]);
+            if (bestPoints == null || a > bestArea) {
+                bestPoints = triPoints;
+                bestArea = a;
+            }
+        }
+
+        // If the best area is 0 then all the triangles were degenerate / collinear. In this case
+        // the three points are not useful and we just return the two most distant.
+        if (bestArea == 0) {
+            return Utils2D.mostDistantPair(fiducials);
+        }
+
+        return Arrays.asList(bestPoints);
+    }
+    
     /**
      * Given a placement containing a fiducial, attempt to find the fiducial using the vision
      * system. The function first moves the camera to the ideal location of the fiducial based on
@@ -341,37 +409,6 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         return location;
     }
     
-    /**
-     * Given a List of Placements, find the two that are the most distant from each other.
-     * 
-     * @param fiducials
-     * @return
-     */
-    private static List<Placement> getMostDistantPlacements(List<Placement> fiducials) {
-        if (fiducials.size() < 2) {
-            return null;
-        }
-        Placement maxA = null, maxB = null;
-        double max = 0;
-        for (Placement a : fiducials) {
-            for (Placement b : fiducials) {
-                if (a == b) {
-                    continue;
-                }
-                double d = Math.abs(a.getLocation().getLinearDistanceTo(b.getLocation()));
-                if (d > max) {
-                    maxA = a;
-                    maxB = b;
-                    max = d;
-                }
-            }
-        }
-        ArrayList<Placement> results = new ArrayList<>();
-        results.add(maxA);
-        results.add(maxB);
-        return results;
-    }
-
     private static IdentifiableList<Placement> getFiducials(BoardLocation boardLocation) {
         Board board = boardLocation.getBoard();
         IdentifiableList<Placement> fiducials = new IdentifiableList<>();
@@ -383,7 +420,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         }
         return fiducials;
     }
-
+    
     public boolean isEnabledAveraging() {
         return enabledAveraging;
     }
@@ -497,5 +534,5 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         public void setPipeline(CvPipeline pipeline) {
             this.pipeline = pipeline;
         }
-    }
+    }  
 }

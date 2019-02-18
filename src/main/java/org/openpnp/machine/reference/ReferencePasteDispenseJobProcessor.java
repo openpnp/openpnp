@@ -106,8 +106,6 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
 
     protected List<JobDispense> jobDispenses = new ArrayList<>();
 
-    protected Map<BoardLocation, Location> boardLocationFiducialOverrides = new HashMap<>();
-
     public ReferencePasteDispenseJobProcessor() {
         fsm.add(State.Uninitialized, Message.Initialize, State.PreFlight, this::doInitialize);
 
@@ -217,7 +215,6 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
         this.machine = Configuration.get().getMachine();
         this.head = this.machine.getDefaultHead();
         this.jobDispenses.clear();
-        this.boardLocationFiducialOverrides.clear();
 
         fireTextStatus("Checking job for setup errors.");
 
@@ -267,8 +264,7 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
             if (!boardLocation.isCheckFiducials()) {
                 continue;
             }
-            Location location = locator.locateBoard(boardLocation);
-            boardLocationFiducialOverrides.put(boardLocation, location);
+            locator.locateBoard(boardLocation);
             Logger.debug("Fiducial check for {}", boardLocation);
         }
     }
@@ -281,14 +277,6 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
 
             BoardLocation boardLocation = jobDispense.boardLocation;
             BoardPad boardPad = jobDispense.boardPad;
-
-            // Check if there is a fiducial override for the board location and if so, use it.
-            if (boardLocationFiducialOverrides.containsKey(boardLocation)) {
-                BoardLocation boardLocation2 = new BoardLocation(boardLocation.getBoard());
-                boardLocation2.setSide(boardLocation.getSide());
-                boardLocation2.setLocation(boardLocationFiducialOverrides.get(boardLocation));
-                boardLocation = boardLocation2;
-            }
 
             Location dispenseLocation =
                     Utils2D.calculateBoardPlacementLocation(boardLocation, boardPad.getLocation());

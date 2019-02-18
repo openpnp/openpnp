@@ -34,8 +34,6 @@ public class BoardLocation extends AbstractModelObject {
     @Element
     private Location location;
     
-    private Location locationFiducialOverrides;
-    
     @Attribute
     private Side side = Side.Top;
     private Board board;
@@ -56,6 +54,10 @@ public class BoardLocation extends AbstractModelObject {
     @ElementMap(required = false)
     private Map<String, Boolean> placed = new HashMap<>();
 
+    /**
+     * Important note: The placement transform is in Millimeters no matter what the source
+     * units are.
+     */
     private AffineTransform placementTransform;
 
     BoardLocation() {
@@ -65,7 +67,6 @@ public class BoardLocation extends AbstractModelObject {
     // Copy constructor needed for deep copy of object.
     public BoardLocation(BoardLocation obj) {
         this.location = obj.location;
-        this.locationFiducialOverrides = obj.locationFiducialOverrides;
         this.side = obj.side;
         this.board = obj.board;
         this.boardFile = obj.boardFile;
@@ -97,30 +98,6 @@ public class BoardLocation extends AbstractModelObject {
         firePropertyChange("location", oldValue, location);
     }
     
-    public Location getLocationFiducialOverrides() {
-        return locationFiducialOverrides;
-    }
-
-    public void setLocationFiducialOverrides(Location locationFiducialOverrides) {
-        Location oldValue = this.locationFiducialOverrides;
-        this.locationFiducialOverrides = locationFiducialOverrides;
-        firePropertyChange("locationFiducialOverrides", oldValue, locationFiducialOverrides);
-    }
-
-    public void clearLocationFiducialOverrides() {
-        setLocationFiducialOverrides(null);
-    }
-
-    public Location getFiducialCompensatedBoardLocation() {
-        // Check if there is a fiducial override for the board location and if so, use it.
-        if ( locationFiducialOverrides != null ) {
-            return locationFiducialOverrides;
-        } else {
-            return location;            
-        }
-        
-    }
-
     public Side getSide() {
         return side;
     }
@@ -243,7 +220,9 @@ public class BoardLocation extends AbstractModelObject {
     }
 
     public void setPlacementTransform(AffineTransform placementTransform) {
+        Object oldValue = this.placementTransform;
         this.placementTransform = placementTransform;
+        firePropertyChange("placementTransform", oldValue, placementTransform);
     }
 
     @Override
