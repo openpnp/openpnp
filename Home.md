@@ -2,6 +2,7 @@
 
 ## New User Resources
 * [[Quick Start]]
+* [[Hardware Build FAQ|Build FAQ]]
 * [[Setup and Calibration]]
 * [[User Manual]] [(PDF)](https://github.com/openpnp/openpnp/files/2226367/OpenPnP.-.User.Manual.pdf)
 * [[Video Tutorials]]
