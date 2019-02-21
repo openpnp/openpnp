@@ -366,6 +366,7 @@ public class JobPlacementsPanel extends JPanel {
 
             placement.setPart(Configuration.get().getParts().get(0));
             placement.setLocation(new Location(Configuration.get().getSystemUnits()));
+            placement.setSide(boardLocation.getSide());
 
             boardLocation.getBoard().addPlacement(placement);
             tableModel.fireTableDataChanged();
