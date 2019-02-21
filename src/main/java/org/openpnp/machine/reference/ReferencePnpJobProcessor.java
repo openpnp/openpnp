@@ -149,15 +149,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     public ReferencePnpJobProcessor() {
         fsm.add(State.Uninitialized, Message.Initialize, State.PreFlight, this::doInitialize);
 
-        fsm.add(State.PreFlight, Message.Next, State.TipCalibration, this::doPreFlight,
-                Message.Next);
+        fsm.add(State.PreFlight, Message.Next, State.TipCalibration, this::doPreFlight);
         fsm.add(State.PreFlight, Message.Abort, State.Cleanup, Message.Next);
         
-        fsm.add(State.TipCalibration, Message.Next, State.FiducialCheck, this::doTipCalibration, Message.Next);
+        fsm.add(State.TipCalibration, Message.Next, State.FiducialCheck, this::doTipCalibration);
         fsm.add(State.TipCalibration, Message.Skip, State.FiducialCheck, Message.Next);
         fsm.add(State.TipCalibration, Message.Abort, State.Cleanup, Message.Next);
 
-        fsm.add(State.FiducialCheck, Message.Next, State.Plan, this::doFiducialCheck, Message.Next);
+        fsm.add(State.FiducialCheck, Message.Next, State.Plan, this::doFiducialCheck);
         fsm.add(State.FiducialCheck, Message.Skip, State.Plan, Message.Next);
         fsm.add(State.FiducialCheck, Message.Abort, State.Cleanup, Message.Next);
 
@@ -165,11 +164,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         fsm.add(State.Plan, Message.Abort, State.Cleanup, Message.Next);
         fsm.add(State.Plan, Message.Complete, State.Cleanup, Message.Next);
 
-        fsm.add(State.ChangeNozzleTip, Message.Next, State.Feed, this::doChangeNozzleTip, Message.Next);
+        fsm.add(State.ChangeNozzleTip, Message.Next, State.Feed, this::doChangeNozzleTip);
         fsm.add(State.ChangeNozzleTip, Message.Skip, State.ChangeNozzleTip, this::doSkip, Message.Next);
         fsm.add(State.ChangeNozzleTip, Message.Abort, State.Cleanup, Message.Next);
 
-        fsm.add(State.Feed, Message.Next, State.Align, this::doFeedAndPick, Message.Next);
+        fsm.add(State.Feed, Message.Next, State.Align, this::doFeedAndPick);
         fsm.add(State.Feed, Message.Skip, State.Feed, this::doSkip, Message.Next);
         fsm.add(State.Feed, Message.IgnoreContinue, State.Feed, this::doIgnoreContinue, Message.Next);
         fsm.add(State.Feed, Message.Abort, State.Cleanup, Message.Next);
@@ -183,7 +182,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         // fsm.add(State.Pick, Message.Skip, State.Pick, this::doSkip, Message.Next);
         // fsm.add(State.Pick, Message.Abort, State.Cleanup, Message.Next);
 
-        fsm.add(State.Align, Message.Next, State.Place, this::doAlign, Message.Next);
+        fsm.add(State.Align, Message.Next, State.Place, this::doAlign);
         fsm.add(State.Align, Message.Skip, State.Align, this::doSkip, Message.Next);
         fsm.add(State.Align, Message.IgnoreContinue, State.Align, this::doIgnoreContinue, Message.Next);
         fsm.add(State.Align, Message.Abort, State.Cleanup, Message.Next);
@@ -535,6 +534,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
 
     protected void doChangeNozzleTip() throws Exception {
+        fireTextStatus("Checking nozzle tips.");
         for (PlannedPlacement plannedPlacement : plannedPlacements) {
             if (plannedPlacement.stepComplete) {
                 continue;
