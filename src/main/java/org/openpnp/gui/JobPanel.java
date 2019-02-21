@@ -291,7 +291,6 @@ public class JobPanel extends JPanel {
                         }
 
                         updatePanelizationIconState();
-
                     }
                 });
 
