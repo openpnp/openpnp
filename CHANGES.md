@@ -1,6 +1,37 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-02-21
+
+## High Profile Bugs Fixes and Updates
+
+A few important bug fixes for long standing bugs are now in, along with some long standing
+feature requests:
+
+* "No defined transitions from Preflight to Initialize": There were a number of errors related
+  to state management in the JobPanel FSM and these are now corrected. The primary cause of this 
+  error was clicking Job buttons while an action was already taking place. State is now managed
+  correctly, and more importantly, the buttons are disabled while operations that can't be 
+  interrupted are taking place.
+  
+  This is a significant change that is hard to test under every condition, so please let
+  us know if you run into issues with this.
+  
+  See https://github.com/openpnp/openpnp/issues/478 for more info.
+  
+* "Stopping a job should stop the job as soon as possible": This issue was related to how
+  the job would continue for a time after pressing pause or stop. In general, once a pick
+  and place cycle started it could not be interrupted. In addition, the startup process of
+  a job would be impossible to interrupt. This is now fixed and granularity of steps is increased.
+  Clicking pause or stop will now stop the job as soon as the current operation is complete.
+  
+  See https://github.com/openpnp/openpnp/issues/278 for more info.
+  
+* Multi-select tables and right click menus: All of the primary tables now support multi-select
+  and right click menus. This makes it much easier to enable / disable a number of feeders at
+  once, or set the "Check Fids" for multiple boards at once, for instance.
+   
+
 # 2019-02-18
 
 ## Major Change: Fiducial System (Affine Transforms)
