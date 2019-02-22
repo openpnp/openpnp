@@ -155,7 +155,8 @@ public class JobPanel extends JPanel {
                         setEnabledAction,setCheckFidsAction, setSideAction);
         singleSelectionActionGroup.setEnabled(false);
         
-        multiSelectionActionGroup = new ActionGroup(setEnabledAction, setCheckFidsAction, setSideAction);
+        multiSelectionActionGroup = new ActionGroup(removeBoardAction, setEnabledAction, setCheckFidsAction, setSideAction);
+        multiSelectionActionGroup.setEnabled(false);
         
         panelizeXOutAction.setEnabled(false);
         panelizeFiducialCheck.setEnabled(false);
@@ -1268,11 +1269,11 @@ public class JobPanel extends JPanel {
                 removeBoardAction.setEnabled(true);
             }
             else {
-                BoardLocation boardLocation = getSelection();
-                if (boardLocation != null) {
-                    getJob().removeBoardLocation(boardLocation);
-                    tableModel.fireTableDataChanged();
+                List<BoardLocation> selections = getSelections();
+                for (BoardLocation selection : getSelections()) {
+                    getJob().removeBoardLocation(selection);
                 }
+                tableModel.fireTableDataChanged();
             }
             updatePanelizationIconState();
         }
