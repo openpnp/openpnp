@@ -68,7 +68,6 @@ import org.openpnp.Translations;
 import org.openpnp.events.BoardLocationSelectedEvent;
 import org.openpnp.events.JobLoadedEvent;
 import org.openpnp.events.PlacementSelectedEvent;
-import org.openpnp.gui.JobPlacementsPanel.SetSideAction;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.panelization.DlgAutoPanelize;
@@ -94,7 +93,6 @@ import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.JobProcessor.TextStatusListener;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
-import org.openpnp.util.FiniteStateMachine;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
@@ -104,17 +102,12 @@ import com.google.common.eventbus.Subscribe;
 public class JobPanel extends JPanel {
     enum State {
         Stopped,
+        Paused,
         Running,
-        Stepping
+        Pausing,
+        Stopping
     }
-
-    enum Message {
-        StartOrPause,
-        Step,
-        Abort,
-        Finished
-    }
-
+    
     final private Configuration configuration;
     final private MainFrame frame;
 
@@ -147,26 +140,12 @@ public class JobPanel extends JPanel {
     private Job job;
 
     private JobProcessor jobProcessor;
-
-    private FiniteStateMachine<State, Message> fsm = new FiniteStateMachine<>(State.Stopped);
+    
+    private State state = State.Stopped;
 
     public JobPanel(Configuration configuration, MainFrame frame) {
         this.configuration = configuration;
         this.frame = frame;
-
-        fsm.add(State.Stopped, Message.StartOrPause, State.Running, this::jobStart);
-        fsm.add(State.Stopped, Message.Step, State.Stepping, this::jobStart);
-
-        // No action is needed. The job is running and will exit when the state
-        // changes to Stepping.
-        fsm.add(State.Running, Message.StartOrPause, State.Stepping);
-        fsm.add(State.Running, Message.Abort, State.Stopped, this::jobAbort);
-        fsm.add(State.Running, Message.Finished, State.Stopped);
-
-        fsm.add(State.Stepping, Message.StartOrPause, State.Running, this::jobRun);
-        fsm.add(State.Stepping, Message.Step, State.Stepping, this::jobRun);
-        fsm.add(State.Stepping, Message.Abort, State.Stopped, this::jobAbort);
-        fsm.add(State.Stepping, Message.Finished, State.Stopped);
 
         singleSelectionActionGroup =
                 new ActionGroup(removeBoardAction, captureCameraBoardLocationAction,
@@ -176,7 +155,8 @@ public class JobPanel extends JPanel {
                         setEnabledAction,setCheckFidsAction, setSideAction);
         singleSelectionActionGroup.setEnabled(false);
         
-        multiSelectionActionGroup = new ActionGroup(setEnabledAction, setCheckFidsAction, setSideAction);
+        multiSelectionActionGroup = new ActionGroup(removeBoardAction, setEnabledAction, setCheckFidsAction, setSideAction);
+        multiSelectionActionGroup.setEnabled(false);
         
         panelizeXOutAction.setEnabled(false);
         panelizeFiducialCheck.setEnabled(false);
@@ -426,11 +406,6 @@ public class JobPanel extends JPanel {
             }
         });
 
-        fsm.addPropertyChangeListener((e) -> {
-            updateJobActions();
-        });
-        
-        
         JPopupMenu popupMenu = new JPopupMenu();
 
         JMenu setSideMenu = new JMenu(setSideAction);
@@ -452,6 +427,11 @@ public class JobPanel extends JPanel {
         table.setComponentPopupMenu(popupMenu);
 
         Configuration.get().getBus().register(this);
+    }
+    
+    void setState(State newState) {
+        this.state = newState;
+        updateJobActions();
     }
     
     public JTable getBoardLocationsTable() {
@@ -714,7 +694,7 @@ public class JobPanel extends JPanel {
      * Updates the Job controls based on the Job state and the Machine's readiness.
      */
     private void updateJobActions() {
-        if (fsm.getState() == State.Stopped) {
+        if (state == State.Stopped) {
             startPauseResumeJobAction.setEnabled(true);
             startPauseResumeJobAction.putValue(AbstractAction.NAME, "Start"); //$NON-NLS-1$
             startPauseResumeJobAction.putValue(AbstractAction.SMALL_ICON, Icons.start);
@@ -724,7 +704,7 @@ public class JobPanel extends JPanel {
             stepJobAction.setEnabled(true);
             tabbedPane.setEnabled(true);
         }
-        else if (fsm.getState() == State.Running) {
+        else if (state == State.Running) {
             startPauseResumeJobAction.setEnabled(true);
             startPauseResumeJobAction.putValue(AbstractAction.NAME, "Pause"); //$NON-NLS-1$
             startPauseResumeJobAction.putValue(AbstractAction.SMALL_ICON, Icons.pause);
@@ -734,7 +714,7 @@ public class JobPanel extends JPanel {
             stepJobAction.setEnabled(false);
             tabbedPane.setEnabled(false);
         }
-        else if (fsm.getState() == State.Stepping) {
+        else if (state == State.Paused) {
             startPauseResumeJobAction.setEnabled(true);
             startPauseResumeJobAction.putValue(AbstractAction.NAME, "Resume"); //$NON-NLS-1$
             startPauseResumeJobAction.putValue(AbstractAction.SMALL_ICON, Icons.start);
@@ -742,6 +722,18 @@ public class JobPanel extends JPanel {
                     "Resume processing of the job."); //$NON-NLS-1$
             stopJobAction.setEnabled(true);
             stepJobAction.setEnabled(true);
+            tabbedPane.setEnabled(false);
+        }
+        else if (state == State.Pausing) {
+            startPauseResumeJobAction.setEnabled(false);
+            stopJobAction.setEnabled(false);
+            stepJobAction.setEnabled(false);
+            tabbedPane.setEnabled(false);
+        }
+        else if (state == State.Stopping) {
+            startPauseResumeJobAction.setEnabled(false);
+            stopJobAction.setEnabled(false);
+            stepJobAction.setEnabled(false);
             tabbedPane.setEnabled(false);
         }
 
@@ -761,7 +753,7 @@ public class JobPanel extends JPanel {
     }
     
     private boolean checkJobStopped() {
-        if (fsm.getState() != State.Stopped) {
+        if (state != State.Stopped) {
             MessageBoxes.errorBox(this, "Error", "Job must be stopped first."); //$NON-NLS-1$ //$NON-NLS-2$
             return false;
         }
@@ -908,6 +900,21 @@ public class JobPanel extends JPanel {
         }
         else if (title.equals("Pick and Place")) { //$NON-NLS-1$
             jobProcessor = Configuration.get().getMachine().getPnpJobProcessor();
+            
+            if (isAllPlaced()) {
+                int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "All placements have been placed already. Reset all placements before starting job?", //$NON-NLS-1$
+                        "Reset placement status?", JOptionPane.YES_NO_OPTION, //$NON-NLS-1$
+                        JOptionPane.WARNING_MESSAGE);
+                if (ret == JOptionPane.YES_OPTION) {
+                    for (BoardLocation boardLocation : job.getBoardLocations()) {
+                        boardLocation.clearAllPlaced();
+                    }
+                    jobPlacementsPanel.refresh();
+                }
+            }
+            
+            
         }
         else {
             throw new Error("Programmer error: Unknown tab title."); //$NON-NLS-1$
@@ -915,22 +922,18 @@ public class JobPanel extends JPanel {
         jobProcessor.initialize(job);
         jobRun();
     }
-
+    
     public void jobRun() {
         UiUtils.submitUiMachineTask(() -> {
-            // Make sure the FSM has actually transitioned to either Running or Stepping
-            // before continuing so that we don't accidentally exit early. This breaks
-            // the potential race condition where this task may execute before the
-            // calling task (setting the FSM state) finishes.
-            while (fsm.getState() != State.Running && fsm.getState() != State.Stepping) {
-                
-            }
-
             do {
                 if (!jobProcessor.next()) {
-                    fsm.send(Message.Finished);
+                    setState(State.Stopped);
                 }
-            } while (fsm.getState() == State.Running);
+            } while (state == State.Running);
+            
+            if (state == State.Pausing) {
+                setState(State.Paused);
+            }
 
             return null;
         }, (e) -> {
@@ -977,9 +980,9 @@ public class JobPanel extends JPanel {
                 // We are either Running or Stepping. If Stepping, there is nothing to do. Just
                 // clear the dialog and let the user take control. If Running we need to transition
                 // to Stepping.
-                if (fsm.getState() == State.Running) {
+                if (state == State.Running) {
                     try {
-                        fsm.send(Message.StartOrPause);
+                        setState(State.Paused);
                     }
                     catch (Exception e) {
                         // Since we are checking if we're in the Running state this should not
@@ -1008,10 +1011,16 @@ public class JobPanel extends JPanel {
 
     private void jobAbort() {
         UiUtils.submitUiMachineTask(() -> {
-            jobProcessor.abort();
+            try {
+                jobProcessor.abort();
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+            setState(State.Stopped);
         });
     }
-
+    
     private void updatePanelizationIconState() {
     	// If more than board is in the job list, then autopanelize isn't allowed
         if (getJob().isUsingPanel() == false && table.getRowCount() > 1){
@@ -1075,21 +1084,22 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            System.out.println("isAllPlaced " + isAllPlaced()); //$NON-NLS-1$
-            if (isAllPlaced()) {
-                int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "All placements have been placed already. Reset all placements before starting job?", //$NON-NLS-1$
-                        "Reset placement status?", JOptionPane.YES_NO_OPTION, //$NON-NLS-1$
-                        JOptionPane.WARNING_MESSAGE);
-                if (ret == JOptionPane.YES_OPTION) {
-                    for (BoardLocation boardLocation : job.getBoardLocations()) {
-                        boardLocation.clearAllPlaced();
-                    }
-                    jobPlacementsPanel.refresh();
-                }
-            }
             UiUtils.messageBoxOnException(() -> {
-                fsm.send(Message.StartOrPause);
+                if (state == State.Stopped) {
+                    setState(State.Running);
+                    jobStart();
+                }
+                else if (state == State.Paused) {
+                    setState(State.Running);
+                    jobRun();
+                }
+                // If we're running and the user hits pause we pause.
+                else if (state == State.Running) {
+                    setState(State.Pausing);
+                }
+                else {
+                    throw new Exception("Don't know how to change from state " + state);
+                }
             });
         }
     };
@@ -1104,7 +1114,14 @@ public class JobPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                fsm.send(Message.Step);
+                if (state == State.Stopped) {
+                    setState(State.Pausing);
+                    jobStart();
+                }
+                else if (state == State.Paused) {
+                    setState(State.Pausing);
+                    jobRun();
+                }
             });
         }
     };
@@ -1119,7 +1136,8 @@ public class JobPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                fsm.send(Message.Abort);
+                setState(State.Stopping);
+                jobAbort();
             });
         }
     };
@@ -1127,7 +1145,6 @@ public class JobPanel extends JPanel {
     public final Action resetAllPlacedAction = new AbstractAction() {
         {
             putValue(NAME, Translations.getString("JobPanel.Action.Job.ResetAllPlaced")); //$NON-NLS-1$
-//            putValue(SMALL_ICON, Icons.add);
             putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.ResetAllPlaced.Description")); //$NON-NLS-1$
         }
 
@@ -1252,11 +1269,11 @@ public class JobPanel extends JPanel {
                 removeBoardAction.setEnabled(true);
             }
             else {
-                BoardLocation boardLocation = getSelection();
-                if (boardLocation != null) {
-                    getJob().removeBoardLocation(boardLocation);
-                    tableModel.fireTableDataChanged();
+                List<BoardLocation> selections = getSelections();
+                for (BoardLocation selection : getSelections()) {
+                    getJob().removeBoardLocation(selection);
                 }
+                tableModel.fireTableDataChanged();
             }
             updatePanelizationIconState();
         }
@@ -1587,16 +1604,7 @@ public class JobPanel extends JPanel {
 
         @Override
         public void machineDisabled(Machine machine, String reason) {
-            // TODO This fails. When we get this message the machine is already
-            // disabled so we can't perform the abort actions.
-            if (fsm.getState() != State.Stopped) {
-                try {
-                    fsm.send(Message.Abort);
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+            setState(State.Stopped);
             updateJobActions();
         }
     };
