@@ -93,6 +93,11 @@ public class Utils2D {
             Location placementLocation) {
         if (bl.getPlacementTransform() != null) {
             AffineTransform tx = bl.getPlacementTransform();
+            // The affine calculations are always done in millimeters, so we convert everything
+            // before we start calculating and then we'll convert it back to the original
+            // units at the end.
+            LengthUnit placementUnits = placementLocation.getUnits();
+            Location boardLocation = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
             placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
 
             // Calculate the apparent angle from the transform. We need this because when we
@@ -110,12 +115,15 @@ public class Utils2D {
             
             Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
             p = tx.transform(p, null);
+            
+            // The final result is the transformed X,Y, the BoardLocation's Z, and the
+            // transform angle + placement angle.
             Location l = new Location(LengthUnit.Millimeters, 
                     p.getX(), 
                     p.getY(), 
-                    0, 
+                    boardLocation.getZ(), 
                     angle + placementLocation.getRotation());
-            l = l.convertToUnits(placementLocation.getUnits());
+            l = l.convertToUnits(placementUnits);
             return l;
         }
         else {
