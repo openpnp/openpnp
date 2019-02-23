@@ -94,13 +94,27 @@ public class Utils2D {
         if (bl.getPlacementTransform() != null) {
             AffineTransform tx = bl.getPlacementTransform();
             placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
+
+            // Calculate the apparent angle from the transform. We need this because when we
+            // created the transform we captured the apparent angle and that is used to position
+            // in X, Y, but we also need the actual value to add to the placement rotation so that
+            // the nozzle is rotated to the correct angle as well.
+            // Note, there is probably a better way to do this. If you know how, please let me know!
+            Point2D.Double a = new Point2D.Double(0, 0);
+            Point2D.Double b = new Point2D.Double(1, 1);
+            Point2D.Double c = new Point2D.Double(0, 0);
+            Point2D.Double d = new Point2D.Double(1, 1);
+            c = (Point2D.Double) tx.transform(c, null);
+            d = (Point2D.Double) tx.transform(d, null);
+            double angle = Math.toDegrees(Math.atan2(d.y - c.y, d.x - c.x) - Math.atan2(b.y - a.y, b.x - a.x));
+            
             Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
             p = tx.transform(p, null);
             Location l = new Location(LengthUnit.Millimeters, 
                     p.getX(), 
                     p.getY(), 
                     0, 
-                    bl.getLocation().getRotation() + placementLocation.getRotation());
+                    angle + placementLocation.getRotation());
             l = l.convertToUnits(placementLocation.getUnits());
             return l;
         }
