@@ -1,3 +1,5 @@
+import java.awt.geom.AffineTransform;
+
 import org.junit.Test;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
@@ -6,6 +8,8 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
 import org.openpnp.util.Utils2D;
+
+import junit.framework.Assert;
 
 public class Utils2DTest {
     /**
@@ -111,6 +115,36 @@ public class Utils2DTest {
         }
     }
 
+    /**
+     * Test calculating a board location with affine transformations and without. Check that
+     * the results are the same and that they match the gold results.
+     * @throws Exception
+     */
+    @Test
+    public void testCalculateBoardPlacementLocationSimple() throws Exception {
+        Board board = new Board();
+        
+        BoardLocation boardLocation = new BoardLocation(board);
+        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 5, 15, -8, -6));
+
+        Placement placement = new Placement("T1");
+        placement.setLocation(new Location(LengthUnit.Millimeters, 55, 5, 0, 90));
+        board.addPlacement(placement);
+        
+        AffineTransform tx = new AffineTransform();
+        tx.translate(5, 15);
+        tx.rotate(Math.toRadians(-6));
+        
+        Location locationBefore = Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation());
+        System.out.println(locationBefore);
+        
+        boardLocation.setPlacementTransform(tx);
+        Location locationAfter = Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation());
+        System.out.println(locationAfter);
+        
+        check(locationBefore, 60.22, 14.22, -8, 84);
+        check(locationAfter, 60.22, 14.22, -8, 84);
+    }
 
     @Test
     public void testCalculateBoardPlacementLocation() throws Exception {
