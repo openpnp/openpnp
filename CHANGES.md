@@ -1,6 +1,41 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-02-26
+
+## New Job Planner
+
+A new Job Planner is being tested. The SimplePnpJobPlanner replaces the StandardPnpJobPlanner
+as the new default. The new planner attempts to fill as many nozzles as possible per cycle,
+and tries to limit the number of nozzle tip changes, but does not try as hard to "look ahead"
+as the old planner.
+
+The upside is that the new planner is much, much faster and works for jobs
+of any size, while the old planner would fail on jobs larger than a few hundred placements
+when multiple nozzles were in use.
+
+The downside is that the new planner may perform more total cycles, and may perform more
+nozzle tip changes, although in testing so far it seems to perform pretty similarly for
+a number of common configurations.
+
+The new planner is enabled by default. Please give it a try and report if you run into any
+issues. If you need to switch back to the old planner, you can edit machine.xml and change
+
+`<planner class="org.openpnp.machine.reference.ReferencePnpJobProcessor$SimplePnpJobPlanner"/>`
+
+to
+
+`<planner class="org.openpnp.machine.reference.ReferencePnpJobProcessor$StandardPnpJobPlanner"/>`
+
+## New Job Planner Interface
+
+As indicated above, the Job Planner interface is back and it is now possible to write custom
+planners and plug them in using the method described above. This interface is not final, and
+will likely undergo some small changes in the future, but the basic concept should remain
+the same.
+
+See either of the two planners described above for an example of how to write one.
+
 # 2019-02-21
 
 ## High Profile Bugs Fixes and Updates
