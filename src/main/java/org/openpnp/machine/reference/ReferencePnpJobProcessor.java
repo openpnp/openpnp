@@ -1096,6 +1096,27 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          */
         @Override
         public List<JobPlacement> plan(Head head, List<JobPlacement> jobPlacements) {
+            // Sort the placements by number of compatible nozzles ascending. This causes the
+            // planner to prefer plans that have greater nozzle diversity, leading to overall
+            // better nozzle usage as fewer placements remain.
+            jobPlacements.sort(new Comparator<JobPlacement>() {
+                @Override
+                public int compare(JobPlacement o1, JobPlacement o2) {
+                    int c1 = 0;
+                    for (Nozzle nozzle : head.getNozzles()) {
+                        if (AbstractPnpJobProcessor.nozzleCanHandle(nozzle, o1.placement.getPart())) {
+                            c1++;
+                        }
+                    }
+                    int c2 = 0;
+                    for (Nozzle nozzle : head.getNozzles()) {
+                        if (AbstractPnpJobProcessor.nozzleCanHandle(nozzle, o2.placement.getPart())) {
+                            c2++;
+                        }
+                    }
+                    return c1 - c2;
+                }
+            });
             List<JobPlacement> result = new ArrayList<>();
             for (Nozzle nozzle : head.getNozzles()) {
                 JobPlacement solution = null;
