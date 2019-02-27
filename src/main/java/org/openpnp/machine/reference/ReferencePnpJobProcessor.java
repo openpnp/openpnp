@@ -1087,12 +1087,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * This is a trivial planner that does not try very hard to make an optimized job, but also
          * does not fail on large jobs like the Standard one does.
          * 
-         * For each planning cycle, the planner loops through each nozzle on the head. For each
-         * nozzle it then loops through the list of remaining placements finds the first placement
-         * that does not require a nozzle change, and one that does. If one is found that does
-         * not require a chance, it is returned immediately. Otherwise it returns the one
-         * that requires the nozzle change. If no compatible placement is found for the nozzle
-         * the nozzle is left empty.
+         * - For each planning cycle, the planner loops through each nozzle on the head. 
+         * - For each nozzle it then loops through the list of remaining placements and
+         *   finds the first placement that does not require a nozzle tip change. 
+         * - If none are found it next searches for a placement that can be handled with a nozzle
+         *   tip change.
+         * - If no compatible placement is found in the searches above the nozzle is left empty.
          */
         @Override
         public List<JobPlacement> plan(Head head, List<JobPlacement> jobPlacements) {
