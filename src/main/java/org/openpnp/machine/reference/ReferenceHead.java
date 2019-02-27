@@ -23,7 +23,6 @@ import java.util.ArrayList;
 
 import javax.swing.Action;
 
-import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.psh.ActuatorsPropertySheetHolder;
@@ -38,24 +37,11 @@ import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.pmw.tinylog.Logger;
 
 public class ReferenceHead extends AbstractHead {
-    protected ReferenceMachine machine;
-    protected ReferenceDriver driver;
-
-    public ReferenceHead() {
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationLoaded(Configuration configuration) throws Exception {
-                machine = (ReferenceMachine) configuration.getMachine();
-                driver = machine.getDriver();
-            }
-        });
-    }
-
     @Override
     public void home() throws Exception {
         Logger.debug("{}.home()", getName());
-        driver.home(this);
-        machine.fireMachineHeadActivity(this);
+        getDriver().home(this);
+        getMachine().fireMachineHeadActivity(this);
     }
 
     @Override
