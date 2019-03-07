@@ -278,8 +278,7 @@ public class ReferenceMachine extends AbstractMachine {
         super.home();
 
         // if homing went well, set machine homed-flag true
-        this.setHomed(true);
-        
+        this.setHomed(true);     
     }
 
     @Override
@@ -342,5 +341,6 @@ public class ReferenceMachine extends AbstractMachine {
     public void setHomed(boolean isHomed) {
         Logger.debug("setHomed({})", isHomed);
         this.isHomed = isHomed;
+        firePropertyChange("homed", null, this.isHomed);
     }
 }
