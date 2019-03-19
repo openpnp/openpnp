@@ -1082,7 +1082,7 @@ public class CameraView extends JComponent implements CameraListener {
             dir.mkdirs();
             DateFormat df = new SimpleDateFormat("YYYY-MM-dd_HH.mm.ss.SSS");
             File file = new File(dir, camera.getName() + "_" + df.format(new Date()) + ".png");
-            ImageIO.write(lastFrame, "png", file);
+            ImageIO.write(camera.capture(), "png", file);
         }
         catch (Exception e1) {
             e1.printStackTrace();

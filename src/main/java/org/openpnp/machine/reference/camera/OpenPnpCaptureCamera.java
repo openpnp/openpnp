@@ -178,7 +178,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
              * the thread busy looping and eating tons of CPU.
              */
             broadcastCapture(img);
-            return transformImage(img);
+            return img;
         }
         catch (Exception e) {
             e.printStackTrace();

@@ -9,4 +9,6 @@ import org.openpnp.model.Part;
  */
 public interface NozzleTip extends Identifiable, Named, WizardConfigurable, PropertySheetHolder {
     public boolean canHandle(Part part);
+    public void calibrate() throws Exception;
+    public boolean isCalibrated();
 }

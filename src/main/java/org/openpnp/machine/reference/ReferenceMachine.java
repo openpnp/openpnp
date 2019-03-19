@@ -94,13 +94,15 @@ public class ReferenceMachine extends AbstractMachine {
 
     private boolean enabled;
 
+    private boolean isHomed = false;
+
     private List<Class<? extends Feeder>> registeredFeederClasses = new ArrayList<>();
 
     @Commit
     protected void commit() {
         super.commit();
     }
-    
+
     public ReferenceDriver getDriver() {
         return driver;
     }
@@ -113,22 +115,23 @@ public class ReferenceMachine extends AbstractMachine {
         this.driver = driver;
     }
 
-    public ReferenceMachine()
-    {
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+    public ReferenceMachine() {
+        Configuration.get()
+                     .addListener(new ConfigurationListener.Adapter() {
 
-            @Override
-             public void configurationLoaded(Configuration configuration) throws Exception {
-                // move any single partAlignments into our list
-                if (partAlignment != null) {
-                    partAlignments.add(partAlignment);
-                    partAlignment = null;
-                }
-                if (partAlignments.isEmpty()) {
-                    partAlignments.add(new ReferenceBottomVision());
-                }
-            }
-        });
+                         @Override
+                         public void configurationLoaded(Configuration configuration)
+                                 throws Exception {
+                             // move any single partAlignments into our list
+                             if (partAlignment != null) {
+                                 partAlignments.add(partAlignment);
+                                 partAlignment = null;
+                             }
+                             if (partAlignments.isEmpty()) {
+                                 partAlignments.add(new ReferenceBottomVision());
+                             }
+                         }
+                     });
     }
 
     @Override
@@ -160,6 +163,9 @@ public class ReferenceMachine extends AbstractMachine {
                 throw e;
             }
             fireMachineDisabled("User requested stop.");
+
+            // remove homed-flag if machine is disabled
+            this.setHomed(false);
         }
     }
 
@@ -187,8 +193,7 @@ public class ReferenceMachine extends AbstractMachine {
                 Arrays.asList(getPnpJobProcessor()/* , getPasteDispenseJobProcessor() */)));
 
         List<PropertySheetHolder> vision = new ArrayList<>();
-        for (PartAlignment alignment : getPartAlignments())
-        {
+        for (PartAlignment alignment : getPartAlignments()) {
             vision.add(alignment);
         }
         vision.add(getFiducialLocator());
@@ -237,7 +242,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(SimulatedUpCamera.class);
         return l;
     }
-    
+
     @Override
     public List<Class<? extends Nozzle>> getCompatibleNozzleClasses() {
         List<Class<? extends Nozzle>> l = new ArrayList<>();
@@ -265,8 +270,15 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Override
     public void home() throws Exception {
-        Logger.debug("home");
+        Logger.debug("homing machine");
+        
+        // if one rehomes, the isHomed flag has to be removed
+        this.setHomed(false);
+        
         super.home();
+
+        // if homing went well, set machine homed-flag true
+        this.setHomed(true);     
     }
 
     @Override
@@ -297,7 +309,6 @@ public class ReferenceMachine extends AbstractMachine {
         }
     }
 
-
     @Override
     public FiducialLocator getFiducialLocator() {
         return fiducialLocator;
@@ -319,5 +330,17 @@ public class ReferenceMachine extends AbstractMachine {
 
     public void setHomeAfterEnabled(boolean newValue) {
         this.homeAfterEnabled = newValue;
+    }
+
+    @Override
+    public boolean isHomed() {
+        return this.isHomed;
+    }
+
+    @Override
+    public void setHomed(boolean isHomed) {
+        Logger.debug("setHomed({})", isHomed);
+        this.isHomed = isHomed;
+        firePropertyChange("homed", null, this.isHomed);
     }
 }

@@ -1,6 +1,176 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-02-26
+
+## New Job Planner
+
+A new Job Planner is being tested. The SimplePnpJobPlanner replaces the StandardPnpJobPlanner
+as the new default. The new planner attempts to fill as many nozzles as possible per cycle,
+and tries to limit the number of nozzle tip changes, but does not try as hard to "look ahead"
+as the old planner.
+
+The upside is that the new planner is much, much faster and works for jobs
+of any size, while the old planner would fail on jobs larger than a few hundred placements
+when multiple nozzles were in use.
+
+The downside is that the new planner may perform more total cycles, and may perform more
+nozzle tip changes, although in testing so far it seems to perform pretty similarly for
+a number of common configurations.
+
+The new planner is enabled by default. Please give it a try and report if you run into any
+issues. If you need to switch back to the old planner, you can edit machine.xml and change
+
+`<planner class="org.openpnp.machine.reference.ReferencePnpJobProcessor$SimplePnpJobPlanner"/>`
+
+to
+
+`<planner class="org.openpnp.machine.reference.ReferencePnpJobProcessor$StandardPnpJobPlanner"/>`
+
+## New Job Planner Interface
+
+As indicated above, the Job Planner interface is back and it is now possible to write custom
+planners and plug them in using the method described above. This interface is not final, and
+will likely undergo some small changes in the future, but the basic concept should remain
+the same.
+
+See either of the two planners described above for an example of how to write one.
+
+# 2019-02-21
+
+## High Profile Bugs Fixes and Updates
+
+A few important bug fixes for long standing bugs are now in, along with some long standing
+feature requests:
+
+* "No defined transitions from Preflight to Initialize": There were a number of errors related
+  to state management in the JobPanel FSM and these are now corrected. The primary cause of this 
+  error was clicking Job buttons while an action was already taking place. State is now managed
+  correctly, and more importantly, the buttons are disabled while operations that can't be 
+  interrupted are taking place.
+  
+  This is a significant change that is hard to test under every condition, so please let
+  us know if you run into issues with this.
+  
+  See https://github.com/openpnp/openpnp/issues/478 for more info.
+  
+* "Stopping a job should stop the job as soon as possible": This issue was related to how
+  the job would continue for a time after pressing pause or stop. In general, once a pick
+  and place cycle started it could not be interrupted. In addition, the startup process of
+  a job would be impossible to interrupt. This is now fixed and granularity of steps is increased.
+  Clicking pause or stop will now stop the job as soon as the current operation is complete.
+  
+  See https://github.com/openpnp/openpnp/issues/278 for more info.
+  
+* Multi-select tables and right click menus: All of the primary tables now support multi-select
+  and right click menus. This makes it much easier to enable / disable a number of feeders at
+  once, or set the "Check Fids" for multiple boards at once, for instance.
+   
+
+# 2019-02-18
+
+## Major Change: Fiducial System (Affine Transforms)
+
+The fiducial system has undergone extensive changes to support compensating for scale and shear
+in boards. When three or more fiducials are available, three will be used during the fiducial
+check and this data is used to calculate much better positions for placements. This should
+result in an overall accuracy improvement when using three fiducials.
+
+In addition, the two fiducial system is now using the same code, minus shear processing, so
+it should show an improvement in accuracy as well when using two fiducials. The difference will
+not be as significant as when using three.
+
+Note that board locations are no longer updated when performing fiducial checks. The fiducial
+data is used in real time to calculate placement positions, rather than relying on the board
+location. This means that if you perform a fiducial check and then move to the board location,
+the board may not look perfectly aligned, but when you move to a placement it will be correct.
+
+The fiducial check will still position the camera over the located board origin at the end of
+the process so that there can be visual verification of success.
+
+In general, users should not notice any differences in using the new system aside from overall
+better accuracy.
+
+Related issues:
+* https://github.com/openpnp/openpnp/issues/648
+* https://github.com/openpnp/openpnp/issues/791
+
+This above changes are complete. There are a few remaining related tasks which are:
+* Implement transform for the two point board locator.
+* Add an indication to the user when a board has been located.
+* Verify compatibility with panels.
+* Implement inverted transform in calculateBoardPlacementLocationInverse so that manual training
+  benefits from the transform.
+
+
+# 2019-02-14
+
+## New GcodeDriver Variables
+
+Some new GcodeDriver variables have been added for the MOVE_TO command. The new variables are used
+for heads where the controller needs to know the direction of motion to choose the right output.
+
+More information at: https://github.com/openpnp/openpnp/wiki/GcodeDriver:-Command-Reference#move_to_command
+
+# 2019-02-12
+
+## Breaking Change: Park System
+
+**Please reset your park locations!**
+
+The Park system has had a number of breaking changes made. They are:
+
+* Park XY now always parks the head at the same location, regardless of what tool is selected in
+  the jog control dropdown. This ensures that if you choose a park location with one tool selected
+  and then attempt to park with a different tool selected you don't crash the head. This is
+  primarily a safety improvement.
+* Z and Rotation have been removed from the park head configuration since these are each specific
+  to the tool being parked.
+* Park Z now parks the selected tool at Safe Z instead of the Z entered in the head configuration.
+* Park Rotation now parks the selected tool's rotation at 0 instead of the Rotation entered in the
+  head configuration.
+
+The overall goal and result of these changes is to ensure that park always parks at the exact same
+location no matter what tool is selected.
+
+See https://github.com/openpnp/openpnp/issues/279 for more information. 
+
+## New Feature: XY Soft Limits
+
+You can now set soft limits for X and Y moves in head configuration. When limits are set and
+enabled any attempted moves outside of the limits will fail and an error will be shown.
+
+# 2019-02-09
+
+## Breaking Changes Coming Soon
+
+A number of breaking changes are coming soon in the develop / Latest branch. These changes will
+likely break configurations and potentially require re-setup and re-calibration of machines.
+
+If you are seeing this message it means you are currently running the develop / Latest branch.
+In the coming weeks, if you automatically update on this branch you are likely to receive
+these breaking changes.
+
+If you are running a production machine and do not wish to follow along with these latest
+developments, please download and install the master / Stable branch from:
+
+http://openpnp.org/downloads/
+
+Stable has been updated as of today and will not be updated again until these breaking changes
+have been fully tested and released.
+
+# 2019-01-18
+
+* Runout Compensation Feature Enabled
+
+    There has been worked on issue #235 in pull request #804 to fix the nozzle runout compensation.
+    It was a new runout compensation algorithm implemented. That algorithm is the new default but it
+    coexists with the improved algorithm that was in the OpenPnP code before already.
+    
+    The feature was tested on two machines, but things are different on others. If you encounter any
+    problems file an issue. Information on how to use this feature you will find in the wiki at
+    https://github.com/openpnp/openpnp/wiki/Runout-Compensation-Setup
+    
 # 2018-12-08
 
 * Serial Library Change
