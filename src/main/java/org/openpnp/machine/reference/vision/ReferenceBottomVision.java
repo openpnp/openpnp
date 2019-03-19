@@ -87,7 +87,6 @@ public class ReferenceBottomVision implements PartAlignment {
                            .getRotation();
         }
         angle = angleNorm(angle, 180.);
-        double placementAngle = angle;
         Location location = camera.getLocation()
                                   .add(new Location(part.getHeight()
                                                         .getUnits(),
@@ -99,36 +98,52 @@ public class ReferenceBottomVision implements PartAlignment {
 
         try (CvPipeline pipeline = partSettings.getPipeline()) {
 
-            RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
-            camera=(Camera)pipeline.getProperty("camera");
-
-            angle = angleNorm(angleNorm(angle)
-                    + angleNorm((rect.size.width < rect.size.height) ? 90 + rect.angle : rect.angle));
-            // error is -angle
-            // See https://github.com/openpnp/openpnp/pull/590 for explanations of the magic
-            // values below. Reproduced here just in case:
-            
-            // For a 200 count stepper configured at 16 microsteps, a microstep is 0.1125 degrees.
-            // 360 / 200 / 16 = 0.1125
-            // 0.1125 / 2 = 0.0567 = half a microstep
-            // 0.0765 is chosen so that when adding to half a microstep it is just a bit more than a microstep.
-            // 0.0765 + 0.0567 = 0.1332
-
-            // The check is intended to not introduce further error if the error is small. 
-            // I believe it is to avoid rounding of microsteps, but I'm not clear on that.
-            
-            if (Math.abs(angle) > 0.0765) {
-                angle += 0.0567 * Math.signum(angle);
-            } // rounding
-
-            nozzle.moveTo(new Location(LengthUnit.Millimeters, Double.NaN, Double.NaN, Double.NaN,
-                    placementAngle + angle));
-
-            rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
-
-            Logger.debug("Result rect {}", rect);
-            Location offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y)
-                                          .derive(null, null, null, Double.NaN);
+        	Location offsets = new Location(location.getUnits());
+        	// Try getting a good fix on the part in multiple passes.
+        	for(int pass = 0;;) {
+	            RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
+	            camera=(Camera)pipeline.getProperty("camera");
+	            
+	            Logger.debug("Result rect {}", rect);
+	            
+	            // Create the offsets object. This is the physical distance from
+	            // the center of the camera to the located part.
+	            offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
+	            
+	            // OpenCV can only tell us the angle of the recognized rectangle in a   
+	            // range of 0° .. 90° as it has no notion of which rectangle side 
+	            // is the true "bottom" side for instance. The angle will abruptly wrap 
+	            // around from 90° to 0° (and vice versa), as another of the four sides 
+	            // becomes the "bottom" side, as perceived by OpenCV.    
+	            // We can assume that the part is never picked more than +/-45º rotated.
+	            // So we change the wrapping-around into one that produces a range from 
+	            // -45° .. +45°. See angleNorm():
+	            angle = angleNorm(location.getRotation() + rect.angle);
+	            
+	            // When we rotate the nozzle later to compensate the angle, the X, Y offsets 
+	            // will change too, as the off-center part rotates around the nozzle axis.
+	            // So we need to compensate for that.
+	            // TODO: verify angle sign here. 
+	            offsets = offsets.rotateXy(-angle)
+	            			.derive(null, null,	null, -angle);
+	                
+	            if (++pass > 2) {
+	            	// Maximum number of passes. 
+	            	break;
+	            }
+	            
+	            if (Math.sqrt(offsets.getX()*offsets.getX() + offsets.getY()*offsets.getY()) < 2.0
+	            		&& Math.abs(angle) < 10.0) {
+	            	// We have a good enough fix - go on with that.
+	            	break;
+	            }
+	            
+	            Logger.debug("Large offsets {}", offsets);
+	            
+	            // Not a good enough fix - try again with corrected position.
+	            location = location.subtractWithRotation(offsets);
+                nozzle.moveTo(location);
+            }
 
             Logger.debug("Final offsets {}", offsets);
             displayResult(pipeline, part, offsets, camera);
@@ -160,25 +175,19 @@ public class ReferenceBottomVision implements PartAlignment {
             // the center of the camera to the located part.
             Location offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
     
-            // We assume that the part is never picked more than 45º rotated
-            // so if OpenCV tells us it's rotated more than 45º we correct
-            // it. This seems to happen quite a bit when the angle of rotation
-            // is close to 0.
-            double angle = rect.angle;
-            while (Math.abs(angle) > 45) {
-                if (angle < 0) {
-                    angle += 90;
-                }
-                else {
-                    angle -= 90;
-                }
-            }
+            // OpenCV can only tell us the angle of the recognized rectangle in a  
+            // range of 0° .. 90° as it has no notion of which rectangle side 
+            // is the true "bottom" side for instance. The angle will abruptly wrap 
+            // around from 90° to 0° (and vice versa), as another of the four sides 
+            // becomes the "bottom" side, as perceived by OpenCV.    
+            // We can assume that the part is never picked more than +/-45º rotated.
+            // So we change the wrapping-around into one that produces a range from 
+            // -45° .. +45°. See angleNorm():
+            double angle = angleNorm(rect.angle);
     
             // Set the angle on the offsets.
             offsets = offsets.derive(null, null, null, -angle);
             Logger.debug("Final offsets {}", offsets);
-    
-            offsets = offsets.derive(null, null, null, offsets.getRotation());
     
             displayResult(pipeline, part, offsets, camera);
     
