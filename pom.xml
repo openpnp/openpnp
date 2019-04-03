@@ -162,9 +162,14 @@
 			<version>1.9.3</version>
 		</dependency>
 		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-math3</artifactId>
+			<version>3.6.1</version>
+		</dependency>
+		<dependency>
 			<groupId>org.openpnp</groupId>
 			<artifactId>openpnp-capture-java</artifactId>
-			<version>0.0.12</version>
+			<version>0.0.17</version>
 		</dependency>
 		<dependency>
 			<groupId>javax.xml.bind</groupId>
@@ -335,7 +340,7 @@
 					<dependency>
 						<groupId>com.puppycrawl.tools</groupId>
 						<artifactId>checkstyle</artifactId>
-						<version>7.6.1</version>
+						<version>8.18</version>
 					</dependency>
 				</dependencies>
 				<executions>
@@ -384,7 +389,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.19</version>
 				<configuration>
-					<argLine>-Xmx256m</argLine>
+					<argLine>-Xmx512m</argLine>
 				</configuration>
 			</plugin>
 

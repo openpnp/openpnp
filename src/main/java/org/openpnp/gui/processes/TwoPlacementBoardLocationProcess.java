@@ -135,11 +135,11 @@ public class TwoPlacementBoardLocationProcess {
         }
 
         // Calculate the angle and offset from the results
-        BoardLocation boardLocation = jobPanel.getSelectedBoardLocation();
+        BoardLocation boardLocation = jobPanel.getSelection();
         Location location = Utils2D.calculateBoardLocation(boardLocation, placementA, placementB,
                 actualLocationA, actualLocationB);
 
-        jobPanel.getSelectedBoardLocation().setLocation(location);
+        jobPanel.getSelection().setLocation(location);
         jobPanel.refreshSelectedBoardRow();
 
         return true;
@@ -147,7 +147,7 @@ public class TwoPlacementBoardLocationProcess {
 
     private boolean step5() {
         UiUtils.submitUiMachineTask(() -> {
-            Location location = jobPanel.getSelectedBoardLocation().getLocation();
+            Location location = jobPanel.getSelection().getLocation();
             MovableUtils.moveToLocationAtSafeZ(camera, location);
         });
 

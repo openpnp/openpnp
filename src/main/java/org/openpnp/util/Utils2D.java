@@ -21,9 +21,18 @@
 
 package org.openpnp.util;
 
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.math3.linear.LUDecomposition;
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
@@ -80,16 +89,47 @@ public class Utils2D {
         return new Point(point.getX() * scaleX, point.getY() * scaleY);
     }
 
-    public static Location calculateFiducialCompensatedBoardPlacementLocation(BoardLocation bl,
-            Location placementLocation) {
-        return calculateBoardPlacementLocation(bl.getFiducialCompensatedBoardLocation(), bl.getSide(),
-                bl.getBoard().getDimensions().getX(), placementLocation);
-    }
-
     public static Location calculateBoardPlacementLocation(BoardLocation bl,
             Location placementLocation) {
-        return calculateBoardPlacementLocation(bl.getLocation(), bl.getSide(),
-                bl.getBoard().getDimensions().getX(), placementLocation);
+        if (bl.getPlacementTransform() != null) {
+            AffineTransform tx = bl.getPlacementTransform();
+            // The affine calculations are always done in millimeters, so we convert everything
+            // before we start calculating and then we'll convert it back to the original
+            // units at the end.
+            LengthUnit placementUnits = placementLocation.getUnits();
+            Location boardLocation = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
+            placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
+
+            // Calculate the apparent angle from the transform. We need this because when we
+            // created the transform we captured the apparent angle and that is used to position
+            // in X, Y, but we also need the actual value to add to the placement rotation so that
+            // the nozzle is rotated to the correct angle as well.
+            // Note, there is probably a better way to do this. If you know how, please let me know!
+            Point2D.Double a = new Point2D.Double(0, 0);
+            Point2D.Double b = new Point2D.Double(1, 1);
+            Point2D.Double c = new Point2D.Double(0, 0);
+            Point2D.Double d = new Point2D.Double(1, 1);
+            c = (Point2D.Double) tx.transform(c, null);
+            d = (Point2D.Double) tx.transform(d, null);
+            double angle = Math.toDegrees(Math.atan2(d.y - c.y, d.x - c.x) - Math.atan2(b.y - a.y, b.x - a.x));
+            
+            Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
+            p = tx.transform(p, null);
+            
+            // The final result is the transformed X,Y, the BoardLocation's Z, and the
+            // transform angle + placement angle.
+            Location l = new Location(LengthUnit.Millimeters, 
+                    p.getX(), 
+                    p.getY(), 
+                    boardLocation.getZ(), 
+                    angle + placementLocation.getRotation());
+            l = l.convertToUnits(placementUnits);
+            return l;
+        }
+        else {
+            return calculateBoardPlacementLocation(bl.getLocation(), bl.getSide(),
+                    bl.getBoard().getDimensions().getX(), placementLocation);
+        }
     }
 
     public static Location calculateBoardPlacementLocation(Location boardLocation, Side side,
@@ -245,5 +285,104 @@ public class Utils2D {
                     (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
         }
         return angle;
+    }
+    
+    public static double distance(Point2D.Double a, Point2D.Double b) {
+        return (Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2)));
+    }
+    
+    // https://stackoverflow.com/questions/21270892/generate-affinetransform-from-3-points
+    public static AffineTransform deriveAffineTransform(
+            double sourceX1, double sourceY1,
+            double sourceX2, double sourceY2,
+            double sourceX3, double sourceY3,
+            double destX1, double destY1,
+            double destX2, double destY2,
+            double destX3, double destY3) {
+        RealMatrix source = MatrixUtils.createRealMatrix(new double[][] {
+            {sourceX1, sourceX2, sourceX3}, 
+            {sourceY1, sourceY2, sourceY3}, 
+            {1, 1, 1}
+        });
+
+        RealMatrix dest = MatrixUtils.createRealMatrix(new double[][] { 
+            {destX1, destX2, destX3}, 
+            {destY1, destY2, destY3} 
+        });
+
+        RealMatrix inverse = new LUDecomposition(source).getSolver().getInverse();
+        RealMatrix transform = dest.multiply(inverse);
+
+        double m00 = transform.getEntry(0, 0);
+        double m01 = transform.getEntry(0, 1);
+        double m02 = transform.getEntry(0, 2);
+        double m10 = transform.getEntry(1, 0);
+        double m11 = transform.getEntry(1, 1);
+        double m12 = transform.getEntry(1, 2);
+
+        return new AffineTransform(m00, m10, m01, m11, m02, m12);       
+    }  
+    
+    // Best keywords: transformation matrix between two line segments
+    // https://stackoverflow.com/questions/42328398/transformation-matrix-between-two-line-segments
+    public static AffineTransform deriveAffineTransform(
+            double sourceX1, double sourceY1,
+            double sourceX2, double sourceY2,
+            double destX1, double destY1,
+            double destX2, double destY2) {
+        Point2D.Double a = new Point2D.Double(sourceX1, sourceY1);
+        Point2D.Double b = new Point2D.Double(sourceX2, sourceY2);
+        Point2D.Double c = new Point2D.Double(destX1, destY1);
+        Point2D.Double d = new Point2D.Double(destX2, destY2);
+        
+        double len_ab = distance(a, b);
+        double len_cd = distance(c, d);
+        double scale = len_cd / len_ab;
+        
+        double r = Math.atan2(d.y - c.y, d.x - c.x) - Math.atan2(b.y - a.y, b.x - a.x);
+        
+        AffineTransform tx = new AffineTransform();
+        tx.translate(c.x, c.y);
+        tx.rotate(r);
+        tx.scale(scale, scale);
+        tx.translate(-a.x, -a.y);
+        return tx;
+    }  
+    
+    /**
+     * Calculate the area of a triangle. Returns 0 if the triangle is degenerate.
+     * @param p1
+     * @param p2
+     * @param p3
+     * @return
+     */
+    public static double triangleArea(Placement p1, Placement p2, Placement p3) {
+        double a = p1.getLocation().getLinearDistanceTo(p2.getLocation());
+        double b = p2.getLocation().getLinearDistanceTo(p3.getLocation());
+        double c = p3.getLocation().getLinearDistanceTo(p1.getLocation());
+        double s = (a + b + c) / 2.;
+        return Math.sqrt(s * (s - a) * (s - b) * (s - c));
+    }
+    
+    public static List<Placement> mostDistantPair(List<Placement> points) {
+        Placement maxA = null, maxB = null;
+        double max = 0;
+        for (Placement a : points) {
+            for (Placement b : points) {
+                if (a == b) {
+                    continue;
+                }
+                double d = a.getLocation().getLinearDistanceTo(b.getLocation());
+                if (d > max) {
+                    maxA = a;
+                    maxB = b;
+                    max = d;
+                }
+            }
+        }
+        ArrayList<Placement> results = new ArrayList<>();
+        results.add(maxA);
+        results.add(maxB);
+        return results;
     }
 }

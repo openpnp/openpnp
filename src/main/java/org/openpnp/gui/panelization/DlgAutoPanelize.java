@@ -202,7 +202,7 @@ public class DlgAutoPanelize extends JDialog {
                 String partId = part == null ? null : part.getId();
     
                 // The selected PCB is the one we'll panelize
-                BoardLocation rootPCB = jobPanel.getSelectedBoardLocation();
+                BoardLocation rootPCB = jobPanel.getSelection();
     
                 Placement p0 = new Placement("PanelFid1");
                 p0.setType(Placement.Type.Fiducial);

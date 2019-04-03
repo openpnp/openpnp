@@ -30,12 +30,11 @@ import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
-import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
-import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
 import org.openpnp.model.Configuration;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -44,7 +43,7 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class SimulatedUpCameraConfigurationWizard extends ReferenceCameraConfigurationWizard {
+public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationWizard {
     private final SimulatedUpCamera camera;
 
     private JPanel panelGeneral;
@@ -60,8 +59,6 @@ public class SimulatedUpCameraConfigurationWizard extends ReferenceCameraConfigu
     private JLabel lblRotation;
 
     public SimulatedUpCameraConfigurationWizard(SimulatedUpCamera camera) {
-        super(camera);
-
         this.camera = camera;
 
         panelGeneral = new JPanel();
@@ -119,8 +116,6 @@ public class SimulatedUpCameraConfigurationWizard extends ReferenceCameraConfigu
 
     @Override
     public void createBindings() {
-        super.createBindings();
-        
         DoubleConverter doubleConverter =
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         LengthConverter lengthConverter = new LengthConverter();

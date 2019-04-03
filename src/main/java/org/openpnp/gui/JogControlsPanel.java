@@ -48,6 +48,7 @@ import javax.swing.event.ChangeListener;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.WrapLayout;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -125,20 +126,20 @@ public class JogControlsPanel extends JPanel {
     private void setUnits(LengthUnit units) {
         if (units == LengthUnit.Millimeters) {
             Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<>();
-            incrementsLabels.put(1, new JLabel("0.01 " + units.getShortName())); //$NON-NLS-1$
-            incrementsLabels.put(2, new JLabel("0.1 " + units.getShortName())); //$NON-NLS-1$
-            incrementsLabels.put(3, new JLabel("1.0 " + units.getShortName())); //$NON-NLS-1$
-            incrementsLabels.put(4, new JLabel("10 " + units.getShortName())); //$NON-NLS-1$
-            incrementsLabels.put(5, new JLabel("100 " + units.getShortName())); //$NON-NLS-1$
+            incrementsLabels.put(1, new JLabel("0.01")); //$NON-NLS-1$
+            incrementsLabels.put(2, new JLabel("0.1")); //$NON-NLS-1$
+            incrementsLabels.put(3, new JLabel("1.0")); //$NON-NLS-1$
+            incrementsLabels.put(4, new JLabel("10")); //$NON-NLS-1$
+            incrementsLabels.put(5, new JLabel("100")); //$NON-NLS-1$
             sliderIncrements.setLabelTable(incrementsLabels);
         }
         else if (units == LengthUnit.Inches) {
             Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<>();
-            incrementsLabels.put(1, new JLabel("0.001 " + units.getShortName())); //$NON-NLS-1$
-            incrementsLabels.put(2, new JLabel("0.01 " + units.getShortName())); //$NON-NLS-1$
-            incrementsLabels.put(3, new JLabel("0.1 " + units.getShortName())); //$NON-NLS-1$
-            incrementsLabels.put(4, new JLabel("1.0 " + units.getShortName())); //$NON-NLS-1$
-            incrementsLabels.put(5, new JLabel("10.0 " + units.getShortName())); //$NON-NLS-1$
+            incrementsLabels.put(1, new JLabel("0.001")); //$NON-NLS-1$
+            incrementsLabels.put(2, new JLabel("0.01")); //$NON-NLS-1$
+            incrementsLabels.put(3, new JLabel("0.1")); //$NON-NLS-1$
+            incrementsLabels.put(4, new JLabel("1.0")); //$NON-NLS-1$
+            incrementsLabels.put(5, new JLabel("10.0")); //$NON-NLS-1$
             sliderIncrements.setLabelTable(incrementsLabels);
         }
         else {
@@ -275,20 +276,6 @@ public class JogControlsPanel extends JPanel {
         return (alpha > 0.0) && (beta > 0.0) && (gamma > 0.0);
     }
 
-    private void park(boolean xy, boolean z, boolean c) {
-        UiUtils.submitUiMachineTask(() -> {
-            HeadMountable tool = machineControlsPanel.getSelectedTool();
-            Location location = tool.getLocation();
-            Location parkLocation = tool.getHead()
-                                        .getParkLocation();
-            parkLocation = parkLocation.convertToUnits(location.getUnits());
-            location = location.derive(xy ? parkLocation.getX() : null,
-                    xy ? parkLocation.getY() : null, z ? parkLocation.getZ() : null,
-                    c ? parkLocation.getRotation() : null);
-            MovableUtils.moveToLocationAtSafeZ(tool, location);
-        });
-    }
-
     private void createUi() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
@@ -326,6 +313,7 @@ public class JogControlsPanel extends JPanel {
         // so the dialog looks right while editing.
         homeButton.setIcon(Icons.home);
         homeButton.setHideActionText(true);
+        homeButton.setToolTipText(Translations.getString("JogControlsPanel.homeButton.toolTipText")); //$NON-NLS-1$ //$NON-NLS-1$
         panelControls.add(homeButton, "2, 2"); //$NON-NLS-1$
 
         JLabel lblXy = new JLabel("X/Y"); //$NON-NLS-1$
@@ -338,11 +326,11 @@ public class JogControlsPanel extends JPanel {
         lblZ.setFont(new Font("Lucida Grande", Font.PLAIN, 22)); //$NON-NLS-1$
         panelControls.add(lblZ, "14, 2"); //$NON-NLS-1$
 
-        JLabel lblDistance = new JLabel(Translations.getString("JogControlsPanel.Label.Distance")); //$NON-NLS-1$
+        JLabel lblDistance = new JLabel("<html>" + Translations.getString("JogControlsPanel.Label.Distance") + "<br>[" + configuration.getSystemUnits().getShortName() + "/deg]</html>"); //$NON-NLS-1$
         lblDistance.setFont(new Font("Lucida Grande", Font.PLAIN, 10)); //$NON-NLS-1$
         panelControls.add(lblDistance, "18, 2, center, center"); //$NON-NLS-1$
 
-        JLabel lblSpeed = new JLabel(Translations.getString("JogControlsPanel.Label.Speed")); //$NON-NLS-1$
+        JLabel lblSpeed = new JLabel("<html>" + Translations.getString("JogControlsPanel.Label.Speed") + "<br>[%]</html>"); //$NON-NLS-1$
         lblSpeed.setFont(new Font("Lucida Grande", Font.PLAIN, 10)); //$NON-NLS-1$
         panelControls.add(lblSpeed, "20, 2, center, center"); //$NON-NLS-1$
 
@@ -385,6 +373,7 @@ public class JogControlsPanel extends JPanel {
         JButton positionNozzleBtn = new JButton(machineControlsPanel.targetToolAction);
         positionNozzleBtn.setIcon(Icons.centerTool);
         positionNozzleBtn.setHideActionText(true);
+        positionNozzleBtn.setToolTipText(Translations.getString("JogControlsPanel.Action.positionSelectedNozzle"));
         panelControls.add(positionNozzleBtn, "22, 4"); //$NON-NLS-1$
 
         JButton buttonStartStop = new JButton(machineControlsPanel.startStopMachineAction);
@@ -419,6 +408,7 @@ public class JogControlsPanel extends JPanel {
         JButton positionCameraBtn = new JButton(machineControlsPanel.targetCameraAction);
         positionCameraBtn.setIcon(Icons.centerCamera);
         positionCameraBtn.setHideActionText(true);
+        positionCameraBtn.setToolTipText(Translations.getString("JogControlsPanel.Action.positionCamera"));
         panelControls.add(positionCameraBtn, "22, 8"); //$NON-NLS-1$
 
         JLabel lblC = new JLabel("C"); //$NON-NLS-1$
@@ -451,7 +441,7 @@ public class JogControlsPanel extends JPanel {
 
         panelActuators = new JPanel();
         tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Actuators"), null, panelActuators, null); //$NON-NLS-1$
-        panelActuators.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
+        panelActuators.setLayout(new WrapLayout(WrapLayout.LEFT));
 
         panelDispensers = new JPanel();
         tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Dispense"), null, panelDispensers, null); //$NON-NLS-1$
@@ -571,7 +561,9 @@ public class JogControlsPanel extends JPanel {
     public Action xyParkAction = new AbstractAction(Translations.getString("JogControlsPanel.Action.ParkXY"), Icons.park) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            park(true, false, false);
+            UiUtils.submitUiMachineTask(() -> {
+                MovableUtils.park(machineControlsPanel.getSelectedTool().getHead());
+            });
         }
     };
 
@@ -579,7 +571,10 @@ public class JogControlsPanel extends JPanel {
     public Action zParkAction = new AbstractAction(Translations.getString("JogControlsPanel.Action.ParkZ"), Icons.park) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            park(false, true, false);
+            UiUtils.submitUiMachineTask(() -> {
+                HeadMountable hm = machineControlsPanel.getSelectedTool();
+                hm.moveToSafeZ();
+            });
         }
     };
 
@@ -587,7 +582,12 @@ public class JogControlsPanel extends JPanel {
     public Action cParkAction = new AbstractAction(Translations.getString("JogControlsPanel.Action.ParkC"), Icons.park) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            park(false, false, true);
+            UiUtils.submitUiMachineTask(() -> {
+                HeadMountable hm = machineControlsPanel.getSelectedTool();
+                Location location = hm.getLocation();
+                location = location.derive(null, null, null, 0.);
+                hm.moveTo(location);
+            });
         }
     };
 
