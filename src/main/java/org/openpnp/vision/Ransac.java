@@ -192,14 +192,15 @@ public class Ransac {
         }
 
         // Discard this line if any index is missing
-        Integer minIndex = indicesOnLine.first();
-        Integer maxIndex = indicesOnLine.last();
-        for (Integer idx=minIndex + 1; idx<maxIndex; idx++) {
-            if (!indicesOnLine.contains(idx)) {
-                return new ArrayList<>();
+        if (indicesOnLine.size() > 0) {
+            Integer minIndex = indicesOnLine.first();
+            Integer maxIndex = indicesOnLine.last();
+            for (Integer idx=minIndex + 1; idx<maxIndex; idx++) {
+                if (!indicesOnLine.contains(idx)) {
+                    return new ArrayList<>();
+                }
             }
         }
-
         return spacedInliers;
     }
 
