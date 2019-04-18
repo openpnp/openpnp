@@ -149,7 +149,7 @@ public class ReferenceBottomVision implements PartAlignment {
                 // We not only check the center offset but also the corner offset brought about by the angular offset. 
                 Location corner = VisionUtils.getPixelCenterOffsets(camera, rect.size.width/2, rect.size.height/2);
                 if (offsetZero.getLinearDistanceTo(offsets) <= getMaxLinearOffset().getValue()
-                        && offsetZero.getLinearDistanceTo(corner)*Math.sin(Math.toRadians(angleOffset)) <=  getMaxLinearOffset().getValue()
+                        && offsetZero.getLinearDistanceTo(corner)*Math.sin(Math.toRadians(Math.abs(angleOffset))) <=  getMaxLinearOffset().getValue()
                         && Math.abs(angleOffset) <= getMaxAngularOffset()) {
                     // We have a good enough fix - go on with that.
                     break;
