@@ -36,6 +36,7 @@ import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
@@ -95,9 +96,9 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         contentPanel.add(panelCalibration);
         panelCalibration.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(72dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("default:grow"),
                 FormSpecs.UNRELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
@@ -108,6 +109,8 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.UNRELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
@@ -173,21 +176,28 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         angleIncrementsTf = new JTextField();
         panelCalibration.add(angleIncrementsTf, "4, 10, left, default");
         angleIncrementsTf.setColumns(3);
+        
+        lblAllowMisdectects = new JLabel("Allow Misdectects");
+        panelCalibration.add(lblAllowMisdectects, "2, 12, right, default");
+        
+        allowMisdetectsTf = new JTextField();
+        panelCalibration.add(allowMisdetectsTf, "4, 12, left, default");
+        allowMisdetectsTf.setColumns(3);
 
         lblOffsetThreshold = new JLabel("Offset Threshold");
-        panelCalibration.add(lblOffsetThreshold, "2, 12, right, default");
+        panelCalibration.add(lblOffsetThreshold, "2, 14, right, default");
 
         offsetThresholdTf = new JTextField();
-        panelCalibration.add(offsetThresholdTf, "4, 12, left, default");
+        panelCalibration.add(offsetThresholdTf, "4, 14, left, default");
         offsetThresholdTf.setColumns(6);
 
         lblNewLabel = new JLabel("Pipeline");
-        panelCalibration.add(lblNewLabel, "2, 14, right, default");
+        panelCalibration.add(lblNewLabel, "2, 16, right, default");
                         
                         panel = new JPanel();
                         FlowLayout flowLayout = (FlowLayout) panel.getLayout();
                         flowLayout.setVgap(0);
-                        panelCalibration.add(panel, "4, 14, left, default");
+                        panelCalibration.add(panel, "4, 16, left, default");
                         
                                 btnEditPipeline = new JButton("Edit");
                                 panel.add(btnEditPipeline);
@@ -231,6 +241,8 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     private JLabel lblCalibrate;
     private JPanel panel;
     private JPanel panel_1;
+    private JLabel lblAllowMisdectects;
+    private JTextField allowMisdetectsTf;
 
     private void resetCalibrationPipeline() {
         nozzleTip.getCalibration()
@@ -253,7 +265,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     private void calibrate() {
         UiUtils.submitUiMachineTask(() -> {
             nozzleTip.getCalibration()
-                     .calibrate(nozzleTip);
+                .calibrate(nozzleTip);
         });
     }
 
@@ -261,18 +273,23 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     @Override
     public void createBindings() {
         IntegerConverter intConverter = new IntegerConverter();
-        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
-
+        LengthConverter lengthConverter = new LengthConverter();
+        
         addWrappedBinding(nozzleTip.getCalibration(), "enabled", calibrationEnabledCheckbox,
                 "selected");
         addWrappedBinding(nozzleTip.getCalibration(), "runoutCompensationAlgorithm",
                 compensationAlgorithmCb, "selectedItem");
         addWrappedBinding(nozzleTip.getCalibration(), "angleSubdivisions", angleIncrementsTf,
                 "text", intConverter);
-        addWrappedBinding(nozzleTip.getCalibration(), "offsetThreshold", offsetThresholdTf,
-                "text", doubleConverter);
+        addWrappedBinding(nozzleTip.getCalibration(), "allowMisdetections", allowMisdetectsTf,
+                "text", intConverter);
+        addWrappedBinding(nozzleTip.getCalibration(), "offsetThresholdLength", offsetThresholdTf,
+                "text", lengthConverter);
+        
         bind(UpdateStrategy.READ, nozzleTip.getCalibration(), "runoutCompensationInformation",
                 lblCalibrationResults, "text");
+        
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(offsetThresholdTf);
     }
     protected void initDataBindings() {
         BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty = BeanProperty.create("selected");
