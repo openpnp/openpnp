@@ -135,8 +135,8 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         }
 
         // position the part over camera center
-        Location cameraLocation = VisionUtils.getBottomVisionCamera()
-                                             .getLocation();
+        Location cameraLocation = bottomVision.getCameraLocationAtPartHeight(part, 
+                VisionUtils.getBottomVisionCamera(), 0.);
 
         if (alignmentOffset.getPreRotated()) {
             // See https://github.com/openpnp/openpnp/pull/590 for explanations of the magic
@@ -146,8 +146,8 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                                         .getLinearDistanceTo(0., 0.)) > 19.999) {
                 throw new Exception("Offset too big");
             }
-            nozzle.moveTo(nozzle.getLocation()
-                                .subtract(alignmentOffset.getLocation()));
+            nozzle.moveTo(cameraLocation
+                                .subtractWithRotation(alignmentOffset.getLocation()));
             return;
         }
 
@@ -169,8 +169,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         location = location.add(cameraLocation);
 
         // Subtract the bottom vision offsets to move the part to the final location,
-        // instead of
-        // the nozzle.
+        // instead of the nozzle.
         location = location.subtract(offsets);
 
         nozzle.moveTo(location);
