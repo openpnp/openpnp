@@ -117,6 +117,10 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         calibrationEnabledCheckbox = new JCheckBox("Enable?");
@@ -190,14 +194,28 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         offsetThresholdTf = new JTextField();
         panelCalibration.add(offsetThresholdTf, "4, 14, left, default");
         offsetThresholdTf.setColumns(6);
+        
+        lblCalibrationZOffset = new JLabel("Calibration Z offset");
+        panelCalibration.add(lblCalibrationZOffset, "2, 16, right, default");
+        
+        calibrationZOffsetTf = new JTextField();
+        panelCalibration.add(calibrationZOffsetTf, "4, 16, left, default");
+        calibrationZOffsetTf.setColumns(6);
+        
+        lblRecalibration = new JLabel("Recalibration");
+        lblRecalibration.setToolTipText("When to recalibrate");
+        panelCalibration.add(lblRecalibration, "2, 18, right, default");
+        
+        recalibrationCb = new JComboBox(ReferenceNozzleTip.Calibration.RecalibrationTrigger.values());
+        panelCalibration.add(recalibrationCb, "4, 18, left, default");
 
         lblNewLabel = new JLabel("Pipeline");
-        panelCalibration.add(lblNewLabel, "2, 16, right, default");
+        panelCalibration.add(lblNewLabel, "2, 20, right, default");
                         
                         panel = new JPanel();
                         FlowLayout flowLayout = (FlowLayout) panel.getLayout();
                         flowLayout.setVgap(0);
-                        panelCalibration.add(panel, "4, 16, left, default");
+                        panelCalibration.add(panel, "4, 20, left, default");
                         
                                 btnEditPipeline = new JButton("Edit");
                                 panel.add(btnEditPipeline);
@@ -231,7 +249,9 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable nozzle = nozzleTip.getParentNozzle();
                 Camera camera = VisionUtils.getBottomVisionCamera();
-                Location location = camera.getLocation();
+                Location location = camera.getLocation()
+                        .add(new Location(nozzleTip.getCalibration().getCalibrationZOffset().getUnits(), 0, 0, 
+                                nozzleTip.getCalibration().getCalibrationZOffset().getValue(), 0));
 
                 MovableUtils.moveToLocationAtSafeZ(nozzle, location);
             });
@@ -243,6 +263,10 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     private JPanel panel_1;
     private JLabel lblAllowMisdectects;
     private JTextField allowMisdetectsTf;
+    private JLabel lblCalibrationZOffset;
+    private JTextField calibrationZOffsetTf;
+    private JLabel lblRecalibration;
+    private JComboBox recalibrationCb;
 
     private void resetCalibrationPipeline() {
         nozzleTip.getCalibration()
@@ -285,11 +309,16 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 "text", intConverter);
         addWrappedBinding(nozzleTip.getCalibration(), "offsetThresholdLength", offsetThresholdTf,
                 "text", lengthConverter);
+        addWrappedBinding(nozzleTip.getCalibration(), "calibrationZOffset", calibrationZOffsetTf,
+                "text", lengthConverter);
+        addWrappedBinding(nozzleTip.getCalibration(), "recalibrationTrigger",
+                recalibrationCb, "selectedItem");
         
         bind(UpdateStrategy.READ, nozzleTip.getCalibration(), "runoutCompensationInformation",
                 lblCalibrationResults, "text");
         
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(offsetThresholdTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationZOffsetTf);
     }
     protected void initDataBindings() {
         BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty = BeanProperty.create("selected");
@@ -308,10 +337,22 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         AutoBinding<JCheckBox, Boolean, JTextField, Boolean> autoBinding_3 = Bindings.createAutoBinding(UpdateStrategy.READ, calibrationEnabledCheckbox, jCheckBoxBeanProperty, angleIncrementsTf, jTextFieldBeanProperty);
         autoBinding_3.bind();
         //
+        AutoBinding<JCheckBox, Boolean, JTextField, Boolean> autoBinding_6 = Bindings.createAutoBinding(UpdateStrategy.READ, calibrationEnabledCheckbox, jCheckBoxBeanProperty, offsetThresholdTf, jTextFieldBeanProperty);
+        autoBinding_6.bind();
+        //
+        AutoBinding<JCheckBox, Boolean, JTextField, Boolean> autoBinding_7 = Bindings.createAutoBinding(UpdateStrategy.READ, calibrationEnabledCheckbox, jCheckBoxBeanProperty, calibrationZOffsetTf, jTextFieldBeanProperty);
+        autoBinding_7.bind();
+        //
+        AutoBinding<JCheckBox, Boolean, JTextField, Boolean> autoBinding_8 = Bindings.createAutoBinding(UpdateStrategy.READ, calibrationEnabledCheckbox, jCheckBoxBeanProperty, allowMisdetectsTf, jTextFieldBeanProperty);
+        autoBinding_8.bind();
+        //
         AutoBinding<JCheckBox, Boolean, JButton, Boolean> autoBinding_4 = Bindings.createAutoBinding(UpdateStrategy.READ, calibrationEnabledCheckbox, jCheckBoxBeanProperty, btnEditPipeline, jButtonBeanProperty);
         autoBinding_4.bind();
         //
         AutoBinding<JCheckBox, Boolean, JButton, Boolean> autoBinding_5 = Bindings.createAutoBinding(UpdateStrategy.READ, calibrationEnabledCheckbox, jCheckBoxBeanProperty, btnResetPipeline, jButtonBeanProperty);
         autoBinding_5.bind();
+        //
+        AutoBinding<JCheckBox, Boolean, JComboBox, Boolean> autoBinding_9 = Bindings.createAutoBinding(UpdateStrategy.READ, calibrationEnabledCheckbox, jCheckBoxBeanProperty, recalibrationCb, jComboBoxBeanProperty);
+        autoBinding_9.bind();
     }
 }

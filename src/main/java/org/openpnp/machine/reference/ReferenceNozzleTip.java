@@ -99,7 +99,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     
     @Element(required = false)
     private Calibration calibration = new Calibration();
-
+    
 
     @Element(required = false)
     private double vacuumLevelPartOn;
@@ -393,9 +393,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
         
         public static class TableBasedRunoutCompensation implements RunoutCompensation {
+            @Element(required = false)
             List<Location> nozzleTipMeasuredLocations;
 
-
+            public TableBasedRunoutCompensation() {
+            }
             public TableBasedRunoutCompensation(List<Location> nozzleTipMeasuredLocations) {
                 //store data for later usage
                 this.nozzleTipMeasuredLocations = nozzleTipMeasuredLocations;
@@ -469,13 +471,18 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         public static class ModelBasedRunoutCompensation implements RunoutCompensation {
             protected List<Location> nozzleTipMeasuredLocations;
         	
+            @Attribute(required = false)
             protected double centerX = 0;
+            @Attribute(required = false)
             protected double centerY = 0;
+            @Attribute(required = false)
             protected double radius = 0;
-            
+            @Attribute(required = false)
             protected double phaseShift;
 
-			public ModelBasedRunoutCompensation(List<Location> nozzleTipMeasuredLocations) {
+            public ModelBasedRunoutCompensation() {
+            }
+            public ModelBasedRunoutCompensation(List<Location> nozzleTipMeasuredLocations) {
 				//store data for possible later usage
 				this.nozzleTipMeasuredLocations = nozzleTipMeasuredLocations;
 				
@@ -656,6 +663,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
         
         public static class ModelBasedRunoutAndCameraCompensation extends ModelBasedRunoutCompensation {
+            public ModelBasedRunoutAndCameraCompensation() {
+                super();
+            }
             public ModelBasedRunoutAndCameraCompensation(List<Location> nozzleTipMeasuredLocations) {
                 super(nozzleTipMeasuredLocations);
             }
@@ -707,7 +717,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         @Attribute(required = false)
         private int angleSubdivisions = 6;
         @Attribute(required = false)
-        private int allowMisdetections = 2;
+        private int allowMisdetections = 0;
         @Attribute(required = false)
         private double angleStart = -180;
         @Attribute(required = false)
@@ -718,14 +728,25 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         
         private boolean calibrating;
         
+        @Element(required = false)
         private RunoutCompensation runoutCompensation = null;
+        
+        private boolean runoutCompensationFresh = false;
         
         public enum RunoutCompensationAlgorithm {
             Model, ModelAndCamera, Table
         }
         
+        public enum RecalibrationTrigger {
+            Automatic, Session, Manual
+        }
+        
         @Attribute(required = false)
         private RunoutCompensationAlgorithm runoutCompensationAlgorithm = RunoutCompensationAlgorithm.Model;      // modelBased or tableBased? Two implementations are available
+
+
+        @Attribute(required = false)
+        private RecalibrationTrigger recalibrationTrigger = RecalibrationTrigger.Automatic;
 
         /**
          * TODO Left for backward compatibility. Unused. Can be removed after Feb 7, 2020.
@@ -745,6 +766,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         private Double offsetThreshold = 0.5;
         @Element(required = false)
         private Length offsetThresholdLength = new Length(0.5, LengthUnit.Millimeters);
+        @Element(required = false)
+        private Length calibrationZOffset = new Length(0.0, LengthUnit.Millimeters);
 
         public RunoutCompensationAlgorithm getRunoutCompensationAlgorithm() {
             return this.runoutCompensationAlgorithm;
@@ -774,32 +797,32 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             
             Nozzle nozzle = nozzleTip.getParentNozzle();
             Camera camera = VisionUtils.getBottomVisionCamera();
+            // Move to the camera  
+            Location cameraLocation = camera.getLocation();
+            // This is our baseline location
+            Location measureBaseLocation = cameraLocation.derive(null, null, null, 0d)
+                    .add(new Location(this.calibrationZOffset.getUnits(), 0, 0, this.calibrationZOffset.getValue(), 0));
             
             try {
                 calibrating = true;
                 
             	reset();
 
-                // Move to the camera with an angle of 0.
-                Location cameraLocation = camera.getLocation();
-                // This is our baseline location
-                Location measureBaseLocation = cameraLocation.derive(null, null, null, 0d);
-
                 HashMap<String, Object> params = new HashMap<>();
                 params.put("nozzle", nozzle);
                 params.put("camera", camera);
                 Configuration.get().getScripting().on("NozzleCalibration.Starting", params);
                 
-                // move nozzle to the camera location at zero degree - the nozzle must not necessarily be at the center
-                MovableUtils.moveToLocationAtSafeZ(nozzle, measureBaseLocation);
+                // move nozzle to the camera location at the start angle - the nozzle must not necessarily be at the center
+                MovableUtils.moveToLocationAtSafeZ(nozzle, measureBaseLocation.derive(null, null, null, angleStart));
 
                 // determine the resulting angleIncrements
                 double angleIncrement = ( angleStop - angleStart ) / this.angleSubdivisions;
                 
                 // determine the number of measurements to be made
                 int angleSubdivisions = this.angleSubdivisions;
-                if(angleStart == -180 && angleStop == 180) {
-                    // on a normal machine start is at 0°, stop would be at 360°. since the nozzle tip is at the same position then, the last measurement can be omitted
+                if(Math.abs(angleStart + 360 - angleStop) < 0.1) {
+                    // we're measuring a full circle, the last measurement can be omitted
                     angleSubdivisions--;
                 }
                 
@@ -820,11 +843,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                     // detect the nozzle tip
                     Location offset = findCircle();
                     if (offset != null) {
-                        offset = offset.derive(null, null, null, measureAngle);		// for later usage in the algorithm, the measureAngle is stored to the offset location 
-                    
+                        // for later usage in the algorithm, the measureAngle is stored to the offset location in millimeter unit 
+                        offset = offset.derive(null, null, null, measureAngle).convertToUnits(LengthUnit.Millimeters);		
+
                         // add offset to array
                         nozzleTipMeasuredLocations.add(offset);
-                        
+
                         Logger.trace("[nozzleTipCalibration]measured offset: {}", offset);
                     }
                 }
@@ -847,10 +871,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 if (this.runoutCompensation.isOffsetAppliedToCamera()) {
                     this.runoutCompensation.applyAxisOffsetToCamera(camera);
                 }
+                this.runoutCompensationFresh = true;
             }
             finally {
                 // go to camera position (now offset-corrected). prevents the user from being irritated if it's not exactly centered
-                nozzle.moveTo(camera.getLocation().derive(null, null, null, 0d));
+                nozzle.moveTo(measureBaseLocation.derive(null, null, null, angleStop));
                 
                 // after processing the nozzle returns to safe-z
                 nozzle.moveToSafeZ();
@@ -899,7 +924,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 
                 // are there any results from the pipeline?
                 if (0==((List) results).size()) {
-                    //throw new Exception("No results from vision. Check pipeline.");      
+                    // Don't throw new Exception("No results from vision. Check pipeline.");      
+                    // Instead the number of obtained fixes is evaluated later.
                     return null;
                 }
 
@@ -936,7 +962,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 
                 // check for a valid resultset
                 if (locations.size() == 0) {
-                    // throw new Exception("No valid results from pipeline within threshold");
+                    // Don't throw new Exception("No valid results from pipeline within threshold");
+                    // Instead the number of obtained fixes is evaluated later.
                     return null;
                 } else if (locations.size() > 1) {
                     // one could throw an exception here, but we just log an info for now since
@@ -967,13 +994,20 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
         public void reset() {
         	runoutCompensation = null;
-        	
+        	runoutCompensationFresh = false;
         	// inform UI about removed information
             firePropertyChange("runoutCompensationInformation", null, null);
         }
 
         public boolean isCalibrated() {
-            return runoutCompensation != null;
+            if (runoutCompensation == null) {
+                return false;
+            }
+            if (this.isRecalibrateOnSessionNeeded()
+                    && ! this.runoutCompensationFresh) {
+                return false;
+            }
+            return true;
         }
         
         public boolean isCalibrating() {
@@ -1014,6 +1048,31 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             Length oldValue = this.offsetThresholdLength;
             this.offsetThresholdLength = offsetThresholdLength;
             firePropertyChange("offsetThresholdLength", oldValue, offsetThresholdLength);
+        }
+
+        public Length getCalibrationZOffset() {
+            return calibrationZOffset;
+        }
+
+        public void setCalibrationZOffset(Length calibrationZOffset) {
+            this.calibrationZOffset = calibrationZOffset;
+        }
+
+        public RecalibrationTrigger getRecalibrationTrigger() {
+            return recalibrationTrigger;
+        }
+        
+        public boolean isRecalibrateOnNozzleChangeNeeded() {
+            return recalibrationTrigger == RecalibrationTrigger.Automatic;
+        }
+        
+        public boolean isRecalibrateOnSessionNeeded() {
+            return recalibrationTrigger == RecalibrationTrigger.Automatic
+                    || recalibrationTrigger == RecalibrationTrigger.Session;
+        }
+        
+        public void setRecalibrationTrigger(RecalibrationTrigger recalibrationTrigger) {
+            this.recalibrationTrigger = recalibrationTrigger;
         }
 
         public boolean isEnabled() {
