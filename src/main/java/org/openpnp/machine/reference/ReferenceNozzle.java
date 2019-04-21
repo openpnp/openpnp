@@ -333,7 +333,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
         
         this.nozzleTip = nt;
-        if (this.nozzleTip.getCalibration().isRecalibrateOnNozzleChangeNeeded()) {
+        if (this.nozzleTip.getCalibration().isRecalibratePerNozzleTipChangeNeeded()) {
             this.nozzleTip.getCalibration().reset();
         }
         currentNozzleTipId = nozzleTip.getId();

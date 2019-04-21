@@ -11,4 +11,5 @@ public interface NozzleTip extends Identifiable, Named, WizardConfigurable, Prop
     public boolean canHandle(Part part);
     public void calibrate() throws Exception;
     public boolean isCalibrated();
+    public void invalidatePerJobCalibration();
 }

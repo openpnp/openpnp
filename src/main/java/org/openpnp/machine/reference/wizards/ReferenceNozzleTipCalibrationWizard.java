@@ -168,6 +168,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                         });
 
         lblCompensationAlgorithm = new JLabel("Calibration System");
+        lblCompensationAlgorithm.setToolTipText("<html>\r\n<p>The following calibration systems are available:</p>\r\n<p><ul><li>Model based system using the Kasa model to approximate<br /> \r\n a runout radius and center offset.</li>\r\n<li>Model based system as above with the center offset used to calibrate<br /> \r\n the true bottom camera position. </li> \r\n<li>Table based system using interpolation between points. </li></ul></p>\r\n<p>Only the table and camera system allows runout-compensated <br /> \r\nmeasurement of the nozzle to down looking camera offset.</p>\r\n</html>\r\n");
         panelCalibration.add(lblCompensationAlgorithm, "2, 8, right, default");
 
         compensationAlgorithmCb =
@@ -182,6 +183,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         angleIncrementsTf.setColumns(3);
         
         lblAllowMisdectects = new JLabel("Allow Misdectects");
+        lblAllowMisdectects.setToolTipText("Allow this number of missed detections before a calibration fails.");
         panelCalibration.add(lblAllowMisdectects, "2, 12, right, default");
         
         allowMisdetectsTf = new JTextField();
@@ -196,14 +198,15 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         offsetThresholdTf.setColumns(6);
         
         lblCalibrationZOffset = new JLabel("Calibration Z offset");
+        lblCalibrationZOffset.setToolTipText("<html>\r\n<p>\r\nWhen the vision-detected outline of a nozzle is higher up on the nozzle tip <br />\r\nit is recommended to shift the focus plane with the \"Z Offset\".\r\n</p>\r\n<p>If a nozzle tip is named \"unmounted\" it's calibration is used for the bare<br />\r\nnozzle tip holder. Again the \"Z Offset\" can be used to calibrate at the proper<br />\r\nfocal plane. \r\n</html>");
         panelCalibration.add(lblCalibrationZOffset, "2, 16, right, default");
         
         calibrationZOffsetTf = new JTextField();
         panelCalibration.add(calibrationZOffsetTf, "4, 16, left, default");
         calibrationZOffsetTf.setColumns(6);
         
-        lblRecalibration = new JLabel("Recalibration");
-        lblRecalibration.setToolTipText("When to recalibrate");
+        lblRecalibration = new JLabel("Recalibration Trigger");
+        lblRecalibration.setToolTipText("<html>\r\n<p>Determines when a recalibration is executed:</p>\r\n<p><ul><li>Per nozzle tip change inside a job.</li>\r\n<li>Per Job on the first change of a nozzle tip.</li>\r\n<li>Manual/stored with the machine configuration). </li></ul></p>\r\n<p>Manual/stored calibration is only recommended for machines <br /> \r\nwhere the C axis rotation is homed/known at power-on.</p>\r\n</html>");
         panelCalibration.add(lblRecalibration, "2, 18, right, default");
         
         recalibrationCb = new JComboBox(ReferenceNozzleTip.Calibration.RecalibrationTrigger.values());

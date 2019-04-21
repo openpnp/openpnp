@@ -328,6 +328,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         return getCalibration().isCalibrated();
     }
 
+    @Override
+    public void invalidatePerJobCalibration() {
+        getCalibration().invalidatePerJobCalibration();
+    }
+    
     public Action loadAction = new AbstractAction("Load") {
         {
             putValue(SMALL_ICON, Icons.nozzleTipLoad);
@@ -731,14 +736,14 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         @Element(required = false)
         private RunoutCompensation runoutCompensation = null;
         
-        private boolean runoutCompensationFresh = false;
+        private boolean runoutCompensationPerJobDone = false;
         
         public enum RunoutCompensationAlgorithm {
             Model, ModelAndCamera, Table
         }
         
         public enum RecalibrationTrigger {
-            Automatic, Session, Manual
+            PerNozzleTipChange, PerJob, Manual
         }
         
         @Attribute(required = false)
@@ -746,7 +751,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
 
         @Attribute(required = false)
-        private RecalibrationTrigger recalibrationTrigger = RecalibrationTrigger.Automatic;
+        private RecalibrationTrigger recalibrationTrigger = RecalibrationTrigger.PerNozzleTipChange;
 
         /**
          * TODO Left for backward compatibility. Unused. Can be removed after Feb 7, 2020.
@@ -763,7 +768,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         // Max allowed linear distance w.r.t. bottom camera for an offset measurement - measurements above threshold are removed from pipelines results 
         @Attribute(required = false)
         @Deprecated
-        private Double offsetThreshold = 0.5;
+        private Double offsetThreshold = 0.0;
         @Element(required = false)
         private Length offsetThresholdLength = new Length(0.5, LengthUnit.Millimeters);
         @Element(required = false)
@@ -871,7 +876,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 if (this.runoutCompensation.isOffsetAppliedToCamera()) {
                     this.runoutCompensation.applyAxisOffsetToCamera(camera);
                 }
-                this.runoutCompensationFresh = true;
+                this.runoutCompensationPerJobDone = true;
             }
             finally {
                 // go to camera position (now offset-corrected). prevents the user from being irritated if it's not exactly centered
@@ -994,7 +999,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
         public void reset() {
         	runoutCompensation = null;
-        	runoutCompensationFresh = false;
+        	runoutCompensationPerJobDone = false;
         	// inform UI about removed information
             firePropertyChange("runoutCompensationInformation", null, null);
         }
@@ -1003,8 +1008,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             if (runoutCompensation == null) {
                 return false;
             }
-            if (this.isRecalibrateOnSessionNeeded()
-                    && ! this.runoutCompensationFresh) {
+            if (this.isRecalibratePerJobNeeded()
+                    && ! this.isRunoutCompensationPerJobDone()) {
                 return false;
             }
             return true;
@@ -1012,6 +1017,14 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         
         public boolean isCalibrating() {
             return calibrating;
+        }
+
+        public boolean isRunoutCompensationPerJobDone() {
+            return runoutCompensationPerJobDone;
+        }
+
+        public void invalidatePerJobCalibration() {
+            this.runoutCompensationPerJobDone = false;
         }
 
         public int getAngleSubdivisions() {
@@ -1041,6 +1054,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
 
         public Length getOffsetThresholdLength() {
+            // Migrate old unit-less setting.
+            if (this.offsetThreshold > 0.) {
+                offsetThresholdLength = new Length(this.offsetThreshold, LengthUnit.Millimeters);
+                this.offsetThreshold = 0.;
+            }
             return offsetThresholdLength;
         }
 
@@ -1062,13 +1080,13 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             return recalibrationTrigger;
         }
         
-        public boolean isRecalibrateOnNozzleChangeNeeded() {
-            return recalibrationTrigger == RecalibrationTrigger.Automatic;
+        public boolean isRecalibratePerNozzleTipChangeNeeded() {
+            return recalibrationTrigger == RecalibrationTrigger.PerNozzleTipChange;
         }
         
-        public boolean isRecalibrateOnSessionNeeded() {
-            return recalibrationTrigger == RecalibrationTrigger.Automatic
-                    || recalibrationTrigger == RecalibrationTrigger.Session;
+        public boolean isRecalibratePerJobNeeded() {
+            return recalibrationTrigger == RecalibrationTrigger.PerNozzleTipChange
+                    || recalibrationTrigger == RecalibrationTrigger.PerJob;
         }
         
         public void setRecalibrationTrigger(RecalibrationTrigger recalibrationTrigger) {

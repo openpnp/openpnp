@@ -390,19 +390,23 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     protected void doTipCalibration() throws Exception {
         fireTextStatus("Performing nozzle tip calibration.");
         
-        // calibrating nozzle tips currently on head
+        // calibrating nozzle tips on job start
         for (Head head : machine.getHeads()) {
             for (Nozzle nozzle : head.getNozzles()) {
-                NozzleTip nozzleTip = nozzle.getNozzleTip();
-                if (nozzleTip == null) {
-                    continue;
-                }
-                if (!nozzleTip.isCalibrated()) {
-                    Logger.debug("Calibrating nozzle tip {}", nozzleTip);
-                    nozzleTip.calibrate();
+                for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
+                    // invalidate the per job calibration
+                    nozzleTip.invalidatePerJobCalibration();
+                    if (nozzleTip == nozzle.getNozzleTip()) {
+                        // currently on head
+                        if (!nozzleTip.isCalibrated()) {
+                            Logger.debug("Calibrating nozzle tip {}", nozzleTip);
+                            nozzleTip.calibrate();
+                        }
+                    }
                 }
             }
         }
+        
     }
 
     protected void doFiducialCheck() throws Exception {
