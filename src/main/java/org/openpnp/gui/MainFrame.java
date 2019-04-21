@@ -330,6 +330,10 @@ public class MainFrame extends JFrame {
         buttonGroup.add(menuItem);
         mnLanguage.add(menuItem);
 
+        menuItem = new JCheckBoxMenuItem(new LanguageSelectionAction(new Locale("fr")));
+        buttonGroup.add(menuItem);
+        mnLanguage.add(menuItem);
+		
         menuItem = new JCheckBoxMenuItem(new LanguageSelectionAction(new Locale("it")));
         buttonGroup.add(menuItem);
         mnLanguage.add(menuItem);
