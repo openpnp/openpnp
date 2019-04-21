@@ -125,6 +125,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         panel.add(btnResetAllTo, "8, 4");
 
         JLabel lblPreRot = new JLabel("Rotate parts prior to vision?");
+        lblPreRot.setToolTipText("Pre-rotate default setting for bottom vision. Can be overridden on individual parts.");
         panel.add(lblPreRot, "2, 6");
 
         preRotCheckbox = new JCheckBox("");
@@ -165,9 +166,13 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
 
     private void updateEnabledState() {
         boolean enabled = (preRotCheckbox.getModel().isSelected());
+        /* No longer disable the config, as the enabled checkbox is only the system default
+         * and pre-rotate can still be enabled on individual parts. Left the code for the moment
+           as this might be reconsidered.
         textFieldMaxVisionPasses.setEnabled(enabled);
         textFieldMaxLinearOffset.setEnabled(enabled);
         textFieldMaxAngularOffset.setEnabled(enabled);
+        */
     }
     
     private void editPipeline() throws Exception {

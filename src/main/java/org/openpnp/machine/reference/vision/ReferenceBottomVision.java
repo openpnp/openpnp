@@ -77,7 +77,8 @@ public class ReferenceBottomVision implements PartAlignment {
 
         Camera camera = VisionUtils.getBottomVisionCamera();
 
-        if (preRotate) {
+        if ((partSettings.getPreRotateUsage() == PreRotateUsage.Default && preRotate)
+                || (partSettings.getPreRotateUsage() == PreRotateUsage.AlwaysOn)) {
             return findOffsetsPreRotate(part, boardLocation, placementLocation, nozzle, camera,
                     partSettings);
         }
@@ -397,11 +398,16 @@ public class ReferenceBottomVision implements PartAlignment {
         }
         return new ReferenceBottomVisionPartConfigurationWizard(this, part);
     }
-
+    
+    public enum PreRotateUsage {
+        Default, AlwaysOn, AlwaysOff
+    }
     @Root
     public static class PartSettings {
         @Attribute
         protected boolean enabled;
+        @Attribute(required = false)
+        protected PreRotateUsage preRotateUsage = PreRotateUsage.Default;
 
         @Element
         protected CvPipeline pipeline;
@@ -427,6 +433,14 @@ public class ReferenceBottomVision implements PartAlignment {
 
         public void setEnabled(boolean enabled) {
             this.enabled = enabled;
+        }
+
+        public PreRotateUsage getPreRotateUsage() {
+            return preRotateUsage;
+        }
+
+        public void setPreRotateUsage(PreRotateUsage preRotateUsage) {
+            this.preRotateUsage = preRotateUsage;
         }
 
         public CvPipeline getPipeline() {
