@@ -1045,12 +1045,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
         @Deprecated
         public double getOffsetThreshold() {
-            return offsetThreshold;
+            return getOffsetThresholdLength().convertToUnits(LengthUnit.Millimeters).getValue();
         }
 
         @Deprecated
         public void setOffsetThreshold(double offsetThreshold) {
-            this.offsetThreshold = offsetThreshold;
+            this.setOffsetThresholdLength(new Length(offsetThreshold, LengthUnit.Millimeters));
         }
 
         public Length getOffsetThresholdLength() {
