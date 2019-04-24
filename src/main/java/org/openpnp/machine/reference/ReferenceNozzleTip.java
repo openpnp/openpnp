@@ -772,7 +772,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             Location cameraLocation = camera.getLocation();
             // This is our baseline location
             Location measureBaseLocation = cameraLocation.derive(null, null, null, 0d)
-                    .add(new Location(this.calibrationZOffset.getUnits(), 0, 0, this.calibrationZOffset.getValue(), 0));
+                    .add(new Location(this.calibrationZOffset.getUnits(), 0, 0, 
+                            this.calibrationZOffset.convertToUnits(cameraLocation.getUnits()).getValue(), 0));
             
             try {
                 calibrating = true;
@@ -854,15 +855,15 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 }   
                 else {
                     ModelBasedRunoutCompensation cameraCompensation = new ModelBasedRunoutCompensation(nozzleTipMeasuredLocations);
+                    // Calculate and apply the new camera position
                     Location newCameraPosition = referenceCamera.getHeadOffsets()
                             .subtract(cameraCompensation.getAxisOffset());
                     Logger.debug("[nozzleTipCalibration]applying axis offset to bottom camera position: {} - {} = {}", 
                             referenceCamera.getHeadOffsets(),
                             cameraCompensation.getAxisOffset(),
                             newCameraPosition);
-                    // Apply the new camera position
                     referenceCamera.setHeadOffsets(newCameraPosition);
-                    // Apply the new angle
+                    // Calculate and apply the new angle
                     double newCameraAngle = referenceCamera.getRotation() - cameraCompensation.getPhaseShift();
                     Logger.debug("[nozzleTipCalibration]applying angle offset to bottom camera rotation: {} - {} = {}", 
                             referenceCamera.getRotation(),
