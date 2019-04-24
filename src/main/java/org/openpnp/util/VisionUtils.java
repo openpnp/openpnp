@@ -135,7 +135,7 @@ public class VisionUtils {
         location = location.convertToUnits(unitsPerPixel.getUnits())
                 .subtract(camera.getLocation())
                 .multiply(1./unitsPerPixel.getX(), -1./unitsPerPixel.getY(), 0., 0.);
-        // translate to upper left corner of camera in pixels
+        // relative to upper left corner of camera in pixels
         return new Point(location.getX()+camera.getWidth()/2, location.getY()+camera.getHeight()/2);
     }
     

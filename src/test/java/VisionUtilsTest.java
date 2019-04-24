@@ -39,7 +39,6 @@ public class VisionUtilsTest {
             return null;
         }
 
-        
         @Override
         public Head getHead() {
             return head;

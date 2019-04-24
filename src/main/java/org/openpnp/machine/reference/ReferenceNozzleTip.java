@@ -1095,9 +1095,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
         
         public void setEnabled(boolean enabled) {
-            boolean oldValue = this.enabled;
             this.enabled = enabled;
-            firePropertyChange("enabled", oldValue, enabled);
         }
 
         public CvPipeline getPipeline() throws Exception {
