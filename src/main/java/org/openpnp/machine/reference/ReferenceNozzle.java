@@ -314,7 +314,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (this.nozzleTip == nozzleTip) {
             return;
         }
-            
+
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
 
         if (changerEnabled) {
@@ -322,7 +322,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
             unloadNozzleTip();
             if (!nt.isUnmountedNozzleTipStandin()) {
-                
+
                 Logger.debug("{}.loadNozzleTip({}): Start", getName(), nozzleTip.getName());
 
                 Logger.debug("{}.loadNozzleTip({}): moveTo Start Location",
@@ -358,7 +358,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 Logger.warn(e);
             }
         }
-        
+
         this.nozzleTip = nt;
         currentNozzleTipId = nozzleTip.getId();
         if (this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded()) {
@@ -416,12 +416,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 Logger.warn(e);
             }
         }
-        
+
         nozzleTip = null;
         currentNozzleTipId = null;
         firePropertyChange("nozzleTip", null, getNozzleTip());
         ((ReferenceMachine) head.getMachine()).fireMachineHeadActivity(head);
-        
+
         if (!changerEnabled) {
             throw new Exception("Manual NozzleTip change required!");
         }
