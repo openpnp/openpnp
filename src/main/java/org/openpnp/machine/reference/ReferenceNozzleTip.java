@@ -768,12 +768,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 referenceCamera = (ReferenceCamera)camera;
             }
            
-            // Move to the camera  
-            Location cameraLocation = camera.getLocation();
             // This is our baseline location
+            Location cameraLocation = camera.getLocation();
             Location measureBaseLocation = cameraLocation.derive(null, null, null, 0d)
-                    .add(new Location(this.calibrationZOffset.getUnits(), 0, 0, 
-                            this.calibrationZOffset.convertToUnits(cameraLocation.getUnits()).getValue(), 0));
+                    .add(new Location(this.calibrationZOffset.getUnits(), 0, 0, this.calibrationZOffset, 0));
             
             try {
                 calibrating = true;

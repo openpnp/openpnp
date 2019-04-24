@@ -178,7 +178,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
             }
         });
         lblCompensationAlgorithm = new JLabel("Calibration System");
-        lblCompensationAlgorithm.setToolTipText("<html>\r\n<p>The following calibration systems are available:</p>\r\n<p><ul><li>Model based system using the Kasa model to approximate<br /> \r\n a runout radius and center offset.</li>\r\n<li>Model based system as above without using the center offset. It is better <br /> \r\n calibrate the bottom camera position & rotation. </li> \r\n<li>Table based system using interpolation between points. </li></ul></p>\r\n</html>\r\n");
+        lblCompensationAlgorithm.setToolTipText("<html>\r\n<p>The following calibration systems are available:</p>\r\n<p><ul><li>Model based system using the Kasa model to approximate<br /> \r\n a runout radius and center offset.</li>\r\n<li>Model based system as above without using the center offset. <br /> \r\nCalibrate the bottom camera position and rotation instead. </li> \r\n<li>Table based system using interpolation between points. </li></ul></p>\r\n</html>\r\n");
         panelCalibration.add(lblCompensationAlgorithm, "2, 8, right, default");
 
         compensationAlgorithmCb =
