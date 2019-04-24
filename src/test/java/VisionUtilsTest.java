@@ -39,6 +39,7 @@ public class VisionUtilsTest {
             return null;
         }
 
+        
         @Override
         public Head getHead() {
             return head;
@@ -56,6 +57,11 @@ public class VisionUtilsTest {
 
         @Override
         public void moveToSafeZ(double speed) throws Exception {
+
+        }
+
+        @Override
+        public void home() throws Exception {
 
         }
 

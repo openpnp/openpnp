@@ -75,6 +75,10 @@ public class ReferencePasteDispenser extends AbstractPasteDispenser
     }
 
     @Override
+    public void home() throws Exception {
+    }
+
+    @Override
     public Location getLocation() {
         return driver.getLocation(this);
     }

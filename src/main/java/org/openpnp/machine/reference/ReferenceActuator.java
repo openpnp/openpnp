@@ -118,6 +118,10 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     }
 
     @Override
+    public void home() throws Exception {
+    }
+
+    @Override
     public Wizard getConfigurationWizard() {
         return new ReferenceActuatorConfigurationWizard(this);
     }

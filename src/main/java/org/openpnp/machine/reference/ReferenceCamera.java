@@ -224,6 +224,10 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         getMachine().fireMachineHeadActivity(head);
     }
 
+    @Override
+    public void home() throws Exception {
+    }
+
     public double getRotation() {
         return rotation;
     }
@@ -335,6 +339,12 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
         image = OpenCvUtils.toBufferedImage(mat);
         mat.release();
+        
+        if (image != null) { 
+            // save the new image dimensions
+            width = image.getWidth();
+            height = image.getHeight();
+        }
         return image;
     }
 

@@ -12,6 +12,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
@@ -125,6 +126,17 @@ public class VisionUtils {
 
         // convert it all to pixels
         return length.getValue() / avgUnitsPerPixel;
+    }
+    
+    public static Point getLocationPixels(Location location, Camera camera) {
+        // get the units per pixel scale 
+        Location unitsPerPixel = camera.getUnitsPerPixel();
+        // convert inputs to the same units, center on camera and scale
+        location = location.convertToUnits(unitsPerPixel.getUnits())
+                .subtract(camera.getLocation())
+                .multiply(1./unitsPerPixel.getX(), -1./unitsPerPixel.getY(), 0., 0.);
+        // translate to upper left corner of camera in pixels
+        return new Point(location.getX()+camera.getWidth()/2, location.getY()+camera.getHeight()/2);
     }
     
     /**
