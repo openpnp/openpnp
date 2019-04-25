@@ -105,7 +105,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
 
         preRotCheckbox = new JCheckBox("");
         panel.add(preRotCheckbox, "4, 6");
-            }
+    }
 
     private void editPipeline() throws Exception {
         CvPipeline pipeline = bottomVision.getPipeline();
@@ -125,7 +125,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
     public String getWizardName() {
         return "ReferenceBottomVision";
     }
-    
+
     @Override
     public void createBindings() {
         addWrappedBinding(bottomVision, "enabled", enabledCheckbox, "selected");
