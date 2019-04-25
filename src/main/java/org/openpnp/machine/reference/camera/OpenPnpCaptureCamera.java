@@ -159,8 +159,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         ensureOpen();
         try {
             while (!stream.hasNewFrame()) {
-                // Do not burn unnecessary CPU cycles.
-                Thread.yield();
+                
             }
             BufferedImage img = stream.capture();
             img = transformImage(img);
