@@ -990,6 +990,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 // finally return the location at index (0) which is either a) the only one or b) the one best matching the nozzle tip
                 return locations.get(0);
             }
+            finally {
+                pipeline.setProperty("MaskCircle.center", null);
+            }
         }
 
         public static CvPipeline createDefaultPipeline() {
