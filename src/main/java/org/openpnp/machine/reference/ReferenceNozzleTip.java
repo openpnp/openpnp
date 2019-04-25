@@ -469,12 +469,17 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             protected double radius = 0;
             @Attribute(required = false)
             protected double phaseShift;
-
+            @Attribute(required = false)
+            protected LengthUnit units = LengthUnit.Millimeters;
+            
             public ModelBasedRunoutCompensation() {
             }
             public ModelBasedRunoutCompensation(List<Location> nozzleTipMeasuredLocations) {
 				//store data for possible later usage
 				this.nozzleTipMeasuredLocations = nozzleTipMeasuredLocations;
+				// save the units as the model is persisted without the locations 
+				this.units = nozzleTipMeasuredLocations.size() > 0 ? 
+				        nozzleTipMeasuredLocations.get(0).getUnits() : LengthUnit.Millimeters;
 				
 				// first calculate the circle fit and store the values to centerXY and radius
 				// the measured offsets describe a circle with the rotational axis as the center, the runout is the circle radius
@@ -496,7 +501,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 	            double offsetX = this.centerX + (this.radius * Math.cos(angle));
 	            double offsetY = this.centerY + (this.radius * Math.sin(angle));
 
-	            return new Location(LengthUnit.Millimeters, offsetX, offsetY, 0, 0);
+	            return new Location(this.units, offsetX, offsetY, 0, 0);
 			}
 			
 	        protected void calcCircleFitKasa(List<Location> nozzleTipMeasuredLocations) {
@@ -599,7 +604,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             		angle = measuredLocation.getRotation();		// the angle at which the measurement was made was stored to the nozzleTipMeasuredLocation into the rotation attribute
             		
             		// move the offset-location by the centerY/centerY. by this all offset-locations are wrt. the 0/0 origin
-            		Location centeredLocation = measuredLocation.subtract(new Location(LengthUnit.Millimeters,this.centerX,this.centerY,0.,0.));
+            		Location centeredLocation = measuredLocation.subtract(new Location(this.units,this.centerX,this.centerY,0.,0.));
             		
             		// calculate the angle, the nozzle tip is located at
             		measuredAngle=Math.toDegrees(Math.atan2(centeredLocation.getY(), centeredLocation.getX()));
@@ -607,12 +612,13 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             		// the difference is the phaseShift
             		double differenceAngle = angle-measuredAngle;
             		
-            		// atan2 outputs angles from -PI to +PI. If one wants positive values, one needs to add +PI to negative values
+            		// atan2 outputs angles from -PI to +PI. 
+            		// since calculating the difference angle in some circumstances the angle can be smaller than -180 -> add +2PI
             		if(differenceAngle < -180) {
             			differenceAngle += 360;
             		}
             		if(differenceAngle > 180) {
-            			// since calculating the difference angle in some circumstances the angle can be bigger than 360 -> subtract
+            			// since calculating the difference angle in some circumstances the angle can be bigger than 180 -> subtract -2PI
             			differenceAngle -= 360;
             		}
             		
@@ -638,7 +644,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
             @Override
             public Location getAxisOffset() {
-                return new Location(LengthUnit.Millimeters,centerX,centerY,0.,0.);
+                return new Location(this.units,centerX,centerY,0.,0.);
             }
             
             
@@ -672,10 +678,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 double offsetX = this.radius * Math.cos(angle);
                 double offsetY = this.radius * Math.sin(angle);
 
-                return new Location(LengthUnit.Millimeters, offsetX, offsetY, 0, 0);
+                return new Location(this.units, offsetX, offsetY, 0, 0);
             }
-            
-            
         }
             
         
@@ -827,7 +831,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                     Location offset = findCircle(measureLocation);
                     if (offset != null) {
                         // for later usage in the algorithm, the measureAngle is stored to the offset location in millimeter unit 
-                        offset = offset.derive(null, null, null, measureAngle).convertToUnits(LengthUnit.Millimeters);		
+                        offset = offset.derive(null, null, null, measureAngle);		
 
                         // add offset to array
                         nozzleTipMeasuredLocations.add(offset);
