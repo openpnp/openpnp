@@ -15,7 +15,6 @@ import javax.swing.border.TitledBorder;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
 import org.openpnp.model.LengthUnit;
@@ -32,7 +31,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JComboBox;
 
 public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceBottomVision bottomVision;
@@ -41,7 +39,6 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
 
     private JCheckBox enabledCheckbox;
     private JCheckBox chckbxCenterAfterTest;
-    private JComboBox comboBoxPreRotate;
 
     public ReferenceBottomVisionPartConfigurationWizard(ReferenceBottomVision bottomVision,
             Part part) {
@@ -53,22 +50,13 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         panel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         contentPanel.add(panel);
-        panel.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("right:default"),
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+        panel.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("right:default"),
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblEnabled = new JLabel("Enabled?");
         panel.add(lblEnabled, "2, 2");
@@ -82,23 +70,17 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                 testAlignment();
             });
         });
-        
-        JLabel lblPrerotate = new JLabel("Pre-rotate");
-        panel.add(lblPrerotate, "2, 4, right, default");
-        
-        comboBoxPreRotate = new JComboBox(ReferenceBottomVision.PreRotateUsage.values());
-        panel.add(comboBoxPreRotate, "4, 4");
 
         JLabel lblTest = new JLabel("Test");
-        panel.add(lblTest, "2, 6");
-        panel.add(btnTestAlighment, "4, 6");
+        panel.add(lblTest, "2, 4");
+        panel.add(btnTestAlighment, "4, 4");
 
         chckbxCenterAfterTest = new JCheckBox("Center After Test");
         chckbxCenterAfterTest.setSelected(true);
-        panel.add(chckbxCenterAfterTest, "6, 6");
+        panel.add(chckbxCenterAfterTest, "6, 4");
 
         JLabel lblPipeline = new JLabel("Pipeline");
-        panel.add(lblPipeline, "2, 8");
+        panel.add(lblPipeline, "2, 6");
 
         JButton editPipelineButton = new JButton("Edit");
         editPipelineButton.addActionListener(new ActionListener() {
@@ -108,7 +90,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                 });
             }
         });
-        panel.add(editPipelineButton, "4, 8");
+        panel.add(editPipelineButton, "4, 6");
 
         JButton btnLoadDefault = new JButton("Reset to Default");
         btnLoadDefault.addActionListener((e) -> {
@@ -123,7 +105,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                 });
             }
         });
-        panel.add(btnLoadDefault, "6, 8");
+        panel.add(btnLoadDefault, "6, 6");
     }
 
     private void testAlignment() throws Exception {
@@ -153,8 +135,8 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         }
 
         // position the part over camera center
-        Location cameraLocation = bottomVision.getCameraLocationAtPartHeight(part, 
-                VisionUtils.getBottomVisionCamera(), 0.);
+        Location cameraLocation = VisionUtils.getBottomVisionCamera()
+                                             .getLocation();
 
         if (alignmentOffset.getPreRotated()) {
             // See https://github.com/openpnp/openpnp/pull/590 for explanations of the magic
@@ -164,8 +146,8 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                                         .getLinearDistanceTo(0., 0.)) > 19.999) {
                 throw new Exception("Offset too big");
             }
-            nozzle.moveTo(cameraLocation
-                                .subtractWithRotation(alignmentOffset.getLocation()));
+            nozzle.moveTo(nozzle.getLocation()
+                                .subtract(alignmentOffset.getLocation()));
             return;
         }
 
@@ -187,7 +169,8 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         location = location.add(cameraLocation);
 
         // Subtract the bottom vision offsets to move the part to the final location,
-        // instead of the nozzle.
+        // instead of
+        // the nozzle.
         location = location.subtract(offsets);
 
         nozzle.moveTo(location);
@@ -216,6 +199,5 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     @Override
     public void createBindings() {
         addWrappedBinding(partSettings, "enabled", enabledCheckbox, "selected");
-        addWrappedBinding(partSettings, "preRotateUsage", comboBoxPreRotate, "selectedItem");
     }
 }
