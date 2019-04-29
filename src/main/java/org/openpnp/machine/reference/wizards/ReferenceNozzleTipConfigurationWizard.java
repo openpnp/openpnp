@@ -387,7 +387,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable nozzle = nozzleTip.getParentNozzle();
                 Camera camera = VisionUtils.getBottomVisionCamera();
-                Location location = camera.getLocation();
+                Location location = camera.getLocation(nozzle);
 
                 MovableUtils.moveToLocationAtSafeZ(nozzle, location);
             });

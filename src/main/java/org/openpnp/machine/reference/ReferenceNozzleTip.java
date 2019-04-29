@@ -935,7 +935,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
             finally {
                 // go to camera position (now offset-corrected). prevents the user from being irritated if it's not exactly centered
-                nozzle.moveTo(camera.getLocation(nozzle).derive(null, null, null, angleStop));
+                nozzle.moveTo(camera.getLocation(nozzle).derive(null, null, measureBaseLocation.getZ(), angleStop));
                 
                 // after processing the nozzle returns to safe-z
                 nozzle.moveToSafeZ();
