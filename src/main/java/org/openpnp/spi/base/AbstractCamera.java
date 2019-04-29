@@ -23,6 +23,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.VisionProvider;
 import org.openpnp.util.OpenCvUtils;
 import org.pmw.tinylog.Logger;
@@ -101,6 +102,20 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         }
         this.head = head;
         this.headSet = true;
+    }
+
+    @Override
+    public Location getCameraToolCalibratedOffset(Camera camera) {
+        return new Location(camera.getUnitsPerPixel().getUnits());
+    }
+
+    @Override
+    public Location getLocation(HeadMountable tool) {
+        if (tool != null) {
+            return getLocation().add(tool.getCameraToolCalibratedOffset(this));
+        }
+
+        return getLocation();
     }
 
     @Override

@@ -34,6 +34,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractActuator;
 import org.pmw.tinylog.Logger;
@@ -83,6 +84,11 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     @Override
     public Location getLocation() {
         return getDriver().getLocation(this);
+    }
+
+    @Override
+    public Location getCameraToolCalibratedOffset(Camera camera) {
+        return new Location(camera.getUnitsPerPixel().getUnits());
     }
 
     @Override

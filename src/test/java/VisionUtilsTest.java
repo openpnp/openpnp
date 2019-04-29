@@ -12,6 +12,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider;
 import org.openpnp.util.VisionUtils;
@@ -67,6 +68,20 @@ public class VisionUtilsTest {
         @Override
         public Location getLocation() {
             return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
+        }
+
+        @Override
+        public Location getLocation(HeadMountable tool) {
+            if (tool != null) {
+                return getLocation().add(tool.getCameraToolCalibratedOffset(this));
+            }
+
+            return getLocation();
+        }
+
+       @Override
+        public Location getCameraToolCalibratedOffset(Camera camera) {
+            return new Location(camera.getUnitsPerPixel().getUnits());
         }
 
         @Override

@@ -24,10 +24,12 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.VisionUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -206,11 +208,11 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
     }
     
-    private ReferenceNozzleTip getUnmountedNozzleTipStandin() {
+    private ReferenceNozzleTip getUnloadedNozzleTipStandin() {
         for (NozzleTip nozzleTip : this.getNozzleTips()) {
             if (nozzleTip instanceof ReferenceNozzleTip) {
                 ReferenceNozzleTip referenceNozzleTip = (ReferenceNozzleTip)nozzleTip;
-                if (referenceNozzleTip.isUnmountedNozzleTipStandin()) {
+                if (referenceNozzleTip.isUnloadedNozzleTipStandin()) {
                     return referenceNozzleTip;
                 }
             }
@@ -218,7 +220,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         return null;
     }
     
-    private ReferenceNozzleTip getCalibrationNozzleTip() {
+    public ReferenceNozzleTip getCalibrationNozzleTip() {
         if (nozzleTip != null) {
             // normally we have the loaded nozzle tip as the calibration nozzle tip
             ReferenceNozzleTip calibrationNozzleTip = null;
@@ -227,12 +229,22 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             }
             return calibrationNozzleTip;
         } else {
-            // if no tip is mounted, we use the "unmounted" nozzle tip stand-in, so we 
+            // if no tip is mounted, we use the "unloaded" nozzle tip stand-in, so we 
             // can still calibrate
-            return getUnmountedNozzleTipStandin();
+            return getUnloadedNozzleTipStandin();
         }
     }
-    
+
+    @Override
+    public Location getCameraToolCalibratedOffset(Camera camera) {
+        // Apply the axis offset from runout calibration here. 
+        ReferenceNozzleTip calibrationNozzleTip = getCalibrationNozzleTip();
+        if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated()) {
+            calibrationNozzleTip.getCalibration().getCalibratedCameraOffset(camera);
+        }
+
+        return new Location(camera.getUnitsPerPixel().getUnits());
+    }
 
     @Override
     public void moveTo(Location location, double speed) throws Exception {
@@ -321,7 +333,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             double speed = getHead().getMachine().getSpeed();
 
             unloadNozzleTip();
-            if (!nt.isUnmountedNozzleTipStandin()) {
+            if (!nt.isUnloadedNozzleTipStandin()) {
 
                 Logger.debug("{}.loadNozzleTip({}): Start", getName(), nozzleTip.getName());
 
@@ -385,13 +397,13 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         Logger.debug("{}.unloadNozzleTip(): Start", getName());
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
 
-        if (!nt.isUnmountedNozzleTipStandin()) {
+        if (!nt.isUnloadedNozzleTipStandin()) {
             Logger.debug("{}.unloadNozzleTip(): moveTo End Location", getName());
             MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerEndLocation(), speed);
         }
 
         if (changerEnabled) {
-            if (!nt.isUnmountedNozzleTipStandin()) {
+            if (!nt.isUnloadedNozzleTipStandin()) {
                 Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location 2", getName());
                 moveTo(nt.getChangerMidLocation2(), nt.getChangerMid2ToEndSpeed() * speed);
 
@@ -425,7 +437,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (!changerEnabled) {
             throw new Exception("Manual NozzleTip change required!");
         }
-        // May need to calibrate the "unmounted" nozzle tip stand-in i.e. the naked nozzle tip holder. 
+        // May need to calibrate the "unloaded" nozzle tip stand-in i.e. the naked nozzle tip holder. 
         ReferenceNozzleTip calibrationNozzleTip = this.getCalibrationNozzleTip();
         if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded()) {
             Logger.debug("{}.unloadNozzleTip() nozzle tip {} calibration needed", getName(), calibrationNozzleTip.getName());

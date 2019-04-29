@@ -10,6 +10,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractPasteDispenser;
 import org.pmw.tinylog.Logger;
@@ -46,6 +47,11 @@ public class ReferencePasteDispenser extends AbstractPasteDispenser
     @Override
     public void setHeadOffsets(Location headOffsets) {
         this.headOffsets = headOffsets;
+    }
+
+    @Override
+    public Location getCameraToolCalibratedOffset(Camera camera) {
+        return new Location(camera.getUnitsPerPixel().getUnits());
     }
 
     @Override

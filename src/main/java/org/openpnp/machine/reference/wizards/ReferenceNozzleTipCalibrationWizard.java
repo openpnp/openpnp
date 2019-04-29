@@ -170,7 +170,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
 
 
         btnCalibrateCamera = new JButton("Calibrate Camera Position and Rotation");
-        btnCalibrateCamera.setToolTipText("<html>\r\nCalibrate the bottom vision camera position and rotation <br />according to nozzle movement.\r\n</html>");
+        btnCalibrateCamera.setToolTipText("<html>\r\nCalibrate the bottom vision camera position and rotation <br />\r\naccording to a pattern of measured nozzle positions.\r\n</html>");
         panelCalibration.add(btnCalibrateCamera, "6, 6");
         btnCalibrateCamera.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -178,7 +178,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
             }
         });
         lblCompensationAlgorithm = new JLabel("Calibration System");
-        lblCompensationAlgorithm.setToolTipText("<html>\r\n<p>The following calibration systems are available:</p>\r\n<p><ul><li>Model based system using the Kasa model to approximate<br /> \r\n a runout radius and center offset.</li>\r\n<li>Model based system as above without using the center offset. <br /> \r\nCalibrate the bottom camera position and rotation instead. </li> \r\n<li>Table based system using interpolation between points. </li></ul></p>\r\n</html>\r\n");
+        lblCompensationAlgorithm.setToolTipText("<html>\r\n<p>The following calibration systems are available:</p>\r\n<p><ul><li>Model based system using the Kasa model to approximate<br /> \r\n a runout radius and center offset.</li>\r\n<li>Model based system without using the center offset. <br /> \r\nCalibrate the bottom camera position and rotation instead. </li> \r\n<li>Model based system using the center offset as the bottom camera<br />\r\ncalibrated nozzle offset.</li> \r\n<li>Table based system using interpolation between points. </li></ul></p>\r\n</html>\r\n");
         panelCalibration.add(lblCompensationAlgorithm, "2, 8, right, default");
 
         compensationAlgorithmCb =
@@ -208,7 +208,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         offsetThresholdTf.setColumns(6);
 
         lblCalibrationZOffset = new JLabel("Calibration Z Offset");
-        lblCalibrationZOffset.setToolTipText("<html>\r\n<p>\r\nWhen the vision-detected feature of a nozzle is higher up on the nozzle tip <br />\r\nit is recommended to shift the focus plane with the \"Z Offset\".\r\n</p>\r\n<p>If a nozzle tip is named \"unmounted\" it is used as a stand-in for calibration<br />\r\nof the bare nozzle tip holder. Again the \"Z Offset\" can be used to calibrate at the proper<br />\r\nfocal plane. \r\n</html>");
+        lblCalibrationZOffset.setToolTipText("<html>\r\n<p>\r\nWhen the vision-detected feature of a nozzle is higher up on the nozzle tip <br />\r\nit is recommended to shift the focus plane with the \"Z Offset\".\r\n</p>\r\n<p>If a nozzle tip is named \"unloaded\" it is used as a stand-in for calibration<br />\r\nof the bare nozzle tip holder. Again the \"Z Offset\" can be used to calibrate at the <br />\r\nproper focal plane. \r\n</p>\r\n</html>");
         panelCalibration.add(lblCalibrationZOffset, "6, 12, right, default");
 
         calibrationZOffsetTf = new JTextField();

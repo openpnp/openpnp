@@ -3,6 +3,8 @@ package org.openpnp.spi.base;
 import javax.swing.Icon;
 
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Location;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.PasteDispenser;
 import org.simpleframework.xml.Attribute;
@@ -34,6 +36,11 @@ public abstract class AbstractPasteDispenser implements PasteDispenser {
     @Override
     public void setHead(Head head) {
         this.head = head;
+    }
+
+    @Override
+    public Location getCameraToolCalibratedOffset(Camera camera) {
+        return new Location(camera.getUnitsPerPixel().getUnits());
     }
 
     @Override
