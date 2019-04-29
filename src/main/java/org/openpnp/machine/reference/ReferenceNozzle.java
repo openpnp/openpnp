@@ -240,7 +240,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         // Apply the axis offset from runout calibration here. 
         ReferenceNozzleTip calibrationNozzleTip = getCalibrationNozzleTip();
         if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated()) {
-            calibrationNozzleTip.getCalibration().getCalibratedCameraOffset(camera);
+            return calibrationNozzleTip.getCalibration().getCalibratedCameraOffset(camera);
         }
 
         return new Location(camera.getUnitsPerPixel().getUnits());

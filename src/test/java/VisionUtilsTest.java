@@ -73,7 +73,7 @@ public class VisionUtilsTest {
         @Override
         public Location getLocation(HeadMountable tool) {
             if (tool != null) {
-                return getLocation().add(tool.getCameraToolCalibratedOffset(this));
+                return getLocation().subtract(tool.getCameraToolCalibratedOffset(this));
             }
 
             return getLocation();

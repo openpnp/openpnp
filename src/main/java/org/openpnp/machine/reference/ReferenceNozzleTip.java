@@ -532,7 +532,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
             @Override
             public Location getCameraOffset() {
-                return new Location(nozzleTipMeasuredLocations.get(0).getUnits());
+                return new Location(this.units);
             }
             
 	        protected void calcCircleFitKasa(List<Location> nozzleTipMeasuredLocations) {
@@ -720,7 +720,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             @Override
             public Location getCameraOffset() {
                 // Return the axis offset as the camera tool specific calibration offset.
-                return new Location(nozzleTipMeasuredLocations.get(0).getUnits());
+                Logger.debug("[nozzleTipCalibration] getCameraOffset() returns: {}, {}", this.centerX, this.centerY);
+                return new Location(this.units, this.centerX, this.centerY, 0., 0.);
             }
         }
             
@@ -926,11 +927,15 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                             cameraCompensation.getPhaseShift(),
                             newCameraAngle);
                     referenceCamera.setRotation(newCameraAngle);
+                    if (this.runoutCompensationAlgorithm != RunoutCompensationAlgorithm.ModelNoOffset) {
+                        // the calibration has become invalid
+                        reset();
+                    }
                 }
             }
             finally {
                 // go to camera position (now offset-corrected). prevents the user from being irritated if it's not exactly centered
-                nozzle.moveTo(measureBaseLocation.derive(null, null, null, angleStop));
+                nozzle.moveTo(camera.getLocation(nozzle).derive(null, null, null, angleStop));
                 
                 // after processing the nozzle returns to safe-z
                 nozzle.moveToSafeZ();
@@ -970,7 +975,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         public Location getCalibratedCameraOffset(Camera camera) {
             try {
                 if (camera == VisionUtils.getBottomVisionCamera()) {
-                    if (!isEnabled() || !isCalibrated()) {
+                    if (isEnabled() && isCalibrated()) {
                         return this.runoutCompensation.getCameraOffset();
                     }
                 } 

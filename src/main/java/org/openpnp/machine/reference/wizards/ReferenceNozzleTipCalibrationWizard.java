@@ -262,7 +262,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable nozzle = nozzleTip.getParentNozzle();
                 Camera camera = VisionUtils.getBottomVisionCamera();
-                Location location = camera.getLocation()
+                Location location = camera.getLocation(nozzle)
                         .add(new Location(nozzleTip.getCalibration().getCalibrationZOffset().getUnits(), 0, 0, 
                                 nozzleTip.getCalibration().getCalibrationZOffset().getValue(), 0));
 
