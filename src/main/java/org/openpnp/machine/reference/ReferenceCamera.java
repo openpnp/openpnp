@@ -51,6 +51,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.base.AbstractCamera;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.LensCalibration;
@@ -224,6 +225,10 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         getMachine().fireMachineHeadActivity(head);
     }
 
+    @Override
+    public void home() throws Exception {
+    }
+
     public double getRotation() {
         return rotation;
     }
@@ -335,6 +340,12 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
         image = OpenCvUtils.toBufferedImage(mat);
         mat.release();
+        
+        if (image != null) { 
+            // save the new image dimensions
+            width = image.getWidth();
+            height = image.getHeight();
+        }
         return image;
     }
 

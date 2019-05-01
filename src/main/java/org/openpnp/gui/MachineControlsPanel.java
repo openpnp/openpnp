@@ -316,7 +316,7 @@ public class MachineControlsPanel extends JPanel {
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable tool = getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
-                MovableUtils.moveToLocationAtSafeZ(tool, camera.getLocation());
+                MovableUtils.moveToLocationAtSafeZ(tool, camera.getLocation(tool));
             });
         }
     };

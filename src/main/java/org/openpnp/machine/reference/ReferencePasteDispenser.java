@@ -10,6 +10,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractPasteDispenser;
 import org.pmw.tinylog.Logger;
@@ -49,6 +50,11 @@ public class ReferencePasteDispenser extends AbstractPasteDispenser
     }
 
     @Override
+    public Location getCameraToolCalibratedOffset(Camera camera) {
+        return new Location(camera.getUnitsPerPixel().getUnits());
+    }
+
+    @Override
     public void dispense(Location startLocation, Location endLocation,
             long dispenseTimeMilliseconds) throws Exception {
         Logger.debug("{}.dispense()", getName());
@@ -72,6 +78,10 @@ public class ReferencePasteDispenser extends AbstractPasteDispenser
                 safeZ.getValue(), Double.NaN);
         driver.moveTo(this, l, speed);
         machine.fireMachineHeadActivity(head);
+    }
+
+    @Override
+    public void home() throws Exception {
     }
 
     @Override

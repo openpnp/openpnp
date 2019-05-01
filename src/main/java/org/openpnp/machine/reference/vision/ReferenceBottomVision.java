@@ -88,7 +88,7 @@ public class ReferenceBottomVision implements PartAlignment {
         }
         angle = angleNorm(angle, 180.);
         double placementAngle = angle;
-        Location location = camera.getLocation()
+        Location location = camera.getLocation(nozzle)
                                   .add(new Location(part.getHeight()
                                                         .getUnits(),
                                           0.0, 0.0, part.getHeight()
@@ -141,7 +141,7 @@ public class ReferenceBottomVision implements PartAlignment {
             throws Exception {
         // Create a location that is the Camera's X, Y, it's Z + part height
         // and a rotation of 0, unless preRotate is enabled
-        Location startLocation = camera.getLocation();
+        Location startLocation = camera.getLocation(nozzle);
         Length partHeight = part.getHeight();
         Location partHeightLocation =
                 new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0);

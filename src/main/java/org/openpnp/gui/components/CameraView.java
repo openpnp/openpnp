@@ -1117,7 +1117,7 @@ public class CameraView extends JComponent implements CameraListener {
         // and with the values of the offsets.
         Location offsets = camera.getUnitsPerPixel().derive(offsetX, offsetY, 0.0, 0.0);
         // Add the offsets to the Camera's position.
-        Location location = camera.getLocation().add(offsets);
+        Location location = camera.getLocation(MainFrame.get().getMachineControls().getSelectedNozzle()).add(offsets);
         CameraViewActionEvent action =
                 new CameraViewActionEvent(CameraView.this, e.getX(), e.getY(),
                         e.getX() * scaledUnitsPerPixelX, e.getY() * scaledUnitsPerPixelY, location);
@@ -1149,16 +1149,18 @@ public class CameraView extends JComponent implements CameraListener {
         // Create a location in the Camera's units per pixel's units
         // and with the values of the offsets.
         Location offsets = camera.getUnitsPerPixel().derive(offsetX, offsetY, 0.0, 0.0);
-        // Add the offsets to the Camera's position.
-        Location location = camera.getLocation().add(offsets);
         // And move there.
         UiUtils.submitUiMachineTask(() -> {
             if (camera.getHead() == null) {
                 // move the nozzle to the camera
                 Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                // Add the offsets to the Camera's nozzle calibrated position.
+                Location location = camera.getLocation(nozzle).add(offsets);
                 MovableUtils.moveToLocationAtSafeZ(nozzle, location);
             }
             else {
+                // Add the offsets to the Camera's position.
+                Location location = camera.getLocation().add(offsets);
                 // move the camera to the location
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
             }
