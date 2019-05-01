@@ -7,6 +7,7 @@ import javax.swing.Action;
 import javax.swing.Icon;
 
 import org.apache.commons.io.IOUtils;
+import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -112,7 +113,7 @@ public class ReferenceBottomVision implements PartAlignment {
                 
         Location nozzleLocation = wantedLocation;
         MovableUtils.moveToLocationAtSafeZ(nozzle, nozzleLocation);
-        final Location offsetZero = new Location(maxLinearOffset.getUnits());
+        final Location center = new Location(maxLinearOffset.getUnits());
 
         try (CvPipeline pipeline = partSettings.getPipeline()) {
 
@@ -134,7 +135,7 @@ public class ReferenceBottomVision implements PartAlignment {
                 // is which. We can assume that the part is never picked more than +/-45º rotated.
                 // So we change the range wrapping-around to -45° .. +45°. See angleNorm():
                 double angleOffset = angleNorm(VisionUtils.getPixelAngle(camera, rect.angle) - wantedAngle);
-
+                
                 // When we rotate the nozzle later to compensate for the angle offset, the X, Y offsets 
                 // will change too, as the off-center part rotates around the nozzle axis.
                 // So we need to compensate for that.
@@ -147,16 +148,29 @@ public class ReferenceBottomVision implements PartAlignment {
                     break;
                 }
                 
-                // We not only check the center offset but also the corner offset brought about by the angular offset. 
-                Location corner = VisionUtils.getPixelCenterOffsets(camera, rect.size.width/2, rect.size.height/2);
-                if (offsetZero.getLinearDistanceTo(offsets) <= getMaxLinearOffset().getValue()
-                        && offsetZero.getLinearDistanceTo(corner)*Math.sin(Math.toRadians(Math.abs(angleOffset))) <=  getMaxLinearOffset().getValue()
-                        && Math.abs(angleOffset) <= getMaxAngularOffset()) {
+                // We not only check the center offset but also the corner offset brought about by the angular offset
+                // so a large part will react more sensitively to angular offsets.
+                Point corners[] = new Point[4];
+                rect.points(corners);
+                Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y)
+                        .convertToUnits(maxLinearOffset.getUnits());
+                Location cornerWithAngularOffset = corner.rotateXy(angleOffset);
+                if (center.getLinearDistanceTo(offsets) > getMaxLinearOffset().getValue()) {
+                    Logger.debug("Offsets too large {} : center offset {} > {}", 
+                            offsets, center.getLinearDistanceTo(offsets), getMaxLinearOffset().getValue()); 
+                } 
+                else if (corner.getLinearDistanceTo(cornerWithAngularOffset) >  getMaxLinearOffset().getValue()) {
+                    Logger.debug("Offsets too large {} : corner offset {} > {}", 
+                            offsets, corner.getLinearDistanceTo(cornerWithAngularOffset), getMaxLinearOffset().getValue()); 
+                }
+                else if (Math.abs(angleOffset) > getMaxAngularOffset()) {
+                    Logger.debug("Offsets too large {} : angle offset {} > {}", 
+                            offsets, Math.abs(angleOffset), getMaxAngularOffset());
+                }
+                else {
                     // We have a good enough fix - go on with that.
                     break;
                 }
-
-                Logger.debug("Offsets too large {}", offsets);
 
                 // Not a good enough fix - try again with corrected position.
                 nozzle.moveTo(nozzleLocation);
