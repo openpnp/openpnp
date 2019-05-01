@@ -61,6 +61,7 @@ import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Helpers;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
@@ -75,6 +76,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.util.HslColor;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
@@ -99,17 +101,15 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     private final BlindsFeeder feeder;
 
     private JPanel panelPart;
+    private JTextField textFieldPartZ;
 
     private JComboBox comboBoxPart;
     private JTextField textFieldFiducial1X;
     private JTextField textFieldFiducial1Y;
-    private JTextField textFieldFiducial1Z;
     private JTextField textFieldFiducial2X;
     private JTextField textFieldFiducial2Y;
-    private JTextField textFieldFiducial2Z;
     private JTextField textFieldFiducial3X;
     private JTextField textFieldFiducial3Y;
-    private JTextField textFieldFiducial3Z;
     private JLabel lblFeederNo;
     private JTextField textFieldFeederNo;
     private JLabel lblFeedersTotal;
@@ -154,12 +154,26 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                 "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null,
                 new Color(0, 0, 0)));
         contentPanel.add(panelPart);
-        panelPart.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelPart.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
         try {
         }
         catch (Throwable t) {
@@ -173,7 +187,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         comboBoxPart = new JComboBox();
         comboBoxPart.setModel(new PartsComboBoxModel());
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
-        panelPart.add(comboBoxPart, "4, 2, left, default");
+        panelPart.add(comboBoxPart, "4, 2, fill, default");
 
         lblRotationInTape = new JLabel("Rotation In Tape");
         panelPart.add(lblRotationInTape, "2, 4, left, default");
@@ -182,13 +196,24 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelPart.add(textFieldLocationRotation, "4, 4, fill, default");
         textFieldLocationRotation.setColumns(4);
 
+        lblPartTopZ = new JLabel("Part Z");
+        lblPartTopZ.setToolTipText("Part pickup Z");
+        panelPart.add(lblPartTopZ, "6, 4, right, default");
+
+        textFieldPartZ = new JTextField();
+        panelPart.add(textFieldPartZ, "8, 4");
+        textFieldPartZ.setColumns(8);
+
+        btnCaptureToolZ = new JButton(captureToolCoordinatesAction);
+        btnCaptureToolZ.setHideActionText(true);
+        panelPart.add(btnCaptureToolZ, "10, 4");
+
         lblRetryCount = new JLabel("Retry Count");
         panelPart.add(lblRetryCount, "2, 6, right, default");
 
         retryCountTf = new JTextField();
-        retryCountTf.setText("3");
         panelPart.add(retryCountTf, "4, 6, fill, default");
-        retryCountTf.setColumns(3);
+        retryCountTf.setColumns(4);
 
         panelTapeSettings = new JPanel();
         contentPanel.add(panelTapeSettings);
@@ -349,9 +374,6 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         JLabel lblY = new JLabel("Y");
         panelLocations.add(lblY, "6, 2");
 
-        JLabel lblZ_1 = new JLabel("Z");
-        panelLocations.add(lblZ_1, "8, 2");
-
         JLabel lblFiducial1Location = new JLabel("Fiducial 1");
         lblFiducial1Location.setToolTipText(
                 "The location of the first diamond shaped fiducial (marked by a square besides it).");
@@ -365,13 +387,10 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelLocations.add(textFieldFiducial1Y, "6, 4");
         textFieldFiducial1Y.setColumns(8);
 
-        textFieldFiducial1Z = new JTextField();
-        panelLocations.add(textFieldFiducial1Z, "8, 4");
-        textFieldFiducial1Z.setColumns(8);
 
         locationButtonsPanelFiducial1 = new LocationButtonsPanel(textFieldFiducial1X,
-                textFieldFiducial1Y, textFieldFiducial1Z, null);
-        panelLocations.add(locationButtonsPanelFiducial1, "10, 4");
+                textFieldFiducial1Y, null, null);
+        panelLocations.add(locationButtonsPanelFiducial1, "8, 4");
 
         JLabel lblFiducial2Location = new JLabel("Fiducial 2");
         lblFiducial2Location.setToolTipText(
@@ -386,13 +405,10 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelLocations.add(textFieldFiducial2Y, "6, 6");
         textFieldFiducial2Y.setColumns(8);
 
-        textFieldFiducial2Z = new JTextField();
-        panelLocations.add(textFieldFiducial2Z, "8, 6");
-        textFieldFiducial2Z.setColumns(8);
 
-        locationButtonsPanelFiducial2 = new LocationButtonsPanel(textFieldFiducial2X, textFieldFiducial2Y,
-                textFieldFiducial2Z, null);
-        panelLocations.add(locationButtonsPanelFiducial2, "10, 6");
+        locationButtonsPanelFiducial2 = new LocationButtonsPanel(textFieldFiducial2X, 
+                textFieldFiducial2Y, null, null);
+        panelLocations.add(locationButtonsPanelFiducial2, "8, 6");
 
         lblFiducial3Location = new JLabel("Fiducial 3");
         lblFiducial3Location.setToolTipText("The location of the third diamond shaped fiducial counter-clockwise from the first.");
@@ -406,20 +422,25 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         textFieldFiducial3Y.setColumns(8);
         panelLocations.add(textFieldFiducial3Y, "6, 8");
 
-        textFieldFiducial3Z = new JTextField();
-        textFieldFiducial3Z.setColumns(8);
-        panelLocations.add(textFieldFiducial3Z, "8, 8");
-
-        locationButtonsPanelFiducial3 = new LocationButtonsPanel((JTextField) null, (JTextField) null, (JTextField) null, (JTextField) null);
-        panelLocations.add(locationButtonsPanelFiducial3, "10, 8");
+        locationButtonsPanelFiducial3 = new LocationButtonsPanel(textFieldFiducial3X, 
+                textFieldFiducial3Y, null, null);
+        panelLocations.add(locationButtonsPanelFiducial3, "8, 8");
 
         lblNormalize = new JLabel("Normalize");
-        lblNormalize.setToolTipText("Normalize the coordinate system to the theoretically correct values according to the 3D printed modell and the EIA standards (whole millimeter square grid).");
+        lblNormalize.setToolTipText("Normalize the coordinate system to the theoretically correct values according to the 3D printed model and the EIA standards (whole millimeter square grid).");
         panelLocations.add(lblNormalize, "2, 10, right, default");
 
         chckbxNormalize = new JCheckBox("");
         chckbxNormalize.setToolTipText("");
         panelLocations.add(chckbxNormalize, "4, 10");
+
+        btnCalibrateFiducials = new JButton("Calibrate Fiducials");
+        btnCalibrateFiducials.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                calibrateFiducials();
+            }
+        });
+        panelLocations.add(btnCalibrateFiducials, "8, 10");
 
         lblFeederNo = new JLabel("Feeder No.");
         lblFeederNo.setToolTipText("Feeder lane number inside the same holder.");
@@ -450,6 +471,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         MutableLocationProxy location = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
         addWrappedBinding(location, "rotation", textFieldLocationRotation, "text", doubleConverter);
+        addWrappedBinding(location, "z", textFieldPartZ, "text", lengthConverter);
 
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
         addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
@@ -465,19 +487,16 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         bind(UpdateStrategy.READ_WRITE, feeder, "fiducial1Location", fiducial1Location, "location");
         addWrappedBinding(fiducial1Location, "lengthX", textFieldFiducial1X, "text", lengthConverter);
         addWrappedBinding(fiducial1Location, "lengthY", textFieldFiducial1Y, "text", lengthConverter);
-        addWrappedBinding(fiducial1Location, "lengthZ", textFieldFiducial1Z, "text", lengthConverter);
 
         MutableLocationProxy fiducial2Location = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "fiducial2Location", fiducial2Location, "location");
         addWrappedBinding(fiducial2Location, "lengthX", textFieldFiducial2X, "text", lengthConverter);
         addWrappedBinding(fiducial2Location, "lengthY", textFieldFiducial2Y, "text", lengthConverter);
-        addWrappedBinding(fiducial2Location, "lengthZ", textFieldFiducial2Z, "text", lengthConverter);
 
         MutableLocationProxy fiducial3Location = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "fiducial3Location", fiducial3Location, "location");
         addWrappedBinding(fiducial3Location, "lengthX", textFieldFiducial3X, "text", lengthConverter);
         addWrappedBinding(fiducial3Location, "lengthY", textFieldFiducial3Y, "text", lengthConverter);
-        addWrappedBinding(fiducial3Location, "lengthZ", textFieldFiducial3Z, "text", lengthConverter);
 
         addWrappedBinding(feeder, "visionEnabled", chckbxUseVision, "selected");
         addWrappedBinding(feeder, "normalize", chckbxNormalize, "selected");
@@ -486,6 +505,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         addWrappedBinding(feeder, "feedersTotal", textFieldFeedersTotal, "text", intConverter);
 
         ComponentDecorators.decorateWithAutoSelect(textFieldLocationRotation);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPartZ);
         ComponentDecorators.decorateWithAutoSelect(retryCountTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldTapeLength);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeederExtent);
@@ -495,14 +515,32 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial1X);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial1Y);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial1Z);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial2X);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial2Y);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial2Z);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial3X);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial3Y);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial3Z);
     }
+
+    public HeadMountable getTool() throws Exception {
+        return MainFrame.get().getMachineControls().getSelectedNozzle();
+    }
+
+    private Action captureToolCoordinatesAction =
+            new AbstractAction("Get Tool Z", Icons.captureTool) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Capture the Z height that the tool is at.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.messageBoxOnException(() -> {
+                Location l = getTool().getLocation();
+                Helpers.copyLocationIntoTextFields(l, null, null, textFieldPartZ, null);
+            });
+        }
+    };
+
 
     private Action autoSetup = new AbstractAction("Auto Setup") {
         @Override
@@ -669,14 +707,18 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     };
     private JLabel lblFeederExtent;
     private JTextField textFieldFeederExtent;
+    private JLabel lblPartTopZ;
+    private JTextField txtPartZ;
+    private JButton btnCaptureToolZ;
+    private JButton btnCalibrateFiducials;
 
     private List<Location> findBlindsAndCenterline(Camera camera) throws Exception {
         // Process the pipeline to clean up the image and detect the blinds
-        try (CvPipeline pipeline = getCvPipeline(camera, true)) {
+        try (CvPipeline pipeline = feeder.getCvPipeline(camera, true)) {
             pipeline.process();
 
             // Grab the results
-            FindShapes findShapesResults = new FindShapes(camera, pipeline).invoke();
+            BlindsFeeder.FindFeatures findShapesResults = feeder.new FindFeatures(camera, pipeline).invoke();
             List<RotatedRect> blinds = findShapesResults.getBlinds();
             if (blinds.isEmpty()) {
                 throw new Exception("Feeder " + getName() + ": No blinds found.");
@@ -703,12 +745,12 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         // BufferedCameraImage is used as we want to run the pipeline on an existing image
         BufferedImageCamera bufferedImageCamera = new BufferedImageCamera(camera, image);
 
-        try (CvPipeline pipeline = getCvPipeline(bufferedImageCamera, true)) {
+        try (CvPipeline pipeline = feeder.getCvPipeline(bufferedImageCamera, true)) {
             // Process the pipeline to clean up the image and detect the blinds
             pipeline.process();
             // Grab the results
             Mat resultMat = pipeline.getWorkingImage().clone();
-            FindShapes findShapesResults = new FindShapes(camera, pipeline).invoke();
+            BlindsFeeder.FindFeatures findShapesResults = feeder.new FindFeatures(camera, pipeline).invoke();
 
             drawRotatedRects(resultMat, findShapesResults.getBlinds(), Color.blue);
             drawRotatedRects(resultMat, findShapesResults.getFiducials(), Color.white);
@@ -719,212 +761,13 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         }
     }
 
-    private class FindShapes {
-        private Camera camera;
-        private CvPipeline pipeline;
 
-        private List<RotatedRect> blinds;
-        private List<RotatedRect> fiducials;
-        private List<Line> lines;
-
-        public FindShapes(Camera camera, CvPipeline pipeline) {
-            this.camera = camera;
-            this.pipeline = pipeline;
-        }
-
-        public List<RotatedRect> getBlinds() {
-            return blinds;
-        }
-        public List<RotatedRect> getFiducials() {
-            return fiducials;
-        }
-        public List<Line> getLines() {
-            return lines;
-        }
-
-        private double angleNorm(double angle) {
-            while (angle > 45) {
-                angle -= 90;
-            }
-            while (angle < -45) {
-                angle += 90;
-            }
-            return angle;
-        }
-
-        public FindShapes invoke() throws Exception {
-            List<RotatedRect> results = null;
-            try {
-                // Grab the results
-                results = (List<RotatedRect>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
-                if (results == null /*???|| results.isEmpty()*/) {
-                    throw new Exception("Feeder " + feeder.getName() + ": No blinds found.");
-                }
-                // in accordance with EIA-481 etc. we use millimeters.
-                Location mmScale = camera.getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters);
-                // TODO: configurable?
-                final double fidMin = 1.8;
-                final double fidMax = 2.2;
-                final double fidAspect = 1.2; 
-                // TODO: configurable?
-                double blindMin = feeder.getPocketPitch().convertToUnits(LengthUnit.Millimeters).getValue()*0.5;
-                double blindMax = feeder.getPocketSize().convertToUnits(LengthUnit.Millimeters).getValue();
-                double blindAspect = 1.2*blindMax/blindMin;
-                if (blindMax == 0) {
-                    blindMax = 22;
-                    blindAspect = 2;
-                }
-                if (blindMin == 0) {
-                    blindMin = 0.5;
-                    blindAspect = 3;
-                }
-                double sizeTolerance = 0.5/mmScale.getX();
-                double angleTolerance = 20;
-                double cosinusTolerance = Math.cos(angleTolerance*Math.PI/180);
-
-                // Convert camera center.
-                Location cameraLocation = feeder.transformMachineToFeederLocation(camera.getLocation());
-                // Try to make sense of it.
-                boolean angleTolerant = 
-                        BlindsFeeder.nullLocation.equals(feeder.getFiducial1Location())
-                        ||BlindsFeeder.nullLocation.equals(feeder.getFiducial2Location());
-                boolean positionTolerant = angleTolerant || feeder.getPocketCenterline().getValue() == 0;
-                blinds = new ArrayList<>();
-                fiducials = new ArrayList<>();
-                List<Point> ransacPoints = new ArrayList<>();
-                for (RotatedRect result : results) {
-                    Point points[] = new Point[4];
-                    result.points(points);
-                    boolean isAtMargin = false;
-                    for (int i = 0; i < 4; i++) {
-                        // Filter out rects sticking to the edges.
-                        if (points[i].x <= 2 || points[i].x >= camera.getWidth() - 2
-                                || points[i].y <= 2 || points[i].y >= camera.getHeight() - 2) {
-                            isAtMargin = true;
-                        }
-                        // Next, please.
-                        i++;
-                    }
-                    if (! isAtMargin) {
-                        // Convert shape center.
-                        Location location = feeder.transformMachineToFeederLocation(VisionUtils.getPixelLocation(camera, result.center.x, result.center.y));
-                        double angle = feeder.transformPixelToFeederAngle(result.angle);
-                        Location mmSize = mmScale.multiply(result.size.width, result.size.height, 0, 0);
-                        if (positionTolerant || Math.abs(cameraLocation.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(location)) < 5) {
-                            if (angleTolerant || Math.abs(angleNorm(angle - 45)) < angleTolerance) {
-                                if (mmSize.getX() > fidMin && mmSize.getX() < fidMax && mmSize.getY() > fidMin && mmSize.getY() < fidMax
-                                        && mmSize.getX()/mmSize.getY() < fidAspect 
-                                        && mmSize.getY()/mmSize.getX() < fidAspect) {
-                                    fiducials.add(result);
-                                }
-                            }
-                            if (angleTolerant || Math.abs(angleNorm(angle - 0)) < angleTolerance) {
-                                if (mmSize.getX() > blindMin && mmSize.getX() < blindMax && mmSize.getY() > blindMin && mmSize.getY() < blindMax
-                                        && mmSize.getX()/mmSize.getY() < blindAspect 
-                                        && mmSize.getY()/mmSize.getX() < blindAspect) {
-                                    // Fits the size requirements.
-                                    blinds.add(result);
-                                    // collect for ransac too
-                                    for (int i = 0; i < results.size(); i++) {
-                                        ransacPoints.add(result.center.clone());
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                // Get rid of outliers.
-                List<RotatedRect> bestList = null;
-                int bestSize = 0;
-                Line bestLine = null;
-                // For each two blinds speculate about a pitch and line.
-                for (int i = 0; i < blinds.size(); i++) {
-                    RotatedRect blind1 = blinds.get(i);
-                    Location location1 = feeder.transformMachineToFeederLocation(VisionUtils.getPixelLocation(camera, blind1.center.x, blind1.center.y))
-                            .convertToUnits(LengthUnit.Millimeters);
-                    double angle1 = feeder.transformPixelToFeederAngle(blind1.angle);
-                    for (int j = i+1; j < blinds.size(); j++) {
-                        RotatedRect blind2 = blinds.get(j);
-                        Location location2 = feeder.transformMachineToFeederLocation(VisionUtils.getPixelLocation(camera, blind2.center.x, blind2.center.y))
-                                .convertToUnits(LengthUnit.Millimeters);
-                        double angle2 = feeder.transformPixelToFeederAngle(blind2.angle);
-                        if (Math.abs(angleNorm(angle1 - angle2)) < angleTolerance
-                                && Math.abs(blind1.size.width - blind2.size.width) < sizeTolerance
-                                && Math.abs(blind1.size.height - blind2.size.height) < sizeTolerance) {
-                            // Same angle and dimension.
-                            double distance2 = location2.getLinearDistanceTo(location1);
-                            int pitch = (int) Math.round(distance2/2)*2;
-                            if (pitch == 2 || (pitch % 4) == 0) {
-                                // Valid pitch.
-                                //double presetPitch = feeder.getPocketPitch().convertToUnits(LengthUnit.Millimeters).getValue();
-                                Location axis = location2.subtract(location1).multiply(1/distance2, 1/distance2, 0, 0);
-                                List<RotatedRect> candList = new ArrayList<>();
-                                candList.add(blind1);
-                                candList.add(blind2);
-                                Line line = new Line(blind1.center, blind2.center);
-                                double minCos = 0;
-                                double maxCos = 1;
-                                for (int k = 0; k < blinds.size(); k++) {
-                                    if (k != i && k != j) {
-                                        RotatedRect blind3 = blinds.get(k);
-                                        Location location3 = feeder.transformMachineToFeederLocation(VisionUtils.getPixelLocation(camera, blind3.center.x, blind3.center.y))
-                                                .convertToUnits(LengthUnit.Millimeters);
-                                        double angle3 = feeder.transformPixelToFeederAngle(blind3.angle);
-                                        if (Math.abs(angleNorm(angle1 - angle3)) < angleTolerance
-                                                && Math.abs(blind1.size.width - blind3.size.width) < sizeTolerance
-                                                && Math.abs(blind1.size.height - blind3.size.height) < sizeTolerance) {
-                                            // Same angle and dimension.
-                                            double distance3 = location3.getLinearDistanceTo(location1);
-                                            double pitchFactor = Math.round(distance3/pitch);
-                                            double pitchErr = Math.abs(pitch*pitchFactor - distance3); 
-                                            if (pitchErr < 1) {
-                                                // Matches pitch
-                                                Location vector = location3.subtract(location1);
-                                                double cosinus = (axis.getX()*vector.getX() + axis.getY()*vector.getY())/distance3;
-                                                if (Math.abs(cosinus) > cosinusTolerance) {
-                                                    // Right, we got one
-                                                    candList.add(blind3);
-                                                    if (cosinus < minCos) {
-                                                        line.a = blind3.center;
-                                                        minCos = cosinus;
-                                                    }
-                                                    else if (cosinus > maxCos) {
-                                                        line.b = blind3.center;
-                                                        maxCos = cosinus;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                if (bestList == null || candList.size() > bestSize) {
-                                    bestList = candList;
-                                    bestSize = candList.size();
-                                    bestLine = line;
-                                }
-                            }
-                        }
-                    }
-                }
-                lines = new ArrayList<>();
-                if (bestLine != null && bestSize >= 3) {
-                    lines.add(bestLine);
-                }
-            }
-            catch (ClassCastException e) {
-                throw new Exception("Unrecognized result type (should be RotatedRect): " + results);
-            }
-
-            return this;
-        }
-    }
-
-    private void drawRotatedRects(Mat mat, List<RotatedRect> shapes, Color color) {
-        if (shapes == null || shapes.isEmpty()) {
+    private void drawRotatedRects(Mat mat, List<RotatedRect> features, Color color) {
+        if (features == null || features.isEmpty()) {
             return;
         }
         Color centerColor = new HslColor(color).getComplementary();
-        for (RotatedRect rect : shapes) {
+        for (RotatedRect rect : features) {
             double x = rect.center.x;
             double y = rect.center.y;
             FluentCv.drawRotatedRect(mat, rect, color, 3);
@@ -1039,10 +882,15 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         }
     }
      */
+    private void calibrateFiducials() {
+        UiUtils.submitUiMachineTask(() -> {
+            feeder.calibrateFeederLocations();
+        });
+    }
 
     private void editPipeline() throws Exception {
         Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-        CvPipeline pipeline = getCvPipeline(camera, false);
+        CvPipeline pipeline = feeder.getCvPipeline(camera, false);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), feeder.getName() + " Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
@@ -1055,35 +903,5 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         feeder.resetPipeline();
     }
 
-    private CvPipeline getCvPipeline(Camera camera, boolean clone) {
-        try {
-            CvPipeline pipeline = feeder.getPipeline();;
-            if (clone) {
-                pipeline = pipeline.clone();
-            }
-            pipeline.setProperty("camera", camera);
-            pipeline.setProperty("feeder", feeder);
-            /* this won't work, properties must be hardwired in the stages
-             * 
-             * // Provide pixel min/max area to pipeline.
-            // We restrict this to 24mm tape carrier having a 20.1mm max pocket size.
-            // See ANSI/EIA-48 1 -C p. 11.
-            double mm = VisionUtils.toPixels(new Length(1, LengthUnit.Millimeters), camera);
-            Integer minArea = (int) (0.8*mm*1*mm); // 2mm pitch punched paper carrier tape (0402). 
-            Integer maxArea = (int) (21*mm*21*mm); // 24mm tape carrier.
-            // feeder specific
-            double nominalArea = VisionUtils.toPixels(feeder.getPocketPitch(), camera)
-             *VisionUtils.toPixels(feeder.getPocketSize(), camera);
-            Integer minArea = (int) (0.75*nominalArea); 
-            Integer maxArea = (int) (1.25*nominalArea); 
-            pipeline.setProperty("FilterContours.minArea", minArea);
-            pipeline.setProperty("FilterContours.maxArea", maxArea);
-             */
-            return pipeline;
-        }
-        catch (CloneNotSupportedException e) {
-            throw new Error(e);
-        }
-    }
 }
 

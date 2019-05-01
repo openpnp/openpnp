@@ -34,9 +34,12 @@ import java.util.List;
 import javax.swing.Action;
 
 import org.apache.commons.io.IOUtils;
+import org.opencv.core.RotatedRect;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
+import org.openpnp.machine.reference.feeder.BlindsFeeder.FindFeatures;
 import org.openpnp.machine.reference.feeder.wizards.BlindsFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -45,14 +48,19 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
+import org.openpnp.vision.Ransac.Line;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
@@ -112,14 +120,80 @@ public class BlindsFeeder extends ReferenceFeeder {
     @Attribute(required = false)
     private int feedersTotal = 0;
 
+    // These internal setting are not on the GUI but can be changed in the XML.
+    @Attribute(required = false)
+    private int fidLocMaxPasses = 3;
+
+    @Attribute(required = false)
+    private double fidLocToleranceMillimeter = 0.5;
+
+    private boolean calibrating = false;
+    private boolean calibrated = false;
+
+    private void checkHomedState(Machine machine) {
+        if (!machine.isHomed()) {
+            this.setCalibrated(false);
+        }
+    }
+
+    public BlindsFeeder() {
+        // Listen to the machine become unhomed. Invalidate feeder calibration in this case. 
+        // Note that home()  first switches the machine isHomed() state off, then on again, 
+        // so we als catch re-homing. 
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationComplete(Configuration configuration) throws Exception {
+                Configuration.get().getMachine().addListener(new MachineListener.Adapter() {
+
+                    @Override
+                    public void machineHeadActivity(Machine machine, Head head) {
+                        checkHomedState(machine);
+                    }
+
+                    @Override
+                    public void machineEnabled(Machine machine) {
+                        checkHomedState(machine);
+                    }
+                });
+            }
+        });
+    }
+
     @Override
     public Location getPickLocation() throws Exception {
-        int feedCount = this.feedCount;
 
-        Location l = new Location(LengthUnit.Millimeters,
-                feedCount*this.pocketPitch.getValue()*feedCount, this.pocketCenterline.getValue(), 0, 0);
+        // Make sure the feeder locations are calibrated, if vision is enabled. 
+        if (isVisionEnabled()) {
+            if (!isCalibrated()) {
+                calibrateFeederLocations();
+            }
+        }
 
-        return l;
+        // Calculate the next pick location in local feeder coordinates. 
+        Length feederX = this.pocketPitch.multiply(this.feedCount).convertToUnits(location.getUnits());
+        Length feederY = this.pocketCenterline.convertToUnits(location.getUnits());
+
+        /* from the 3D print OpenSCAD code:
+         * 
+         *  TODO:
+         *  
+            tape_net=tape_length-sprocket_grid;//2*min_width-sprocket_diameter0;
+            sprocket_count=floor(tape_net/sprocket_grid);
+                 //grid_count*grid/sprocket_grid;
+            pocket_count=floor(tape_net/pocket_grid)
+                //grid_count*grid/pocket_grid
+                + (pocket_grid < sprocket_grid ? 1 : 0); // 2mm grid has one pocket more
+            sprocket_d = sprocket_grid*0.5+
+                tape_align*(tape_net - (sprocket_count)*sprocket_grid);
+            pocket_d = sprocket_d 
+                + (pocket_grid < sprocket_grid ? -pocket_grid*0.5 : 0)
+                + (((pocket_grid/sprocket_grid) % 2 == 0) ? sprocket_grid*0.5 : 0); // even numbered sprockets per part need shift
+         */
+
+        Location feederLocation = new Location(location.getUnits(), feederX.getValue(), feederY.getValue(), 
+                location.getZ(), location.getRotation());
+        Location machineLocation = transformFeederToMachineLocation(feederLocation);
+        return machineLocation;
     }
 
 
@@ -127,61 +201,295 @@ public class BlindsFeeder extends ReferenceFeeder {
         setFeedCount(getFeedCount() + 1);
     }
 
-    /*private Location findClosestHole(Camera camera) throws Exception {
-        try (CvPipeline pipeline = getPipeline()) {
-            Integer pxMinDistance = (int) VisionUtils.toPixels(getHolePitchMin(), camera);
-            Integer pxMinDiameter = (int) VisionUtils.toPixels(getHoleDiameterMin(), camera);
-            Integer pxMaxDiameter = (int) VisionUtils.toPixels(getHoleDiameterMax(), camera);
 
-            // Process the pipeline to clean up the image and detect the tape holes
-            pipeline.setProperty("camera", camera);
-            pipeline.setProperty("feeder", this);
-            pipeline.setProperty("DetectFixedCirclesHough.minDistance", pxMinDistance);
-            pipeline.setProperty("DetectFixedCirclesHough.minDiameter", pxMinDiameter);
-            pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
-            pipeline.process();
+    public class FindFeatures {
+        private Camera camera;
+        private CvPipeline pipeline;
 
-            try {
-                MainFrame.get().getCameraViews().getCameraView(camera)
-                        .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
+        private List<RotatedRect> blinds;
+        private List<RotatedRect> fiducials;
+        private List<Line> lines;
+
+        public FindFeatures(Camera camera, CvPipeline pipeline) {
+            this.camera = camera;
+            this.pipeline = pipeline;
+        }
+
+        public List<RotatedRect> getBlinds() {
+            return blinds;
+        }
+        public List<RotatedRect> getFiducials() {
+            return fiducials;
+        }
+        public List<Line> getLines() {
+            return lines;
+        }
+
+        private double angleNorm(double angle) {
+            while (angle > 45) {
+                angle -= 90;
             }
-            catch (Exception e) {
-                // if we aren't running in the UI this will fail, and that's okay
+            while (angle < -45) {
+                angle += 90;
             }
+            return angle;
+        }
 
-            // Grab the results
-            Object result = null;
-            List<CvStage.Result.Circle> results = null;
+        public FindFeatures invoke() throws Exception {
+            List<RotatedRect> results = null;
             try {
-                result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;            
-                results = (List<CvStage.Result.Circle>) result;
+                // Grab the results
+                results = (List<RotatedRect>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
+                if (results == null /*???|| results.isEmpty()*/) {
+                    throw new Exception("Feeder " + getName() + ": No features found.");
+                }
+                // in accordance with EIA-481 etc. we use millimeters.
+                Location mmScale = camera.getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters);
+                // TODO: configurable?
+                final double fidMin = 1.8;
+                final double fidMax = 2.2;
+                final double fidAspect = 1.2; 
+                // TODO: configurable?
+                double blindMin = getPocketPitch().convertToUnits(LengthUnit.Millimeters).getValue()*0.5;
+                double blindMax = getPocketSize().convertToUnits(LengthUnit.Millimeters).getValue();
+                double blindAspect = 1.2*blindMax/blindMin;
+                if (blindMax == 0) {
+                    blindMax = 22;
+                    blindAspect = 2;
+                }
+                if (blindMin == 0) {
+                    blindMin = 0.5;
+                    blindAspect = 3;
+                }
+                double sizeTolerance = 0.5/mmScale.getX();
+                double angleTolerance = 20;
+                double cosinusTolerance = Math.cos(angleTolerance*Math.PI/180);
+
+                // Convert camera center.
+                Location cameraLocation = transformMachineToFeederLocation(camera.getLocation());
+                // Try to make sense of it.
+                boolean angleTolerant = 
+                        BlindsFeeder.nullLocation.equals(getFiducial1Location())
+                        ||BlindsFeeder.nullLocation.equals(getFiducial2Location());
+                boolean positionTolerant = angleTolerant || getPocketCenterline().getValue() == 0;
+                blinds = new ArrayList<>();
+                fiducials = new ArrayList<>();
+                //List<Point> ransacPoints = new ArrayList<>();
+                for (RotatedRect result : results) {
+                    org.opencv.core.Point points[] = new org.opencv.core.Point[4];
+                    result.points(points);
+                    boolean isAtMargin = false;
+                    for (int i = 0; i < 4; i++) {
+                        // Filter out rects sticking to the edges.
+                        if (points[i].x <= 2 || points[i].x >= camera.getWidth() - 2
+                                || points[i].y <= 2 || points[i].y >= camera.getHeight() - 2) {
+                            isAtMargin = true;
+                        }
+                        // Next, please.
+                        i++;
+                    }
+                    if (! isAtMargin) {
+                        // Convert shape center.
+                        Location location = transformMachineToFeederLocation(VisionUtils.getPixelLocation(camera, result.center.x, result.center.y));
+                        double angle = transformPixelToFeederAngle(result.angle);
+                        Location mmSize = mmScale.multiply(result.size.width, result.size.height, 0, 0);
+                        if (positionTolerant || Math.abs(cameraLocation.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(location)) < 5) {
+                            if (angleTolerant || Math.abs(angleNorm(angle - 45)) < angleTolerance) {
+                                if (mmSize.getX() > fidMin && mmSize.getX() < fidMax && mmSize.getY() > fidMin && mmSize.getY() < fidMax
+                                        && mmSize.getX()/mmSize.getY() < fidAspect 
+                                        && mmSize.getY()/mmSize.getX() < fidAspect) {
+                                    fiducials.add(result);
+                                }
+                            }
+                            if (angleTolerant || Math.abs(angleNorm(angle - 0)) < angleTolerance) {
+                                if (mmSize.getX() > blindMin && mmSize.getX() < blindMax && mmSize.getY() > blindMin && mmSize.getY() < blindMax
+                                        && mmSize.getX()/mmSize.getY() < blindAspect 
+                                        && mmSize.getY()/mmSize.getX() < blindAspect) {
+                                    // Fits the size requirements.
+                                    blinds.add(result);
+                                    /* // collect for ransac too
+                                    for (int i = 0; i < results.size(); i++) {
+                                        ransacPoints.add(result.center.clone());
+                                    }*/
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Sort fiducials by distance from camera center.
+                Collections.sort(fiducials, new Comparator<RotatedRect>() {
+                    @Override
+                    public int compare(RotatedRect o1, RotatedRect o2) {
+                        double d1 = VisionUtils.getPixelLocation(camera, o1.center.x, o1.center.y).getLinearDistanceTo(camera.getLocation());
+                        double d2 = VisionUtils.getPixelLocation(camera, o2.center.x, o2.center.y).getLinearDistanceTo(camera.getLocation());
+                        return Double.compare(d1, d2);
+                    }
+                });
+
+                // Get rid of outliers.
+                List<RotatedRect> bestList = null;
+                int bestSize = 0;
+                Line bestLine = null;
+                // For each two blinds speculate about a pitch and line.
+                for (int i = 0; i < blinds.size(); i++) {
+                    RotatedRect blind1 = blinds.get(i);
+                    Location location1 = transformMachineToFeederLocation(VisionUtils.getPixelLocation(camera, blind1.center.x, blind1.center.y))
+                            .convertToUnits(LengthUnit.Millimeters);
+                    double angle1 = transformPixelToFeederAngle(blind1.angle);
+                    for (int j = i+1; j < blinds.size(); j++) {
+                        RotatedRect blind2 = blinds.get(j);
+                        Location location2 = transformMachineToFeederLocation(VisionUtils.getPixelLocation(camera, blind2.center.x, blind2.center.y))
+                                .convertToUnits(LengthUnit.Millimeters);
+                        double angle2 = transformPixelToFeederAngle(blind2.angle);
+                        if (Math.abs(angleNorm(angle1 - angle2)) < angleTolerance
+                                && Math.abs(blind1.size.width - blind2.size.width) < sizeTolerance
+                                && Math.abs(blind1.size.height - blind2.size.height) < sizeTolerance) {
+                            // Same angle and dimension.
+                            double distance2 = location2.getLinearDistanceTo(location1);
+                            int pitch = (int) Math.round(distance2/2)*2;
+                            if (pitch == 2 || (pitch % 4) == 0) {
+                                // Valid pitch.
+                                //double presetPitch = feeder.getPocketPitch().convertToUnits(LengthUnit.Millimeters).getValue();
+                                Location axis = location2.subtract(location1).multiply(1/distance2, 1/distance2, 0, 0);
+                                List<RotatedRect> candList = new ArrayList<>();
+                                candList.add(blind1);
+                                candList.add(blind2);
+                                Line line = new Line(blind1.center, blind2.center);
+                                double minCos = 0;
+                                double maxCos = 1;
+                                for (int k = 0; k < blinds.size(); k++) {
+                                    if (k != i && k != j) {
+                                        RotatedRect blind3 = blinds.get(k);
+                                        Location location3 = transformMachineToFeederLocation(VisionUtils.getPixelLocation(camera, blind3.center.x, blind3.center.y))
+                                                .convertToUnits(LengthUnit.Millimeters);
+                                        double angle3 = transformPixelToFeederAngle(blind3.angle);
+                                        if (Math.abs(angleNorm(angle1 - angle3)) < angleTolerance
+                                                && Math.abs(blind1.size.width - blind3.size.width) < sizeTolerance
+                                                && Math.abs(blind1.size.height - blind3.size.height) < sizeTolerance) {
+                                            // Same angle and dimension.
+                                            double distance3 = location3.getLinearDistanceTo(location1);
+                                            double pitchFactor = Math.round(distance3/pitch);
+                                            double pitchErr = Math.abs(pitch*pitchFactor - distance3); 
+                                            if (pitchErr < 1) {
+                                                // Matches pitch
+                                                Location vector = location3.subtract(location1);
+                                                double cosinus = (axis.getX()*vector.getX() + axis.getY()*vector.getY())/distance3;
+                                                if (Math.abs(cosinus) > cosinusTolerance) {
+                                                    // Right, we got one
+                                                    candList.add(blind3);
+                                                    if (cosinus < minCos) {
+                                                        line.a = blind3.center;
+                                                        minCos = cosinus;
+                                                    }
+                                                    else if (cosinus > maxCos) {
+                                                        line.b = blind3.center;
+                                                        maxCos = cosinus;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                if (bestList == null || candList.size() > bestSize) {
+                                    bestList = candList;
+                                    bestSize = candList.size();
+                                    bestLine = line;
+                                }
+                            }
+                        }
+                    }
+                }
+                lines = new ArrayList<>();
+                if (bestLine != null && bestSize >= 3) {
+                    lines.add(bestLine);
+                }
             }
             catch (ClassCastException e) {
-                throw new Exception("Unrecognized result type (should be Circles): " + result);
-            }
-            if (results.isEmpty()) {
-                throw new Exception("Feeder " + getName() + ": No tape holes found.");
+                throw new Exception("Unrecognized result type (should be RotatedRect): " + results);
             }
 
-            // Find the closest result
-            results.sort((a, b) -> {
-                Double da = VisionUtils.getPixelLocation(camera, a.x, a.y)
-                        .getLinearDistanceTo(camera.getLocation());
-                Double db = VisionUtils.getPixelLocation(camera, b.x, b.y)
-                        .getLinearDistanceTo(camera.getLocation());
-                return da.compareTo(db);
-            });
-
-            CvStage.Result.Circle closestResult = results.get(0);
-            Location holeLocation = VisionUtils.getPixelLocation(camera, closestResult.x, closestResult.y);
-            return holeLocation;
+            return this;
         }
     }
-     */
 
+    private Location locateFiducial(Camera camera, Location location) throws Exception {
+        if (location.equals(nullLocation)) {
+            throw new Exception("Feeder " + getName() + ": Fiducial location not set.");
+        }
+
+        location = location.derive(camera.getLocation(), false, false, true, false);
+        try (CvPipeline pipeline = getCvPipeline(camera, true)) {
+
+            for (int i = 0; i < fidLocMaxPasses; i++) {
+                // Move to the location
+                MovableUtils.moveToLocationAtSafeZ(camera, location);
+
+                // Process vision
+                pipeline.process();
+
+                // Interpret the results
+                BlindsFeeder.FindFeatures findFeaturesResults = new FindFeatures(camera, pipeline).invoke();
+                List<RotatedRect> fiducials = findFeaturesResults.getFiducials();
+                if (fiducials.isEmpty()) {
+                    throw new Exception("Feeder " + getName() + ": Fiducial not found.");
+                }
+                // Convert location.
+                RotatedRect bestFiducial = fiducials.get(0);
+                Location bestFiducialLocation = VisionUtils.getPixelLocation(camera, bestFiducial.center.x, bestFiducial.center.y);
+                double mmDistance = bestFiducialLocation.getLinearLengthTo(location).convertToUnits(LengthUnit.Millimeters).getValue();
+
+                // update location
+                location = bestFiducialLocation;
+
+                if (mmDistance < fidLocToleranceMillimeter) {
+                    // Already a good enough fix - skip further passes
+                    break;
+                }
+            }
+            // Return the final result.
+            return location;
+        }
+    }
+
+    public void calibrateFeederLocations() throws Exception {
+        if (!isCalibrating()) {
+
+            if ( !Configuration.get().getMachine().isHomed() ) {
+                throw new Exception("Feeder " + getName() + ": Machine not yet homed.");
+            }
+
+            setCalibrating(true);
+            try {
+                Camera camera = Configuration.get()
+                        .getMachine()
+                        .getDefaultHead()
+                        .getDefaultCamera();
+                setFiducial1Location(locateFiducial(camera, getFiducial1Location()));
+                setFiducial2Location(locateFiducial(camera, getFiducial2Location()));
+                setFiducial3Location(locateFiducial(camera, getFiducial3Location()));
+                setCalibrated(true);
+            }
+            finally {
+                setCalibrating(false);
+            }
+        }
+    }
+
+
+    /**
+     * The Machine to Feeder transformation and inverse.
+     */
     private AffineTransform tx;
     private AffineTransform txInverse;
+    private double txRotation;
 
+    
+    public void invalidateFeederTransformation() {
+        tx = null;
+        txInverse = null;
+    }
+    
     /**
      * Generates the transformation from feeder local coordinate system to 
      * machine coordinates as defined by the fiducials.
@@ -202,6 +510,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             tx = new AffineTransform();
             // Translate for fiducial 1 (if set).
             tx.translate(origin.getX(), origin.getY());
+            txRotation = 0.;
             return false;
         }
         if (!normalize) {
@@ -239,15 +548,32 @@ public class BlindsFeeder extends ReferenceFeeder {
                 axisX.getX(), axisX.getY(), 
                 axisY.getX(), axisY.getY(), 
                 origin.getX(), origin.getY());
+        // Reconstruct the angle at which the feeder lays on the machine. When "normalize" is off, it is only
+        // an approximation valid for lines parallel to the tapes (as is most useful). It ignores shear in the
+        // transform.
+        txRotation = Math.toDegrees(Math.atan2(axisX.getX(), axisX.getY()));
         return true;
     }
 
     AffineTransform getFeederToMachineTransform() {
-        // Create the transformation from the fiducials. 
         if (tx == null) {
             updateFeederToMachineTransform();
         }
         return tx;
+    }
+
+    double getFeederToMachineRotation() {
+        if (tx == null) {
+            updateFeederToMachineTransform();
+        }
+        return txRotation;
+    }
+
+    double getMachineToFeederRotation() {
+        if (tx == null) {
+            updateFeederToMachineTransform();
+        }
+        return -txRotation;
     }
 
     private AffineTransform getMachineToFeederTransform() {
@@ -269,43 +595,30 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     public Location transformFeederToMachineLocation(Location feederLocation) {
         AffineTransform tx = getFeederToMachineTransform();
+        double rotation = getFeederToMachineRotation();
         feederLocation = feederLocation.convertToUnits(fiducial1Location.getUnits()); 
         Point2D.Double ptDst = new Point2D.Double();
         tx.transform(new Point2D.Double(feederLocation.getX(), feederLocation.getY()), ptDst);
-        return new Location(fiducial1Location.getUnits(), ptDst.getX(), ptDst.getY(), 0, 0);
+        return new Location(fiducial1Location.getUnits(), ptDst.getX(), ptDst.getY(), 
+                feederLocation.getZ(), feederLocation.getRotation()+rotation);
     }
 
     public Location transformMachineToFeederLocation(Location machineLocation) {
         AffineTransform tx = getMachineToFeederTransform();
+        double rotation = getMachineToFeederRotation();
         machineLocation = machineLocation.convertToUnits(fiducial1Location.getUnits()); 
         Point2D.Double ptDst = new Point2D.Double();
         tx.transform(new Point2D.Double(machineLocation.getX(), machineLocation.getY()), ptDst);
-        return new Location(fiducial1Location.getUnits(), ptDst.getX(), ptDst.getY(), 0, 0);
+        return new Location(fiducial1Location.getUnits(), ptDst.getX(), ptDst.getY(), 
+                machineLocation.getZ(), machineLocation.getRotation()+rotation);
     }
 
-    public double getFeederToMachineAngle() {
-        // Reconstruct the angle at which the feeder lays on the machine. When "normalize" is off, it is only
-        // an approximation valid for lines parallel to the tapes (as is most useful). It ignores shear in the
-        // transform.
-        AffineTransform tx = getFeederToMachineTransform();
-        Point2D.Double ptOrigin = new Point2D.Double();
-        Point2D.Double ptRadius = new Point2D.Double();
-        tx.transform(new Point2D.Double(0, 0), ptOrigin);
-        tx.transform(new Point2D.Double(1, 0), ptRadius);
-        double norm = ptRadius.distance(ptOrigin);
-        double angle = Math.acos((ptRadius.getX() - ptOrigin.getX())/norm);
-        if ((ptRadius.getY() - ptOrigin.getY()) < 0) {
-            angle += Math.PI;
-        }
-        // All angles in OpenPNP seem to be in degrees.
-        return angle*180/Math.PI;
-    }
     public double transformFeederToMachineAngle(double angle) {
-        return angle+getFeederToMachineAngle();
+        return angle+getFeederToMachineRotation();
     }
     public double transformMachineToFeederAngle(double angle) {
         // We don't need th reverse transform, a simple sign reversion will do.
-        return angle-getFeederToMachineAngle();
+        return angle+getMachineToFeederRotation();
     }
     public double transformPixelToFeederAngle(double angle) {
         // Pixel angles are left-handed, coming from the OpenCV coordinate system, where 
@@ -353,8 +666,8 @@ public class BlindsFeeder extends ReferenceFeeder {
         Collections.sort(list, new Comparator<BlindsFeeder>() {
             @Override
             public int compare(BlindsFeeder feeder1, BlindsFeeder feeder2)  {
-                return new Double(feeder1.getPocketCenterline().convertToUnits(LengthUnit.Millimeters).getValue())
-                        .compareTo(feeder2.getPocketCenterline().convertToUnits(LengthUnit.Millimeters).getValue());
+                return new Double(feeder1.getPocketCenterline().getValue())
+                        .compareTo(feeder2.getPocketCenterline().convertToUnits(feeder1.getPocketCenterline().getUnits()).getValue());
             }
         });
         return list;
@@ -376,6 +689,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             setTapeLength(feeder.tapeLength);
             setFeederExtent(feeder.feederExtent);
             setNormalize(feeder.normalize);
+            setCalibrated(feeder.calibrated);
             isUpdating = false;
         }
     }
@@ -437,22 +751,80 @@ public class BlindsFeeder extends ReferenceFeeder {
         pipeline = createDefaultPipeline();
     }
 
+    public CvPipeline getCvPipeline(Camera camera, boolean clone) {
+        try {
+            CvPipeline pipeline = getPipeline();;
+            if (clone) {
+                pipeline = pipeline.clone();
+            }
+            pipeline.setProperty("camera", camera);
+            pipeline.setProperty("feeder", this);
+            /* this won't work, properties must be hardwired in the stages
+             * 
+             * // Provide pixel min/max area to pipeline.
+            // We restrict this to 24mm tape carrier having a 20.1mm max pocket size.
+            // See ANSI/EIA-48 1 -C p. 11.
+            double mm = VisionUtils.toPixels(new Length(1, LengthUnit.Millimeters), camera);
+            Integer minArea = (int) (0.8*mm*1*mm); // 2mm pitch punched paper carrier tape (0402). 
+            Integer maxArea = (int) (21*mm*21*mm); // 24mm tape carrier.
+            // feeder specific
+            double nominalArea = VisionUtils.toPixels(feeder.getPocketPitch(), camera)
+             *VisionUtils.toPixels(feeder.getPocketSize(), camera);
+            Integer minArea = (int) (0.75*nominalArea); 
+            Integer maxArea = (int) (1.25*nominalArea); 
+            pipeline.setProperty("FilterContours.minArea", minArea);
+            pipeline.setProperty("FilterContours.maxArea", maxArea);
+             */
+            return pipeline;
+        }
+        catch (CloneNotSupportedException e) {
+            throw new Error(e);
+        }
+    }
+
+
+
+    public boolean isCalibrating() {
+        return calibrating;
+    }
+
+    private void setCalibrating(boolean calibrating) {
+        this.calibrating = calibrating;
+    }
+
+    public boolean isCalibrated() {
+        return calibrated;
+    }
+
+    private void setCalibrated(boolean calibrated) {
+        boolean oldValue = this.calibrated;
+        this.calibrated = calibrated;
+        if (oldValue != calibrated) {
+            this.updateConnectedFeedersFromThis();
+            firePropertyChange("calibrated", oldValue, calibrated);
+        }
+    }
+
     public Location getFiducial1Location() {
         return fiducial1Location;
     }
-
 
     public void setFiducial1Location(Location fiducial1Location) {
         Location oldValue = this.fiducial1Location;
         this.fiducial1Location = fiducial1Location;
         if (! oldValue.equals(fiducial1Location)) {
+            this.invalidateFeederTransformation();
             this.updateConnectedFeedersFromThis(oldValue, true);
             firePropertyChange("fiducial1Location", oldValue, fiducial1Location);
-            if ((! oldValue.equals(nullLocation))
-                    && (! fiducial1Location.equals(nullLocation))
+            if (oldValue.equals(nullLocation) 
+                    && fiducial2Location.equals(nullLocation)
+                    && fiducial3Location.equals(nullLocation)) {
+                // That's an initial fix. Try to clone from another feeder.
+                updateFromConnectedFeeder(fiducial1Location, true);
+            }
+            else if ((! oldValue.equals(nullLocation))
                     && oldValue.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(fiducial1Location) > 4) {
                 // Large change in fiducial 1 location - move fiducials 2 and 3 as well (i.e. move the whole feeder).
-                // NOTE the setters will in turn notify and update all the other feeders in the same holder.
                 if (! fiducial2Location.equals(nullLocation)) {
                     setFiducial2Location(fiducial2Location.add(fiducial1Location.subtract(oldValue)));
                 }
@@ -473,6 +845,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         Location oldValue = this.fiducial2Location;
         this.fiducial2Location = fiducial2Location;
         if (! oldValue.equals(fiducial2Location)) {
+            this.invalidateFeederTransformation();
             this.updateConnectedFeedersFromThis();
             firePropertyChange("fiducial2Location", oldValue, fiducial2Location);
         }
@@ -488,6 +861,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         Location oldValue = this.fiducial3Location;
         this.fiducial3Location = fiducial3Location;
         if (! oldValue.equals(fiducial3Location)) {
+            this.invalidateFeederTransformation();
             this.updateConnectedFeedersFromThis();
             firePropertyChange("fiducial3Location", oldValue, fiducial3Location);
         }
@@ -503,6 +877,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         boolean oldValue = this.normalize;
         this.normalize = normalize;
         if (oldValue != normalize) {
+            this.invalidateFeederTransformation();
             this.updateConnectedFeedersFromThis();
             firePropertyChange("normalize", oldValue, normalize);
         }
