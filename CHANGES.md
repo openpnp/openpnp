@@ -1,6 +1,13 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-04-21
+
+## Italian and French Translations
+
+Thank you to Davide and Sebastien for adding Italian and French translations!
+
+
 # 2019-02-26
 
 ## New Job Planner
