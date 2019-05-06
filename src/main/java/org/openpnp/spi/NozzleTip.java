@@ -1,6 +1,7 @@
 package org.openpnp.spi;
 
 import org.openpnp.model.Identifiable;
+import org.openpnp.model.Length;
 import org.openpnp.model.Named;
 import org.openpnp.model.Part;
 
@@ -11,4 +12,6 @@ public interface NozzleTip extends Identifiable, Named, WizardConfigurable, Prop
     public boolean canHandle(Part part);
     public void calibrate() throws Exception;
     public boolean isCalibrated();
+    public Length getDiameterLow();
+    public Length getDiameterHigh();
 }

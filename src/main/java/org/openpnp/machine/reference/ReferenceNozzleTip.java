@@ -27,6 +27,7 @@ import org.openpnp.machine.reference.wizards.ReferenceNozzleTipCalibrationWizard
 import org.openpnp.machine.reference.wizards.ReferenceNozzleTipConfigurationWizard;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -105,6 +106,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     @Element(required = false)
     private double vacuumLevelPartOff;
     
+    @Element(required = false)
+    private Length diameterLow = new Length(0, LengthUnit.Millimeters);
+    
+    @Element(required = false)
+    private Length diameterHigh = new Length(0, LengthUnit.Millimeters);
+    
     private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<>();
 
     public ReferenceNozzleTip() {
@@ -157,6 +164,15 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 allowIncompatiblePackages || compatiblePackages.contains(part.getPackage());
         // Logger.debug("{}.canHandle({}) => {}", getName(), part.getId(), result);
         return result;
+    }
+
+    @Override
+    public Length getDiameterLow() {
+        return diameterLow;
+    }
+    @Override
+    public Length getDiameterHigh() {
+        return diameterHigh;
     }
 
     public Set<org.openpnp.model.Package> getCompatiblePackages() {
@@ -312,6 +328,14 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     public void setVacuumLevelPartOff(double vacuumLevelPartOff) {
         this.vacuumLevelPartOff = vacuumLevelPartOff;
+    }
+
+    public void setDiameterLow(Length diameterLow) {
+        this.diameterLow = diameterLow;
+    }
+
+    public void setDiameterHigh(Length diameterHigh) {
+        this.diameterHigh = diameterHigh;
     }
 
     public Calibration getCalibration() {

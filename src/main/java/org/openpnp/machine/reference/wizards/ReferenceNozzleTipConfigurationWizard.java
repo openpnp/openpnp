@@ -121,6 +121,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JLabel lblSpeed1_2;
     private JLabel lblSpeed2_3;
     private JLabel lblSpeed3_4;
+    private JPanel panelDiameters;
 
 
     public ReferenceNozzleTipConfigurationWizard(ReferenceNozzleTip nozzleTip) {
@@ -371,7 +372,48 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         CellConstraints cc = new CellConstraints();
         lblDwellTime = new JLabel("Note: Total Dwell Time is the sum of Nozzle Dwell Time plus the Nozzle Tip Dwell Time.");
         panelDwellTime.add(lblDwellTime, cc.xywh(2, 6, 5, 1));
-       
+
+        panelDiameters = new JPanel();
+        panelDiameters.setBorder(new TitledBorder(null, "Nozzle Tip Diameters", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
+        contentPanel.add(panelDiameters);
+        panelDiameters.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblLowDiameter = new JLabel("Low Diameter");
+        lblLowDiameter.setToolTipText("Outside diameter of the nozzle tip to push or drag thin objects (measure at 1mm). ");
+        panelDiameters.add(lblLowDiameter, "2, 2, right, default");
+        
+        textFieldLowDiameter = new JTextField();
+        panelDiameters.add(textFieldLowDiameter, "4, 2");
+        textFieldLowDiameter.setColumns(10);
+        
+        lblHighDiameter = new JLabel("High Diameter");
+        lblHighDiameter.setToolTipText("Higher-up diameter of the nozzle tip used to push taller objects.");
+        panelDiameters.add(lblHighDiameter, "2, 4, right, default");
+        
+        textFieldHighDiameter = new JTextField();
+        panelDiameters.add(textFieldHighDiameter, "4, 4");
+        textFieldHighDiameter.setColumns(10);
+        
     }
     
 
@@ -393,6 +435,10 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
             });
         }
     };
+    private JLabel lblLowDiameter;
+    private JTextField textFieldLowDiameter;
+    private JLabel lblHighDiameter;
+    private JTextField textFieldHighDiameter;
 
     private void editCalibrationPipeline() throws Exception {
         CvPipeline pipeline = nozzleTip.getCalibration().getPipeline();
@@ -468,6 +514,9 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         addWrappedBinding(nozzleTip, "pickDwellMilliseconds", pickDwellTf, "text", intConverter);
         addWrappedBinding(nozzleTip, "placeDwellMilliseconds", placeDwellTf, "text", intConverter);
         
+        addWrappedBinding(nozzleTip, "diameterLow", textFieldLowDiameter, "text", lengthConverter);
+        addWrappedBinding(nozzleTip, "diameterLow", textFieldHighDiameter, "text", lengthConverter);
+
         ComponentDecorators.decorateWithAutoSelect(nameTf);
         
         ComponentDecorators.decorateWithAutoSelect(pickDwellTf);
@@ -494,6 +543,10 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
            
         ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOn);
         ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOff);
+        
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLowDiameter);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHighDiameter);
+
     }
 
     @Override
