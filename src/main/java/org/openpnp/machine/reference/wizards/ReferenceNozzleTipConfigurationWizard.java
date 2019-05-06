@@ -515,7 +515,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         addWrappedBinding(nozzleTip, "placeDwellMilliseconds", placeDwellTf, "text", intConverter);
         
         addWrappedBinding(nozzleTip, "diameterLow", textFieldLowDiameter, "text", lengthConverter);
-        addWrappedBinding(nozzleTip, "diameterLow", textFieldHighDiameter, "text", lengthConverter);
+        addWrappedBinding(nozzleTip, "diameterHigh", textFieldHighDiameter, "text", lengthConverter);
 
         ComponentDecorators.decorateWithAutoSelect(nameTf);
         

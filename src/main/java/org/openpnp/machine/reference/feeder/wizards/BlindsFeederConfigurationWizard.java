@@ -713,6 +713,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         public void actionPerformed(ActionEvent e) {
             UiUtils.messageBoxOnException(() -> {
                 BlindsFeeder.actuateAllFeederCovers(false);
+                btnActuateCover.setAction(openCover);
             });
         }
     };
