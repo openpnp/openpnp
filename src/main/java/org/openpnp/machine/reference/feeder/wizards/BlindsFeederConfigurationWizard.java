@@ -97,6 +97,10 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import org.jdesktop.beansbinding.BeanProperty;
+import org.jdesktop.beansbinding.AutoBinding;
+import org.jdesktop.beansbinding.Bindings;
+import org.jdesktop.beansbinding.ELProperty;
 
 @SuppressWarnings("serial")
 public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard {
@@ -372,6 +376,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblCoverType = new JLabel("Cover Type");
@@ -386,8 +392,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         comboBoxCoverActuation = new JComboBox(BlindsFeeder.CoverActuation.values());
         panelCover.add(comboBoxCoverActuation, "10, 2, fill, default");
 
-        btnActuateCover = new JButton(feeder.isCoverOpen() ? closeCover : openCover);
-        panelCover.add(btnActuateCover, "14, 2");
+        btnOpenCover = new JButton(openCover);
+        panelCover.add(btnOpenCover, "14, 2");
 
         lblEdgeDistance = new JLabel("Edge Distance");
         lblEdgeDistance.setToolTipText("Distance from first sprocket/fiducial to edge.");
@@ -404,9 +410,26 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         textFieldPushSpeed = new JTextField();
         panelCover.add(textFieldPushSpeed, "10, 4");
         textFieldPushSpeed.setColumns(10);
+        
+        btnCloseThis = new JButton(closeCover);
+        panelCover.add(btnCloseThis, "14, 4");
 
-        btnCloseAll = new JButton(closeAllCovers);
-        panelCover.add(btnCloseAll, "14, 4");
+        lblPushZOffset = new JLabel("Push Z Offset");
+        panelCover.add(lblPushZOffset, "2, 6, right, default");
+
+        textFieldPushZOffset = new JTextField();
+        panelCover.add(textFieldPushZOffset, "4, 6, fill, default");
+        textFieldPushZOffset.setColumns(10);
+
+        lblPushHigh = new JLabel("Push High?");
+        lblPushHigh.setToolTipText("Push with the higher-up nozzle tip diameter. See the nozzle tip configuration.");
+        panelCover.add(lblPushHigh, "8, 6, right, default");
+
+        checkBoxPushHigh = new JCheckBox("");
+        panelCover.add(checkBoxPushHigh, "10, 6");
+        
+                btnCloseAll = new JButton(closeAllCovers);
+                panelCover.add(btnCloseAll, "14, 6");
 
         panelLocations = new JPanel();
         contentPanel.add(panelLocations);
@@ -564,6 +587,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         });
         panelVision.add(btnPipelineToAllFeeders, "4, 4");
         panelVision.add(btnResetPipeline, "6, 4");
+        initDataBindings();
     }
 
     @Override
@@ -594,6 +618,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         addWrappedBinding(feeder, "coverActuation", comboBoxCoverActuation, "selectedItem");
         addWrappedBinding(feeder, "edgeDistance", textFieldEdgeDistance, "text", lengthConverter);
         addWrappedBinding(feeder, "pushSpeed", textFieldPushSpeed, "text", doubleConverter);
+        addWrappedBinding(feeder, "pushZOffset", textFieldPushZOffset, "text", lengthConverter);
+        addWrappedBinding(feeder, "pushHigh", checkBoxPushHigh, "selected");
 
         MutableLocationProxy fiducial1Location = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "fiducial1Location", fiducial1Location, "location");
@@ -626,6 +652,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPocketSize);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldEdgeDistance);
         ComponentDecorators.decorateWithAutoSelect(textFieldPushSpeed);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPushZOffset);
         ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial1X);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial1Y);
@@ -685,7 +712,6 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         public void actionPerformed(ActionEvent e) {
             UiUtils.messageBoxOnException(() -> {
                 feeder.actuateCover(true);
-                btnActuateCover.setAction(closeCover);
             });
         }
     };
@@ -699,7 +725,6 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         public void actionPerformed(ActionEvent e) {
             UiUtils.messageBoxOnException(() -> {
                 feeder.actuateCover(false);
-                btnActuateCover.setAction(openCover);
             });
         }
     };
@@ -713,7 +738,6 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         public void actionPerformed(ActionEvent e) {
             UiUtils.messageBoxOnException(() -> {
                 BlindsFeeder.actuateAllFeederCovers(false);
-                btnActuateCover.setAction(openCover);
             });
         }
     };
@@ -729,7 +753,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     private JTextField textFieldPocketsEmpty;
     private JLabel lblPocketsEmpty;
     private JButton btnPipelineToAllFeeders;
-    private JButton btnActuateCover;
+    private JButton btnOpenCover;
     private JLabel lblEdgeDistance;
     private JTextField textFieldEdgeDistance;
     private JLabel lblPushSpeed;
@@ -741,6 +765,11 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     private JComboBox comboBoxCoverActuation;
     private JButton btnOpenAll;
     private JButton btnCloseAll;
+    private JLabel lblPushZOffset;
+    private JTextField textFieldPushZOffset;
+    private JLabel lblPushHigh;
+    private JCheckBox checkBoxPushHigh;
+    private JButton btnCloseThis;
 
     private void calibrateFiducials() {
         UiUtils.submitUiMachineTask(() -> {
@@ -766,6 +795,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     private void setPipelineToAllFeeders() throws CloneNotSupportedException {
         feeder.setPipelineToAllFeeders();
     }
-
+    protected void initDataBindings() {
+    }
 }
 
