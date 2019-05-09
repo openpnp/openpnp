@@ -330,13 +330,27 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
 
         if (changerEnabled) {
-            double speed = getHead().getMachine().getSpeed();
 
             unloadNozzleTip();
             if (!nt.isUnloadedNozzleTipStandin()) {
 
                 Logger.debug("{}.loadNozzleTip({}): Start", getName(), nozzleTip.getName());
 
+                try {
+                    Map<String, Object> globals = new HashMap<>();
+                    globals.put("head", getHead());
+                    globals.put("nozzle", this);
+                    globals.put("nozzleTip", nt);
+                    Configuration.get()
+                                 .getScripting()
+                                 .on("NozzleTip.BeforeLoad", globals);
+                }
+                catch (Exception e) {
+                    Logger.warn(e);
+                }
+
+                double speed = getHead().getMachine().getSpeed();
+                
                 Logger.debug("{}.loadNozzleTip({}): moveTo Start Location",
                         new Object[] {getName(), nozzleTip.getName()});
                 MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerStartLocation(), speed);
@@ -356,18 +370,18 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
                 Logger.debug("{}.loadNozzleTip({}): Finished",
                         new Object[] {getName(), nozzleTip.getName()});
-            }
 
-            try {
-                Map<String, Object> globals = new HashMap<>();
-                globals.put("head", getHead());
-                globals.put("nozzle", this);
-                Configuration.get()
-                .getScripting()
-                .on("NozzleTip.Loaded", globals);
-            }
-            catch (Exception e) {
-                Logger.warn(e);
+                try {
+                    Map<String, Object> globals = new HashMap<>();
+                    globals.put("head", getHead());
+                    globals.put("nozzle", this);
+                    Configuration.get()
+                    .getScripting()
+                    .on("NozzleTip.Loaded", globals);
+                }
+                catch (Exception e) {
+                    Logger.warn(e);
+                }
             }
         }
 
@@ -392,18 +406,32 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             return;
         }
 
-        double speed = getHead().getMachine().getSpeed();
-
-        Logger.debug("{}.unloadNozzleTip(): Start", getName());
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
 
         if (!nt.isUnloadedNozzleTipStandin()) {
+            Logger.debug("{}.unloadNozzleTip(): Start", getName());
+
+            if (changerEnabled) {
+                 try {
+                    Map<String, Object> globals = new HashMap<>();
+                    globals.put("head", getHead());
+                    globals.put("nozzle", this);
+                    globals.put("nozzleTip", nt);
+                    Configuration.get()
+                    .getScripting()
+                    .on("NozzleTip.BeforeUnload", globals);
+                }
+                catch (Exception e) {
+                    Logger.warn(e);
+                }
+            }
+
+            double speed = getHead().getMachine().getSpeed();
+
             Logger.debug("{}.unloadNozzleTip(): moveTo End Location", getName());
             MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerEndLocation(), speed);
-        }
 
-        if (changerEnabled) {
-            if (!nt.isUnloadedNozzleTipStandin()) {
+            if (changerEnabled) {
                 Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location 2", getName());
                 moveTo(nt.getChangerMidLocation2(), nt.getChangerMid2ToEndSpeed() * speed);
 
@@ -415,17 +443,18 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 moveToSafeZ(getHead().getMachine().getSpeed());
 
                 Logger.debug("{}.unloadNozzleTip(): Finished", getName());
-            }
-            try {
-                Map<String, Object> globals = new HashMap<>();
-                globals.put("head", getHead());
-                globals.put("nozzle", this);
-                Configuration.get()
-                .getScripting()
-                .on("NozzleTip.Unloaded", globals);
-            }
-            catch (Exception e) {
-                Logger.warn(e);
+
+                try {
+                    Map<String, Object> globals = new HashMap<>();
+                    globals.put("head", getHead());
+                    globals.put("nozzle", this);
+                    Configuration.get()
+                    .getScripting()
+                    .on("NozzleTip.Unloaded", globals);
+                }
+                catch (Exception e) {
+                    Logger.warn(e);
+                }
             }
         }
 
