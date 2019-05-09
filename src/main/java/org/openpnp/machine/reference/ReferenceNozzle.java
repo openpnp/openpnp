@@ -330,7 +330,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
 
         if (changerEnabled) {
-
             unloadNozzleTip();
             if (!nt.isUnloadedNozzleTipStandin()) {
 
@@ -350,7 +349,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 }
 
                 double speed = getHead().getMachine().getSpeed();
-                
+
                 Logger.debug("{}.loadNozzleTip({}): moveTo Start Location",
                         new Object[] {getName(), nozzleTip.getName()});
                 MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerStartLocation(), speed);
