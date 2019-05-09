@@ -144,6 +144,7 @@ public class MainFrame extends JFrame {
     private MachineSetupPanel machineSetupPanel;
     private JDialog frameCamera;
     private JDialog frameMachineControls;
+    private Map<KeyStroke, Action> hotkeyActionMap;
 
     public static MainFrame get() {
         return mainFrame;
@@ -195,6 +196,10 @@ public class MainFrame extends JFrame {
 
     public JTabbedPane getTabs() {
         return tabs;
+    }
+
+    public Map<KeyStroke, Action> getHotkeyActionMap() {
+        return hotkeyActionMap;
     }
 
     private Preferences prefs = Preferences.userNodeForPackage(MainFrame.class);
@@ -421,7 +426,7 @@ public class MainFrame extends JFrame {
         panelMachine.setLayout(new BorderLayout(0, 0));
 
         // Add global hotkeys for the arrow keys
-        final Map<KeyStroke, Action> hotkeyActionMap = new HashMap<>();
+        hotkeyActionMap = new HashMap<>();
 
         int mask = KeyEvent.CTRL_DOWN_MASK;
 

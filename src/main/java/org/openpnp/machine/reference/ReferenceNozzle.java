@@ -271,6 +271,19 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             
             unloadNozzleTip();
             Logger.debug("{}.loadNozzleTip({}): Start", getName(), nozzleTip.getName());
+            
+            try {
+                Map<String, Object> globals = new HashMap<>();
+                globals.put("head", getHead());
+                globals.put("nozzle", this);
+                globals.put("nozzleTip", nt);
+                Configuration.get()
+                             .getScripting()
+                             .on("NozzleTip.BeforeLoad", globals);
+            }
+            catch (Exception e) {
+                Logger.warn(e);
+            }
 
             Logger.debug("{}.loadNozzleTip({}): moveTo Start Location",
                     new Object[] {getName(), nozzleTip.getName()});
@@ -322,6 +335,19 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         
         Logger.debug("{}.unloadNozzleTip(): Start", getName());
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
+
+        try {
+            Map<String, Object> globals = new HashMap<>();
+            globals.put("head", getHead());
+            globals.put("nozzle", this);
+            globals.put("nozzleTip", nt);
+            Configuration.get()
+                         .getScripting()
+                         .on("NozzleTip.BeforeUnload", globals);
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+        }
 
         Logger.debug("{}.unloadNozzleTip(): moveTo End Location", getName());
         MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerEndLocation(), speed);

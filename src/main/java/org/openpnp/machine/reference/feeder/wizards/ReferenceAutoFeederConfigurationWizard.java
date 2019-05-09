@@ -20,8 +20,11 @@
 package org.openpnp.machine.reference.feeder.wizards;
 
 import java.awt.Color;
+import java.awt.event.ActionEvent;
 
-import javax.swing.JCheckBox;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -33,6 +36,9 @@ import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder.ActuatorType;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.Actuator;
+import org.openpnp.util.UiUtils;
+import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -49,6 +55,8 @@ public class ReferenceAutoFeederConfigurationWizard
     private JTextField postPickActuatorValue;
     private JComboBox actuatorType;
     private JComboBox postPickActuatorType;
+    private JButton btnTestFeedActuator;
+    private JButton btnTestPostPickActuator;
 
     public ReferenceAutoFeederConfigurationWizard(ReferenceAutoFeeder feeder) {
         super(feeder);
@@ -59,6 +67,8 @@ public class ReferenceAutoFeederConfigurationWizard
                 "Actuators", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelActuator);
         panelActuator.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -103,6 +113,9 @@ public class ReferenceAutoFeederConfigurationWizard
         JLabel lblForBoolean = new JLabel("For Boolean: 1 = True, 0 = False");
         panelActuator.add(lblForBoolean, "10, 4");
 
+        btnTestFeedActuator = new JButton(testFeedActuatorAction);
+        panelActuator.add(btnTestFeedActuator, "12, 4");
+
         JLabel lblPostPick = new JLabel("Post Pick");
         panelActuator.add(lblPostPick, "2, 6, right, default");
 
@@ -119,6 +132,9 @@ public class ReferenceAutoFeederConfigurationWizard
         
         JLabel label = new JLabel("For Boolean: 1 = True, 0 = False");
         panelActuator.add(label, "10, 6");
+
+        btnTestPostPickActuator = new JButton(testPostPickActuatorAction);
+        panelActuator.add(btnTestPostPickActuator, "12, 6");
     }
 
     @Override
@@ -141,4 +157,50 @@ public class ReferenceAutoFeederConfigurationWizard
         ComponentDecorators.decorateWithAutoSelect(postPickActuatorName);
         ComponentDecorators.decorateWithAutoSelect(postPickActuatorValue);
     }
+
+    private Action testFeedActuatorAction = new AbstractAction("Test feed") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			UiUtils.messageBoxOnException(() -> {
+				if (feeder.getActuatorName() == null || feeder.getActuatorName().equals("")) {
+					Logger.warn("No actuatorName specified for feeder {}.", feeder.getName());
+					return;
+				}
+				Actuator actuator = Configuration.get().getMachine().getActuatorByName(feeder.getActuatorName());
+
+				if (actuator == null) {
+					throw new Exception("Feed failed. Unable to find an actuator named " + feeder.getActuatorName());
+				}
+				if (feeder.getActuatorType() == ActuatorType.Boolean) {
+					actuator.actuate(feeder.getActuatorValue() != 0);
+				} else {
+					actuator.actuate(feeder.getActuatorValue());
+				}
+			});
+		}
+    };
+
+    private Action testPostPickActuatorAction = new AbstractAction("Test post pick") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			UiUtils.messageBoxOnException(() -> {
+				if (feeder.getPostPickActuatorName() == null || feeder.getPostPickActuatorName().equals("")) {
+					Logger.warn("No postPickActuatorName specified for feeder {}.", feeder.getName());
+					return;
+				}
+				Actuator actuator = Configuration.get().getMachine()
+						.getActuatorByName(feeder.getPostPickActuatorName());
+
+				if (actuator == null) {
+					throw new Exception(
+							"Feed failed. Unable to find an actuator named " + feeder.getPostPickActuatorName());
+				}
+				if (feeder.getPostPickActuatorType() == ActuatorType.Boolean) {
+					actuator.actuate(feeder.getPostPickActuatorValue() != 0);
+				} else {
+					actuator.actuate(feeder.getPostPickActuatorValue());
+				}
+			});
+		}
+    };
 }
