@@ -805,17 +805,20 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
                 Object results = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
 
+                if (results instanceof Exception) {
+                	throw (Exception)results;
+                }
+                
                 //show result from pipeline in camera view
                 MainFrame.get().get().getCameraViews().getCameraView(camera).showFilteredImage(
                         OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 1000);
-                
-                // are there any results from the pipeline?
-                if (0==((List) results).size()) {
-                    throw new Exception("No results from vision. Check pipeline.");                    
-                }
 
                 // add all results from pipeline to a Location-list post processing
                 if (results instanceof List) {
+                    // are there any results from the pipeline?
+                    if (0==((List) results).size()) {
+                        throw new Exception("No results from vision. Check pipeline.");                    
+                    }
                     for (Object result : (List) results) {
                         if ((result) instanceof Result.Circle) {
                             Result.Circle circle = ((Result.Circle) result);
