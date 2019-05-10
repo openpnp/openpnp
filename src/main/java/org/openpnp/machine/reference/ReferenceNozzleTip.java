@@ -803,8 +803,14 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 pipeline.process();
                 List<Location> locations = new ArrayList<>();
 
-                Object results = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
+                String stageName = VisionUtils.PIPELINE_RESULTS_NAME;
+                Result pipelineResult = pipeline.getResult(stageName);
+                if (pipelineResult == null) {
+                	throw new Exception(String.format("There should be a \"%s\" stage in the pipeline.", stageName));
+                }
 
+				Object results = pipelineResult.model;
+                
                 if (results instanceof Exception) {
                 	throw (Exception)results;
                 }
