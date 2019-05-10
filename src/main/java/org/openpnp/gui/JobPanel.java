@@ -956,7 +956,7 @@ public class JobPanel extends JPanel {
             int result = JOptionPane.showOptionDialog(getTopLevelAncestor(), t.getMessage(),
                     "Job Error", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null, //$NON-NLS-1$
                     options.toArray(), retryOption);
-            String selectedOption = options.get(result);
+            String selectedOption = (result < 0) ? "Pause Job" : options.get(result);
             if (selectedOption.equals(retryOption)) {
                 jobRun();
             }
