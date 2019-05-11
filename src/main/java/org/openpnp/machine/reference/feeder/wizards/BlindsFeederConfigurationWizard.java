@@ -378,6 +378,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblCoverType = new JLabel("Cover Type");
@@ -395,31 +397,23 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         btnOpenCover = new JButton(openCover);
         panelCover.add(btnOpenCover, "14, 2");
 
-        lblEdgeDistance = new JLabel("Edge Distance");
-        lblEdgeDistance.setToolTipText("Distance from first sprocket/fiducial to edge.");
-        panelCover.add(lblEdgeDistance, "2, 4, right, default");
-
-        textFieldEdgeDistance = new JTextField();
-        panelCover.add(textFieldEdgeDistance, "4, 4");
-        textFieldEdgeDistance.setColumns(10);
-
         lblPushSpeed = new JLabel("Push speed");
         lblPushSpeed.setToolTipText("Speed factor when pushing the cover.");
-        panelCover.add(lblPushSpeed, "8, 4, right, default");
+        panelCover.add(lblPushSpeed, "2, 4, right, default");
 
         textFieldPushSpeed = new JTextField();
-        panelCover.add(textFieldPushSpeed, "10, 4");
+        panelCover.add(textFieldPushSpeed, "4, 4");
         textFieldPushSpeed.setColumns(10);
-        
-        btnCloseThis = new JButton(closeCover);
-        panelCover.add(btnCloseThis, "14, 4");
 
         lblPushZOffset = new JLabel("Push Z Offset");
-        panelCover.add(lblPushZOffset, "2, 6, right, default");
+        panelCover.add(lblPushZOffset, "8, 4, right, default");
 
         textFieldPushZOffset = new JTextField();
-        panelCover.add(textFieldPushZOffset, "4, 6, fill, default");
+        panelCover.add(textFieldPushZOffset, "10, 4, fill, default");
         textFieldPushZOffset.setColumns(10);
+
+        btnCloseThis = new JButton(closeCover);
+        panelCover.add(btnCloseThis, "14, 4");
 
         lblPushHigh = new JLabel("Push High?");
         lblPushHigh.setToolTipText("Push with the higher-up nozzle tip diameter. See the nozzle tip configuration.");
@@ -427,9 +421,35 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         checkBoxPushHigh = new JCheckBox("");
         panelCover.add(checkBoxPushHigh, "10, 6");
-        
-                btnCloseAll = new JButton(closeAllCovers);
-                panelCover.add(btnCloseAll, "14, 6");
+
+        btnCloseAll = new JButton(closeAllCovers);
+        panelCover.add(btnCloseAll, "14, 6");
+
+        lblEdgeBeginDistance = new JLabel("Edge Distance Open");
+        lblEdgeBeginDistance.setToolTipText("Distance from first sprocket to the edge used for opening the cover (fiducial 1 side).");
+        panelCover.add(lblEdgeBeginDistance, "2, 8, right, default");
+
+        textFieldEdgeOpeningDistance = new JTextField();
+        panelCover.add(textFieldEdgeOpeningDistance, "4, 8");
+        textFieldEdgeOpeningDistance.setColumns(10);
+
+        lblEdgeEnd = new JLabel("Edge Distance Closed");
+        lblEdgeEnd.setToolTipText("Distance from last sprocket to the edge used for closing the cover (fiducial 2 side).");
+        panelCover.add(lblEdgeEnd, "8, 8, right, default");
+
+        textFieldEdgeClosingDistance = new JTextField();
+        panelCover.add(textFieldEdgeClosingDistance, "10, 8, fill, default");
+        textFieldEdgeClosingDistance.setColumns(10);
+
+        btnCalibrateEdges = new JButton("Calibrate Edges");
+        btnCalibrateEdges.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                UiUtils.messageBoxOnException(() -> {
+                    feeder.calibrateCoverEdges();
+                });
+            };
+        });
+        panelCover.add(btnCalibrateEdges, "14, 8");
 
         panelLocations = new JPanel();
         contentPanel.add(panelLocations);
@@ -616,7 +636,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         addWrappedBinding(feeder, "coverType", comboBoxCoverType, "selectedItem");
         addWrappedBinding(feeder, "coverActuation", comboBoxCoverActuation, "selectedItem");
-        addWrappedBinding(feeder, "edgeDistance", textFieldEdgeDistance, "text", lengthConverter);
+        addWrappedBinding(feeder, "edgeOpenDistance", textFieldEdgeOpeningDistance, "text", lengthConverter);
+        addWrappedBinding(feeder, "edgeClosedDistance", textFieldEdgeClosingDistance, "text", lengthConverter);
         addWrappedBinding(feeder, "pushSpeed", textFieldPushSpeed, "text", doubleConverter);
         addWrappedBinding(feeder, "pushZOffset", textFieldPushZOffset, "text", lengthConverter);
         addWrappedBinding(feeder, "pushHigh", checkBoxPushHigh, "selected");
@@ -650,7 +671,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPocketCenterline);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPocketPitch);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPocketSize);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldEdgeDistance);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldEdgeOpeningDistance);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldEdgeClosingDistance);
         ComponentDecorators.decorateWithAutoSelect(textFieldPushSpeed);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPushZOffset);
         ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
@@ -754,8 +776,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     private JLabel lblPocketsEmpty;
     private JButton btnPipelineToAllFeeders;
     private JButton btnOpenCover;
-    private JLabel lblEdgeDistance;
-    private JTextField textFieldEdgeDistance;
+    private JLabel lblEdgeBeginDistance;
+    private JTextField textFieldEdgeOpeningDistance;
     private JLabel lblPushSpeed;
     private JTextField textFieldPushSpeed;
     private JPanel panelCover;
@@ -770,6 +792,9 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     private JLabel lblPushHigh;
     private JCheckBox checkBoxPushHigh;
     private JButton btnCloseThis;
+    private JLabel lblEdgeEnd;
+    private JTextField textFieldEdgeClosingDistance;
+    private JButton btnCalibrateEdges;
 
     private void calibrateFiducials() {
         UiUtils.submitUiMachineTask(() -> {
