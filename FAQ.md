@@ -10,7 +10,7 @@
 * ["It would be faster to do it by hand."](#it-would-be-faster-to-do-it-by-hand)
 * [What Should I Build?](#what-should-i-build)
 * [How can I improve placement accuracy?](#how-can-i-improve-placement-accuracy)
-* [OpenPnP is not working in Windows 7](#openpnp-is-not-working-in-windows-7]
+* [OpenPnP is not working in Windows 7](#openpnp-is-not-working-in-windows-7)
 
 ## How do I get help?
 
