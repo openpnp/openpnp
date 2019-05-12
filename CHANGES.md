@@ -1,6 +1,23 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-05-10
+
+## Bottom Vision Pre-Rotate Updates and Bug Fixes 
+
+* Bottom Vision Pre-Rotate now stores the rotation offset in the PartAlignmentOffset allowing 
+  Pre-Rotate Bottom Vision with multiple nozzles sharing a C axis. 
+* The angle calculation is unified and simplified with regard to math laws (distributive modulo equivalences).
+* Pre-Rotate Bottom Vision is done in a multi-pass loop until a good fix is obtained.
+* X, Y offsets are obtained together with the rotation offset, so with a good fix only one vision pass is needed 
+  (formerly two needed). This way Pre-Rotate Bottom Vision becomes as fast as Post-Rotate in most cases. 
+* The maximum allowed linear center and corner offset as well as the angular offset can be configured (GUI). 
+  If the allowed offsets are not met, an additional compensation & vision pass is done. A maximum number of passes can be configured.
+* The use of Pre-Rotate can now be overridden per Part (Default, Always on, Always off).   
+* A bug in Test Align was fixed, where the part height was not added to Z i.e. the part held too close to the camera.
+
+For more information see https://github.com/openpnp/openpnp/pull/815
+
 # 2019-04-21
 
 ## Italian and French Translations
