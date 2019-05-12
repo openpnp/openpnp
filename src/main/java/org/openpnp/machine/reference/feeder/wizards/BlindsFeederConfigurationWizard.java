@@ -273,6 +273,17 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelTapeSettings.add(textFieldFeederExtent, "10, 2");
         textFieldFeederExtent.setColumns(10);
 
+        btnShowInfo = new JButton("Show Features");
+        btnShowInfo.setToolTipText("Show the features recognized by the pipeline.");
+        btnShowInfo.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                UiUtils.submitUiMachineTask(() -> {
+                    feeder.showFeatures();
+                });
+            }
+        });
+        panelTapeSettings.add(btnShowInfo, "14, 2");
+
         btnAutoSetup = new JButton(autoSetup);
         btnAutoSetup.setToolTipText("Capture the pocket pitch, size and centerline from the current camera position.");
         panelTapeSettings.add(btnAutoSetup, "14, 4, 1, 3");
@@ -423,6 +434,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelCover.add(checkBoxPushHigh, "10, 6");
 
         btnCloseAll = new JButton(closeAllCovers);
+        btnCloseAll.setText("Close All Covers");
         panelCover.add(btnCloseAll, "14, 6");
 
         lblEdgeBeginDistance = new JLabel("Edge Distance Open");
@@ -444,7 +456,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         btnCalibrateEdges = new JButton("Calibrate Edges");
         btnCalibrateEdges.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                UiUtils.messageBoxOnException(() -> {
+                UiUtils.submitUiMachineTask(() -> {
                     feeder.calibrateCoverEdges();
                 });
             };
@@ -713,7 +725,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 Camera camera = Configuration.get()
                         .getMachine()
                         .getDefaultHead()
@@ -724,7 +736,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         }
     };
 
-    private Action openCover = new AbstractAction("Open This", Icons.lockOpenOutline) {
+    private Action openCover = new AbstractAction("Open Cover", Icons.lockOpenOutline) {
         {
             putValue(Action.SHORT_DESCRIPTION,
                     "Open this cover using the nozzle tip.");
@@ -732,12 +744,12 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 feeder.actuateCover(true);
             });
         }
     };
-    private Action closeCover = new AbstractAction("Close This", Icons.lockOutline) {
+    private Action closeCover = new AbstractAction("Close Cover", Icons.lockOutline) {
         {
             putValue(Action.SHORT_DESCRIPTION,
                     "Close this cover using the nozzle tip.");
@@ -745,12 +757,12 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 feeder.actuateCover(false);
             });
         }
     };
-    private Action closeAllCovers = new AbstractAction("Close All", Icons.lockOutline) {
+    private Action closeAllCovers = new AbstractAction("Close All Covers") {
         {
             putValue(Action.SHORT_DESCRIPTION,
                     "Close all feeder covers of the machine.");
@@ -758,7 +770,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 BlindsFeeder.actuateAllFeederCovers(false);
             });
         }
@@ -795,6 +807,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     private JLabel lblEdgeEnd;
     private JTextField textFieldEdgeClosingDistance;
     private JButton btnCalibrateEdges;
+    private JButton btnShowInfo;
 
     private void calibrateFiducials() {
         UiUtils.submitUiMachineTask(() -> {

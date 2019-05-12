@@ -130,4 +130,6 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
      * @return
      */
 	public double getMaxPartSpeed(); 
+
+    public boolean isInsideSoftLimits(HeadMountable hm, Location location) throws Exception;
 }
