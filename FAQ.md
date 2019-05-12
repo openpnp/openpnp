@@ -10,6 +10,7 @@
 * ["It would be faster to do it by hand."](#it-would-be-faster-to-do-it-by-hand)
 * [What Should I Build?](#what-should-i-build)
 * [How can I improve placement accuracy?](#how-can-i-improve-placement-accuracy)
+* [OpenPnP is not working in Windows 7](#openpnp-is-not-working-in-windows-7]
 
 ## How do I get help?
 
@@ -102,6 +103,9 @@ Getting reliable, fast and accurate results is the ultimate goal but even for so
 This guide tries to give an overview of the things to consider:
 https://github.com/openpnp/openpnp/wiki/Troubleshooting-Placement-Accuracy
 
+## OpenPnP is not working in Windows 7
+
+Windows 7 is missing some libraries that OpenPnP relies on. If you can upgrade to Windows 10, that is the quickest solution. If that is not an option see [this Github comment](https://github.com/opencv/opencv/issues/12010#issuecomment-420640169) about a possible solution, and [this discussion thread](https://groups.google.com/d/msgid/openpnp/f14a436d-5b3e-4e21-b2cf-dee1f8222cd6%40googlegroups.com) for more information.
 
 ---
 Table of Contents Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
