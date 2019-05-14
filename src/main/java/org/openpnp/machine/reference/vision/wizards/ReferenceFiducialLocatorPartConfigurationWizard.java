@@ -1,6 +1,5 @@
 package org.openpnp.machine.reference.vision.wizards;
 
-import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -24,6 +23,7 @@ import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.stages.SetResult;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
+import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -92,12 +92,11 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
         pipeline.setProperty("package", part.getPackage());
         pipeline.setProperty("footprint", part.getPackage().getFootprint());
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new JDialog(MainFrame.get(), "Fiducial Locator Pipeline");
-        dialog.getContentPane().setLayout(new BorderLayout());
-        dialog.getContentPane().add(editor);
-        dialog.setSize(1024, 768);
+        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Fiducial Locator Pipeline", editor);
         dialog.setVisible(true);
+        editor.initializeFocus();
     }
+
     @Override
     public void createBindings() {
     }
