@@ -267,7 +267,7 @@ public class NamedCSVImporter implements BoardImporter {
     private static List<Placement> parseFile(File file, boolean createMissingParts,
             boolean updateHeights) throws Exception {
         BufferedReader reader =
-                new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+                new BufferedReader(new InputStreamReader(new FileInputStream(file), "ISO-8859-1"));
         ArrayList<Placement> placements = new ArrayList<>();
         String line;
 
