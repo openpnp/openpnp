@@ -104,8 +104,8 @@ public class MaskHsv extends CvStage {
         }
         else {
             //Hue range wraps past 255 back through 0 so the mask needs to include the range from hueMin
-            //to 255 in addition to the range from 0 to hueMax so a mask for each separate range is created
-            //and ORed together to form the actual mask.
+            //to 255 in addition to the range from 0 to hueMax.  To accomplish this, a mask for each separate
+            //range is created and then ORed together to form the actual mask.
             min = new Scalar(hueMin, saturationMin, valueMin);
             max = new Scalar(255, saturationMax, valueMax);
             Core.inRange(mat, min, max, mask);
