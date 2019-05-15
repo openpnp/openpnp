@@ -94,7 +94,6 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Fiducial Locator Pipeline", editor);
         dialog.setVisible(true);
-        editor.initializeFocus();
     }
 
     @Override
