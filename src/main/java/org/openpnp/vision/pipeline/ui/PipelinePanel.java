@@ -2,14 +2,11 @@ package org.openpnp.vision.pipeline.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
-import java.awt.event.HierarchyEvent;
-import java.awt.event.HierarchyListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -18,7 +15,6 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.BoxLayout;
 import javax.swing.DropMode;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
@@ -148,12 +144,17 @@ public class PipelinePanel extends JPanel {
                 }
             }
         });
-
+        stagesTable.changeSelection(stagesTable.getRowCount()-1,  0,  false, false);
+          
         splitPaneMain.setLeftComponent(splitPaneStages);
         splitPaneMain.setRightComponent(propertySheetPanel);
         
         splitPaneMain.setResizeWeight(0.5);
         splitPaneStages.setResizeWeight(0.80);
+    }
+    
+    public void initializeFocus() {
+    	stagesTable.grabFocus();
     }
 
     public void onStagePropertySheetValueChanged(Object aValue, int row, int column) {
@@ -170,6 +171,7 @@ public class PipelinePanel extends JPanel {
         editor.process();
     }
     
+   
     private void refreshProperties() {
         CvStage stage = getSelectedStage();
         if (stage == null) {
