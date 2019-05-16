@@ -218,7 +218,7 @@ public class PipelinePanel extends JPanel {
     public Action newStageAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Stage...");
+            putValue(NAME, "New stage...");
             putValue(SHORT_DESCRIPTION, "Create a new stage.");
         }
 
@@ -233,7 +233,7 @@ public class PipelinePanel extends JPanel {
                 }
             });
             ClassSelectionDialog<CvStage> dialog = new ClassSelectionDialog<>(
-                    JOptionPane.getFrameForComponent(PipelinePanel.this), "New Stage",
+                    JOptionPane.getFrameForComponent(PipelinePanel.this), "New stage",
                     "Please select a stage implemention from the list below.", stageClasses);
             dialog.setVisible(true);
             Class<? extends CvStage> stageClass = dialog.getSelectedClass();
@@ -273,7 +273,7 @@ public class PipelinePanel extends JPanel {
     public final Action copyAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, "Copy Pipeline to Clipboard");
+            putValue(NAME, "Copy pipeline to clipboard");
             putValue(SHORT_DESCRIPTION, "Copy the pipeline to the clipboard in text format.");
         }
 
@@ -294,7 +294,7 @@ public class PipelinePanel extends JPanel {
     public final Action pasteAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, "Create Pipeline from Clipboard");
+            putValue(NAME, "Create pipeline from clipboard");
             putValue(SHORT_DESCRIPTION,
                     "Create a new pipeline from a definition on the clipboard.");
         }
@@ -310,7 +310,7 @@ public class PipelinePanel extends JPanel {
                 editor.process();
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Paste failed", e);
             }
         }
     };
@@ -318,8 +318,8 @@ public class PipelinePanel extends JPanel {
     public final Action refreshAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.refresh);
-            putValue(NAME, "");
-            putValue(SHORT_DESCRIPTION, "");
+            putValue(NAME, "Update picture from current view.");
+            putValue(SHORT_DESCRIPTION, "Update picture from current view.");
         }
 
         @Override
