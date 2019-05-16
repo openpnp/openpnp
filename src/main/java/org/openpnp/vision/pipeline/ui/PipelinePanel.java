@@ -286,7 +286,7 @@ public class PipelinePanel extends JPanel {
                 clipboard.setContents(stringSelection, null);
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Copy Failed", e);
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Copy failed", e);
             }
         }
     };
