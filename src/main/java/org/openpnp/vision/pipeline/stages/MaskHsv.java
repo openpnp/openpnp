@@ -10,7 +10,9 @@ import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
 import org.openpnp.vision.pipeline.Stage;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.core.Commit;
 
 @Stage(description="Remove color from an image based on the HSV color space. Pixels that fall between (hueMin, saturationMin, valueMin) and (hueMax, saturationMax, valueMax) are set to black in the output image. This stage expects the input to be in HSV_FULL format, so you should do a ConvertColor with Bgr2HsvFull before this stage and ConvertColor Hsv2BgrFull after. These are not applied internally as to not complicate the use of multiple instances of this stage in series. Note that this stage can be used with any 3 channel, 8 bit per channel color space. The order of the filtered channels is hue, saturation, value, but you can use these ranges for other channels.")
 public class MaskHsv extends CvStage {
@@ -38,6 +40,10 @@ public class MaskHsv extends CvStage {
     @Property(description="Maximum value to be masked.  Note values range from 0 to 255 (inclusive). Setting valueMax less than valueMin will result in no pixels being masked.")
     private int valueMax = 255;
 
+    @Attribute(required=false)
+    @Property(description="Inverts the selection of pixels to mask.")
+    private Boolean invert;
+    
     public int getHueMin() {
         return hueMin;
     }
@@ -86,6 +92,37 @@ public class MaskHsv extends CvStage {
         this.valueMax = valueMax;
     }
 
+    public Boolean getInvert() {
+        return invert;
+    }
+
+    public void setInvert(Boolean invert) {
+        this.invert = invert;
+    }
+
+
+    @Commit
+    public void commit() {
+        //This method gets called by the deserializer when configuration .xml files are loading.  It checks the format of
+        //each maskHsv and converts any that are in the old format (without an invert flag) to the new format (with an
+        //invert flag) correcting hue limits if needed.  This will make the new format backward compatible with old format.
+        if (invert == null) {
+            Logger.trace( "Old format found in .xml file, converting to new format..." );
+            if (hueMin > hueMax) {
+                Logger.trace( "    Swapping hue limits and setting invert to true." );
+                int temp = hueMax;
+                hueMax = hueMin;
+                hueMin = temp;
+                invert = true;
+            }
+            else {
+                Logger.trace( "    Keeping hue limits as is and setting invert to false." );
+                invert = false;
+            }
+        }
+    }
+    
+    
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         Mat mat = pipeline.getWorkingImage();
@@ -119,10 +156,12 @@ public class MaskHsv extends CvStage {
             Core.bitwise_or(mask, mask2, mask);
         }
 
-        //The mask is inverted because it is used to copy the unmasked portions of the
+        //The mask is normally inverted because it is used to copy the unmasked portions of the
         //image into the final result.
-        Core.bitwise_not(mask, mask);
-
+        if (!invert) {
+            Core.bitwise_not(mask, mask);
+        }
+        
         mat.copyTo(masked, mask);
         return new Result(masked);
     }
