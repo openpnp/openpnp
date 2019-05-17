@@ -21,9 +21,15 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Frame;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
@@ -73,6 +79,7 @@ import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
+import org.simpleframework.xml.Serializer;
 
 @SuppressWarnings("serial")
 public class PartsPanel extends JPanel implements WizardContainer {
@@ -96,7 +103,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         this.configuration = configuration;
         this.frame = frame;
 
-        singleSelectionActionGroup = new ActionGroup(deletePartAction, pickPartAction);
+        singleSelectionActionGroup = new ActionGroup(deletePartAction, pickPartAction, copyPartToClipboardAction);
         singleSelectionActionGroup.setEnabled(false);
         multiSelectionActionGroup = new ActionGroup(deletePartAction);
         multiSelectionActionGroup.setEnabled(false);
@@ -175,6 +182,15 @@ public class PartsPanel extends JPanel implements WizardContainer {
         btnDeletePart.setToolTipText("");
         toolBar.addSeparator();
         toolBar.add(pickPartAction);
+        
+        toolBar.addSeparator();
+        JButton btnNewButton = new JButton(copyPartToClipboardAction);
+        btnNewButton.setHideActionText(true);
+        toolBar.add(btnNewButton);
+        
+        JButton btnNewButton_1 = new JButton(pastePartToClipboardAction);
+        btnNewButton_1.setHideActionText(true);
+        toolBar.add(btnNewButton_1);
 
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
@@ -355,6 +371,65 @@ public class PartsPanel extends JPanel implements WizardContainer {
         }
     };
 
+    public final Action copyPartToClipboardAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.copy);
+            putValue(NAME, "Copy Part to Clipboard");
+            putValue(SHORT_DESCRIPTION,
+                    "Copy the currently selected part to the clipboard in text format.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            Part part = getSelection();
+            if (part == null) {
+                return;
+            }
+            try {
+                Serializer s = Configuration.createSerializer();
+                StringWriter w = new StringWriter();
+                s.write(part, w);
+                StringSelection stringSelection = new StringSelection(w.toString());
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clipboard.setContents(stringSelection, null);
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Copy Failed", e);
+            }
+        }
+    };
+
+    public final Action pastePartToClipboardAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.paste);
+            putValue(NAME, "Create Part from Clipboard");
+            putValue(SHORT_DESCRIPTION, "Create a new part from a definition on the clipboard.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            try {
+                Serializer ser = Configuration.createSerializer();
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                String s = (String) clipboard.getData(DataFlavor.stringFlavor);
+                StringReader r = new StringReader(s);
+                Part part = ser.read(Part.class, s);
+                for (int i = 0;; i++) {
+                    if (Configuration.get().getPart(part.getId() + "-" + i) == null) {
+                        part.setId(part.getId() + "-" + i);
+                        Configuration.get().addPart(part);
+                        break;
+                    }
+                }
+                tableModel.fireTableDataChanged();
+                Helpers.selectLastTableRow(table);
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
+            }
+        }
+    };
+    
     @Override
     public void wizardCompleted(Wizard wizard) {}
 

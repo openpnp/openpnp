@@ -1,17 +1,14 @@
 package org.openpnp.machine.reference.signaler;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
-import javax.swing.Action;
-import javax.swing.Icon;
 
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.signaler.wizards.SoundSignalerConfigurationWizard;
 import org.openpnp.model.Configuration;
-import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractSignaler;
@@ -33,20 +30,20 @@ public class SoundSignaler extends AbstractSignaler {
 
     private void playSound(String filename) {
         try {
-            InputStream soundStream;
+            AudioInputStream audioInputStream;
 
             // Check if there is a file in the configuration directory under sounds overriding the resource files
             File overrideFile = new File(Configuration.get().getConfigurationDirectory(), filename);
 
             if(overrideFile.exists() && !overrideFile.isDirectory()) {
-                soundStream = new FileInputStream(overrideFile);
-            } else {
-                soundStream = classLoader.getResourceAsStream(filename);
+                audioInputStream = AudioSystem.getAudioInputStream(overrideFile);
+            } 
+            else {
+                audioInputStream = AudioSystem.getAudioInputStream(classLoader.getResourceAsStream(filename));
             }
 
             Clip clip = AudioSystem.getClip();
-            AudioInputStream inputStream = AudioSystem.getAudioInputStream(soundStream);
-            clip.open(inputStream);
+            clip.open(audioInputStream);
             clip.start(); 
         } 
         catch (Exception e) {
@@ -93,5 +90,26 @@ public class SoundSignaler extends AbstractSignaler {
                 break;
             }
         }
+    }
+
+    @Override
+    public Wizard getConfigurationWizard() {
+        return new SoundSignalerConfigurationWizard(this);
+    }
+
+    public boolean isEnableErrorSound() {
+        return enableErrorSound;
+    }
+
+    public void setEnableErrorSound(boolean enableErrorSound) {
+        this.enableErrorSound = enableErrorSound;
+    }
+
+    public boolean isEnableFinishedSound() {
+        return enableFinishedSound;
+    }
+
+    public void setEnableFinishedSound(boolean enableFinishedSound) {
+        this.enableFinishedSound = enableFinishedSound;
     }
 }

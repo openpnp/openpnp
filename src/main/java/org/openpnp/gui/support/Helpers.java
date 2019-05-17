@@ -64,7 +64,7 @@ public class Helpers {
      */
     public static void selectLastTableRow(JTable table) {
         table.clearSelection();
-        int index = table.getRowCount() - 1;
+        int index = table.getModel().getRowCount() - 1;
         index = table.convertRowIndexToView(index);
         table.addRowSelectionInterval(index, index);
     }
@@ -77,7 +77,7 @@ public class Helpers {
     	 }
     	 
          table.clearSelection();
-         if (++index > table.getRowCount()-1){
+         if (++index > table.getModel().getRowCount() - 1){
          	index = 0;
          }
          

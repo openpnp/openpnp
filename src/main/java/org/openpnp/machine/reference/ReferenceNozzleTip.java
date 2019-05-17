@@ -3,6 +3,8 @@ package org.openpnp.machine.reference;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -45,6 +47,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceNozzleTip extends AbstractNozzleTip {
     // TODO Remove after October 1, 2017.
@@ -437,7 +440,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
             @Override
             public String toString() {
-                return String.format(Locale.US, "0° Offset %f, %f", nozzleTipMeasuredLocations.get(0).getX(), nozzleTipMeasuredLocations.get(0).getY());
+                return String.format(Locale.US, "%d°-offset x=%f, y=%f", (int)nozzleTipMeasuredLocations.get(0).getRotation(), nozzleTipMeasuredLocations.get(0).getX(), nozzleTipMeasuredLocations.get(0).getY());
             }
 
             @Override
@@ -450,9 +453,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         public static class ModelBasedRunoutCompensation implements RunoutCompensation {
         	List<Location> nozzleTipMeasuredLocations;
         	
-            double centerX;
-            double centerY;
-            double radius;
+            double centerX = 0;
+            double centerY = 0;
+            double radius = 0;
             
             double phaseShift;
 
@@ -539,9 +542,23 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 	    	    kasaB = (kasaD1 - kasaG12*kasaC)/kasaG11/2.0;
 	    	    
 	    	    // assembling the output
-	    	    this.centerX = kasaB + kasaMeanX;
-                this.centerY = kasaC + kasaMeanY;
-                this.radius = Math.sqrt(kasaB*kasaB + kasaC*kasaC + kasaMxx + kasaMyy);
+                Double centerX = kasaB + kasaMeanX;
+                Double centerY = kasaC + kasaMeanY;
+                Double radius = Math.sqrt(kasaB*kasaB + kasaC*kasaC + kasaMxx + kasaMyy);
+                
+                // saving output if valid
+                // the values are NaN if all given nozzleTipMeasuredLocations are the same (this is the case probably only on a simulated machine with nulldriver)
+                if ( !centerX.isNaN() && !centerY.isNaN() && !radius.isNaN() ) {
+                    // values valid
+                    this.centerX = centerX;
+                    this.centerY = centerY;
+                    this.radius = radius;
+                } else {
+                    // nozzletip has zero runout and constant offset to bottom camera
+                    this.centerX = nozzleTipMeasuredLocations.get(0).getX();
+                    this.centerY = nozzleTipMeasuredLocations.get(0).getY();
+                    this.radius = 0;
+                }
                 
                 Logger.debug("[nozzleTipCalibration]calculated nozzleEccentricity: {}", this.toString());
 	        }
@@ -636,6 +653,22 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         @Attribute(required = false)
         private RunoutCompensationAlgorithm runoutCompensationAlgorithm = RunoutCompensationAlgorithm.Model;      // modelBased or tableBased? Two implementations are available
 
+        /**
+         * TODO Left for backward compatibility. Unused. Can be removed after Feb 7, 2020.
+         */
+        @Deprecated
+        @Attribute(required=false)
+        private Double angleIncrement = null;
+        
+        @Commit
+        public void commit() {
+            angleIncrement = null;
+        }
+        
+        // Max allowed linear distance w.r.t. bottom camera for an offset measurement - measurements above threshold are removed from pipelines results 
+        @Attribute(required = false)
+        private Double offsetThreshold = 0.5;
+
         public RunoutCompensationAlgorithm getRunoutCompensationAlgorithm() {
             return this.runoutCompensationAlgorithm;
         }
@@ -653,12 +686,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
         
         public void calibrate(ReferenceNozzleTip nozzleTip) throws Exception {
-        	/* TODO, possible later refinement:
-        	 * a) add plausibility checks
-        	 * b) if one measurement fails, one could retry or skip that silently if enough valid measurements are still available (possible only for modelBased algorithm)
-        	 * c) polish the gui 
-        	 */
-        	
             if ( !isEnabled() ) {
                 return;
             }
@@ -774,37 +801,67 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             try (CvPipeline pipeline = getPipeline()) {
                 pipeline.setProperty("camera", camera);
                 pipeline.process();
-                Location location;
-                
-                Object result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
-                
-                // are there any results from the pipeline?
-                if (0==((List) result).size()) {
-                    throw new Exception("No results from vision. Check pipeline.");                    
+                List<Location> locations = new ArrayList<>();
+
+                String stageName = VisionUtils.PIPELINE_RESULTS_NAME;
+                Result pipelineResult = pipeline.getResult(stageName);
+                if (pipelineResult == null) {
+                	throw new Exception(String.format("There should be a \"%s\" stage in the pipeline.", stageName));
                 }
 
-                if (result instanceof List) {
-                    if (((List) result).get(0) instanceof Result.Circle) {
-                        Result.Circle circle = ((List<Result.Circle>) result).get(0);
-                        location = VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y);
-                    }
-                    else if (((List) result).get(0) instanceof KeyPoint) {
-                        KeyPoint keyPoint = ((List<KeyPoint>) result).get(0);
-                        location = VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x, keyPoint.pt.y);
-                    }
-                    else {
-                        throw new Exception("Unrecognized result " + result);
-                    }
+				Object results = pipelineResult.model;
+                
+                if (results instanceof Exception) {
+                	throw (Exception)results;
                 }
-                else {
-                    throw new Exception("Unrecognized result " + result);
-                }
-
+                
                 //show result from pipeline in camera view
                 MainFrame.get().get().getCameraViews().getCameraView(camera).showFilteredImage(
                         OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 1000);
+
+                // add all results from pipeline to a Location-list post processing
+                if (results instanceof List) {
+                    // are there any results from the pipeline?
+                    if (0==((List) results).size()) {
+                        throw new Exception("No results from vision. Check pipeline.");                    
+                    }
+                    for (Object result : (List) results) {
+                        if ((result) instanceof Result.Circle) {
+                            Result.Circle circle = ((Result.Circle) result);
+                            locations.add(VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y));
+                        }
+                        else if ((result) instanceof KeyPoint) {
+                            KeyPoint keyPoint = ((KeyPoint) result);
+                            locations.add(VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x, keyPoint.pt.y));
+                        }
+                        else {
+                            throw new Exception("Unrecognized result " + result);
+                        }
+                      }
+                }
                 
-                return location;
+                // remove all results that are above threshold
+                Iterator<Location> locationsIterator = locations.iterator();
+                while (locationsIterator.hasNext()) {
+                    Location location = locationsIterator.next();
+                    if (location.getLinearDistanceTo(0., 0.) > offsetThreshold) {
+                        locationsIterator.remove();
+                        Logger.trace("[nozzleTipCalibration]Removed offset location {} from results; measured distance {} exceeds offsetThreshold {}", location, location.getLinearDistanceTo(0., 0.), offsetThreshold);
+                    }
+                }
+                
+                // check for a valid resultset
+                if (locations.size() == 0) {
+                    throw new Exception("No valid results from pipeline within threshold");
+                } else if (locations.size() > 1) {
+                    // one could throw an exception here, but we just log an info for now since
+                    // - invalid measurements above threshold are removed from results already and
+                    // - we expect the best match delivered from pipeline to be the first on the list.
+                    Logger.info("[nozzleTipCalibration]Got more than one result from pipeline. For best performance tweak pipeline to return exactly one result only. First location from the following set is taken as valid: " + locations);
+                }
+                
+                // finally return the location at index (0) which is either a) the only one or b) the one best matching the nozzle tip
+                return locations.get(0);
             }
         }
 
@@ -837,13 +894,21 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         public boolean isCalibrating() {
             return calibrating;
         }
-        
+
         public int getAngleSubdivisions() {
             return angleSubdivisions;
         }
 
         public void setAngleSubdivisions(int angleSubdivisions) {
             this.angleSubdivisions = angleSubdivisions;
+        }
+
+        public double getOffsetThreshold() {
+            return offsetThreshold;
+        }
+
+        public void setOffsetThreshold(double offsetThreshold) {
+            this.offsetThreshold = offsetThreshold;
         }
 
         public boolean isEnabled() {

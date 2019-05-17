@@ -48,6 +48,7 @@ import javax.swing.event.ChangeListener;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.WrapLayout;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -275,20 +276,6 @@ public class JogControlsPanel extends JPanel {
         return (alpha > 0.0) && (beta > 0.0) && (gamma > 0.0);
     }
 
-    private void park(boolean xy, boolean z, boolean c) {
-        UiUtils.submitUiMachineTask(() -> {
-            HeadMountable tool = machineControlsPanel.getSelectedTool();
-            Location location = tool.getLocation();
-            Location parkLocation = tool.getHead()
-                                        .getParkLocation();
-            parkLocation = parkLocation.convertToUnits(location.getUnits());
-            location = location.derive(xy ? parkLocation.getX() : null,
-                    xy ? parkLocation.getY() : null, z ? parkLocation.getZ() : null,
-                    c ? parkLocation.getRotation() : null);
-            MovableUtils.moveToLocationAtSafeZ(tool, location);
-        });
-    }
-
     private void createUi() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
@@ -454,7 +441,7 @@ public class JogControlsPanel extends JPanel {
 
         panelActuators = new JPanel();
         tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Actuators"), null, panelActuators, null); //$NON-NLS-1$
-        panelActuators.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
+        panelActuators.setLayout(new WrapLayout(WrapLayout.LEFT));
 
         panelDispensers = new JPanel();
         tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Dispense"), null, panelDispensers, null); //$NON-NLS-1$
@@ -574,7 +561,9 @@ public class JogControlsPanel extends JPanel {
     public Action xyParkAction = new AbstractAction(Translations.getString("JogControlsPanel.Action.ParkXY"), Icons.park) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            park(true, false, false);
+            UiUtils.submitUiMachineTask(() -> {
+                MovableUtils.park(machineControlsPanel.getSelectedTool().getHead());
+            });
         }
     };
 
@@ -582,7 +571,10 @@ public class JogControlsPanel extends JPanel {
     public Action zParkAction = new AbstractAction(Translations.getString("JogControlsPanel.Action.ParkZ"), Icons.park) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            park(false, true, false);
+            UiUtils.submitUiMachineTask(() -> {
+                HeadMountable hm = machineControlsPanel.getSelectedTool();
+                hm.moveToSafeZ();
+            });
         }
     };
 
@@ -590,7 +582,12 @@ public class JogControlsPanel extends JPanel {
     public Action cParkAction = new AbstractAction(Translations.getString("JogControlsPanel.Action.ParkC"), Icons.park) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            park(false, false, true);
+            UiUtils.submitUiMachineTask(() -> {
+                HeadMountable hm = machineControlsPanel.getSelectedTool();
+                Location location = hm.getLocation();
+                location = location.derive(null, null, null, 0.);
+                hm.moveTo(location);
+            });
         }
     };
 

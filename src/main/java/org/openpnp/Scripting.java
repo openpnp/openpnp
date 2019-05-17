@@ -72,7 +72,7 @@ public class Scripting {
         if (!getScriptsDirectory().exists()) {
             getScriptsDirectory().mkdirs();
         }
-
+        
         // TODO: It would be better if we just copied all the files from the Examples
         // directory in the jar, but this is relatively difficult to do.
         // There is some information on how to do it in:
@@ -84,6 +84,7 @@ public class Scripting {
                         "JavaScript/Call_Java.js", 
                         "JavaScript/Hello_World.js", 
                         "JavaScript/Move_Machine.js", 
+                        "JavaScript/Pipeline.js",
                         "JavaScript/Print_Scripting_Info.js",
                         "JavaScript/QrCodeXout.js",
                         "JavaScript/Reset_Strip_Feeders.js", 

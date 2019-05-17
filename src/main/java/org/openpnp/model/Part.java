@@ -75,6 +75,16 @@ public class Part extends AbstractModelObject implements Identifiable {
         return id;
     }
 
+    /**
+     * Warning: This should never be called once the Part is added to the configuration. It
+     * should only be used when creating a new part.
+     * 
+     * @param id
+     */
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public String getName() {
         return name;
     }

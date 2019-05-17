@@ -2,6 +2,8 @@ package org.openpnp.machine.reference;
 
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -10,6 +12,7 @@ import javax.swing.JOptionPane;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.psh.NozzleTipsPropertySheetHolder;
@@ -241,7 +244,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         } else {
             Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
         }
-        getDriver().moveTo(this, location, getHead().getMaxPartSpeed() * speed);
+        ((ReferenceHead) getHead()).moveTo(this, location, getHead().getMaxPartSpeed() * speed);
         getMachine().fireMachineHeadActivity(head);
     }
 
@@ -268,6 +271,19 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             
             unloadNozzleTip();
             Logger.debug("{}.loadNozzleTip({}): Start", getName(), nozzleTip.getName());
+            
+            try {
+                Map<String, Object> globals = new HashMap<>();
+                globals.put("head", getHead());
+                globals.put("nozzle", this);
+                globals.put("nozzleTip", nt);
+                Configuration.get()
+                             .getScripting()
+                             .on("NozzleTip.BeforeLoad", globals);
+            }
+            catch (Exception e) {
+                Logger.warn(e);
+            }
 
             Logger.debug("{}.loadNozzleTip({}): moveTo Start Location",
                     new Object[] {getName(), nozzleTip.getName()});
@@ -288,6 +304,18 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
             Logger.debug("{}.loadNozzleTip({}): Finished",
                     new Object[] {getName(), nozzleTip.getName()});
+            
+            try {
+                Map<String, Object> globals = new HashMap<>();
+                globals.put("head", getHead());
+                globals.put("nozzle", this);
+                Configuration.get()
+                             .getScripting()
+                             .on("NozzleTip.Loaded", globals);
+            }
+            catch (Exception e) {
+                Logger.warn(e);
+            }
         }
         
         this.nozzleTip = nt;
@@ -308,6 +336,19 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         Logger.debug("{}.unloadNozzleTip(): Start", getName());
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
 
+        try {
+            Map<String, Object> globals = new HashMap<>();
+            globals.put("head", getHead());
+            globals.put("nozzle", this);
+            globals.put("nozzleTip", nt);
+            Configuration.get()
+                         .getScripting()
+                         .on("NozzleTip.BeforeUnload", globals);
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+        }
+
         Logger.debug("{}.unloadNozzleTip(): moveTo End Location", getName());
         MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerEndLocation(), speed);
 
@@ -323,6 +364,18 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             moveToSafeZ(getHead().getMachine().getSpeed());
 
             Logger.debug("{}.unloadNozzleTip(): Finished", getName());
+            
+            try {
+                Map<String, Object> globals = new HashMap<>();
+                globals.put("head", getHead());
+                globals.put("nozzle", this);
+                Configuration.get()
+                             .getScripting()
+                             .on("NozzleTip.Unloaded", globals);
+            }
+            catch (Exception e) {
+                Logger.warn(e);
+            }
         }
         
         nozzleTip = null;
@@ -393,6 +446,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
+            if (getHead().getNozzles().size() == 1) {
+                MessageBoxes.errorBox(null, "Error: Nozzle Not Deleted", "Can't delete last nozzle. There must be at least one nozzle.");
+                return;
+            }
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
                     "Are you sure you want to delete " + getName() + "?",
                     "Delete " + getName() + "?", JOptionPane.YES_NO_OPTION);
