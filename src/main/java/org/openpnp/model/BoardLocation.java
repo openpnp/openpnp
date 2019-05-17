@@ -96,6 +96,11 @@ public class BoardLocation extends AbstractModelObject {
         Location oldValue = this.location;
         this.location = location;
         firePropertyChange("location", oldValue, location);
+        // If the location is changing it is not possible the placement transform is
+        // still valid, so clear it.
+        if (!this.location.equals(oldValue)) {
+            setPlacementTransform(null);
+        }
     }
     
     public Side getSide() {
