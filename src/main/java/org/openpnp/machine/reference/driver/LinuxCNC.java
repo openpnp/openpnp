@@ -221,7 +221,7 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
     }
 
     public synchronized void connect(String serverIp, int port) throws Exception {
-        // disconnect();
+        disconnect();
         Logger.debug("connect({}, {})", serverIp, port);
         SocketAddress sa = new InetSocketAddress(serverIp, port);
         socket = new Socket();
@@ -242,7 +242,6 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
             // dump that is sent after reset.
             // responses = sendCommand(null, 3000);
         }
-        connected = true;
 
         responses = sendCommand("hello EMC x 1.1");
         responses.addAll(sendCommand("set enable EMCTOO"));
@@ -259,14 +258,7 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
         // This will be used later to determine the return status.
         responses.addAll(sendCommand("set verbose on"));
 
-        processConnectionResponses(responses);
-
-        if (!connected) {
-            throw new Exception(
-                    "Unable to receive connection response from LinuxCNC ver 1.1. Check your server ip and port in machine.xml");
-        }
-
-        if (!connected) {
+        if (!processConnectionResponses(responses)) {
             throw new Exception(String.format(
                     "Unable to receive connection response from LinuxCNC. Check your server ip and port in machine.xml and that you are running at least version %f of LinuxCNCrsh",
                     minimumRequiredVersion));
@@ -290,18 +282,20 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
         // Reset all axes to 0, in case the firmware was not reset on
         // connect.
         sendCommand("set mdi G92 X0 Y0 Z0 A0");
+        
+        connected = true;
     }
 
-    private void processConnectionResponses(List<String> responses) {
+    private boolean processConnectionResponses(List<String> responses) {
         for (String response : responses) {
             if (response.startsWith("HELLO ACK EMCNETSVR 1.1")) {
-
                 connectedVersion = 1.1;
-                connected = true;
                 Logger.debug(
                         String.format("Connected to LinuxCNCrsh Version: %.2f", connectedVersion));
+                return true;
             }
         }
+        return false;
     }
 
     public synchronized void disconnect() {
