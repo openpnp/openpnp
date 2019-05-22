@@ -35,14 +35,14 @@ When you start OpenPnP for the first time you will see a simulated pick and plac
 
 1. Press the green power button <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/power_button_on.svg" height="18"> to start the virtual "machine".
 2. Use the jog buttons ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/arrow-left.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/arrow-down.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/arrow-right.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/arrow-up.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/rotate-clockwise.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/rotate-counterclockwise.svg) in the jog controls to move the camera around. You can change the distance each click moves by changing the value of the Distance slider.
-3. Visit each of the tabs along the bottom of the window to see how Jobs, Parts, Packages, Feeders and the Machine is configured. Right now it's best not to change anything.
+3. Visit each of the tabs along the top of the window to see how Jobs, Parts, Packages, Feeders and the Machine is configured. Right now it's best not to change anything.
 
 Your First Job
 ==============
 
 Now that you've seen the user interface a bit, it's time to try running a pick and place job. Follow along with the instructions below:
 
-1. Select the Job tab at the bottom of the main OpenPnP window.
+1. Select the Job tab at the top of the main OpenPnP window.
 2. From the File menu, select Open Job.
 3. Using your computer's file dialog, find the `samples` directory that came with OpenPnP. It should be in the same directory you installed OpenPnP into.
 4. In the `samples` directory, find the `pnp-test` directory and open the `pnp-test.job.xml` file inside it.
