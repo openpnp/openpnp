@@ -37,6 +37,16 @@ When you start OpenPnP for the first time you will see a simulated pick and plac
 2. Use the jog buttons ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/arrow-left.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/arrow-down.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/arrow-right.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/arrow-up.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/rotate-clockwise.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/rotate-counterclockwise.svg) in the jog controls to move the camera around. You can change the distance each click moves by changing the value of the Distance slider.
 3. Visit each of the tabs along the top of the window to see how Jobs, Parts, Packages, Feeders and the Machine is configured. Right now it's best not to change anything.
 
+About The Demo
+--------------
+If you'd like to get right to seeing OpenPnP in action you can skip this section and refer back to it later.
+
+The demo configuration you see when you first start OpenPnP includes simulated cameras, feeders, nozzles, and everything else that makes an OpenPnP machine. In particular, what you see in the camera view is a small window into a much larger virtual pick and place machine. The full machine looks like this:
+
+![](https://raw.githubusercontent.com/openpnp/openpnp/develop/src/main/resources/samples/pnp-test/pnp-test.png)
+
+The machine includes 8 boards in different orientations, 9 strip feeders labeled Upper Strip 1 - 4, and Lower Strip 1 - 4, and a red rectangle showing the location of the simulated bottom vision camera.
+
 Your First Job
 ==============
 
