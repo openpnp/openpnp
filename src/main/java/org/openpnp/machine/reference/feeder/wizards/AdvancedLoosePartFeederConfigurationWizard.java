@@ -19,7 +19,6 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -39,6 +38,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
+import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -108,12 +108,9 @@ public class AdvancedLoosePartFeederConfigurationWizard
         pipeline.setProperty("camera", Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
         pipeline.setProperty("feeder", feeder);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new JDialog(MainFrame.get(), feeder.getPart().getId() + " Pipeline");
-        dialog.getContentPane().setLayout(new BorderLayout());
-        dialog.getContentPane().add(editor);
-        dialog.setSize(1024, 768);
+        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), feeder.getPart().getId() + " Pipeline", editor);
         dialog.setVisible(true);
-    }
+}
 
     private void resetPipeline() {
         feeder.resetPipeline();
@@ -124,10 +121,7 @@ public class AdvancedLoosePartFeederConfigurationWizard
         pipeline.setProperty("camera", Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
         pipeline.setProperty("feeder", feeder);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new JDialog(MainFrame.get(), feeder.getPart().getId() + " Training Pipeline");
-        dialog.getContentPane().setLayout(new BorderLayout());
-        dialog.getContentPane().add(editor);
-        dialog.setSize(1024, 768);
+        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), feeder.getPart().getId() + " Training Pipeline", editor);
         dialog.setVisible(true);
     }
 

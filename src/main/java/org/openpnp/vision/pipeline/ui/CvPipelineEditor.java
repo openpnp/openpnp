@@ -149,21 +149,25 @@ public class CvPipelineEditor extends JPanel {
         inputAndOutputSplitPane.setContinuousLayout(true);
         add(inputAndOutputSplitPane, BorderLayout.CENTER);
 
-        pipelinePanel = new PipelinePanel(this);
-        inputAndOutputSplitPane.setLeftComponent(pipelinePanel);
         resultsPanel = new ResultsPanel(this);
         inputAndOutputSplitPane.setRightComponent(resultsPanel);
-
+        pipelinePanel = new PipelinePanel(this);
+        inputAndOutputSplitPane.setLeftComponent(pipelinePanel);
+        
         addHierarchyListener(new HierarchyListener() {
             @Override
             public void hierarchyChanged(HierarchyEvent e) {
                 inputAndOutputSplitPane.setDividerLocation(0.25);
             }
         });
-
+        
         process();
     }
-
+    
+    public void initializeFocus() {
+        pipelinePanel.initializeFocus();    	
+    }
+    
     public CvPipeline getPipeline() {
         return pipeline;
     }
