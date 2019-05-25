@@ -40,7 +40,7 @@ public interface Camera extends HeadMountable, WizardConfigurable,
      * tools might introduce slight offsets in X, Y as their Z axes are not perfectly parallel.
      * This offset is compensated if the getLocation(tool) method is used instead of the plain
      * getLocation() method. 
-     * If tool == null it just returns the uncalibrated location.
+     * If tool == null it returns the same as plain getLocation().
      *  
      * @param tool
      * @return

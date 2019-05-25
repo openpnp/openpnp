@@ -1117,7 +1117,8 @@ public class CameraView extends JComponent implements CameraListener {
         // and with the values of the offsets.
         Location offsets = camera.getUnitsPerPixel().derive(offsetX, offsetY, 0.0, 0.0);
         // Add the offsets to the Camera's position.
-        Location location = camera.getLocation(MainFrame.get().getMachineControls().getSelectedNozzle()).add(offsets);
+        Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+        Location location = camera.getLocation(nozzle).add(offsets);
         CameraViewActionEvent action =
                 new CameraViewActionEvent(CameraView.this, e.getX(), e.getY(),
                         e.getX() * scaledUnitsPerPixelX, e.getY() * scaledUnitsPerPixelY, location);

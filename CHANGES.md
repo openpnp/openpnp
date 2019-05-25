@@ -1,6 +1,56 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-05-25
+
+## Runout Compensation and Bottom Camera Position and Rotation Calibration
+
+Feature changes:
+* Using the Runout calibration facility, an automatic bottom camera position and rotation offset 
+  calibration is provided. In a multi-nozzle machine, this should be done with the first/best nozzle.
+* For all the other nozzles in a multi-nozzle machine, a new "Model & Camera Offset" calibration system is
+  provided, compensating for any offset introduced through imperfect Z travel when the bottom camera focal 
+  plane does not match the PCB surface plane. 
+* The user can not set how many missed vision detections are tolerated in Runout Calibration for more 
+  robustness inside a job.
+* The user can set a Z offset for calibrate per nozzle tip to allow the focal plane of the vision-detected 
+  feature to be further up on the nozzle tip (e.g. receded air hole in a cup shaped nozzle tip).
+* If a nozzle tip is named "unloaded" it is used as a stand-in when no nozzle tip is loaded. 
+  Very useful when the nozzle tip holder itself has so much runout that even nozzle tip changing 
+  is scary without calibration. Again use the Z offset to calibrate the bare nozzle tip holder in the 
+  focal plane. 
+* User settable automatic recalibration trigger:
+   - On each nozzle tip change
+   - On each nozzle tip change if used in a job (like before)
+   - On homing/first change of a nozzle tip after homing. Nozzle tips that are later unloaded 
+     and reloaded will not be recalibrated, saving time. This assumes that both the nozzle (i.e. 
+     the C axis) and the nozzle tip in the holder will retain a known rotation (i.e. the runout 
+     phase shift does not change).
+   - On manual calibration only. The compensation is stored in the machine.xml which is useful 
+     for machines that have a homed/spring-loaded rotation C axes so the runout phase shift 
+     remains the same on every power up.
+
+Fixes:
+* Removed unnecessary start/stop rotations in calibration
+* Changed the threshold property into a unit-aware Length
+* Fixed missing LengthUnit conversions in the  "Model" calibration system (it compensated in 
+  millimeters but based its model on camera units).
+* Fixed camera not updating its width/height when the frame size changes due to changed transformations 
+  such as rotation (like after the above-mentioned rotation calibration). VisionUtils performed
+  bad pixel to Location coordinate conversions until the next OpenPNP restart.
+
+Changes in models and utility functions:
+* Added a home() method to all HeadMountables to trigger recalibration when needed.
+* Added a Camera.getLocation(tool) method to get a camera position adjusted for a specific 
+  nozzle/nozzle tip. This helps with multi-nozzle machines that have the bottom camera
+  focal plane at a Z height that differs from the PCB surface. Therefore the different nozzles might
+  introduce a slight offset due to the Z axes not being perfectly perallel to each other. 
+* Added reverse transformation in VisionUtils (Location to pixel)
+* Added "center" property to vision stage MaskCircle to allow off-center nozzle tip recognition
+  for camera calibration.
+  
+For more information see https://github.com/openpnp/openpnp/pull/825
+  
 # 2019-05-10
 
 ## Bottom Vision Pre-Rotate Updates and Bug Fixes 

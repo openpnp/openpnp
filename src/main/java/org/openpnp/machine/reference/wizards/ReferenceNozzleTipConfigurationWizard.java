@@ -19,16 +19,12 @@
 
 package org.openpnp.machine.reference.wizards;
 
-import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
 import javax.swing.JCheckBox;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -39,27 +35,16 @@ import javax.swing.table.AbstractTableModel;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
-import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Location;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.HeadMountable;
-import org.openpnp.util.MovableUtils;
-import org.openpnp.util.UiUtils;
-import org.openpnp.util.VisionUtils;
-import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -375,33 +360,6 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     }
     
 
-    @SuppressWarnings("serial")     // Question is this allowed? This is stolen code from LocationButtonsPanel
-    private Action positionToolAction = new AbstractAction("Position Tool", Icons.centerTool) {
-        {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Position the tool over the bottom camera.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            UiUtils.submitUiMachineTask(() -> {
-                HeadMountable nozzle = nozzleTip.getParentNozzle();
-                Camera camera = VisionUtils.getBottomVisionCamera();
-                Location location = camera.getLocation(nozzle);
-
-                MovableUtils.moveToLocationAtSafeZ(nozzle, location);
-            });
-        }
-    };
-
-    private void editCalibrationPipeline() throws Exception {
-        CvPipeline pipeline = nozzleTip.getCalibration().getPipeline();
-        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Calibration Pipeline", editor);
-        dialog.setVisible(true);
-    }
-
-   
     @Override
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
