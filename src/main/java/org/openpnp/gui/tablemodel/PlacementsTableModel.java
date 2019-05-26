@@ -40,11 +40,11 @@ public class PlacementsTableModel extends AbstractTableModel {
     final Configuration configuration;
 
     private String[] columnNames =
-            new String[] {"ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Placed", "Status", "Check Fids", "Comments"};
+            new String[] {"ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Placed", "Status", "Comments"};
 
     private Class[] columnTypes = new Class[] {PartCellValue.class, Part.class, Side.class,
             LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, Type.class,
-            Boolean.class, Status.class, Boolean.class, String.class};
+            Boolean.class, Status.class, String.class};
 
     public enum Status {
         Ready,
@@ -149,9 +149,6 @@ public class PlacementsTableModel extends AbstractTableModel {
             	jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 9) {
-                placement.setCheckFids((Boolean) aValue);
-            }
-            else if (columnIndex == 10) {
                 placement.setComments((String) aValue);
             }
         }
@@ -212,8 +209,6 @@ public class PlacementsTableModel extends AbstractTableModel {
             case 8:
                 return getPlacementStatus(placement);
             case 9:
-                return placement.getCheckFids();
-            case 10:
                 return placement.getComments();
             default:
                 return null;

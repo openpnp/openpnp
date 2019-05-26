@@ -42,8 +42,9 @@ public class Placement extends AbstractModelObject implements Identifiable {
      * History: 1.0: Initial revision. 
      * 1.1: Replaced Boolean place with Type type. Deprecated place.
      * 1.2: Removed glue attribute.
+     * 1.3: Removed checkFids attribute.
      */
-    @Version(revision = 1.2)
+    @Version(revision = 1.3)
     private double version;
 
     @Attribute
@@ -61,9 +62,6 @@ public class Placement extends AbstractModelObject implements Identifiable {
 
     private Part part;
 
-    @Attribute
-    private boolean checkFids;
-    
     @Element(required=false)
     private String comments;
 
@@ -137,15 +135,6 @@ public class Placement extends AbstractModelObject implements Identifiable {
         firePropertyChange("type", oldValue, type);
     }
 
-    public boolean getCheckFids() { return checkFids; }
-
-    public void setCheckFids(boolean checkFids)
-    {
-        Object oldValue = this.checkFids;
-        this.checkFids = checkFids;
-        firePropertyChange("checkFids", oldValue, checkFids);
-    }
-    
     public String getComments() {
         return comments;
     }
