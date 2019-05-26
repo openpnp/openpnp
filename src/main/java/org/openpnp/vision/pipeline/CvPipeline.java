@@ -199,7 +199,7 @@ public class CvPipeline implements AutoCloseable {
             Result result = null;
             try {
                 if (!stage.isEnabled()) {
-                    throw new Exception("Stage not enabled.");
+                    throw new Exception(String.format("Stage \"%s\"not enabled.", stage.getName()));
                 }
                 result = stage.process(this);
             }

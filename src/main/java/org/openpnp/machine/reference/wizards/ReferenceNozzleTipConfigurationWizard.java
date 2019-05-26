@@ -19,7 +19,6 @@
 
 package org.openpnp.machine.reference.wizards;
 
-import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -60,6 +59,7 @@ import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
+import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -443,10 +443,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private void editCalibrationPipeline() throws Exception {
         CvPipeline pipeline = nozzleTip.getCalibration().getPipeline();
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new JDialog(MainFrame.get(), "Calibration Pipeline");
-        dialog.getContentPane().setLayout(new BorderLayout());
-        dialog.getContentPane().add(editor);
-        dialog.setSize(1024, 768);
+        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Calibration Pipeline", editor);
         dialog.setVisible(true);
     }
 

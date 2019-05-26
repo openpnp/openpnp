@@ -159,6 +159,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         
         table = new AutoSelectTextTable(tableModel);
         tableSorter = new TableRowSorter<>(tableModel);
+        table.getColumnModel().moveColumn(1,  2);
 
         final JSplitPane splitPane = new JSplitPane();
         splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);

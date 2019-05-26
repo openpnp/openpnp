@@ -267,7 +267,7 @@ public class NamedCSVImporter implements BoardImporter {
     private static List<Placement> parseFile(File file, boolean createMissingParts,
             boolean updateHeights) throws Exception {
         BufferedReader reader =
-                new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+                new BufferedReader(new InputStreamReader(new FileInputStream(file), "ISO-8859-1"));
         ArrayList<Placement> placements = new ArrayList<>();
         String line;
 
@@ -284,7 +284,7 @@ public class NamedCSVImporter implements BoardImporter {
 
         if (Len == 0) {
             reader.close();
-            throw new Exception("Unable to parse CSV File Names");
+            throw new Exception("Unable to find relevant headers' names.\n See https://github.com/openpnp/openpnp/wiki/Importing-Centroid-Data for more.");
         }
 
         // CSVParser csvParser = new CSVParser(new FileInputStream(file));
