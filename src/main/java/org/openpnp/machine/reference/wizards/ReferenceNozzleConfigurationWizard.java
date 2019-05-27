@@ -67,8 +67,6 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
     private JPanel panel;
     private JLabel lblVacuumSenseActuator;
     private JTextField vacSenseActuatorNameTf;
-    private JLabel lblPartOnLowers;
-    private JCheckBox invertVacuumLogicChk;
 
     public ReferenceNozzleConfigurationWizard(ReferenceNozzle nozzle) {
         this.nozzle = nozzle;
@@ -213,8 +211,6 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblVacuumSenseActuator = new JLabel("Vacuum Sense Actuator Name");
@@ -223,12 +219,6 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         vacSenseActuatorNameTf = new JTextField();
         panel.add(vacSenseActuatorNameTf, "4, 2");
         vacSenseActuatorNameTf.setColumns(10);
-        
-        lblPartOnLowers = new JLabel("Vacuum Value Decreases On Pick?");
-        panel.add(lblPartOnLowers, "2, 4");
-        
-        invertVacuumLogicChk = new JCheckBox("");
-        panel.add(invertVacuumLogicChk, "4, 4");
     }
 
     @Override
@@ -249,7 +239,6 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         addWrappedBinding(nozzle, "pickDwellMilliseconds", pickDwellTf, "text", intConverter);
         addWrappedBinding(nozzle, "placeDwellMilliseconds", placeDwellTf, "text", intConverter);
         addWrappedBinding(nozzle, "vacuumSenseActuatorName", vacSenseActuatorNameTf, "text");
-        addWrappedBinding(nozzle, "invertVacuumSenseLogic", invertVacuumLogicChk, "selected");
 
         ComponentDecorators.decorateWithAutoSelect(nameTf);
         ComponentDecorators.decorateWithAutoSelect(pickDwellTf);

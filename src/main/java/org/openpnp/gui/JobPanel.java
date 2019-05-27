@@ -939,73 +939,29 @@ public class JobPanel extends JPanel {
         }, (e) -> {
 
         }, (t) -> {
-            List<String> options = new ArrayList<>();
-            String retryOption = "Try Again"; //$NON-NLS-1$
-            String skipOption = "Skip"; //$NON-NLS-1$
-            String ignoreContinueOption = "Ignore and Continue"; //$NON-NLS-1$
-            String pauseOption = "Pause Job"; //$NON-NLS-1$
-
-            options.add(retryOption);
-            if (jobProcessor.canSkip()) {
-                options.add(skipOption);
-            }
-            if (jobProcessor.canIgnoreContinue()) {
-            	options.add(ignoreContinueOption);
-            }
-            options.add(pauseOption);
-            int result = JOptionPane.showOptionDialog(getTopLevelAncestor(), t.getMessage(),
-                    "Job Error", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null, //$NON-NLS-1$
-                    options.toArray(), retryOption);
-            String selectedOption = (result < 0) ? "Pause Job" : options.get(result);
-            if (selectedOption.equals(retryOption)) {
-                jobRun();
-            }
-            // Skip
-            else if (selectedOption.equals(skipOption)) {
-                UiUtils.messageBoxOnException(() -> {
-                    // Tell the job processor to skip the current placement and then call jobRun()
-                    // to start things back up, either running or stepping.
-                    jobSkip();
-                });
-            }
-            //ignore/continue
-            else if (selectedOption.equals(ignoreContinueOption)) {
-                UiUtils.messageBoxOnException(() -> {
-                    // Tell the job processor ignore error and continue as if everything were normal
-                    jobIgnoreContinue();
-                });
-            }
-            // Pause or cancel dialog
-            else {
-                // We are either Running or Stepping. If Stepping, there is nothing to do. Just
-                // clear the dialog and let the user take control. If Running we need to transition
-                // to Stepping.
-                if (state == State.Running) {
-                    try {
-                        setState(State.Paused);
-                    }
-                    catch (Exception e) {
-                        // Since we are checking if we're in the Running state this should not
-                        // ever happen. If it does, the Error will let us know.
-                        e.printStackTrace();
-                        throw new Error(e);
-                    }
+            /**
+             * TODO It would be nice to give the user the ability to single click suppress errors
+             * on the currently processing placement, but that requires knowledge of the currently
+             * processing placement. With the current model where JobProcessor is available for
+             * both dispense and PnP this is not possible. Once dispense is removed we can include
+             * the current placement in the thrown error and add this feature.
+             */
+            
+            MessageBoxes.errorBox(getTopLevelAncestor(), "Job Error", t.getMessage());
+            // We are either Running or Stepping. If Stepping, there is nothing to do. Just
+            // clear the dialog and let the user take control. If Running we need to transition
+            // to Stepping.
+            if (state == State.Running) {
+                try {
+                    setState(State.Paused);
+                }
+                catch (Exception e) {
+                    // Since we are checking if we're in the Running state this should not
+                    // ever happen. If it does, the Error will let us know.
+                    e.printStackTrace();
+                    throw new Error(e);
                 }
             }
-        });
-    }
-
-    public void jobSkip() {
-        UiUtils.submitUiMachineTask(() -> {
-            jobProcessor.skip();
-            jobRun();
-        });
-    }
-
-    public void jobIgnoreContinue() {
-        UiUtils.submitUiMachineTask(() -> {
-            jobProcessor.ignoreContinue();
-            jobRun();
         });
     }
 
@@ -1269,7 +1225,6 @@ public class JobPanel extends JPanel {
                 removeBoardAction.setEnabled(true);
             }
             else {
-                List<BoardLocation> selections = getSelections();
                 for (BoardLocation selection : getSelections()) {
                     getJob().removeBoardLocation(selection);
                 }

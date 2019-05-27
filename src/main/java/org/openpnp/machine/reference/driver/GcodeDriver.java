@@ -775,10 +775,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
 
-        ReferenceNozzleTip nt = nozzle.getNozzleTip();
-        command = substituteVariable(command, "VacuumLevelPartOn", nt.getVacuumLevelPartOn());
-        command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
-
         sendGcode(command);
 
         for (ReferenceDriver driver : subDrivers) {
@@ -794,10 +790,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         String command = getCommand(nozzle, CommandType.PLACE_COMMAND);
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
-
-        command = substituteVariable(command, "VacuumLevelPartOn", nt.getVacuumLevelPartOn());
-        command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
-        sendGcode(command);
 
         pickedNozzles.remove(nozzle);
         if (pickedNozzles.size() < 1) {

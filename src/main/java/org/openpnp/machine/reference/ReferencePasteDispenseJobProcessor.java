@@ -22,9 +22,7 @@ package org.openpnp.machine.reference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.openpnp.machine.reference.ReferencePasteDispenseJobProcessor.JobDispense.Status;
 import org.openpnp.model.BoardLocation;
@@ -131,16 +129,17 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
         fsm.send(Message.Initialize);
     }
 
-    public synchronized boolean next() throws Exception {
+    public synchronized boolean next() throws JobProcessorException {
         if(fsm.getState() == State.Uninitialized) {
             return false;
         }
 
         try {
             fsm.send(Message.Next);
-        } catch (Exception e) {
+        } 
+        catch (Exception e) {
             this.fireJobState(this.machine.getSignalers(), AbstractJobProcessor.State.ERROR);
-            throw (e);
+            throw new JobProcessorException(null, e);
         }
 
         if (fsm.getState() == State.Stopped) {
@@ -148,7 +147,12 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
              * If we've reached the Stopped state the process is complete. We reset the FSM and
              * return false to indicate that we're finished.
              */
-            fsm.send(Message.Reset);
+            try {
+                fsm.send(Message.Reset);
+            }
+            catch (Exception e) {
+                throw new JobProcessorException(null, e);
+            }
             return false;
         }
         else if (fsm.getState() == State.Dispense && isJobComplete()) {
@@ -156,7 +160,12 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
              * If we've reached the Dispense state and there are no more dispenses to work on the job
              * is complete. We send the Complete Message to start the cleanup process.
              */
-            fsm.send(Message.Complete);
+            try {
+                fsm.send(Message.Complete);
+            }
+            catch (Exception e) {
+                throw new JobProcessorException(null, e);
+            }
             this.fireJobState(this.machine.getSignalers(), AbstractJobProcessor.State.FINISHED);
             return false;
         }
@@ -164,8 +173,13 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
         return true;
     }
 
-    public synchronized void abort() throws Exception {
-        fsm.send(Message.Abort);
+    public synchronized void abort() throws JobProcessorException {
+        try {
+            fsm.send(Message.Abort);
+        }
+        catch (Exception e) {
+            throw new JobProcessorException(null, e);
+        }
     }
 
     public synchronized void skip() throws Exception {

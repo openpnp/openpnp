@@ -213,8 +213,8 @@ public class FootprintPanel extends JPanel {
     public final Action newAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Part...");
-            putValue(SHORT_DESCRIPTION, "Create a new part, specifying it's ID.");
+            putValue(NAME, "New Pad...");
+            putValue(SHORT_DESCRIPTION, "Create a new pad, specifying it's ID.");
         }
 
         @Override
@@ -235,8 +235,8 @@ public class FootprintPanel extends JPanel {
     public final Action deleteAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Part");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected part.");
+            putValue(NAME, "Delete Pad");
+            putValue(SHORT_DESCRIPTION, "Delete the currently selected pad.");
         }
 
         @Override

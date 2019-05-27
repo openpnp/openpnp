@@ -108,8 +108,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JPanel panelVacuumSensing;
     private JLabel lblPartOnNozzle;
     private JLabel lblPartOffNozzle;
-    private JTextField vacuumLevelPartOn;
-    private JTextField vacuumLevelPartOff;
+    private JTextField vacuumLevelPartOnLow;
+    private JTextField vacuumLevelPartOffLow;
     private JPanel panel;
     private JLabel lblName;
     private JTextField nameTf;
@@ -315,26 +315,44 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblPartOnNozzle = new JLabel("Part On Nozzle Vacuum Value");
-        panelVacuumSensing.add(lblPartOnNozzle, "2, 2, right, default");
+        lblNewLabel = new JLabel("Low Value");
+        panelVacuumSensing.add(lblNewLabel, "4, 2");
         
-        vacuumLevelPartOn = new JTextField();
-        panelVacuumSensing.add(vacuumLevelPartOn, "4, 2");
-        vacuumLevelPartOn.setColumns(10);
+        lblNewLabel_1 = new JLabel("High Value");
+        panelVacuumSensing.add(lblNewLabel_1, "6, 2");
         
-        lblPartOffNozzle = new JLabel("Part Off Nozzle Vacuum Value");
-        panelVacuumSensing.add(lblPartOffNozzle, "2, 4, right, default");
+        lblPartOnNozzle = new JLabel("Part On Nozzle Vacuum Range");
+        panelVacuumSensing.add(lblPartOnNozzle, "2, 4, right, default");
         
-        vacuumLevelPartOff = new JTextField();
-        panelVacuumSensing.add(vacuumLevelPartOff, "4, 4");
-        vacuumLevelPartOff.setColumns(10);
+        vacuumLevelPartOnLow = new JTextField();
+        panelVacuumSensing.add(vacuumLevelPartOnLow, "4, 4");
+        vacuumLevelPartOnLow.setColumns(10);
+        
+        vacuumLevelPartOnHigh = new JTextField();
+        panelVacuumSensing.add(vacuumLevelPartOnHigh, "6, 4");
+        vacuumLevelPartOnHigh.setColumns(10);
+        
+        lblPartOffNozzle = new JLabel("Part Off Nozzle Vacuum Range");
+        panelVacuumSensing.add(lblPartOffNozzle, "2, 6, right, default");
+        
+        vacuumLevelPartOffLow = new JTextField();
+        panelVacuumSensing.add(vacuumLevelPartOffLow, "4, 6");
+        vacuumLevelPartOffLow.setColumns(10);
+        
+        vacuumLevelPartOffHigh = new JTextField();
+        panelVacuumSensing.add(vacuumLevelPartOffHigh, "6, 6");
+        vacuumLevelPartOffHigh.setColumns(10);
         
         panelDwellTime = new JPanel();
         panelDwellTime.setBorder(new TitledBorder(null, "Dwell Times", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -393,6 +411,10 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
             });
         }
     };
+    private JLabel lblNewLabel;
+    private JLabel lblNewLabel_1;
+    private JTextField vacuumLevelPartOnHigh;
+    private JTextField vacuumLevelPartOffHigh;
 
     private void editCalibrationPipeline() throws Exception {
         CvPipeline pipeline = nozzleTip.getCalibration().getPipeline();
@@ -459,8 +481,10 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         addWrappedBinding(changerEndLocation, "lengthZ", textFieldChangerEndZ, "text",
                 lengthConverter);
         
-        addWrappedBinding(nozzleTip, "vacuumLevelPartOn", vacuumLevelPartOn, "text", doubleConverter);
-        addWrappedBinding(nozzleTip, "vacuumLevelPartOff", vacuumLevelPartOff, "text", doubleConverter);
+        addWrappedBinding(nozzleTip, "vacuumLevelPartOnLow", vacuumLevelPartOnLow, "text", doubleConverter);
+        addWrappedBinding(nozzleTip, "vacuumLevelPartOnHigh", vacuumLevelPartOnHigh, "text", doubleConverter);
+        addWrappedBinding(nozzleTip, "vacuumLevelPartOffLow", vacuumLevelPartOffLow, "text", doubleConverter);
+        addWrappedBinding(nozzleTip, "vacuumLevelPartOffHigh", vacuumLevelPartOffHigh, "text", doubleConverter);
         
         addWrappedBinding(nozzleTip, "pickDwellMilliseconds", pickDwellTf, "text", intConverter);
         addWrappedBinding(nozzleTip, "placeDwellMilliseconds", placeDwellTf, "text", intConverter);
@@ -489,8 +513,10 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerEndY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerEndZ);
            
-        ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOn);
-        ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOff);
+        ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOnLow);
+        ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOnHigh);
+        ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOffLow);
+        ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOffHigh);
     }
 
     @Override

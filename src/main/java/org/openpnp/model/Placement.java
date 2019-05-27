@@ -37,13 +37,18 @@ public class Placement extends AbstractModelObject implements Identifiable {
     public enum Type {
         Place, Fiducial, Ignore
     }
+    
+    public enum ErrorHandling {
+        Alert, Suppress
+    }
 
     /**
      * History: 1.0: Initial revision. 
      * 1.1: Replaced Boolean place with Type type. Deprecated place.
      * 1.2: Removed glue attribute.
+     * 1.3: Removed checkFids attribute.
      */
-    @Version(revision = 1.2)
+    @Version(revision = 1.3)
     private double version;
 
     @Attribute
@@ -61,11 +66,11 @@ public class Placement extends AbstractModelObject implements Identifiable {
 
     private Part part;
 
-    @Attribute
-    private boolean checkFids;
-    
-    @Element(required=false)
+    @Element(required = false)
     private String comments;
+    
+    @Element(required = false)
+    private ErrorHandling errorHandling = ErrorHandling.Alert;
 
     @SuppressWarnings("unused")
     private Placement() {
@@ -137,15 +142,6 @@ public class Placement extends AbstractModelObject implements Identifiable {
         firePropertyChange("type", oldValue, type);
     }
 
-    public boolean getCheckFids() { return checkFids; }
-
-    public void setCheckFids(boolean checkFids)
-    {
-        Object oldValue = this.checkFids;
-        this.checkFids = checkFids;
-        firePropertyChange("checkFids", oldValue, checkFids);
-    }
-    
     public String getComments() {
         return comments;
     }
@@ -154,6 +150,16 @@ public class Placement extends AbstractModelObject implements Identifiable {
         Object oldValue = this.comments;
         this.comments = comments;
         firePropertyChange("comments", oldValue, comments);
+    }
+    
+    public ErrorHandling getErrorHandling() {
+        return errorHandling;
+    }
+
+    public void setErrorHandling(ErrorHandling errorHandling) {
+        Object oldValue = this.errorHandling;
+        this.errorHandling = errorHandling;
+        firePropertyChange("errorHandling", oldValue, errorHandling);
     }
 
     @Override
