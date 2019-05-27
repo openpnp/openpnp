@@ -29,7 +29,6 @@ import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
-import org.openpnp.machine.reference.ReferencePasteDispenser;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConsole;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverGcodes;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverSettings;
@@ -74,10 +73,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
         ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index"),
-        ACTUATOR_READ_REGEX(true),
-        PRE_DISPENSE_COMMAND(false, "DispenseTime"),
-        DISPENSE_COMMAND(false, "DispenseTime"),
-        POST_DISPENSE_COMMAND(false, "DispenseTime");
+        ACTUATOR_READ_REGEX(true);
 
         final boolean headMountable;
         final String[] variableNames;
@@ -276,29 +272,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             	disconnect();
         	}
         }
-    }
-
-    @Override
-    public void dispense(ReferencePasteDispenser dispenser,Location startLocation,Location endLocation,long dispenseTimeMilliseconds) throws Exception {
-        Logger.debug("dispense({}, {}, {}, {})", new Object[] {dispenser, startLocation, endLocation, dispenseTimeMilliseconds});
-
-        String command = getCommand(null, CommandType.PRE_DISPENSE_COMMAND);
-        command = substituteVariable(command, "DispenseTime", dispenseTimeMilliseconds);
-
-        sendGcode(command);
-
-        for (ReferenceDriver driver: subDrivers )
-        {
-            driver.dispense(dispenser,startLocation,endLocation,dispenseTimeMilliseconds);
-        }
-
-        command = getCommand(null, CommandType.DISPENSE_COMMAND);
-        command = substituteVariable(command, "DispenseTime", dispenseTimeMilliseconds);
-        sendGcode(command);
-
-        command = getCommand(null, CommandType.POST_DISPENSE_COMMAND);
-        command = substituteVariable(command, "DispenseTime", dispenseTimeMilliseconds);
-        sendGcode(command);
     }
 
     @Override

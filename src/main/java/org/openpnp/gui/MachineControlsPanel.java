@@ -50,7 +50,6 @@ import org.openpnp.gui.support.HeadMountableItem;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NozzleItem;
-import org.openpnp.gui.support.PasteDispenserItem;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
@@ -59,7 +58,6 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
@@ -115,18 +113,6 @@ public class MachineControlsPanel extends JPanel {
         }
     }
 
-
-    public PasteDispenser getSelectedPasteDispenser() {
-        if (selectedTool instanceof PasteDispenser) {
-            return (PasteDispenser) selectedTool;
-        }
-        try {
-            return Configuration.get().getMachine().getDefaultHead().getDefaultPasteDispenser();
-        }
-        catch (Exception e) {
-            return null;
-        }
-    }
 
     /**
      * Currently returns the selected Nozzle. Intended to eventually return either the selected
@@ -405,10 +391,6 @@ public class MachineControlsPanel extends JPanel {
 
                 for (Camera camera : head.getCameras()) {
                     comboBoxHeadMountable.addItem(new CameraItem(camera));
-                }
-                
-                for (PasteDispenser dispenser : head.getPasteDispensers()) {
-                    comboBoxHeadMountable.addItem(new PasteDispenserItem(dispenser));
                 }
             }
 
