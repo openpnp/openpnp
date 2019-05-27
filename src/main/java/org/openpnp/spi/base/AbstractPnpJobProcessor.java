@@ -14,7 +14,7 @@ import org.openpnp.util.MovableUtils;
 public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
         implements PnpJobProcessor {
 
-    public static void discardAll(Head head) throws PnpJobProcessorException {
+    public static void discardAll(Head head) throws JobProcessorException {
         for (Nozzle nozzle : head.getNozzles()) {
             discard(nozzle);
         }
@@ -28,7 +28,7 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
      * @param nozzle
      * @throws Exception
      */
-    public static void discard(Nozzle nozzle) throws PnpJobProcessorException {
+    public static void discard(Nozzle nozzle) throws JobProcessorException {
         if (nozzle.getPart() == null) {
             return;
         }
@@ -43,17 +43,17 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
             
         }
         catch (Exception e) {
-            throw new PnpJobProcessorException(nozzle, e);
+            throw new JobProcessorException(nozzle, e);
         }
     }
 
-    public static NozzleTip findNozzleTip(Nozzle nozzle, Part part) throws PnpJobProcessorException {
+    public static NozzleTip findNozzleTip(Nozzle nozzle, Part part) throws JobProcessorException {
         for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
             if (nozzleTip.canHandle(part)) {
                 return nozzleTip;
             }
         }
-        throw new PnpJobProcessorException(part,
+        throw new JobProcessorException(part,
                 "No compatible nozzle tip on nozzle " + nozzle.getName() + " found for part " + part.getId());
     }
 
@@ -73,7 +73,7 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
      * @return
      * @throws Exception If no compatible NozzleTip can be found.
      */
-    public static NozzleTip findNozzleTip(Head head, Part part) throws PnpJobProcessorException {
+    public static NozzleTip findNozzleTip(Head head, Part part) throws JobProcessorException {
         for (Nozzle nozzle : head.getNozzles()) {
             try {
                 return findNozzleTip(nozzle, part);
@@ -81,7 +81,7 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
             catch (Exception e) {
             }
         }
-        throw new PnpJobProcessorException(part, "No compatible nozzle tip on any nozzle found for part " + part.getId());
+        throw new JobProcessorException(part, "No compatible nozzle tip on any nozzle found for part " + part.getId());
     }
 
     /**
@@ -91,13 +91,13 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
      * @return
      * @throws Exception If no Feeder is found that is both enabled and is serving the Part.
      */
-    public static Feeder findFeeder(Machine machine, Part part) throws PnpJobProcessorException {
+    public static Feeder findFeeder(Machine machine, Part part) throws JobProcessorException {
         for (Feeder feeder : machine.getFeeders()) {
             if (feeder.getPart() == part && feeder.isEnabled()) {
                 return feeder;
             }
         }
-        throw new PnpJobProcessorException(part, "No compatible, enabled feeder found for part " + part.getId());
+        throw new JobProcessorException(part, "No compatible, enabled feeder found for part " + part.getId());
     }
 
 

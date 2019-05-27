@@ -43,7 +43,6 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
@@ -54,12 +53,11 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Placement.ErrorHandling;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PnpJobProcessor;
-import org.openpnp.spi.PnpJobProcessor.JobPlacement;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
@@ -82,10 +80,6 @@ public class JobPlacementsPanel extends JPanel {
     private static Color statusColorWarning = new Color(252, 255, 157);
     private static Color statusColorReady = new Color(157, 255, 168);
     private static Color statusColorError = new Color(255, 157, 157);
-    private static Color cellColorSelected = UIManager.getColor("Table.selectionBackground");
-    private static Color jobColorProcessing = new Color(157, 222, 255);
-    private static Color jobColorPending = new Color(252, 255, 157);
-    private static Color jobColorComplete = new Color(157, 255, 168);
 
     public JobPlacementsPanel(JobPanel jobPanel) {
     	this.jobPanel = jobPanel;
@@ -96,10 +90,12 @@ public class JobPlacementsPanel extends JPanel {
         boardLocationSelectionActionGroup.setEnabled(false);
 
         singleSelectionActionGroup =
-                new ActionGroup(removeAction, editPlacementFeederAction, setTypeAction, setSideAction, setPlacedAction);
+                new ActionGroup(removeAction, editPlacementFeederAction, setTypeAction, 
+                        setSideAction, setPlacedAction, setErrorHandlingAction);
         singleSelectionActionGroup.setEnabled(false);
 
-        multiSelectionActionGroup = new ActionGroup(removeAction, setTypeAction, setSideAction, setPlacedAction);
+        multiSelectionActionGroup = new ActionGroup(removeAction, setTypeAction, 
+                setSideAction, setPlacedAction, setErrorHandlingAction);
         multiSelectionActionGroup.setEnabled(false);
 
         captureAndPositionActionGroup = new ActionGroup(captureCameraPlacementLocation,
@@ -111,6 +107,7 @@ public class JobPlacementsPanel extends JPanel {
         partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
         JComboBox<Side> sidesComboBox = new JComboBox(Side.values());
         JComboBox<Type> typesComboBox = new JComboBox(Type.values());
+        JComboBox<Type> errorHandlingComboBox = new JComboBox(ErrorHandling.values());
 
         setLayout(new BorderLayout(0, 0));
         JToolBar toolBarPlacements = new JToolBar();
@@ -159,6 +156,7 @@ public class JobPlacementsPanel extends JPanel {
         table.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
         table.setDefaultEditor(Part.class, new DefaultCellEditor(partsComboBox));
         table.setDefaultEditor(Type.class, new DefaultCellEditor(typesComboBox));
+        table.setDefaultEditor(ErrorHandling.class, new DefaultCellEditor(errorHandlingComboBox));
         table.setDefaultRenderer(Part.class, new IdentifiableTableCellRenderer<Part>());
         table.setDefaultRenderer(PlacementsTableModel.Status.class, new StatusRenderer());
         table.setDefaultRenderer(Placement.Type.class, new TypeRenderer());
@@ -236,6 +234,11 @@ public class JobPlacementsPanel extends JPanel {
         setPlacedMenu.add(new SetPlacedAction(true));
         setPlacedMenu.add(new SetPlacedAction(false));
         popupMenu.add(setPlacedMenu);
+
+        JMenu setErrorHandlingMenu = new JMenu(setErrorHandlingAction);
+        setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Alert));
+        setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Suppress));
+        popupMenu.add(setErrorHandlingMenu);
 
         table.setComponentPopupMenu(popupMenu);
 
@@ -563,6 +566,35 @@ public class JobPlacementsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
                 placement.setSide(side);
+                tableModel.fireTableDataChanged();
+                updateActivePlacements();
+            }
+        }
+    };
+    
+    public final Action setErrorHandlingAction = new AbstractAction() {
+        {
+            putValue(NAME, "Set Error Handling");
+            putValue(SHORT_DESCRIPTION, "Set placement error handling(s) to...");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {}
+    };
+
+    class SetErrorHandlingAction extends AbstractAction {
+        Placement.ErrorHandling errorHandling;
+
+        public SetErrorHandlingAction(Placement.ErrorHandling errorHandling) {
+            this.errorHandling = errorHandling;
+            putValue(NAME, errorHandling.toString());
+            putValue(SHORT_DESCRIPTION, "Set placement error handling(s) to " + errorHandling.toString());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            for (Placement placement : getSelections()) {
+                placement.setErrorHandling(errorHandling);
                 tableModel.fireTableDataChanged();
                 updateActivePlacements();
             }

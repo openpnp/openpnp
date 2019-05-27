@@ -33,6 +33,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Placement.ErrorHandling;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Feeder;
 
@@ -40,11 +41,11 @@ public class PlacementsTableModel extends AbstractTableModel {
     final Configuration configuration;
 
     private String[] columnNames =
-            new String[] {"ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Placed", "Status", "Comments"};
+            new String[] {"ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Placed", "Status", "Error Handling", "Comments"};
 
     private Class[] columnTypes = new Class[] {PartCellValue.class, Part.class, Side.class,
             LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, Type.class,
-            Boolean.class, Status.class, String.class};
+            Boolean.class, Status.class, ErrorHandling.class, String.class};
 
     public enum Status {
         Ready,
@@ -95,9 +96,7 @@ public class PlacementsTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex == 1 || columnIndex == 2 || columnIndex == 3 || columnIndex == 4
-                || columnIndex == 5 || columnIndex == 6 || columnIndex == 7 || columnIndex == 9 
-                || columnIndex == 10;
+        return columnIndex != 0 && columnIndex != 8;
     }
 
     @Override
@@ -149,6 +148,9 @@ public class PlacementsTableModel extends AbstractTableModel {
             	jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 9) {
+                placement.setErrorHandling((ErrorHandling) aValue);
+            }
+            else if (columnIndex == 10) {
                 placement.setComments((String) aValue);
             }
         }
@@ -209,6 +211,8 @@ public class PlacementsTableModel extends AbstractTableModel {
             case 8:
                 return getPlacementStatus(placement);
             case 9:
+                return placement.getErrorHandling();
+            case 10:
                 return placement.getComments();
             default:
                 return null;

@@ -37,6 +37,10 @@ public class Placement extends AbstractModelObject implements Identifiable {
     public enum Type {
         Place, Fiducial, Ignore
     }
+    
+    public enum ErrorHandling {
+        Alert, Suppress
+    }
 
     /**
      * History: 1.0: Initial revision. 
@@ -62,8 +66,11 @@ public class Placement extends AbstractModelObject implements Identifiable {
 
     private Part part;
 
-    @Element(required=false)
+    @Element(required = false)
     private String comments;
+    
+    @Element(required = false)
+    private ErrorHandling errorHandling = ErrorHandling.Suppress;
 
     @SuppressWarnings("unused")
     private Placement() {
@@ -143,6 +150,16 @@ public class Placement extends AbstractModelObject implements Identifiable {
         Object oldValue = this.comments;
         this.comments = comments;
         firePropertyChange("comments", oldValue, comments);
+    }
+    
+    public ErrorHandling getErrorHandling() {
+        return errorHandling;
+    }
+
+    public void setErrorHandling(ErrorHandling errorHandling) {
+        Object oldValue = this.errorHandling;
+        this.errorHandling = errorHandling;
+        firePropertyChange("errorHandling", oldValue, errorHandling);
     }
 
     @Override

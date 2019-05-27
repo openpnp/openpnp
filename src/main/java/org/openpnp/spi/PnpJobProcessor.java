@@ -14,10 +14,10 @@ public interface PnpJobProcessor extends JobProcessor {
             Complete
         }
 
-        protected final BoardLocation boardLocation;
-        protected final Placement placement;
-        protected Status status = Status.Pending;
-        protected Exception error;
+        private final BoardLocation boardLocation;
+        private final Placement placement;
+        private Status status = Status.Pending;
+        private Exception error;
 
         public JobPlacement(BoardLocation boardLocation, Placement placement) {
             this.boardLocation = boardLocation;
@@ -42,10 +42,15 @@ public interface PnpJobProcessor extends JobProcessor {
             return status;
         }
 
+        /**
+         * Set the error, and as a side effect, set the status to Errored.
+         * @param error
+         */
         public void setError(Exception error) {
             Object oldValue = this.error;
             this.error = error;
             firePropertyChange("error", oldValue, error);
+            setStatus(Status.Errored);
         }
 
         public Exception getError() {
@@ -64,26 +69,6 @@ public interface PnpJobProcessor extends JobProcessor {
         @Override
         public String toString() {
             return placement.getId();
-        }
-    }
-    
-    public class PnpJobProcessorException extends Exception {
-        private static final long serialVersionUID = 1L;
-        
-        private final Object source;
-        
-        public PnpJobProcessorException(Object source, Throwable throwable) {
-            super(throwable.getMessage(), throwable);
-            this.source = source;
-        }
-        
-        public PnpJobProcessorException(Object source, String message) {
-            super(message);
-            this.source = source;
-        }
-        
-        public Object getSource() {
-            return source;
         }
     }
 }
