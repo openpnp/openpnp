@@ -31,60 +31,60 @@
          </head>
       </heads>
       <feeders>
-         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="F1" name="R0805" enabled="true" part-id="R0805-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
-            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-            <reference-hole-location units="Millimeters" x="147.347" y="40.285" z="0.0" rotation="0.0"/>
-            <last-hole-location units="Millimeters" x="147.433" y="36.238" z="0.0" rotation="0.0"/>
-            <part-pitch value="4.0" units="Millimeters"/>
-            <tape-width value="8.0" units="Millimeters"/>
-         </feeder>
-         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="F2" name="R0603" enabled="true" part-id="R0603-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
-            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-            <reference-hole-location units="Millimeters" x="157.385" y="40.199" z="0.0" rotation="0.0"/>
-            <last-hole-location units="Millimeters" x="157.328" y="36.267" z="0.0" rotation="0.0"/>
-            <part-pitch value="4.0" units="Millimeters"/>
-            <tape-width value="8.0" units="Millimeters"/>
-         </feeder>
-         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="F3" name="R0402" enabled="true" part-id="R0402-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
-            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-            <reference-hole-location units="Millimeters" x="167.366" y="40.256" z="0.0" rotation="0.0"/>
-            <last-hole-location units="Millimeters" x="167.366" y="36.295" z="0.0" rotation="0.0"/>
-            <part-pitch value="2.0" units="Millimeters"/>
-            <tape-width value="8.0" units="Millimeters"/>
-         </feeder>
-         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="F4" name="R0201" enabled="true" part-id="R0201-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
-            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-            <reference-hole-location units="Millimeters" x="177.404" y="40.256" z="0.0" rotation="0.0"/>
-            <last-hole-location units="Millimeters" x="177.376" y="36.267" z="0.0" rotation="0.0"/>
-            <part-pitch value="2.0" units="Millimeters"/>
-            <tape-width value="8.0" units="Millimeters"/>
-         </feeder>
-         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="F5" name="R0805-2" enabled="true" part-id="R0805-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="F5" name="Upper Strips - 1" enabled="true" part-id="R0805-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
             <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
             <reference-hole-location units="Millimeters" x="138.715" y="88.244" z="0.0" rotation="0.0"/>
             <last-hole-location units="Millimeters" x="139.057" y="84.226" z="0.0" rotation="0.0"/>
             <part-pitch value="4.0" units="Millimeters"/>
             <tape-width value="8.0" units="Millimeters"/>
          </feeder>
-         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="F6" name="R0805-3" enabled="true" part-id="R0805-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="F6" name="Upper Strips - 2" enabled="true" part-id="R0805-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
             <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
             <reference-hole-location units="Millimeters" x="155.055" y="87.275" z="0.0" rotation="0.0"/>
             <last-hole-location units="Millimeters" x="154.713" y="83.314" z="0.0" rotation="0.0"/>
             <part-pitch value="4.0" units="Millimeters"/>
             <tape-width value="8.0" units="Millimeters"/>
          </feeder>
-         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="F7" name="R0805-4" enabled="true" part-id="R0805-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="F7" name="Upper Strips - 3" enabled="true" part-id="R0805-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
             <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
             <reference-hole-location units="Millimeters" x="172.679" y="56.242" z="0.0" rotation="0.0"/>
             <last-hole-location units="Millimeters" x="172.251" y="60.289" z="0.0" rotation="0.0"/>
             <part-pitch value="4.0" units="Millimeters"/>
             <tape-width value="8.0" units="Millimeters"/>
          </feeder>
-         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="F8" name="R0805-5" enabled="true" part-id="R0805-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="F8" name="Upper Strips - 4" enabled="true" part-id="R0805-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
             <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
             <reference-hole-location units="Millimeters" x="184.199" y="55.074" z="0.0" rotation="0.0"/>
             <last-hole-location units="Millimeters" x="184.456" y="59.035" z="0.0" rotation="0.0"/>
             <part-pitch value="4.0" units="Millimeters"/>
+            <tape-width value="8.0" units="Millimeters"/>
+         </feeder>
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="F1" name="Lower Strips - 1" enabled="true" part-id="R0805-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
+            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+            <reference-hole-location units="Millimeters" x="147.347" y="40.285" z="0.0" rotation="0.0"/>
+            <last-hole-location units="Millimeters" x="147.433" y="36.238" z="0.0" rotation="0.0"/>
+            <part-pitch value="4.0" units="Millimeters"/>
+            <tape-width value="8.0" units="Millimeters"/>
+         </feeder>
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="F2" name="Lower Strips - 2" enabled="true" part-id="R0603-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
+            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+            <reference-hole-location units="Millimeters" x="157.385" y="40.199" z="0.0" rotation="0.0"/>
+            <last-hole-location units="Millimeters" x="157.328" y="36.267" z="0.0" rotation="0.0"/>
+            <part-pitch value="4.0" units="Millimeters"/>
+            <tape-width value="8.0" units="Millimeters"/>
+         </feeder>
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="F3" name="Lower Strips - 3" enabled="true" part-id="R0402-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
+            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+            <reference-hole-location units="Millimeters" x="167.366" y="40.256" z="0.0" rotation="0.0"/>
+            <last-hole-location units="Millimeters" x="167.366" y="36.295" z="0.0" rotation="0.0"/>
+            <part-pitch value="2.0" units="Millimeters"/>
+            <tape-width value="8.0" units="Millimeters"/>
+         </feeder>
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="F4" name="Lower Strips - 4" enabled="true" part-id="R0201-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
+            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+            <reference-hole-location units="Millimeters" x="177.404" y="40.256" z="0.0" rotation="0.0"/>
+            <last-hole-location units="Millimeters" x="177.376" y="36.267" z="0.0" rotation="0.0"/>
+            <part-pitch value="2.0" units="Millimeters"/>
             <tape-width value="8.0" units="Millimeters"/>
          </feeder>
       </feeders>

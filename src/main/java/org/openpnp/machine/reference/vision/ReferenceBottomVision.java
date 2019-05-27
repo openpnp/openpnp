@@ -7,6 +7,7 @@ import javax.swing.Action;
 import javax.swing.Icon;
 
 import org.apache.commons.io.IOUtils;
+import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -47,6 +48,15 @@ public class ReferenceBottomVision implements PartAlignment {
     @Attribute(required = false)
     protected boolean preRotate = false;
 
+    @Attribute(required = false)
+    protected int maxVisionPasses = 3;
+
+    @Element(required = false)
+    protected Length maxLinearOffset = new Length(1, LengthUnit.Millimeters);
+
+    @Attribute(required = false)
+    protected double maxAngularOffset = 10;
+
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
 
@@ -68,7 +78,8 @@ public class ReferenceBottomVision implements PartAlignment {
 
         Camera camera = VisionUtils.getBottomVisionCamera();
 
-        if (preRotate) {
+        if ((partSettings.getPreRotateUsage() == PreRotateUsage.Default && preRotate)
+                || (partSettings.getPreRotateUsage() == PreRotateUsage.AlwaysOn)) {
             return findOffsetsPreRotate(part, boardLocation, placementLocation, nozzle, camera,
                     partSettings);
         }
@@ -77,120 +88,133 @@ public class ReferenceBottomVision implements PartAlignment {
                     partSettings);
         }
     }
+    
+    public Location getCameraLocationAtPartHeight(Part part, Camera camera, double angle) {
+        return camera.getLocation()
+                .add(new Location(part.getHeight()
+                        .getUnits(),
+                        0.0, 0.0, part.getHeight()
+                        .getValue(),
+                        0.0))
+                .derive(null, null, null, angle);
+    }
 
-    private static PartAlignmentOffset findOffsetsPreRotate(Part part, BoardLocation boardLocation,
+    private PartAlignmentOffset findOffsetsPreRotate(Part part, BoardLocation boardLocation,
             Location placementLocation, Nozzle nozzle, Camera camera, PartSettings partSettings)
             throws Exception {
-        double angle = placementLocation.getRotation();
+        double wantedAngle = placementLocation.getRotation();
         if (boardLocation != null) {
-            angle = Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation)
+            wantedAngle = Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation)
                            .getRotation();
         }
-        angle = angleNorm(angle, 180.);
-        Location location = camera.getLocation()
-                                  .add(new Location(part.getHeight()
-                                                        .getUnits(),
-                                          0.0, 0.0, part.getHeight()
-                                                        .getValue(),
-                                          0.0))
-                                  .derive(null, null, null, angle);
-        MovableUtils.moveToLocationAtSafeZ(nozzle, location);
+        wantedAngle = angleNorm(wantedAngle, 180.);
+        // Wanted location.
+        Location wantedLocation = getCameraLocationAtPartHeight(part, camera, wantedAngle);
+                
+        Location nozzleLocation = wantedLocation;
+        MovableUtils.moveToLocationAtSafeZ(nozzle, nozzleLocation);
+        final Location center = new Location(maxLinearOffset.getUnits());
 
         try (CvPipeline pipeline = partSettings.getPipeline()) {
 
-        	Location offsets = new Location(location.getUnits());
-        	// Try getting a good fix on the part in multiple passes.
-        	for(int pass = 0;;) {
-	            RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
-	            camera=(Camera)pipeline.getProperty("camera");
-	            
-	            Logger.debug("Result rect {}", rect);
-	            
-	            // Create the offsets object. This is the physical distance from
-	            // the center of the camera to the located part.
-	            offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
-	            
-	            // OpenCV can only tell us the angle of the recognized rectangle in a   
-	            // range of 0° .. 90° as it has no notion of which rectangle side 
-	            // is the true "bottom" side for instance. The angle will abruptly wrap 
-	            // around from 90° to 0° (and vice versa), as another of the four sides 
-	            // becomes the "bottom" side, as perceived by OpenCV.    
-	            // We can assume that the part is never picked more than +/-45º rotated.
-	            // So we change the wrapping-around into one that produces a range from 
-	            // -45° .. +45°. See angleNorm():
-	            angle = angleNorm(location.getRotation() + rect.angle);
-	            
-	            // When we rotate the nozzle later to compensate the angle, the X, Y offsets 
-	            // will change too, as the off-center part rotates around the nozzle axis.
-	            // So we need to compensate for that.
-	            // TODO: verify angle sign here. 
-	            offsets = offsets.rotateXy(-angle)
-	            			.derive(null, null,	null, -angle);
-	                
-	            if (++pass > 2) {
-	            	// Maximum number of passes. 
-	            	break;
-	            }
-	            
-	            if (Math.sqrt(offsets.getX()*offsets.getX() + offsets.getY()*offsets.getY()) < 2.0
-	            		&& Math.abs(angle) < 10.0) {
-	            	// We have a good enough fix - go on with that.
-	            	break;
-	            }
-	            
-	            Logger.debug("Large offsets {}", offsets);
-	            
-	            // Not a good enough fix - try again with corrected position.
-	            location = location.subtractWithRotation(offsets);
-                nozzle.moveTo(location);
-            }
+            // The running, iterative offset.
+            Location offsets = new Location(nozzleLocation.getUnits());
+            // Try getting a good fix on the part in multiple passes.
+            for(int pass = 0;;) {
+                RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
+                camera=(Camera)pipeline.getProperty("camera");
 
+                Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
+
+                // Create the offsets object. This is the physical distance from
+                // the center of the camera to the located part.
+                offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
+
+                // OpenCV can only tell us the angle of the recognized rectangle in a   
+                // wrapping-around range of 0° .. 90° as it has no notion of which rectangle side 
+                // is which. We can assume that the part is never picked more than +/-45º rotated.
+                // So we change the range wrapping-around to -45° .. +45°. See angleNorm():
+                double angleOffset = angleNorm(VisionUtils.getPixelAngle(camera, rect.angle) - wantedAngle);
+                
+                // When we rotate the nozzle later to compensate for the angle offset, the X, Y offsets 
+                // will change too, as the off-center part rotates around the nozzle axis.
+                // So we need to compensate for that.
+                offsets = offsets.rotateXy(-angleOffset)
+                        .derive(null, null,	null, angleOffset);
+                nozzleLocation = nozzleLocation.subtractWithRotation(offsets);
+
+                if (++pass >= maxVisionPasses) {
+                    // Maximum number of passes reached. 
+                    break;
+                }
+                
+                // We not only check the center offset but also the corner offset brought about by the angular offset
+                // so a large part will react more sensitively to angular offsets.
+                Point corners[] = new Point[4];
+                rect.points(corners);
+                Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y)
+                        .convertToUnits(maxLinearOffset.getUnits());
+                Location cornerWithAngularOffset = corner.rotateXy(angleOffset);
+                if (center.getLinearDistanceTo(offsets) > getMaxLinearOffset().getValue()) {
+                    Logger.debug("Offsets too large {} : center offset {} > {}", 
+                            offsets, center.getLinearDistanceTo(offsets), getMaxLinearOffset().getValue()); 
+                } 
+                else if (corner.getLinearDistanceTo(cornerWithAngularOffset) >  getMaxLinearOffset().getValue()) {
+                    Logger.debug("Offsets too large {} : corner offset {} > {}", 
+                            offsets, corner.getLinearDistanceTo(cornerWithAngularOffset), getMaxLinearOffset().getValue()); 
+                }
+                else if (Math.abs(angleOffset) > getMaxAngularOffset()) {
+                    Logger.debug("Offsets too large {} : angle offset {} > {}", 
+                            offsets, Math.abs(angleOffset), getMaxAngularOffset());
+                }
+                else {
+                    // We have a good enough fix - go on with that.
+                    break;
+                }
+
+                // Not a good enough fix - try again with corrected position.
+                nozzle.moveTo(nozzleLocation);
+            }
+            Logger.debug("Offsets accepted {}", offsets);
+            // Calculate cumulative offsets over all the passes.  
+            offsets = wantedLocation.subtractWithRotation(nozzleLocation);
             Logger.debug("Final offsets {}", offsets);
             displayResult(pipeline, part, offsets, camera);
             return new PartAlignment.PartAlignmentOffset(offsets, true);
         }
     }
 
-    private static PartAlignmentOffset findOffsetsPostRotate(Part part, BoardLocation boardLocation,
+    private PartAlignmentOffset findOffsetsPostRotate(Part part, BoardLocation boardLocation,
             Location placementLocation, Nozzle nozzle, Camera camera, PartSettings partSettings)
-            throws Exception {
+                    throws Exception {
         // Create a location that is the Camera's X, Y, it's Z + part height
         // and a rotation of 0, unless preRotate is enabled
-        Location startLocation = camera.getLocation();
-        Length partHeight = part.getHeight();
-        Location partHeightLocation =
-                new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0);
-        startLocation = startLocation.add(partHeightLocation)
-                                     .derive(null, null, null, 0.);
-
-        MovableUtils.moveToLocationAtSafeZ(nozzle, startLocation);
+        Location wantedLocation = getCameraLocationAtPartHeight(part, camera, 0.);
+        
+        MovableUtils.moveToLocationAtSafeZ(nozzle, wantedLocation);
 
         try (CvPipeline pipeline = partSettings.getPipeline()) {
             RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
             camera=(Camera)pipeline.getProperty("camera");
-    
-            Logger.debug("Result rect {}", rect);
-    
+
+            Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
+
             // Create the offsets object. This is the physical distance from
             // the center of the camera to the located part.
             Location offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
-    
-            // OpenCV can only tell us the angle of the recognized rectangle in a  
-            // range of 0° .. 90° as it has no notion of which rectangle side 
-            // is the true "bottom" side for instance. The angle will abruptly wrap 
-            // around from 90° to 0° (and vice versa), as another of the four sides 
-            // becomes the "bottom" side, as perceived by OpenCV.    
-            // We can assume that the part is never picked more than +/-45º rotated.
-            // So we change the wrapping-around into one that produces a range from 
-            // -45° .. +45°. See angleNorm():
-            double angle = angleNorm(rect.angle);
-    
+
+            // OpenCV can only tell us the angle of the recognized rectangle in a   
+            // wrapping-around range of 0° .. 90° as it has no notion of which rectangle side 
+            // is which. We can assume that the part is never picked more than +/-45º rotated.
+            // So we change the range wrapping-around to -45° .. +45°. See angleNorm():
+            double angleOffset = angleNorm(VisionUtils.getPixelAngle(camera, rect.angle));
+
             // Set the angle on the offsets.
-            offsets = offsets.derive(null, null, null, -angle);
+            offsets = offsets.derive(null, null, null, angleOffset);
             Logger.debug("Final offsets {}", offsets);
-    
+
             displayResult(pipeline, part, offsets, camera);
-    
+
             return new PartAlignmentOffset(offsets, false);
         }
     }
@@ -314,6 +338,30 @@ public class ReferenceBottomVision implements PartAlignment {
         this.preRotate = preRotate;
     }
 
+    public int getMaxVisionPasses() {
+        return maxVisionPasses;
+    }
+
+    public void setMaxVisionPasses(int maxVisionPasses) {
+        this.maxVisionPasses = maxVisionPasses;
+    }
+
+    public Length getMaxLinearOffset() {
+        return maxLinearOffset;
+    }
+
+    public void setMaxLinearOffset(Length maxLinearOffset) {
+        this.maxLinearOffset = maxLinearOffset;
+    }
+
+    public double getMaxAngularOffset() {
+        return maxAngularOffset;
+    }
+
+    public void setMaxAngularOffset(double maxAngularOffset) {
+        this.maxAngularOffset = maxAngularOffset;
+    }
+
     @Override
     public String getPropertySheetHolderTitle() {
         return "Bottom Vision";
@@ -364,11 +412,16 @@ public class ReferenceBottomVision implements PartAlignment {
         }
         return new ReferenceBottomVisionPartConfigurationWizard(this, part);
     }
-
+    
+    public enum PreRotateUsage {
+        Default, AlwaysOn, AlwaysOff
+    }
     @Root
     public static class PartSettings {
         @Attribute
         protected boolean enabled;
+        @Attribute(required = false)
+        protected PreRotateUsage preRotateUsage = PreRotateUsage.Default;
 
         @Element
         protected CvPipeline pipeline;
@@ -394,6 +447,14 @@ public class ReferenceBottomVision implements PartAlignment {
 
         public void setEnabled(boolean enabled) {
             this.enabled = enabled;
+        }
+
+        public PreRotateUsage getPreRotateUsage() {
+            return preRotateUsage;
+        }
+
+        public void setPreRotateUsage(PreRotateUsage preRotateUsage) {
+            this.preRotateUsage = preRotateUsage;
         }
 
         public CvPipeline getPipeline() {
