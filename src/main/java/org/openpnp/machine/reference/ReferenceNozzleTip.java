@@ -3,8 +3,6 @@ package org.openpnp.machine.reference;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -50,17 +48,6 @@ import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
 
 public class ReferenceNozzleTip extends AbstractNozzleTip {
-    // TODO Remove after October 1, 2017.
-    @Element(required = false)
-    private Double changerStartSpeed = null;
-    @Element(required = false)
-    private Double changerMidSpeed = null;
-    @Element(required = false)
-    private Double changerMidSpeed2 = null;
-    @Element(required = false)
-    private Double changerEndSpeed = null;
-    // END TODO Remove after October 1, 2017.
-    
     @ElementList(required = false, entry = "id")
     private Set<String> compatiblePackageIds = new HashSet<>();
 
@@ -98,12 +85,17 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     @Element(required = false)
     private Calibration calibration = new Calibration();
 
-
     @Element(required = false)
-    private double vacuumLevelPartOn;
-
+    private double vacuumLevelPartOnLow;
+    
     @Element(required = false)
-    private double vacuumLevelPartOff;
+    private double vacuumLevelPartOnHigh;
+    
+    @Element(required = false)
+    private double vacuumLevelPartOffLow;
+    
+    @Element(required = false)
+    private double vacuumLevelPartOffHigh;
     
     private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<>();
 
@@ -127,25 +119,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                  */
                 if (changerMidLocation2 == null) {
                     changerMidLocation2 = changerMidLocation.derive(null, null, null, null);
-                }
-                /*
-                 * Backwards compatibility for speed settings.
-                 *  Map the old variables to new one if present in machine.xlm and null the old ones
-                 *  */
-                if (changerStartSpeed != null) {
-                 changerStartToMidSpeed = changerStartSpeed;
-                 changerStartSpeed = null;
-            	}
-                if (changerMidSpeed != null) {
-                	changerMidToMid2Speed = changerMidSpeed;
-                	changerMidSpeed = null;
-                }
-                if (changerMidSpeed2 !=null) {
-                	changerMid2ToEndSpeed = changerMidSpeed2;
-                	changerMidSpeed2 = null;
-                }
-                if (changerEndSpeed != null) {
-                	changerEndSpeed = null;
                 }
             }
         });
@@ -297,21 +270,37 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
         return null;
     }
-	
-    public double getVacuumLevelPartOn() {
-        return vacuumLevelPartOn;
+
+    public double getVacuumLevelPartOnLow() {
+        return vacuumLevelPartOnLow;
     }
 
-    public void setVacuumLevelPartOn(double vacuumLevelPartOn) {
-        this.vacuumLevelPartOn = vacuumLevelPartOn;
+    public void setVacuumLevelPartOnLow(double vacuumLevelPartOnLow) {
+        this.vacuumLevelPartOnLow = vacuumLevelPartOnLow;
     }
 
-    public double getVacuumLevelPartOff() {
-        return vacuumLevelPartOff;
+    public double getVacuumLevelPartOnHigh() {
+        return vacuumLevelPartOnHigh;
     }
 
-    public void setVacuumLevelPartOff(double vacuumLevelPartOff) {
-        this.vacuumLevelPartOff = vacuumLevelPartOff;
+    public void setVacuumLevelPartOnHigh(double vacuumLevelPartOnHigh) {
+        this.vacuumLevelPartOnHigh = vacuumLevelPartOnHigh;
+    }
+    
+    public double getVacuumLevelPartOffLow() {
+        return vacuumLevelPartOffLow;
+    }
+
+    public void setVacuumLevelPartOffLow(double vacuumLevelPartOffLow) {
+        this.vacuumLevelPartOffLow = vacuumLevelPartOffLow;
+    }
+
+    public double getVacuumLevelPartOffHigh() {
+        return vacuumLevelPartOffHigh;
+    }
+
+    public void setVacuumLevelPartOffHigh(double vacuumLevelPartOffHigh) {
+        this.vacuumLevelPartOffHigh = vacuumLevelPartOffHigh;
     }
 
     public Calibration getCalibration() {

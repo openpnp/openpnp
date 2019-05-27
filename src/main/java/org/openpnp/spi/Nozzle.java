@@ -84,4 +84,27 @@ public interface Nozzle
     public void addNozzleTip(NozzleTip nozzleTip) throws Exception;
     
     public void removeNozzleTip(NozzleTip nozzleTip);
+    
+    /**
+     * Returns true if the isPartDetected() method is available. Some machines do not have
+     * vacuum sensors or other part detection sensors, so this feature is optional.
+     * @return
+     */
+    public boolean isPartDetectionEnabled();
+    
+    /**
+     * Returns true if a part appears to be on the nozzle. This is typically implemented by
+     * checking a vacuum level range, but other methods such as laser or vision detection
+     * are possible.
+     * @return
+     */
+    public boolean isPartOn() throws Exception;
+    
+    /**
+     * Returns true if a part appears to be off the nozzle. This is typically implemented by
+     * checking a vacuum level range, but other methods such as laser or vision detection
+     * are possible.
+     * @return
+     */
+    public boolean isPartOff() throws Exception;
 }

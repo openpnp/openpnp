@@ -63,6 +63,14 @@
                     <head-offsets x="10" y="10" z="0" rotation="0" units="Millimeters" />
                 </actuator>
             </actuators>
+            <cameras>
+               <camera class="org.openpnp.machine.reference.camera.ImageCamera" id="C1" name="Top" looking="Down" rotation="0.0" fps="24" width="640" height="480">
+                  <units-per-pixel units="Millimeters" x="0.04233" y="0.04233" z="0.0" rotation="0.0"/>
+                  <vision-provider class="org.openpnp.machine.reference.vision.OpenCvVisionProvider"/>
+                  <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+                  <source-uri>classpath://samples/pnp-test/pnp-test.png</source-uri>
+               </camera>
+            </cameras>
         </head>
       </heads>
       <feeders>

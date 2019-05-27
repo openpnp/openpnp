@@ -5,12 +5,11 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Placement;
 
 public interface PnpJobProcessor extends JobProcessor {
-
     public static class JobPlacement {
         public enum Status {
             Pending,
             Processing,
-            Skipped,
+            Errored,
             Complete
         }
 
@@ -35,6 +34,19 @@ public interface PnpJobProcessor extends JobProcessor {
         @Override
         public String toString() {
             return placement.getId();
+        }
+    }
+    public class PnpJobProcessorException extends Exception {
+        private final Object source;
+        
+        public PnpJobProcessorException(Object source, Throwable throwable) {
+            super(throwable);
+            this.source = source;
+        }
+        
+        public PnpJobProcessorException(Object source, String reason) {
+            super(reason);
+            this.source = source;
         }
     }
 }

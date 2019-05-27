@@ -941,17 +941,9 @@ public class JobPanel extends JPanel {
         }, (t) -> {
             List<String> options = new ArrayList<>();
             String retryOption = "Try Again"; //$NON-NLS-1$
-            String skipOption = "Skip"; //$NON-NLS-1$
-            String ignoreContinueOption = "Ignore and Continue"; //$NON-NLS-1$
             String pauseOption = "Pause Job"; //$NON-NLS-1$
 
             options.add(retryOption);
-            if (jobProcessor.canSkip()) {
-                options.add(skipOption);
-            }
-            if (jobProcessor.canIgnoreContinue()) {
-            	options.add(ignoreContinueOption);
-            }
             options.add(pauseOption);
             int result = JOptionPane.showOptionDialog(getTopLevelAncestor(), t.getMessage(),
                     "Job Error", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null, //$NON-NLS-1$
@@ -959,21 +951,6 @@ public class JobPanel extends JPanel {
             String selectedOption = (result < 0) ? "Pause Job" : options.get(result);
             if (selectedOption.equals(retryOption)) {
                 jobRun();
-            }
-            // Skip
-            else if (selectedOption.equals(skipOption)) {
-                UiUtils.messageBoxOnException(() -> {
-                    // Tell the job processor to skip the current placement and then call jobRun()
-                    // to start things back up, either running or stepping.
-                    jobSkip();
-                });
-            }
-            //ignore/continue
-            else if (selectedOption.equals(ignoreContinueOption)) {
-                UiUtils.messageBoxOnException(() -> {
-                    // Tell the job processor ignore error and continue as if everything were normal
-                    jobIgnoreContinue();
-                });
             }
             // Pause or cancel dialog
             else {
@@ -992,20 +969,6 @@ public class JobPanel extends JPanel {
                     }
                 }
             }
-        });
-    }
-
-    public void jobSkip() {
-        UiUtils.submitUiMachineTask(() -> {
-            jobProcessor.skip();
-            jobRun();
-        });
-    }
-
-    public void jobIgnoreContinue() {
-        UiUtils.submitUiMachineTask(() -> {
-            jobProcessor.ignoreContinue();
-            jobRun();
         });
     }
 
@@ -1269,7 +1232,6 @@ public class JobPanel extends JPanel {
                 removeBoardAction.setEnabled(true);
             }
             else {
-                List<BoardLocation> selections = getSelections();
                 for (BoardLocation selection : getSelections()) {
                     getJob().removeBoardLocation(selection);
                 }
