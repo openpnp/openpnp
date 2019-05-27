@@ -1,11 +1,12 @@
 package org.openpnp.spi;
 
+import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Placement;
 
 public interface PnpJobProcessor extends JobProcessor {
-    public static class JobPlacement {
+    public static class JobPlacement extends AbstractModelObject {
         public enum Status {
             Pending,
             Processing,
@@ -13,13 +14,42 @@ public interface PnpJobProcessor extends JobProcessor {
             Complete
         }
 
-        public final BoardLocation boardLocation;
-        public final Placement placement;
-        public Status status = Status.Pending;
+        protected final BoardLocation boardLocation;
+        protected final Placement placement;
+        protected Status status = Status.Pending;
+        protected Exception error;
 
         public JobPlacement(BoardLocation boardLocation, Placement placement) {
             this.boardLocation = boardLocation;
             this.placement = placement;
+        }
+
+        public BoardLocation getBoardLocation() {
+            return boardLocation;
+        }
+
+        public Placement getPlacement() {
+            return placement;
+        }
+
+        public void setStatus(Status status) {
+            Object oldValue = this.status;
+            this.status = status;
+            firePropertyChange("status", oldValue, status);
+        }
+
+        public Status getStatus() {
+            return status;
+        }
+
+        public void setError(Exception error) {
+            Object oldValue = this.error;
+            this.error = error;
+            firePropertyChange("error", oldValue, error);
+        }
+
+        public Exception getError() {
+            return error;
         }
 
         public double getPartHeight() {
@@ -30,7 +60,7 @@ public interface PnpJobProcessor extends JobProcessor {
         public String getPartId() {
             return placement.getPart().getId();
         }
-
+        
         @Override
         public String toString() {
             return placement.getId();
