@@ -144,7 +144,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         catch (Exception e) {
             // We swallow the error here because if we can't cleanup there's not really much
             // we can do. We have to end the job.
-            Logger.warn(e);
+            Logger.error(e);
         }
         this.fireJobState(Configuration.get().getMachine().getSignalers(), AbstractJobProcessor.State.STOPPED);
         currentStep = null;

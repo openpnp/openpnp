@@ -36,17 +36,24 @@ public interface PnpJobProcessor extends JobProcessor {
             return placement.getId();
         }
     }
+    
     public class PnpJobProcessorException extends Exception {
+        private static final long serialVersionUID = 1L;
+        
         private final Object source;
         
         public PnpJobProcessorException(Object source, Throwable throwable) {
-            super(throwable);
+            super(throwable.getMessage(), throwable);
             this.source = source;
         }
         
-        public PnpJobProcessorException(Object source, String reason) {
-            super(reason);
+        public PnpJobProcessorException(Object source, String message) {
+            super(message);
             this.source = source;
+        }
+        
+        public Object getSource() {
+            return source;
         }
     }
 }

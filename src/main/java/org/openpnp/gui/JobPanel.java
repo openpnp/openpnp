@@ -939,34 +939,19 @@ public class JobPanel extends JPanel {
         }, (e) -> {
 
         }, (t) -> {
-            List<String> options = new ArrayList<>();
-            String retryOption = "Try Again"; //$NON-NLS-1$
-            String pauseOption = "Pause Job"; //$NON-NLS-1$
-
-            options.add(retryOption);
-            options.add(pauseOption);
-            int result = JOptionPane.showOptionDialog(getTopLevelAncestor(), t.getMessage(),
-                    "Job Error", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null, //$NON-NLS-1$
-                    options.toArray(), retryOption);
-            String selectedOption = (result < 0) ? "Pause Job" : options.get(result);
-            if (selectedOption.equals(retryOption)) {
-                jobRun();
-            }
-            // Pause or cancel dialog
-            else {
-                // We are either Running or Stepping. If Stepping, there is nothing to do. Just
-                // clear the dialog and let the user take control. If Running we need to transition
-                // to Stepping.
-                if (state == State.Running) {
-                    try {
-                        setState(State.Paused);
-                    }
-                    catch (Exception e) {
-                        // Since we are checking if we're in the Running state this should not
-                        // ever happen. If it does, the Error will let us know.
-                        e.printStackTrace();
-                        throw new Error(e);
-                    }
+            MessageBoxes.errorBox(getTopLevelAncestor(), "Job Error", t.getMessage());
+            // We are either Running or Stepping. If Stepping, there is nothing to do. Just
+            // clear the dialog and let the user take control. If Running we need to transition
+            // to Stepping.
+            if (state == State.Running) {
+                try {
+                    setState(State.Paused);
+                }
+                catch (Exception e) {
+                    // Since we are checking if we're in the Running state this should not
+                    // ever happen. If it does, the Error will let us know.
+                    e.printStackTrace();
+                    throw new Error(e);
                 }
             }
         });
