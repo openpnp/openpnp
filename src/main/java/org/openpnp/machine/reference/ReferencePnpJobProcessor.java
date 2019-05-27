@@ -743,7 +743,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 return;
             }
             try {
-                if (!nozzle.isPartOff()) {
+                // We need vacuum on to determine the vacuum level.
+                nozzle.pick(null);
+                
+                boolean partOff = nozzle.isPartOff();
+                
+                nozzle.place();
+                
+                if (!partOff) {
                     throw new JobProcessorException(nozzle, "Part detected on nozzle after place.");
                 }
             }
