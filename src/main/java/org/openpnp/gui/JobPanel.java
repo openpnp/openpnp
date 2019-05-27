@@ -939,6 +939,14 @@ public class JobPanel extends JPanel {
         }, (e) -> {
 
         }, (t) -> {
+            /**
+             * TODO It would be nice to give the user the ability to single click suppress errors
+             * on the currently processing placement, but that requires knowledge of the currently
+             * processing placement. With the current model where JobProcessor is available for
+             * both dispense and PnP this is not possible. Once dispense is removed we can include
+             * the current placement in the thrown error and add this feature.
+             */
+            
             MessageBoxes.errorBox(getTopLevelAncestor(), "Job Error", t.getMessage());
             // We are either Running or Stepping. If Stepping, there is nothing to do. Just
             // clear the dialog and let the user take control. If Running we need to transition
