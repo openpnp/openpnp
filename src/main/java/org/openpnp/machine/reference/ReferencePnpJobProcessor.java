@@ -499,7 +499,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 checkPartOn(nozzle);
             }
             catch (JobProcessorException e) {
-                if (retryIncrementAndGet(plannedPlacement) >= 3) {
+                if (retryIncrementAndGet(plannedPlacement) >= feeder.getPickRetryCount()) {
                     // Clear the retry count because we're about to show the error. If the user
                     // decides to try again we want to do the full retry cycle.
                     retries.remove(plannedPlacement);
@@ -526,7 +526,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         
         private void feed(Feeder feeder, Nozzle nozzle) throws JobProcessorException {
             Exception lastException = null;
-            for (int i = 0; i < Math.max(1, feeder.getRetryCount()); i++) {
+            for (int i = 0; i < Math.max(1, feeder.getFeedRetryCount()); i++) {
                 try {
                     fireTextStatus("Feed %s on %s.", feeder.getName(), feeder.getPart().getId());
                     

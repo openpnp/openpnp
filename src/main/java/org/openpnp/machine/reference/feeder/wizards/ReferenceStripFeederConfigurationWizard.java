@@ -139,12 +139,20 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null,
                 new Color(0, 0, 0)));
         contentPanel.add(panelPart);
-        panelPart.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelPart.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
         try {
         }
         catch (Throwable t) {
@@ -167,13 +175,21 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelPart.add(textFieldLocationRotation, "4, 4, fill, default");
         textFieldLocationRotation.setColumns(4);
 
-        lblRetryCount = new JLabel("Retry Count");
+        lblRetryCount = new JLabel("Feed Retry Count");
         panelPart.add(lblRetryCount, "2, 6, right, default");
 
         retryCountTf = new JTextField();
         retryCountTf.setText("3");
         panelPart.add(retryCountTf, "4, 6, fill, default");
         retryCountTf.setColumns(3);
+        
+        lblPickRetryCount = new JLabel("Pick Retry Count");
+        panelPart.add(lblPickRetryCount, "2, 8, right, default");
+        
+        pickRetryCount = new JTextField();
+        pickRetryCount.setText("3");
+        pickRetryCount.setColumns(3);
+        panelPart.add(pickRetryCount, "4, 8, fill, default");
 
         panelTapeSettings = new JPanel();
         contentPanel.add(panelTapeSettings);
@@ -343,7 +359,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         addWrappedBinding(location, "rotation", textFieldLocationRotation, "text", doubleConverter);
 
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
-        addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
+        addWrappedBinding(feeder, "feedRetryCount", retryCountTf, "text", intConverter);
+        addWrappedBinding(feeder, "pickRetryCount", pickRetryCount, "text", intConverter);
         addWrappedBinding(feeder, "tapeType", comboBoxTapeType, "selectedItem");
 
         addWrappedBinding(feeder, "tapeWidth", textFieldTapeWidth, "text", lengthConverter);
@@ -371,6 +388,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         ComponentDecorators.decorateWithAutoSelect(textFieldLocationRotation);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldTapeWidth);
         ComponentDecorators.decorateWithAutoSelect(retryCountTf);
+        ComponentDecorators.decorateWithAutoSelect(pickRetryCount);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPartPitch);
         ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartX);
@@ -571,6 +589,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                          });
         }
     };
+    private JLabel lblPickRetryCount;
+    private JTextField pickRetryCount;
 
     private List<Location> findHoles(Camera camera) throws Exception {
         // Process the pipeline to clean up the image and detect the tape holes
