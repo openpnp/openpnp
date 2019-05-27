@@ -70,7 +70,7 @@ public class Placement extends AbstractModelObject implements Identifiable {
     private String comments;
     
     @Element(required = false)
-    private ErrorHandling errorHandling = ErrorHandling.Suppress;
+    private ErrorHandling errorHandling = ErrorHandling.Alert;
 
     @SuppressWarnings("unused")
     private Placement() {
