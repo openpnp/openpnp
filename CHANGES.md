@@ -79,6 +79,25 @@ able to go back to the older version without restoring your backups.
   better handled by the main vacuum system. It would be possible to add the new vacuum variables
   to GcodeDriver, so if someone is depending on this functionality please speak up.
 
+* BREAKING CHANGE: Placement Type "Ignore" has been moved to Placement Enabled. The Type field
+  will be used only for specifying Placement or Fiducial, and a new Enabled field has been added.
+  This makes it easier to disable placements for a job without losing whether that placement is a
+  fiducial or a placement.
+	
+  Additionally, Type Place has been renamed to Placement.
+  
+  This change is backwards compatible but not forwards compatible. If you open and save a job using
+  this version you will not be able to open it with an older version.
+    
+* BREAKING CHANGE: The Paste Dispense feature has been removed entirely. This feature is used by
+  by very few people, does not work well, and is not well maintained. Removing the feature
+  allows OpenPnP to focus on the pick and place user experience without having to maintain
+  backwards compatibility with paste dispense.
+    
+  A version of OpenPnP with Paste Dispense will be saved and will be made available for users to
+  download if they need that functionality for an existing setup. That version will receive no
+  future updates.
+  
 * Added a new error handling system that allows users to specify on a placement by placement basis
   how errors should be handled. The options are Alert and Suppress. 
   
@@ -129,20 +148,6 @@ able to go back to the older version without restoring your backups.
     panel will be mostly used for Job editing before starting a job, and will be mostly read only
     during a job run.
     
-  * Placement Type "Ignore" being moved to Placement Enabled. The Type field will be used only for
-    specifying Placement or Fiducial, and a new Enabled field will be added. This will make it
-    easier to disable placements for a job without losing whether that placement is a fiducial
-    or a placement.
-    
-  * Paste Dispense Removal: The entire Paste Dispense feature will be removed. This feature is used
-    by very, very few people, does not work well, and is not well maintained. Removing the feature
-    will allow OpenPnP to focus on the pick and place user experience without having to maintain
-    backwards compatibility with the poorly designed paste dispense.
-    
-    A version of OpenPnP with Paste Dispense will be saved and will be made available for users to
-    download if they need that functionality for an existing setup. That version will receive no
-    future updates.
-
 # 2019-05-10
 
 ## Bottom Vision Pre-Rotate Updates and Bug Fixes 
