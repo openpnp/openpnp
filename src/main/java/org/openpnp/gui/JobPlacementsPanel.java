@@ -75,12 +75,12 @@ public class JobPlacementsPanel extends JPanel {
     private BoardLocation boardLocation;
     private JobPanel jobPanel;
 
-    private static Color typeColorIgnore = new Color(252, 255, 157);
     private static Color typeColorFiducial = new Color(157, 188, 255);
-    private static Color typeColorPlace = new Color(157, 255, 168);
+    private static Color typeColorPlacement = new Color(157, 255, 168);
     private static Color statusColorWarning = new Color(252, 255, 157);
     private static Color statusColorReady = new Color(157, 255, 168);
     private static Color statusColorError = new Color(255, 157, 157);
+    private static Color statusColorDisabled = new Color(180, 180, 180);
 
     public JobPlacementsPanel(JobPanel jobPanel) {
     	this.jobPanel = jobPanel;
@@ -91,27 +91,29 @@ public class JobPlacementsPanel extends JPanel {
         
         Configuration configuration = Configuration.get();
         
-                boardLocationSelectionActionGroup = new ActionGroup(newAction);
+        boardLocationSelectionActionGroup = new ActionGroup(newAction);
         boardLocationSelectionActionGroup.setEnabled(false);
-        
-                singleSelectionActionGroup =
-                        new ActionGroup(removeAction, editPlacementFeederAction, setTypeAction, 
-                                setSideAction, setPlacedAction, setErrorHandlingAction);
+
+        singleSelectionActionGroup = new ActionGroup(removeAction, editPlacementFeederAction,
+                setTypeAction, setSideAction, setPlacedAction, setErrorHandlingAction,
+                setEnabledAction);
         singleSelectionActionGroup.setEnabled(false);
-        
-                multiSelectionActionGroup = new ActionGroup(removeAction, setTypeAction, 
-                        setSideAction, setPlacedAction, setErrorHandlingAction);
+
+        multiSelectionActionGroup = new ActionGroup(removeAction, setTypeAction, setSideAction,
+                setPlacedAction, setErrorHandlingAction, setEnabledAction);
         multiSelectionActionGroup.setEnabled(false);
-        
-                captureAndPositionActionGroup = new ActionGroup(captureCameraPlacementLocation,
-                        captureToolPlacementLocation, moveCameraToPlacementLocation,
-                        moveCameraToPlacementLocationNext, moveToolToPlacementLocation);
+
+        captureAndPositionActionGroup = new ActionGroup(captureCameraPlacementLocation,
+                captureToolPlacementLocation, moveCameraToPlacementLocation,
+                moveCameraToPlacementLocationNext, moveToolToPlacementLocation);
         captureAndPositionActionGroup.setEnabled(false);
-        
-                JComboBox<PartsComboBoxModel> partsComboBox = new JComboBox(new PartsComboBoxModel());
+
+        JComboBox<PartsComboBoxModel> partsComboBox = new JComboBox(new PartsComboBoxModel());
         partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
         JComboBox<Side> sidesComboBox = new JComboBox(Side.values());
-        JComboBox<Type> typesComboBox = new JComboBox(Type.values());
+        // Note we don't use Type.values() here because there are a couple Types that are only
+        // there for backwards compatibility and we don't want them in the list.
+        JComboBox<Type> typesComboBox = new JComboBox(new Type[] { Type.Placement, Type.Fiducial });
         JComboBox<Type> errorHandlingComboBox = new JComboBox(ErrorHandling.values());
         
                 setLayout(new BorderLayout(0, 0));
@@ -175,7 +177,7 @@ public class JobPlacementsPanel extends JPanel {
             public void keyTyped(KeyEvent e) {
                 if (e.getKeyChar() == ' ') {
                     Placement placement = getSelection();
-                    placement.setType(placement.getType() == Type.Place ? Type.Ignore : Type.Place);
+                    placement.setEnabled(!placement.isEnabled());
                     tableModel.fireTableRowsUpdated(table.getSelectedRow(), table.getSelectedRow());
                     updateActivePlacements();
                 }
@@ -185,70 +187,75 @@ public class JobPlacementsPanel extends JPanel {
             }
         });
         
-                JPopupMenu popupMenu = new JPopupMenu();
-        
-                JMenu setTypeMenu = new JMenu(setTypeAction);
+        JPopupMenu popupMenu = new JPopupMenu();
+
+        JMenu setTypeMenu = new JMenu(setTypeAction);
         for (Placement.Type type : Placement.Type.values()) {
             setTypeMenu.add(new SetTypeAction(type));
         }
         popupMenu.add(setTypeMenu);
-        
-                JMenu setSideMenu = new JMenu(setSideAction);
+
+        JMenu setSideMenu = new JMenu(setSideAction);
         for (Board.Side side : Board.Side.values()) {
             setSideMenu.add(new SetSideAction(side));
         }
         popupMenu.add(setSideMenu);
-        
+
         JMenu setPlacedMenu = new JMenu(setPlacedAction);
         setPlacedMenu.add(new SetPlacedAction(true));
         setPlacedMenu.add(new SetPlacedAction(false));
         popupMenu.add(setPlacedMenu);
-        
-                JMenu setErrorHandlingMenu = new JMenu(setErrorHandlingAction);
+
+        JMenu setEnabledMenu = new JMenu(setEnabledAction);
+        setEnabledMenu.add(new SetEnabledAction(true));
+        setEnabledMenu.add(new SetEnabledAction(false));
+        popupMenu.add(setEnabledMenu);
+
+        JMenu setErrorHandlingMenu = new JMenu(setErrorHandlingAction);
         setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Alert));
         setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Suppress));
         popupMenu.add(setErrorHandlingMenu);
-        
-                table.setComponentPopupMenu(popupMenu);
-        
-                JScrollPane scrollPane = new JScrollPane(table);
+
+        table.setComponentPopupMenu(popupMenu);
+
+        JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
         JToolBar toolBarPlacements = new JToolBar();
         add(toolBarPlacements, BorderLayout.NORTH);
-        
-                toolBarPlacements.setFloatable(false);
-                JButton btnNewPlacement = new JButton(newAction);
-                btnNewPlacement.setHideActionText(true);
-                toolBarPlacements.add(btnNewPlacement);
-                JButton btnRemovePlacement = new JButton(removeAction);
-                btnRemovePlacement.setHideActionText(true);
-                toolBarPlacements.add(btnRemovePlacement);
-                toolBarPlacements.addSeparator();
-                JButton btnCaptureCameraPlacementLocation = new JButton(captureCameraPlacementLocation);
-                btnCaptureCameraPlacementLocation.setHideActionText(true);
-                toolBarPlacements.add(btnCaptureCameraPlacementLocation);
-                
-                        JButton btnCaptureToolPlacementLocation = new JButton(captureToolPlacementLocation);
-                        btnCaptureToolPlacementLocation.setHideActionText(true);
-                        toolBarPlacements.add(btnCaptureToolPlacementLocation);
-                        
-                                JButton btnPositionCameraPositionLocation = new JButton(moveCameraToPlacementLocation);
-                                btnPositionCameraPositionLocation.setHideActionText(true);
-                                toolBarPlacements.add(btnPositionCameraPositionLocation);
-                                JButton btnPositionCameraPositionNextLocation =
-                                        new JButton(moveCameraToPlacementLocationNext);
-                                btnPositionCameraPositionNextLocation.setHideActionText(true);
-                                toolBarPlacements.add(btnPositionCameraPositionNextLocation);
-                                
-                                        JButton btnPositionToolPositionLocation = new JButton(moveToolToPlacementLocation);
-                                        btnPositionToolPositionLocation.setHideActionText(true);
-                                        toolBarPlacements.add(btnPositionToolPositionLocation);
-                                        
-                                                toolBarPlacements.addSeparator();
-                                                
-                                                        JButton btnEditFeeder = new JButton(editPlacementFeederAction);
-                                                        btnEditFeeder.setHideActionText(true);
-                                                        toolBarPlacements.add(btnEditFeeder);
+
+        toolBarPlacements.setFloatable(false);
+        JButton btnNewPlacement = new JButton(newAction);
+        btnNewPlacement.setHideActionText(true);
+        toolBarPlacements.add(btnNewPlacement);
+        JButton btnRemovePlacement = new JButton(removeAction);
+        btnRemovePlacement.setHideActionText(true);
+        toolBarPlacements.add(btnRemovePlacement);
+        toolBarPlacements.addSeparator();
+        JButton btnCaptureCameraPlacementLocation = new JButton(captureCameraPlacementLocation);
+        btnCaptureCameraPlacementLocation.setHideActionText(true);
+        toolBarPlacements.add(btnCaptureCameraPlacementLocation);
+
+        JButton btnCaptureToolPlacementLocation = new JButton(captureToolPlacementLocation);
+        btnCaptureToolPlacementLocation.setHideActionText(true);
+        toolBarPlacements.add(btnCaptureToolPlacementLocation);
+
+        JButton btnPositionCameraPositionLocation = new JButton(moveCameraToPlacementLocation);
+        btnPositionCameraPositionLocation.setHideActionText(true);
+        toolBarPlacements.add(btnPositionCameraPositionLocation);
+        JButton btnPositionCameraPositionNextLocation =
+                new JButton(moveCameraToPlacementLocationNext);
+        btnPositionCameraPositionNextLocation.setHideActionText(true);
+        toolBarPlacements.add(btnPositionCameraPositionNextLocation);
+
+        JButton btnPositionToolPositionLocation = new JButton(moveToolToPlacementLocation);
+        btnPositionToolPositionLocation.setHideActionText(true);
+        toolBarPlacements.add(btnPositionToolPositionLocation);
+
+        toolBarPlacements.addSeparator();
+
+        JButton btnEditFeeder = new JButton(editPlacementFeederAction);
+        btnEditFeeder.setHideActionText(true);
+        toolBarPlacements.add(btnEditFeeder);
     }
     
     public void refresh() {
@@ -609,7 +616,7 @@ public class JobPlacementsPanel extends JPanel {
     public final Action setPlacedAction = new AbstractAction() {
         {
             putValue(NAME, "Set Placed");
-            putValue(SHORT_DESCRIPTION, "Set placement status to...");
+            putValue(SHORT_DESCRIPTION, "Set placed to...");
         }
 
         @Override
@@ -623,13 +630,43 @@ public class JobPlacementsPanel extends JPanel {
             this.placed = placed;
             String name = placed ? "Placed" : "Not Placed";
             putValue(NAME, name);
-            putValue(SHORT_DESCRIPTION, "Set placement status to " + name);
+            putValue(SHORT_DESCRIPTION, "Set placed to " + name);
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
                 boardLocation.setPlaced(placement.getId(), placed);
+                tableModel.fireTableDataChanged();   
+                updateActivePlacements();
+            }
+        }
+    };
+
+    public final Action setEnabledAction = new AbstractAction() {
+        {
+            putValue(NAME, "Set Enabled");
+            putValue(SHORT_DESCRIPTION, "Set placement enabled to...");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {}
+    };
+
+    class SetEnabledAction extends AbstractAction {
+        final Boolean enabled;
+
+        public SetEnabledAction(Boolean enabled) {
+            this.enabled = enabled;
+            String name = enabled ? "Enabled" : "Disabled";
+            putValue(NAME, name);
+            putValue(SHORT_DESCRIPTION, "Set placement enabled to " + name);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            for (Placement placement : getSelections()) {
+                placement.setEnabled(enabled);
                 tableModel.fireTableDataChanged();   
                 updateActivePlacements();
             }
@@ -648,15 +685,10 @@ public class JobPlacementsPanel extends JPanel {
                 setForeground(Color.black);
                 setBackground(typeColorFiducial);
             }
-            else if (type == Type.Ignore) {
+            else if (type == Type.Placement) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
-                setBackground(typeColorIgnore);
-            }
-            else if (type == Type.Place) {
-                setBorder(new LineBorder(getBackground()));
-                setForeground(Color.black);
-                setBackground(typeColorPlace);
+                setBackground(typeColorPlacement);
             }
         }
     }
@@ -666,7 +698,7 @@ public class JobPlacementsPanel extends JPanel {
             if (value == null) {
                 return;
             }
-            Status status = (Status) value;
+            Status status = (Status) value; 
             if (status == Status.Ready) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
@@ -690,6 +722,12 @@ public class JobPlacementsPanel extends JPanel {
                 setForeground(Color.black);
                 setBackground(statusColorError);
                 setText("Missing Part");
+            }
+            else if (status == Status.Disabled) {
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorDisabled);
+                setText("Disabled");
             }
             else {
                 setBorder(new LineBorder(getBackground()));
