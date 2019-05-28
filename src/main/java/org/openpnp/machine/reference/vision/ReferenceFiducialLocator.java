@@ -414,7 +414,8 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         IdentifiableList<Placement> fiducials = new IdentifiableList<>();
         for (Placement placement : board.getPlacements()) {
             if (placement.getType() == Type.Fiducial
-                    && placement.getSide() == boardLocation.getSide()) {
+                    && placement.getSide() == boardLocation.getSide()
+                    && placement.isEnabled()) {
                 fiducials.add(placement);
             }
         }

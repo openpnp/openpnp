@@ -41,17 +41,18 @@ public class PlacementsTableModel extends AbstractTableModel {
     final Configuration configuration;
 
     private String[] columnNames =
-            new String[] {"ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Placed", "Status", "Error Handling", "Comments"};
+            new String[] {"ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Enabled", "Placed", "Status", "Error Handling", "Comments"};
 
     private Class[] columnTypes = new Class[] {PartCellValue.class, Part.class, Side.class,
             LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, Type.class,
-            Boolean.class, Status.class, ErrorHandling.class, String.class};
+            Boolean.class, Boolean.class, Status.class, ErrorHandling.class, String.class};
 
     public enum Status {
         Ready,
         MissingPart,
         MissingFeeder,
-        ZeroPartHeight
+        ZeroPartHeight,
+        Disabled
     }
 
     private Board board;
@@ -96,7 +97,7 @@ public class PlacementsTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex != 0 && columnIndex != 8;
+        return columnIndex != 0 && columnIndex != 9;
     }
 
     @Override
@@ -144,13 +145,17 @@ public class PlacementsTableModel extends AbstractTableModel {
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 7) {
-            	boardLocation.setPlaced(placement.getId(), (Boolean) aValue);
-            	jobPlacementsPanel.updateActivePlacements();
+                placement.setEnabled((Boolean) aValue);
+                jobPlacementsPanel.updateActivePlacements();
             }
-            else if (columnIndex == 9) {
-                placement.setErrorHandling((ErrorHandling) aValue);
+            else if (columnIndex == 8) {
+                boardLocation.setPlaced(placement.getId(), (Boolean) aValue);
+                jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 10) {
+                placement.setErrorHandling((ErrorHandling) aValue);
+            }
+            else if (columnIndex == 11) {
                 placement.setComments((String) aValue);
             }
         }
@@ -165,7 +170,11 @@ public class PlacementsTableModel extends AbstractTableModel {
         if (placement.getPart() == null) {
             return Status.MissingPart;
         }
-        if (placement.getType() == Placement.Type.Place) {
+        if (!placement.isEnabled()) {
+            return Status.Disabled;
+                    
+        }
+        if (placement.getType() == Placement.Type.Placement && placement.isEnabled()) {
             boolean found = false;
             for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
                 if (feeder.getPart() == placement.getPart() && feeder.isEnabled()) {
@@ -203,16 +212,18 @@ public class PlacementsTableModel extends AbstractTableModel {
             case 6:
                 return placement.getType();
             case 7:
+                return placement.isEnabled();
+            case 8:
                 // TODO STOPSHIP: Both of these are huge performance hogs and do not belong
                 // in the render process. At the least we should cache this information but it
                 // would be better if the information was updated out of band by a listener.
             	jobPlacementsPanel.updateActivePlacements();
             	return boardLocation.getPlaced(placement.getId());
-            case 8:
-                return getPlacementStatus(placement);
             case 9:
-                return placement.getErrorHandling();
+                return getPlacementStatus(placement);
             case 10:
+                return placement.getErrorHandling();
+            case 11:
                 return placement.getComments();
             default:
                 return null;

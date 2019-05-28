@@ -199,8 +199,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 checkDuplicateRefs(boardLocation);
                 
                 for (Placement placement : boardLocation.getBoard().getPlacements()) {
-                    // Ignore placements that aren't set to be placed
-                    if (placement.getType() != Placement.Type.Place) {
+                    // Ignore placements that aren't placements
+                    if (placement.getType() != Placement.Type.Placement) {
+                        continue;
+                    }
+                    
+                    if (!placement.isEnabled()) {
                         continue;
                     }
                     

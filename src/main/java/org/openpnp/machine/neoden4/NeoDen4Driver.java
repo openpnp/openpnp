@@ -10,7 +10,6 @@ import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.machine.reference.ReferencePasteDispenser;
 import org.openpnp.machine.reference.driver.AbstractReferenceDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
@@ -276,10 +275,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         }
     }
 
-    @Override
-    public void dispense(ReferencePasteDispenser dispenser,Location startLocation,Location endLocation,long dispenseTimeMilliseconds) throws Exception {
-    }
-    
     int read() throws Exception {
         return read(true);
     }

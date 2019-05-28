@@ -729,7 +729,6 @@ public class MainFrame extends JFrame {
         registerBoardImporter(KicadPosImporter.class);
         registerBoardImporter(DipTraceImporter.class);
         registerBoardImporter(NamedCSVImporter.class);
-        registerBoardImporter(SolderPasteGerberImporter.class);
     }
 
     /**

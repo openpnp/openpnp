@@ -49,20 +49,16 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.WrapLayout;
-import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Point;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
@@ -721,17 +717,6 @@ public class JogControlsPanel extends JPanel {
             for (final Head head : machine.getHeads()) {
                 for (Actuator actuator : head.getActuators()) {
                     addActuator(actuator);
-                }
-                for (final PasteDispenser dispenser : head.getPasteDispensers()) {
-                    final JButton dispenserButton =
-                            new JButton(head.getName() + ":" + dispenser.getName()); //$NON-NLS-1$
-                    dispenserButton.setFocusable(false);
-                    dispenserButton.addActionListener((e) -> {
-                        UiUtils.submitUiMachineTask(() -> {
-                            dispenser.dispense(null, null, 250);
-                        });
-                    });
-                    panelDispensers.add(dispenserButton);
                 }
             }
 

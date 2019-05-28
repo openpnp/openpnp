@@ -62,7 +62,6 @@ import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
-import org.openpnp.spi.PasteDispenseJobProcessor;
 import org.openpnp.spi.PnpJobProcessor;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.Signaler;
@@ -78,9 +77,6 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Element(required = false)
     protected PnpJobProcessor pnpJobProcessor = new ReferencePnpJobProcessor();
-
-    @Element(required = false)
-    protected PasteDispenseJobProcessor pasteDispenseJobProcessor;
 
     @Deprecated
     @Element(required = false)
@@ -317,11 +313,6 @@ public class ReferenceMachine extends AbstractMachine {
     @Override
     public PnpJobProcessor getPnpJobProcessor() {
         return pnpJobProcessor;
-    }
-
-    @Override
-    public PasteDispenseJobProcessor getPasteDispenseJobProcessor() {
-        return pasteDispenseJobProcessor;
     }
 
     public boolean getHomeAfterEnabled() {
