@@ -31,6 +31,7 @@ import org.openpnp.util.MovableUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMountable {
     @Element
@@ -53,6 +54,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Element(required = false)
     protected String vacuumSenseActuatorName;
+    
+    @Deprecated
+    @Attribute(required = false)
+    protected Boolean invertVacuumSenseLogic = null;
 
     /**
      * If limitRotation is enabled the nozzle will reverse directions when commanded to rotate past
@@ -75,6 +80,11 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public ReferenceNozzle(String id) {
         this();
         this.id = id;
+    }
+    
+    @Commit
+    public void commit() {
+        invertVacuumSenseLogic = null;
     }
     
     public boolean isLimitRotation() {

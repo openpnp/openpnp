@@ -59,6 +59,7 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.core.Commit;
 
 @Root
 public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
@@ -94,6 +95,22 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     @Element(required = false)
     public PnpJobPlanner planner = new SimplePnpJobPlanner();
 
+    @Deprecated
+    @Attribute(required = false)
+    protected Boolean parkWhenComplete = null;
+    
+    @Deprecated
+    @Element(required = false)
+    protected Boolean autoSaveJob = null;
+    
+    @Deprecated
+    @Element(required = false)
+    protected Boolean autoSaveConfiguration = null;
+    
+    @Deprecated
+    @Element(required = false)
+    protected Long configSaveFrequencyMs = null;
+
     protected Job job;
 
     protected Machine machine;
@@ -108,6 +125,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     int totalPartsPlaced;
     
     public ReferencePnpJobProcessor() {
+    }
+    
+    @Commit
+    public void commit() {
+        parkWhenComplete = null;
+        autoSaveJob = null;
+        autoSaveConfiguration = null;
+        configSaveFrequencyMs = null;
     }
 
     public synchronized void initialize(Job job) throws Exception {
@@ -497,6 +522,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             pick(nozzle, feeder, placement, part);
 
+            /** 
+             * If either postPick or checkPartOn fails we discard and then cycle back to feed
+             * up to pickRetryCount times. We include postPick because if the pick succeeded
+             * then we assume we are carrying a part, so we want to make sure to discard it
+             * if there is a problem.   
+             */
             try {
                 postPick(feeder, nozzle);
                 

@@ -96,6 +96,14 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     
     @Element(required = false)
     private double vacuumLevelPartOffHigh;
+
+    @Deprecated
+    @Element(required = false)
+    private Double vacuumLevelPartOn;
+    
+    @Deprecated
+    @Element(required = false)
+    private Double vacuumLevelPartOff;
     
     private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<>();
 
@@ -122,6 +130,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 }
             }
         });
+    }
+    
+    @Commit
+    public void commit() {
+        vacuumLevelPartOn = null;
+        vacuumLevelPartOff = null;
     }
 
     @Override
