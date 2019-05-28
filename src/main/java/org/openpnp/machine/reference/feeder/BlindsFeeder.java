@@ -184,9 +184,9 @@ public class BlindsFeeder extends ReferenceFeeder {
     }
 
     public BlindsFeeder() {
-        // Listen to the machine become unhomed. Invalidate feeder calibration in this case. 
+        // Listen to the machine become unhomed to invalidate feeder calibration. 
         // Note that home()  first switches the machine isHomed() state off, then on again, 
-        // so we als catch re-homing. 
+        // so we also catch re-homing. 
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationComplete(Configuration configuration) throws Exception {
@@ -206,27 +206,26 @@ public class BlindsFeeder extends ReferenceFeeder {
         });
     }
 
+     private void recalculate() {
+        // Geometry must correspond to 3D printed feeder. So this code must remain in sync with the
+        // OpenSCAD BlindsFeeder_v???.scad file. 
 
-    private static int toInteger(double val) {
-        return (int)Math.round(val);
-    }
-
-    private void recalculate() {
-        // Geometry must correspond to 3D printed feeder.
-
-        // The fiducials give us the first and last sprocket position directly (as a feeder-local X-coordinate).
+        // The fiducials give us the first and last sprocket position directly (in feeder-local X-coordinates).
         // The pockets are then aligned to the sprockets according to the EIA 481-C-2003 standard. 
 
-        // According to the EIA standard, pockets align with the mid-point between two sprocket holes, however for the 
-        // 2mm pitch tapes (0402 and smaller) there is another pocket squeezed in and aligned with the sprocket hole.
+        // According to the standard, pockets align with the mid-point between two sprocket holes, however for the 
+        // 2mm pitch tapes (0402 and smaller) there is another row of pocket interleaved and aligned with the sprocket hole.
         // This means that for 2mm pitch parts there is one more pocket in the tape and the first one starts right on
         // the sprocket pitch instead of half the pocket pitch away. 
-        boolean isSmallPitch = toInteger(sprocketPitch.divide(pocketPitch)) == 2;
-        pocketCount = toInteger(Math.floor(tapeLength.divide(pocketPitch)))
-                + (isSmallPitch ? 1 : 0); 
-        // Align pocket center (which is at 0.25 x pocketPitch) to sprocketPitch
+        boolean isSmallPitch = Math.round(sprocketPitch.divide(pocketPitch)) == 2;
+        pocketCount = (int)(Math.floor(tapeLength.divide(pocketPitch)))
+                + (isSmallPitch ? 1 : 0);
+        // The wanted pocket center position relative to the pocket pitch is 0.25 for blinds covers,
+        // but 0.5 for all other cover types where the part can be larger than half the pitch.  
+        double pitchRelativePosition = (coverType == CoverType.BlindsCover ? 0.25 : 0.5);
+        // Align pocket center to sprocketPitch. Make sure to round 0.5 downwards (hence the -0.001).
         Length pocketAlign = sprocketPitch
-                .multiply(Math.floor(pocketPitch.multiply(0.25).divide(sprocketPitch))); 
+                .multiply(Math.round(pocketPitch.multiply(pitchRelativePosition).divide(sprocketPitch) - 0.001)); 
         // Now shift that to a mid-point between two sprockets (unless it is a small pitch)
         pocketDistance = sprocketPitch.multiply(isSmallPitch ? 0.0 : 0.5)
                 .add(pocketAlign); 
