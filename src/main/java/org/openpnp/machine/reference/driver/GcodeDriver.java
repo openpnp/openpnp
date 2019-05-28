@@ -763,6 +763,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         String command = getCommand(nozzle, CommandType.PLACE_COMMAND);
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
+        sendGcode(command);
 
         pickedNozzles.remove(nozzle);
         if (pickedNozzles.size() < 1) {
