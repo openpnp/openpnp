@@ -215,7 +215,7 @@ public class JobPlacementsPanel extends JPanel {
 
         JMenu setErrorHandlingMenu = new JMenu(setErrorHandlingAction);
         setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Alert));
-        setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Suppress));
+        setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Defer));
         popupMenu.add(setErrorHandlingMenu);
 
         table.setComponentPopupMenu(popupMenu);

@@ -1073,7 +1073,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 switch (plannedPlacement.jobPlacement.getPlacement().getErrorHandling()) {
                     case Alert:
                         throw e;
-                    case Suppress:
+                    case Defer:
                         plannedPlacement.jobPlacement.setError(e);
                         return this;
                     default:
