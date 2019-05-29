@@ -44,7 +44,7 @@ public class Placement extends AbstractModelObject implements Identifiable {
     }
     
     public enum ErrorHandling {
-        Alert, Suppress
+        Alert, Defer
     }
 
     /**

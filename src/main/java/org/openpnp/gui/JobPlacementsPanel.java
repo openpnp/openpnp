@@ -19,17 +19,21 @@ import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
-import javax.swing.UIManager;
 import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -61,8 +65,6 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
-import org.pmw.tinylog.Logger;
-import javax.swing.border.TitledBorder;
 
 public class JobPlacementsPanel extends JPanel {
     private JTable table;
@@ -213,16 +215,20 @@ public class JobPlacementsPanel extends JPanel {
 
         JMenu setErrorHandlingMenu = new JMenu(setErrorHandlingAction);
         setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Alert));
-        setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Suppress));
+        setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Defer));
         popupMenu.add(setErrorHandlingMenu);
 
         table.setComponentPopupMenu(popupMenu);
 
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
+        
+        JPanel panel = new JPanel();
+        add(panel, BorderLayout.NORTH);
+        panel.setLayout(new BorderLayout(0, 0));
         JToolBar toolBarPlacements = new JToolBar();
-        add(toolBarPlacements, BorderLayout.NORTH);
-
+        panel.add(toolBarPlacements);
+        
         toolBarPlacements.setFloatable(false);
         JButton btnNewPlacement = new JButton(newAction);
         btnNewPlacement.setHideActionText(true);
@@ -256,6 +262,36 @@ public class JobPlacementsPanel extends JPanel {
         JButton btnEditFeeder = new JButton(editPlacementFeederAction);
         btnEditFeeder.setHideActionText(true);
         toolBarPlacements.add(btnEditFeeder);
+
+        JPanel panel_1 = new JPanel();
+        panel.add(panel_1, BorderLayout.EAST);
+
+        JLabel lblNewLabel = new JLabel("Search");
+        panel_1.add(lblNewLabel);
+
+        searchTextField = new JTextField();
+        searchTextField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                search();
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                search();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                search();
+            }
+        });
+        panel_1.add(searchTextField);
+        searchTextField.setColumns(15);
+    }
+    
+    private void search() {
+        updateRowFilter();
     }
     
     public void refresh() {
@@ -301,7 +337,33 @@ public class JobPlacementsPanel extends JPanel {
                 blTotalActivePlacements - blActivePlacements, 
                 blTotalActivePlacements);
     }
-
+    
+    private void updateRowFilter() {
+        List<RowFilter<PlacementsTableModel, Integer>> filters = new ArrayList<>();
+        
+        RowFilter<PlacementsTableModel, Integer> sideFilter = new RowFilter<PlacementsTableModel, Integer>() {
+            public boolean include(Entry<? extends PlacementsTableModel, ? extends Integer> entry) {
+                if (boardLocation == null) {
+                    return false;
+                }
+                PlacementsTableModel model = entry.getModel();
+                Placement placement = model.getPlacement(entry.getIdentifier());
+                return placement.getSide() == boardLocation.getSide();
+            }
+        };
+        filters.add(sideFilter);
+        
+        try {
+            RowFilter<PlacementsTableModel, Integer> searchFilter = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
+            filters.add(searchFilter);
+        }
+        catch (PatternSyntaxException e) {
+        }
+        
+        tableSorter.setRowFilter(RowFilter.andFilter(filters));
+    }
+    
+    
     public void setBoardLocation(BoardLocation boardLocation) {
         this.boardLocation = boardLocation;
         if (boardLocation == null) {
@@ -312,16 +374,7 @@ public class JobPlacementsPanel extends JPanel {
             tableModel.setBoardLocation(boardLocation);
             boardLocationSelectionActionGroup.setEnabled(true);
 
-            RowFilter<PlacementsTableModel, Object> rf = null;
-            // If current expression doesn't parse, don't update.
-			try {
-				rf = RowFilter.regexFilter("(?i)" + boardLocation.getSide().toString());
-			}
-            catch (PatternSyntaxException e) {
-                Logger.warn("Side sort failed", e);
-                return;
-            }
-            tableSorter.setRowFilter(rf);
+            updateRowFilter();
         }
         updateActivePlacements();
     }
@@ -652,6 +705,7 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {}
     };
+    private JTextField searchTextField;
 
     class SetEnabledAction extends AbstractAction {
         final Boolean enabled;
