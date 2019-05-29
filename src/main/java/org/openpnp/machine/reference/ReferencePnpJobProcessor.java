@@ -723,7 +723,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             place(nozzle, part, placement, placementLocation);
             
-            checkPartOff(nozzle);
+            checkPartOff(nozzle, part);
             
             // Mark the placement as finished
             jobPlacement.setStatus(Status.Complete);
@@ -773,13 +773,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
         }
         
-        private void checkPartOff(Nozzle nozzle) throws JobProcessorException {
+        private void checkPartOff(Nozzle nozzle, Part part) throws JobProcessorException {
             if (!nozzle.isPartDetectionEnabled()) {
                 return;
             }
             try {
                 // We need vacuum on to determine the vacuum level.
-                nozzle.pick(null);
+                nozzle.pick(part);
                 
                 boolean partOff = nozzle.isPartOff();
                 
