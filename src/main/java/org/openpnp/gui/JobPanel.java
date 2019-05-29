@@ -378,7 +378,7 @@ public class JobPanel extends JPanel {
 
         add(splitPane);
 
-        mnOpenRecent = new JMenu("Open Recent Job..."); //$NON-NLS-1$
+        mnOpenRecent = new JMenu(Translations.getString("JobPanel.Action.Job.RecentJobs")); //$NON-NLS-1$
         mnOpenRecent.setMnemonic(KeyEvent.VK_R);
         loadRecentJobs();
 

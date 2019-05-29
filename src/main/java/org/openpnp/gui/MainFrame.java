@@ -343,6 +343,10 @@ public class MainFrame extends JFrame {
         buttonGroup.add(menuItem);
         mnLanguage.add(menuItem);
 
+        menuItem = new JCheckBoxMenuItem(new LanguageSelectionAction(new Locale("de")));
+        buttonGroup.add(menuItem);
+        mnLanguage.add(menuItem);
+
         for (int i = 0; i < mnLanguage.getItemCount(); i++) {
             JCheckBoxMenuItem item = (JCheckBoxMenuItem) mnLanguage.getItem(i);
             LanguageSelectionAction action = (LanguageSelectionAction) item.getAction();
@@ -975,7 +979,7 @@ public class MainFrame extends JFrame {
         }
     };
 
-    private Action windowStyleMultipleSelected = new AbstractAction("Multiple Window Style") { //$NON-NLS-1$
+    private Action windowStyleMultipleSelected = new AbstractAction(Translations.getString("Menu.Window.MultipleStyle")) { //$NON-NLS-1$
         {
             putValue(MNEMONIC_KEY, KeyEvent.VK_M);
         }
