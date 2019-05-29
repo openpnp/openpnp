@@ -758,11 +758,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
 
-        ReferenceNozzleTip nt = nozzle.getNozzleTip();
-
         String command = getCommand(nozzle, CommandType.PLACE_COMMAND);
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
+
         sendGcode(command);
 
         pickedNozzles.remove(nozzle);
