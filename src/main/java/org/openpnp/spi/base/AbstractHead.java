@@ -47,6 +47,9 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     @Element(required = false)
     protected Location maxLocation = new Location(LengthUnit.Millimeters);
+    
+    @Element(required = false)
+    protected String zProbeActuatorName;
 
     protected Machine machine;
 
@@ -271,5 +274,18 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     public void setSoftLimitsEnabled(boolean softLimitsEnabled) {
         this.softLimitsEnabled = softLimitsEnabled;
+    }
+    
+    @Override
+    public Actuator getZProbe() {
+        return getActuatorByName(zProbeActuatorName); 
+    }
+
+    public String getzProbeActuatorName() {
+        return zProbeActuatorName;
+    }
+
+    public void setzProbeActuatorName(String zProbeActuatorName) {
+        this.zProbeActuatorName = zProbeActuatorName;
     }
 }
