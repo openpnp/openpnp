@@ -15,6 +15,9 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleTipCalibrationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleTipConfigurationWizard;
+import org.openpnp.machine.reference.wizards.ReferenceNozzleTipPackagesWizard;
+import org.openpnp.machine.reference.wizards.ReferenceNozzleTipPartDetectionWizard;
+import org.openpnp.machine.reference.wizards.ReferenceNozzleTipToolChangerWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -171,6 +174,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard()),
+                new PropertySheetWizardAdapter(new ReferenceNozzleTipPackagesWizard(this), "Packages"),
+                new PropertySheetWizardAdapter(new ReferenceNozzleTipPartDetectionWizard(this), "Part Detection"),
+                new PropertySheetWizardAdapter(new ReferenceNozzleTipToolChangerWizard(this), "Tool Changer"),
                 new PropertySheetWizardAdapter(new ReferenceNozzleTipCalibrationWizard(this), "Calibration")
                 };
     }
