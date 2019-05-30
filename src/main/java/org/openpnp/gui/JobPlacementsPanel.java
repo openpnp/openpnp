@@ -237,17 +237,11 @@ public class JobPlacementsPanel extends JPanel {
         btnRemovePlacement.setHideActionText(true);
         toolBarPlacements.add(btnRemovePlacement);
         toolBarPlacements.addSeparator();
-        JButton btnCaptureCameraPlacementLocation = new JButton(captureCameraPlacementLocation);
-        btnCaptureCameraPlacementLocation.setHideActionText(true);
-        toolBarPlacements.add(btnCaptureCameraPlacementLocation);
-
-        JButton btnCaptureToolPlacementLocation = new JButton(captureToolPlacementLocation);
-        btnCaptureToolPlacementLocation.setHideActionText(true);
-        toolBarPlacements.add(btnCaptureToolPlacementLocation);
-
+        
         JButton btnPositionCameraPositionLocation = new JButton(moveCameraToPlacementLocation);
         btnPositionCameraPositionLocation.setHideActionText(true);
         toolBarPlacements.add(btnPositionCameraPositionLocation);
+        
         JButton btnPositionCameraPositionNextLocation =
                 new JButton(moveCameraToPlacementLocationNext);
         btnPositionCameraPositionNextLocation.setHideActionText(true);
@@ -256,6 +250,16 @@ public class JobPlacementsPanel extends JPanel {
         JButton btnPositionToolPositionLocation = new JButton(moveToolToPlacementLocation);
         btnPositionToolPositionLocation.setHideActionText(true);
         toolBarPlacements.add(btnPositionToolPositionLocation);
+
+        toolBarPlacements.addSeparator();
+
+        JButton btnCaptureCameraPlacementLocation = new JButton(captureCameraPlacementLocation);
+        btnCaptureCameraPlacementLocation.setHideActionText(true);
+        toolBarPlacements.add(btnCaptureCameraPlacementLocation);
+
+        JButton btnCaptureToolPlacementLocation = new JButton(captureToolPlacementLocation);
+        btnCaptureToolPlacementLocation.setHideActionText(true);
+        toolBarPlacements.add(btnCaptureToolPlacementLocation);
 
         toolBarPlacements.addSeparator();
 

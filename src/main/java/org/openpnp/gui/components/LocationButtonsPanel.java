@@ -40,6 +40,9 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+import javax.swing.JSeparator;
+import javax.swing.SwingConstants;
+import java.awt.Color;
 
 /**
  * A JPanel of 4 small buttons that assist in setting locations. The buttons are Capture Camera
@@ -67,6 +70,18 @@ public class LocationButtonsPanel extends JPanel {
         this.textFieldY = textFieldY;
         this.textFieldZ = textFieldZ;
         this.textFieldC = textFieldC;
+        
+                JButton buttonCenterCamera = new JButton(positionCameraAction);
+                buttonCenterCamera.setHideActionText(true);
+                add(buttonCenterCamera);
+        
+                buttonCenterTool = new JButton(positionToolAction);
+                buttonCenterTool.setHideActionText(true);
+                add(buttonCenterTool);
+        
+        separator = new JSeparator();
+        separator.setOrientation(SwingConstants.VERTICAL);
+        add(separator);
 
         buttonCaptureCamera = new JButton(captureCameraCoordinatesAction);
         buttonCaptureCamera.setHideActionText(true);
@@ -75,14 +90,6 @@ public class LocationButtonsPanel extends JPanel {
         buttonCaptureTool = new JButton(captureToolCoordinatesAction);
         buttonCaptureTool.setHideActionText(true);
         add(buttonCaptureTool);
-
-        JButton buttonCenterCamera = new JButton(positionCameraAction);
-        buttonCenterCamera.setHideActionText(true);
-        add(buttonCenterCamera);
-
-        buttonCenterTool = new JButton(positionToolAction);
-        buttonCenterTool.setHideActionText(true);
-        add(buttonCenterTool);
 
         buttonCenterToolNoSafeZ = new JButton(positionToolNoSafeZAction);
         buttonCenterToolNoSafeZ.setHideActionText(true);
@@ -320,4 +327,5 @@ public class LocationButtonsPanel extends JPanel {
                 }
             };
     private JButton buttonCenterToolNoSafeZ;
+    private JSeparator separator;
 }
