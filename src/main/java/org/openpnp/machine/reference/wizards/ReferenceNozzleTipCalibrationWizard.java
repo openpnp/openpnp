@@ -41,6 +41,7 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.machine.reference.ReferenceNozzleTipCalibration;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
@@ -164,7 +165,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelCalibration.add(lblCompensationAlgorithm, "2, 8, right, default");
 
         compensationAlgorithmCb =
-                new JComboBox(ReferenceNozzleTip.Calibration.RunoutCompensationAlgorithm.values());
+                new JComboBox(ReferenceNozzleTipCalibration.RunoutCompensationAlgorithm.values());
         panelCalibration.add(compensationAlgorithmCb, "4, 8, left, default");
 
         lblAngleIncrements = new JLabel("Circle Divisions");
