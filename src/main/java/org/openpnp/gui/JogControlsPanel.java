@@ -78,7 +78,6 @@ public class JogControlsPanel extends JPanel {
     private final MachineControlsPanel machineControlsPanel;
     private final Configuration configuration;
     private JPanel panelActuators;
-    private JPanel panelDispensers;
     private JSlider sliderIncrements;
     private JCheckBox boardProtectionOverrideCheck;
 
@@ -112,9 +111,6 @@ public class JogControlsPanel extends JPanel {
         zParkAction.setEnabled(enabled);
         cParkAction.setEnabled(enabled);
         for (Component c : panelActuators.getComponents()) {
-            c.setEnabled(enabled);
-        }
-        for (Component c : panelDispensers.getComponents()) {
             c.setEnabled(enabled);
         }
     }
@@ -439,11 +435,6 @@ public class JogControlsPanel extends JPanel {
         tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Actuators"), null, panelActuators, null); //$NON-NLS-1$
         panelActuators.setLayout(new WrapLayout(WrapLayout.LEFT));
 
-        panelDispensers = new JPanel();
-        tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Dispense"), null, panelDispensers, null); //$NON-NLS-1$
-        FlowLayout flowLayout = (FlowLayout) panelDispensers.getLayout();
-        flowLayout.setAlignment(FlowLayout.LEFT);
-        
         JPanel panelSafety = new JPanel();
         tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Safety"), null, panelSafety, null); //$NON-NLS-1$
         panelSafety.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
