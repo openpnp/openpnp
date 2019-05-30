@@ -45,6 +45,7 @@ import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.swingx.JXCollapsiblePane;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
+import org.openpnp.gui.support.ActuatorItem;
 import org.openpnp.gui.support.CameraItem;
 import org.openpnp.gui.support.HeadMountableItem;
 import org.openpnp.gui.support.Icons;
@@ -52,6 +53,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NozzleItem;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
@@ -391,6 +393,10 @@ public class MachineControlsPanel extends JPanel {
 
                 for (Camera camera : head.getCameras()) {
                     comboBoxHeadMountable.addItem(new CameraItem(camera));
+                }
+                
+                for (Actuator actuator : head.getActuators()) {
+                    comboBoxHeadMountable.addItem(new ActuatorItem(actuator));
                 }
             }
 

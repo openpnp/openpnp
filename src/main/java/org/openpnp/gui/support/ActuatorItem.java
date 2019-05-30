@@ -21,19 +21,18 @@ package org.openpnp.gui.support;
 
 import org.openpnp.spi.Actuator;
 
-public class ActuatorItem {
-    private Actuator actuator;
-
+public class ActuatorItem extends HeadMountableItem {
     public ActuatorItem(Actuator actuator) {
-        this.actuator = actuator;
+        super(actuator);
     }
 
     public Actuator getActuator() {
-        return actuator;
+        return (Actuator) hm;
     }
 
     @Override
     public String toString() {
-        return "Actuator: " + actuator.getName();
+        return String.format("Actuator: %s %s", hm.getName(), hm.getHead() != null
+                ? String.format("(Head: %s)", hm.getHead().getName()) : "");
     }
 }
