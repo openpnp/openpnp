@@ -553,7 +553,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelLocations.add(locationButtonsPanelFiducial3, "12, 8");
 
         lblNormalize = new JLabel("Normalize");
-        lblNormalize.setToolTipText("Normalize the coordinate system to the theoretically correct values according to the 3D printed model and the EIA standards (whole millimeter square grid).");
+        lblNormalize.setToolTipText("<html>\r\nNormalize the fiducial distances and shear to the theoretically correct <br />\r\nvalues (whole millimeter square grid). This means you trust the mechanics  <br />\r\nof your machine and of your 3D printer over the computer vision fiducial fixes.  <br />\r\nOverall absolute position and angle are still determined by vision. \r\n</html>");
         panelLocations.add(lblNormalize, "2, 10, right, default");
 
         chckbxNormalize = new JCheckBox("");

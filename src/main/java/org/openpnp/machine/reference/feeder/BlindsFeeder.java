@@ -218,17 +218,17 @@ public class BlindsFeeder extends ReferenceFeeder {
         // This means that for 2mm pitch parts there is one more pocket in the tape and the first one starts right on
         // the sprocket pitch instead of half the pocket pitch away. 
         boolean isSmallPitch = Math.round(sprocketPitch.divide(pocketPitch)) == 2;
-        pocketCount = (int)(Math.floor(tapeLength.divide(pocketPitch)))
-                + (isSmallPitch ? 1 : 0);
+        setPocketCount((int)(Math.floor(tapeLength.divide(pocketPitch)))
+                + (isSmallPitch ? 1 : 0));
         // The wanted pocket center position relative to the pocket pitch is 0.25 for blinds covers,
         // but 0.5 for all other cover types where the part can be larger than half the pitch.  
         double pitchRelativePosition = (coverType == CoverType.BlindsCover ? 0.25 : 0.5);
         // Align pocket center to sprocketPitch. Make sure to round 0.5 downwards (hence the -0.001).
         Length pocketAlign = sprocketPitch
                 .multiply(Math.round(pocketPitch.multiply(pitchRelativePosition).divide(sprocketPitch) - 0.001)); 
-        // Now shift that to a mid-point between two sprockets (unless it is a small pitch)
-        pocketDistance = sprocketPitch.multiply(isSmallPitch ? 0.0 : 0.5)
-                .add(pocketAlign); 
+        // Now shift that to a mid-point between two sprockets (unless it is small pitch)
+        setPocketDistance(sprocketPitch.multiply(isSmallPitch ? 0.0 : 0.5)
+                .add(pocketAlign)); 
     }
 
     private void assertCalibration() throws Exception {
@@ -500,8 +500,8 @@ public class BlindsFeeder extends ReferenceFeeder {
                 // in accordance with EIA-481 etc. we use millimeters.
                 Location mmScale = camera.getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters);
                 // TODO: configurable?
-                final double fidMin = 1.6;
-                final double fidMax = 2.4;
+                final double fidMin = 1.4;
+                final double fidMax = 2.3;
                 final double fidAspect = 1.3; 
                 // TODO: configurable?
                 final double tolerance = 1.4;
