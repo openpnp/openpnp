@@ -1,6 +1,33 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-06-01
+
+## OpenPnP 2.0 Ongoing Changes
+
+* Actuators are now added to the tools dropdown in jog controls so that you can select one and
+  move it. This is probably a temporary change as this dropdown will go away in the future, but
+  for the time being it helps with setting up drag feeders.
+  
+* Swapped positions of "capture" and "move" buttons wherever those buttons are grouped together,
+  and added a separator between the two groups of buttons. This is intended to make it a little
+  less easy to accidentally click the capture buttons, which many people have recognized as being
+  a UX problem.
+
+* Moved the "Feed" button on the Feeders panel to the front of the list as this is the most
+  common action.
+
+* Split the reference nozzle and reference nozzle tip configuration wizards into separate panels.
+  This is will make it easier to refactor for global nozzles.
+  
+* Added basic Z Probing by setting actuator name on head.
+
+* Added canned cycle for getting a Z Probe at a location.
+
+* Z Probe is now automatically performed, if enabled, when capturing a camera location. This
+  results in a fully formed location capture including Z. If no Z Probe is available Z is left
+  unchanged. 
+
 # 2019-05-27
 
 ## OpenPnP 2.0
