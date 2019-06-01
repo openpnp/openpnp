@@ -125,10 +125,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         toolBar.add(btnDeleteFeeder);
 
         toolBar.addSeparator();
+        toolBar.add(pickFeederAction);
         toolBar.add(feedFeederAction);
         toolBar.add(moveCameraToPickLocation);
         toolBar.add(moveToolToPickLocation);
-        toolBar.add(pickFeederAction);
 
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);

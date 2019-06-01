@@ -45,7 +45,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
     public ReferenceMachineConfigurationWizard(ReferenceMachine machine) {
         this.machine = machine;
 
-        JPanel panelGeneral = new JPanel();
+                JPanel panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
@@ -63,20 +63,20 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
                 FormSpecs.DEFAULT_ROWSPEC,}));
         JLabel lblDriver = new JLabel("Driver");
         panelGeneral.add(lblDriver, "2, 2");
-
-        comboBoxDriver = new JComboBox();
+        
+                comboBoxDriver = new JComboBox();
         panelGeneral.add(comboBoxDriver, "2, 4");
-
-        checkBoxHomeAfterEnabled = new JCheckBox("Home after ENABLED?");
+        
+        checkBoxHomeAfterEnabled = new JCheckBox("Home after enabled?");
         panelGeneral.add(checkBoxHomeAfterEnabled, "2, 6");
-
-        comboBoxDriver.addItem(NullDriver.class.getCanonicalName());
+        
+                comboBoxDriver.addItem(NullDriver.class.getCanonicalName());
         comboBoxDriver.addItem(GcodeDriver.class.getCanonicalName());
         comboBoxDriver.addItem(LinuxCNC.class.getCanonicalName());
         comboBoxDriver.addItem(OpenBuildsDriver.class.getCanonicalName());
         comboBoxDriver.addItem(NeoDen4Driver.class.getCanonicalName());
-
-        JPanel panelLocations = new JPanel();
+        
+                JPanel panelLocations = new JPanel();
         panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelLocations);
@@ -89,44 +89,44 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
-
-        JLabel lblX = new JLabel("X");
+        
+                JLabel lblX = new JLabel("X");
         panelLocations.add(lblX, "4, 2");
         lblX.setHorizontalAlignment(SwingConstants.CENTER);
-
-        JLabel lblY = new JLabel("Y");
+        
+                JLabel lblY = new JLabel("Y");
         panelLocations.add(lblY, "6, 2");
         lblY.setHorizontalAlignment(SwingConstants.CENTER);
-
-        JLabel lblZ = new JLabel("Z");
+        
+                JLabel lblZ = new JLabel("Z");
         panelLocations.add(lblZ, "8, 2");
         lblZ.setHorizontalAlignment(SwingConstants.CENTER);
-
-        JLabel lblRotation = new JLabel("Rotation");
+        
+                JLabel lblRotation = new JLabel("Rotation");
         panelLocations.add(lblRotation, "10, 2");
         lblRotation.setHorizontalAlignment(SwingConstants.CENTER);
-
-        JLabel lblDiscardPoint = new JLabel("Discard Location");
+        
+                JLabel lblDiscardPoint = new JLabel("Discard Location");
         panelLocations.add(lblDiscardPoint, "2, 4");
-
-        discardXTf = new JTextField();
+        
+                discardXTf = new JTextField();
         panelLocations.add(discardXTf, "4, 4");
         discardXTf.setColumns(5);
-
-        discardYTf = new JTextField();
+        
+                discardYTf = new JTextField();
         panelLocations.add(discardYTf, "6, 4");
         discardYTf.setColumns(5);
-
-        discardZTf = new JTextField();
+        
+                discardZTf = new JTextField();
         panelLocations.add(discardZTf, "8, 4");
         discardZTf.setColumns(5);
-
-        discardCTf = new JTextField();
+        
+                discardCTf = new JTextField();
         panelLocations.add(discardCTf, "10, 4");
         discardCTf.setColumns(5);
-
-        LocationButtonsPanel locationButtonsPanel =
-                new LocationButtonsPanel(discardXTf, discardYTf, discardZTf, discardCTf);
+        
+                LocationButtonsPanel locationButtonsPanel =
+                        new LocationButtonsPanel(discardXTf, discardYTf, discardZTf, discardCTf);
         panelLocations.add(locationButtonsPanel, "12, 4");
 
         this.driverClassName = machine.getDriver().getClass().getCanonicalName();
@@ -147,7 +147,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         addWrappedBinding(discardLocation, "lengthY", discardYTf, "text", lengthConverter);
         addWrappedBinding(discardLocation, "lengthZ", discardZTf, "text", lengthConverter);
         addWrappedBinding(discardLocation, "rotation", discardCTf, "text", doubleConverter);
-
+        
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discardXTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discardYTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discardZTf);

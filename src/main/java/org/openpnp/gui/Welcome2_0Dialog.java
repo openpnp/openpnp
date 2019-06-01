@@ -41,21 +41,21 @@ import org.apache.commons.io.FileUtils;
 import org.openpnp.Main;
 
 @SuppressWarnings("serial")
-public class AboutDialog extends JDialog {
+public class Welcome2_0Dialog extends JDialog {
 
     private final JPanel contentPanel = new JPanel();
     private JTextPane textPane;
 
-    public AboutDialog(Frame frame) {
+    public Welcome2_0Dialog(Frame frame) {
         super(frame, true);
-        setTitle("About OpenPnP");
+        setTitle("Welcome to OpenPnP 2.0");
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setBounds(100, 100, 347, 360);
         getContentPane().setLayout(new BorderLayout());
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-        JLabel lblOpenpnp = new JLabel("OpenPnP");
+        JLabel lblOpenpnp = new JLabel("Welcome to OpenPnP 2.0");
         lblOpenpnp.setAlignmentX(Component.CENTER_ALIGNMENT);
         lblOpenpnp.setFont(new Font("Lucida Grande", Font.BOLD, 32));
         contentPanel.add(lblOpenpnp);
@@ -85,7 +85,7 @@ public class AboutDialog extends JDialog {
         getRootPane().setDefaultButton(okButton);
 
         try {
-            String s = FileUtils.readFileToString(new File("CHANGES.md"));
+            String s = FileUtils.readFileToString(new File("OPENPNP_2_0.md"));
             textPane.setText(s);
             textPane.setCaretPosition(0);
         }

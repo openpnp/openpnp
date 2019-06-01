@@ -18,6 +18,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.psh.NozzleTipsPropertySheetHolder;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleCameraOffsetWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleConfigurationWizard;
+import org.openpnp.machine.reference.wizards.ReferenceNozzlePartDetectionWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -31,6 +32,7 @@ import org.openpnp.util.MovableUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMountable {
     @Element
@@ -53,9 +55,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Element(required = false)
     protected String vacuumSenseActuatorName;
-
+    
+    @Deprecated
     @Attribute(required = false)
-    protected boolean invertVacuumSenseLogic;
+    protected Boolean invertVacuumSenseLogic = null;
 
     /**
      * If limitRotation is enabled the nozzle will reverse directions when commanded to rotate past
@@ -78,6 +81,11 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public ReferenceNozzle(String id) {
         this();
         this.id = id;
+    }
+    
+    @Commit
+    public void commit() {
+        invertVacuumSenseLogic = null;
     }
     
     public boolean isLimitRotation() {
@@ -122,14 +130,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         this.vacuumSenseActuatorName = vacuumSenseActuatorName;
     }
 
-    public boolean isInvertVacuumSenseLogic() {
-        return invertVacuumSenseLogic;
-    }
-
-    public void setInvertVacuumSenseLogic(boolean invertVacuumSenseLogic) {
-        this.invertVacuumSenseLogic = invertVacuumSenseLogic;
-    }
-
     @Override
     public ReferenceNozzleTip getNozzleTip() {
         return nozzleTip;
@@ -150,26 +150,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         
         // Dwell Time
         Thread.sleep(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
-
-        Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
-        if (actuator != null) {
-            ReferenceNozzleTip nt = getNozzleTip();
-            double vacuumLevel = Double.parseDouble(actuator.read());
-            if (invertVacuumSenseLogic) {
-                if (vacuumLevel > nt.getVacuumLevelPartOn()) {
-                    throw new Exception(String.format(
-                            "Pick failure: Vacuum level %f is higher than expected value of %f for part on. Part may have failed to pick.",
-                            vacuumLevel, nt.getVacuumLevelPartOn()));
-                }
-            }
-            else {
-                if (vacuumLevel < nt.getVacuumLevelPartOn()) {
-                    throw new Exception(String.format(
-                            "Pick failure: Vacuum level %f is lower than expected value of %f for part on. Part may have failed to pick.",
-                            vacuumLevel, nt.getVacuumLevelPartOn()));
-                }
-            }
-        }
     }
 
     @Override
@@ -184,26 +164,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         
         // Dwell Time
         Thread.sleep(this.getPlaceDwellMilliseconds() + nozzleTip.getPlaceDwellMilliseconds());
-
-        Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
-        if (actuator != null) {
-            ReferenceNozzleTip nt = getNozzleTip();
-            double vacuumLevel = Double.parseDouble(actuator.read());
-            if (invertVacuumSenseLogic) {
-                if (vacuumLevel < nt.getVacuumLevelPartOff()) {
-                    throw new Exception(String.format(
-                            "Place failure: Vacuum level %f is lower than expected value of %f for part off. Part may be stuck to nozzle.",
-                            vacuumLevel, nt.getVacuumLevelPartOff()));
-                }
-            }
-            else {
-                if (vacuumLevel > nt.getVacuumLevelPartOff()) {
-                    throw new Exception(String.format(
-                            "Place failure: Vacuum level %f is higher than expected value of %f for part off. Part may be stuck to nozzle.",
-                            vacuumLevel, nt.getVacuumLevelPartOff()));
-                }
-            }
-        }
     }
 
     @Override
@@ -428,6 +388,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard()),
+                new PropertySheetWizardAdapter(new ReferenceNozzlePartDetectionWizard(this), "Part Detection"),
                 new PropertySheetWizardAdapter(new ReferenceNozzleCameraOffsetWizard(this), "Offset Wizard")
         };
     }
@@ -488,5 +449,32 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     ReferenceMachine getMachine() {
         return (ReferenceMachine) Configuration.get().getMachine();
+    }
+    
+    @Override
+    public boolean isPartDetectionEnabled() {
+        return vacuumSenseActuatorName != null && !vacuumSenseActuatorName.isEmpty();
+    }
+    
+    private double readVacuumLevel() throws Exception {
+        Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
+        if (actuator == null) {
+            throw new Exception(String.format("Can't find vacuum actuator %s", vacuumSenseActuatorName));
+        }
+        return Double.parseDouble(actuator.read());
+    }
+
+    @Override
+    public boolean isPartOn() throws Exception {
+        ReferenceNozzleTip nt = getNozzleTip();
+        double vacuumLevel = readVacuumLevel();
+        return vacuumLevel >= nt.getVacuumLevelPartOnLow() && vacuumLevel <= nt.getVacuumLevelPartOnHigh();
+    }
+
+    @Override
+    public boolean isPartOff() throws Exception {
+        ReferenceNozzleTip nt = getNozzleTip();
+        double vacuumLevel = readVacuumLevel();
+        return vacuumLevel >= nt.getVacuumLevelPartOffLow() && vacuumLevel <= nt.getVacuumLevelPartOffHigh();
     }
 }

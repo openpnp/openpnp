@@ -49,20 +49,16 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.WrapLayout;
-import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Point;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
@@ -82,7 +78,6 @@ public class JogControlsPanel extends JPanel {
     private final MachineControlsPanel machineControlsPanel;
     private final Configuration configuration;
     private JPanel panelActuators;
-    private JPanel panelDispensers;
     private JSlider sliderIncrements;
     private JCheckBox boardProtectionOverrideCheck;
 
@@ -116,9 +111,6 @@ public class JogControlsPanel extends JPanel {
         zParkAction.setEnabled(enabled);
         cParkAction.setEnabled(enabled);
         for (Component c : panelActuators.getComponents()) {
-            c.setEnabled(enabled);
-        }
-        for (Component c : panelDispensers.getComponents()) {
             c.setEnabled(enabled);
         }
     }
@@ -443,11 +435,6 @@ public class JogControlsPanel extends JPanel {
         tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Actuators"), null, panelActuators, null); //$NON-NLS-1$
         panelActuators.setLayout(new WrapLayout(WrapLayout.LEFT));
 
-        panelDispensers = new JPanel();
-        tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Dispense"), null, panelDispensers, null); //$NON-NLS-1$
-        FlowLayout flowLayout = (FlowLayout) panelDispensers.getLayout();
-        flowLayout.setAlignment(FlowLayout.LEFT);
-        
         JPanel panelSafety = new JPanel();
         tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Safety"), null, panelSafety, null); //$NON-NLS-1$
         panelSafety.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
@@ -721,17 +708,6 @@ public class JogControlsPanel extends JPanel {
             for (final Head head : machine.getHeads()) {
                 for (Actuator actuator : head.getActuators()) {
                     addActuator(actuator);
-                }
-                for (final PasteDispenser dispenser : head.getPasteDispensers()) {
-                    final JButton dispenserButton =
-                            new JButton(head.getName() + ":" + dispenser.getName()); //$NON-NLS-1$
-                    dispenserButton.setFocusable(false);
-                    dispenserButton.addActionListener((e) -> {
-                        UiUtils.submitUiMachineTask(() -> {
-                            dispenser.dispense(null, null, 250);
-                        });
-                    });
-                    panelDispensers.add(dispenserButton);
                 }
             }
 
