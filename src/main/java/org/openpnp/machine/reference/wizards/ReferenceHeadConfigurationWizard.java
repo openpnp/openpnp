@@ -164,6 +164,25 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
 
         softLimitsEnabled = new JCheckBox("Enabled?");
         panel_1.add(softLimitsEnabled, "2, 8, 7, 1");
+        
+        JPanel panel_2 = new JPanel();
+        panel_2.setBorder(new TitledBorder(null, "Z Probe", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panel_2);
+        panel_2.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        JLabel lblNewLabel_4 = new JLabel("Z Probe Actuator Name");
+        panel_2.add(lblNewLabel_4, "2, 2, right, default");
+        
+        zProbeActuatorName = new JTextField();
+        panel_2.add(zProbeActuatorName, "4, 2, fill, default");
+        zProbeActuatorName.setColumns(15);
     }
 
     @Override
@@ -187,12 +206,16 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
 
         addWrappedBinding(head, "softLimitsEnabled", softLimitsEnabled, "selected");
 
+        addWrappedBinding(head, "zProbeActuatorName", zProbeActuatorName, "text");
+
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(parkX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(parkY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(minX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(minY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxY);
+        
+        ComponentDecorators.decorateWithAutoSelect(zProbeActuatorName);
     }
 
     private static Location getParsedLocation(JTextField textFieldX, JTextField textFieldY) {
@@ -318,4 +341,5 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
     private JTextField maxX;
     private JTextField maxY;
     private JCheckBox softLimitsEnabled;
+    private JTextField zProbeActuatorName;
 }

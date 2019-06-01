@@ -317,15 +317,9 @@ public class JobPanel extends JPanel {
         JButton btnRemoveBoard = new JButton(removeBoardAction);
         btnRemoveBoard.setHideActionText(true);
         toolBarBoards.add(btnRemoveBoard);
+        
         toolBarBoards.addSeparator();
-        JButton btnCaptureCameraBoardLocation = new JButton(captureCameraBoardLocationAction);
-        btnCaptureCameraBoardLocation.setHideActionText(true);
-        toolBarBoards.add(btnCaptureCameraBoardLocation);
-
-        JButton btnCaptureToolBoardLocation = new JButton(captureToolBoardLocationAction);
-        btnCaptureToolBoardLocation.setHideActionText(true);
-        toolBarBoards.add(btnCaptureToolBoardLocation);
-
+        
         JButton btnPositionCameraBoardLocation = new JButton(moveCameraToBoardLocationAction);
         btnPositionCameraBoardLocation.setHideActionText(true);
         toolBarBoards.add(btnPositionCameraBoardLocation);
@@ -334,9 +328,22 @@ public class JobPanel extends JPanel {
                 new JButton(moveCameraToBoardLocationNextAction);
         btnPositionCameraBoardLocationNext.setHideActionText(true);
         toolBarBoards.add(btnPositionCameraBoardLocationNext);
+        
         JButton btnPositionToolBoardLocation = new JButton(moveToolToBoardLocationAction);
         btnPositionToolBoardLocation.setHideActionText(true);
         toolBarBoards.add(btnPositionToolBoardLocation);
+        
+        toolBarBoards.addSeparator();
+
+        JButton btnCaptureCameraBoardLocation = new JButton(captureCameraBoardLocationAction);
+        btnCaptureCameraBoardLocation.setHideActionText(true);
+        toolBarBoards.add(btnCaptureCameraBoardLocation);
+
+        JButton btnCaptureToolBoardLocation = new JButton(captureToolBoardLocationAction);
+        btnCaptureToolBoardLocation.setHideActionText(true);
+        toolBarBoards.add(btnCaptureToolBoardLocation);
+
+        
         toolBarBoards.addSeparator();
 
         JButton btnTwoPointBoardLocation = new JButton(twoPointLocateBoardLocationAction);
