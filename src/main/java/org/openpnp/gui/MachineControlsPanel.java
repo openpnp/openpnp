@@ -41,6 +41,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
+import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.swingx.JXCollapsiblePane;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
@@ -270,10 +271,11 @@ public class MachineControlsPanel extends JPanel {
                 boolean enable = !machine.isEnabled();
                 try {
 					Configuration.get().getMachine().setEnabled(enable);
+					// TODO STOPSHIP move setEnabled into a binding.
 					setEnabled(true);
 					if (machine.getHomeAfterEnabled() && machine.isEnabled()) {
+                        // TODO STOPSHIP should not be in the UI
 						machine.home();
-		                homeAction.putValue(Action.SMALL_ICON, Icons.home);
 					}
                 }
                 catch (Exception t1) {
@@ -287,11 +289,14 @@ public class MachineControlsPanel extends JPanel {
         }
     };
 
-    @SuppressWarnings("serial")
-    public Action homeAction = new AbstractAction(Translations.getString("MachineControls.Action.Home"), Icons.home) { //$NON-NLS-1$
-        {
+    public class HomeAction extends AbstractAction {
+        public HomeAction() {
+            super(Translations.getString("MachineControls.Action.Home"), Icons.home);
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_BACK_QUOTE,
                     Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        }
+        public void setHomed(boolean homed) {
+            putValue(Action.SMALL_ICON, homed ? Icons.home : Icons.homeWarning);
         }
 
         @Override
@@ -299,10 +304,10 @@ public class MachineControlsPanel extends JPanel {
             UiUtils.submitUiMachineTask(() -> {
                 Machine machine = Configuration.get().getMachine();
                 machine.home();
-                homeAction.putValue(Action.SMALL_ICON, Icons.home);
             });
         }
-    };
+    }
+    public HomeAction homeAction = new HomeAction();
 
     @SuppressWarnings("serial")
     public Action targetToolAction = new AbstractAction(null, Icons.centerTool) {
@@ -332,7 +337,6 @@ public class MachineControlsPanel extends JPanel {
         startStopMachineAction.putValue(Action.NAME, enabled ? Translations.getString("MachineControls.Action.Stop") : Translations.getString("MachineControls.Action.Start")); //$NON-NLS-1$ //$NON-NLS-2$
         startStopMachineAction.putValue(Action.SMALL_ICON,
                 enabled ? Icons.powerOff : Icons.powerOn);
-        homeAction.putValue(Action.SMALL_ICON, enabled ? Icons.homeWarning : Icons.home);
     }
 
     private MachineListener machineListener = new MachineListener.Adapter() {
@@ -415,6 +419,8 @@ public class MachineControlsPanel extends JPanel {
             updateStartStopButton(machine.isEnabled());
 
             setEnabled(machine.isEnabled());
+            
+            BeanUtils.bind(UpdateStrategy.READ, machine, "homed", homeAction, "homed");
 
             for (Head head : machine.getHeads()) {
 

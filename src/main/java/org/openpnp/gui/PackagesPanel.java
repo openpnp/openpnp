@@ -330,7 +330,7 @@ public class PackagesPanel extends JPanel {
                 return;
             }
             try {
-                Serializer s = Configuration.get().createSerializer();
+                Serializer s = Configuration.createSerializer();
                 StringWriter w = new StringWriter();
                 s.write(pkg, w);
                 StringSelection stringSelection = new StringSelection(w.toString());
@@ -353,7 +353,7 @@ public class PackagesPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             try {
-                Serializer ser = Configuration.get().createSerializer();
+                Serializer ser = Configuration.createSerializer();
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 String s = (String) clipboard.getData(DataFlavor.stringFlavor);
                 StringReader r = new StringReader(s);

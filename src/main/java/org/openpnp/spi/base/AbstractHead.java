@@ -42,6 +42,15 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     
     @Element(required = false)
     protected Location parkLocation = new Location(LengthUnit.Millimeters);
+    
+    @Element(required=false)
+    protected boolean softLimitsEnabled = false;
+
+    @Element(required = false)
+    protected Location minLocation = new Location(LengthUnit.Millimeters);
+
+    @Element(required = false)
+    protected Location maxLocation = new Location(LengthUnit.Millimeters);
 
     protected Machine machine;
 
@@ -267,5 +276,29 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
         }
 
         return speed;
+    }
+
+    public Location getMinLocation() {
+        return minLocation;
+    }
+
+    public void setMinLocation(Location minLocation) {
+        this.minLocation = minLocation;
+    }
+
+    public Location getMaxLocation() {
+        return maxLocation;
+    }
+
+    public void setMaxLocation(Location maxLocation) {
+        this.maxLocation = maxLocation;
+    }
+
+    public boolean isSoftLimitsEnabled() {
+        return softLimitsEnabled;
+    }
+
+    public void setSoftLimitsEnabled(boolean softLimitsEnabled) {
+        this.softLimitsEnabled = softLimitsEnabled;
     }
 }

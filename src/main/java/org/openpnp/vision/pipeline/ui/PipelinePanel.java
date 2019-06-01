@@ -2,14 +2,11 @@ package org.openpnp.vision.pipeline.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
-import java.awt.event.HierarchyEvent;
-import java.awt.event.HierarchyListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -18,7 +15,6 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.BoxLayout;
 import javax.swing.DropMode;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
@@ -148,12 +144,17 @@ public class PipelinePanel extends JPanel {
                 }
             }
         });
-
+        stagesTable.changeSelection(stagesTable.getRowCount()-1,  0,  false, false);
+          
         splitPaneMain.setLeftComponent(splitPaneStages);
         splitPaneMain.setRightComponent(propertySheetPanel);
         
         splitPaneMain.setResizeWeight(0.5);
         splitPaneStages.setResizeWeight(0.80);
+    }
+    
+    public void initializeFocus() {
+    	stagesTable.grabFocus();
     }
 
     public void onStagePropertySheetValueChanged(Object aValue, int row, int column) {
@@ -170,6 +171,7 @@ public class PipelinePanel extends JPanel {
         editor.process();
     }
     
+   
     private void refreshProperties() {
         CvStage stage = getSelectedStage();
         if (stage == null) {
@@ -216,7 +218,7 @@ public class PipelinePanel extends JPanel {
     public Action newStageAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Stage...");
+            putValue(NAME, "New stage...");
             putValue(SHORT_DESCRIPTION, "Create a new stage.");
         }
 
@@ -231,7 +233,7 @@ public class PipelinePanel extends JPanel {
                 }
             });
             ClassSelectionDialog<CvStage> dialog = new ClassSelectionDialog<>(
-                    JOptionPane.getFrameForComponent(PipelinePanel.this), "New Stage",
+                    JOptionPane.getFrameForComponent(PipelinePanel.this), "New stage",
                     "Please select a stage implemention from the list below.", stageClasses);
             dialog.setVisible(true);
             Class<? extends CvStage> stageClass = dialog.getSelectedClass();
@@ -271,7 +273,7 @@ public class PipelinePanel extends JPanel {
     public final Action copyAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, "Copy Pipeline to Clipboard");
+            putValue(NAME, "Copy pipeline to clipboard");
             putValue(SHORT_DESCRIPTION, "Copy the pipeline to the clipboard in text format.");
         }
 
@@ -284,7 +286,7 @@ public class PipelinePanel extends JPanel {
                 clipboard.setContents(stringSelection, null);
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Copy Failed", e);
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Copy failed", e);
             }
         }
     };
@@ -292,7 +294,7 @@ public class PipelinePanel extends JPanel {
     public final Action pasteAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, "Create Pipeline from Clipboard");
+            putValue(NAME, "Create pipeline from clipboard");
             putValue(SHORT_DESCRIPTION,
                     "Create a new pipeline from a definition on the clipboard.");
         }
@@ -308,7 +310,7 @@ public class PipelinePanel extends JPanel {
                 editor.process();
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Paste failed", e);
             }
         }
     };
@@ -316,8 +318,8 @@ public class PipelinePanel extends JPanel {
     public final Action refreshAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.refresh);
-            putValue(NAME, "");
-            putValue(SHORT_DESCRIPTION, "");
+            putValue(NAME, "Update picture from current view.");
+            putValue(SHORT_DESCRIPTION, "Update picture from current view.");
         }
 
         @Override

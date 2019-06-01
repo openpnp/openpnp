@@ -103,7 +103,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     @Override
     public void moveTo(Location location, double speed) throws Exception {
         Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
-        getDriver().moveTo(this, location, getHead().getMaxPartSpeed() * speed);
+        ((ReferenceHead) getHead()).moveTo(this, location, getHead().getMaxPartSpeed() * speed);
         getMachine().fireMachineHeadActivity(head);
     }
 

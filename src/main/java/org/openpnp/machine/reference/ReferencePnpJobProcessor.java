@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,6 +49,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PartAlignment;
+import org.openpnp.spi.PnpJobPlanner;
 import org.openpnp.spi.PnpJobProcessor.JobPlacement.Status;
 import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractPnpJobProcessor;
@@ -129,6 +131,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     @Attribute(required = false)
     protected JobOrderHint jobOrder = JobOrderHint.PartHeight;
 
+    @Element(required = false)
+    public PnpJobPlanner planner = new SimplePnpJobPlanner();
+
     private FiniteStateMachine<State, Message> fsm = new FiniteStateMachine<>(State.Uninitialized);
 
     protected Job job;
@@ -140,24 +145,28 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     protected List<JobPlacement> jobPlacements = new ArrayList<>();
 
     protected List<PlannedPlacement> plannedPlacements = new ArrayList<>();
-
+    
+    protected Set<BoardLocation> completedFidChecks = new HashSet<>();
+    
     long startTime;
     int totalPartsPlaced;
     
     long lastConfigSavedTimeMs = 0;
     
+    int cycles = 0;
+    int nozzleTipChanges = 0;
+    
     public ReferencePnpJobProcessor() {
         fsm.add(State.Uninitialized, Message.Initialize, State.PreFlight, this::doInitialize);
 
-        fsm.add(State.PreFlight, Message.Next, State.TipCalibration, this::doPreFlight,
-                Message.Next);
+        fsm.add(State.PreFlight, Message.Next, State.TipCalibration, this::doPreFlight);
         fsm.add(State.PreFlight, Message.Abort, State.Cleanup, Message.Next);
         
-        fsm.add(State.TipCalibration, Message.Next, State.FiducialCheck, this::doTipCalibration, Message.Next);
+        fsm.add(State.TipCalibration, Message.Next, State.FiducialCheck, this::doTipCalibration);
         fsm.add(State.TipCalibration, Message.Skip, State.FiducialCheck, Message.Next);
         fsm.add(State.TipCalibration, Message.Abort, State.Cleanup, Message.Next);
 
-        fsm.add(State.FiducialCheck, Message.Next, State.Plan, this::doFiducialCheck, Message.Next);
+        fsm.add(State.FiducialCheck, Message.Next, State.Plan, this::doFiducialCheck);
         fsm.add(State.FiducialCheck, Message.Skip, State.Plan, Message.Next);
         fsm.add(State.FiducialCheck, Message.Abort, State.Cleanup, Message.Next);
 
@@ -165,11 +174,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         fsm.add(State.Plan, Message.Abort, State.Cleanup, Message.Next);
         fsm.add(State.Plan, Message.Complete, State.Cleanup, Message.Next);
 
-        fsm.add(State.ChangeNozzleTip, Message.Next, State.Feed, this::doChangeNozzleTip, Message.Next);
+        fsm.add(State.ChangeNozzleTip, Message.Next, State.Feed, this::doChangeNozzleTip);
         fsm.add(State.ChangeNozzleTip, Message.Skip, State.ChangeNozzleTip, this::doSkip, Message.Next);
         fsm.add(State.ChangeNozzleTip, Message.Abort, State.Cleanup, Message.Next);
 
-        fsm.add(State.Feed, Message.Next, State.Align, this::doFeedAndPick, Message.Next);
+        fsm.add(State.Feed, Message.Next, State.Align, this::doFeedAndPick);
         fsm.add(State.Feed, Message.Skip, State.Feed, this::doSkip, Message.Next);
         fsm.add(State.Feed, Message.IgnoreContinue, State.Feed, this::doIgnoreContinue, Message.Next);
         fsm.add(State.Feed, Message.Abort, State.Cleanup, Message.Next);
@@ -183,7 +192,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         // fsm.add(State.Pick, Message.Skip, State.Pick, this::doSkip, Message.Next);
         // fsm.add(State.Pick, Message.Abort, State.Cleanup, Message.Next);
 
-        fsm.add(State.Align, Message.Next, State.Place, this::doAlign, Message.Next);
+        fsm.add(State.Align, Message.Next, State.Place, this::doAlign);
         fsm.add(State.Align, Message.Skip, State.Align, this::doSkip, Message.Next);
         fsm.add(State.Align, Message.IgnoreContinue, State.Align, this::doIgnoreContinue, Message.Next);
         fsm.add(State.Align, Message.Abort, State.Cleanup, Message.Next);
@@ -297,12 +306,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     protected void doPreFlight() throws Exception {
         startTime = System.currentTimeMillis();
         totalPartsPlaced = 0;
+        cycles = 0;
+        nozzleTipChanges = 0;
         saveJobAndConfig(true);
         
         // Create some shortcuts for things that won't change during the run
         this.machine = Configuration.get().getMachine();
         this.head = this.machine.getDefaultHead();
         this.jobPlacements.clear();
+        this.completedFidChecks.clear();
         
 
         fireTextStatus("Checking job for setup errors.");
@@ -312,9 +324,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             if (!boardLocation.isEnabled()) {
                 continue;
             }
-            
-            // clear locationFiducialOverrides
-            boardLocation.clearLocationFiducialOverrides();            
             
             // Check for ID duplicates - throw error if any are found
             HashSet<String> idlist = new HashSet<String>();
@@ -410,8 +419,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         	
         	BoardLocation boardLocation = job.getBoardLocations().get(0);
         	
-        	Location location = locator.locateBoard(boardLocation, p.isCheckFiducials());
-        	boardLocation.setLocationFiducialOverrides(location);
+        	locator.locateBoard(boardLocation, p.isCheckFiducials());
         	Logger.debug("Panel Fiducial check for {}", boardLocation);
         }
         
@@ -422,9 +430,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             if (!boardLocation.isCheckFiducials()) {
                 continue;
             }
-            Location location = locator.locateBoard(boardLocation);
-            boardLocation.setLocationFiducialOverrides(location);
+            if (completedFidChecks.contains(boardLocation)) {
+                continue;
+            }
+            locator.locateBoard(boardLocation);
             Logger.debug("Fiducial check for {}", boardLocation);
+            completedFidChecks.add(boardLocation);
         }
     }
     
@@ -433,8 +444,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
         
-        Location location = locator.locateBoard(boardLocation);
-        boardLocation.setLocationFiducialOverrides(location);
+        locator.locateBoard(boardLocation);
         Logger.debug("Fiducial check for {}", boardLocation);
     }
 
@@ -487,44 +497,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return;
         }
 
-        // Create a List of Lists of JobPlacements that each Nozzle can handle, including
-        // one instance of null per Nozzle. The null indicates a possible "no solution"
-        // for that Nozzle.
-        List<List<JobPlacement>> solutions = head.getNozzles().stream().map(nozzle -> {
-            return Stream.concat(jobPlacements.stream().filter(jobPlacement -> {
-                return nozzleCanHandle(nozzle, jobPlacement.placement.getPart());
-            }), Stream.of((JobPlacement) null)).collect(Collectors.toList());
-        }).collect(Collectors.toList());
-
-        // Get the cartesian product of those Lists
-        List<JobPlacement> result = Collect.cartesianProduct(solutions).stream()
-                // Filter out any results that contains the same JobPlacement more than once
-                .filter(list -> {
-                    // Note: A previous version of this code just dumped everything into a
-                    // set and compared the size. This worked for two nozzles since there would
-                    // never be more than two nulls, but for > 2 nozzles there will always be a
-                    // solution that has > 2 nulls, which means the size will never match.
-                    // This version of the code ignores the nulls (since they are valid
-                    // solutions) and instead only checks for duplicate valid JobPlacements.
-                    // There is probably a more clever way to do this, but it isn't coming
-                    // to me at the moment.
-                    HashSet<JobPlacement> set = new HashSet<>();
-                    for (JobPlacement jp : list) {
-                        if (jp == null) {
-                            continue;
-                        }
-                        if (set.contains(jp)) {
-                            return false;
-                        }
-                        set.add(jp);
-                    }
-                    return true;
-                })
-                // Sort by the solutions that contain the fewest nulls followed by the
-                // solutions that require the fewest nozzle changes.
-                .sorted(byFewestNulls.thenComparing(byFewestNozzleChanges))
-                // And return the top result.
-                .findFirst().orElse(null);
+        long t = System.currentTimeMillis();
+        List<JobPlacement> result = planner.plan(head, jobPlacements);
+        Logger.debug("Planner complete in {}ms: {}", (System.currentTimeMillis() - t), result);
 
         // Now we have a solution, so apply it to the nozzles and plan the placements.
         for (Nozzle nozzle : head.getNozzles()) {
@@ -536,11 +511,17 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             jobPlacement.status = Status.Processing;
             plannedPlacements.add(new PlannedPlacement(nozzle, jobPlacement));
         }
+        
+        if (plannedPlacements.size() == 0) {
+            throw new Exception("No placements planned. That's an uh oh.");
+        }
 
         Logger.debug("Planned placements {}", plannedPlacements);
+        cycles++;
     }
-
+    
     protected void doChangeNozzleTip() throws Exception {
+        fireTextStatus("Checking nozzle tips.");
         for (PlannedPlacement plannedPlacement : plannedPlacements) {
             if (plannedPlacement.stepComplete) {
                 continue;
@@ -578,6 +559,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             // Mark this step as complete
             plannedPlacement.stepComplete = true;
+            
+            nozzleTipChanges++;
         }
 
         clearStepComplete();
@@ -747,7 +730,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             // Check if there is a fiducial override for the board location and if so, use it.
             Location placementLocation =
-                    Utils2D.calculateFiducialCompensatedBoardPlacementLocation(boardLocation, placement.getLocation());
+                    Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation());
 
             // If there are alignment offsets update the placement location with them
             if (plannedPlacement.alignmentOffsets != null) {
@@ -868,13 +851,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         if (parkWhenComplete) {
             fireTextStatus("Park nozzle.");
-            MovableUtils.moveToLocationAtSafeZ(head.getDefaultNozzle(), head.getParkLocation());
+            MovableUtils.park(head);
         }
         
         double dtSec = (System.currentTimeMillis() - startTime)/1000.0;
         DecimalFormat df = new DecimalFormat("###,###.0");
         
-        Logger.info("Job finished {} parts in {} sec. This is {} pph", totalPartsPlaced, df.format(dtSec), df.format(totalPartsPlaced / (dtSec / 3600.0)));
+        Logger.info("Job finished {} parts in {} sec. This is {} CPH", totalPartsPlaced, df.format(dtSec), df.format(totalPartsPlaced / (dtSec / 3600.0)));
+        Logger.info("Cycles {}, Nozzle Tip Changes {}", cycles, nozzleTipChanges);
         
         HashMap<String, Object> params = new HashMap<>();
         params.put("job", job);
@@ -1013,48 +997,175 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }    
 
     private void saveJobAndConfig(boolean ignoreTimer) throws Exception {
-        Logger.info("saveJobAndConfig({})", ignoreTimer);
+        Logger.debug("saveJobAndConfig({})", ignoreTimer);
         if (autoSaveJob) {
-            Logger.info("Auto saving job.");
+            Logger.debug("Auto saving job.");
             File file = job.getFile();
             if (file != null) {
                 Configuration.get().saveJob(job, file);
             }
         }
         if (autoSaveConfiguration && (ignoreTimer || System.currentTimeMillis() > lastConfigSavedTimeMs + configSaveFrequencyMs)) {
-            Logger.info("Auto saving config.");
+            Logger.debug("Auto saving config.");
             Configuration.get().save();
             lastConfigSavedTimeMs = System.currentTimeMillis();
         }
     }
     
-    
+    @Root
+    public static class StandardPnpJobPlanner implements PnpJobPlanner {
+        Head head;
+        
+        public List<JobPlacement> plan(Head head, List<JobPlacement> jobPlacements) {
+            this.head = head;
+            
+            // Create a List of Lists of JobPlacements that each Nozzle can handle, including
+            // one instance of null per Nozzle. The null indicates a possible "no solution"
+            // for that Nozzle.
+            List<List<JobPlacement>> solutions = head.getNozzles().stream().map(nozzle -> {
+                return Stream.concat(jobPlacements.stream().filter(jobPlacement -> {
+                    return nozzleCanHandle(nozzle, jobPlacement.placement.getPart());
+                }), Stream.of((JobPlacement) null)).collect(Collectors.toList());
+            }).collect(Collectors.toList());
 
-    // Sort a List<JobPlacement> by the number of nulls it contains in ascending order.
-    Comparator<List<JobPlacement>> byFewestNulls = (a, b) -> {
-        return Collections.frequency(a, null) - Collections.frequency(b, null);
-    };
-
-    // Sort a List<JobPlacement> by the number of nozzle changes it will require in
-    // descending order.
-    Comparator<List<JobPlacement>> byFewestNozzleChanges = (a, b) -> {
-        int countA = 0, countB = 0;
-        for (int i = 0; i < head.getNozzles().size(); i++) {
-            Nozzle nozzle = head.getNozzles().get(i);
-            JobPlacement jpA = a.get(i);
-            JobPlacement jpB = b.get(i);
-            if (nozzle.getNozzleTip() == null) {
-                countA++;
-                countB++;
-                continue;
-            }
-            if (jpA != null && !nozzle.getNozzleTip().canHandle(jpA.placement.getPart())) {
-                countA++;
-            }
-            if (jpB != null && !nozzle.getNozzleTip().canHandle(jpB.placement.getPart())) {
-                countB++;
-            }
+            // Get the cartesian product of those Lists
+            List<JobPlacement> result = Collect.cartesianProduct(solutions).stream()
+                    // Filter out any results that contains the same JobPlacement more than once
+                    .filter(list -> {
+                        // Note: A previous version of this code just dumped everything into a
+                        // set and compared the size. This worked for two nozzles since there would
+                        // never be more than two nulls, but for > 2 nozzles there will always be a
+                        // solution that has > 2 nulls, which means the size will never match.
+                        // This version of the code ignores the nulls (since they are valid
+                        // solutions) and instead only checks for duplicate valid JobPlacements.
+                        // There is probably a more clever way to do this, but it isn't coming
+                        // to me at the moment.
+                        HashSet<JobPlacement> set = new HashSet<>();
+                        for (JobPlacement jp : list) {
+                            if (jp == null) {
+                                continue;
+                            }
+                            if (set.contains(jp)) {
+                                return false;
+                            }
+                            set.add(jp);
+                        }
+                        return true;
+                    })
+                    // Sort by the solutions that contain the fewest nulls followed by the
+                    // solutions that require the fewest nozzle changes.
+                    .sorted(byFewestNulls.thenComparing(byFewestNozzleChanges))
+                    // And return the top result.
+                    .findFirst().orElse(null);
+            return result;
         }
-        return countA - countB;
-    };
+        
+        // Sort a List<JobPlacement> by the number of nulls it contains in ascending order.
+        Comparator<List<JobPlacement>> byFewestNulls = (a, b) -> {
+            return Collections.frequency(a, null) - Collections.frequency(b, null);
+        };
+
+        // Sort a List<JobPlacement> by the number of nozzle changes it will require in
+        // descending order.
+        Comparator<List<JobPlacement>> byFewestNozzleChanges = (a, b) -> {
+            int countA = 0, countB = 0;
+            for (int i = 0; i < head.getNozzles().size(); i++) {
+                Nozzle nozzle = head.getNozzles().get(i);
+                JobPlacement jpA = a.get(i);
+                JobPlacement jpB = b.get(i);
+                if (nozzle.getNozzleTip() == null) {
+                    countA++;
+                    countB++;
+                    continue;
+                }
+                if (jpA != null && !nozzle.getNozzleTip().canHandle(jpA.placement.getPart())) {
+                    countA++;
+                }
+                if (jpB != null && !nozzle.getNozzleTip().canHandle(jpB.placement.getPart())) {
+                    countB++;
+                }
+            }
+            return countA - countB;
+        };
+    }
+    
+    @Root
+    public static class SimplePnpJobPlanner implements PnpJobPlanner {
+        /**
+         * This is a trivial planner that does not try very hard to make an optimized job, but also
+         * does not fail on large jobs like the Standard one does.
+         * 
+         * - For each planning cycle, the planner loops through each nozzle on the head. 
+         * - For each nozzle it then loops through the list of remaining placements and
+         *   finds the first placement that does not require a nozzle tip change. 
+         * - If none are found it next searches for a placement that can be handled with a nozzle
+         *   tip change.
+         * - If no compatible placement is found in the searches above the nozzle is left empty.
+         */
+        @Override
+        public List<JobPlacement> plan(Head head, List<JobPlacement> jobPlacements) {
+            // Sort the placements by number of compatible nozzles ascending. This causes the
+            // planner to prefer plans that have greater nozzle diversity, leading to overall
+            // better nozzle usage as fewer placements remain.
+            jobPlacements.sort(new Comparator<JobPlacement>() {
+                @Override
+                public int compare(JobPlacement o1, JobPlacement o2) {
+                    int c1 = 0;
+                    for (Nozzle nozzle : head.getNozzles()) {
+                        if (AbstractPnpJobProcessor.nozzleCanHandle(nozzle, o1.placement.getPart())) {
+                            c1++;
+                        }
+                    }
+                    int c2 = 0;
+                    for (Nozzle nozzle : head.getNozzles()) {
+                        if (AbstractPnpJobProcessor.nozzleCanHandle(nozzle, o2.placement.getPart())) {
+                            c2++;
+                        }
+                    }
+                    return c1 - c2;
+                }
+            });
+            List<JobPlacement> result = new ArrayList<>();
+            for (Nozzle nozzle : head.getNozzles()) {
+                JobPlacement solution = null;
+                
+                // First, see if we can put a placement on the nozzle that will not require a
+                // nozzle tip change.
+                if (nozzle.getNozzleTip() != null) {
+                    for (JobPlacement jobPlacement : jobPlacements) {
+                        Placement placement = jobPlacement.placement;
+                        Part part = placement.getPart();
+                        if (nozzle.getNozzleTip().canHandle(part)) {
+                            solution = jobPlacement;
+                            break;
+                        }
+                    }
+                }
+                if (solution != null) {
+                    jobPlacements.remove(solution);
+                    result.add(solution);
+                    continue;
+                }
+
+                // If that didn't work, see if we can put one on with a nozzle tip change.
+                for (JobPlacement jobPlacement : jobPlacements) {
+                    Placement placement = jobPlacement.placement;
+                    Part part = placement.getPart();
+                    if (nozzleCanHandle(nozzle, part)) {
+                        solution = jobPlacement;
+                        break;
+                    }
+                }
+                if (solution != null) {
+                    jobPlacements.remove(solution);
+                    result.add(solution);
+                    continue;
+                }
+                
+                // And if that didn't work we give up on this nozzle.
+                result.add(null);
+            }
+            return result;
+        }
+    }
 }

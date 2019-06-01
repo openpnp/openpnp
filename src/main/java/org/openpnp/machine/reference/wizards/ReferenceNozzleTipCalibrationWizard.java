@@ -19,7 +19,6 @@
 
 package org.openpnp.machine.reference.wizards;
 
-import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -51,6 +50,7 @@ import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
+import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -74,6 +74,8 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     private JComboBox compensationAlgorithmCb;
     private JLabel lblAngleIncrements;
     private JTextField angleIncrementsTf;
+    private JLabel lblOffsetThreshold;
+    private JTextField offsetThresholdTf;
     private JButton btnCalibrate;
     private JButton btnReset;
     private JLabel lblCalibrationInfo;
@@ -106,6 +108,8 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.UNRELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
@@ -170,13 +174,20 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelCalibration.add(angleIncrementsTf, "4, 10, left, default");
         angleIncrementsTf.setColumns(3);
 
+        lblOffsetThreshold = new JLabel("Offset Threshold");
+        panelCalibration.add(lblOffsetThreshold, "2, 12, right, default");
+
+        offsetThresholdTf = new JTextField();
+        panelCalibration.add(offsetThresholdTf, "4, 12, left, default");
+        offsetThresholdTf.setColumns(6);
+
         lblNewLabel = new JLabel("Pipeline");
-        panelCalibration.add(lblNewLabel, "2, 12, right, default");
+        panelCalibration.add(lblNewLabel, "2, 14, right, default");
                         
                         panel = new JPanel();
                         FlowLayout flowLayout = (FlowLayout) panel.getLayout();
                         flowLayout.setVgap(0);
-                        panelCalibration.add(panel, "4, 12, left, default");
+                        panelCalibration.add(panel, "4, 14, left, default");
                         
                                 btnEditPipeline = new JButton("Edit");
                                 panel.add(btnEditPipeline);
@@ -230,14 +241,9 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         CvPipeline pipeline = nozzleTip.getCalibration()
                                        .getPipeline();
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new JDialog(MainFrame.get(), "Calibration Pipeline");
-        dialog.getContentPane()
-              .setLayout(new BorderLayout());
-        dialog.getContentPane()
-              .add(editor);
-        dialog.setSize(1024, 768);
+        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Calibration Pipeline", editor);
         dialog.setVisible(true);
-    }
+}
 
     private void calibrate() {
         UiUtils.submitUiMachineTask(() -> {
@@ -250,6 +256,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     @Override
     public void createBindings() {
         IntegerConverter intConverter = new IntegerConverter();
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
         addWrappedBinding(nozzleTip.getCalibration(), "enabled", calibrationEnabledCheckbox,
                 "selected");
@@ -257,6 +264,8 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 compensationAlgorithmCb, "selectedItem");
         addWrappedBinding(nozzleTip.getCalibration(), "angleSubdivisions", angleIncrementsTf,
                 "text", intConverter);
+        addWrappedBinding(nozzleTip.getCalibration(), "offsetThreshold", offsetThresholdTf,
+                "text", doubleConverter);
         bind(UpdateStrategy.READ, nozzleTip.getCalibration(), "runoutCompensationInformation",
                 lblCalibrationResults, "text");
     }
