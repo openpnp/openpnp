@@ -30,6 +30,8 @@ Some Smoothie based boards that are known to work with OpenPnP, and which you ca
 * **Re-Arm**: http://www.panucatt.com/default.asp
     Panucatt Devices also sells the Re-Arm, which is a Smoothie based board in the form factor of an Arduino Mega. This allows it to be used with existing RAMPS 1.4 boards which are common in the 3D printer world. 
 
+Note that MKS Smoothie clones are **not recommended**. See [this FAQ](http://smoothieware.org/troubleshooting#what-is-wrong-with-mks) for more information on why.
+
 ## Peter's Head
 
 There is a common style of pick and place often referred to as "Peter's Head". This style of head has one Z axis motor which uses belts or gears to drive two nozzles. Due to the complex homing operation required for this type of head, you may need to use the modified Smoothie firmware found [here](https://github.com/openpnp/Smoothieware) if you have this style of head.
