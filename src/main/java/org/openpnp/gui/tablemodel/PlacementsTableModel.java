@@ -41,11 +41,11 @@ public class PlacementsTableModel extends AbstractTableModel {
     final Configuration configuration;
 
     private String[] columnNames =
-            new String[] {"ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Enabled", "Placed", "Status", "Error Handling", "Comments"};
+            new String[] {"Enabled", "ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Placed", "Status", "Error Handling", "Comments"};
 
-    private Class[] columnTypes = new Class[] {PartCellValue.class, Part.class, Side.class,
+    private Class[] columnTypes = new Class[] {Boolean.class, PartCellValue.class, Part.class, Side.class,
             LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, Type.class,
-            Boolean.class, Boolean.class, Status.class, ErrorHandling.class, String.class};
+            Boolean.class, Status.class, ErrorHandling.class, String.class};
 
     public enum Status {
         Ready,
@@ -110,14 +110,18 @@ public class PlacementsTableModel extends AbstractTableModel {
         try {
             Placement placement = board.getPlacements().get(rowIndex);
             if (columnIndex == 1) {
+                placement.setEnabled((Boolean) aValue);
+                jobPlacementsPanel.updateActivePlacements();
+            }
+            else if (columnIndex == 2) {
                 placement.setPart((Part) aValue);
                 fireTableCellUpdated(rowIndex, 8);
             }
-            else if (columnIndex == 2) {
+            else if (columnIndex == 3) {
                 placement.setSide((Side) aValue);
                 jobPlacementsPanel.updateActivePlacements();
             }
-            else if (columnIndex == 3) {
+            else if (columnIndex == 4) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 value.setDisplayNativeUnits(true);
                 Length length = value.getLength();
@@ -126,7 +130,7 @@ public class PlacementsTableModel extends AbstractTableModel {
                         true);
                 placement.setLocation(location);
             }
-            else if (columnIndex == 4) {
+            else if (columnIndex == 5) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 value.setDisplayNativeUnits(true);
                 Length length = value.getLength();
@@ -135,17 +139,13 @@ public class PlacementsTableModel extends AbstractTableModel {
                         true);
                 placement.setLocation(location);
             }
-            else if (columnIndex == 5) {
+            else if (columnIndex == 6) {
                 placement.setLocation(placement.getLocation().derive(null, null, null,
                         Double.parseDouble(aValue.toString())));
             }
-            else if (columnIndex == 6) {
+            else if (columnIndex == 7) {
                 placement.setType((Type) aValue);
                 fireTableCellUpdated(rowIndex, 8);
-                jobPlacementsPanel.updateActivePlacements();
-            }
-            else if (columnIndex == 7) {
-                placement.setEnabled((Boolean) aValue);
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 8) {
@@ -197,22 +197,22 @@ public class PlacementsTableModel extends AbstractTableModel {
         Placement placement = board.getPlacements().get(row);
         Location loc = placement.getLocation();
         switch (col) {
-            case 0:
-                return new PartCellValue(placement.getId());
+			case 0:
+				return placement.isEnabled();
             case 1:
-                return placement.getPart();
+                return new PartCellValue(placement.getId());
             case 2:
-                return placement.getSide();
+                return placement.getPart();
             case 3:
-                return new LengthCellValue(loc.getLengthX(), true);
+                return placement.getSide();
             case 4:
-                return new LengthCellValue(loc.getLengthY(), true);
+                return new LengthCellValue(loc.getLengthX(), true);
             case 5:
-                return new RotationCellValue(loc.getRotation(), true);
+                return new LengthCellValue(loc.getLengthY(), true);
             case 6:
-                return placement.getType();
+                return new RotationCellValue(loc.getRotation(), true);
             case 7:
-                return placement.isEnabled();
+                return placement.getType();
             case 8:
                 // TODO STOPSHIP: Both of these are huge performance hogs and do not belong
                 // in the render process. At the least we should cache this information but it
