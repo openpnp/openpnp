@@ -78,7 +78,7 @@ public class JobPlacementsPanel extends JPanel {
     private JobPanel jobPanel;
 
     private static Color typeColorFiducial = new Color(157, 188, 255);
-    private static Color typeColorPlacement = new Color(157, 255, 168);
+    private static Color typeColorPlacement = new Color(255, 255, 255);
     private static Color statusColorWarning = new Color(252, 255, 157);
     private static Color statusColorReady = new Color(157, 255, 168);
     private static Color statusColorError = new Color(255, 157, 157);
