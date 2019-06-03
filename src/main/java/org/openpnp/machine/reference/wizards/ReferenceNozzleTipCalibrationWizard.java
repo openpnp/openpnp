@@ -42,6 +42,7 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.machine.reference.ReferenceNozzleTipCalibration;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
@@ -182,7 +183,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelCalibration.add(lblCompensationAlgorithm, "2, 8, right, default");
 
         compensationAlgorithmCb =
-                new JComboBox(ReferenceNozzleTip.Calibration.RunoutCompensationAlgorithm.values());
+                new JComboBox(ReferenceNozzleTipCalibration.RunoutCompensationAlgorithm.values());
         panelCalibration.add(compensationAlgorithmCb, "4, 8, left, default");
 
         lblAngleIncrements = new JLabel("Circle Divisions");
@@ -219,7 +220,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         lblRecalibration.setToolTipText("<html>\r\n<p>Determines when a recalibration is automatically executed:</p>\r\n<p><ul><li>On each nozzle tip change.</li>\r\n<li>On each nozzle tip change but only in Jobs.</li>\r\n<li>On machine homing and when first loaded. </li></ul></p>\r\n<p>Manual with stored calibration (only recommended for machines <br /> \r\nwith C axis homing).</p>\r\n</html>");
         panelCalibration.add(lblRecalibration, "2, 14, right, default");
 
-        recalibrationCb = new JComboBox(ReferenceNozzleTip.Calibration.RecalibrationTrigger.values());
+        recalibrationCb = new JComboBox(ReferenceNozzleTipCalibration.RecalibrationTrigger.values());
         panelCalibration.add(recalibrationCb, "4, 14, left, default");
 
         lblNewLabel = new JLabel("Pipeline");

@@ -343,6 +343,10 @@ public class MainFrame extends JFrame {
         buttonGroup.add(menuItem);
         mnLanguage.add(menuItem);
 
+        menuItem = new JCheckBoxMenuItem(new LanguageSelectionAction(new Locale("de")));
+        buttonGroup.add(menuItem);
+        mnLanguage.add(menuItem);
+
         for (int i = 0; i < mnLanguage.getItemCount(); i++) {
             JCheckBoxMenuItem item = (JCheckBoxMenuItem) mnLanguage.getItem(i);
             LanguageSelectionAction action = (LanguageSelectionAction) item.getAction();
@@ -626,6 +630,15 @@ public class MainFrame extends JFrame {
         try {
             configuration.load();
             configuration.getScripting().setMenu(mnScripts);
+            
+            if (Configuration.get().getMachine().getProperty("Welcome2_0_Dialog_Shown") == null) {
+                Welcome2_0Dialog dialog = new Welcome2_0Dialog(this);
+                dialog.setSize(750, 550);
+                dialog.setLocationRelativeTo(null);
+                dialog.setModal(true);
+                dialog.setVisible(true);
+                Configuration.get().getMachine().setProperty("Welcome2_0_Dialog_Shown", true);
+            }
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -729,7 +742,6 @@ public class MainFrame extends JFrame {
         registerBoardImporter(KicadPosImporter.class);
         registerBoardImporter(DipTraceImporter.class);
         registerBoardImporter(NamedCSVImporter.class);
-        registerBoardImporter(SolderPasteGerberImporter.class);
     }
 
     /**
@@ -975,7 +987,7 @@ public class MainFrame extends JFrame {
         }
     };
 
-    private Action windowStyleMultipleSelected = new AbstractAction("Multiple Window Style") { //$NON-NLS-1$
+    private Action windowStyleMultipleSelected = new AbstractAction(Translations.getString("Menu.Window.MultipleStyle")) { //$NON-NLS-1$
         {
             putValue(MNEMONIC_KEY, KeyEvent.VK_M);
         }

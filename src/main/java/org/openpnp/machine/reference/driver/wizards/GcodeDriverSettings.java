@@ -15,6 +15,7 @@ import java.io.StringWriter;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -36,14 +37,12 @@ import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PasteDispenser;
 import org.simpleframework.xml.Serializer;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JCheckBox;
 
 public class GcodeDriverSettings extends AbstractConfigurationWizard {
     private final GcodeDriver driver;
@@ -328,9 +327,6 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
             String type = null;
             if (hm instanceof Nozzle) {
                 type = "Nozzle";
-            }
-            else if (hm instanceof PasteDispenser) {
-                type = "Paste Dispenser";
             }
             else if (hm instanceof Camera) {
                 type = "Camera";

@@ -1,7 +1,7 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
-# 2019-05-25
+# 2019-06-02
 
 ## Runout Compensation and Bottom Camera Position and Rotation Calibration
 
@@ -51,6 +51,180 @@ Changes in models and utility functions:
   
 For more information see https://github.com/openpnp/openpnp/pull/825
   
+# 2019-06-01
+
+## OpenPnP 2.0 Ongoing Changes
+
+* Actuators are now added to the tools dropdown in jog controls so that you can select one and
+  move it. This is probably a temporary change as this dropdown will go away in the future, but
+  for the time being it helps with setting up drag feeders.
+  
+* Swapped positions of "capture" and "move" buttons wherever those buttons are grouped together,
+  and added a separator between the two groups of buttons. This is intended to make it a little
+  less easy to accidentally click the capture buttons, which many people have recognized as being
+  a UX problem.
+
+* Moved the "Feed" button on the Feeders panel to the front of the list as this is the most
+  common action.
+
+* Split the reference nozzle and reference nozzle tip configuration wizards into separate panels.
+  This is will make it easier to refactor for global nozzles.
+  
+* Added basic Z Probing by setting actuator name on head.
+
+* Added canned cycle for getting a Z Probe at a location.
+
+* Z Probe is now automatically performed, if enabled, when capturing a camera location. This
+  results in a fully formed location capture including Z. If no Z Probe is available Z is left
+  unchanged. 
+
+# 2019-05-27
+
+## OpenPnP 2.0
+
+This update includes a large number of major changes to how OpenPnP works, along with several
+breaking changes. Because of the severity of the changes I am calling this OpenPnP 2.0.
+
+Please read the release notes carefully before using it, and please back up your configuration
+directory, job, and board files. Some of the changes will modify your files and you will not be
+able to go back to the older version without restoring your backups.
+
+* JobProcessor Rewrite: The JobProcessor has been rewritten from the ground up to solve a number
+  of long standing bugs and issues. The new version allows for finer granularity in steps, better
+  error handling - including context sensitive errors, better retry options for pick and feed
+  failures, improved vacuum checking, and increased flexibility.
+  
+  * The FSM implementation that caused the "No defined state from..." type errors has been removed
+    completely. Fixes #695.
+    
+  * Each step is now in it's own class, and maintains it's own state. This lets each step determine
+    what level of granularity it wants to expose.
+     
+  * Steps now direct the job processor to the next step when they finish, making it very easy to
+    add customized steps and to retry when things fail.
+    
+  * The JobProcessor interface now returns a custom exception type that includes a source. In
+    general these sources will be instances of model or SPI objects such as Nozzle, Feeder, Part, 
+    Placement, etc. This makes it possible to help the user find the source of the error in the UI.
+    
+    A future update will include a new "Production" panel that will let you quickly jump to
+    the source of an error.
+    
+  * Granularity has been greatly improved in several long running steps. Fiducials, and pick, 
+    primarily. Now clicking stop during a fiducial check will not continue checking every board
+    before stopping.  
+    
+  * Vacuum checking is now performed in the job processor, instead of in the nozzle. With this
+    change additional vacuum checks have been added as well. Vacuum is now checked after pick,
+    after bottom vision, before place, and after place. In addition, the after pick check is
+    now performed after lifting the nozzle for better accuracy and the after place check is
+    performed with vacuum turned on.
+    
+  * Feed retry and pick retry are now separate steps.
+  
+    Feed retry allows retry of a feeder that has an error while feeding, such as a vision failure
+    on the strip feeder, or a hardware error on an auto feeder.
+    
+    Pick retry handles retry of the entire pick sequence. This is primarily a factor when using
+    vacuum sensing. After a part is picked, if the vacuum sensing system does not detect the part
+    on the nozzle a discard cycle is performed and the entire feed / pick cycle is restarted.
+    
+  * These changes fix #280.
+    
+* BREAKING CHANGE: Changed the vacuum sensing levels from the trio of logic inverted, 
+  part on level, and part off level to a dual range for on low/high and off low/high.
+
+* BREAKING CHANGE: Removed job auto save and config auto safe from the job processor.
+  This feature caused a serious performance hit and cluttered up the job processor.
+  This feature will be added back at a later date with a new implementation that does not harm
+  performance.
+  
+* BREAKING CHANGE: Removed "Check Fids?" from the placements panel, and it's functionality from the
+  job processor. This feature was originally meant to be a way to check local fids around
+  important placements but it was not implemented correctly and was not generally useful.
+  PRs welcome to add true local fid checking.
+
+  This change should not break any jobs or configurations, but I've labeled it a breaking change
+  to get the attention of anyone who was using the feature for further discussion.
+
+* BREAKING CHANGE: The park when complete option has been removed and park when complete is now
+  always performed. **You must set a park location before running a job on this version.** 
+  This is a preperatory change for more automation in machine movements in general.
+  It will become much more important that the machine knows where it can safely park.
+
+* BREAKING CHANGE: Removed the isPartOn and isPartOff variables from the GcodeDriver. This is
+  better handled by the main vacuum system. It would be possible to add the new vacuum variables
+  to GcodeDriver, so if someone is depending on this functionality please speak up.
+
+* BREAKING CHANGE: Placement Type "Ignore" has been moved to Placement Enabled. The Type field
+  will be used only for specifying Placement or Fiducial, and a new Enabled field has been added.
+  This makes it easier to disable placements for a job without losing whether that placement is a
+  fiducial or a placement.
+	
+  Additionally, Type Place has been renamed to Placement.
+  
+  This change is backwards compatible but not forwards compatible. If you open and save a job using
+  this version you will not be able to open it with an older version.
+    
+* BREAKING CHANGE: The Paste Dispense feature has been removed entirely. This feature is used by
+  by very few people, does not work well, and is not well maintained. Removing the feature
+  allows OpenPnP to focus on the pick and place user experience without having to maintain
+  backwards compatibility with paste dispense.
+    
+  A version of OpenPnP with Paste Dispense will be saved and will be made available for users to
+  download if they need that functionality for an existing setup. That version will receive no
+  future updates.
+  
+* Added a new error handling system that allows users to specify on a placement by placement basis
+  how errors should be handled. The options are Alert and Suppress. 
+  
+  Alert will raise the error immediately and pause the job. The user must fix the problem before
+  continuing. 
+  
+  Suppress will mark the placement errored and continue on without alerting the user. When the
+  job finishes the list of errored placements is printed. The user can then fix errors and re-run
+  the job to fix unplaced placements.
+  
+  In the very near future there will be a GUI added that shows the errored placements at the end
+  of the job so that you can see what needs to be fixed to finish the job.
+  
+* Removed Skip, Ignore and Continue, and Try Again from the Job error dialog. Now the error is
+  shown and the job is paused. The user can make adjustments to the job and start it again to
+  recovery from the error.
+
+* Refactored vacuum sensing to Nozzle.isPartOn() and Nozzle.isPartOff(). Fixes #753, and #102.
+
+* Removed the post pre-flight nozzle tip calibration from job processor. I can't see why this would
+  be useful since the planner may immediately change out the nozzle tips. Calibration is now
+  performed after tip changes for any tips that are not already calibrated. If this change is
+  detrimental to your setup please speak up.    
+
+* Added missing signaler signals for job running and stopped.  
+
+* Increased the speed of the demo driver to make the demo a little more fun to watch.  
+  
+* Fix tooltips and button names on footprint pads.  
+
+* Renamed Feeder.retryCount to Feeder.feedRetryCount.
+
+* Added Feeder.pickRetryCount.
+
+* Changed hardcoded pick retry in job processor to use Feeder.pickRetryCount.
+
+* Coming Soon: There are a number of other features that are based on this work, which are coming
+  very soon.
+  
+  * Production Tab: Job controls will be moved from the Job tab to a new Production tab. The
+    Production tab will include status about the running job in total, and status for each
+    placement being processed by the job.
+    
+    The Production tab will also include a list of placements that have errored during processing
+    and will allow the user to quickly jump to the source of the error.
+    
+    The Placement Status and Placed? columns will also move to this tab. After this change the Job
+    panel will be mostly used for Job editing before starting a job, and will be mostly read only
+    during a job run.
+    
 # 2019-05-10
 
 ## Bottom Vision Pre-Rotate Updates and Bug Fixes 
