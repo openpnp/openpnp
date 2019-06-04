@@ -97,7 +97,7 @@ public class PlacementsTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex != 0 && columnIndex != 9;
+        return columnIndex != 1 && columnIndex != 9;
     }
 
     @Override
@@ -109,7 +109,7 @@ public class PlacementsTableModel extends AbstractTableModel {
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
             Placement placement = board.getPlacements().get(rowIndex);
-            if (columnIndex == 1) {
+            if (columnIndex == 0) {
                 placement.setEnabled((Boolean) aValue);
                 jobPlacementsPanel.updateActivePlacements();
             }
