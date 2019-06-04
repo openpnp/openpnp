@@ -192,9 +192,8 @@ public class JobPlacementsPanel extends JPanel {
         JPopupMenu popupMenu = new JPopupMenu();
 
         JMenu setTypeMenu = new JMenu(setTypeAction);
-        for (Placement.Type type : Placement.Type.values()) {
-            setTypeMenu.add(new SetTypeAction(type));
-        }
+        setTypeMenu.add(new SetTypeAction(Placement.Type.Placement));
+        setTypeMenu.add(new SetTypeAction(Placement.Type.Fiducial));
         popupMenu.add(setTypeMenu);
 
         JMenu setSideMenu = new JMenu(setSideAction);
