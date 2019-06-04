@@ -72,7 +72,7 @@ public class BasicJobTest {
 
         delegate.expectMove("Move N1 Nozzle Change Unload", n1,
                 new Location(LengthUnit.Millimeters, 40, 0, 0, 0), 1.0);
-        delegate.expectMove("Move N1 Nozzle Change Load", n1,
+        delegate.expectMove("Move N2 Nozzle Change Load", n2,
                 new Location(LengthUnit.Millimeters, 50, 0, 0, 0), 1.0);
 
         delegate.expectMove("Move N1 to F1", n1, new Location(LengthUnit.Millimeters, -10, 0, 0, 0),
@@ -102,13 +102,11 @@ public class BasicJobTest {
 
         ReferencePnpJobProcessor jobProcessor = (ReferencePnpJobProcessor) machine.getPnpJobProcessor();
         machine.setEnabled(true);
+        jobProcessor.addTextStatusListener(text -> {
+            System.out.println(text);
+        });
         jobProcessor.initialize(job);
-        try {
-            while (jobProcessor.next());
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+        while (jobProcessor.next());
     }
 
     private Job createSimpleJob() {
@@ -165,6 +163,7 @@ public class BasicJobTest {
         @Override
         public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
                 throws Exception {
+            System.out.println(hm + " " + location);
             if (expectedOps.isEmpty()) {
                 throw new Exception("Unexpected Move " + location + ".");
             }

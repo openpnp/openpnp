@@ -59,12 +59,7 @@ public class SampleJobTest {
 
         machine.setEnabled(true);
         jobProcessor.initialize(job);
-        try {
-            while (jobProcessor.next());
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+        while (jobProcessor.next());
         // camera.stopContinuousCapture(encoder);
         // encoder.finish();
     }

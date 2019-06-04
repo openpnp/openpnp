@@ -25,7 +25,6 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.core.Commit;
 
 @Root
 public class ReferenceNozzleTipCalibration extends AbstractModelObject {
@@ -306,18 +305,6 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     @Attribute(required = false)
     private ReferenceNozzleTipCalibration.RunoutCompensationAlgorithm runoutCompensationAlgorithm = RunoutCompensationAlgorithm.Model;      // modelBased or tableBased? Two implementations are available
 
-    /**
-     * TODO Left for backward compatibility. Unused. Can be removed after Feb 7, 2020.
-     */
-    @Deprecated
-    @Attribute(required=false)
-    private Double angleIncrement = null;
-    
-    @Commit
-    public void commit() {
-        angleIncrement = null;
-    }
-    
     // Max allowed linear distance w.r.t. bottom camera for an offset measurement - measurements above threshold are removed from pipelines results 
     @Attribute(required = false)
     private Double offsetThreshold = 0.5;
@@ -348,7 +335,12 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             return;
         }
         
-        Nozzle nozzle = nozzleTip.getParentNozzle();
+        // TODO STOPSHIP refactor calibration to nozzle, instead of nozzletip
+        if (true) {
+            throw new Exception("Calibration is broken in this version. Please downgrade if you require calibration.");
+        }
+//        Nozzle nozzle = nozzleTip.getParentNozzle();
+        Nozzle nozzle = null;
         Camera camera = VisionUtils.getBottomVisionCamera();
         
         try {

@@ -6,7 +6,6 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PnpJobProcessor;
 import org.openpnp.util.MovableUtils;
@@ -45,43 +44,6 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
         catch (Exception e) {
             throw new JobProcessorException(nozzle, e);
         }
-    }
-
-    public static NozzleTip findNozzleTip(Nozzle nozzle, Part part) throws JobProcessorException {
-        for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
-            if (nozzleTip.canHandle(part)) {
-                return nozzleTip;
-            }
-        }
-        throw new JobProcessorException(part,
-                "No compatible nozzle tip on nozzle " + nozzle.getName() + " found for part " + part.getId());
-    }
-
-    public static boolean nozzleCanHandle(Nozzle nozzle, Part part) {
-        for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
-            if (nozzleTip.canHandle(part)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Find the first NozzleTip that is able to handle the given Part.
-     * 
-     * @param part
-     * @return
-     * @throws Exception If no compatible NozzleTip can be found.
-     */
-    public static NozzleTip findNozzleTip(Head head, Part part) throws JobProcessorException {
-        for (Nozzle nozzle : head.getNozzles()) {
-            try {
-                return findNozzleTip(nozzle, part);
-            }
-            catch (Exception e) {
-            }
-        }
-        throw new JobProcessorException(part, "No compatible nozzle tip on any nozzle found for part " + part.getId());
     }
 
     /**

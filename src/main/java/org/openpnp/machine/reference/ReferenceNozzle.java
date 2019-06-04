@@ -1,7 +1,6 @@
 package org.openpnp.machine.reference;
 
 import java.awt.event.ActionEvent;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,10 +14,11 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.psh.NozzleTipsPropertySheetHolder;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleCameraOffsetWizard;
+import org.openpnp.machine.reference.wizards.ReferenceNozzleCompatibleNozzleTipsWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzlePartDetectionWizard;
+import org.openpnp.machine.reference.wizards.ReferenceNozzleToolChangerWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -32,7 +32,6 @@ import org.openpnp.util.MovableUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.Commit;
 
 public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMountable {
     @Element
@@ -56,10 +55,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     @Element(required = false)
     protected String vacuumSenseActuatorName;
     
-    @Deprecated
-    @Attribute(required = false)
-    protected Boolean invertVacuumSenseLogic = null;
-
     /**
      * If limitRotation is enabled the nozzle will reverse directions when commanded to rotate past
      * 180 degrees. So, 190 degrees becomes -170 and -190 becomes 170.
@@ -73,7 +68,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
-                nozzleTip = (ReferenceNozzleTip) nozzleTips.get(currentNozzleTipId);
+                nozzleTip = (ReferenceNozzleTip) configuration.getMachine().getNozzleTip(currentNozzleTipId);
             }
         });
     }
@@ -81,11 +76,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public ReferenceNozzle(String id) {
         this();
         this.id = id;
-    }
-    
-    @Commit
-    public void commit() {
-        invertVacuumSenseLogic = null;
     }
     
     public boolean isLimitRotation() {
@@ -225,7 +215,11 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
 
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
-
+        
+        if (!getCompatibleNozzleTips().contains(nt)) {
+            throw new Exception("Can't load incompatible nozzle tip.");
+        }
+        
         if (changerEnabled) {
             double speed = getHead().getMachine().getSpeed();
             
@@ -379,17 +373,17 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        ArrayList<PropertySheetHolder> children = new ArrayList<>();
-        children.add(new NozzleTipsPropertySheetHolder(this, "Nozzle Tips", getNozzleTips(), null));
-        return children.toArray(new PropertySheetHolder[] {});
+        return null;
     }
 
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard()),
+                new PropertySheetWizardAdapter(new ReferenceNozzleCompatibleNozzleTipsWizard(this), "Nozzle Tips"),
                 new PropertySheetWizardAdapter(new ReferenceNozzlePartDetectionWizard(this), "Part Detection"),
-                new PropertySheetWizardAdapter(new ReferenceNozzleCameraOffsetWizard(this), "Offset Wizard")
+                new PropertySheetWizardAdapter(new ReferenceNozzleToolChangerWizard(this), "Tool Changer"),
+                new PropertySheetWizardAdapter(new ReferenceNozzleCameraOffsetWizard(this), "Offset Wizard"),
         };
     }
 

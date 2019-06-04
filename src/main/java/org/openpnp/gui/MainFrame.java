@@ -68,6 +68,8 @@ import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.undo.CannotUndoException;
+import javax.swing.undo.UndoManager;
 
 import org.openpnp.Translations;
 import org.openpnp.gui.components.CameraPanel;
@@ -76,9 +78,8 @@ import org.openpnp.gui.importer.DipTraceImporter;
 import org.openpnp.gui.importer.EagleBoardImporter;
 import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
 import org.openpnp.gui.importer.KicadPosImporter;
-import org.openpnp.gui.importer.NamedCSVImporter;
-import org.openpnp.gui.importer.SolderPasteGerberImporter;
 import org.openpnp.gui.importer.LabcenterProteusImporter; //
+import org.openpnp.gui.importer.NamedCSVImporter;
 import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
@@ -145,9 +146,15 @@ public class MainFrame extends JFrame {
     private JDialog frameCamera;
     private JDialog frameMachineControls;
     private Map<KeyStroke, Action> hotkeyActionMap;
+    
+    private UndoManager undoManager = new UndoManager();
 
     public static MainFrame get() {
         return mainFrame;
+    }
+    
+    public UndoManager getUndoManager() {
+        return undoManager;
     }
 
     public MachineControlsPanel getMachineControls() {
@@ -284,6 +291,9 @@ public class MainFrame extends JFrame {
         mnEdit.setMnemonic(KeyEvent.VK_E);
         menuBar.add(mnEdit);
 
+        mnEdit.add(new JMenuItem(undoAction));
+        mnEdit.add(new JMenuItem(redoAction));
+        mnEdit.addSeparator();
         JMenu mnEditAddBoard = new JMenu(jobPanel.addBoardAction);
         mnEditAddBoard.add(new JMenuItem(jobPanel.addNewBoardAction));
         mnEditAddBoard.add(new JMenuItem(jobPanel.addExistingBoardAction));
@@ -626,7 +636,7 @@ public class MainFrame extends JFrame {
         registerBoardImporters();
 
         addComponentListener(componentListener);
-
+        
         try {
             configuration.load();
             configuration.getScripting().setMenu(mnScripts);
@@ -1133,6 +1143,42 @@ public class MainFrame extends JFrame {
             dialog.setSize(620, 720);
             dialog.setLocationRelativeTo(MainFrame.get());
             dialog.setVisible(true);
+        }
+    };
+    
+    public final Action undoAction = new AbstractAction("Undo") {
+        {
+            putValue(MNEMONIC_KEY, KeyEvent.VK_Z);
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke('Z',
+                    Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            try {
+                undoManager.undo();
+            }
+            catch (Exception e) {
+                
+            }
+        }
+    };
+    
+    public final Action redoAction = new AbstractAction("Redo") {
+        {
+//            putValue(MNEMONIC_KEY, KeyEvent.VK_Y);
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke('Z',
+                    Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() | KeyEvent.SHIFT_MASK));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            try {
+                undoManager.redo();
+            }
+            catch (Exception e) {
+                
+            }
         }
     };
     

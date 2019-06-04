@@ -26,7 +26,6 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -66,13 +65,13 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class FootprintPanel extends JPanel {
+public class PackageVisionPanel extends JPanel {
     private FootprintTableModel tableModel;
     private JTable table;
 
     final private Footprint footprint;
 
-    public FootprintPanel(Footprint footprint) {
+    public PackageVisionPanel(Footprint footprint) {
         this.footprint = footprint;
 
         setLayout(new BorderLayout(0, 0));
@@ -142,9 +141,8 @@ public class FootprintPanel extends JPanel {
         toolBar.setFloatable(false);
         toolbarPanel.add(toolBar);
 
-        JButton btnNew = toolBar.add(newAction);
-        JButton btnDelete = toolBar.add(deleteAction);
-
+        toolBar.add(newAction);
+        toolBar.add(deleteAction);
 
         JScrollPane tableScrollPane = new JScrollPane(table);
         tableScrollPane.setPreferredSize(new Dimension(454, 100));
@@ -192,9 +190,9 @@ public class FootprintPanel extends JPanel {
             if (cameraView == null) {
                 return;
             }
-            cameraView.removeReticle(FootprintPanel.class.getName());
+            cameraView.removeReticle(PackageVisionPanel.class.getName());
             Reticle reticle = new FootprintReticle(footprint);
-            cameraView.setReticle(FootprintPanel.class.getName(), reticle);
+            cameraView.setReticle(PackageVisionPanel.class.getName(), reticle);
         }
         catch (Exception e) {
             e.printStackTrace();
