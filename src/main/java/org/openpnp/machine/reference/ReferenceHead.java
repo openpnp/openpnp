@@ -40,6 +40,7 @@ public class ReferenceHead extends AbstractHead {
     public void home() throws Exception {
         Logger.debug("{}.home()", getName());
         getDriver().home(this);
+        super.home();
         getMachine().fireMachineHeadActivity(this);
     }
 
