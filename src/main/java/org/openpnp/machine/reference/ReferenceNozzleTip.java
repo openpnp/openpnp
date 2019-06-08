@@ -17,6 +17,9 @@ import org.openpnp.machine.reference.wizards.ReferenceNozzleTipToolChangerWizard
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Head;
+import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzleTip;
 import org.simpleframework.xml.Attribute;
@@ -54,13 +57,13 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     
     @Element(required = false)
     private ReferenceNozzleTipCalibration calibration = new ReferenceNozzleTipCalibration();
-
+    
     @Element(required = false)
     private double vacuumLevelPartOnLow;
-    
+
     @Element(required = false)
     private double vacuumLevelPartOnHigh;
-    
+
     @Element(required = false)
     private double vacuumLevelPartOffLow;
     
@@ -69,7 +72,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     
     public ReferenceNozzleTip() {
     }
-    
+
     @Commit
     public void commit() {
         /*
@@ -191,6 +194,19 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         this.changerMid2ToEndSpeed = changerMid2ToEndSpeed;
     }
 
+    public Nozzle getParentNozzle() {
+        for (Head head : Configuration.get().getMachine().getHeads()) {
+            for (Nozzle nozzle : head.getNozzles()) {
+                for (NozzleTip nozzleTip : Configuration.get().getMachine().getNozzleTips()) {
+                    if (nozzleTip == this) {
+                        return nozzle;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+	
     public double getVacuumLevelPartOnLow() {
         return vacuumLevelPartOnLow;
     }
@@ -206,7 +222,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public void setVacuumLevelPartOnHigh(double vacuumLevelPartOnHigh) {
         this.vacuumLevelPartOnHigh = vacuumLevelPartOnHigh;
     }
-    
+
     public double getVacuumLevelPartOffLow() {
         return vacuumLevelPartOffLow;
     }
@@ -223,6 +239,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         this.vacuumLevelPartOffHigh = vacuumLevelPartOffHigh;
     }
 
+    public boolean isUnloadedNozzleTipStandin() {
+        return getName().equals("unloaded")
+                || getName().equals("unmounted");
+    }
     public ReferenceNozzleTipCalibration getCalibration() {
         return calibration;
     }
@@ -252,4 +272,4 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
         }
     };
-}
+        }

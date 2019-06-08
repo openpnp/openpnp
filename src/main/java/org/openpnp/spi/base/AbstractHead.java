@@ -176,6 +176,19 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     }
 
     @Override
+    public void home() throws Exception {
+        for (Nozzle nozzle : nozzles) {
+            nozzle.home();
+        }
+        for (Camera camera : cameras) {
+            camera.home();
+        }
+        for (Actuator actuator : actuators) {
+            actuator.home();
+        }
+    }
+
+    @Override
     public String getName() {
         return name;
     }
