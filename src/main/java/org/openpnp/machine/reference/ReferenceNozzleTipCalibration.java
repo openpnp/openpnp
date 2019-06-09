@@ -19,8 +19,6 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
@@ -604,21 +602,15 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         }
     }
 
-    static void recalibrateOnHome() throws Exception {
-        // on (re-) homing the machine, recalibrate or reset all the nozzle tip calibrations
-        for (NozzleTip nozzleTip : Configuration.get().getMachine().getNozzleTips()) {
-            if (nozzleTip instanceof ReferenceNozzleTip) {
-                ReferenceNozzleTip calibrationNozzleTip = (ReferenceNozzleTip)nozzleTip;
-                if (calibrationNozzleTip.getCalibration().isRecalibrateOnHomeNeeded()) {
-                    // First reset calibrations of this nozzle tip for all the nozzles it was attached to.
-                    Logger.debug("ReferenceNozzleTipCalibration.recalibrateOnHome() nozzle tip {} calibration resetAll", calibrationNozzleTip.getName());
-                    calibrationNozzleTip.getCalibration().resetAll();
-                    // Then calibrate the tip for the nozzle where it is currently attached, if any.
-                    if (calibrationNozzleTip.getNozzleAttachedTo() != null) {
-                        Logger.debug("ReferenceNozzleTipCalibration.recalibrateOnHome() nozzle tip {} calibration neeeded", calibrationNozzleTip.getName());
-                        calibrationNozzleTip.getCalibration().calibrate(true, false);
-                    }
-                }
+    void recalibrateOnHome() throws Exception {
+        if (isRecalibrateOnHomeNeeded()) {
+            // First reset calibrations of this nozzle tip for all the nozzles it was attached to.
+            Logger.debug("ReferenceNozzleTipCalibration.recalibrateOnHome() nozzle tip {} calibration resetAll", nozzleTip.getName());
+            resetAll();
+            // Then calibrate the tip for the nozzle it is currently attached to, if any.
+            if (nozzleTip.getNozzleAttachedTo() != null) {
+                Logger.debug("ReferenceNozzleTipCalibration.recalibrateOnHome() nozzle tip {} calibration neeeded", nozzleTip.getName());
+                calibrate(true, false);
             }
         }
     }

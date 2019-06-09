@@ -19,7 +19,6 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzleTip;
 import org.simpleframework.xml.Attribute;
@@ -93,6 +92,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     @Override
     public String toString() {
         return getName() + " " + getId();
+    }
+
+    @Override
+    public void home() throws Exception {
+        getCalibration().recalibrateOnHome();
     }
 
     @Override
@@ -246,6 +250,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         return getName().equals("unloaded")
                 || getName().equals("unmounted");
     }
+
     public ReferenceNozzleTipCalibration getCalibration() {
         return calibration;
     }
@@ -275,4 +280,4 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
         }
     };
-        }
+}
