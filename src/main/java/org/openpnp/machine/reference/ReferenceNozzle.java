@@ -253,24 +253,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     
     @Override
     public void home() throws Exception {
-        Logger.debug("{}.home()", getName());
-        for (NozzleTip attachedNozzleTip : this.getCompatibleNozzleTips()) {
-            if (attachedNozzleTip instanceof ReferenceNozzleTip) {
-                ReferenceNozzleTip calibrationNozzleTip = (ReferenceNozzleTip)attachedNozzleTip;
-                if (calibrationNozzleTip.getCalibration().isRecalibrateOnHomeNeeded()) {
-                    if (calibrationNozzleTip == this.nozzleTip) {
-                        // The currently mounted nozzle tip.
-                        Logger.debug("{}.home() nozzle tip {} calibration neeeded", getName(), calibrationNozzleTip.getName());
-                        calibrationNozzleTip.getCalibration().calibrate(calibrationNozzleTip, true, false);
-                    }
-                    else {
-                        // Not currently mounted so just reset.
-                        Logger.debug("{}.home() nozzle tip {} calibration reset", getName(), calibrationNozzleTip.getName());
-                        calibrationNozzleTip.getCalibration().reset();
-                    }
-                }
-            }
-        }
     }
 
     @Override
@@ -344,7 +326,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         currentNozzleTipId = nozzleTip.getId();
         if (this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded()) {
             Logger.debug("{}.loadNozzleTip() nozzle tip {} calibration needed", getName(), this.nozzleTip.getName());
-            this.nozzleTip.getCalibration().calibrate(this.nozzleTip);
+            this.nozzleTip.getCalibration().calibrate();
         }
         else if (this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeInJobNeeded()) {
             Logger.debug("{}.loadNozzleTip() nozzle tip {} calibration reset", getName(), this.nozzleTip.getName());
@@ -425,7 +407,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         ReferenceNozzleTip calibrationNozzleTip = this.getCalibrationNozzleTip();
         if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded()) {
             Logger.debug("{}.unloadNozzleTip() nozzle tip {} calibration needed", getName(), calibrationNozzleTip.getName());
-            calibrationNozzleTip.getCalibration().calibrate(calibrationNozzleTip);
+            calibrationNozzleTip.getCalibration().calibrate();
         }
     }
 

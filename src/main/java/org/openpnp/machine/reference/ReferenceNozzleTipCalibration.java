@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.KeyPoint;
@@ -29,11 +30,15 @@ import org.openpnp.vision.pipeline.CvStage.Result;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
 
 @Root
 public class ReferenceNozzleTipCalibration extends AbstractModelObject {
+    // Reference back to the nozzle tip.
+    private ReferenceNozzleTip nozzleTip;
+
     public static interface RunoutCompensation {
 
         Location getOffset(double angle);
@@ -397,8 +402,11 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
     private boolean calibrating;
 
+    @Deprecated
     @Element(required = false)
     private RunoutCompensation runoutCompensation = null;
+    @ElementMap(required = false)
+    private Map<String, RunoutCompensation> runoutCompensationLookup = new HashMap<>();
 
     public enum RunoutCompensationAlgorithm {
         Model, ModelNoOffset, ModelCameraOffset, Table
@@ -446,13 +454,13 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
     public String getRunoutCompensationInformation() {
         if(isCalibrated()) {
-            return runoutCompensation.toString();
+            return getRunoutCompensation().toString();
         } else {
             return "Uncalibrated";
         }
     }
 
-    public void calibrate(ReferenceNozzleTip nozzleTip, boolean homing, boolean calibrateCamera) throws Exception {
+    public void calibrate(boolean homing, boolean calibrateCamera) throws Exception {
         if ( !isEnabled() ) {
             return;
         }
@@ -461,8 +469,8 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             throw new Exception("Machine not yet homed, nozzle tip calibration request aborted");
         }
 
-        ReferenceNozzle nozzle = (ReferenceNozzle)nozzleTip.getParentNozzle();
-        if (nozzle.getCalibrationNozzleTip() != nozzleTip) {
+        ReferenceNozzle nozzle = nozzleTip.getNozzleAttachedTo();
+        if (nozzle == null) {
             if (nozzleTip.isUnloadedNozzleTipStandin()) {
                 throw new Exception("Please unload the nozzle tip first.");
             }
@@ -556,13 +564,13 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
             if (!calibrateCamera) {
                 if (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.Model) {
-                    this.runoutCompensation = new ModelBasedRunoutCompensation(nozzleTipMeasuredLocations);
+                    this.setRunoutCompensation(new ModelBasedRunoutCompensation(nozzleTipMeasuredLocations));
                 } else if (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelNoOffset) {
-                    this.runoutCompensation = new ModelBasedRunoutNoOffsetCompensation(nozzleTipMeasuredLocations);
+                    this.setRunoutCompensation(new ModelBasedRunoutNoOffsetCompensation(nozzleTipMeasuredLocations));
                 } else if (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelCameraOffset) {
-                    this.runoutCompensation = new ModelBasedRunoutCameraOffsetCompensation(nozzleTipMeasuredLocations);
+                    this.setRunoutCompensation(new ModelBasedRunoutCameraOffsetCompensation(nozzleTipMeasuredLocations));
                 } else {
-                    this.runoutCompensation = new TableBasedRunoutCompensation(nozzleTipMeasuredLocations);
+                    this.setRunoutCompensation(new TableBasedRunoutCompensation(nozzleTipMeasuredLocations));
                 }
             }
             else {
@@ -593,33 +601,43 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
             // setting to false in the very end to prevent endless calibration repetitions if calibration was not successful (pipeline not well or similar) and the nozzle is commanded afterwards somewhere else (where the calibration is asked for again ...)
             calibrating = false;
-
-            // inform UI about new information available
-            firePropertyChange("runoutCompensationInformation", null, null);
         }
     }
 
-    public static void resetAllNozzleTips() {
-        // reset all nozzle tip calibrations, as they have become invalid
-        for (Head head : Configuration.get().getMachine().getHeads()) {
-            for (Nozzle nozzle  : head.getNozzles()) {
-                for (NozzleTip nt : nozzle.getCompatibleNozzleTips()) {
-                    if (nt instanceof ReferenceNozzleTip) {
-                        ReferenceNozzleTip rnt = (ReferenceNozzleTip)nt;
-                        // the calibration has become invalid
-                        rnt.getCalibration().reset();
+    static void recalibrateOnHome() throws Exception {
+        // on (re-) homing the machine, recalibrate or reset all the nozzle tip calibrations
+        for (NozzleTip nozzleTip : Configuration.get().getMachine().getNozzleTips()) {
+            if (nozzleTip instanceof ReferenceNozzleTip) {
+                ReferenceNozzleTip calibrationNozzleTip = (ReferenceNozzleTip)nozzleTip;
+                if (calibrationNozzleTip.getCalibration().isRecalibrateOnHomeNeeded()) {
+                    // First reset calibrations of this nozzle tip for all the nozzles it was attached to.
+                    Logger.debug("ReferenceNozzleTipCalibration.recalibrateOnHome() nozzle tip {} calibration resetAll", calibrationNozzleTip.getName());
+                    calibrationNozzleTip.getCalibration().resetAll();
+                    // Then calibrate the tip for the nozzle where it is currently attached, if any.
+                    if (calibrationNozzleTip.getNozzleAttachedTo() != null) {
+                        Logger.debug("ReferenceNozzleTipCalibration.recalibrateOnHome() nozzle tip {} calibration neeeded", calibrationNozzleTip.getName());
+                        calibrationNozzleTip.getCalibration().calibrate(true, false);
                     }
                 }
             }
         }
     }
 
-    public void calibrate(ReferenceNozzleTip nozzleTip) throws Exception {
-        calibrate(nozzleTip, false, false);
+    public static void resetAllNozzleTips() {
+        // Reset all nozzle tip calibrations, as they have become invalid dure to some machine configuration change.
+        for (NozzleTip nt: Configuration.get().getMachine().getNozzleTips()) {
+            if (nt instanceof ReferenceNozzleTip) {
+                ((ReferenceNozzleTip)nt).getCalibration().resetAll();
+            }
+        }
     }
 
-    public void calibrateCamera(ReferenceNozzleTip nozzleTip) throws Exception {
-        calibrate(nozzleTip, false, true);
+    public void calibrate() throws Exception {
+        calibrate(false, false);
+    }
+
+    public void calibrateCamera() throws Exception {
+        calibrate(false, true);
     }
 
     /*
@@ -631,7 +649,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
         }
 
-        return this.runoutCompensation.getOffset(angle);
+        return this.getRunoutCompensation().getOffset(angle);
 
     }
 
@@ -642,7 +660,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         try {
             if (camera == VisionUtils.getBottomVisionCamera()) {
                 if (isEnabled() && isCalibrated()) {
-                    return this.runoutCompensation.getCameraOffset();
+                    return this.getRunoutCompensation().getCameraOffset();
                 }
             } 
         }
@@ -754,14 +772,60 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         pipeline = createDefaultPipeline();
     }
 
+    public ReferenceNozzleTip getNozzleTip() {
+        return nozzleTip;
+    }
+
+    public void setNozzleTip(ReferenceNozzleTip nozzleTip) {
+        this.nozzleTip = nozzleTip;
+    }
+
     public void reset() {
+        // reset the combined nozzle tip + nozzle runout compensation for the nozzle we are currently attached to 
+        setRunoutCompensation(null);
+        // deprecated
         runoutCompensation = null;
-        // inform UI about removed information
+    }
+
+    public void resetAll() {
+        // reset the nozzle tip + nozzle runout for all the nozzles we were attached to
+        // i.e. just wipe the whole lookup table
+        runoutCompensationLookup.clear();
+        // inform UI about changed information
         firePropertyChange("runoutCompensationInformation", null, null);
+        // deprecated
+        runoutCompensation = null;
+    }
+
+    private RunoutCompensation getRunoutCompensation() {
+        // get the combined nozzle tip + nozzle runout compensation for the nozzle we are currently attached to 
+        ReferenceNozzle nozzle = nozzleTip.getNozzleAttachedTo();
+        if (nozzle != null) {
+            return runoutCompensationLookup.get(nozzle.getId());
+        }
+        return null;
+    }
+
+    private void setRunoutCompensation(RunoutCompensation runoutCompensation) {
+        // set the combined nozzle tip + nozzle runout compensation for the nozzle we are currently attached to 
+        ReferenceNozzle nozzle = nozzleTip.getNozzleAttachedTo();
+        if (nozzle != null) {
+            if (runoutCompensation == null) {
+                runoutCompensationLookup.remove(nozzle.getId());
+            }
+            else {
+                runoutCompensationLookup.put(nozzle.getId(), runoutCompensation);
+            }
+                
+            // inform UI about changed information
+            firePropertyChange("runoutCompensationInformation", null, null);
+        }
+        // deprecated
+        runoutCompensation = null;
     }
 
     public boolean isCalibrated() {
-        return runoutCompensation != null;
+        return getRunoutCompensation() != null;
     }
 
     public boolean isCalibrating() {

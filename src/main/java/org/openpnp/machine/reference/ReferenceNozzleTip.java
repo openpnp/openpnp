@@ -85,6 +85,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         if (changerMidLocation2 == null) {
             changerMidLocation2 = changerMidLocation.derive(null, null, null, null);
         }
+        /* Calibration needs the reference back to the nozzle tip. 
+         */
+        calibration.setNozzleTip(this);
     }
     
     @Override
@@ -194,12 +197,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         this.changerMid2ToEndSpeed = changerMid2ToEndSpeed;
     }
 
-    public Nozzle getParentNozzle() {
+    public ReferenceNozzle getNozzleAttachedTo() {
         for (Head head : Configuration.get().getMachine().getHeads()) {
             for (Nozzle nozzle : head.getNozzles()) {
-                for (NozzleTip nozzleTip : Configuration.get().getMachine().getNozzleTips()) {
-                    if (nozzleTip == this) {
-                        return nozzle;
+                if (nozzle instanceof ReferenceNozzle) {
+                    if (this == ((ReferenceNozzle)nozzle).getCalibrationNozzleTip()) {
+                        return ((ReferenceNozzle)nozzle);
                     }
                 }
             }
@@ -248,7 +251,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
     
     public void calibrate() throws Exception {
-        getCalibration().calibrate(this);
+        getCalibration().calibrate();
     }
     
     public boolean isCalibrated() {

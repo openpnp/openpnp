@@ -159,7 +159,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         btnReset.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 nozzleTip.getCalibration()
-                .reset();
+                    .resetAll();
             }
         });
         btnCalibrate.addActionListener(new ActionListener() {
@@ -261,7 +261,15 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                HeadMountable nozzle = nozzleTip.getParentNozzle();
+                HeadMountable nozzle = nozzleTip.getNozzleAttachedTo();
+                if (nozzle == null) {
+                    if (nozzleTip.isUnloadedNozzleTipStandin()) {
+                        throw new Exception("Please unload the nozzle tip first.");
+                    }
+                    else {
+                        throw new Exception("Please load the selected nozzle tip first.");
+                    }
+                }
                 Camera camera = VisionUtils.getBottomVisionCamera();
                 Location location = camera.getLocation(nozzle)
                         .add(new Location(nozzleTip.getCalibration().getCalibrationZOffset().getUnits(), 0, 0, 
@@ -299,14 +307,14 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     private void calibrate() {
         UiUtils.submitUiMachineTask(() -> {
             nozzleTip.getCalibration()
-                .calibrate(nozzleTip);
+                .calibrate();
         });
     }
 
     private void calibrateCamera() {
         UiUtils.submitUiMachineTask(() -> {
             nozzleTip.getCalibration()
-                .calibrateCamera(nozzleTip);
+                .calibrateCamera();
         });
     }
 
