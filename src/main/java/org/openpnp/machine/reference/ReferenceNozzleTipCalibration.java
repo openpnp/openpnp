@@ -19,6 +19,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.MovableUtils;
@@ -451,13 +452,14 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         this.runoutCompensationAlgorithm = runoutCompensationAlgorithm;
     }
 
-    public ReferenceNozzle getUiCalibrationNozzle() {
+    public ReferenceNozzle getUiCalibrationNozzle(ReferenceNozzleTip nozzleTip) throws Exception {
+        ReferenceNozzle refNozzle; 
         if (nozzleTip.isUnloadedNozzleTipStandin()) {
             // The "unloaded" stand-in will not be well-defined if multiple nozzles are currently
             // naked. Therefore the currently selected nozzle from the machine controls is preferred.
             Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
             if (nozzle instanceof ReferenceNozzle) {
-                ReferenceNozzle refNozzle = (ReferenceNozzle)nozzle;
+                refNozzle = (ReferenceNozzle)nozzle;
                 if (refNozzle.getCalibrationNozzleTip() == nozzleTip) {
                     // Yes, it's a match.
                     return refNozzle; 
@@ -465,15 +467,56 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             }
             // If not, it just takes the first naked nozzle, if any. 
         }
-        return nozzleTip.getNozzleAttachedTo();
+        refNozzle = nozzleTip.getNozzleAttachedTo();
+        if (refNozzle == null) {
+            if (nozzleTip.isUnloadedNozzleTipStandin()) {
+                throw new Exception("Please unload the nozzle tip on the current nozzle.");
+            }
+            else {
+                throw new Exception("Please load the selected nozzle tip on the current nozzle.");
+            }
+        }
+        return refNozzle;
     }
 
-    public String getRunoutCompensationInformation(ReferenceNozzle nozzle) {
-        if(isCalibrated(nozzle)) {
-            return getRunoutCompensation(nozzle).toString();
-        } else {
-            return "Uncalibrated";
+    private ReferenceNozzleTip getNozzleTip() {
+        // Note this is a bit of a hack, used to get the nozzleTip back from the calibration.
+        for (NozzleTip nozzleTip : Configuration.get().getMachine().getNozzleTips()) {
+            if (nozzleTip instanceof ReferenceNozzleTip) {
+                if (((ReferenceNozzleTip)nozzleTip).getCalibration() == this) {
+                    return (ReferenceNozzleTip)nozzleTip;
+                }
+            }
         }
+        return null;
+    }
+
+    public String getRunoutCompensationInformation() {
+        StringBuffer info = new StringBuffer();
+        // In the UI property getter (no parameter passing) we need to reconstruct things a bit. 
+        ReferenceNozzleTip nozzleTip = getNozzleTip();
+        ReferenceNozzle nozzle = null;
+        if (nozzleTip != null) {
+            try {
+                nozzle = nozzleTip.getCalibration().getUiCalibrationNozzle(nozzleTip);
+            }
+            catch (Exception e) {
+                info.append(e.getMessage());
+            }
+        }
+        if (nozzle != null) {
+            info.append(nozzleTip.getName());
+            info.append(" on ");
+            info.append(nozzle.getName());
+            info.append(": ");
+            if (isCalibrated(nozzle)) {
+                info.append(getRunoutCompensation(nozzle).toString());
+            }
+            else {
+                info.append("Uncalibrated");
+            }
+        }
+        return info.toString();
     }
 
     public void calibrate(ReferenceNozzle nozzle, boolean homing, boolean calibrateCamera) throws Exception {
@@ -485,13 +528,8 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             throw new Exception("Machine not yet homed, nozzle tip calibration request aborted");
         }
 
-        if (nozzle == null || nozzle.getCalibrationNozzleTip() != nozzleTip) {
-            if (nozzleTip.isUnloadedNozzleTipStandin()) {
-                throw new Exception("Please unload the nozzle tip on the current nozzle first.");
-            }
-            else {
-                throw new Exception("Please load the selected nozzle tip on the current nozzle first.");
-            }
+        if (nozzle == null) {
+            throw new Exception("Nozzle to nozzle tip mismatch.");
         }
         Camera camera = VisionUtils.getBottomVisionCamera();
         ReferenceCamera referenceCamera = null;
@@ -766,14 +804,6 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
     public void resetPipeline() {
         pipeline = createDefaultPipeline();
-    }
-
-    public ReferenceNozzleTip getNozzleTip() {
-        return nozzleTip;
-    }
-
-    public void setNozzleTip(ReferenceNozzleTip nozzleTip) {
-        this.nozzleTip = nozzleTip;
     }
 
     public void reset(ReferenceNozzle nozzle) {

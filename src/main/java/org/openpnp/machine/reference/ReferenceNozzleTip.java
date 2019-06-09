@@ -84,9 +84,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         if (changerMidLocation2 == null) {
             changerMidLocation2 = changerMidLocation.derive(null, null, null, null);
         }
-        /* Calibration needs the reference back to the nozzle tip. 
-         */
-        calibration.setNozzleTip(this);
     }
     
     @Override

@@ -139,7 +139,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelCalibration.add(lblCalibrationInfo, "2, 4, right, default");
 
         lblCalibrationResults = new JLabel(nozzleTip.getCalibration()
-                .getRunoutCompensationInformation(nozzleTip.getCalibration().getUiCalibrationNozzle()));
+                    .getRunoutCompensationInformation());
         panelCalibration.add(lblCalibrationResults, "4, 4, 3, 1, left, default");
 
         lblCalibrate = new JLabel("Calibration");
@@ -263,15 +263,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                HeadMountable nozzle = nozzleTip.getCalibration().getUiCalibrationNozzle();
-                if (nozzle == null) {
-                    if (nozzleTip.isUnloadedNozzleTipStandin()) {
-                        throw new Exception("Please unload the nozzle tip on the current nozzle first.");
-                    }
-                    else {
-                        throw new Exception("Please load the selected nozzle tip on the current nozzle first.");
-                    }
-                }
+                HeadMountable nozzle = nozzleTip.getCalibration().getUiCalibrationNozzle(nozzleTip);
                 Camera camera = VisionUtils.getBottomVisionCamera();
                 Location location = camera.getLocation(nozzle)
                         .add(new Location(nozzleTip.getCalibration().getCalibrationZOffset().getUnits(), 0, 0, 
@@ -310,14 +302,14 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     private void calibrate() {
         UiUtils.submitUiMachineTask(() -> {
             nozzleTip.getCalibration()
-                .calibrate(nozzleTip.getCalibration().getUiCalibrationNozzle());
+                .calibrate(nozzleTip.getCalibration().getUiCalibrationNozzle(nozzleTip));
         });
     }
 
     private void calibrateCamera() {
         UiUtils.submitUiMachineTask(() -> {
             nozzleTip.getCalibration()
-                .calibrateCamera(nozzleTip.getCalibration().getUiCalibrationNozzle());
+                .calibrateCamera(nozzleTip.getCalibration().getUiCalibrationNozzle(nozzleTip));
         });
     }
 
