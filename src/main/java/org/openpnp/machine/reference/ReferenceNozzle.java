@@ -191,11 +191,29 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public Location getCameraToolCalibratedOffset(Camera camera) {
         // Apply the axis offset from runout calibration here. 
         ReferenceNozzleTip calibrationNozzleTip = getCalibrationNozzleTip();
-        if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated()) {
-            return calibrationNozzleTip.getCalibration().getCalibratedCameraOffset(camera);
+        if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated(this)) {
+            return calibrationNozzleTip.getCalibration().getCalibratedCameraOffset(this, camera);
         }
 
         return new Location(camera.getUnitsPerPixel().getUnits());
+    }
+
+    @Override
+    public void calibrate() throws Exception {
+        ReferenceNozzleTip calibrationNozzleTip = getCalibrationNozzleTip();
+        if (calibrationNozzleTip != null) {
+            calibrationNozzleTip.getCalibration().calibrate(this);
+        }
+    }
+    
+    @Override
+    public boolean isCalibrated() {
+        ReferenceNozzleTip calibrationNozzleTip = getCalibrationNozzleTip();
+        if (calibrationNozzleTip != null) {
+            return calibrationNozzleTip.getCalibration().isCalibrated(this);
+        }
+        // No calibration needed.
+        return true;
     }
 
     @Override
@@ -230,8 +248,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
 
         ReferenceNozzleTip calibrationNozzleTip = getCalibrationNozzleTip();
-        if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated()) {
-            Location correctionOffset = calibrationNozzleTip.getCalibration().getCalibratedOffset(location.getRotation());
+        if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated(this)) {
+            Location correctionOffset = calibrationNozzleTip.getCalibration().getCalibratedOffset(this, location.getRotation());
             location = location.subtract(correctionOffset);
             Logger.debug("{}.moveTo({}, {}) (runout compensation: {})", getName(), location, speed, correctionOffset);
         } else {
@@ -253,6 +271,24 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     
     @Override
     public void home() throws Exception {
+        Logger.debug("{}.home()", getName());
+        for (NozzleTip attachedNozzleTip : this.getCompatibleNozzleTips()) {
+            if (attachedNozzleTip instanceof ReferenceNozzleTip) {
+                ReferenceNozzleTip calibrationNozzleTip = (ReferenceNozzleTip)attachedNozzleTip;
+                if (calibrationNozzleTip.getCalibration().isRecalibrateOnHomeNeeded(this)) {
+                    if (calibrationNozzleTip == this.getCalibrationNozzleTip()) {
+                        // The currently mounted nozzle tip.
+                        Logger.debug("{}.home() nozzle tip {} calibration neeeded", getName(), calibrationNozzleTip.getName());
+                        calibrationNozzleTip.getCalibration().calibrate(this, true, false);
+                    }
+                    else {
+                        // Not currently mounted so just reset.
+                        Logger.debug("{}.home() nozzle tip {} calibration reset", getName(), calibrationNozzleTip.getName());
+                        calibrationNozzleTip.getCalibration().reset(this);
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -324,14 +360,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
         this.nozzleTip = nt;
         currentNozzleTipId = nozzleTip.getId();
-        if (this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded()) {
+        if (this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded(this)) {
             Logger.debug("{}.loadNozzleTip() nozzle tip {} calibration needed", getName(), this.nozzleTip.getName());
-            this.nozzleTip.getCalibration().calibrate();
+            this.nozzleTip.getCalibration().calibrate(this);
         }
-        else if (this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeInJobNeeded()) {
+        else if (this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeInJobNeeded(this)) {
             Logger.debug("{}.loadNozzleTip() nozzle tip {} calibration reset", getName(), this.nozzleTip.getName());
             // is will be recalibrated by the job - just reset() for now
-            this.nozzleTip.getCalibration().reset();
+            this.nozzleTip.getCalibration().reset(this);
         }
         firePropertyChange("nozzleTip", null, getNozzleTip());
         ((ReferenceMachine) head.getMachine()).fireMachineHeadActivity(head);
@@ -405,9 +441,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
         // May need to calibrate the "unloaded" nozzle tip stand-in i.e. the naked nozzle tip holder. 
         ReferenceNozzleTip calibrationNozzleTip = this.getCalibrationNozzleTip();
-        if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded()) {
+        if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded(this)) {
             Logger.debug("{}.unloadNozzleTip() nozzle tip {} calibration needed", getName(), calibrationNozzleTip.getName());
-            calibrationNozzleTip.getCalibration().calibrate();
+            calibrationNozzleTip.getCalibration().calibrate(this);
         }
     }
 
@@ -415,9 +451,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public Location getLocation() {
         Location location = getDriver().getLocation(this);
         ReferenceNozzleTip calibrationNozzleTip = getCalibrationNozzleTip();
-        if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated()) {
+        if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated(this)) {
             Location offset =
-                    calibrationNozzleTip.getCalibration().getCalibratedOffset(location.getRotation());
+                    calibrationNozzleTip.getCalibration().getCalibratedOffset(this, location.getRotation());
             location = location.add(offset);
         }
         return location;

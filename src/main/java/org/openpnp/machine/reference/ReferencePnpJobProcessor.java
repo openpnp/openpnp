@@ -455,13 +455,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 return this;
             }
             
-            if (nozzleTip.isCalibrated()) {
+            if (plannedPlacement.nozzle.isCalibrated()) {
                 return this;
             }
             
             fireTextStatus("Calibrate nozzle tip %s", nozzleTip);
             try {
-                nozzleTip.calibrate();
+                plannedPlacement.nozzle.calibrate();
             }
             catch (Exception e) {
                 throw new JobProcessorException(nozzleTip, e);

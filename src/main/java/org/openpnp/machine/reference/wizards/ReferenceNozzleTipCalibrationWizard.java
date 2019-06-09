@@ -41,12 +41,14 @@ import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.ReferenceNozzleTipCalibration;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
@@ -137,7 +139,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelCalibration.add(lblCalibrationInfo, "2, 4, right, default");
 
         lblCalibrationResults = new JLabel(nozzleTip.getCalibration()
-                .getRunoutCompensationInformation());
+                .getRunoutCompensationInformation(nozzleTip.getCalibration().getUiCalibrationNozzle()));
         panelCalibration.add(lblCalibrationResults, "4, 4, 3, 1, left, default");
 
         lblCalibrate = new JLabel("Calibration");
@@ -261,13 +263,13 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                HeadMountable nozzle = nozzleTip.getNozzleAttachedTo();
+                HeadMountable nozzle = nozzleTip.getCalibration().getUiCalibrationNozzle();
                 if (nozzle == null) {
                     if (nozzleTip.isUnloadedNozzleTipStandin()) {
-                        throw new Exception("Please unload the nozzle tip first.");
+                        throw new Exception("Please unload the nozzle tip on the current nozzle first.");
                     }
                     else {
-                        throw new Exception("Please load the selected nozzle tip first.");
+                        throw new Exception("Please load the selected nozzle tip on the current nozzle first.");
                     }
                 }
                 Camera camera = VisionUtils.getBottomVisionCamera();
@@ -302,19 +304,20 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Calibration Pipeline", editor);
         dialog.setVisible(true);
-}
+    }
 
+    
     private void calibrate() {
         UiUtils.submitUiMachineTask(() -> {
             nozzleTip.getCalibration()
-                .calibrate();
+                .calibrate(nozzleTip.getCalibration().getUiCalibrationNozzle());
         });
     }
 
     private void calibrateCamera() {
         UiUtils.submitUiMachineTask(() -> {
             nozzleTip.getCalibration()
-                .calibrateCamera();
+                .calibrateCamera(nozzleTip.getCalibration().getUiCalibrationNozzle());
         });
     }
 

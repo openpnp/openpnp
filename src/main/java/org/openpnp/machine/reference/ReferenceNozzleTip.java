@@ -95,11 +95,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     @Override
-    public void home() throws Exception {
-        getCalibration().recalibrateOnHome();
-    }
-
-    @Override
     public Wizard getConfigurationWizard() {
         return new ReferenceNozzleTipConfigurationWizard(this);
     }
@@ -205,6 +200,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         for (Head head : Configuration.get().getMachine().getHeads()) {
             for (Nozzle nozzle : head.getNozzles()) {
                 if (nozzle instanceof ReferenceNozzle) {
+                    // Note this also includes support for the "unloaded" nozzle tip stand-in to calibrate the
+                    // naked nozzle. But it will default to the first naked nozzle
+                    // See also: ReferenceNozzleTipCalibration.getUiCalibrationNozzle().
                     if (this == ((ReferenceNozzle)nozzle).getCalibrationNozzleTip()) {
                         return ((ReferenceNozzle)nozzle);
                     }
@@ -213,7 +211,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
         return null;
     }
-	
+
     public double getVacuumLevelPartOnLow() {
         return vacuumLevelPartOnLow;
     }
@@ -247,22 +245,13 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public boolean isUnloadedNozzleTipStandin() {
-        return getName().equals("unloaded")
-                || getName().equals("unmounted");
+        return getName().startsWith("unloaded");
     }
 
     public ReferenceNozzleTipCalibration getCalibration() {
         return calibration;
     }
     
-    public void calibrate() throws Exception {
-        getCalibration().calibrate();
-    }
-    
-    public boolean isCalibrated() {
-        return getCalibration().isCalibrated();
-    }
-
     public Action deleteAction = new AbstractAction("Delete Nozzle Tip") {
         {
             putValue(SMALL_ICON, Icons.nozzleTipRemove);

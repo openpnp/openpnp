@@ -184,9 +184,6 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         for (Head head : heads) {
             head.home();
         }
-        for (NozzleTip nozzleTip : nozzleTips) {
-            nozzleTip.home();
-        }
     }
 
     @Override
