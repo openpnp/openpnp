@@ -273,7 +273,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public ReferenceNozzleTipCalibration getCalibration() {
         return calibration;
     }
-
+    
     public Action deleteAction = new AbstractAction("Delete Nozzle Tip") {
         {
             putValue(SMALL_ICON, Icons.nozzleTipRemove);
