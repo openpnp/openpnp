@@ -22,6 +22,7 @@ package org.openpnp.machine.reference.wizards;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -30,6 +31,7 @@ import javax.swing.border.TitledBorder;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 
 import com.jgoodies.forms.layout.CellConstraints;
@@ -52,6 +54,10 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JLabel lblName;
     private JTextField nameTf;
     private JPanel panelDiameters;
+    private JComponent lblHighDiameter;
+    private JLabel lblLowDiameter;
+    private JTextField textFieldLowDiameter;
+    private JTextField textFieldHighDiameter;
 
 
     public ReferenceNozzleTipConfigurationWizard(ReferenceNozzleTip nozzleTip) {
@@ -75,7 +81,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         nameTf = new JTextField();
         panel.add(nameTf, "4, 2, fill, default");
         nameTf.setColumns(10);
-
+        
         panelDwellTime = new JPanel();
         panelDwellTime.setBorder(new TitledBorder(null, "Dwell Times", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelDwellTime);
@@ -156,11 +162,10 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     }
     
 
-        @Override
+    @Override
     public void createBindings() {
-        LengthConverter lengthConverter = new LengthConverter();
         IntegerConverter intConverter = new IntegerConverter();
-        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+        LengthConverter lengthConverter = new LengthConverter();
 
         addWrappedBinding(nozzleTip, "name", nameTf, "text");
         
@@ -179,4 +184,4 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHighDiameter);
 
     }
-    }
+}

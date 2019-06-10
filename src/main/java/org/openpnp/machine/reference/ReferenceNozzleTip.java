@@ -57,7 +57,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     
     @Element(required = false)
     private ReferenceNozzleTipCalibration calibration = new ReferenceNozzleTipCalibration();
-
+    
     @Element(required = false)
     private double vacuumLevelPartOnLow;
 
@@ -69,40 +69,31 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     
     @Element(required = false)
     private double vacuumLevelPartOffHigh;
+
     @Element(required = false)
     private Length diameterLow = new Length(0, LengthUnit.Millimeters);
-    
+
     @Element(required = false)
     private Length diameterHigh = new Length(0, LengthUnit.Millimeters);
-    
 
     public ReferenceNozzleTip() {
-                    }
+    }
 
     @Commit
     public void commit() {
-                /*
-                 * Backwards compatibility. Since this field is being added after the fact, if
-                 * the field is not specified in the config then we just make a copy of the
-                 * other mid location. The result is that if a user already has a changer
-                 * configured they will not suddenly have a move to 0,0,0,0 which would break
-                 * everything.
-                 */
-                if (changerMidLocation2 == null) {
-                    changerMidLocation2 = changerMidLocation.derive(null, null, null, null);
-                }
-            	}
-
-    @Override
-    @Override
-    public Length getDiameterLow() {
-        return diameterLow;
-    }
-    @Override
-    public Length getDiameterHigh() {
-        return diameterHigh;
+        /*
+         * Backwards compatibility. Since this field is being added after the fact, if
+         * the field is not specified in the config then we just make a copy of the
+         * other mid location. The result is that if a user already has a changer
+         * configured they will not suddenly have a move to 0,0,0,0 which would break
+         * everything.
+         */
+        if (changerMidLocation2 == null) {
+            changerMidLocation2 = changerMidLocation.derive(null, null, null, null);
+        }
     }
 
+    @Override
     public String toString() {
         return getName() + " " + getId();
     }
@@ -224,7 +215,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
         return null;
     }
-	
+
     public double getVacuumLevelPartOnLow() {
         return vacuumLevelPartOnLow;
     }
@@ -243,37 +234,45 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     public double getVacuumLevelPartOffLow() {
         return vacuumLevelPartOffLow;
-    public void setDiameterLow(Length diameterLow) {
-        this.diameterLow = diameterLow;
     }
 
-    public void setDiameterHigh(Length diameterHigh) {
-        this.diameterHigh = diameterHigh;
-    }
-
-    public Calibration getCalibration() {
-        return calibration;
-    }
-    
     public void setVacuumLevelPartOffLow(double vacuumLevelPartOffLow) {
         this.vacuumLevelPartOffLow = vacuumLevelPartOffLow;
     }
-    
+
     public double getVacuumLevelPartOffHigh() {
         return vacuumLevelPartOffHigh;
     }
 
     public void setVacuumLevelPartOffHigh(double vacuumLevelPartOffHigh) {
         this.vacuumLevelPartOffHigh = vacuumLevelPartOffHigh;
-        }
+    }
+
+    @Override
+    public Length getDiameterLow() {
+        return diameterLow;
+    }
+
+    public void setDiameterLow(Length diameterLow) {
+        this.diameterLow = diameterLow;
+    }
+
+    @Override
+    public Length getDiameterHigh() {
+        return diameterHigh;
+    }
+
+    public void setDiameterHigh(Length diameterHigh) {
+        this.diameterHigh = diameterHigh;
+    }
 
     public boolean isUnloadedNozzleTipStandin() {
         return getName().startsWith("unloaded");
-        }
+    }
 
     public ReferenceNozzleTipCalibration getCalibration() {
         return calibration;
-        }
+    }
 
     public Action deleteAction = new AbstractAction("Delete Nozzle Tip") {
         {
@@ -292,4 +291,4 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
         }
     };
-        }
+}

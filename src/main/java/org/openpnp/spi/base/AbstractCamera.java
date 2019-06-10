@@ -226,16 +226,6 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     }
 
     protected void broadcastCapture(BufferedImage img) {
-    	/** To prevent a race condition when using getWidth() or getHeight() inside
-    	 * frameReceived() (e.g. inside filterCameraImage()) we need to store width, height 
-    	 * of the captured image before broadcasting. Otherwise we get endless recursion
-    	 * because ReferenceCamera.getWidth ReferenceCamera.getHeight() calls  
-    	 * internalCapture() to get a new frame for width/height measurement if not yet 
-    	 * initialized.      
-         */            
-        width = img.getWidth();
-        height = img.getHeight();
-        
         for (ListenerEntry listener : new ArrayList<>(listeners)) {
             listener.listener.frameReceived(img);
         }
