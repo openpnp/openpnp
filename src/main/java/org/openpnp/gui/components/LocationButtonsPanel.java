@@ -26,18 +26,22 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.util.Cycles;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
@@ -67,15 +71,7 @@ public class LocationButtonsPanel extends JPanel {
         this.textFieldY = textFieldY;
         this.textFieldZ = textFieldZ;
         this.textFieldC = textFieldC;
-
-        buttonCaptureCamera = new JButton(captureCameraCoordinatesAction);
-        buttonCaptureCamera.setHideActionText(true);
-        add(buttonCaptureCamera);
-
-        buttonCaptureTool = new JButton(captureToolCoordinatesAction);
-        buttonCaptureTool.setHideActionText(true);
-        add(buttonCaptureTool);
-
+        
         JButton buttonCenterCamera = new JButton(positionCameraAction);
         buttonCenterCamera.setHideActionText(true);
         add(buttonCenterCamera);
@@ -86,6 +82,18 @@ public class LocationButtonsPanel extends JPanel {
 
         buttonCenterToolNoSafeZ = new JButton(positionToolNoSafeZAction);
         buttonCenterToolNoSafeZ.setHideActionText(true);
+                
+        separator = new JSeparator();
+        separator.setOrientation(SwingConstants.VERTICAL);
+        add(separator);
+
+        buttonCaptureCamera = new JButton(captureCameraCoordinatesAction);
+        buttonCaptureCamera.setHideActionText(true);
+        add(buttonCaptureCamera);
+
+        buttonCaptureTool = new JButton(captureToolCoordinatesAction);
+        buttonCaptureTool.setHideActionText(true);
+        add(buttonCaptureTool);
 
         setActuatorName(null);
     }
@@ -100,7 +108,7 @@ public class LocationButtonsPanel extends JPanel {
     
     public void setShowPositionToolNoSafeZ(boolean b) {
         if (b) {
-            add(buttonCenterToolNoSafeZ);
+            add(buttonCenterToolNoSafeZ, 2);
         }
         else {
             remove(buttonCenterToolNoSafeZ);
@@ -178,13 +186,20 @@ public class LocationButtonsPanel extends JPanel {
 
                 @Override
                 public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.messageBoxOnException(() -> {
+                    UiUtils.submitUiMachineTask(() -> {
                         Location l = getCamera().getLocation();
+                        Location lz = Cycles.zProbe(l);
+                        if (lz != null) {
+                            l = lz;
+                        }
                         if (baseLocation != null) {
                             l = l.subtractWithRotation(baseLocation);
                             l = l.rotateXy(-baseLocation.getRotation());
                         }
-                        Helpers.copyLocationIntoTextFields(l, textFieldX, textFieldY, null,
+                        Helpers.copyLocationIntoTextFields(l, 
+                                textFieldX, 
+                                textFieldY, 
+                                lz == null ? null : textFieldZ,
                                 textFieldC);
                     });
                 }
@@ -320,4 +335,5 @@ public class LocationButtonsPanel extends JPanel {
                 }
             };
     private JButton buttonCenterToolNoSafeZ;
+    private JSeparator separator;
 }

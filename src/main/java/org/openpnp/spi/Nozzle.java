@@ -1,6 +1,6 @@
 package org.openpnp.spi;
 
-import java.util.List;
+import java.util.Set;
 
 import org.openpnp.model.Part;
 
@@ -41,13 +41,6 @@ public interface Nozzle
     public void place() throws Exception;
 
     /**
-     * Get a list of the NozzleTips currently attached to the Nozzle.
-     * 
-     * @return
-     */
-    public List<NozzleTip> getNozzleTips();
-
-    /**
      * Changer interface:
      * 
      * Command the Nozzle to load the given NozzleTip as it's current NozzleTip. If this returns
@@ -81,7 +74,35 @@ public interface Nozzle
      */
     public Part getPart();
     
-    public void addNozzleTip(NozzleTip nozzleTip) throws Exception;
+    /**
+     * Returns true if the isPartDetected() method is available. Some machines do not have
+     * vacuum sensors or other part detection sensors, so this feature is optional.
+     * @return
+     */
+    public boolean isPartDetectionEnabled();
     
-    public void removeNozzleTip(NozzleTip nozzleTip);
+    /**
+     * Returns true if a part appears to be on the nozzle. This is typically implemented by
+     * checking a vacuum level range, but other methods such as laser or vision detection
+     * are possible.
+     * @return
+     */
+    public boolean isPartOn() throws Exception;
+    
+    /**
+     * Returns true if a part appears to be off the nozzle. This is typically implemented by
+     * checking a vacuum level range, but other methods such as laser or vision detection
+     * are possible.
+     * @return
+     */
+    public boolean isPartOff() throws Exception;
+    
+    public Set<NozzleTip> getCompatibleNozzleTips();
+    
+    public void addCompatibleNozzleTip(NozzleTip nt);
+    
+    public void removeCompatibleNozzleTip(NozzleTip nt);
+    
+    public void calibrate() throws Exception;
+    public boolean isCalibrated();
 }

@@ -35,6 +35,19 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     }
 
     /**
+     * Get the location of the camera inlcuding the calibrated offset for the given tool.   
+     * If the bottom camera focal plane is different from the PCB surface plane, the various
+     * tools might introduce slight offsets in X, Y as their Z axes are not perfectly parallel.
+     * This offset is compensated if the getLocation(tool) method is used instead of the plain
+     * getLocation() method. 
+     * If tool == null it returns the same as plain getLocation().
+     *  
+     * @param tool
+     * @return
+     */
+    public Location getLocation(HeadMountable tool);
+
+    /**
      * Get the direction the Camera is looking.
      * 
      * @return

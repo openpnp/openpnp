@@ -6,15 +6,14 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.NozzleTip;
-import org.openpnp.spi.PnpJobProcessor;
 import org.openpnp.spi.PartAlignment;
+import org.openpnp.spi.PnpJobProcessor;
 import org.openpnp.util.MovableUtils;
 
 public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
         implements PnpJobProcessor {
 
-    public static void discardAll(Head head) throws Exception {
+    public static void discardAll(Head head) throws JobProcessorException {
         for (Nozzle nozzle : head.getNozzles()) {
             discard(nozzle);
         }
@@ -28,53 +27,23 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
      * @param nozzle
      * @throws Exception
      */
-    public static void discard(Nozzle nozzle) throws Exception {
+    public static void discard(Nozzle nozzle) throws JobProcessorException {
         if (nozzle.getPart() == null) {
             return;
         }
-        // move to the discard location
-        MovableUtils.moveToLocationAtSafeZ(nozzle,
-                Configuration.get().getMachine().getDiscardLocation());
-        // discard the part
-        nozzle.place();
-        nozzle.moveToSafeZ();
-    }
-
-    public static NozzleTip findNozzleTip(Nozzle nozzle, Part part) throws Exception {
-        for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
-            if (nozzleTip.canHandle(part)) {
-                return nozzleTip;
-            }
+        try {
+            // move to the discard location
+            MovableUtils.moveToLocationAtSafeZ(nozzle,
+                    Configuration.get().getMachine().getDiscardLocation());
+            // discard the part
+            nozzle.place();
+            nozzle.moveToSafeZ();
+            
+            
         }
-        throw new Exception(
-                "No compatible nozzle tip on nozzle " + nozzle.getName() + " found for part " + part.getId());
-    }
-
-    public static boolean nozzleCanHandle(Nozzle nozzle, Part part) {
-        for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
-            if (nozzleTip.canHandle(part)) {
-                return true;
-            }
+        catch (Exception e) {
+            throw new JobProcessorException(nozzle, e);
         }
-        return false;
-    }
-
-    /**
-     * Find the first NozzleTip that is able to handle the given Part.
-     * 
-     * @param part
-     * @return
-     * @throws Exception If no compatible NozzleTip can be found.
-     */
-    public static NozzleTip findNozzleTip(Head head, Part part) throws Exception {
-        for (Nozzle nozzle : head.getNozzles()) {
-            try {
-                return findNozzleTip(nozzle, part);
-            }
-            catch (Exception e) {
-            }
-        }
-        throw new Exception("No compatible nozzle tip on any nozzle found for part " + part.getId());
     }
 
     /**
@@ -84,27 +53,25 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
      * @return
      * @throws Exception If no Feeder is found that is both enabled and is serving the Part.
      */
-    public static Feeder findFeeder(Machine machine, Part part) throws Exception {
+    public static Feeder findFeeder(Machine machine, Part part) throws JobProcessorException {
         for (Feeder feeder : machine.getFeeders()) {
             if (feeder.getPart() == part && feeder.isEnabled()) {
                 return feeder;
             }
         }
-        throw new Exception("No compatible, enabled feeder found for part " + part.getId());
+        throw new JobProcessorException(part, "No compatible, enabled feeder found for part " + part.getId());
     }
 
 
-    public static PartAlignment findPartAligner(Machine machine, Part part) throws Exception {
-        for (PartAlignment partAlignment : machine.getPartAlignments())
-        {
-
-                       if(partAlignment.canHandle(part))
-                       {
-                           return partAlignment;
-                       }
+    public static PartAlignment findPartAligner(Machine machine, Part part) {
+        for (PartAlignment partAlignment : machine.getPartAlignments()) {
+            if (partAlignment.canHandle(part)) {
+                return partAlignment;
+            }
         }
 
-        // if we can't find a part-aligner, thats ok.. the user might not have defined one, so we place without aligning
+        // if we can't find a part-aligner, thats ok.. the user might not have defined one, so we
+        // place without aligning
         return null;
     }
 

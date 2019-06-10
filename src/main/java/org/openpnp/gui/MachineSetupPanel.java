@@ -22,7 +22,6 @@ package org.openpnp.gui;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.beans.IndexedPropertyChangeEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -35,15 +34,17 @@ import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JCheckBox;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.TreeSelectionEvent;
@@ -79,6 +80,17 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
     private JToolBar toolBar;
     private final Action action = new SwingAction();
     private JCheckBox cbExp;
+    
+    /**
+     * These three variables are used to manage state so that if the user is flipping between nodes
+     * of the same type we select the same tab that was previously selected. The idea is that if
+     * you are looking at the Part Detection settings for a Nozzle Tip, and you switch to another
+     * Nozzle Tip you probably want to look at the Part Detection settings for it, and not
+     * whatever the first tab is.
+     */
+    private boolean disableLastSelectedListener = false;
+    private Object lastSelectedNode = null;
+    private int lastSelectedTabIndex = 0;
 
     public MachineSetupPanel() {
         setLayout(new BorderLayout(0, 0));
@@ -144,10 +156,20 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
 
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         splitPane.setRightComponent(tabbedPane);
+        
+        tabbedPane.addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent e) {
+                if (disableLastSelectedListener) {
+                    return;
+                }
+                lastSelectedTabIndex = tabbedPane.getSelectedIndex();
+            }
+        });
 
         tree.getSelectionModel().addTreeSelectionListener(new TreeSelectionListener() {
             @Override
             public void valueChanged(TreeSelectionEvent e) {
+                disableLastSelectedListener = true;
                 tabbedPane.removeAll();
                 toolBar.removeAll();
 
@@ -180,9 +202,22 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
                                     tabbedPane.add(title, panel);
                                 }
                             }
+                            
+                            if (lastSelectedNode != null) {
+                                if (lastSelectedNode.getClass().equals(node.obj.getClass())) {
+                                    tabbedPane.setSelectedIndex(lastSelectedTabIndex);
+                                }
+                            }
+                            
+                            lastSelectedNode = node.obj;
+                        }
+                        else {
+                            lastSelectedNode = null;
                         }
                     }
                 }
+                
+                disableLastSelectedListener = false;
 
                 revalidate();
                 repaint();

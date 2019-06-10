@@ -34,7 +34,6 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractHead;
-import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.pmw.tinylog.Logger;
 
 public class ReferenceHead extends AbstractHead {
@@ -42,6 +41,7 @@ public class ReferenceHead extends AbstractHead {
     public void home() throws Exception {
         Logger.debug("{}.home()", getName());
         getDriver().home(this);
+        super.home();
         getMachine().fireMachineHeadActivity(this);
     }
 
@@ -61,7 +61,6 @@ public class ReferenceHead extends AbstractHead {
         children.add(new NozzlesPropertySheetHolder(this, "Nozzles", getNozzles(), null));
         children.add(new CamerasPropertySheetHolder(this, "Cameras", getCameras(), null));
         children.add(new ActuatorsPropertySheetHolder(this, "Actuators", getActuators(), null));
-        children.add(new SimplePropertySheetHolder("Paste Dispensers", getPasteDispensers()));
         return children.toArray(new PropertySheetHolder[] {});
     }
 

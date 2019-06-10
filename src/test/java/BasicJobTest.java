@@ -19,9 +19,9 @@ import org.openpnp.model.Job;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 
@@ -68,10 +68,11 @@ public class BasicJobTest {
         Head h1 = machine.getHead("H1");
         Nozzle n1 = h1.getNozzle("N1");
         Nozzle n2 = h1.getNozzle("N2");
+        Camera c1 = h1.getCamera("C1");
 
         delegate.expectMove("Move N1 Nozzle Change Unload", n1,
                 new Location(LengthUnit.Millimeters, 40, 0, 0, 0), 1.0);
-        delegate.expectMove("Move N1 Nozzle Change Load", n1,
+        delegate.expectMove("Move N2 Nozzle Change Load", n2,
                 new Location(LengthUnit.Millimeters, 50, 0, 0, 0), 1.0);
 
         delegate.expectMove("Move N1 to F1", n1, new Location(LengthUnit.Millimeters, -10, 0, 0, 0),
@@ -97,11 +98,13 @@ public class BasicJobTest {
         delegate.expectPlace(n2);
         delegate.expectMove("Move N2 to R2, Safe-Z", n2,
                 new Location(LengthUnit.Millimeters, 00, 20, 0, 90), 1.0);
+        delegate.expectMove("Part", c1, new Location(LengthUnit.Millimeters, 0, 0, 0, 90), 1.0);
 
         ReferencePnpJobProcessor jobProcessor = (ReferencePnpJobProcessor) machine.getPnpJobProcessor();
-        jobProcessor.setAutoSaveJob(false);
-        jobProcessor.setAutoSaveConfiguration(false);
         machine.setEnabled(true);
+        jobProcessor.addTextStatusListener(text -> {
+            System.out.println(text);
+        });
         jobProcessor.initialize(job);
         while (jobProcessor.next());
     }
@@ -160,6 +163,7 @@ public class BasicJobTest {
         @Override
         public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
                 throws Exception {
+            System.out.println(hm + " " + location);
             if (expectedOps.isEmpty()) {
                 throw new Exception("Unexpected Move " + location + ".");
             }

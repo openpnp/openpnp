@@ -49,6 +49,7 @@ import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.machine.reference.psh.ActuatorsPropertySheetHolder;
 import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
+import org.openpnp.machine.reference.psh.NozzleTipsPropertySheetHolder;
 import org.openpnp.machine.reference.psh.SignalersPropertySheetHolder;
 import org.openpnp.machine.reference.signaler.ActuatorSignaler;
 import org.openpnp.machine.reference.signaler.SoundSignaler;
@@ -63,7 +64,6 @@ import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
-import org.openpnp.spi.PasteDispenseJobProcessor;
 import org.openpnp.spi.PnpJobProcessor;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.Signaler;
@@ -79,13 +79,6 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Element(required = false)
     protected PnpJobProcessor pnpJobProcessor = new ReferencePnpJobProcessor();
-
-    @Element(required = false)
-    protected PasteDispenseJobProcessor pasteDispenseJobProcessor;
-
-    @Deprecated
-    @Element(required = false)
-    protected PartAlignment partAlignment = null;
 
     @Element(required = false)
     protected FiducialLocator fiducialLocator = new ReferenceFiducialLocator();
@@ -123,11 +116,6 @@ public class ReferenceMachine extends AbstractMachine {
                          @Override
                          public void configurationLoaded(Configuration configuration)
                                  throws Exception {
-                             // move any single partAlignments into our list
-                             if (partAlignment != null) {
-                                 partAlignments.add(partAlignment);
-                                 partAlignment = null;
-                             }
                              if (partAlignments.isEmpty()) {
                                  partAlignments.add(new ReferenceBottomVision());
                              }
@@ -186,12 +174,13 @@ public class ReferenceMachine extends AbstractMachine {
         children.add(new SignalersPropertySheetHolder(this, "Signalers", getSignalers(), null));
         children.add(new SimplePropertySheetHolder("Feeders", getFeeders()));
         children.add(new SimplePropertySheetHolder("Heads", getHeads()));
+        children.add(new NozzleTipsPropertySheetHolder("Nozzle Tips", getNozzleTips(), null));
         children.add(new CamerasPropertySheetHolder(null, "Cameras", getCameras(), null));
         children.add(new ActuatorsPropertySheetHolder(null, "Actuators", getActuators(), null));
         children.add(
                 new SimplePropertySheetHolder("Driver", Collections.singletonList(getDriver())));
         children.add(new SimplePropertySheetHolder("Job Processors",
-                Arrays.asList(getPnpJobProcessor()/* , getPasteDispenseJobProcessor() */)));
+                Arrays.asList(getPnpJobProcessor())));
 
         List<PropertySheetHolder> vision = new ArrayList<>();
         for (PartAlignment alignment : getPartAlignments()) {
@@ -319,11 +308,6 @@ public class ReferenceMachine extends AbstractMachine {
     @Override
     public PnpJobProcessor getPnpJobProcessor() {
         return pnpJobProcessor;
-    }
-
-    @Override
-    public PasteDispenseJobProcessor getPasteDispenseJobProcessor() {
-        return pasteDispenseJobProcessor;
     }
 
     public boolean getHomeAfterEnabled() {
