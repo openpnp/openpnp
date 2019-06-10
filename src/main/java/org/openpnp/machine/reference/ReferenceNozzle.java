@@ -587,7 +587,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             // We need vacuum on to determine the vacuum level.
             actuateVacuumValve(true);
             // Use the same dwell time as a pick.
-            Thread.sleep(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
+            Thread.sleep(this.getPickDwellMilliseconds() + nt.getPickDwellMilliseconds());
             // Now read the vacuum level.
             vacuumLevel = readVacuumLevel();
         }
