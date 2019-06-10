@@ -555,13 +555,21 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public boolean isPartDetectionEnabled() {
         return vacuumSenseActuatorName != null && !vacuumSenseActuatorName.isEmpty();
     }
-    
-    private double readVacuumLevel() throws Exception {
+
+    private Actuator getActuator() throws Exception {
         Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
         if (actuator == null) {
             throw new Exception(String.format("Can't find vacuum actuator %s", vacuumSenseActuatorName));
         }
-        return Double.parseDouble(actuator.read());
+        return actuator;
+    }
+    
+    private void actuateVacuumValve(boolean on) throws Exception {
+        getActuator().actuate(on);
+    }
+
+    private double readVacuumLevel() throws Exception {
+        return Double.parseDouble(getActuator().read());
     }
 
     @Override
@@ -574,7 +582,18 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     @Override
     public boolean isPartOff() throws Exception {
         ReferenceNozzleTip nt = getNozzleTip();
-        double vacuumLevel = readVacuumLevel();
+        double vacuumLevel = Double.NaN;
+        try {
+            // We need vacuum on to determine the vacuum level.
+            actuateVacuumValve(true);
+            // Use the same dwell time as a pick.
+            Thread.sleep(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
+            // Now read the vacuum level.
+            vacuumLevel = readVacuumLevel();
+        }
+        finally {
+            actuateVacuumValve(false);
+        }
         return vacuumLevel >= nt.getVacuumLevelPartOffLow() && vacuumLevel <= nt.getVacuumLevelPartOffHigh();
     }
 }
