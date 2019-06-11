@@ -1,6 +1,30 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-06-10
+
+## Global Nozzle Tip Update
+
+The nozzle tip system has been overhauled so that nozzle tips belong to the machine, rather than
+to each nozzle. This removes the need to duplicate nozzle tips for each nozzle, and better
+fits how nozzle changers typically work.
+
+Additionally, you can now easily set package compatibility directly from the
+packages panel.
+
+This is a large, breaking change. For more information on why this change happened, please see:
+https://github.com/openpnp/openpnp/issues/183
+
+Thank you to @markmaker for reviewing and for merging in his recent calibration changes. He has
+also provided some help for migrating:
+
+- copy the big `<nozzle-tips/>` XML block to the right place (I took a default OpenPNP 2.0 `machine.xml` as a guide). 
+- start OpenPNP again and again, note the elements/attributes no longer supported and delete them (would be so nice to have a command-line option for the XML parser to ignore unknown elements and attributes, but it seems the parser in OpenPNP has no such thing*)
+- define nozzle tip to nozzle compatibility on the Nozzle
+- learn the new way to change nozzle tips (by clicking the checkbox in the list)
+- define vacuum levels not forgetting the fact that isPartOff is now measured with opened valve for a moment (but see #855).
+
+
 # 2019-06-02
 
 ## Runout Compensation and Bottom Camera Position and Rotation Calibration
