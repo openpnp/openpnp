@@ -1,47 +1,31 @@
 package org.openpnp.machine.reference;
 
 import java.awt.event.ActionEvent;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
-import org.opencv.core.RotatedRect;
-import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleTipCalibrationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleTipConfigurationWizard;
-import org.openpnp.machine.reference.wizards.ReferenceNozzleTipPackagesWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleTipPartDetectionWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleTipToolChangerWizard;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzleTip;
-import org.openpnp.util.UiUtils;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.core.Commit;
 
 public class ReferenceNozzleTip extends AbstractNozzleTip {
-    @ElementList(required = false, entry = "id")
-    private Set<String> compatiblePackageIds = new HashSet<>();
-
-    @Attribute(required = false)
-    private boolean allowIncompatiblePackages;
-    
     @Attribute(required = false)
     private int pickDwellMilliseconds;
 
@@ -84,69 +68,24 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     
     @Element(required = false)
     private double vacuumLevelPartOffHigh;
-
-    @Deprecated
-    @Element(required = false)
-    private Double vacuumLevelPartOn;
     
-    @Deprecated
-    @Element(required = false)
-    private Double vacuumLevelPartOff;
-    
-    private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<>();
-
     public ReferenceNozzleTip() {
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationLoaded(Configuration configuration) throws Exception {
-                for (String id : compatiblePackageIds) {
-                    org.openpnp.model.Package pkg = configuration.getPackage(id);
-                    if (pkg == null) {
-                        continue;
-                    }
-                    compatiblePackages.add(pkg);
-                }
-                /*
-                 * Backwards compatibility. Since this field is being added after the fact, if
-                 * the field is not specified in the config then we just make a copy of the
-                 * other mid location. The result is that if a user already has a changer
-                 * configured they will not suddenly have a move to 0,0,0,0 which would break
-                 * everything.
-                 */
-                if (changerMidLocation2 == null) {
-                    changerMidLocation2 = changerMidLocation.derive(null, null, null, null);
-                }
-            	}
-        });
     }
 
     @Commit
     public void commit() {
-        vacuumLevelPartOn = null;
-        vacuumLevelPartOff = null;
-    }
-
-    @Override
-    public boolean canHandle(Part part) {
-        boolean result =
-                allowIncompatiblePackages || compatiblePackages.contains(part.getPackage());
-        // Logger.debug("{}.canHandle({}) => {}", getName(), part.getId(), result);
-        return result;
-    }
-
-    public Set<org.openpnp.model.Package> getCompatiblePackages() {
-        return new HashSet<>(compatiblePackages);
-    }
-
-    public void setCompatiblePackages(Set<org.openpnp.model.Package> compatiblePackages) {
-        this.compatiblePackages.clear();
-        this.compatiblePackages.addAll(compatiblePackages);
-        compatiblePackageIds.clear();
-        for (org.openpnp.model.Package pkg : compatiblePackages) {
-            compatiblePackageIds.add(pkg.getId());
+        /*
+         * Backwards compatibility. Since this field is being added after the fact, if
+         * the field is not specified in the config then we just make a copy of the
+         * other mid location. The result is that if a user already has a changer
+         * configured they will not suddenly have a move to 0,0,0,0 which would break
+         * everything.
+         */
+        if (changerMidLocation2 == null) {
+            changerMidLocation2 = changerMidLocation.derive(null, null, null, null);
         }
     }
-
+    
     @Override
     public String toString() {
         return getName() + " " + getId();
@@ -169,28 +108,19 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        return new Action[] {unloadAction, loadAction, deleteAction};
+        return new Action[] { deleteAction };
     }
 
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard()),
-                new PropertySheetWizardAdapter(new ReferenceNozzleTipPackagesWizard(this), "Packages"),
                 new PropertySheetWizardAdapter(new ReferenceNozzleTipPartDetectionWizard(this), "Part Detection"),
                 new PropertySheetWizardAdapter(new ReferenceNozzleTipToolChangerWizard(this), "Tool Changer"),
                 new PropertySheetWizardAdapter(new ReferenceNozzleTipCalibrationWizard(this), "Calibration")
                 };
     }
 
-    public boolean isAllowIncompatiblePackages() {
-        return allowIncompatiblePackages;
-    }
-
-    public void setAllowIncompatiblePackages(boolean allowIncompatiblePackages) {
-        this.allowIncompatiblePackages = allowIncompatiblePackages;
-    }
-    
     public int getPickDwellMilliseconds() {
         return pickDwellMilliseconds;
     }
@@ -263,19 +193,22 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         this.changerMid2ToEndSpeed = changerMid2ToEndSpeed;
     }
 
-    public Nozzle getParentNozzle() {
+    public ReferenceNozzle getNozzleAttachedTo() {
         for (Head head : Configuration.get().getMachine().getHeads()) {
             for (Nozzle nozzle : head.getNozzles()) {
-                for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
-                    if (nozzleTip == this) {
-                        return nozzle;
+                if (nozzle instanceof ReferenceNozzle) {
+                    // Note this also includes support for the "unloaded" nozzle tip stand-in to calibrate the
+                    // naked nozzle. But it will default to the first naked nozzle
+                    // See also: ReferenceNozzleTipCalibration.getUiCalibrationNozzle().
+                    if (this == ((ReferenceNozzle)nozzle).getCalibrationNozzleTip()) {
+                        return ((ReferenceNozzle)nozzle);
                     }
                 }
             }
         }
         return null;
     }
-	
+
     public double getVacuumLevelPartOnLow() {
         return vacuumLevelPartOnLow;
     }
@@ -309,50 +242,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public boolean isUnloadedNozzleTipStandin() {
-        return getName().equals("unloaded")
-                || getName().equals("unmounted");
+        return getName().startsWith("unloaded");
     }
+
     public ReferenceNozzleTipCalibration getCalibration() {
         return calibration;
     }
-    
-    public void calibrate() throws Exception {
-        getCalibration().calibrate(this);
-    }
-    
-    public boolean isCalibrated() {
-        return getCalibration().isCalibrated();
-    }
-
-    public Action loadAction = new AbstractAction("Load") {
-        {
-            putValue(SMALL_ICON, Icons.nozzleTipLoad);
-            putValue(NAME, "Load");
-            putValue(SHORT_DESCRIPTION, "Load the currently selected nozzle tip.");
-        }
-
-        @Override
-        public void actionPerformed(final ActionEvent arg0) {
-            UiUtils.submitUiMachineTask(() -> {
-                getParentNozzle().loadNozzleTip(ReferenceNozzleTip.this);
-            });
-        }
-    };
-
-    public Action unloadAction = new AbstractAction("Unload") {
-        {
-            putValue(SMALL_ICON, Icons.nozzleTipUnload);
-            putValue(NAME, "Unload");
-            putValue(SHORT_DESCRIPTION, "Unload the currently loaded nozzle tip.");
-        }
-
-        @Override
-        public void actionPerformed(final ActionEvent arg0) {
-            UiUtils.submitUiMachineTask(() -> {
-                getParentNozzle().unloadNozzleTip();
-            });
-        }
-    };
     
     public Action deleteAction = new AbstractAction("Delete Nozzle Tip") {
         {
@@ -367,8 +262,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                     "Are you sure you want to delete " + getName() + "?",
                     "Delete " + getName() + "?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
-                getParentNozzle().removeNozzleTip(ReferenceNozzleTip.this);
+                Configuration.get().getMachine().removeNozzleTip(ReferenceNozzleTip.this);
             }
         }
     };
-        }
+}

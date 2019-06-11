@@ -41,12 +41,14 @@ import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.ReferenceNozzleTipCalibration;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
@@ -137,7 +139,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelCalibration.add(lblCalibrationInfo, "2, 4, right, default");
 
         lblCalibrationResults = new JLabel(nozzleTip.getCalibration()
-                .getRunoutCompensationInformation());
+                    .getRunoutCompensationInformation());
         panelCalibration.add(lblCalibrationResults, "4, 4, 3, 1, left, default");
 
         lblCalibrate = new JLabel("Calibration");
@@ -159,7 +161,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         btnReset.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 nozzleTip.getCalibration()
-                .reset();
+                    .resetAll();
             }
         });
         btnCalibrate.addActionListener(new ActionListener() {
@@ -261,7 +263,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                HeadMountable nozzle = nozzleTip.getParentNozzle();
+                HeadMountable nozzle = nozzleTip.getCalibration().getUiCalibrationNozzle(nozzleTip);
                 Camera camera = VisionUtils.getBottomVisionCamera();
                 Location location = camera.getLocation(nozzle)
                         .add(new Location(nozzleTip.getCalibration().getCalibrationZOffset().getUnits(), 0, 0, 
@@ -294,19 +296,20 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Calibration Pipeline", editor);
         dialog.setVisible(true);
-}
+    }
 
+    
     private void calibrate() {
         UiUtils.submitUiMachineTask(() -> {
             nozzleTip.getCalibration()
-                .calibrate(nozzleTip);
+                .calibrate(nozzleTip.getCalibration().getUiCalibrationNozzle(nozzleTip));
         });
     }
 
     private void calibrateCamera() {
         UiUtils.submitUiMachineTask(() -> {
             nozzleTip.getCalibration()
-                .calibrateCamera(nozzleTip);
+                .calibrateCamera(nozzleTip.getCalibration().getUiCalibrationNozzle(nozzleTip));
         });
     }
 

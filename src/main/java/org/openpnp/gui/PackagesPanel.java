@@ -150,10 +150,6 @@ public class PackagesPanel extends JPanel {
         add(splitPane, BorderLayout.CENTER);
 
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-        JPanel footprintPanel = new JPanel();
-        footprintPanel.setLayout(new BorderLayout());
-        tabbedPane.add("Footprint", new JScrollPane(footprintPanel));
-
 
         table = new AutoSelectTextTable(tableModel);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -178,10 +174,10 @@ public class PackagesPanel extends JPanel {
 
                 Package pkg = getSelection();
 
-                footprintPanel.removeAll();
-
+                tabbedPane.removeAll();
                 if (pkg != null) {
-                    footprintPanel.add(new FootprintPanel(pkg.getFootprint()), BorderLayout.CENTER);
+                    tabbedPane.add("Nozzle Tips", new PackageNozzleTipsPanel(pkg));
+                    tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(pkg.getFootprint())));
                 }
 
                 revalidate();
@@ -210,7 +206,7 @@ public class PackagesPanel extends JPanel {
                     if (cameraView == null) {
                         return;
                     }
-                    cameraView.removeReticle(FootprintPanel.class.getName());
+                    cameraView.removeReticle(PackageVisionPanel.class.getName());
                 }
                 catch (Exception e1) {
                 }
@@ -288,7 +284,7 @@ public class PackagesPanel extends JPanel {
                 for (Part part : Configuration.get().getParts()) {
                     if (part.getPackage() == pkg) {
                         MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-                                getSelection().getId() + " cannot be deleted. It is used by "
+                                pkg.getId() + " cannot be deleted. It is used by "
                                         + part.getId());
                         return;
                     }

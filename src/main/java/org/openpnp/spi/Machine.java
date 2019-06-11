@@ -218,4 +218,19 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public Object getProperty(String name);
     
     public void setProperty(String name, Object value);
+
+    /**
+     * Get a list of the NozzleTips currently attached to the Nozzle.
+     * 
+     * @return
+     */
+    public List<NozzleTip> getNozzleTips();
+
+    public void addNozzleTip(NozzleTip nozzleTip) throws Exception;
+    
+    public void removeNozzleTip(NozzleTip nozzleTip);
+    
+    public NozzleTip getNozzleTip(String id);
+    
+    public NozzleTip getNozzleTipByName(String name);
 }
