@@ -145,6 +145,16 @@ public class VisionUtilsTest {
         }
 
         @Override
+        public BufferedImage captureForPreview() {
+            return null;
+        }
+
+        @Override
+        public BufferedImage captureRaw() {
+            return null;
+        }
+
+        @Override
         public void startContinuousCapture(CameraListener listener) {
 
         }

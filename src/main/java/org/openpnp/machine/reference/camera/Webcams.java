@@ -54,7 +54,6 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
     protected Webcam webcam;
     private Thread thread;
     private boolean forceGray;
-    private BufferedImage image;
 
     private static final JHGrayFilter GRAY = new JHGrayFilter();
 
@@ -77,8 +76,7 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
             return null;
         }
         try {
-            BufferedImage img = webcam.getImage();
-            return transformImage(img);
+            return webcam.getImage();
         }
         catch (Exception e) {
             return null;
@@ -93,18 +91,10 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
         super.startContinuousCapture(listener);
     }
 
-    private BufferedImage lastImage = null;
-    private BufferedImage redImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
-
-
     public void run() {
         while (!Thread.interrupted()) {
             try {
-                BufferedImage image = internalCapture();
-                if (image == null) {
-                    image = redImage;
-                }
-                broadcastCapture(image);
+                broadcastCapture(captureForPreview());
             }
             catch (Exception e) {
                 e.printStackTrace();
