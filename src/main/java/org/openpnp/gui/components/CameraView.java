@@ -26,6 +26,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.ComponentAdapter;
@@ -1049,8 +1050,12 @@ public class CameraView extends JComponent implements CameraListener {
                 setCursor(getCursorForHandlePosition(selectionActiveHandle));
             }
             else if (selectionMode == null && selection != null) {
-                int x = getMousePosition().x;
-                int y = getMousePosition().y;
+                Point p = getMousePosition();
+                if (p == null) {
+                    return;
+                }
+                int x = p.x;
+                int y = p.y;
 
                 HandlePosition handlePosition = getSelectionHandleAtPosition(x, y);
                 if (handlePosition != null) {

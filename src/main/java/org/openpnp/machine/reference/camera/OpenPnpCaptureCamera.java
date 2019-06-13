@@ -184,7 +184,6 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             return img;
         }
         catch (Exception e) {
-            e.printStackTrace();
             return null;
         }
     }
