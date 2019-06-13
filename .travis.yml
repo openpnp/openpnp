@@ -2,8 +2,8 @@ language: java
 sudo: false
 
 jdk:
-- oraclejdk8
-- oraclejdk9
+#- oraclejdk8 # seems to be failing, maybe no longer supported.
+#- oraclejdk9 # seems to be failing, maybe no longer supported.
 - openjdk10
 - oraclejdk11
   
