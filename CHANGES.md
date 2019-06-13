@@ -1,6 +1,34 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-06-12
+
+## Switcher Camera and Camera Interface Changes
+
+This update adds a new camera type called a SwitcherCamera. This camera is a virtual camera
+that allows you to have multiple virtual cameras sharing the same physical capture device. This
+is a common configuration on commercial desktop pick and place machines, where a single capture
+card captures images from two analog cameras. A serial command is used to switch which camera
+is currently streaming.
+
+Some small changes were also made to the camera interface in general. Two new methods were added:
+* Camera.captureForPreview(): Captures an image and applies transforms, but does not perform
+  scripting or lighting events.
+* Camera.captureRaw(): Returns a raw image from the capture device, with no transforms.
+
+The first is mainly for future expansion - in the near future changes will be made to how camera
+streaming works to improve performance and make the cameras more context sensitive.
+
+The second is added specifically for the new SwitcherCamera, so that it can get raw images from
+the source camera. This new method is also being used to clean up and consolidate the camera
+code across various camera implementations.
+
+In general, if you aren't using the SwitcherCamera you shouldn't notice any differences with
+this update. If you notice new problems with cameras, please report an issue.
+
+See https://github.com/openpnp/openpnp/wiki/SwitcherCamera for more information.
+
+
 # 2019-06-10
 
 ## Global Nozzle Tip Update
