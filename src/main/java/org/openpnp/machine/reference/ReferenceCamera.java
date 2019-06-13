@@ -124,6 +124,10 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public ReferenceCamera() {
     }
     
+    /**
+     * Captures an image using captureForPreview() and performs scripting and lighting events
+     * before and after the capture.
+     */
     @Override
     public BufferedImage capture() {
         try {
@@ -134,7 +138,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         catch (Exception e) {
             Logger.warn(e);
         }
-        BufferedImage image = safeInternalCapture();
+        BufferedImage image = captureForPreview();
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("camera", this);
@@ -144,6 +148,23 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             Logger.warn(e);
         }
         return image;
+    }
+    
+    /**
+     * Captures an image using captureRaw(), applies local transformations and returns the image.
+     */
+    @Override
+    public BufferedImage captureForPreview() {
+        return transformImage(captureRaw());
+    }
+    
+    /**
+     * Captures an image using safeInternalCapture() and returns it without any transformations
+     * applied.
+     */
+    @Override
+    public BufferedImage captureRaw() {
+        return safeInternalCapture();
     }
     
     protected abstract BufferedImage internalCapture();
@@ -326,6 +347,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         this.deinterlace = deinterlace;
     }
 
+    // TODO Optimization: We could skip the convert to and from Mat if no transforms are needed.
     protected BufferedImage transformImage(BufferedImage image) {
         Mat mat = OpenCvUtils.toMat(image);
 

@@ -25,13 +25,11 @@ import java.beans.PropertyChangeSupport;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
-import javax.swing.Action;
 
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.ImageCameraConfigurationWizard;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
@@ -144,7 +142,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 
         gFrame.dispose();
 
-        return transformImage(frame);
+        return frame;
     }
 
     private synchronized void initialize() throws Exception {
@@ -166,8 +164,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 
     public void run() {
         while (!Thread.interrupted()) {
-            BufferedImage frame = internalCapture();
-            broadcastCapture(frame);
+            broadcastCapture(captureForPreview());
             try {
                 Thread.sleep(1000 / fps);
             }

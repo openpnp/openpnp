@@ -191,8 +191,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
 
     public void run() {
         while (!Thread.interrupted()) {
-            BufferedImage frame = internalCapture();
-            broadcastCapture(frame);
+            broadcastCapture(captureForPreview());
             try {
                 Thread.sleep(1000 / fps);
             }

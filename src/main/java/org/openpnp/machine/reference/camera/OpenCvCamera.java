@@ -75,8 +75,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
             if (!fg.read(mat)) {
                 return null;
             }
-            BufferedImage img = OpenCvUtils.toBufferedImage(mat);
-            return transformImage(img);
+            return OpenCvUtils.toBufferedImage(mat);
         }
         catch (Exception e) {
             return null;
@@ -97,10 +96,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     public void run() {
         while (!Thread.interrupted()) {
             try {
-                BufferedImage image = internalCapture();
-                if (image != null) {
-                    broadcastCapture(image);
-                }
+                broadcastCapture(captureForPreview());
             }
             catch (Exception e) {
                 e.printStackTrace();
