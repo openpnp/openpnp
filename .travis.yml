@@ -40,7 +40,7 @@ deploy:
   region: us-west-2
   local_dir: installers
   on:
-    jdk: oraclejdk8
+    jdk: oraclejdk11
     branch:
     - develop
     - master
