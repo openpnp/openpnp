@@ -1,9 +1,10 @@
 language: java
 sudo: false
+dist: trusty
 
 jdk:
-#- oraclejdk8 # seems to be failing, maybe no longer supported.
-#- oraclejdk9 # seems to be failing, maybe no longer supported.
+- oraclejdk8
+- oraclejdk9
 - openjdk10
 - oraclejdk11
   
@@ -40,7 +41,7 @@ deploy:
   region: us-west-2
   local_dir: installers
   on:
-    jdk: oraclejdk11
+    jdk: oraclejdk8
     branch:
     - develop
     - master
