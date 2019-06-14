@@ -30,7 +30,6 @@ import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.util.MovableUtils;
-import org.openpnp.util.VisionUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -138,12 +137,31 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (nozzleTip == null) {
             throw new Exception("Can't pick, no nozzle tip loaded");
         }
+        
+        try {
+            Map<String, Object> globals = new HashMap<>();
+            globals.put("nozzle", this);
+            Configuration.get().getScripting().on("Nozzle.BeforePick", globals);
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+        }
+        
         this.part = part;
         getDriver().pick(this);
         getMachine().fireMachineHeadActivity(head);
         
         // Dwell Time
         Thread.sleep(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
+        
+        try {
+            Map<String, Object> globals = new HashMap<>();
+            globals.put("nozzle", this);
+            Configuration.get().getScripting().on("Nozzle.AfterPick", globals);
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+        }
     }
 
     @Override
@@ -152,12 +170,31 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (nozzleTip == null) {
             throw new Exception("Can't place, no nozzle tip loaded");
         }
+        
+        try {
+            Map<String, Object> globals = new HashMap<>();
+            globals.put("nozzle", this);
+            Configuration.get().getScripting().on("Nozzle.BeforePlace", globals);
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+        }
+        
         getDriver().place(this);
         this.part = null;
         getMachine().fireMachineHeadActivity(head);
         
         // Dwell Time
         Thread.sleep(this.getPlaceDwellMilliseconds() + nozzleTip.getPlaceDwellMilliseconds());
+        
+        try {
+            Map<String, Object> globals = new HashMap<>();
+            globals.put("nozzle", this);
+            Configuration.get().getScripting().on("Nozzle.AfterPlace", globals);
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+        }
     }
     
     private ReferenceNozzleTip getUnloadedNozzleTipStandin() {
