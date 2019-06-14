@@ -635,7 +635,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         addWrappedBinding(location, "lengthZ", textFieldPartZ, "text", lengthConverter);
 
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
-        addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
+        addWrappedBinding(feeder, "feedRetryCount", retryCountTf, "text", intConverter);
 
         addWrappedBinding(feeder, "tapeLength", textFieldTapeLength, "text", lengthConverter);
         addWrappedBinding(feeder, "feederExtent", textFieldFeederExtent, "text", lengthConverter);
