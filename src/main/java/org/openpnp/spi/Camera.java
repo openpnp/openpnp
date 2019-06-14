@@ -72,7 +72,11 @@ public interface Camera extends HeadMountable, WizardConfigurable,
      * @return
      */
     public BufferedImage capture();
-
+    
+    public BufferedImage captureForPreview();
+    
+    public BufferedImage captureRaw();
+    
     /**
      * Same as capture(), but waits the settle time before capturing.
      * 

@@ -1,6 +1,69 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-06-13
+
+## New Scripting Events
+
+Added several new scripting events for pick and place events:
+
+* Nozzle.BeforePick
+* Nozzle.AfterPick
+* Nozzle.BeforePlace
+* Nozzle.AfterPlace
+
+# 2019-06-12
+
+## Switcher Camera and Camera Interface Changes
+
+This update adds a new camera type called a SwitcherCamera. This camera is a virtual camera
+that allows you to have multiple virtual cameras sharing the same physical capture device. This
+is a common configuration on commercial desktop pick and place machines, where a single capture
+card captures images from two analog cameras. A serial command is used to switch which camera
+is currently streaming.
+
+Some small changes were also made to the camera interface in general. Two new methods were added:
+* Camera.captureForPreview(): Captures an image and applies transforms, but does not perform
+  scripting or lighting events.
+* Camera.captureRaw(): Returns a raw image from the capture device, with no transforms.
+
+The first is mainly for future expansion - in the near future changes will be made to how camera
+streaming works to improve performance and make the cameras more context sensitive.
+
+The second is added specifically for the new SwitcherCamera, so that it can get raw images from
+the source camera. This new method is also being used to clean up and consolidate the camera
+code across various camera implementations.
+
+In general, if you aren't using the SwitcherCamera you shouldn't notice any differences with
+this update. If you notice new problems with cameras, please report an issue.
+
+See https://github.com/openpnp/openpnp/wiki/SwitcherCamera for more information.
+
+
+# 2019-06-10
+
+## Global Nozzle Tip Update
+
+The nozzle tip system has been overhauled so that nozzle tips belong to the machine, rather than
+to each nozzle. This removes the need to duplicate nozzle tips for each nozzle, and better
+fits how nozzle changers typically work.
+
+Additionally, you can now easily set package compatibility directly from the
+packages panel.
+
+This is a large, breaking change. For more information on why this change happened, please see:
+https://github.com/openpnp/openpnp/issues/183
+
+Thank you to @markmaker for reviewing and for merging in his recent calibration changes. He has
+also provided some help for migrating:
+
+- copy the big `<nozzle-tips/>` XML block to the right place (I took a default OpenPNP 2.0 `machine.xml` as a guide). 
+- start OpenPNP again and again, note the elements/attributes no longer supported and delete them (would be so nice to have a command-line option for the XML parser to ignore unknown elements and attributes, but it seems the parser in OpenPNP has no such thing*)
+- define nozzle tip to nozzle compatibility on the Nozzle
+- learn the new way to change nozzle tips (by clicking the checkbox in the list)
+- define vacuum levels not forgetting the fact that isPartOff is now measured with opened valve for a moment (but see #855).
+
+
 # 2019-06-02
 
 ## Runout Compensation and Bottom Camera Position and Rotation Calibration
