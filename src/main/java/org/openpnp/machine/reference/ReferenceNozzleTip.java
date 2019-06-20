@@ -21,6 +21,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzleTip;
+import org.openpnp.util.UiUtils;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
@@ -108,7 +109,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        return new Action[] { deleteAction };
+        return new Action[] {unloadAction, loadAction, deleteAction};
     }
 
     @Override
@@ -249,6 +250,36 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         return calibration;
     }
     
+
+    public Action loadAction = new AbstractAction("Load") {
+        {
+            putValue(SMALL_ICON, Icons.nozzleTipLoad);
+            putValue(NAME, "Load");
+            putValue(SHORT_DESCRIPTION, "Load the currently selected nozzle tip.");
+        }
+
+        @Override
+        public void actionPerformed(final ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                MainFrame.get().getMachineControls().getSelectedNozzle().loadNozzleTip(ReferenceNozzleTip.this);
+            });
+        }
+    };
+
+    public Action unloadAction = new AbstractAction("Unload") {
+        {
+            putValue(SMALL_ICON, Icons.nozzleTipUnload);
+            putValue(NAME, "Unload");
+            putValue(SHORT_DESCRIPTION, "Unload the currently loaded nozzle tip.");
+        }
+
+        @Override
+        public void actionPerformed(final ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                MainFrame.get().getMachineControls().getSelectedNozzle().unloadNozzleTip();
+            });
+        }
+    };
     public Action deleteAction = new AbstractAction("Delete Nozzle Tip") {
         {
             putValue(SMALL_ICON, Icons.nozzleTipRemove);
