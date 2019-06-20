@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.swing.SwingUtilities;
+
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.RotatedRect;
@@ -36,9 +38,6 @@ import org.simpleframework.xml.core.Commit;
 
 @Root
 public class ReferenceNozzleTipCalibration extends AbstractModelObject {
-    // Reference back to the nozzle tip.
-    private ReferenceNozzleTip nozzleTip;
-
     public static interface RunoutCompensation {
 
         Location getOffset(double angle);
@@ -433,6 +432,25 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     @Commit
     public void commit() {
         angleIncrement = null;
+
+        // We need to invoke this even later than the commit(), as the Configuration is not yet ready.
+        SwingUtilities.invokeLater(() -> {
+            MainFrame.get().getMachineControls().addPropertyChangeListener("selectedTool", e -> {
+                // inform UI about changed information
+                this.firePropertyChange("runoutCompensationInformation", null, null);
+            });
+            for (Head head : Configuration.get().getMachine().getHeads()) {
+                for (Nozzle nozzle : head.getNozzles()) {
+                    if (nozzle instanceof ReferenceNozzle) {
+                        ReferenceNozzle refNozzle = (ReferenceNozzle)nozzle;
+                        refNozzle.addPropertyChangeListener("nozzleTip", e -> {
+                            // inform UI about changed information
+                            this.firePropertyChange("runoutCompensationInformation", null, null);
+                        });
+                    }
+                }
+            }
+        });
     }
 
     // Max allowed linear distance w.r.t. bottom camera for an offset measurement - measurements above threshold are removed from pipelines results 
@@ -455,8 +473,9 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     public ReferenceNozzle getUiCalibrationNozzle(ReferenceNozzleTip nozzleTip) throws Exception {
         ReferenceNozzle refNozzle; 
         if (nozzleTip.isUnloadedNozzleTipStandin()) {
-            // The "unloaded" stand-in will not be well-defined if multiple nozzles are currently
-            // naked. Therefore the currently selected nozzle from the machine controls is preferred.
+            // For the "unloaded" stand-in it is not well-defined where it is currently "loaded"
+            // if multiple nozzles are currently naked. Therefore the currently selected nozzle from 
+            // the machine controls is preferred.
             Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
             if (nozzle instanceof ReferenceNozzle) {
                 refNozzle = (ReferenceNozzle)nozzle;
@@ -465,18 +484,16 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                     return refNozzle; 
                 }
             }
-            // If not, it just takes the first naked nozzle, if any. 
+            throw new Exception("Please unload the nozzle tip on the selected nozzle.");
         }
-        refNozzle = nozzleTip.getNozzleAttachedTo();
-        if (refNozzle == null) {
-            if (nozzleTip.isUnloadedNozzleTipStandin()) {
-                throw new Exception("Please unload the nozzle tip on the current nozzle.");
+        else {
+            // For real nozzle tips, the nozzle where it is currently attached is well-defined.
+            refNozzle = nozzleTip.getNozzleAttachedTo();
+            if (refNozzle == null) {
+                throw new Exception("Please load the nozzle tip on a nozzle.");
             }
-            else {
-                throw new Exception("Please load the selected nozzle tip on the current nozzle.");
-            }
+            return refNozzle;
         }
-        return refNozzle;
     }
 
     private ReferenceNozzleTip getNozzleTip() {
