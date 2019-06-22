@@ -416,8 +416,10 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     }
 
     @Attribute(required = false)
-    private ReferenceNozzleTipCalibration.RunoutCompensationAlgorithm runoutCompensationAlgorithm = RunoutCompensationAlgorithm.Model;      // modelBased or tableBased? Two implementations are available
-
+    private ReferenceNozzleTipCalibration.RunoutCompensationAlgorithm runoutCompensationAlgorithm = RunoutCompensationAlgorithm.ModelCameraOffset;
+    
+    @Attribute(required = false)
+    private double version = 1.0;
 
     @Attribute(required = false)
     private RecalibrationTrigger recalibrationTrigger = RecalibrationTrigger.NozzleTipChangeInJob;
@@ -432,6 +434,13 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     @Commit
     public void commit() {
         angleIncrement = null;
+        
+        // OpenPNP Version update
+        if (version < 2) {
+            version = 2.0;
+            // Force ModelCameraOffset calibration system.
+            runoutCompensationAlgorithm = RunoutCompensationAlgorithm.ModelCameraOffset;
+        }
 
         // We need to invoke this even later than the commit(), as the Configuration is not yet ready.
         SwingUtilities.invokeLater(() -> {
