@@ -46,7 +46,7 @@ You can setup the calibration features per nozzle tip. This allows you to tune t
 8. Click calibrate.
 9. When the process is finished you may want to check that the nozzle tip is well centered over the bottom camera. Click the tool to camera button again and rotate the nozzle.
 10. If you're satisfied that the tip center always stays precisely in the crosshairs of the camera, you're set.
-11. If the nozzle tip has significant runout, you might now want to repeat the [Nozzle Offset Wizard](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Nozzle-Setup#head-offsets) with the calibrated nozzle tip. No need to rotate the nozzle in the material this time. You will get a smaller mark and a more precise offset capture. Note that changing the nozzle offset will auomatically invalidate any nozzle tip calibrations. Simply repeat calibration afterwards.
+11. The Status text will inform you how large the runout was, that is now compensated. If it is significant, you might now want to repeat the [Nozzle Offset Wizard](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Nozzle-Setup#head-offsets) with the calibrated nozzle tip. No need to rotate the nozzle in the material this time. You will get a smaller mark and a more precise offset capture. Note that changing the nozzle offset will auomatically invalidate any nozzle tip calibrations. Simply repeat the calibration afterwards.
 
 ![Nozzle Tip Calibration Wizard](https://user-images.githubusercontent.com/9963310/59954597-da90e180-9485-11e9-8560-8157bdaa5453.png)
 
