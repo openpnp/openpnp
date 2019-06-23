@@ -19,6 +19,7 @@
 
 package org.openpnp.machine.reference.wizards;
 
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -33,11 +34,13 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.jdesktop.beansbinding.BeanProperty;
+import org.jdesktop.beansbinding.Bindings;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
@@ -47,8 +50,10 @@ import org.openpnp.machine.reference.ReferenceNozzleTipCalibration;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
@@ -61,10 +66,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import org.jdesktop.beansbinding.BeanProperty;
-import org.jdesktop.beansbinding.AutoBinding;
-import org.jdesktop.beansbinding.Bindings;
-import java.awt.FlowLayout;
 
 public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWizard {
     private final ReferenceNozzleTip nozzleTip;
@@ -80,7 +81,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     private JButton btnCalibrate;
     private JButton btnReset;
     private JLabel lblCalibrationInfo;
-    private JLabel lblCalibrationResults;
+    private JLabel lblCalibrationStatus;
     private JCheckBox calibrationEnabledCheckbox;
 
 
@@ -133,9 +134,8 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         lblCalibrationInfo = new JLabel("Status");
         panelCalibration.add(lblCalibrationInfo, "2, 4, right, default");
 
-        lblCalibrationResults = new JLabel(nozzleTip.getCalibration()
-                    .getRunoutCompensationInformation());
-        panelCalibration.add(lblCalibrationResults, "4, 4, 3, 1, left, default");
+        lblCalibrationStatus = new JLabel(getCalibrationStatus());
+        panelCalibration.add(lblCalibrationStatus, "4, 4, 3, 1, left, default");
 
         lblCalibrate = new JLabel("Calibration");
         panelCalibration.add(lblCalibrate, "2, 6, right, default");
@@ -238,6 +238,24 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 });
             }
         });
+
+        nozzleTip.getCalibration().addPropertyChangeListener("calibrationInformation", e -> {
+            firePropertyChange("calibrationStatus", null, null);;
+        });
+        MainFrame.get().getMachineControls().addPropertyChangeListener("selectedTool", e -> {
+            firePropertyChange("calibrationStatus", null, null);;
+        });
+        for (Head head : Configuration.get().getMachine().getHeads()) {
+            for (Nozzle nozzle : head.getNozzles()) {
+                if (nozzle instanceof ReferenceNozzle) {
+                    ReferenceNozzle refNozzle = (ReferenceNozzle)nozzle;
+                    refNozzle.addPropertyChangeListener("nozzleTip", e -> {
+                        firePropertyChange("calibrationStatus", null, null);
+                    });
+                }
+            }
+        }
+
         initDataBindings();
 
     }
@@ -251,7 +269,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                HeadMountable nozzle = nozzleTip.getCalibration().getUiCalibrationNozzle(nozzleTip);
+                HeadMountable nozzle = getUiCalibrationNozzle();
                 Camera camera = VisionUtils.getBottomVisionCamera();
                 Location location = camera.getLocation(nozzle)
                         .add(new Location(nozzleTip.getCalibration().getCalibrationZOffset().getUnits(), 0, 0, 
@@ -273,6 +291,57 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     private JComboBox recalibrationCb;
     private JButton btnCalibrateCamera;
 
+    public ReferenceNozzle getUiCalibrationNozzle() throws Exception {
+        ReferenceNozzle refNozzle; 
+        if (nozzleTip.isUnloadedNozzleTipStandin()) {
+            // For the "unloaded" stand-in it is not well-defined where it is currently "loaded"
+            // if multiple nozzles are bare at the same time. Therefore the currently selected nozzle 
+            // from the machine controls is preferred.
+            Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+            if (nozzle instanceof ReferenceNozzle) {
+                refNozzle = (ReferenceNozzle)nozzle;
+                if (refNozzle.getCalibrationNozzleTip() == nozzleTip) {
+                    // Yes, it's a match.
+                    return refNozzle; 
+                }
+            }
+            throw new Exception("Please unload the nozzle tip on the selected nozzle.");
+        }
+        else {
+            // For real nozzle tips, the nozzle where it is currently attached to is well-defined.
+            refNozzle = nozzleTip.getNozzleAttachedTo();
+            if (refNozzle == null) {
+                throw new Exception("Please load the nozzle tip on a nozzle.");
+            }
+            return refNozzle;
+        }
+    }
+
+    public String getCalibrationStatus() {
+        StringBuffer info = new StringBuffer();
+        ReferenceNozzle nozzle = null;
+        try {
+            nozzle = getUiCalibrationNozzle();
+        }
+        catch (Exception e) {
+            info.append(e.getMessage());
+            nozzle = null;
+        }
+        if (nozzle != null) {
+            info.append(nozzleTip.getName());
+            info.append(" on ");
+            info.append(nozzle.getName());
+            info.append(": ");
+            if (nozzle.isCalibrated()) {
+                info.append(nozzleTip.getCalibration().getCalibrationInformation(nozzle));
+            }
+            else {
+                info.append("Uncalibrated");
+            }
+        }
+        return info.toString();
+    }
+
     private void resetCalibrationPipeline() {
         nozzleTip.getCalibration()
                  .resetPipeline();
@@ -290,14 +359,14 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     private void calibrate() {
         UiUtils.submitUiMachineTask(() -> {
             nozzleTip.getCalibration()
-                .calibrate(nozzleTip.getCalibration().getUiCalibrationNozzle(nozzleTip));
+                .calibrate(getUiCalibrationNozzle());
         });
     }
 
     private void calibrateCamera() {
         UiUtils.submitUiMachineTask(() -> {
             nozzleTip.getCalibration()
-                .calibrateCamera(nozzleTip.getCalibration().getUiCalibrationNozzle(nozzleTip));
+                .calibrateCamera(getUiCalibrationNozzle());
         });
     }
 
@@ -319,8 +388,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         addWrappedBinding(nozzleTip.getCalibration(), "recalibrationTrigger",
                 recalibrationCb, "selectedItem");
         
-        bind(UpdateStrategy.READ, nozzleTip.getCalibration(), "runoutCompensationInformation",
-                lblCalibrationResults, "text");
+        bind(UpdateStrategy.READ, this, "calibrationStatus", lblCalibrationStatus, "text");
         
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(offsetThresholdTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationZOffsetTf);
