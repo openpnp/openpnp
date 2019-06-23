@@ -26,6 +26,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Feeder;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzle;
@@ -129,6 +130,23 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     @Override
+    public void moveToPickLocation(Feeder feeder) throws Exception {
+        Location location = feeder.getPickLocation();
+        try {
+            Map<String, Object> globals = new HashMap<>();
+            globals.put("nozzle", this);
+            globals.put("feeder", feeder);
+            globals.put("location", location);
+            Configuration.get().getScripting().on("Nozzle.MoveToPickLocation", globals);
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+        }
+
+        MovableUtils.moveToLocationAtSafeZ(this, location);
+    }
+
+    @Override
     public void pick(Part part) throws Exception {
         Logger.debug("{}.pick()", getName());
         if (part == null) {
@@ -149,6 +167,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         
         this.part = part;
         getDriver().pick(this);
+        if (isVaccumActuatorEnabled()) {
+            actuateVacuumValve(true);
+        }
         getMachine().fireMachineHeadActivity(head);
         
         // Dwell Time
@@ -162,6 +183,21 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         catch (Exception e) {
             Logger.warn(e);
         }
+    }
+
+    @Override
+    public void moveToPlacementLocation(Location location) throws Exception {
+        try {
+            Map<String, Object> globals = new HashMap<>();
+            globals.put("nozzle", this);
+            globals.put("location", location);
+            Configuration.get().getScripting().on("Nozzle.MoveToPlacementLocation", globals);
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+        }
+
+        MovableUtils.moveToLocationAtSafeZ(this, location);
     }
 
     @Override
@@ -181,6 +217,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
         
         getDriver().place(this);
+        if (isVaccumActuatorEnabled()) {
+            actuateVacuumValve(false);
+        }
         this.part = null;
         getMachine().fireMachineHeadActivity(head);
         
@@ -587,13 +626,24 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     ReferenceMachine getMachine() {
         return (ReferenceMachine) Configuration.get().getMachine();
     }
-    
-    @Override
-    public boolean isPartDetectionEnabled() {
+
+    protected boolean isVaccumActuatorEnabled() {
         return vacuumSenseActuatorName != null && !vacuumSenseActuatorName.isEmpty();
     }
 
-    private Actuator getActuator() throws Exception {
+    @Override
+    public boolean isPartOnEnabled() {
+        return isVaccumActuatorEnabled() 
+                && (getNozzleTip().getVacuumLevelPartOnLow() < getNozzleTip().getVacuumLevelPartOnHigh());
+    }
+
+    @Override
+    public boolean isPartOffEnabled() {
+        return isVaccumActuatorEnabled() 
+                && (getNozzleTip().getVacuumLevelPartOffLow() < getNozzleTip().getVacuumLevelPartOffHigh());
+    }
+
+    protected Actuator getVacuumActuator() throws Exception {
         Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
         if (actuator == null) {
             throw new Exception(String.format("Can't find vacuum actuator %s", vacuumSenseActuatorName));
@@ -601,12 +651,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         return actuator;
     }
     
-    private void actuateVacuumValve(boolean on) throws Exception {
-        getActuator().actuate(on);
+    protected void actuateVacuumValve(boolean on) throws Exception {
+        getVacuumActuator().actuate(on);
     }
 
-    private double readVacuumLevel() throws Exception {
-        return Double.parseDouble(getActuator().read());
+    protected double readVacuumLevel() throws Exception {
+        return Double.parseDouble(getVacuumActuator().read());
     }
 
     @Override
@@ -619,18 +669,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     @Override
     public boolean isPartOff() throws Exception {
         ReferenceNozzleTip nt = getNozzleTip();
-        double vacuumLevel = Double.NaN;
-        try {
-            // We need vacuum on to determine the vacuum level.
-            actuateVacuumValve(true);
-            // Use the same dwell time as a pick.
-            Thread.sleep(this.getPickDwellMilliseconds() + nt.getPickDwellMilliseconds());
-            // Now read the vacuum level.
-            vacuumLevel = readVacuumLevel();
-        }
-        finally {
-            actuateVacuumValve(false);
-        }
+        double vacuumLevel = readVacuumLevel();
         return vacuumLevel >= nt.getVacuumLevelPartOffLow() && vacuumLevel <= nt.getVacuumLevelPartOffHigh();
     }
 }

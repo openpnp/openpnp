@@ -2,6 +2,7 @@ package org.openpnp.spi;
 
 import java.util.Set;
 
+import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 
 /**
@@ -20,21 +21,43 @@ public interface Nozzle
     NozzleTip getNozzleTip();
 
     /**
+     * Commands the Nozzle to move to the pick location. Position the nozzle over the part to be 
+     * picked and lower it to the correct height. 
+     * Some implementations may choose to perform a more elaborate approach to the parts, such as 
+     * probing for contact, slowing down etc.
+     * 
+     * @throws Exception
+     */
+    public void moveToPickLocation(Feeder feeder) throws Exception;
+
+    /**
      * Commands the Nozzle to perform it's pick operation. Generally this just consists of turning
-     * on the vacuum. When this is called during job processing the processor will have already
-     * positioned the nozzle over the part to be picked and lowered it to the correct height. Some
-     * implementations may choose to do further work in pick(), such as firing air cylinders,
-     * monitoring pressure sensors, etc.
+     * on the vacuum. When this is called during job processing the processor will already have called. 
+     * moveToPickLocation() having positioned the nozzle over the part to be picked and lowered it to 
+     * the correct height.  
+     * Some implementations may choose to do further work in pick(), such as firing 
+     * air cylinders, monitoring pressure sensors, etc.
      * 
      * @throws Exception
      */
     public void pick(Part part) throws Exception;
 
+
+    /**
+     * Commands the Nozzle to move to the placement location. Position the nozzle with the part to be placed 
+     * over the PCB and lower it to the correct height. 
+     * Some implementations may choose to perform a more elaborate approach to the PCB, such as probing 
+     * for contact, slowing down, etc.
+     * 
+     * @throws Exception
+     */
+    public void moveToPlacementLocation(Location location) throws Exception;
+
     /**
      * Commands the Nozzle to perform it's place operation. Generally this just consists of
      * releasing vacuum and may include a puff of air to set the Part. When this is called during
-     * job processing the processor will have already positioned the nozzle over the part to be
-     * placed and lowered it to the correct height.
+     * job processing the processor will already have called moveToPlacementLocation() having positioned 
+     * the nozzle with the part to be placed over the PCB and lowered it to the correct height.
      * 
      * @throws Exception
      */
@@ -75,12 +98,19 @@ public interface Nozzle
     public Part getPart();
     
     /**
-     * Returns true if the isPartDetected() method is available. Some machines do not have
+     * Returns true if the isPartOn() method is available. Some machines do not have
      * vacuum sensors or other part detection sensors, so this feature is optional.
      * @return
      */
-    public boolean isPartDetectionEnabled();
+    public boolean isPartOnEnabled();
     
+    /**
+     * Returns true if the isPartOff() method is available. Some machines do not have
+     * vacuum sensors or other part detection sensors, so this feature is optional.
+     * @return
+     */
+    public boolean isPartOffEnabled();
+
     /**
      * Returns true if a part appears to be on the nozzle. This is typically implemented by
      * checking a vacuum level range, but other methods such as laser or vision detection

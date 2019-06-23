@@ -238,6 +238,7 @@ public class ReferenceMachine extends AbstractMachine {
     public List<Class<? extends Nozzle>> getCompatibleNozzleClasses() {
         List<Class<? extends Nozzle>> l = new ArrayList<>();
         l.add(ReferenceNozzle.class);
+        l.add(ContactProbeNozzle.class);
         return l;
     }
 

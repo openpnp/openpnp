@@ -554,8 +554,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         placement.getId());
                 
                 // Move to pick location.
-                MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
-
+                nozzle.moveToPickLocation(feeder);
 
                 // Pick
                 nozzle.pick(part);
@@ -578,7 +577,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         private void checkPartOn(Nozzle nozzle) throws JobProcessorException {
-            if (!nozzle.isPartDetectionEnabled()) {
+            if (!nozzle.isPartOnEnabled()) {
                 return;
             }
             try {
@@ -654,7 +653,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         private void checkPartOn(Nozzle nozzle) throws JobProcessorException {
-            if (!nozzle.isPartDetectionEnabled()) {
+            if (!nozzle.isPartOnEnabled()) {
                 return;
             }
             try {
@@ -716,7 +715,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             try {
                 // Move to the placement location
-                MovableUtils.moveToLocationAtSafeZ(nozzle, placementLocation);
+                nozzle.moveToPlacementLocation(placementLocation);
 
                 // Place the part
                 nozzle.place();
@@ -730,7 +729,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         private void checkPartOn(Nozzle nozzle) throws JobProcessorException {
-            if (!nozzle.isPartDetectionEnabled()) {
+            if (!nozzle.isPartOnEnabled()) {
                 return;
             }
             try {
@@ -747,11 +746,18 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         private void checkPartOff(Nozzle nozzle, Part part) throws JobProcessorException {
-            if (!nozzle.isPartDetectionEnabled()) {
+            if (!nozzle.isPartOffEnabled()) {
                 return;
             }
             try {
-                if (!nozzle.isPartOff()) {
+                // We need vacuum on to determine the vacuum level.
+                nozzle.pick(part);
+                
+                boolean partOff = nozzle.isPartOff();
+                
+                nozzle.place();
+                
+                if (!partOff) {
                     throw new JobProcessorException(nozzle, "Part detected on nozzle after place.");
                 }
             }
