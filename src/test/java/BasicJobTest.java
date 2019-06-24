@@ -77,17 +77,19 @@ public class BasicJobTest {
 
         delegate.expectMove("Move N1 to F1", n1, new Location(LengthUnit.Millimeters, -10, 0, 0, 0),
                 1.0);
-        delegate.expectPick(n1);
+
+        delegate.expectedActuate();
 
         delegate.expectMove("Move N2 to F1", n2, new Location(LengthUnit.Millimeters, -20, 0, 0, 0),
                 1.0);
-        delegate.expectPick(n2);
+
+        delegate.expectedActuate();
 
         delegate.expectMove("Move N1 to R1, Safe-Z", n1,
                 new Location(LengthUnit.Millimeters, 0, 10, 0, 45), 1.0);
         delegate.expectMove("Move N1 to R1, Z", n1,
                 new Location(LengthUnit.Millimeters, 0, 10, 0.825500, 45), 1.0);
-        delegate.expectPlace(n1);
+        delegate.expectedActuate();
         delegate.expectMove("Move N1 to R1, Safe-Z", n1,
                 new Location(LengthUnit.Millimeters, 0, 10, 0, 45), 1.0);
 
@@ -95,7 +97,7 @@ public class BasicJobTest {
                 new Location(LengthUnit.Millimeters, 00, 20, 0, 90), 1.0);
         delegate.expectMove("Move N2 to R2, Z", n2,
                 new Location(LengthUnit.Millimeters, 00, 20, 0.825500, 90), 1.0);
-        delegate.expectPlace(n2);
+        delegate.expectedActuate();
         delegate.expectMove("Move N2 to R2, Safe-Z", n2,
                 new Location(LengthUnit.Millimeters, 00, 20, 0, 90), 1.0);
         delegate.expectMove("Part", c1, new Location(LengthUnit.Millimeters, 0, 0, 0, 90), 1.0);
@@ -148,14 +150,6 @@ public class BasicJobTest {
             expectedOps.add(o);
         }
 
-        public void expectPick(Nozzle nozzle) {
-            expectedOps.add(new ExpectedPick(nozzle));
-        }
-
-        public void expectPlace(Nozzle nozzle) {
-            expectedOps.add(new ExpectedPlace(nozzle));
-        }
-
         public void expectedActuate() {
             expectedOps.add(new ExpectedActuate());
         }
@@ -183,46 +177,19 @@ public class BasicJobTest {
         }
 
         @Override
-        public void pick(ReferenceNozzle nozzle) throws Exception {
-            if (expectedOps.isEmpty()) {
-                throw new Exception("Unexpected Pick " + nozzle + ".");
-            }
-            else {
-                ExpectedOp op = expectedOps.remove();
-                if (!(op instanceof ExpectedPick)) {
-                    throw new Exception("Unexpected Pick " + nozzle + ". Expected " + op);
-                }
-
-                ExpectedPick pick = (ExpectedPick) op;
-
-                if (pick.nozzle != nozzle) {
-                    throw new Exception("Unexpected Pick " + nozzle + ". Expected " + op);
-                }
-            }
-        }
-
-        @Override
-        public void place(ReferenceNozzle nozzle) throws Exception {
-            if (expectedOps.isEmpty()) {
-                throw new Exception("Unexpected Place " + nozzle + ".");
-            }
-            else {
-                ExpectedOp op = expectedOps.remove();
-                if (!(op instanceof ExpectedPlace)) {
-                    throw new Exception("Unexpected Place " + nozzle + ". Expected " + op);
-                }
-
-                ExpectedPlace place = (ExpectedPlace) op;
-
-                if (place.nozzle != nozzle) {
-                    throw new Exception("Unexpected Place " + nozzle + ". Expected " + op);
-                }
-            }
-        }
-
-        @Override
         public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
-            super.actuate(actuator, on);
+            if (expectedOps.isEmpty()) {
+                throw new Exception("Unexpected Actuate");
+            }
+            else {
+                ExpectedOp op = expectedOps.remove();
+
+                if (!(op instanceof ExpectedActuate)) {
+                    throw new Exception("Unexpected Actuate. Expected " + op);
+                }
+
+            }
+            //? super.actuate(actuator, on);
         }
 
         @Override
@@ -231,32 +198,6 @@ public class BasicJobTest {
         }
 
         class ExpectedOp {
-        }
-
-        class ExpectedPick extends ExpectedOp {
-            public Nozzle nozzle;
-
-            public ExpectedPick(Nozzle nozzle) {
-                this.nozzle = nozzle;
-            }
-
-            @Override
-            public String toString() {
-                return "Pick " + nozzle + " " + nozzle.getNozzleTip().getName();
-            }
-        }
-
-        class ExpectedPlace extends ExpectedOp {
-            public Nozzle nozzle;
-
-            public ExpectedPlace(Nozzle nozzle) {
-                this.nozzle = nozzle;
-            }
-
-            @Override
-            public String toString() {
-                return "Place " + nozzle + " " + nozzle.getNozzleTip().getName();
-            }
         }
 
         class ExpectedActuate extends ExpectedOp {

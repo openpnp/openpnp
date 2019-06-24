@@ -39,9 +39,12 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.LongConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.model.AbstractModelObject;
+import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -152,17 +155,32 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelVision);
-        panelVision.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
-
-        lblSettleTimems = new JLabel("Settle Time (ms)");
-        panelVision.add(lblSettleTimems, "2, 2, right, default");
-
-        textFieldSettleTime = new JTextField();
-        panelVision.add(textFieldSettleTime, "4, 2, fill, default");
-        textFieldSettleTime.setColumns(10);
+        panelVision.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(100dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+                
+                lblLightActuator = new JLabel("Light Actuator");
+                panelVision.add(lblLightActuator, "2, 2, right, default");
+                
+                comboBoxLightActuator = new JComboBox();
+                comboBoxLightActuator = new JComboBox();
+                comboBoxLightActuator.setModel(new ActuatorsComboBoxModel((AbstractModelObject)(camera.getHead() == null ? 
+                        Configuration.get().getMachine() : camera.getHead())));
+                panelVision.add(comboBoxLightActuator, "4, 2, fill, default");
+        
+                lblSettleTimems = new JLabel("Settle Time (ms)");
+                panelVision.add(lblSettleTimems, "2, 4, right, default");
+                
+                        textFieldSettleTime = new JTextField();
+                        panelVision.add(textFieldSettleTime, "4, 4, fill, default");
+                        textFieldSettleTime.setColumns(10);
     }
 
     @Override
@@ -179,6 +197,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         addWrappedBinding(unitsPerPixel, "lengthY", textFieldUppY, "text", lengthConverter);
 
         addWrappedBinding(camera, "settleTimeMs", textFieldSettleTime, "text", longConverter);
+
+        addWrappedBinding(camera, "lightActuatorName", comboBoxLightActuator, "selectedItem");
 
         ComponentDecorators.decorateWithAutoSelect(textFieldUppX);
         ComponentDecorators.decorateWithAutoSelect(textFieldUppY);
@@ -242,4 +262,6 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     private JLabel lblLooking;
     private JComboBox lookingCb;
     private JTextField nameTf;
+    private JLabel lblLightActuator;
+    private JComboBox comboBoxLightActuator;
 }

@@ -553,14 +553,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 fireTextStatus("Pick %s from %s for %s.", part.getId(), feeder.getName(),
                         placement.getId());
                 
-                // Move to pick location.
-                nozzle.moveToPickLocation(feeder);
-
                 // Pick
-                nozzle.pick(part);
-
-                // Retract
-                nozzle.moveToSafeZ();
+                nozzle.pick(feeder);
             }
             catch (Exception e) {
                 throw new JobProcessorException(nozzle, e);
@@ -714,14 +708,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             fireTextStatus("Placing %s for %s.", part.getId(), placement.getId());
             
             try {
-                // Move to the placement location
-                nozzle.moveToPlacementLocation(placementLocation);
-
                 // Place the part
-                nozzle.place();
-
-                // Retract
-                nozzle.moveToSafeZ();
+                nozzle.place(placementLocation);
             }
             catch (Exception e) {
                 throw new JobProcessorException(nozzle, e);
@@ -750,14 +738,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 return;
             }
             try {
-                // We need vacuum on to determine the vacuum level.
-                nozzle.pick(part);
-                
-                boolean partOff = nozzle.isPartOff();
-                
-                nozzle.place();
-                
-                if (!partOff) {
+                if (!nozzle.isPartOff()) {
                     throw new JobProcessorException(nozzle, "Part detected on nozzle after place.");
                 }
             }

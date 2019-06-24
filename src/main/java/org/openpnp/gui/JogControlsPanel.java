@@ -597,13 +597,8 @@ public class JogControlsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
-                // move to the discard location
-                MovableUtils.moveToLocationAtSafeZ(nozzle, Configuration.get()
-                                                                        .getMachine()
-                                                                        .getDiscardLocation());
                 // discard the part
-                nozzle.place();
-                nozzle.moveToSafeZ();
+                nozzle.place(Configuration.get().getMachine().getDiscardLocation());
             });
         }
     };

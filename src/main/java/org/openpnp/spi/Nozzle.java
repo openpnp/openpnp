@@ -21,47 +21,23 @@ public interface Nozzle
     NozzleTip getNozzleTip();
 
     /**
-     * Commands the Nozzle to move to the pick location. Position the nozzle over the part to be 
-     * picked and lower it to the correct height. 
-     * Some implementations may choose to perform a more elaborate approach to the parts, such as 
-     * probing for contact, slowing down etc.
+     * Commands the Nozzle to perform it's pick operation. Generally this consists of positioning the 
+     * nozzle over the part to be picked, lowering it to the correct height, then turning on vacuum.   
+     * Some implementations may choose to do further work in pick(), such as firing air cylinders, 
+     * monitoring pressure sensors, etc.
      * 
      * @throws Exception
      */
-    public void moveToPickLocation(Feeder feeder) throws Exception;
+    public void pick(Feeder feeder) throws Exception;
 
     /**
-     * Commands the Nozzle to perform it's pick operation. Generally this just consists of turning
-     * on the vacuum. When this is called during job processing the processor will already have called. 
-     * moveToPickLocation() having positioned the nozzle over the part to be picked and lowered it to 
-     * the correct height.  
-     * Some implementations may choose to do further work in pick(), such as firing 
-     * air cylinders, monitoring pressure sensors, etc.
+     * Commands the Nozzle to perform it's place operation. Generally this consists of positioning the nozzle 
+     * with the part to be placed over the PCB, lowering it to the correct height, then releasing vacuum. 
+     * May include a puff of air to set the part. 
      * 
      * @throws Exception
      */
-    public void pick(Part part) throws Exception;
-
-
-    /**
-     * Commands the Nozzle to move to the placement location. Position the nozzle with the part to be placed 
-     * over the PCB and lower it to the correct height. 
-     * Some implementations may choose to perform a more elaborate approach to the PCB, such as probing 
-     * for contact, slowing down, etc.
-     * 
-     * @throws Exception
-     */
-    public void moveToPlacementLocation(Location location) throws Exception;
-
-    /**
-     * Commands the Nozzle to perform it's place operation. Generally this just consists of
-     * releasing vacuum and may include a puff of air to set the Part. When this is called during
-     * job processing the processor will already have called moveToPlacementLocation() having positioned 
-     * the nozzle with the part to be placed over the PCB and lowered it to the correct height.
-     * 
-     * @throws Exception
-     */
-    public void place() throws Exception;
+    public void place(Location location) throws Exception;
 
     /**
      * Changer interface:

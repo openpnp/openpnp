@@ -59,19 +59,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     }
 
     @Override
-    public void moveToPickLocation(Feeder feeder) throws Exception {
-        Location location = feeder.getPickLocation();
-        try {
-            Map<String, Object> globals = new HashMap<>();
-            globals.put("nozzle", this);
-            globals.put("feeder", feeder);
-            globals.put("location", location);
-            Configuration.get().getScripting().on("Nozzle.MoveToPickLocation", globals);
-        }
-        catch (Exception e) {
-            Logger.warn(e);
-        }
-
+    protected void moveToPickLocation(Feeder feeder, Location location) throws Exception {
         // Move nozzle to Z offset above the target location.
         location = location.add(new Location(this.probeOffset.getUnits(), 0, 0, probeOffset.getValue(), 0));
         MovableUtils.moveToLocationAtSafeZ(this, location);
@@ -80,24 +68,15 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     }
 
     @Override
-    public void pick(Part part) throws Exception {
-        super.pick(part);
-        // Probe retract.
+    protected void retractFromPickLocation(Feeder feeder, Location location) throws Exception {
+        // Retract nozzle from probing.
         actuateContactProbe(false);
+        // Retract nozzle fully.
+        super.retractFromPickLocation(feeder, location);
     }
 
     @Override
-    public void moveToPlacementLocation(Location location) throws Exception {
-        try {
-            Map<String, Object> globals = new HashMap<>();
-            globals.put("nozzle", this);
-            globals.put("location", location);
-            Configuration.get().getScripting().on("Nozzle.MoveToPlacementLocation", globals);
-        }
-        catch (Exception e) {
-            Logger.warn(e);
-        }
-        
+    protected void moveToPlacementLocation(Location location) throws Exception {
         // Move nozzle to Z offset above the target location.
         location = location.add(new Location(this.probeOffset.getUnits(), 0, 0, probeOffset.getValue(), 0));
         MovableUtils.moveToLocationAtSafeZ(this, location);
@@ -106,10 +85,11 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     }
 
     @Override
-    public void place() throws Exception {
-        super.place();
-        // Probe retract.
+    protected void retractFromPlacementLocation(Location location) throws Exception {
+        // Retract nozzle from probing.
         actuateContactProbe(false);
+        // Retract nozzle fully.
+        super.retractFromPlacementLocation(location);
     }
 
     protected Actuator getContactProbeActuator() throws Exception {

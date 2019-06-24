@@ -126,4 +126,6 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
 	public double getMaxPartSpeed(); 
 	
     public Actuator getZProbe(); 
+    
+    public Actuator getPump(); 
 }

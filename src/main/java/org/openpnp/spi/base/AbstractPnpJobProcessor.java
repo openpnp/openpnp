@@ -32,13 +32,8 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
             return;
         }
         try {
-            // move to the discard location
-            MovableUtils.moveToLocationAtSafeZ(nozzle,
-                    Configuration.get().getMachine().getDiscardLocation());
             // discard the part
-            nozzle.place();
-            nozzle.moveToSafeZ();
-            
+            nozzle.place(Configuration.get().getMachine().getDiscardLocation());
             
         }
         catch (Exception e) {

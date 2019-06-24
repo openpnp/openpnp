@@ -24,6 +24,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -33,11 +34,13 @@ import javax.swing.border.TitledBorder;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ContactProbeNozzle;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.model.AbstractModelObject;
 
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -49,8 +52,8 @@ import com.jgoodies.forms.layout.RowSpec;
 public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
     private final ReferenceNozzle nozzle;
     private JPanel panel;
-    private JLabel label;
-    private JTextField contactProbeActuatorNameTf;
+    private JLabel lblContactProbeActuator;
+    private JComboBox comboBoxContactProbeActuator;
     private JLabel lblProbeOffset;
     private JTextField textFieldProbeOffset;
 
@@ -73,12 +76,12 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        label = new JLabel("Contact Probe Actuator Name");
-        panel.add(label, "1, 2, left, center");
+        lblContactProbeActuator = new JLabel("Contact Probe Actuator");
+        panel.add(lblContactProbeActuator, "1, 2, left, center");
         
-        contactProbeActuatorNameTf = new JTextField();
-        panel.add(contactProbeActuatorNameTf, "2, 2, left, top");
-        contactProbeActuatorNameTf.setColumns(10);
+        comboBoxContactProbeActuator = new JComboBox();
+        comboBoxContactProbeActuator.setModel(new ActuatorsComboBoxModel((AbstractModelObject)nozzle.getHead()));
+        panel.add(comboBoxContactProbeActuator, "2, 2, default, top");
         
         lblProbeOffset = new JLabel("Probe Offset");
         panel.add(lblProbeOffset, "1, 4, right, default");
@@ -93,11 +96,10 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
         LengthConverter lengthConverter = new LengthConverter();
         IntegerConverter intConverter = new IntegerConverter();
 
-        addWrappedBinding(nozzle, "contactProbeActuatorName", contactProbeActuatorNameTf, "text");
+        addWrappedBinding(nozzle, "contactProbeActuatorName", comboBoxContactProbeActuator, "selectedItem");
         addWrappedBinding(nozzle, "probeOffset", textFieldProbeOffset,
                 "text", lengthConverter);
 
-        ComponentDecorators.decorateWithAutoSelect(contactProbeActuatorNameTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldProbeOffset);
     }
 }

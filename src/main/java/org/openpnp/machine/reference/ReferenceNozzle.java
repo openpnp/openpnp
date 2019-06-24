@@ -27,6 +27,7 @@ import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzle;
@@ -129,36 +130,34 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         return nozzleTip;
     }
 
-    @Override
-    public void moveToPickLocation(Feeder feeder) throws Exception {
-        Location location = feeder.getPickLocation();
-        try {
-            Map<String, Object> globals = new HashMap<>();
-            globals.put("nozzle", this);
-            globals.put("feeder", feeder);
-            globals.put("location", location);
-            Configuration.get().getScripting().on("Nozzle.MoveToPickLocation", globals);
-        }
-        catch (Exception e) {
-            Logger.warn(e);
-        }
-
+    protected void moveToPickLocation(Feeder feeder, Location location) throws Exception {
         MovableUtils.moveToLocationAtSafeZ(this, location);
     }
 
+    protected void retractFromPickLocation(Feeder feeder, Location location) throws Exception {
+        moveToSafeZ();
+    }
+
     @Override
-    public void pick(Part part) throws Exception {
+    public void pick(Feeder feeder) throws Exception {
         Logger.debug("{}.pick()", getName());
+        Part part = feeder.getPart();
+        Location location = feeder.getPickLocation();
         if (part == null) {
             throw new Exception("Can't pick null part");
         }
         if (nozzleTip == null) {
             throw new Exception("Can't pick, no nozzle tip loaded");
         }
-        
+
+        moveToPickLocation(feeder, location);
+
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
+            globals.put("feeder", feeder);
+            globals.put("part", part);
+            globals.put("location", location);
             Configuration.get().getScripting().on("Nozzle.BeforePick", globals);
         }
         catch (Exception e) {
@@ -166,60 +165,57 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
         
         this.part = part;
-        getDriver().pick(this);
-        if (isVaccumActuatorEnabled()) {
-            actuateVacuumValve(true);
-        }
+        actuateVacuumValve(true);
+
         getMachine().fireMachineHeadActivity(head);
         
         // Dwell Time
         Thread.sleep(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
-        
+
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
+            globals.put("feeder", feeder);
+            globals.put("part", part);
+            globals.put("location", location);
             Configuration.get().getScripting().on("Nozzle.AfterPick", globals);
         }
         catch (Exception e) {
             Logger.warn(e);
         }
+
+        retractFromPickLocation(feeder, location);
     }
 
-    @Override
-    public void moveToPlacementLocation(Location location) throws Exception {
-        try {
-            Map<String, Object> globals = new HashMap<>();
-            globals.put("nozzle", this);
-            globals.put("location", location);
-            Configuration.get().getScripting().on("Nozzle.MoveToPlacementLocation", globals);
-        }
-        catch (Exception e) {
-            Logger.warn(e);
-        }
-
+    protected void moveToPlacementLocation(Location location) throws Exception {
         MovableUtils.moveToLocationAtSafeZ(this, location);
     }
 
+    protected void retractFromPlacementLocation(Location location) throws Exception {
+        moveToSafeZ();
+    }
+
     @Override
-    public void place() throws Exception {
+    public void place(Location location) throws Exception {
         Logger.debug("{}.place()", getName());
         if (nozzleTip == null) {
             throw new Exception("Can't place, no nozzle tip loaded");
         }
-        
+
+        moveToPlacementLocation(location);
+
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
+            globals.put("location", location);
             Configuration.get().getScripting().on("Nozzle.BeforePlace", globals);
         }
         catch (Exception e) {
             Logger.warn(e);
         }
-        
-        getDriver().place(this);
-        if (isVaccumActuatorEnabled()) {
-            actuateVacuumValve(false);
-        }
+
+        actuateVacuumValve(false);
+
         this.part = null;
         getMachine().fireMachineHeadActivity(head);
         
@@ -229,11 +225,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
+            globals.put("location", location);
             Configuration.get().getScripting().on("Nozzle.AfterPlace", globals);
         }
         catch (Exception e) {
             Logger.warn(e);
         }
+
+        retractFromPlacementLocation(location);
     }
     
     private ReferenceNozzleTip getUnloadedNozzleTipStandin() {
@@ -651,8 +650,32 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         return actuator;
     }
     
+    protected boolean hasPartOnAnyOtherNozzle() {
+        for (Nozzle nozzle : getHead().getNozzles()) {
+            if (nozzle != this ) {
+                if (nozzle.getPart() != null) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
     protected void actuateVacuumValve(boolean on) throws Exception {
+        Actuator pump = getHead().getPump();
+        if (pump != null && on) {
+            if (! hasPartOnAnyOtherNozzle()) {
+                pump.actuate(true);
+            }
+        }
+
         getVacuumActuator().actuate(on);
+
+        if (pump != null && !on) {
+            if (! hasPartOnAnyOtherNozzle()) {
+                pump.actuate(false); 
+            }
+        }
     }
 
     protected double readVacuumLevel() throws Exception {
@@ -668,8 +691,18 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public boolean isPartOff() throws Exception {
-        ReferenceNozzleTip nt = getNozzleTip();
-        double vacuumLevel = readVacuumLevel();
-        return vacuumLevel >= nt.getVacuumLevelPartOffLow() && vacuumLevel <= nt.getVacuumLevelPartOffHigh();
+        try {
+            // switch vacuum on for the test
+            actuateVacuumValve(true);
+            // Dwell Time
+            Thread.sleep(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
+            // read the vacuum level. 
+            double vacuumLevel = readVacuumLevel();
+            ReferenceNozzleTip nt = getNozzleTip();
+            return vacuumLevel >= nt.getVacuumLevelPartOffLow() && vacuumLevel <= nt.getVacuumLevelPartOffHigh();
+        }
+        finally {
+            actuateVacuumValve(false);
+        }
     }
 }

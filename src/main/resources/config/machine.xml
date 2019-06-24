@@ -5,6 +5,7 @@
             <nozzles>
                <nozzle class="org.openpnp.machine.reference.ReferenceNozzle" id="N1" name="N1" pick-dwell-milliseconds="0" place-dwell-milliseconds="0" current-nozzle-tip-id="NT1" changer-enabled="false">
                   <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+				<vacuum-sense-actuator-name>A1</vacuum-sense-actuator-name>
 				<compatible-nozzle-tip-ids class="java.util.ArrayList">
 					<string>NT1</string>
 				</compatible-nozzle-tip-ids>

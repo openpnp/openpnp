@@ -561,25 +561,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void pick(ReferenceNozzle nozzle) throws Exception {
-        pickedNozzles.add(nozzle);
-        if (pickedNozzles.size() > 0) {
-            // TODO STOPSHIP turn on pump
-        }
-        // TODO STOPSHIP send pick
-    }
-
-    @Override
-    public void place(ReferenceNozzle nozzle) throws Exception {
-        // TODO STOPSHIP send place
-        
-        pickedNozzles.remove(nozzle);
-        if (pickedNozzles.size() < 1) {
-            // TODO STOPSHIP turn off pump
-        }
-    }
-
-    @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
         // TODO STOPSHIP actuate
     }
