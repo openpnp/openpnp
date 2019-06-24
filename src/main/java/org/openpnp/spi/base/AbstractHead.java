@@ -102,6 +102,9 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     @Override
     public Actuator getActuatorByName(String name) {
+        if (name == null || name.isEmpty()) {
+            return null;
+        }
         for (Actuator actuator : actuators) {
             if (actuator.getName().equals(name)) {
                 return actuator;

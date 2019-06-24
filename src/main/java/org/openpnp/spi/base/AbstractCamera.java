@@ -221,7 +221,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                     lightActuator.actuate(true);
                 }
                 catch (Exception e) {
-                    Logger.error(e);
+                    Logger.warn(e);
                 }
             }
     	
@@ -244,7 +244,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                     lightActuator.actuate(false);
                 }
                 catch (Exception e) {
-                    Logger.error(e);
+                    Logger.warn(e);
                 }
             }
         }
@@ -266,7 +266,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
 
     public Actuator getLightActuator() {
         if (getHead() == null) {
-            return getHead().getMachine().getActuatorByName(lightActuatorName);
+            return Configuration.get().getMachine().getActuatorByName(lightActuatorName);
         }
         return getHead().getActuatorByName(lightActuatorName);
     }
