@@ -32,6 +32,7 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder.ActuatorType;
@@ -49,9 +50,9 @@ import javax.swing.JComboBox;
 public class ReferenceAutoFeederConfigurationWizard
         extends AbstractReferenceFeederConfigurationWizard {
     private final ReferenceAutoFeeder feeder;
-    private JTextField actuatorName;
+    private JComboBox comboBoxFeedActuator;
     private JTextField actuatorValue;
-    private JTextField postPickActuatorName;
+    private JComboBox comboBoxPostPickActuator;
     private JTextField postPickActuatorValue;
     private JComboBox actuatorType;
     private JComboBox postPickActuatorType;
@@ -70,7 +71,7 @@ public class ReferenceAutoFeederConfigurationWizard
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -87,8 +88,8 @@ public class ReferenceAutoFeederConfigurationWizard
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblActuatorName = new JLabel("Actuator Name");
-        panelActuator.add(lblActuatorName, "4, 2, left, default");
+        JLabel lblActuator = new JLabel("Actuator");
+        panelActuator.add(lblActuator, "4, 2, left, default");
 
         JLabel lblActuatorType = new JLabel("Actuator Type");
         panelActuator.add(lblActuatorType, "6, 2, left, default");
@@ -98,10 +99,10 @@ public class ReferenceAutoFeederConfigurationWizard
 
         JLabel lblFeed = new JLabel("Feed");
         panelActuator.add(lblFeed, "2, 4, right, default");
-
-        actuatorName = new JTextField();
-        panelActuator.add(actuatorName, "4, 4");
-        actuatorName.setColumns(10);
+        
+        comboBoxFeedActuator = new JComboBox();
+        comboBoxFeedActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        panelActuator.add(comboBoxFeedActuator, "4, 4, fill, default");
         
         actuatorType = new JComboBox(ActuatorType.values());
         panelActuator.add(actuatorType, "6, 4, fill, default");
@@ -118,10 +119,10 @@ public class ReferenceAutoFeederConfigurationWizard
 
         JLabel lblPostPick = new JLabel("Post Pick");
         panelActuator.add(lblPostPick, "2, 6, right, default");
-
-        postPickActuatorName = new JTextField();
-        postPickActuatorName.setColumns(10);
-        panelActuator.add(postPickActuatorName, "4, 6");
+        
+        comboBoxPostPickActuator = new JComboBox();
+        comboBoxPostPickActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        panelActuator.add(comboBoxPostPickActuator, "4, 6, fill, default");
         
         postPickActuatorType = new JComboBox(ActuatorType.values());
         panelActuator.add(postPickActuatorType, "6, 6, fill, default");
@@ -144,17 +145,15 @@ public class ReferenceAutoFeederConfigurationWizard
         DoubleConverter doubleConverter =
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
-        addWrappedBinding(feeder, "actuatorName", actuatorName, "text");
+        addWrappedBinding(feeder, "actuatorName", comboBoxFeedActuator, "selectedItem");
         addWrappedBinding(feeder, "actuatorType", actuatorType, "selectedItem");
         addWrappedBinding(feeder, "actuatorValue", actuatorValue, "text", doubleConverter);
         
-        addWrappedBinding(feeder, "postPickActuatorName", postPickActuatorName, "text");
+        addWrappedBinding(feeder, "postPickActuatorName", comboBoxPostPickActuator, "selectedItem");
         addWrappedBinding(feeder, "postPickActuatorType", postPickActuatorType, "selectedItem");
         addWrappedBinding(feeder, "postPickActuatorValue", postPickActuatorValue, "text", doubleConverter);
         
-        ComponentDecorators.decorateWithAutoSelect(actuatorName);
         ComponentDecorators.decorateWithAutoSelect(actuatorValue);
-        ComponentDecorators.decorateWithAutoSelect(postPickActuatorName);
         ComponentDecorators.decorateWithAutoSelect(postPickActuatorValue);
     }
 

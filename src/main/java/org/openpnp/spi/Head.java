@@ -63,6 +63,13 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
      */
     public Actuator getActuator(String id);
 
+    /**
+     * Get the Actuator attached to this Head that has the specified name.
+     * Returns null if the name is null or empty.
+     * 
+     * @param id
+     * @return
+     */
     public Actuator getActuatorByName(String name);
 
     /**

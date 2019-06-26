@@ -80,7 +80,7 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
         panel.add(lblContactProbeActuator, "1, 2, left, center");
         
         comboBoxContactProbeActuator = new JComboBox();
-        comboBoxContactProbeActuator.setModel(new ActuatorsComboBoxModel((AbstractModelObject)nozzle.getHead()));
+        comboBoxContactProbeActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
         panel.add(comboBoxContactProbeActuator, "2, 2, default, top");
         
         lblProbeOffset = new JLabel("Probe Offset");

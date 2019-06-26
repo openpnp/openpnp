@@ -40,21 +40,21 @@ public class ActuatorsComboBoxModel extends DefaultComboBoxModel implements Prop
             return o1.getName().compareTo(o2.getName());
         }
     };
-    private AbstractModelObject object;
+    private AbstractModelObject actuatorsBase;
     
-    public ActuatorsComboBoxModel(AbstractModelObject object) {
-        this.object = object;
+    public ActuatorsComboBoxModel(Object object) {
+        this.actuatorsBase = (AbstractModelObject)object;
         addAllElements();
-        object.addPropertyChangeListener("actuators", this);
+        this.actuatorsBase.addPropertyChangeListener("actuators", this);
     }
 
     private void addAllElements() {
         ArrayList<Actuator> actuators = null;
-        if (object instanceof Machine) {
-             actuators = new ArrayList<>(((Machine)object).getActuators());
+        if (actuatorsBase instanceof Machine) {
+             actuators = new ArrayList<>(((Machine)actuatorsBase).getActuators());
         }
-        if (object instanceof Head) {
-            actuators = new ArrayList<>(((Head)object).getActuators());
+        if (actuatorsBase instanceof Head) {
+            actuators = new ArrayList<>(((Head)actuatorsBase).getActuators());
         }
         Collections.sort(actuators, comparator);
         for (Actuator actuator : actuators) {
