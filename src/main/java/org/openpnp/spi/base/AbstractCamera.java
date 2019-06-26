@@ -21,7 +21,6 @@ import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
@@ -49,9 +48,6 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
 
     @Attribute(required = false)
     protected long settleTimeMs = 250;
-
-    @Attribute(required = false)
-    protected String lightActuatorName;
 
     protected Set<ListenerEntry> listeners = Collections.synchronizedSet(new HashSet<>());
 
@@ -213,40 +209,19 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         catch (Exception e) {
             Logger.warn(e);
         }
-
-        Actuator lightActuator = getLightActuator();
-        try {
-            if (lightActuator != null) {
-                try {
-                    lightActuator.actuate(true);
-                }
-                catch (Exception e) {
-                    Logger.warn(e);
-                }
-            }
+        
     	
-            if (getSettleTimeMs() >= 0) {
-                try {
-                    Thread.sleep(getSettleTimeMs());
-                }
-                catch (Exception e) {
-    
-                }
-                return capture();
+        if (getSettleTimeMs() >= 0) {
+            try {
+                Thread.sleep(getSettleTimeMs());
             }
-            else {
-                return autoSettleAndCapture();
+            catch (Exception e) {
+
             }
+            return capture();
         }
-        finally {
-            if (lightActuator != null) {
-                try {
-                    lightActuator.actuate(false);
-                }
-                catch (Exception e) {
-                    Logger.warn(e);
-                }
-            }
+        else {
+            return autoSettleAndCapture();
         }
     }
 
@@ -262,21 +237,6 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
 
     public void setSettleTimeMs(long settleTimeMs) {
         this.settleTimeMs = settleTimeMs;
-    }
-
-    public Actuator getLightActuator() {
-        if (getHead() == null) {
-            return Configuration.get().getMachine().getActuatorByName(lightActuatorName);
-        }
-        return getHead().getActuatorByName(lightActuatorName);
-    }
-
-    public String getLightActuatorName() {
-        return lightActuatorName;
-    }
-
-    public void setLightActuatorName(String lightActuatorName) {
-        this.lightActuatorName = lightActuatorName;
     }
 
     @Override
