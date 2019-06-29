@@ -1,5 +1,8 @@
 package org.openpnp.spi.base;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
@@ -9,6 +12,7 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PnpJobProcessor;
 import org.openpnp.util.MovableUtils;
+import org.pmw.tinylog.Logger;
 
 public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
         implements PnpJobProcessor {
@@ -38,8 +42,14 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
             // discard the part
             nozzle.place();
             nozzle.moveToSafeZ();
-            
-            
+            try {
+                Map<String, Object> globals = new HashMap<>();
+                globals.put("nozzle", nozzle);
+                Configuration.get().getScripting().on("Job.AfterDiscard", globals);
+            }
+            catch (Exception e) {
+                Logger.warn(e);
+            }
         }
         catch (Exception e) {
             throw new JobProcessorException(nozzle, e);
