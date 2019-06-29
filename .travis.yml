@@ -5,8 +5,10 @@ dist: trusty
 jdk:
 - oraclejdk8
 - oraclejdk9
+- openjdk8
+- openjdk9
+- openjdk10
 - openjdk11
-- openjdk12
   
 env:
   global:
