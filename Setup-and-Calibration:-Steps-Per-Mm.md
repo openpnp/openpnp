@@ -1,6 +1,6 @@
 # Steps Per Mm
 
-Now that you can move the machine around and you have a camera it's a good time to check that your controller is moving the right amount when you tell it to. This is often part of your "steps per mm" configuration in most controllers. The way that you set this will be dependent on your controller, and you should check the instructions for the controller for more information.
+Now that you can move the machine around and you have a camera it's a good time to check that your controller is moving the right amount when you tell it to. This is often part of your "steps per mm" configuration in most controllers. The way that you set this will be dependent on your controller, and you should check the instructions for the controller for more information. This setting is usually not configured from within OpenPnP, but it is possible to set this value for some controllers (for example, using an M92 command with the GcodeDriver as part of the homing command process).
 
 ## Testing Steps Per Mm
 
