@@ -67,7 +67,7 @@ public class ReferenceNozzlePartDetectionWizard extends AbstractConfigurationWiz
         panel.add(label, "1, 2, right, center");
         
         comboBoxActuator = new JComboBox();
-        comboBoxActuator.setModel(new ActuatorsComboBoxModel((AbstractModelObject)nozzle.getHead()));
+        comboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
         panel.add(comboBoxActuator, "2, 2");
     }
 
