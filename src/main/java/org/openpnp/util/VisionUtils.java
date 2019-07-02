@@ -17,6 +17,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
+import org.openpnp.spi.PartAlignment.PartAlignmentOffset;
 import org.pmw.tinylog.Logger;
 
 import com.google.zxing.BinaryBitmap;
@@ -212,14 +213,17 @@ public class VisionUtils {
         catch (Exception e) {
             Logger.warn(e);
         }
+        PartAlignmentOffset offsets = null;
         try {
-            return p.findOffsets(part, boardLocation, placementLocation, nozzle);
+            offsets = p.findOffsets(part, boardLocation, placementLocation, nozzle);
+            return offsets;
         }
         finally {
             try {
                 Map<String, Object> globals = new HashMap<>();
                 globals.put("part", part);
                 globals.put("nozzle", nozzle);
+                globals.put("offsets", offsets);
                 Configuration.get().getScripting().on("Vision.PartAlignment.After", globals);
             }
             catch (Exception e) {

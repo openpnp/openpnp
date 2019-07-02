@@ -378,6 +378,11 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             throw new Exception("Can't load incompatible nozzle tip.");
         }
         
+        if (nt.getNozzleAttachedTo() != null) {
+            // Nozzle tip is on different nozzle - unload it from there first.  
+            nt.getNozzleAttachedTo().unloadNozzleTip();
+        }
+        
         if (changerEnabled) {
             unloadNozzleTip();
             if (!nt.isUnloadedNozzleTipStandin()) {

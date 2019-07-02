@@ -127,6 +127,7 @@ public class MachineControlsPanel extends JPanel {
     }
 
     public void setSelectedTool(HeadMountable hm) {
+        HeadMountable oldValue = selectedTool;
         selectedTool = hm;
         for (int i = 0; i < comboBoxHeadMountable.getItemCount(); i++) {
             HeadMountableItem item = (HeadMountableItem) comboBoxHeadMountable.getItemAt(i); 
@@ -136,6 +137,9 @@ public class MachineControlsPanel extends JPanel {
             }
         }
         updateDros();
+        if (oldValue != hm) {
+            firePropertyChange("selectedTool", oldValue, hm);
+        }
     }
 
     public JogControlsPanel getJogControlsPanel() {
