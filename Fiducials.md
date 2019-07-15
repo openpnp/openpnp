@@ -6,7 +6,9 @@ Fiducials are typically created by leaving a blank spot of copper on the PCB sur
 
 ## Fiducials in OpenPnP
 
-OpenPnP can use 2 or 3 fiducials to detect the position of a PCB on the bed of the machine. This allows for automated, accurate, board locating either during job setup or during job run. When 2 fiducials are detected OpenPnP can determine the position and rotation of the PCB. If 3 or more are detected, the best 3 will be used to determine the position, rotation, scale, and shear of the PCB. Using 3 or more will generally produce better results than just 2.
+OpenPnP can use 2 or 3 fiducials to detect the position of a PCB on the bed of the machine. This allows for automated, accurate, board locating either during job setup or during job run.
+
+When 2 fiducials are detected OpenPnP can determine the position and rotation of the PCB. If 3 or more are detected, the best 3 will be used to determine the position, rotation, scale, and shear of the PCB. Using 3 or more will generally produce better results than just 2.
 
 A fiducial in OpenPnP is defined by a package with a footprint that specifies what the fiducial looks like. For instance, a 1mm round fiducial is simply a footprint containing a 1x1mm pad with 100% roundness.
 
