@@ -72,7 +72,7 @@ For archival purposes, the driver section from sebastian's machine.xml is reprod
       <text><![CDATA[G92 X0 Y0 Z0]]></text>
    </command>
    <command type="COMMAND_CONFIRM_REGEX">
-      <text><![CDATA[.*ok&gt;.*]]></text>
+      <text><![CDATA[.*ok>.*]]></text>
    </command>
    <command type="MOVE_TO_COMPLETE_REGEX">
       <text><![CDATA[.*stat:3.*]]></text>
