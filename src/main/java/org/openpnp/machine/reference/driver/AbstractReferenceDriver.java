@@ -265,8 +265,15 @@ public abstract class AbstractReferenceDriver extends AbstractModelObject implem
                   if (i<len) {
                        c = s.charAt(i++);
                        if ((c == 'u') || (c == 'U')) {
-                            c = (char) Integer.parseInt(s.substring(i,i+4),16);
-                            i += 4;
+                          try {
+                               c = (char) Integer.parseInt(s.substring(i,i+4),16);
+                               i += 4;
+                          }
+                          catch (Exception e) {
+                              //the escaped unicode character doesn't have the correct form (four hexidecimal digits) so just pass it along
+                              //as a string
+                              sb.append('\\');
+                          }
                        }
                        else if ((c == 't') || (c == 'T')) {
                            c = 0x0009; //unicode tab
