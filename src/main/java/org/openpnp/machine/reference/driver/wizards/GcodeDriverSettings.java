@@ -144,16 +144,16 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         visualHoming = new JCheckBox("");
         settingsPanel.add(visualHoming, "8, 10");
         
-        JLabel lblBackslashEscapedCharacters = new JLabel("Allow Backslash Escaped Characters");
-        lblBackslashEscapedCharacters.setToolTipText("Allows inserting unicode characters into Gcode strings as \\uxxxx "
+        JLabel lblBackslashEscapedCharacters = new JLabel("Backslash Escaped Characters");
+        lblBackslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
-                + "feed, \\r for carriage return, and \\f, for form feed.");
+                + "feed, \\r for carriage return, and \\f for form feed.");
         settingsPanel.add(lblBackslashEscapedCharacters, "2, 12, right, default");
         
         backslashEscapedCharacters = new JCheckBox("");
-        backslashEscapedCharacters.setToolTipText("Allows inserting unicode characters into Gcode strings as \\uxxxx "
+        backslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
-                + "feed, \\r for carriage return, and \\f, for form feed.");
+                + "feed, \\r for carriage return, and \\f for form feed.");
         settingsPanel.add(backslashEscapedCharacters, "4, 12");
     }
 
