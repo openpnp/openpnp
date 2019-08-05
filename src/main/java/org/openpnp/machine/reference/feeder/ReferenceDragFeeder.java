@@ -227,7 +227,8 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
             // if possible, confirm drag pin retraction
             if (pinReturnActuatorValue.length() > 0) {
 
-                if (dragPinActuator.read() != pinReturnActuatorValue) {
+                if (!dragPinActuator.read()
+                                    .equals(pinReturnActuatorValue)) {
                     // if we're here then the pin is stuck, so what follows tries to back off a
                     // second
                     // time by the same amount to try to get the pin free from binding
@@ -244,7 +245,8 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
                     dragPinActuator.actuate(false);
                 }
 
-                if (dragPinActuator.read() != pinReturnActuatorValue) {
+                if (!dragPinActuator.read()
+                                    .equals(pinReturnActuatorValue)) {
                     throw new Exception("Unable to retract drag pin");
                 }
             }
