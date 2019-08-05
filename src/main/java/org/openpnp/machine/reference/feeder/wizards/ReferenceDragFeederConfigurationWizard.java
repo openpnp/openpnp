@@ -79,13 +79,13 @@ public class ReferenceDragFeederConfigurationWizard
     private JTextField textFieldFeedEndY;
     private JTextField textFieldFeedEndZ;
     private JTextField textFieldFeedRate;
-    private JLabel lblActuatorId;
-    private JLabel lblPeelOffActuatorId;
     private JLabel lbl0402PartDetected;
     private JTextField textFieldActuatorId;
     private JTextField textFieldPeelOffActuatorId;
+    private JTextField textFieldRetractActuatorValue;
     private JPanel panelGeneral;
     private JPanel panelVision;
+    private JPanel panelActuators;
     private JPanel panelLocations;
     private JCheckBox chckbxVisionEnabled;
     private JPanel panelVisionEnabled;
@@ -123,39 +123,88 @@ public class ReferenceDragFeederConfigurationWizard
                 TitledBorder.TOP, null, null));
 
         panelFields.add(panelGeneral);
-        panelGeneral.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("left:default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblFeedRate = new JLabel("Feed Speed %");
         panelGeneral.add(lblFeedRate, "2, 2");
-
+        
         textFieldFeedRate = new JTextField();
         panelGeneral.add(textFieldFeedRate, "4, 2");
         textFieldFeedRate.setColumns(5);
-
-        lblActuatorId = new JLabel("Actuator Name");
-        panelGeneral.add(lblActuatorId, "2, 4, right, default");
-
-        textFieldActuatorId = new JTextField();
-        panelGeneral.add(textFieldActuatorId, "4, 4");
-        textFieldActuatorId.setColumns(5);
-
-        lblPeelOffActuatorId = new JLabel("Peel Off Actuator Name");
-        panelGeneral.add(lblPeelOffActuatorId, "6, 4, right, default");
-
-        textFieldPeelOffActuatorId = new JTextField();
-        panelGeneral.add(textFieldPeelOffActuatorId, "8, 4");
-        textFieldPeelOffActuatorId.setColumns(5);
-
+        
         if (feeder.isPart0402()) {
 	        lbl0402PartDetected = new JLabel("0402 Part DETECTED");
 	        panelGeneral.add(lbl0402PartDetected, "6, 2");
         }
+        
+        panelActuators = new JPanel();
+        panelFields.add(panelActuators);
+        panelActuators.setBorder(new TitledBorder(null, "Actuators", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
+        panelActuators.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("left:default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+
+        JLabel lblDragPin = new JLabel("Drag Pin");
+        panelActuators.add(lblDragPin, "2, 2");
+
+        JLabel lblPinRetract = new JLabel("Pin Retracted Value");
+        panelActuators.add(lblPinRetract, "4, 2");
+        
+        JLabel lblPeelOff = new JLabel("Peel Off");
+        panelActuators.add(lblPeelOff, "6, 2");
+
+        textFieldActuatorId = new JTextField();
+        panelActuators.add(textFieldActuatorId, "2, 4");
+        textFieldActuatorId.setColumns(12);
+        
+        textFieldRetractActuatorValue = new JTextField();
+        panelActuators.add(textFieldRetractActuatorValue, "4, 4");
+        textFieldRetractActuatorValue.setColumns(12);
+
+        textFieldPeelOffActuatorId = new JTextField();
+        panelActuators.add(textFieldPeelOffActuatorId, "6, 4");
+        textFieldPeelOffActuatorId.setColumns(12);
 
         panelLocations = new JPanel();
         panelFields.add(panelLocations);
@@ -367,7 +416,8 @@ public class ReferenceDragFeederConfigurationWizard
         addWrappedBinding(feeder, "feedSpeed", textFieldFeedRate, "text", percentConverter);
         addWrappedBinding(feeder, "actuatorName", textFieldActuatorId, "text");
         addWrappedBinding(feeder, "peelOffActuatorName", textFieldPeelOffActuatorId, "text");
-
+        addWrappedBinding(feeder, "pinReturnActuatorValue", textFieldRetractActuatorValue, "text");
+        
         MutableLocationProxy feedStartLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "feedStartLocation", feedStartLocation, "location");
         addWrappedBinding(feedStartLocation, "lengthX", textFieldFeedStartX, "text",
@@ -400,6 +450,7 @@ public class ReferenceDragFeederConfigurationWizard
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedRate);
         ComponentDecorators.decorateWithAutoSelect(textFieldActuatorId);
         ComponentDecorators.decorateWithAutoSelect(textFieldPeelOffActuatorId);
+        ComponentDecorators.decorateWithAutoSelect(textFieldRetractActuatorValue);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartZ);
