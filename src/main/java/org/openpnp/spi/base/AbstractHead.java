@@ -38,8 +38,8 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     @Element(required = false)
     protected Location parkLocation = new Location(LengthUnit.Millimeters);
-    
-    @Element(required=false)
+
+    @Element(required = false)
     protected boolean softLimitsEnabled = false;
 
     @Element(required = false)
@@ -47,9 +47,12 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     @Element(required = false)
     protected Location maxLocation = new Location(LengthUnit.Millimeters);
-    
+
     @Element(required = false)
     protected String zProbeActuatorName;
+
+    @Element(required = false)
+    protected String zProbeActuatorSafeZValue;
 
     protected Machine machine;
 
@@ -100,7 +103,8 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     @Override
     public Actuator getActuatorByName(String name) {
         for (Actuator actuator : actuators) {
-            if (actuator.getName().equals(name)) {
+            if (actuator.getName()
+                        .equals(name)) {
                 return actuator;
             }
         }
@@ -172,6 +176,19 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
         }
         for (Actuator actuator : actuators) {
             actuator.moveToSafeZ(speed);
+        }
+        if (this.zProbeActuatorName.length() > 0 && this.zProbeActuatorSafeZValue.length() > 0) {
+            if (this.getZProbe() == null) {
+                throw new Exception(String.format("No Actuator found with name %s on Head %s",
+                        zProbeActuatorName, this.getName()));
+            }
+            String zProbeValue = this.getZProbe()
+                                     .read();
+            if (!zProbeValue.equals(zProbeActuatorSafeZValue)) {
+                throw new Exception(String.format(
+                        "Z Probe Actuator %s says Head %s is not at safe Z (probe is reading %s and not %s)",
+                        zProbeActuatorName, this.getName(), zProbeValue, zProbeActuatorSafeZValue));
+            }
         }
     }
 
@@ -258,7 +275,9 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
         for (Nozzle nozzle : getNozzles()) {
             if (nozzle.getPart() != null) {
-                speed = Math.min(nozzle.getPart().getSpeed(), speed);
+                speed = Math.min(nozzle.getPart()
+                                       .getSpeed(),
+                        speed);
             }
         }
 
@@ -288,10 +307,10 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     public void setSoftLimitsEnabled(boolean softLimitsEnabled) {
         this.softLimitsEnabled = softLimitsEnabled;
     }
-    
+
     @Override
     public Actuator getZProbe() {
-        return getActuatorByName(zProbeActuatorName); 
+        return getActuatorByName(zProbeActuatorName);
     }
 
     public String getzProbeActuatorName() {
@@ -300,5 +319,13 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     public void setzProbeActuatorName(String zProbeActuatorName) {
         this.zProbeActuatorName = zProbeActuatorName;
+    }
+
+    public String getzProbeActuatorSafeZValue() {
+        return zProbeActuatorSafeZValue;
+    }
+
+    public void setzProbeActuatorSafeZValue(String zProbeActuatorSafeZValue) {
+        this.zProbeActuatorSafeZValue = zProbeActuatorSafeZValue;
     }
 }

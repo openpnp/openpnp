@@ -19,6 +19,12 @@
 
 package org.openpnp.machine.reference.wizards;
 
+import java.awt.event.ActionEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -43,13 +49,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-
-import java.awt.event.ActionEvent;
-
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
 
 @SuppressWarnings("serial")
 public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizard {
@@ -164,25 +163,35 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
 
         softLimitsEnabled = new JCheckBox("Enabled?");
         panel_1.add(softLimitsEnabled, "2, 8, 7, 1");
-        
+
         JPanel panel_2 = new JPanel();
-        panel_2.setBorder(new TitledBorder(null, "Z Probe", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panel_2.setBorder(new TitledBorder(null, "Z Probe", TitledBorder.LEADING, TitledBorder.TOP,
+                null, null));
         contentPanel.add(panel_2);
-        panel_2.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-        
+        panel_2.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"),},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+
         JLabel lblNewLabel_4 = new JLabel("Z Probe Actuator Name");
         panel_2.add(lblNewLabel_4, "2, 2, right, default");
-        
+
         zProbeActuatorName = new JTextField();
         panel_2.add(zProbeActuatorName, "4, 2, fill, default");
         zProbeActuatorName.setColumns(15);
+
+        JLabel lblNewLabel_5 = new JLabel("Z Probe Safe Z Value");
+        panel_2.add(lblNewLabel_5, "2, 4, right, default");
+
+        zProbeActuatorSafeZValue = new JTextField();
+        panel_2.add(zProbeActuatorSafeZValue, "4, 4, fill, default");
     }
 
     @Override
@@ -207,6 +216,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         addWrappedBinding(head, "softLimitsEnabled", softLimitsEnabled, "selected");
 
         addWrappedBinding(head, "zProbeActuatorName", zProbeActuatorName, "text");
+        addWrappedBinding(head, "zProbeActuatorSafeZValue", zProbeActuatorSafeZValue, "text");
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(parkX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(parkY);
@@ -214,8 +224,9 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(minY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxY);
-        
+
         ComponentDecorators.decorateWithAutoSelect(zProbeActuatorName);
+        ComponentDecorators.decorateWithAutoSelect(zProbeActuatorSafeZValue);
     }
 
     private static Location getParsedLocation(JTextField textFieldX, JTextField textFieldY) {
@@ -342,4 +353,5 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
     private JTextField maxY;
     private JCheckBox softLimitsEnabled;
     private JTextField zProbeActuatorName;
+    private JTextField zProbeActuatorSafeZValue;
 }
