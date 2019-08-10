@@ -192,6 +192,21 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
 
         zProbeActuatorSafeZValue = new JTextField();
         panel_2.add(zProbeActuatorSafeZValue, "4, 4, fill, default");
+        zProbeActuatorSafeZValue.setColumns(15);
+
+        JLabel lblNewLabel_6 = new JLabel("Z Safe Check Actuator Name");
+        panel_2.add(lblNewLabel_6, "2, 6, right, default");
+
+        zSafeCheckActuatorName = new JTextField();
+        panel_2.add(zSafeCheckActuatorName, "4, 6, fill, default");
+        zSafeCheckActuatorName.setColumns(15);
+
+        JLabel lblNewLabel_7 = new JLabel("Z Safe Check Actuator Ok Value");
+        panel_2.add(lblNewLabel_7, "2, 8, right, default");
+
+        zSafeCheckActuatorOkValue = new JTextField();
+        panel_2.add(zSafeCheckActuatorOkValue, "4, 8, fill, default");
+        zSafeCheckActuatorOkValue.setColumns(15);
     }
 
     @Override
@@ -217,6 +232,8 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
 
         addWrappedBinding(head, "zProbeActuatorName", zProbeActuatorName, "text");
         addWrappedBinding(head, "zProbeActuatorSafeZValue", zProbeActuatorSafeZValue, "text");
+        addWrappedBinding(head, "zSafeCheckActuatorName", zSafeCheckActuatorName, "text");
+        addWrappedBinding(head, "zSafeCheckActuatorValue", zSafeCheckActuatorOkValue, "text");
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(parkX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(parkY);
@@ -227,6 +244,8 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
 
         ComponentDecorators.decorateWithAutoSelect(zProbeActuatorName);
         ComponentDecorators.decorateWithAutoSelect(zProbeActuatorSafeZValue);
+        ComponentDecorators.decorateWithAutoSelect(zSafeCheckActuatorName);
+        ComponentDecorators.decorateWithAutoSelect(zSafeCheckActuatorOkValue);
     }
 
     private static Location getParsedLocation(JTextField textFieldX, JTextField textFieldY) {
@@ -354,4 +373,6 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
     private JCheckBox softLimitsEnabled;
     private JTextField zProbeActuatorName;
     private JTextField zProbeActuatorSafeZValue;
+    private JTextField zSafeCheckActuatorName;
+    private JTextField zSafeCheckActuatorOkValue;
 }

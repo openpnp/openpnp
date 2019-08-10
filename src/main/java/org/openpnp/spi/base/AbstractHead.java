@@ -54,6 +54,12 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     @Element(required = false)
     protected String zProbeActuatorSafeZValue;
 
+    @Element(required = false)
+    protected String zSafeCheckActuatorName;
+
+    @Element(required = false)
+    protected String zSafeCheckActuatorOkValue;
+
     protected Machine machine;
 
     public AbstractHead() {
@@ -188,6 +194,21 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
                 throw new Exception(String.format(
                         "Z Probe Actuator %s says Head %s is not at safe Z (probe is reading %s and not %s)",
                         zProbeActuatorName, this.getName(), zProbeValue, zProbeActuatorSafeZValue));
+            }
+        }
+        if (this.zSafeCheckActuatorName.length() > 0
+                && this.zSafeCheckActuatorOkValue.length() > 0) {
+            Actuator zSafeCheckActuator = this.getActuatorByName(zSafeCheckActuatorName);
+            if (zSafeCheckActuator == null) {
+                throw new Exception(String.format("No Actuator found with name %s on Head %s",
+                        zSafeCheckActuatorName, this.getName()));
+            }
+            String actuatorValue = zSafeCheckActuator.read();
+            if (!actuatorValue.equals(zSafeCheckActuatorOkValue)) {
+                throw new Exception(String.format(
+                        "Z Probe Safe Check Actuator %s says Head %s is not at safe Z (probe is reading %s and not %s)",
+                        zSafeCheckActuatorName, this.getName(), actuatorValue,
+                        zSafeCheckActuatorOkValue));
             }
         }
     }
@@ -327,5 +348,21 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     public void setzProbeActuatorSafeZValue(String zProbeActuatorSafeZValue) {
         this.zProbeActuatorSafeZValue = zProbeActuatorSafeZValue;
+    }
+
+    public String getzSafeCheckActuatorName() {
+        return zSafeCheckActuatorName;
+    }
+
+    public void setzSafeCheckActuatorName(String zSafeCheckActuatorName) {
+        this.zSafeCheckActuatorName = zSafeCheckActuatorName;
+    }
+
+    public String getzSafeCheckActuatorValue() {
+        return zSafeCheckActuatorOkValue;
+    }
+
+    public void setzSafeCheckActuatorValue(String zSafeCheckActuatorValue) {
+        this.zSafeCheckActuatorOkValue = zSafeCheckActuatorValue;
     }
 }
