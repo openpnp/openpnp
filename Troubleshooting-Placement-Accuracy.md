@@ -25,7 +25,7 @@ If you see off angle components also with smaller parts consider enabling Bottom
 If you rotate the nozzle while it is in view of the bottom vision camera and you notice the nozzle center is moving away from the center-crosshair then your nozzle suffers from runout. Mispicks and parts placed with an offset may occur.
 
 Possible solutions to solve this are:
-* Setup the [runout compensation feature](https://github.com/openpnp/openpnp/wiki/Runout-Compensation-Setup).
+* Setup the [runout compensation feature](https://github.com/openpnp/openpnp/wiki/Nozzle-Tip-Calibration-Setup).
 * Consider enabling Bottom-Vision Pre-Rotation (every component is rotated to the desired placement rotation angle in bottom vision) by setting the checkbox in Machine Setup -> Vision -> Bottom Vision -> Rotate parts prior to vision?
 
 Note that C axis in most machines cannot be homed so nozzle runout will affect the nozzle rotation/position being different every time the machine is turned on. A manual workaround here is to mark the nozzle with a label on one side and make sure it is oriented the same way every time the machine is turned on and homed.
