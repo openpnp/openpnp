@@ -62,14 +62,18 @@ This command has special handling for the X, Y, Z and Rotation variables. If the
 | Z              | Double   | The calculated Z position for the move. |
 | Rotation       | Double   | The calculated C or Rotation position for the move in deg. |
 | FeedRate       | Double   | The calculated feed rate for the move. |
+| XF             | Double   | Forced X position for the move, even if there is no change. |
+| YF             | Double   | Forced Y position for the move, even if there is no change.  |
+| ZF             | Double   | Forced Z position for the move, even if there is no change.  |
+| RotationF      | Double   | Forced C or Rotation position for the move in deg, even if there is no change. |
 | XIncreasing    | Boolean  | Sent only if the move includes an X component and the value is increasing. |
-| XIncreasing    | Boolean  | Sent only if the move includes an X component and the value is increasing. |
+| XDecreasing    | Boolean  | Sent only if the move includes an X component and the value is decreasing. |
 | YIncreasing    | Boolean  | Sent only if the move includes an Y component and the value is increasing. |
-| YIncreasing    | Boolean  | Sent only if the move includes an Y component and the value is increasing. |
+| YDecreasing    | Boolean  | Sent only if the move includes an Y component and the value is decreasing. |
 | ZIncreasing    | Boolean  | Sent only if the move includes an Z component and the value is increasing. |
-| ZIncreasing    | Boolean  | Sent only if the move includes an Z component and the value is increasing. |
+| ZDecreasing    | Boolean  | Sent only if the move includes an Z component and the value is decreasing. |
 | RotationIncreasing    | Boolean  | Sent only if the move includes an Rotation component and the value is increasing. |
-| RotationIncreasing    | Boolean  | Sent only if the move includes an Rotation component and the value is increasing. |
+| RotationDecreasing    | Boolean  | Sent only if the move includes an Rotation component and the value is decreasing. |
 
 Example:
 ```
