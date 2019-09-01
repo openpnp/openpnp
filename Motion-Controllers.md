@@ -36,6 +36,8 @@ Note that MKS Smoothie clones are **not recommended**. See [this FAQ](http://smo
 
 There is a common style of pick and place often referred to as "Peter's Head". This style of head has one Z axis motor which uses belts or gears to drive two nozzles. Due to the complex homing operation required for this type of head, you may need to use the modified Smoothie firmware found [here](https://github.com/openpnp/Smoothieware) if you have this style of head.
 
+A new version, based on the latest Smoothieware version (edge) was created [here](https://github.com/Smoothieware/Smoothieware/pull/1423), but is still in testing (help wanted).
+
 # Other Options
 
 In general, any motion controller that can accept GCode commands for movement and output control will work with OpenPnP. You can even use other protocols than GCode if you are feeling adventurous.
