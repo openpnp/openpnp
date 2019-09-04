@@ -69,10 +69,7 @@ public class SetColor extends CvStage {
 				   parameters as the originating camera image. */
         BufferedImage i = OpenCvUtils.toBufferedImage(mat);
         mat.release();
-				Logger.trace("IMG " + i.getWidth() + " " + i.getHeight());
 				BufferedImage image = i.getSubimage(0, 0, camera.getCaptureWidth(), camera.getCaptureHeight());
-				Logger.trace("CAM " + camera.getWidth() + " " + camera.getHeight());
-				Logger.trace("IMG " + image.getWidth() + " " + image.getHeight());
 
         /* Apply camera transformation to solid block.
            We now have an image of just the camera transformation. */
