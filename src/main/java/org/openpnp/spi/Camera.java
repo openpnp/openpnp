@@ -58,7 +58,7 @@ public interface Camera extends HeadMountable, WizardConfigurable,
      *
      * @return
      */
-    public BufferedImage transformImage(BufferedImage image);
+    public BufferedImage camTransformImage(BufferedImage image);
 
    
     /**
@@ -112,6 +112,20 @@ public interface Camera extends HeadMountable, WizardConfigurable,
      * @return
      */
     public int getHeight();
+
+    /**
+     * Get the original capture width of image in pixels.
+     * 
+     * @return
+     */
+    public int getCaptureWidth();
+
+    /**
+     * Get the original capture height of images in pixels.
+     * 
+     * @return
+     */
+    public int getCaptureHeight();
 
     /**
      * Get the time in milliseconds that the Camera should be allowed to settle before images are

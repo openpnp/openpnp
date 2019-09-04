@@ -56,7 +56,11 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
 
     protected Integer height;
     
-    private boolean headSet = false;
+    protected Integer captureWidth;
+
+    protected Integer captureHeight;
+
+     private boolean headSet = false;
     
     private Mat lastSettleMat = null;
 
