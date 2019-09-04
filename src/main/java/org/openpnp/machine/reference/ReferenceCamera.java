@@ -304,7 +304,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         this.deinterlace = deinterlace;
     }
 
-    protected BufferedImage transformImage(BufferedImage image) {
+    public BufferedImage transformImage(BufferedImage image) {
         Mat mat = OpenCvUtils.toMat(image);
 
         mat = crop(mat);

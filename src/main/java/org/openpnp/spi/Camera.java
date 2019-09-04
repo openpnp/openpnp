@@ -52,7 +52,15 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     public Location getUnitsPerPixel();
 
     public void setUnitsPerPixel(Location unitsPerPixel);
-    
+     
+    /**
+     * Applies the camera's active transformation to any compatible image.
+     *
+     * @return
+     */
+    public BufferedImage transformImage(BufferedImage image);
+
+   
     /**
      * Immediately captures an image from the camera and returns it in it's native format. Fires
      * the Camera.BeforeCapture and Camera.AfterCapture scripting events before and after.
