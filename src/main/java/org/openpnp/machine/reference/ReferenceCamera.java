@@ -196,6 +196,26 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         }
         return height;
     }
+ 
+    @Override
+    public synchronized int getCaptureWidth() {
+        if (captureWidth == null) {
+            BufferedImage image = safeInternalCapture();
+            width = image.getWidth();
+            height = image.getHeight();
+        }
+        return captureWidth;
+    }
+
+    @Override
+    public synchronized int getCaptureHeight() {
+        if (captureHeight == null) {
+            BufferedImage image = safeInternalCapture();
+            width = image.getWidth();
+            height = image.getHeight();
+        }
+        return captureHeight;
+    }
 
     @Override
     public Location getHeadOffsets() {
@@ -304,9 +324,16 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         this.deinterlace = deinterlace;
     }
 
-    public BufferedImage transformImage(BufferedImage image) {
+    public BufferedImage camTransformImage(BufferedImage image) {
         Mat mat = OpenCvUtils.toMat(image);
+				mat = transformMat(mat);
 
+        image = OpenCvUtils.toBufferedImage(mat);
+        mat.release();
+        return image;
+		}
+
+    private Mat transformMat(Mat mat) {
         mat = crop(mat);
 
         mat = calibrate(mat);
@@ -333,9 +360,23 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             Core.flip(mat, mat, flipCode);
         }
 
-        image = OpenCvUtils.toBufferedImage(mat);
-        mat.release();
-        return image;
+				return mat;
+		}
+
+    protected BufferedImage transformImage(BufferedImage image) {
+				/* transformImage is a utility function called by descendant
+					 classes when the capture an image; we can be sure this image
+					 comes from capture data.
+
+					 Record the pretransform size. */
+        if (captureWidth == null || captureWidth != image.getWidth()) {
+					captureWidth = image.getWidth();
+				}
+        if (captureHeight == null || captureHeight != image.getHeight()) {
+					captureHeight = image.getHeight();
+				}
+
+				return camTransformImage(image);
     }
 
     private Mat crop(Mat mat) {
