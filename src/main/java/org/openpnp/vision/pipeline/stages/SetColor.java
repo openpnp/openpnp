@@ -12,6 +12,7 @@ import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Stage;
 import org.openpnp.vision.pipeline.Property;
 import org.openpnp.vision.pipeline.stages.convert.ColorConverter;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.convert.Convert;
 
@@ -44,15 +45,18 @@ public class SetColor extends CvStage {
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         /* Create a solid block of color to use as basis
-           for transform. */
+           for transform.
+
+					 If we perform a transform, we must use the pretransform
+					 image size.
+				 
+				 */
+				
         Mat mat = pipeline.getWorkingImage();
         mat.setTo(FluentCv.colorToScalar(color));
 				if(!this.transform){
-        	return new Result(mat);
+        	return null;
 				}
-
-        BufferedImage image = OpenCvUtils.toBufferedImage(mat);
-        mat.release();
 
         /* Get the active camera */
         Camera camera = (Camera) pipeline.getProperty("camera");
@@ -60,9 +64,19 @@ public class SetColor extends CvStage {
              throw new Exception("No Camera set on pipeline.");
         }
 
+				/* TODO Somebody else can make this more eloquent.
+				   Just trying to make an image with the same color space and
+				   parameters as the originating camera image. */
+        BufferedImage i = OpenCvUtils.toBufferedImage(mat);
+        mat.release();
+				Logger.trace("IMG " + i.getWidth() + " " + i.getHeight());
+				BufferedImage image = i.getSubimage(0, 0, camera.getCaptureWidth(), camera.getCaptureHeight());
+				Logger.trace("CAM " + camera.getWidth() + " " + camera.getHeight());
+				Logger.trace("IMG " + image.getWidth() + " " + image.getHeight());
+
         /* Apply camera transformation to solid block.
            We now have an image of just the camera transformation. */
-        image = camera.transformImage(image);
+        image = camera.camTransformImage(image);
         return new Result(OpenCvUtils.toMat(image));
     }
 }
