@@ -158,6 +158,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     @Attribute(required = false)
     protected boolean visualHomingEnabled = true;
 
+    @Attribute(required = false)
+    protected boolean backslashEscapedCharactersEnabled = false;
+
     @Element(required = false)
     protected Location homingFiducialLocation = new Location(LengthUnit.Millimeters);
 
@@ -871,6 +874,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
 
         // Send the command, if one was specified
         if (command != null) {
+            if (backslashEscapedCharactersEnabled) {
+                command = unescape(command);
+            }
             Logger.trace("[{}] >> {}", getCommunications().getConnectionName(), command);
             getCommunications().writeLine(command);
         }
@@ -1177,6 +1183,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         this.visualHomingEnabled = visualHomingEnabled;
     }
 
+    public boolean isBackslashEscapedCharactersEnabled() {
+        return backslashEscapedCharactersEnabled;
+    }
+
+    public void setBackslashEscapedCharactersEnabled(boolean backslashEscapedCharactersEnabled) {
+        this.backslashEscapedCharactersEnabled = backslashEscapedCharactersEnabled;
+    }
+
     public static class Axis {
         public enum Type {
             X,
@@ -1393,4 +1407,5 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             return transformedCoordinate;
         }
     }
+    
 }
