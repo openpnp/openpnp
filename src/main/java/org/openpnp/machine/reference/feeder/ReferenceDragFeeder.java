@@ -87,11 +87,14 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     protected Vision vision = new Vision();
     @Element(required = false)
     protected Length backoffDistance = new Length(0, LengthUnit.Millimeters);
+    @Element(required = false)
+    protected int uiNextPartOffset = 0;
+
 
     protected Location pickLocation;
 
     private double feededCount = 0;
-    private double partsPitchX = -2; // -2mm for 0402
+    private double partsPitchX = 2; // -2mm for 0402
     private double partsPitchY = 0;
 
     /*
@@ -105,21 +108,32 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
     @Override
     public Location getPickLocation() throws Exception {
+        Location correctedPickLocation;
+
+        if (feededCount > 0) {
+            feededCount--;
+        }
+        else {
+            feededCount = 0;
+        }
+
+        partPitch = new Location(LengthUnit.Millimeters, partsPitchX * feededCount,
+                partsPitchY * feededCount, 0, 0);
+
         if (pickLocation == null) {
             pickLocation = location;
         }
 
         if (vision.isEnabled() && visionOffset != null) {
-            if (this.isPart0402() && partPitch != null) {
-                return pickLocation.subtract(visionOffset)
-                                   .add(partPitch);
-            }
-            else {
-                return pickLocation.subtract(visionOffset);
-            }
+            correctedPickLocation = pickLocation.subtract(visionOffset)
+                                                .add(partPitch);
+
+        }
+        else {
+            correctedPickLocation = pickLocation.add(partPitch);
         }
 
-        return pickLocation;
+        return correctedPickLocation;
     }
 
     @Override
@@ -198,9 +212,6 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
             // extend the pin
             dragPinActuator.actuate(true);
 
-            // insert the pin
-            dragPinActuator.moveTo(feedStartLocation);
-
             // drag the tape
             dragPinActuator.moveTo(feedEndLocation, feedSpeed * dragPinActuator.getHead()
                                                                                .getMachine()
@@ -241,7 +252,8 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
                                                            .getSpeed());
                     }
 
-                    // try retracting the pin again (maybe the command has a sleep that would help)
+                    // try retracting the pin again (maybe the command has a sleep that would
+                    // help)
                     dragPinActuator.actuate(false);
                 }
 
@@ -251,34 +263,23 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
                 }
             }
 
+
+
             if (this.isPart0402() == true) {
                 // can change it to "feededCount = parts_count_userSettings;"
                 feededCount = 2;
             }
         }
         else {
-            Logger.debug("Multi parts drag feeder: skipping drag " + feededCount);
+            Logger.debug("Multi parts drag feeder: skipping drag feededCount = " + feededCount);
         }
-
 
         head.moveToSafeZ();
 
         if (vision.isEnabled()) {
             visionOffset = getVisionOffsets(head, location);
 
-            if (feededCount > 0) {
-                feededCount--;
-                if (feededCount > 0) {
-                    partPitch = new Location(LengthUnit.Millimeters, partsPitchX * feededCount,
-                            partsPitchY * feededCount, 0, 0);
-                }
-                else {
-                    partPitch = null;
-                }
-            }
-
             Logger.debug("final visionOffsets " + visionOffset);
-
             Logger.debug("Modified pickLocation {}", pickLocation.subtract(visionOffset));
         }
     }
@@ -389,17 +390,19 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         }
 
         partPitch = null;
+        feededCount = 0;
+    }
+
+    public void updateNextPartOffset() {
+        feededCount = uiNextPartOffset + 1;
+        Logger.debug(String.format("---: feededCount = %s", String.valueOf(feededCount)));
     }
 
     public boolean isPart0402() {
         return this.getPart()
                    .getPackage()
                    .getId()
-                   .contains("C0402")
-                || this.getPart()
-                       .getPackage()
-                       .getId()
-                       .contains("R0402");
+                   .contains("0402");
     }
 
     public Location getFeedStartLocation() {
@@ -460,8 +463,16 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         return backoffDistance;
     }
 
+    public int getUiNextPartOffset() {
+        return uiNextPartOffset;
+    }
+
     public void setBackoffDistance(Length backoffDistance) {
         this.backoffDistance = backoffDistance;
+    }
+
+    public void setUiNextPartOffset(int uiNextPartOffset) {
+        this.uiNextPartOffset = uiNextPartOffset;
     }
 
     public Vision getVision() {
