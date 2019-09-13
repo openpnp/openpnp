@@ -158,7 +158,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         getMachine().fireMachineHeadActivity(head);
 
         // Dwell Time
-        Thread.sleep(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
+        // Thread.sleep(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
+        isPartOn();
 
         try {
             Map<String, Object> globals = new HashMap<>();
@@ -195,7 +196,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         getMachine().fireMachineHeadActivity(head);
 
         // Dwell Time
-        Thread.sleep(this.getPlaceDwellMilliseconds() + nozzleTip.getPlaceDwellMilliseconds());
+        // Thread.sleep(this.getPlaceDwellMilliseconds() + nozzleTip.getPlaceDwellMilliseconds());
+        isPartOff();
 
         try {
             Map<String, Object> globals = new HashMap<>();
@@ -662,18 +664,50 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public boolean isPartOn() throws Exception {
+        /*
+         * Checks to see if the vacuum pressure level indicates that a part is on the nozzle. If
+         * not, then it divides up the dwell time into multiple cycles and periodically checks the
+         * vacuum status at the end of each cycle to see if the part is attached. This makes the
+         * dwell time a maximum value that you only spend all of if needed but based on the vacuum
+         * level you may use less time.
+         */
         ReferenceNozzleTip nt = getNozzleTip();
-        double vacuumLevel = readVacuumLevel();
-        return vacuumLevel >= nt.getVacuumLevelPartOnLow()
-                && vacuumLevel <= nt.getVacuumLevelPartOnHigh();
+        double vacuumLevel;
+        int timeout_ms = this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds();
+        int cycles = 20;
+        int cycle_sleep_ms = (timeout_ms / cycles) + 1; // Add 1 just to make sure we do sleep
+
+        for (int i = 0; i < cycles; i++) {
+            vacuumLevel = readVacuumLevel();
+            if (vacuumLevel >= nt.getVacuumLevelPartOnLow()
+                    && vacuumLevel <= nt.getVacuumLevelPartOnHigh()) {
+                return true;
+            }
+            Thread.sleep(cycle_sleep_ms);
+        }
+        return false;
     }
 
     @Override
     public boolean isPartOff() throws Exception {
+        /*
+         * See isPartOn() for explanation of details.
+         */
         ReferenceNozzleTip nt = getNozzleTip();
-        double vacuumLevel = readVacuumLevel();
-        return vacuumLevel >= nt.getVacuumLevelPartOffLow()
-                && vacuumLevel <= nt.getVacuumLevelPartOffHigh();
+        double vacuumLevel;
+        int timeout_ms = this.getPlaceDwellMilliseconds() + nozzleTip.getPlaceDwellMilliseconds();
+        int cycles = 20;
+        int cycle_sleep_ms = (timeout_ms / cycles) + 1;
+
+        for (int i = 0; i < cycles; i++) {
+            vacuumLevel = readVacuumLevel();
+            if (vacuumLevel >= nt.getVacuumLevelPartOffLow()
+                    && vacuumLevel <= nt.getVacuumLevelPartOffHigh()) {
+                return true;
+            }
+            Thread.sleep(cycle_sleep_ms);
+        }
+        return false;
     }
 
     @Override
