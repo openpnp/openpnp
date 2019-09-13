@@ -63,7 +63,7 @@ public class TestDriver implements ReferenceDriver {
     public Location getLocation(ReferenceHeadMountable hm) {
         return location.add(hm.getHeadOffsets());
     }
-    
+
     @Override
     public void pick(ReferenceNozzle nozzle) throws Exception {
         delegate.pick(nozzle);
@@ -165,6 +165,12 @@ public class TestDriver implements ReferenceDriver {
         public void close() throws IOException {
 
         }
+
+        @Override
+        public void pumpOn(ReferenceNozzle nozzle) {}
+
+        @Override
+        public void pumpOff(ReferenceNozzle nozzle) {}
     }
 
     @Override
@@ -193,11 +199,16 @@ public class TestDriver implements ReferenceDriver {
     }
 
     @Override
-    public void close() throws IOException {
-    }
-    
+    public void close() throws IOException {}
+
     @Override
     public Wizard getConfigurationWizard() {
         return null;
     }
+
+    @Override
+    public void pumpOn(ReferenceNozzle nozzle) {}
+
+    @Override
+    public void pumpOff(ReferenceNozzle nozzle) {}
 }

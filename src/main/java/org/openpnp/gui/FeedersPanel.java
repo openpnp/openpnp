@@ -53,11 +53,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
-import org.openpnp.events.BoardLocationSelectedEvent;
 import org.openpnp.events.FeederSelectedEvent;
-import org.openpnp.gui.JobPanel.SetCheckFidsAction;
-import org.openpnp.gui.JobPanel.SetEnabledAction;
-import org.openpnp.gui.JobPanel.SetSideAction;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.ActionGroup;
@@ -67,8 +63,6 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
-import org.openpnp.model.Board;
-import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -129,6 +123,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         toolBar.add(feedFeederAction);
         toolBar.add(moveCameraToPickLocation);
         toolBar.add(moveToolToPickLocation);
+        toolBar.add(vacOnAction);
+        toolBar.add(vacOffAction);
 
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);
@@ -137,42 +133,44 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         panel_1.add(lblSearch);
 
         searchTextField = new JTextField();
-        searchTextField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                search();
-            }
+        searchTextField.getDocument()
+                       .addDocumentListener(new DocumentListener() {
+                           @Override
+                           public void removeUpdate(DocumentEvent e) {
+                               search();
+                           }
 
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                search();
-            }
+                           @Override
+                           public void insertUpdate(DocumentEvent e) {
+                               search();
+                           }
 
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                search();
-            }
-        });
+                           @Override
+                           public void changedUpdate(DocumentEvent e) {
+                               search();
+                           }
+                       });
         panel_1.add(searchTextField);
         searchTextField.setColumns(15);
-        
-        
+
+
         table = new AutoSelectTextTable(tableModel);
         tableSorter = new TableRowSorter<>(tableModel);
-        table.getColumnModel().moveColumn(1,  2);
+        table.getColumnModel()
+             .moveColumn(1, 2);
 
         final JSplitPane splitPane = new JSplitPane();
         splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         splitPane.setContinuousLayout(true);
-        splitPane
-                .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+        splitPane.setDividerLocation(
+                prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
         splitPane.addPropertyChangeListener("dividerLocation", new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
                 prefs.putInt(PREF_DIVIDER_POSITION, splitPane.getDividerLocation());
             }
         });
-        
+
         add(splitPane, BorderLayout.CENTER);
         splitPane.setLeftComponent(new JScrollPane(table));
         table.setRowSorter(tableSorter);
@@ -183,52 +181,58 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
         singleSelectActionGroup = new ActionGroup(deleteFeederAction, feedFeederAction,
                 pickFeederAction, moveCameraToPickLocation, moveToolToPickLocation,
-                setEnabledAction);
+                setEnabledAction, vacOnAction, vacOffAction);
         singleSelectActionGroup.setEnabled(false);
-        
+
         multiSelectActionGroup = new ActionGroup(deleteFeederAction, setEnabledAction);
         multiSelectActionGroup.setEnabled(false);
-        
-        table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (e.getValueIsAdjusting()) {
-                    return;
-                }
-                
-                List<Feeder> selections = getSelections();
-                if (selections.size() == 0) {
-                    singleSelectActionGroup.setEnabled(false);
-                    multiSelectActionGroup.setEnabled(false);
-                }
-                else if (selections.size() == 1) {
-                    multiSelectActionGroup.setEnabled(false);
-                    singleSelectActionGroup.setEnabled(true);
-                }
-                else {
-                    singleSelectActionGroup.setEnabled(false);
-                    multiSelectActionGroup.setEnabled(true);
-                }
 
-                Feeder feeder = getSelection();
-                
-                configurationPanel.removeAll();
-                if (feeder != null) {
-                    PropertySheet[] propertySheets = feeder.getPropertySheets();
-                    for (PropertySheet ps : propertySheets) {
-                        configurationPanel.addTab(ps.getPropertySheetTitle(), ps.getPropertySheetPanel());
-                    }
-                }
-                
-                revalidate();
-                repaint();
-                
-                Configuration.get().getBus().post(new FeederSelectedEvent(feeder, FeedersPanel.this));
-            }
-        });
+        table.getSelectionModel()
+             .addListSelectionListener(new ListSelectionListener() {
+                 @Override
+                 public void valueChanged(ListSelectionEvent e) {
+                     if (e.getValueIsAdjusting()) {
+                         return;
+                     }
 
-        Configuration.get().getBus().register(this);
-        
+                     List<Feeder> selections = getSelections();
+                     if (selections.size() == 0) {
+                         singleSelectActionGroup.setEnabled(false);
+                         multiSelectActionGroup.setEnabled(false);
+                     }
+                     else if (selections.size() == 1) {
+                         multiSelectActionGroup.setEnabled(false);
+                         singleSelectActionGroup.setEnabled(true);
+                     }
+                     else {
+                         singleSelectActionGroup.setEnabled(false);
+                         multiSelectActionGroup.setEnabled(true);
+                     }
+
+                     Feeder feeder = getSelection();
+
+                     configurationPanel.removeAll();
+                     if (feeder != null) {
+                         PropertySheet[] propertySheets = feeder.getPropertySheets();
+                         for (PropertySheet ps : propertySheets) {
+                             configurationPanel.addTab(ps.getPropertySheetTitle(),
+                                     ps.getPropertySheetPanel());
+                         }
+                     }
+
+                     revalidate();
+                     repaint();
+
+                     Configuration.get()
+                                  .getBus()
+                                  .post(new FeederSelectedEvent(feeder, FeedersPanel.this));
+                 }
+             });
+
+        Configuration.get()
+                     .getBus()
+                     .register(this);
+
         JPopupMenu popupMenu = new JPopupMenu();
 
         JMenu setEnabledMenu = new JMenu(setEnabledAction);
@@ -238,7 +242,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
         table.setComponentPopupMenu(popupMenu);
     }
-    
+
     @Subscribe
     public void feederSelected(FeederSelectedEvent event) {
         if (event.source == this) {
@@ -246,11 +250,12 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         }
         SwingUtilities.invokeLater(() -> {
             mainFrame.showTab("Feeders");
-            
+
             for (int i = 0; i < tableModel.getRowCount(); i++) {
                 if (tableModel.getFeeder(i) == event.feeder) {
                     int index = table.convertRowIndexToView(i);
-                    table.getSelectionModel().setSelectionInterval(index, index);
+                    table.getSelectionModel()
+                         .setSelectionInterval(index, index);
                     table.scrollRectToVisible(new Rectangle(table.getCellRect(index, 0, true)));
                     break;
                 }
@@ -274,15 +279,17 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         if (feeder == null) {
             feeder = findFeeder(part, false);
         }
-        if (feeder == null) {            
+        if (feeder == null) {
             newFeeder(part);
         }
         else {
-            table.getSelectionModel().clearSelection();
+            table.getSelectionModel()
+                 .clearSelection();
             for (int i = 0; i < tableModel.getRowCount(); i++) {
                 if (tableModel.getFeeder(i) == feeder) {
                     int index = table.convertRowIndexToView(i);
-                    table.getSelectionModel().setSelectionInterval(index, index);
+                    table.getSelectionModel()
+                         .setSelectionInterval(index, index);
                     table.scrollRectToVisible(new Rectangle(table.getCellRect(index, 0, true)));
                     break;
                 }
@@ -292,7 +299,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
     private Feeder findFeeder(Part part, boolean enabled) {
         for (int i = 0; i < tableModel.getRowCount(); i++) {
-            Feeder feeder = tableModel.getFeeder(i); 
+            Feeder feeder = tableModel.getFeeder(i);
             if (feeder.getPart() == part && feeder.isEnabled() == enabled) {
                 return feeder;
             }
@@ -313,7 +320,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         int[] selectedRows = table.getSelectedRows();
         for (int selectedRow : selectedRows) {
             selectedRow = table.convertRowIndexToModel(selectedRow);
-            selections.add(Configuration.get().getMachine().getFeeders().get(selectedRow));
+            selections.add(Configuration.get()
+                                        .getMachine()
+                                        .getFeeders()
+                                        .get(selectedRow));
         }
         return selections;
     }
@@ -322,7 +332,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         RowFilter<FeedersTableModel, Object> rf = null;
         // If current expression doesn't parse, don't update.
         try {
-            rf = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
+            rf = RowFilter.regexFilter("(?i)" + searchTextField.getText()
+                                                               .trim());
         }
         catch (PatternSyntaxException e) {
             Logger.warn("Search failed", e);
@@ -341,7 +352,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public void wizardCancelled(Wizard wizard) {}
 
     private void newFeeder(Part part) {
-        if (Configuration.get().getParts().size() == 0) {
+        if (Configuration.get()
+                         .getParts()
+                         .size() == 0) {
             MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
                     "There are currently no parts defined in the system. Please create at least one part before creating a feeder.");
             return;
@@ -357,7 +370,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         ClassSelectionDialog<Feeder> dialog =
                 new ClassSelectionDialog<>(JOptionPane.getFrameForComponent(FeedersPanel.this),
                         title, "Please select a Feeder implemention from the list below.",
-                        configuration.getMachine().getCompatibleFeederClasses());
+                        configuration.getMachine()
+                                     .getCompatibleFeederClasses());
         dialog.setVisible(true);
         Class<? extends Feeder> feederClass = dialog.getSelectedClass();
         if (feederClass == null) {
@@ -366,9 +380,13 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         try {
             Feeder feeder = feederClass.newInstance();
 
-            feeder.setPart(part == null ? Configuration.get().getParts().get(0) : part);
+            feeder.setPart(part == null ? Configuration.get()
+                                                       .getParts()
+                                                       .get(0)
+                    : part);
 
-            configuration.getMachine().addFeeder(feeder);
+            configuration.getMachine()
+                         .addFeeder(feeder);
             tableModel.refresh();
 
             searchTextField.setText("");
@@ -406,21 +424,25 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             List<Feeder> selections = getSelections();
-            List<String> ids = selections.stream().map(Feeder::getName).collect(Collectors.toList());
+            List<String> ids = selections.stream()
+                                         .map(Feeder::getName)
+                                         .collect(Collectors.toList());
             String formattedIds;
             if (ids.size() <= 3) {
                 formattedIds = String.join(", ", ids);
             }
             else {
-                formattedIds = String.join(", ", ids.subList(0, 3)) + ", and " + (ids.size() - 3) + " others";
+                formattedIds = String.join(", ", ids.subList(0, 3)) + ", and " + (ids.size() - 3)
+                        + " others";
             }
-            
+
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                     "Are you sure you want to delete " + formattedIds + "?",
                     "Delete " + selections.size() + " feeders?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 for (Feeder feeder : selections) {
-                    configuration.getMachine().removeFeeder(feeder);
+                    configuration.getMachine()
+                                 .removeFeeder(feeder);
                     tableModel.refresh();
                 }
             }
@@ -438,7 +460,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Feeder feeder = getSelection();
-                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                Nozzle nozzle = MainFrame.get()
+                                         .getMachineControls()
+                                         .getSelectedNozzle();
 
                 nozzle.moveToSafeZ();
                 feeder.feed(nozzle);
@@ -459,7 +483,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Feeder feeder = getSelection();
-                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                Nozzle nozzle = MainFrame.get()
+                                         .getMachineControls()
+                                         .getSelectedNozzle();
 
                 nozzle.moveToSafeZ();
                 feeder.feed(nozzle);
@@ -484,8 +510,11 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Feeder feeder = getSelection();
-                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
-                        .getDefaultCamera();
+                Camera camera = MainFrame.get()
+                                         .getMachineControls()
+                                         .getSelectedTool()
+                                         .getHead()
+                                         .getDefaultCamera();
                 Location pickLocation = feeder.getPickLocation();
                 MovableUtils.moveToLocationAtSafeZ(camera, pickLocation);
             });
@@ -504,14 +533,53 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Feeder feeder = getSelection();
-                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                Nozzle nozzle = MainFrame.get()
+                                         .getMachineControls()
+                                         .getSelectedNozzle();
 
                 Location pickLocation = feeder.getPickLocation();
                 MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
             });
         }
     };
-    
+
+
+    public Action vacOnAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.vacOn);
+            putValue(NAME, "Vacuum On");
+            putValue(SHORT_DESCRIPTION, "Turn on the vacuum.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                Nozzle nozzle = MainFrame.get()
+                                         .getMachineControls()
+                                         .getSelectedNozzle();
+                nozzle.pumpOn();
+            });
+        }
+    };
+
+    public Action vacOffAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.vacOff);
+            putValue(NAME, "Vacuum Off");
+            putValue(SHORT_DESCRIPTION, "Turn off the vacuum.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                Nozzle nozzle = MainFrame.get()
+                                         .getMachineControls()
+                                         .getSelectedNozzle();
+                nozzle.pumpOff();
+            });
+        }
+    };
+
     public final Action setEnabledAction = new AbstractAction() {
         {
             putValue(NAME, "Set Enabled");

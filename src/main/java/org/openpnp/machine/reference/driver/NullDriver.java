@@ -204,8 +204,8 @@ public class NullDriver implements ReferenceDriver {
             setHeadLocation(hm.getHead(), hl);
 
             // Provide live updates to the Machine as the move progresses.
-            ((ReferenceMachine) Configuration.get().getMachine())
-                    .fireMachineHeadActivity(hm.getHead());
+            ((ReferenceMachine) Configuration.get()
+                                             .getMachine()).fireMachineHeadActivity(hm.getHead());
 
             try {
                 Thread.sleep(100);
@@ -255,7 +255,7 @@ public class NullDriver implements ReferenceDriver {
             Thread.sleep(500);
         }
     }
-    
+
     @Override
     public String actuatorRead(ReferenceActuator actuator) throws Exception {
         return Math.random() + "";
@@ -315,4 +315,10 @@ public class NullDriver implements ReferenceDriver {
     public void close() throws IOException {
 
     }
+
+    @Override
+    public void pumpOn(ReferenceNozzle nozzle) {}
+
+    @Override
+    public void pumpOff(ReferenceNozzle nozzle) {}
 }

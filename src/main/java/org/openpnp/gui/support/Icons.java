@@ -10,7 +10,7 @@ public class Icons {
     public static Icon paste = getIcon("/icons/paste.svg");
     public static Icon export = getIcon("/icons/export.svg");
     public static Icon importt = getIcon("/icons/import.svg");
-    
+
     public static Icon nozzleAdd = getIcon("/icons/nozzle-add.svg");
     public static Icon nozzleRemove = getIcon("/icons/nozzle-remove.svg");
 
@@ -48,7 +48,8 @@ public class Icons {
     public static Icon showPart = getIcon("/icons/feeder-show-part-outline.svg");
     public static Icon editFeeder = getIcon("/icons/feeder-edit.svg");
     public static Icon feeder = getIcon("/icons/feeder.svg");
-    
+    public static Icon vacOn = getIcon("/icons/vac-on.svg");
+    public static Icon vacOff = getIcon("/icons/vac-off.svg");
 
     public static Icon partAlign = getIcon("/icons/part-align.svg");
 
@@ -62,7 +63,7 @@ public class Icons {
     public static Icon rotateClockwise = getIcon("/icons/rotate-clockwise.svg");
     public static Icon rotateCounterclockwise = getIcon("/icons/rotate-counterclockwise.svg");
     public static Icon zero = getIcon("/icons/zero.svg");
-    
+
     public static Icon navigateFirst = getIcon("/icons/nav-first.svg");
     public static Icon navigateLast = getIcon("/icons/nav-last.svg");
     public static Icon navigatePrevious = getIcon("/icons/nav-previous.svg");

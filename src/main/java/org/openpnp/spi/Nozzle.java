@@ -10,8 +10,7 @@ import org.openpnp.model.Part;
  * that defines what types of Packages it can handle and it may have the capability of changing it's
  * NozzleTip.
  */
-public interface Nozzle
-        extends HeadMountable, WizardConfigurable, PropertySheetHolder {
+public interface Nozzle extends HeadMountable, WizardConfigurable, PropertySheetHolder {
     /**
      * Get the NozzleTip currently attached to the Nozzle.
      * 
@@ -64,45 +63,52 @@ public interface Nozzle
      * @throws Exception
      */
     public void unloadNozzleTip() throws Exception;
-    
+
     /**
-     * Get the part that is currently picked on the Nozzle, or null if none is picked.
-     * Should typically be non-null after a pick operation and before a place operation and null
-     * after a pick operation. Of note, it should be non-null after a failed pick operation
-     * so that the system can determine which part it may need to discard. It may also be null
-     * if a user initiated, manual, pick is performed with no Part to reference. 
+     * Get the part that is currently picked on the Nozzle, or null if none is picked. Should
+     * typically be non-null after a pick operation and before a place operation and null after a
+     * pick operation. Of note, it should be non-null after a failed pick operation so that the
+     * system can determine which part it may need to discard. It may also be null if a user
+     * initiated, manual, pick is performed with no Part to reference.
      */
     public Part getPart();
-    
+
     /**
-     * Returns true if the isPartDetected() method is available. Some machines do not have
-     * vacuum sensors or other part detection sensors, so this feature is optional.
+     * Returns true if the isPartDetected() method is available. Some machines do not have vacuum
+     * sensors or other part detection sensors, so this feature is optional.
+     * 
      * @return
      */
     public boolean isPartDetectionEnabled();
-    
+
     /**
-     * Returns true if a part appears to be on the nozzle. This is typically implemented by
-     * checking a vacuum level range, but other methods such as laser or vision detection
-     * are possible.
+     * Returns true if a part appears to be on the nozzle. This is typically implemented by checking
+     * a vacuum level range, but other methods such as laser or vision detection are possible.
+     * 
      * @return
      */
     public boolean isPartOn() throws Exception;
-    
+
     /**
      * Returns true if a part appears to be off the nozzle. This is typically implemented by
-     * checking a vacuum level range, but other methods such as laser or vision detection
-     * are possible.
+     * checking a vacuum level range, but other methods such as laser or vision detection are
+     * possible.
+     * 
      * @return
      */
     public boolean isPartOff() throws Exception;
-    
+
     public Set<NozzleTip> getCompatibleNozzleTips();
-    
+
     public void addCompatibleNozzleTip(NozzleTip nt);
-    
+
     public void removeCompatibleNozzleTip(NozzleTip nt);
-    
+
     public void calibrate() throws Exception;
+
     public boolean isCalibrated();
+
+    void pumpOn() throws Exception;
+
+    void pumpOff() throws Exception;
 }

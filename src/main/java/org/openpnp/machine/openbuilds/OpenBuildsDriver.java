@@ -74,7 +74,7 @@ public class OpenBuildsDriver extends AbstractReferenceDriver implements Runnabl
         }
         if (connected && !enabled) {
             if (!connectionKeepAlive) {
-            	disconnect();
+                disconnect();
             }
         }
     }
@@ -136,8 +136,8 @@ public class OpenBuildsDriver extends AbstractReferenceDriver implements Runnabl
                     Utils2D.normalizeAngle(nozzleIndex == 0 ? c : c2)).add(hm.getHeadOffsets());
         }
         else {
-            return new Location(LengthUnit.Millimeters, x, y, zA, Utils2D.normalizeAngle(c))
-                    .add(hm.getHeadOffsets());
+            return new Location(LengthUnit.Millimeters, x, y, zA, Utils2D.normalizeAngle(c)).add(
+                    hm.getHeadOffsets());
         }
     }
 
@@ -243,7 +243,9 @@ public class OpenBuildsDriver extends AbstractReferenceDriver implements Runnabl
         if (nozzle == null) {
             return 0;
         }
-        return nozzle.getHead().getNozzles().indexOf(nozzle);
+        return nozzle.getHead()
+                     .getNozzles()
+                     .indexOf(nozzle);
     }
 
     @Override
@@ -462,7 +464,8 @@ public class OpenBuildsDriver extends AbstractReferenceDriver implements Runnabl
         while (!disconnectRequested) {
             String line;
             try {
-                line = getCommunications().readLine().trim();
+                line = getCommunications().readLine()
+                                          .trim();
             }
             catch (TimeoutException ex) {
                 continue;
@@ -549,4 +552,10 @@ public class OpenBuildsDriver extends AbstractReferenceDriver implements Runnabl
     private void led(boolean on) throws Exception {
         sendCommand(on ? "M810" : "M811");
     }
+
+    @Override
+    public void pumpOn(ReferenceNozzle nozzle) {}
+
+    @Override
+    public void pumpOff(ReferenceNozzle nozzle) {}
 }

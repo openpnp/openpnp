@@ -281,7 +281,7 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
         // Reset all axes to 0, in case the firmware was not reset on
         // connect.
         sendCommand("set mdi G92 X0 Y0 Z0 A0");
-        
+
         connected = true;
     }
 
@@ -447,4 +447,10 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
     public Icon getPropertySheetHolderIcon() {
         return null;
     }
+
+    @Override
+    public void pumpOn(ReferenceNozzle nozzle) {}
+
+    @Override
+    public void pumpOff(ReferenceNozzle nozzle) {}
 }
