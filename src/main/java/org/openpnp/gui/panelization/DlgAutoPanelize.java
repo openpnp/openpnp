@@ -44,7 +44,7 @@ import org.openpnp.util.UiUtils;
 
 public class DlgAutoPanelize extends JDialog {
     final private JobPanel jobPanel;
-    
+
     private JSpinner textFieldPCBColumns;
     private JSpinner textFieldPCBRows;
     private JTextField textFieldboardXSpacing;
@@ -57,15 +57,16 @@ public class DlgAutoPanelize extends JDialog {
     private JCheckBox checkFidsCheckBox;
     private final Action okAction = new SwingAction();
     private final Action cancelAction = new SwingAction_1();
-    
-    DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+
+    DoubleConverter doubleConverter = new DoubleConverter(Configuration.get()
+                                                                       .getLengthDisplayFormat());
     IntegerConverter integerConverter = new IntegerConverter();
     LengthConverter lengthConverter = new LengthConverter();
 
     public DlgAutoPanelize(Frame parent, JobPanel jobPanel) {
         super(parent, "Panelization Settings", true);
         this.jobPanel = jobPanel;
-        
+
         getRootPane().setLayout(new BoxLayout(getRootPane(), BoxLayout.Y_AXIS));
 
         JPanel jPanel = new JPanel();
@@ -86,11 +87,11 @@ public class DlgAutoPanelize extends JDialog {
         jPanel.add(textFieldPCBRows, "4, 4, fill, default");
 
         // Spacing
-        jPanel.add(new JLabel("X Spacing", JLabel.RIGHT), "2, 6, right, default");
+        jPanel.add(new JLabel("X Gap Spacing", JLabel.RIGHT), "2, 6, right, default");
         textFieldboardXSpacing = new JTextField();
         jPanel.add(textFieldboardXSpacing, "4, 6, fill, default");
 
-        jPanel.add(new JLabel("Y Spacing", JLabel.RIGHT), "2, 8, right, default");
+        jPanel.add(new JLabel("Y Gap Spacing", JLabel.RIGHT), "2, 8, right, default");
         textFieldboardYSpacing = new JTextField();
         jPanel.add(textFieldboardYSpacing, "4, 8, fill, default");
 
@@ -118,7 +119,7 @@ public class DlgAutoPanelize extends JDialog {
         partsComboBox.setEditable(false);
         partsComboBox.setLightWeightPopupEnabled(false);
         partsComboBox.setMaximumRowCount(7);
-        
+
         jPanel.add(partsComboBox, "4, 18, fill, default");
 
         jPanel.add(new JLabel("Check Panel Fiducials", JLabel.RIGHT), "2, 20, right, default");
@@ -146,37 +147,48 @@ public class DlgAutoPanelize extends JDialog {
         KeyStroke stroke = KeyStroke.getKeyStroke("ESCAPE");
         InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         inputMap.put(stroke, "ESCAPE");
-        rootPane.getActionMap().put("ESCAPE", cancelAction);
-        
+        rootPane.getActionMap()
+                .put("ESCAPE", cancelAction);
+
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldboardXSpacing);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldboardYSpacing);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldboardPanelFid1X);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldboardPanelFid1Y);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldboardPanelFid2X);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldboardPanelFid2Y);
-        
+
         // Specify a placeholder panel for now if we don't have one already
-        if (jobPanel.getJob().getPanels() == null || jobPanel.getJob().getPanels().isEmpty()) {
-            jobPanel.getJob().addPanel(
-                    new Panel("Panel1", 3, 3, new Length(0, LengthUnit.Millimeters),
+        if (jobPanel.getJob()
+                    .getPanels() == null
+                || jobPanel.getJob()
+                           .getPanels()
+                           .isEmpty()) {
+            jobPanel.getJob()
+                    .addPanel(new Panel("Panel1", 3, 3, new Length(0, LengthUnit.Millimeters),
                             new Length(0, LengthUnit.Millimeters), "", false,
                             new Placement("PanelFid1"), new Placement("PanelFid2")));
         }
 
         // Set current values.
-        Panel panel = jobPanel.getJob().getPanels().get(0);
+        Panel panel = jobPanel.getJob()
+                              .getPanels()
+                              .get(0);
         int rows = panel.getRows();
         int cols = panel.getColumns();
-        
+
         textFieldPCBColumns.setValue(cols);
         textFieldPCBRows.setValue(rows);
         partsComboBox.setSelectedItem(panel.getFiducialPart());
         textFieldboardXSpacing.setText(lengthConverter.convertForward(panel.getXGap()));
         textFieldboardYSpacing.setText(lengthConverter.convertForward(panel.getYGap()));
-        Location fid0Loc = panel.getFiducials().get(0).getLocation();
+        Location fid0Loc = panel.getFiducials()
+                                .get(0)
+                                .getLocation();
         textFieldboardPanelFid1X.setText(lengthConverter.convertForward(fid0Loc.getLengthX()));
         textFieldboardPanelFid1Y.setText(lengthConverter.convertForward(fid0Loc.getLengthY()));
-        Location fid1Loc = panel.getFiducials().get(1).getLocation();
+        Location fid1Loc = panel.getFiducials()
+                                .get(1)
+                                .getLocation();
         textFieldboardPanelFid2X.setText(lengthConverter.convertForward(fid1Loc.getLengthX()));
         textFieldboardPanelFid2Y.setText(lengthConverter.convertForward(fid1Loc.getLengthY()));
         checkFidsCheckBox.setSelected(panel.isCheckFiducials());
@@ -194,41 +206,48 @@ public class DlgAutoPanelize extends JDialog {
                 int rows = (int) (textFieldPCBRows.getValue());
                 Length gapX = lengthConverter.convertReverse(textFieldboardXSpacing.getText());
                 Length gapY = lengthConverter.convertReverse(textFieldboardYSpacing.getText());
-                Length globalFid1X = lengthConverter.convertReverse(textFieldboardPanelFid1X.getText());
-                Length globalFid1Y = lengthConverter.convertReverse(textFieldboardPanelFid1Y.getText());
-                Length globalFid2X = lengthConverter.convertReverse(textFieldboardPanelFid2X.getText());
-                Length globalFid2Y = lengthConverter.convertReverse(textFieldboardPanelFid2Y.getText());
+                Length globalFid1X =
+                        lengthConverter.convertReverse(textFieldboardPanelFid1X.getText());
+                Length globalFid1Y =
+                        lengthConverter.convertReverse(textFieldboardPanelFid1Y.getText());
+                Length globalFid2X =
+                        lengthConverter.convertReverse(textFieldboardPanelFid2X.getText());
+                Length globalFid2Y =
+                        lengthConverter.convertReverse(textFieldboardPanelFid2Y.getText());
                 Part part = (Part) partsComboBox.getSelectedItem();
                 String partId = part == null ? null : part.getId();
-    
+
                 // The selected PCB is the one we'll panelize
                 BoardLocation rootPCB = jobPanel.getSelection();
-    
+
                 Placement p0 = new Placement("PanelFid1");
                 p0.setType(Placement.Type.Fiducial);
                 MutableLocationProxy p0Location = new MutableLocationProxy();
                 p0Location.setLocation(new Location(LengthUnit.Millimeters));
                 p0Location.setLengthX(globalFid1X);
                 p0Location.setLengthY(globalFid1Y);
-                p0Location.setRotation(rootPCB.getLocation().getRotation());
+                p0Location.setRotation(rootPCB.getLocation()
+                                              .getRotation());
                 p0.setLocation(p0Location.getLocation());
                 p0.setPart(part);
-                
+
                 Placement p1 = new Placement("PanelFid2");
                 p1.setType(Placement.Type.Fiducial);
                 MutableLocationProxy p1Location = new MutableLocationProxy();
                 p1Location.setLocation(new Location(LengthUnit.Millimeters));
                 p1Location.setLengthX(globalFid2X);
                 p1Location.setLengthY(globalFid2Y);
-                p1Location.setRotation(rootPCB.getLocation().getRotation());
+                p1Location.setRotation(rootPCB.getLocation()
+                                              .getRotation());
                 p1.setLocation(p1Location.getLocation());
                 p1.setPart(part);
-    
+
                 Panel pcbPanel = new Panel("Panel1", cols, rows, gapX, gapY, partId,
                         checkFidsCheckBox.isSelected(), p0, p1);
-    
-                jobPanel.getJob().removeAllPanels();
-    
+
+                jobPanel.getJob()
+                        .removeAllPanels();
+
                 if ((rows == 1) && (cols == 1)) {
                     // Here, the user has effectively shut off panelization by
                     // specifying row = col = 1. In this case, we don't
@@ -239,14 +258,19 @@ public class DlgAutoPanelize extends JDialog {
                     // this dlg was that there was a single board in the list.
                     // When this feature is turned off, there will again
                     // be a single board in the list
-                    BoardLocation b = jobPanel.getJob().getBoardLocations().get(0);
-                    jobPanel.getJob().removeAllBoards();
-                    jobPanel.getJob().addBoardLocation(b);
+                    BoardLocation b = jobPanel.getJob()
+                                              .getBoardLocations()
+                                              .get(0);
+                    jobPanel.getJob()
+                            .removeAllBoards();
+                    jobPanel.getJob()
+                            .addBoardLocation(b);
                     jobPanel.refresh();
                 }
                 else {
                     // Here, panelization is active.
-                    jobPanel.getJob().addPanel(pcbPanel);
+                    jobPanel.getJob()
+                            .addPanel(pcbPanel);
                     jobPanel.populatePanelSettingsIntoBoardLocations();
                 }
                 setVisible(false);
