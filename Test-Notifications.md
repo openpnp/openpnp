@@ -1,3 +1,0 @@
-Testing push notifications.
-
-Test
