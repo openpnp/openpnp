@@ -78,21 +78,39 @@ public class ReferenceHead extends AbstractHead {
         Logger.debug("{}.moveToSafeZ({})", getName(), speed);
         super.moveToSafeZ(speed);
     }
-    
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed) throws Exception {
+
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+            throws Exception {
         if (isSoftLimitsEnabled()) {
             /**
              * Since minLocation and maxLocation are captured with the Camera's coordinates, we need
              * to know where the Camera will land, not the HeadMountable.
              */
             Location cameraLocation = location.subtract(hm.getHeadOffsets());
-            cameraLocation = cameraLocation.add(((ReferenceCamera) getDefaultCamera()).getHeadOffsets());
+            cameraLocation =
+                    cameraLocation.add(((ReferenceCamera) getDefaultCamera()).getHeadOffsets());
             Location minLocation = this.minLocation.convertToUnits(cameraLocation.getUnits());
             Location maxLocation = this.maxLocation.convertToUnits(cameraLocation.getUnits());
-            if (cameraLocation.getX() < minLocation.getX() || cameraLocation.getX() > maxLocation.getX() ||
-                    cameraLocation.getY() < minLocation.getY() || cameraLocation.getY() > maxLocation.getY()) {
-                throw new Exception(String.format("Can't move %s to %s, outside of soft limits on head %s.",
-                        hm.getName(), location, getName()));
+            if (cameraLocation.getX() < minLocation.getX()
+                    || cameraLocation.getX() > maxLocation.getX()
+                    || cameraLocation.getY() < minLocation.getY()
+                    || cameraLocation.getY() > maxLocation.getY()) {
+                String limit = "";
+                if (cameraLocation.getX() < minLocation.getX())
+                    limit += String.format("x_camera (%f) < x_min (%f)  ", cameraLocation.getX(),
+                            minLocation.getX());
+                if (cameraLocation.getX() > maxLocation.getX())
+                    limit += String.format("x_camera (%f) > x_max (%f)  ", cameraLocation.getX(),
+                            maxLocation.getX());
+                if (cameraLocation.getY() < minLocation.getY())
+                    limit += String.format("y_camera (%f) < y_min (%f)  ", cameraLocation.getY(),
+                            minLocation.getY());
+                if (cameraLocation.getY() > maxLocation.getY())
+                    limit += String.format("y_camera (%f) > y_max (%f)  ", cameraLocation.getY(),
+                            maxLocation.getY());
+                throw new Exception(
+                        String.format("Can't move %s to %s, outside of soft limits on head %s.  %s",
+                                hm.getName(), location, getName(), limit));
             }
         }
         getDriver().moveTo(hm, location, speed);
@@ -103,12 +121,13 @@ public class ReferenceHead extends AbstractHead {
     public String toString() {
         return getName();
     }
-    
+
     ReferenceDriver getDriver() {
         return getMachine().getDriver();
     }
-    
+
     public ReferenceMachine getMachine() {
-        return (ReferenceMachine) Configuration.get().getMachine();
+        return (ReferenceMachine) Configuration.get()
+                                               .getMachine();
     }
 }
