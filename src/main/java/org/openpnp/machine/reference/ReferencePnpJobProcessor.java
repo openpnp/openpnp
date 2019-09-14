@@ -795,6 +795,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 return;
             }
             try {
+<<<<<<< HEAD
+=======
+                // We need vacuum on to determine the vacuum level.
+                // nozzle.pick(part);
+
+                // nozzle.place();
+
+>>>>>>> branch 'develop' of https://github.com/c-riegel/openpnp.git
                 if (!nozzle.isPartOff()) {
                     throw new JobProcessorException(nozzle, "Part detected on nozzle after place.");
                 }
