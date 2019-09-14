@@ -96,18 +96,22 @@ public class ReferenceHead extends AbstractHead {
                     || cameraLocation.getY() < minLocation.getY()
                     || cameraLocation.getY() > maxLocation.getY()) {
                 String limit = "";
-                if (cameraLocation.getX() < minLocation.getX())
+                if (cameraLocation.getX() < minLocation.getX()) {
                     limit += String.format("x_camera (%f) < x_min (%f)  ", cameraLocation.getX(),
                             minLocation.getX());
-                if (cameraLocation.getX() > maxLocation.getX())
+                }
+                if (cameraLocation.getX() > maxLocation.getX()) {
                     limit += String.format("x_camera (%f) > x_max (%f)  ", cameraLocation.getX(),
                             maxLocation.getX());
-                if (cameraLocation.getY() < minLocation.getY())
+                }
+                if (cameraLocation.getY() < minLocation.getY()) {
                     limit += String.format("y_camera (%f) < y_min (%f)  ", cameraLocation.getY(),
                             minLocation.getY());
-                if (cameraLocation.getY() > maxLocation.getY())
+                }
+                if (cameraLocation.getY() > maxLocation.getY()) {
                     limit += String.format("y_camera (%f) > y_max (%f)  ", cameraLocation.getY(),
                             maxLocation.getY());
+                }
                 throw new Exception(
                         String.format("Can't move %s to %s, outside of soft limits on head %s.  %s",
                                 hm.getName(), location, getName(), limit));
