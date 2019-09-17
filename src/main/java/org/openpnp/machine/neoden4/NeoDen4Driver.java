@@ -594,6 +594,10 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
         // TODO STOPSHIP actuate
     }
+    
+    @Override
+    public void actuate(ReferenceNozzle nozzle, boolean on) throws Exception {
+    }
 
     @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {

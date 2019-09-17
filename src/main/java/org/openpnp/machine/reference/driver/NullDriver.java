@@ -239,6 +239,10 @@ public class NullDriver implements ReferenceDriver {
     }
 
     @Override
+    public void actuate(ReferenceNozzle nozzle, boolean on) throws Exception {
+    }
+    
+    @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
         Logger.debug("actuate({}, {})", actuator, value);
         checkEnabled();

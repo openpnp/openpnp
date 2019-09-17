@@ -199,6 +199,10 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
         // }
     }
 
+    
+    @Override
+    public void actuate(ReferenceNozzle nozzle, boolean on) throws Exception {
+    }
 
 
     @Override

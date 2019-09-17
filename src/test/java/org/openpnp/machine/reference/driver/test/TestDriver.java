@@ -75,6 +75,10 @@ public class TestDriver implements ReferenceDriver {
     }
 
     @Override
+    public void actuate(ReferenceNozzle nozzle, boolean on) throws Exception {
+    }
+    
+    @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
         delegate.actuate(actuator, on);
     }
@@ -121,6 +125,10 @@ public class TestDriver implements ReferenceDriver {
 
         }
 
+        @Override
+        public void actuate(ReferenceNozzle nozzle, boolean on) throws Exception {
+        }
+        
         @Override
         public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
 

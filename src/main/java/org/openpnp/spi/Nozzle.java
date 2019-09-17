@@ -97,6 +97,8 @@ public interface Nozzle extends HeadMountable, WizardConfigurable, PropertySheet
      * @return
      */
     public boolean isPartOff() throws Exception;
+    
+    public void actuate(boolean on) throws Exception;
 
     public Set<NozzleTip> getCompatibleNozzleTips();
 

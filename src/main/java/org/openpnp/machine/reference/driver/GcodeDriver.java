@@ -859,6 +859,20 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             driver.actuate(actuator, value);
         }
     }
+    
+    public void actuate(ReferenceNozzle nozzle, boolean on) throws Exception {
+        String command = getCommand(nozzle, CommandType.ACTUATE_BOOLEAN_COMMAND);
+        command = substituteVariable(command, "Id", nozzle.getId());
+        command = substituteVariable(command, "Name", nozzle.getName());
+        command = substituteVariable(command, "BooleanValue", on);
+        command = substituteVariable(command, "True", on ? on : null);
+        command = substituteVariable(command, "False", on ? null : on);
+        sendGcode(command);
+
+        for (ReferenceDriver driver : subDrivers) {
+            driver.actuate(nozzle, on);
+        }
+    }
 
     @Override
     public String actuatorRead(ReferenceActuator actuator) throws Exception {

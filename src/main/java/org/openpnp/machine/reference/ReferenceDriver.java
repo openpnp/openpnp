@@ -129,4 +129,6 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
     public void pumpOn(ReferenceNozzle nozzle) throws Exception;
 
     public void pumpOff(ReferenceNozzle nozzle) throws Exception;
+
+    public void actuate(ReferenceNozzle nozzle, boolean on) throws Exception;
 }

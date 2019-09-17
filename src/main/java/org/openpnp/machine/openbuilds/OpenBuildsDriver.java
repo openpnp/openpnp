@@ -121,6 +121,9 @@ public class OpenBuildsDriver extends AbstractReferenceDriver implements Runnabl
     @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {}
 
+    @Override
+    public void actuate(ReferenceNozzle nozzle, boolean on) throws Exception {
+    }    
 
     @Override
     public Location getLocation(ReferenceHeadMountable hm) {
