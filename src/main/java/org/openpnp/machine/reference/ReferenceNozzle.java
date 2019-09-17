@@ -619,4 +619,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         double vacuumLevel = readVacuumLevel();
         return vacuumLevel >= nt.getVacuumLevelPartOffLow() && vacuumLevel <= nt.getVacuumLevelPartOffHigh();
     }
+    
+    @Override
+    public void purge() throws Exception {
+        getDriver().place(this);
+    }
+    
+    @Override
+    public void actuate(boolean on) throws Exception {
+        getDriver().actuate(this,on);
+    }
 }
