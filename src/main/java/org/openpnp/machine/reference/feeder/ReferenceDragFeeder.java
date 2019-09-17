@@ -81,6 +81,8 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     protected String actuatorName;
     @Attribute(required = false)
     protected String peelOffActuatorName;
+    @Attribute(required = false)
+    protected String pinReturnActuatorValue;
     @Element(required = false)
     protected Vision vision = new Vision();
     @Element(required = false)
@@ -137,9 +139,9 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
          * it would have already hit.
          */
 
-        Actuator actuator = head.getActuatorByName(actuatorName);
+        Actuator dragPinActuator = head.getActuatorByName(actuatorName);
 
-        if (actuator == null) {
+        if (dragPinActuator == null) {
             throw new Exception(String.format("No Actuator found with name %s on feed Head %s",
                     actuatorName, head.getName()));
         }
@@ -154,8 +156,6 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 						peelOffActuatorName, head.getName()));
 	        }
 		}
-
-        head.moveToSafeZ();
 
         if (vision.isEnabled()) {
             if (visionOffset == null) {
@@ -189,16 +189,15 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 	        }
 
 	        // Move the actuator to the feed start location.
-	        actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
+            dragPinActuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
 
 	        // extend the pin
-	        actuator.actuate(true);
-
-	        // insert the pin
-	        actuator.moveTo(feedStartLocation);
+            dragPinActuator.actuate(true);
 
 	        // drag the tape
-	        actuator.moveTo(feedEndLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
+            dragPinActuator.moveTo(feedEndLocation, feedSpeed * dragPinActuator.getHead()
+                                                                               .getMachine()
+                                                                               .getSpeed());
 
 			if (peelOffActuator != null) {
 				// peel off before backoff
@@ -206,14 +205,46 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 				peelOffActuator.actuate(false);
 			}
 
+            // retract the pin
+            dragPinActuator.actuate(false);
+            
 	        // backoff to release tension from the pin
 	        if (backoffDistance.getValue() != 0) {
-	            Location backoffLocation = Utils2D.getPointAlongLine(feedEndLocation, feedStartLocation, backoffDistance);
-	            actuator.moveTo(backoffLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
+                Location backoffLocation = Utils2D.getPointAlongLine(feedEndLocation,
+                        feedStartLocation, backoffDistance);
+                dragPinActuator.moveTo(backoffLocation, feedSpeed * dragPinActuator.getHead()
+                                                                                   .getMachine()
+                                                                                   .getSpeed());
+            }
+
+            // if possible, confirm drag pin retraction
+            if (pinReturnActuatorValue.length() > 0) {
+
+                if (!dragPinActuator.read()
+                                    .equals(pinReturnActuatorValue)) {
+                    // if we're here then the pin is stuck, so what follows tries to back off a
+                    // second
+                    // time by the same amount to try to get the pin free from binding
+                    Logger.debug("\n\nfeed: move to pin backoff 2");
+                    if (backoffDistance.getValue() != 0) {
+                        Location backoffLocation2 = Utils2D.getPointAlongLine(feedEndLocation,
+                                feedStartLocation, backoffDistance.add(backoffDistance));
+                        dragPinActuator.moveTo(backoffLocation2,
+                                feedSpeed * dragPinActuator.getHead()
+                                                           .getMachine()
+                                                           .getSpeed());
 	        }
 
-	        // retract the pin
-	        actuator.actuate(false);
+                    // try retracting the pin again (maybe the command has a sleep that would
+                    // help)
+                    dragPinActuator.actuate(false);
+                }
+
+                if (!dragPinActuator.read()
+                                    .equals(pinReturnActuatorValue)) {
+                    throw new Exception("Unable to retract drag pin");
+                }
+            }
 
 	        if (this.isPart0402() == true) {
 				// can change it to "feededCount = parts_count_userSettings;"
@@ -221,11 +252,8 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 	        }
         } 
         else {
-			Logger.debug("Multi parts drag feeder: skipping drag " + feededCount);
+            Logger.debug("Multi parts drag feeder: skipping drag feededCount = " + feededCount);
         }
-
-
-        head.moveToSafeZ();
 
         if (vision.isEnabled()) {
             visionOffset = getVisionOffsets(head, location);
@@ -396,6 +424,16 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     public void setPeelOffActuatorName(String actuatorName) {
         String oldValue = this.peelOffActuatorName;
         this.peelOffActuatorName = actuatorName;
+        propertyChangeSupport.firePropertyChange("actuatorName", oldValue, actuatorName);
+    }
+
+    public String getPinReturnActuatorValue() {
+        return pinReturnActuatorValue;
+    }
+
+    public void setPinReturnActuatorValue(String actuatorName) {
+        String oldValue = this.pinReturnActuatorValue;
+        this.pinReturnActuatorValue = actuatorName;
         propertyChangeSupport.firePropertyChange("actuatorName", oldValue, actuatorName);
     }
 
