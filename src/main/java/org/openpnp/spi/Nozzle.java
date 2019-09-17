@@ -104,5 +104,10 @@ public interface Nozzle
     public void removeCompatibleNozzleTip(NozzleTip nt);
     
     public void calibrate() throws Exception;
+    
     public boolean isCalibrated();
+    
+    public void actuate(boolean on) throws Exception;
+    
+    void purge() throws Exception;
 }
