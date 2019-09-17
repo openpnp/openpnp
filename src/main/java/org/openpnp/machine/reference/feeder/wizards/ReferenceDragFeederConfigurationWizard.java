@@ -44,8 +44,6 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
-import org.jdesktop.beansbinding.BeanProperty;
-import org.jdesktop.beansbinding.Bindings;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
@@ -110,6 +108,7 @@ public class ReferenceDragFeederConfigurationWizard
     private JPanel panel;
     private JButton btnCancelChangeTemplateImage;
     private JButton btnResetVisionOffsets;
+    private JButton btnSetPartOffset;
 
     public ReferenceDragFeederConfigurationWizard(ReferenceDragFeeder feeder) {
         super(feeder);
@@ -161,28 +160,17 @@ public class ReferenceDragFeederConfigurationWizard
         panelFields.add(panelLocations);
         panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
-        panelLocations.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("left:default:grow"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+        panelLocations.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"),},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblX = new JLabel("X");
         panelLocations.add(lblX, "4, 4");
@@ -237,6 +225,14 @@ public class ReferenceDragFeederConfigurationWizard
         backoffDistTf = new JTextField();
         panelLocations.add(backoffDistTf, "4, 10");
         backoffDistTf.setColumns(10);
+
+        btnSetPartOffset = new JButton("Update next part offset to:");
+        btnSetPartOffset.setAction(setNextPartOffset);
+        panelLocations.add(btnSetPartOffset, "6, 10");
+
+        nextPartOffset = new JTextField();
+        panelLocations.add(nextPartOffset, "8, 10");
+        nextPartOffset.setColumns(10);
         //
         panelVision = new JPanel();
         panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING,
@@ -396,6 +392,7 @@ public class ReferenceDragFeederConfigurationWizard
                 intConverter);
         
         addWrappedBinding(feeder, "backoffDistance", backoffDistTf, "text", lengthConverter);
+        addWrappedBinding(feeder, "uiNextPartOffset", nextPartOffset, "text", intConverter);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedRate);
         ComponentDecorators.decorateWithAutoSelect(textFieldActuatorId);
@@ -411,6 +408,7 @@ public class ReferenceDragFeederConfigurationWizard
         ComponentDecorators.decorateWithAutoSelect(textFieldAoiWidth);
         ComponentDecorators.decorateWithAutoSelect(textFieldAoiHeight);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(backoffDistTf);
+        ComponentDecorators.decorateWithAutoSelect(nextPartOffset);
 
         bind(UpdateStrategy.READ, feeder, "actuatorName", locationButtonsPanelFeedStart, "actuatorName");
         bind(UpdateStrategy.READ, feeder, "actuatorName", locationButtonsPanelFeedEnd, "actuatorName");
@@ -560,6 +558,18 @@ public class ReferenceDragFeederConfigurationWizard
             });
         }
     };
+    
+    @SuppressWarnings("serial")
+    private Action setNextPartOffset = new AbstractAction("Set next part offset to:") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.messageBoxOnException(() -> {
+                feeder.updateNextPartOffset();
+            });
+        }
+    };
+    
     private JLabel lblBackoffDistance;
     private JTextField backoffDistTf;
+    private JTextField nextPartOffset;
 }

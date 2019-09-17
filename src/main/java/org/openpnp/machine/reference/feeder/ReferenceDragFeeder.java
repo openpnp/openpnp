@@ -84,7 +84,9 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     @Element(required = false)
     protected Vision vision = new Vision();
     @Element(required = false)
-    protected Length backoffDistance = new Length(0, LengthUnit.Millimeters);    
+    protected Length backoffDistance = new Length(0, LengthUnit.Millimeters);   
+    @Element(required = false)
+    protected int uiNextPartOffset = 0;
 
     protected Location pickLocation;
 
@@ -350,6 +352,11 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 		partPitch = null;
 	}
 
+    public void updateNextPartOffset() {
+        feededCount = uiNextPartOffset + 1;
+        Logger.debug(String.format("---: feededCount = %s", String.valueOf(feededCount)));
+    }
+    
 	public boolean isPart0402() {
 		return this.getPart().getPackage().getId().contains("C0402")
 				|| this.getPart().getPackage().getId().contains("R0402");
@@ -405,6 +412,14 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
     public void setBackoffDistance(Length backoffDistance) {
         this.backoffDistance = backoffDistance;
+    }
+    
+    public int getUiNextPartOffset() {
+        return uiNextPartOffset;
+    }
+
+    public void setUiNextPartOffset(int uiNextPartOffset) {
+        this.uiNextPartOffset = uiNextPartOffset;
     }
 
     public Vision getVision() {
