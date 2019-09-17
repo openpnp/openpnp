@@ -350,6 +350,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                                                  .get(0);
 
                 fireTextStatus("Panel fiducial check on %s", boardLocation);
+                Logger.debug(String.format("\n\n\nPanel fiducial check on %s", boardLocation));
                 try {
                     locator.locateBoard(boardLocation, p.isCheckFiducials());
                 }
@@ -382,6 +383,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
 
                 fireTextStatus("Fiducial check for %s", boardLocation);
+                Logger.debug(String.format("\n\n\nPanel fiducial check on %s", boardLocation));
                 try {
                     locator.locateBoard(boardLocation);
                 }
@@ -392,6 +394,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 completed.add(boardLocation);
                 return this;
             }
+            
+            Logger.debug(String.format("\n\n\nPanel fiducial check complete"));
 
             return new Plan();
         }
@@ -424,7 +428,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             long t = System.currentTimeMillis();
             List<PlannedPlacement> plannedPlacements = planner.plan(head, jobPlacements);
-            Logger.debug("Planner complete in {}ms: {}", (System.currentTimeMillis() - t),
+            Logger.debug("\n\nPlanner complete in {}ms: {}", (System.currentTimeMillis() - t),
                     plannedPlacements);
 
             if (plannedPlacements.isEmpty()) {
@@ -526,9 +530,26 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
             final Placement placement = jobPlacement.getPlacement();
             final Part part = placement.getPart();
-
+            final BoardLocation boardLocation = plannedPlacement.jobPlacement.getBoardLocation();
             final Feeder feeder = findFeeder(machine, part);
-
+            
+            try {
+                HashMap<String, Object> params = new HashMap<>();
+                params.put("job", job);
+                params.put("jobProcessor", this);
+                params.put("part", part);
+                params.put("nozzle", nozzle);
+                params.put("placement", placement);
+                params.put("boardLocation", boardLocation);
+                params.put("feeder", feeder);
+                Configuration.get()
+                             .getScripting()
+                             .on("Job.Placement.Starting", params);
+            }
+            catch (Exception e) {
+                throw new JobProcessorException(null, e);
+            }
+            
             feed(feeder, nozzle);
 
             pick(nozzle, feeder, placement, part);
@@ -576,7 +597,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 try {
                     fireTextStatus("Feed %s on %s.", feeder.getName(), feeder.getPart()
                                                                              .getId());
-
+                    Logger.debug(String.format("\n\n\nFeed %s on %s.", feeder.getName(), feeder.getPart()
+                            .getId()));
                     feeder.feed(nozzle);
                     return;
                 }
@@ -592,10 +614,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             try {
                 fireTextStatus("Pick %s from %s for %s.", part.getId(), feeder.getName(),
                         placement.getId());
+                Logger.debug(String.format("\n\n\nPick %s from %s for %s.", part.getId(), feeder.getName(),
+                        placement.getId()));
 
                 // Move to pick location.
                 MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
-
 
                 // Pick
                 nozzle.pick(part);
@@ -609,6 +632,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
 
         private void postPick(Feeder feeder, Nozzle nozzle) throws JobProcessorException {
+            Logger.debug(String.format("\n\n\npostPick from %s on %s.", feeder.getName(),
+                    nozzle.getName()));
             try {
                 feeder.postPick(nozzle);
             }
@@ -618,6 +643,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
 
         private void checkPartOn(Nozzle nozzle) throws JobProcessorException {
+            Logger.debug(String.format("\n\n\ncheckPartOn on %s.", nozzle.getName()));
             if (!nozzle.isPartDetectionEnabled()) {
                 return;
             }
