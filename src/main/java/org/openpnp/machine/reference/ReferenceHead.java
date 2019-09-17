@@ -109,7 +109,7 @@ public class ReferenceHead extends AbstractHead {
                             maxLocation.getY());
                 }
                 throw new Exception(
-                        String.format("Can't move %s to %s, outside of soft limits on head %s.  %s",
+                        String.format("Can't move %s to %s, outside of soft limits on head %s:  %s",
                                 hm.getName(), location, getName(), limit));
             }
         }
