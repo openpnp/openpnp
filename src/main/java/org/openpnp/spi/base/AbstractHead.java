@@ -50,16 +50,16 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     protected Location maxLocation = new Location(LengthUnit.Millimeters);
 
     @Element(required = false)
-    protected String zProbeActuatorName = "";
+    protected String zContactActuatorName = "";
+    
+    @Element(required = false)
+    protected String zContactActuatorValue = "";
 
     @Element(required = false)
-    protected String zProbeActuatorSafeZValue = "";
+    protected String zSafeActuatorName = "";
 
     @Element(required = false)
-    protected String zSafeCheckActuatorName = "";
-
-    @Element(required = false)
-    protected String zSafeCheckActuatorOkValue = "";
+    protected String zSafeActuatorValue = "";
 
     protected Machine machine;
 
@@ -186,32 +186,18 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
         for (Actuator actuator : actuators) {
             actuator.moveToSafeZ(speed);
         }
-        if (this.zProbeActuatorName.length() > 0 && this.zProbeActuatorSafeZValue.length() > 0) {
-            if (this.getZProbe() == null) {
+
+        if (this.zSafeActuatorName.length() > 0 && this.zSafeActuatorValue.length() > 0) {
+            Actuator zSafeActuator = getActuatorByName(zSafeActuatorName);
+            if (zSafeActuator == null) {
                 throw new Exception(String.format("No Actuator found with name %s on Head %s",
-                        zProbeActuatorName, this.getName()));
+                        zSafeActuatorName, this.getName()));
             }
-            String zProbeValue = this.getZProbe()
-                                     .read();
-            if (!zProbeValue.equals(zProbeActuatorSafeZValue)) {
+            String zProbeValue = zSafeActuator.read();
+            if (!zProbeValue.equals(zSafeActuatorValue)) {
                 throw new Exception(String.format(
                         "Z Probe Actuator %s says Head %s is not at safe Z (probe is reading %s and not %s)",
-                        zProbeActuatorName, this.getName(), zProbeValue, zProbeActuatorSafeZValue));
-            }
-        }
-        if (this.zSafeCheckActuatorName.length() > 0
-                && this.zSafeCheckActuatorOkValue.length() > 0) {
-            Actuator zSafeCheckActuator = this.getActuatorByName(zSafeCheckActuatorName);
-            if (zSafeCheckActuator == null) {
-                throw new Exception(String.format("No Actuator found with name %s on Head %s",
-                        zSafeCheckActuatorName, this.getName()));
-            }
-            String actuatorValue = zSafeCheckActuator.read();
-            if (!actuatorValue.equals(zSafeCheckActuatorOkValue)) {
-                throw new Exception(String.format(
-                        "Z Probe Safe Check Actuator %s says Head %s is not at safe Z (probe is reading %s and not %s)",
-                        zSafeCheckActuatorName, this.getName(), actuatorValue,
-                        zSafeCheckActuatorOkValue));
+                        zSafeActuatorName, this.getName(), zProbeValue, zSafeActuatorValue));
             }
         }
         Logger.debug("\nAbstractHead::moveToSafeZ complete\n");
@@ -335,38 +321,38 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     @Override
     public Actuator getZProbe() {
-        return getActuatorByName(zProbeActuatorName);
+        return getActuatorByName(zContactActuatorName);
     }
 
-    public String getzProbeActuatorName() {
-        return zProbeActuatorName;
+    public String getzSafeActuatorValue() {
+        return zSafeActuatorValue;
     }
 
-    public void setzProbeActuatorName(String zProbeActuatorName) {
-        this.zProbeActuatorName = zProbeActuatorName;
+    public void setzSafeActuatorValue(String zSafeActuatorValue) {
+        this.zSafeActuatorValue = zSafeActuatorValue;
     }
 
-    public String getzProbeActuatorSafeZValue() {
-        return zProbeActuatorSafeZValue;
+    public String getzSafeActuatorName() {
+        return zSafeActuatorName;
     }
 
-    public void setzProbeActuatorSafeZValue(String zProbeActuatorSafeZValue) {
-        this.zProbeActuatorSafeZValue = zProbeActuatorSafeZValue;
+    public void setzSafeActuatorName(String zSafeActuatorName) {
+        this.zSafeActuatorName = zSafeActuatorName;
     }
 
-    public String getzSafeCheckActuatorName() {
-        return zSafeCheckActuatorName;
+    public String getzContactActuatorName() {
+        return zContactActuatorName;
     }
 
-    public void setzSafeCheckActuatorName(String zSafeCheckActuatorName) {
-        this.zSafeCheckActuatorName = zSafeCheckActuatorName;
+    public void setzContactActuatorName(String zContactActuatorName) {
+        this.zContactActuatorName = zContactActuatorName;
+    }
+    
+    public String getzContactActuatorValue() {
+        return zContactActuatorValue;
     }
 
-    public String getzSafeCheckActuatorValue() {
-        return zSafeCheckActuatorOkValue;
-    }
-
-    public void setzSafeCheckActuatorValue(String zSafeCheckActuatorValue) {
-        this.zSafeCheckActuatorOkValue = zSafeCheckActuatorValue;
+    public void setzContactActuatorValue(String zContactActuatorValue) {
+        this.zContactActuatorValue = zContactActuatorValue;
     }
 }
