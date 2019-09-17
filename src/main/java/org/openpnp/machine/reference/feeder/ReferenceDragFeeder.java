@@ -172,8 +172,6 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
             }
         }
 
-        head.moveToSafeZ();
-
         if (vision.isEnabled()) {
             if (visionOffset == null) {
                 // This is the first feed with vision, or the offset has
@@ -207,12 +205,15 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
             }
 
             // Move the actuator to the feed start location.
+            Logger.debug("\n\nfeed: move to pin start");
             dragPinActuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
 
             // extend the pin
+            Logger.debug("\n\nfeed: actuate pin");
             dragPinActuator.actuate(true);
 
             // drag the tape
+            Logger.debug("\n\nfeed: move to pin end");
             dragPinActuator.moveTo(feedEndLocation, feedSpeed * dragPinActuator.getHead()
                                                                                .getMachine()
                                                                                .getSpeed());
@@ -223,7 +224,12 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
                 peelOffActuator.actuate(false);
             }
 
+            // retract the pin
+            Logger.debug("\n\nfeed: retract pin");
+            dragPinActuator.actuate(false);
+            
             // back off to release tension from the pin
+            Logger.debug("\n\nfeed: move to pin backoff 1");
             if (backoffDistance.getValue() != 0) {
                 Location backoffLocation = Utils2D.getPointAlongLine(feedEndLocation,
                         feedStartLocation, backoffDistance);
@@ -231,9 +237,6 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
                                                                                    .getMachine()
                                                                                    .getSpeed());
             }
-
-            // retract the pin
-            dragPinActuator.actuate(false);
 
             // if possible, confirm drag pin retraction
             if (pinReturnActuatorValue.length() > 0) {
@@ -243,6 +246,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
                     // if we're here then the pin is stuck, so what follows tries to back off a
                     // second
                     // time by the same amount to try to get the pin free from binding
+                    Logger.debug("\n\nfeed: move to pin backoff 2");
                     if (backoffDistance.getValue() != 0) {
                         Location backoffLocation2 = Utils2D.getPointAlongLine(feedEndLocation,
                                 feedStartLocation, backoffDistance.add(backoffDistance));
@@ -263,8 +267,6 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
                 }
             }
 
-
-
             if (this.isPart0402() == true) {
                 // can change it to "feededCount = parts_count_userSettings;"
                 feededCount = 2;
@@ -274,14 +276,14 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
             Logger.debug("Multi parts drag feeder: skipping drag feededCount = " + feededCount);
         }
 
-        head.moveToSafeZ();
-
         if (vision.isEnabled()) {
             visionOffset = getVisionOffsets(head, location);
 
             Logger.debug("final visionOffsets " + visionOffset);
             Logger.debug("Modified pickLocation {}", pickLocation.subtract(visionOffset));
         }
+        
+        Logger.debug("feed({}) complete", nozzle);
     }
 
     // TODO: Throw an Exception if vision fails.
