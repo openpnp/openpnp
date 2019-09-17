@@ -86,11 +86,11 @@ public class DlgAutoPanelize extends JDialog {
         jPanel.add(textFieldPCBRows, "4, 4, fill, default");
 
         // Spacing
-        jPanel.add(new JLabel("X Gap Spacing", JLabel.RIGHT), "2, 6, right, default");
+        jPanel.add(new JLabel("X Spacing", JLabel.RIGHT), "2, 6, right, default");
         textFieldboardXSpacing = new JTextField();
         jPanel.add(textFieldboardXSpacing, "4, 6, fill, default");
 
-        jPanel.add(new JLabel("Y Gap Spacing", JLabel.RIGHT), "2, 8, right, default");
+        jPanel.add(new JLabel("Y Spacing", JLabel.RIGHT), "2, 8, right, default");
         textFieldboardYSpacing = new JTextField();
         jPanel.add(textFieldboardYSpacing, "4, 8, fill, default");
 
