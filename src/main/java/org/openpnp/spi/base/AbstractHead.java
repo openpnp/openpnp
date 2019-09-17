@@ -38,8 +38,8 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     @Element(required = false)
     protected Location parkLocation = new Location(LengthUnit.Millimeters);
-    
-    @Element(required=false)
+
+    @Element(required = false)
     protected boolean softLimitsEnabled = false;
 
     @Element(required = false)
@@ -47,9 +47,12 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     @Element(required = false)
     protected Location maxLocation = new Location(LengthUnit.Millimeters);
-    
+
     @Element(required = false)
-    protected String zProbeActuatorName;
+    protected String zContactActuatorName = "";
+
+    @Element(required = false)
+    protected String zContactActuatorValue = "";
 
     protected Machine machine;
 
@@ -288,17 +291,25 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     public void setSoftLimitsEnabled(boolean softLimitsEnabled) {
         this.softLimitsEnabled = softLimitsEnabled;
     }
-    
+
     @Override
     public Actuator getZProbe() {
-        return getActuatorByName(zProbeActuatorName); 
+        return getActuatorByName(zContactActuatorName);
     }
 
-    public String getzProbeActuatorName() {
-        return zProbeActuatorName;
+    public String getzContactActuatorName() {
+        return zContactActuatorName;
     }
 
-    public void setzProbeActuatorName(String zProbeActuatorName) {
-        this.zProbeActuatorName = zProbeActuatorName;
+    public void setzContactActuatorName(String zContactActuatorName) {
+        this.zContactActuatorName = zContactActuatorName;
+    }
+
+    public String getzContactActuatorValue() {
+        return zContactActuatorValue;
+    }
+
+    public void setzContactActuatorValue(String zContactActuatorValue) {
+        this.zContactActuatorValue = zContactActuatorValue;
     }
 }
