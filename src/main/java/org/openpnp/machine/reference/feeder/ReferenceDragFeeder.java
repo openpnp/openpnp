@@ -81,6 +81,8 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     protected String actuatorName;
     @Attribute(required = false)
     protected String peelOffActuatorName;
+    @Attribute(required = false)
+    protected String pinReturnActuatorValue;
     @Element(required = false)
     protected Vision vision = new Vision();
     @Element(required = false)
@@ -91,7 +93,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     protected Location pickLocation;
 
     private double feededCount = 0;
-    private double partsPitchX = -2; //-2mm for 0402
+    private double partsPitchX = 2; // 2mm for 0402
     private double partsPitchY = 0;
 
     /*
@@ -105,20 +107,32 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
     @Override
     public Location getPickLocation() throws Exception {
+        Location correctedPickLocation;
+
+        if (feededCount > 0) {
+            feededCount--;
+        }
+        else {
+            feededCount = 0;
+        }
+
+        partPitch = new Location(LengthUnit.Millimeters, partsPitchX * feededCount,
+                partsPitchY * feededCount, 0, 0);
+
         if (pickLocation == null) {
             pickLocation = location;
         }
 
         if (vision.isEnabled() && visionOffset != null) {
-			if (this.isPart0402() && partPitch != null) {
-				return pickLocation.subtract(visionOffset).add(partPitch);
+            correctedPickLocation = pickLocation.subtract(visionOffset)
+                                                .add(partPitch);
+
 			}
 			else {
-				return pickLocation.subtract(visionOffset);
-			}
+            correctedPickLocation = pickLocation.add(partPitch);
         }
 
-        return pickLocation;
+        return correctedPickLocation;
     }
 
     @Override
@@ -139,9 +153,9 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
          * it would have already hit.
          */
 
-        Actuator actuator = head.getActuatorByName(actuatorName);
+        Actuator dragPinActuator = head.getActuatorByName(actuatorName);
 
-        if (actuator == null) {
+        if (dragPinActuator == null) {
             throw new Exception(String.format("No Actuator found with name %s on feed Head %s",
                     actuatorName, head.getName()));
         }
@@ -156,8 +170,6 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 						peelOffActuatorName, head.getName()));
 	        }
 		}
-
-        head.moveToSafeZ();
 
         if (vision.isEnabled()) {
             if (visionOffset == null) {
@@ -191,16 +203,18 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 	        }
 
 	        // Move the actuator to the feed start location.
-	        actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
+            Logger.debug("\n\nfeed: move to pin start");
+            dragPinActuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
 
 	        // extend the pin
-	        actuator.actuate(true);
-
-	        // insert the pin
-	        actuator.moveTo(feedStartLocation);
+            Logger.debug("\n\nfeed: actuate pin");
+            dragPinActuator.actuate(true);
 
 	        // drag the tape
-	        actuator.moveTo(feedEndLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
+            Logger.debug("\n\nfeed: move to pin end");
+            dragPinActuator.moveTo(feedEndLocation, feedSpeed * dragPinActuator.getHead()
+                                                                               .getMachine()
+                                                                               .getSpeed());
 
 			if (peelOffActuator != null) {
 				// peel off before backoff
@@ -208,14 +222,48 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 				peelOffActuator.actuate(false);
 			}
 
+            // retract the pin
+            Logger.debug("\n\nfeed: retract pin");
+            dragPinActuator.actuate(false);
+            
 	        // backoff to release tension from the pin
+            Logger.debug("\n\nfeed: move to pin backoff 1");
+            if (backoffDistance.getValue() != 0) {
+                Location backoffLocation = Utils2D.getPointAlongLine(feedEndLocation,
+                        feedStartLocation, backoffDistance);
+                dragPinActuator.moveTo(backoffLocation, feedSpeed * dragPinActuator.getHead()
+                                                                                   .getMachine()
+                                                                                   .getSpeed());
+            }
+
+            // if possible, confirm drag pin retraction
+            if (pinReturnActuatorValue.length() > 0) {
+
+                if (!dragPinActuator.read()
+                                    .equals(pinReturnActuatorValue)) {
+                    // if we're here then the pin is stuck, so what follows tries to back off a
+                    // second
+                    // time by the same amount to try to get the pin free from binding
+                    Logger.debug("\n\nfeed: move to pin backoff 2");
 	        if (backoffDistance.getValue() != 0) {
-	            Location backoffLocation = Utils2D.getPointAlongLine(feedEndLocation, feedStartLocation, backoffDistance);
-	            actuator.moveTo(backoffLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
+                        Location backoffLocation2 = Utils2D.getPointAlongLine(feedEndLocation,
+                                feedStartLocation, backoffDistance.add(backoffDistance));
+                        dragPinActuator.moveTo(backoffLocation2,
+                                feedSpeed * dragPinActuator.getHead()
+                                                           .getMachine()
+                                                           .getSpeed());
 	        }
 
-	        // retract the pin
-	        actuator.actuate(false);
+                    // try retracting the pin again (maybe the command has a sleep that would
+                    // help)
+                    dragPinActuator.actuate(false);
+                }
+
+                if (!dragPinActuator.read()
+                                    .equals(pinReturnActuatorValue)) {
+                    throw new Exception("Unable to retract drag pin");
+                }
+            }
 
 	        if (this.isPart0402() == true) {
 				// can change it to "feededCount = parts_count_userSettings;"
@@ -223,30 +271,18 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 	        }
         } 
         else {
-			Logger.debug("Multi parts drag feeder: skipping drag " + feededCount);
+            Logger.debug("Multi parts drag feeder: skipping drag feededCount = " + feededCount);
         }
-
-
-        head.moveToSafeZ();
 
         if (vision.isEnabled()) {
             visionOffset = getVisionOffsets(head, location);
-
-			if (feededCount > 0) {
-				feededCount--;
-				if (feededCount > 0) {
-					partPitch = new Location(LengthUnit.Millimeters, partsPitchX * feededCount,
-							partsPitchY * feededCount, 0, 0);
-				} 
-				else {
-					partPitch = null;
-				}
-			}
 
             Logger.debug("final visionOffsets " + visionOffset);
 
             Logger.debug("Modified pickLocation {}", pickLocation.subtract(visionOffset));
         }
+        
+        Logger.debug("feed({}) complete", nozzle);
     }
 
     // TODO: Throw an Exception if vision fails.
@@ -350,6 +386,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 		}
 
 		partPitch = null;
+        feededCount = 0;
 	}
 
     public void updateNextPartOffset() {
@@ -358,8 +395,10 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     }
     
 	public boolean isPart0402() {
-		return this.getPart().getPackage().getId().contains("C0402")
-				|| this.getPart().getPackage().getId().contains("R0402");
+        return this.getPart()
+                   .getPackage()
+                   .getId()
+                   .contains("0402");
 	}
 
     public Location getFeedStartLocation() {
@@ -406,18 +445,28 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         propertyChangeSupport.firePropertyChange("actuatorName", oldValue, actuatorName);
     }
 
+    public String getPinReturnActuatorValue() {
+        return pinReturnActuatorValue;
+    }
+
+    public void setPinReturnActuatorValue(String actuatorName) {
+        String oldValue = this.pinReturnActuatorValue;
+        this.pinReturnActuatorValue = actuatorName;
+        propertyChangeSupport.firePropertyChange("actuatorName", oldValue, actuatorName);
+    }
+
     public Length getBackoffDistance() {
         return backoffDistance;
+    }
+
+    public int getUiNextPartOffset() {
+        return uiNextPartOffset;
     }
 
     public void setBackoffDistance(Length backoffDistance) {
         this.backoffDistance = backoffDistance;
     }
     
-    public int getUiNextPartOffset() {
-        return uiNextPartOffset;
-    }
-
     public void setUiNextPartOffset(int uiNextPartOffset) {
         this.uiNextPartOffset = uiNextPartOffset;
     }
