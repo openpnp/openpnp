@@ -54,12 +54,6 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     @Element(required = false)
     protected String zContactActuatorValue = "";
 
-    @Element(required = false)
-    protected String zSafeActuatorName = "";
-
-    @Element(required = false)
-    protected String zSafeActuatorValue = "";
-
     protected Machine machine;
 
     public AbstractHead() {
@@ -182,20 +176,6 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
         for (Actuator actuator : actuators) {
             actuator.moveToSafeZ(speed);
         }
-
-        if (this.zSafeActuatorName.length() > 0 && this.zSafeActuatorValue.length() > 0) {
-            Actuator zSafeActuator = getActuatorByName(zSafeActuatorName);
-            if (zSafeActuator == null) {
-                throw new Exception(String.format("No Actuator found with name %s on Head %s",
-                        zSafeActuatorName, this.getName()));
-            }
-            String zProbeValue = zSafeActuator.read();
-            if (!zProbeValue.equals(zSafeActuatorValue)) {
-                throw new Exception(String.format(
-                        "Z Probe Actuator %s says Head %s is not at safe Z (probe is reading %s and not %s)",
-                        zSafeActuatorName, this.getName(), zProbeValue, zSafeActuatorValue));
-            }
-        }
     }
 
     @Override
@@ -315,22 +295,6 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     @Override
     public Actuator getZProbe() {
         return getActuatorByName(zContactActuatorName);
-    }
-
-    public String getzSafeActuatorValue() {
-        return zSafeActuatorValue;
-    }
-
-    public void setzSafeActuatorValue(String zSafeActuatorValue) {
-        this.zSafeActuatorValue = zSafeActuatorValue;
-    }
-
-    public String getzSafeActuatorName() {
-        return zSafeActuatorName;
-    }
-
-    public void setzSafeActuatorName(String zSafeActuatorName) {
-        this.zSafeActuatorName = zSafeActuatorName;
     }
 
     public String getzContactActuatorName() {
