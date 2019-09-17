@@ -53,11 +53,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
-import org.openpnp.events.BoardLocationSelectedEvent;
 import org.openpnp.events.FeederSelectedEvent;
-import org.openpnp.gui.JobPanel.SetCheckFidsAction;
-import org.openpnp.gui.JobPanel.SetEnabledAction;
-import org.openpnp.gui.JobPanel.SetSideAction;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.ActionGroup;
@@ -67,8 +63,6 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
-import org.openpnp.model.Board;
-import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -129,6 +123,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         toolBar.add(feedFeederAction);
         toolBar.add(moveCameraToPickLocation);
         toolBar.add(moveToolToPickLocation);
+        toolBar.add(vacOnAction);
+        toolBar.add(vacOffAction);
 
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);
@@ -183,7 +179,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
         singleSelectActionGroup = new ActionGroup(deleteFeederAction, feedFeederAction,
                 pickFeederAction, moveCameraToPickLocation, moveToolToPickLocation,
-                setEnabledAction);
+                setEnabledAction, vacOnAction, vacOffAction);
         singleSelectActionGroup.setEnabled(false);
         
         multiSelectActionGroup = new ActionGroup(deleteFeederAction, setEnabledAction);
@@ -511,7 +507,43 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             });
         }
     };
-    
+
+    public Action vacOnAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.vacOn);
+            putValue(NAME, "Vacuum through nozzle");
+            putValue(SHORT_DESCRIPTION, "Call the nozzle's actuate operation");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                Nozzle nozzle = MainFrame.get()
+                                         .getMachineControls()
+                                         .getSelectedNozzle();
+                nozzle.actuate(true);
+            });
+        }
+    };
+
+    public Action vacOffAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.vacOff);
+            putValue(NAME, "Purge Nozzle");
+            putValue(SHORT_DESCRIPTION, "Call the nozzle's place operation");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                Nozzle nozzle = MainFrame.get()
+                                         .getMachineControls()
+                                         .getSelectedNozzle();
+                nozzle.purge();
+            });
+        }
+    };
+
     public final Action setEnabledAction = new AbstractAction() {
         {
             putValue(NAME, "Set Enabled");

@@ -162,9 +162,13 @@ public class TestDriver implements ReferenceDriver {
         }
 
         @Override
-        public void close() throws IOException {
-
-        }
+        public void close() throws IOException {}
+        
+        @Override
+        public void actuate(ReferenceNozzle nozzle, boolean on) throws Exception {}
+        
+        @Override
+        public void purge(ReferenceNozzle nozzle) {}
     }
 
     @Override
@@ -200,4 +204,10 @@ public class TestDriver implements ReferenceDriver {
     public Wizard getConfigurationWizard() {
         return null;
     }
+    
+    @Override
+    public void actuate(ReferenceNozzle nozzle, boolean on) throws Exception {}
+    
+    @Override
+    public void purge(ReferenceNozzle nozzle) {}
 }

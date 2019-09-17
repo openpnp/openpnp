@@ -787,4 +787,10 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     public void setConnectWaitTimeMilliseconds(int connectWaitTimeMilliseconds) {
         this.connectWaitTimeMilliseconds = connectWaitTimeMilliseconds;
     }
+    
+    @Override
+    public void actuate(ReferenceNozzle nozzle, boolean on) throws Exception {}
+    
+    @Override
+    public void purge(ReferenceNozzle nozzle) {}
 }

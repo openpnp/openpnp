@@ -549,4 +549,10 @@ public class OpenBuildsDriver extends AbstractReferenceDriver implements Runnabl
     private void led(boolean on) throws Exception {
         sendCommand(on ? "M810" : "M811");
     }
+    
+    @Override
+    public void actuate(ReferenceNozzle nozzle, boolean on) throws Exception {}
+    
+    @Override
+    public void purge(ReferenceNozzle nozzle) {}
 }
