@@ -547,8 +547,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action vacOnAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.vacOn);
-            putValue(NAME, "Vacuum On");
-            putValue(SHORT_DESCRIPTION, "Turn on the vacuum.");
+            putValue(NAME, "Vacuum through nozzle");
+            putValue(SHORT_DESCRIPTION, "Call the nozzle's actuate operation");
         }
 
         @Override
@@ -557,7 +557,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 Nozzle nozzle = MainFrame.get()
                                          .getMachineControls()
                                          .getSelectedNozzle();
-                nozzle.pumpOn();
+                nozzle.actuate(true);
             });
         }
     };
@@ -565,8 +565,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action vacOffAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.vacOff);
-            putValue(NAME, "Vacuum Off");
-            putValue(SHORT_DESCRIPTION, "Turn off the vacuum.");
+            putValue(NAME, "Purge Nozzle");
+            putValue(SHORT_DESCRIPTION, "Call the nozzle's place operation");
         }
 
         @Override
@@ -575,7 +575,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 Nozzle nozzle = MainFrame.get()
                                          .getMachineControls()
                                          .getSelectedNozzle();
-                nozzle.pumpOff();
+                nozzle.purge();
             });
         }
     };

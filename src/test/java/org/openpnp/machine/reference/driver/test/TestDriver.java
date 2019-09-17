@@ -175,10 +175,7 @@ public class TestDriver implements ReferenceDriver {
         }
 
         @Override
-        public void pumpOn(ReferenceNozzle nozzle) {}
-
-        @Override
-        public void pumpOff(ReferenceNozzle nozzle) {}
+        public void purge(ReferenceNozzle nozzle) {}
     }
 
     @Override
@@ -213,10 +210,9 @@ public class TestDriver implements ReferenceDriver {
     public Wizard getConfigurationWizard() {
         return null;
     }
-
+    
     @Override
-    public void pumpOn(ReferenceNozzle nozzle) {}
-
-    @Override
-    public void pumpOff(ReferenceNozzle nozzle) {}
+    public void purge(ReferenceNozzle nozzle) throws Exception {
+        delegate.purge(nozzle);
+    }
 }

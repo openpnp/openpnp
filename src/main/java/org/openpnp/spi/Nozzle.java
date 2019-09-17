@@ -109,8 +109,6 @@ public interface Nozzle extends HeadMountable, WizardConfigurable, PropertySheet
     public void calibrate() throws Exception;
 
     public boolean isCalibrated();
-
-    void pumpOn() throws Exception;
-
-    void pumpOff() throws Exception;
+    
+    void purge() throws Exception;
 }

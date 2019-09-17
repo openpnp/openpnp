@@ -803,8 +803,5 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void pumpOn(ReferenceNozzle nozzle) {}
-
-    @Override
-    public void pumpOff(ReferenceNozzle nozzle) {}
+    public void purge(ReferenceNozzle nozzle) {}
 }

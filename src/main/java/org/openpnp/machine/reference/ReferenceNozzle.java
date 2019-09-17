@@ -711,15 +711,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     @Override
-    public void pumpOff() throws Exception {
+    public void purge() throws Exception {
         getDriver().place(this);
     }
 
-    @Override
-    public void pumpOn() throws Exception {
-        getDriver().pick(this);
-    }
-    
     @Override
     public void actuate(boolean on) throws Exception {
         getDriver().actuate(this,on);

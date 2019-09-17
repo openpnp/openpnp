@@ -126,9 +126,7 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
 
     public default void createDefaults() {}
 
-    public void pumpOn(ReferenceNozzle nozzle) throws Exception;
-
-    public void pumpOff(ReferenceNozzle nozzle) throws Exception;
+    public void purge(ReferenceNozzle nozzle) throws Exception;
 
     public void actuate(ReferenceNozzle nozzle, boolean on) throws Exception;
 }

@@ -785,7 +785,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     public void pick(ReferenceNozzle nozzle) throws Exception {
         pickedNozzles.add(nozzle);
         if (pickedNozzles.size() > 0) {
-            pumpOn(nozzle);
+            sendGcode(getCommand(nozzle, CommandType.PUMP_ON_COMMAND));
         }
 
         String command = getCommand(nozzle, CommandType.PICK_COMMAND);
@@ -800,34 +800,27 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
 
     @Override
-    public void pumpOn(ReferenceNozzle nozzle) throws Exception {
-        sendGcode(getCommand(nozzle, CommandType.PUMP_ON_COMMAND));
-    }
-
-    @Override
-    public void pumpOff(ReferenceNozzle nozzle) throws Exception {
-        sendGcode(getCommand(nozzle, CommandType.PUMP_OFF_COMMAND));
-    }
-
-    @Override
-    public void place(ReferenceNozzle nozzle) throws Exception {
-
+    public void purge(ReferenceNozzle nozzle) throws Exception {
         String command = getCommand(nozzle, CommandType.PLACE_COMMAND);
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
 
         sendGcode(command);
-
+    }
+    
+    @Override
+    public void place(ReferenceNozzle nozzle) throws Exception {
+        purge(nozzle);
+        
         pickedNozzles.remove(nozzle);
         if (pickedNozzles.size() < 1) {
-            pumpOff(nozzle);
+            sendGcode(getCommand(nozzle, CommandType.PUMP_OFF_COMMAND));
         }
 
         for (ReferenceDriver driver : subDrivers) {
             driver.place(nozzle);
         }
     }
-
 
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {

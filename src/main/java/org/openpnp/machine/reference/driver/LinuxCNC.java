@@ -453,8 +453,5 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
     }
 
     @Override
-    public void pumpOn(ReferenceNozzle nozzle) {}
-
-    @Override
-    public void pumpOff(ReferenceNozzle nozzle) {}
+    public void purge(ReferenceNozzle nozzle) {}
 }
