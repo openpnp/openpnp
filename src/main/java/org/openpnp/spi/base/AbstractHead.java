@@ -15,6 +15,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.IdentifiableList;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -49,16 +50,16 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     protected Location maxLocation = new Location(LengthUnit.Millimeters);
 
     @Element(required = false)
-    protected String zProbeActuatorName;
+    protected String zProbeActuatorName = "";
 
     @Element(required = false)
-    protected String zProbeActuatorSafeZValue;
+    protected String zProbeActuatorSafeZValue = "";
 
     @Element(required = false)
-    protected String zSafeCheckActuatorName;
+    protected String zSafeCheckActuatorName = "";
 
     @Element(required = false)
-    protected String zSafeCheckActuatorOkValue;
+    protected String zSafeCheckActuatorOkValue = "";
 
     protected Machine machine;
 
@@ -174,6 +175,8 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     @Override
     public void moveToSafeZ(double speed) throws Exception {
+        Logger.debug("\n\nAbstractHead::moveToSafeZ");
+        
         for (Nozzle nozzle : nozzles) {
             nozzle.moveToSafeZ(speed);
         }
@@ -211,6 +214,7 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
                         zSafeCheckActuatorOkValue));
             }
         }
+        Logger.debug("\nAbstractHead::moveToSafeZ complete\n");
     }
 
     @Override
