@@ -157,6 +157,8 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 	        }
 		}
 
+        head.moveToSafeZ();
+
         if (vision.isEnabled()) {
             if (visionOffset == null) {
                 // This is the first feed with vision, or the offset has
