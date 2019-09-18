@@ -49,10 +49,7 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     protected Location maxLocation = new Location(LengthUnit.Millimeters);
 
     @Element(required = false)
-    protected String zContactActuatorName = "";
-
-    @Element(required = false)
-    protected String zContactActuatorValue = "";
+    protected String zProbeActuatorName;
 
     protected Machine machine;
 
@@ -294,22 +291,14 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     @Override
     public Actuator getZProbe() {
-        return getActuatorByName(zContactActuatorName);
+        return getActuatorByName(zProbeActuatorName); 
     }
 
-    public String getzContactActuatorName() {
-        return zContactActuatorName;
+    public String getzProbeActuatorName() {
+        return zProbeActuatorName;
     }
 
-    public void setzContactActuatorName(String zContactActuatorName) {
-        this.zContactActuatorName = zContactActuatorName;
-    }
-
-    public String getzContactActuatorValue() {
-        return zContactActuatorValue;
-    }
-
-    public void setzContactActuatorValue(String zContactActuatorValue) {
-        this.zContactActuatorValue = zContactActuatorValue;
+    public void setzProbeActuatorName(String zProbeActuatorName) {
+        this.zProbeActuatorName = zProbeActuatorName;
     }
 }
