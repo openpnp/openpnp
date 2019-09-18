@@ -447,10 +447,4 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
     public Icon getPropertySheetHolderIcon() {
         return null;
     }
-    
-    @Override
-    public void actuate(ReferenceNozzle nozzle, boolean on) throws Exception {}
-    
-    @Override
-    public void purge(ReferenceNozzle nozzle) {}
 }

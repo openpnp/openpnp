@@ -28,6 +28,7 @@ import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConsole;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverGcodes;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverSettings;
@@ -758,17 +759,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
 
     @Override
-    public void purge(ReferenceNozzle nozzle) throws Exception {
+    public void place(ReferenceNozzle nozzle) throws Exception {
+
         String command = getCommand(nozzle, CommandType.PLACE_COMMAND);
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
 
         sendGcode(command);
-    }
-    
-    @Override
-    public void place(ReferenceNozzle nozzle) throws Exception {
-        purge(nozzle);
 
         pickedNozzles.remove(nozzle);
         if (pickedNozzles.size() < 1) {
@@ -794,20 +791,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
 
         for (ReferenceDriver driver : subDrivers) {
             driver.actuate(actuator, on);
-        }
-    }
-
-    public void actuate(ReferenceNozzle nozzle, boolean on) throws Exception {
-        String command = getCommand(nozzle, CommandType.ACTUATE_BOOLEAN_COMMAND);
-        command = substituteVariable(command, "Id", nozzle.getId());
-        command = substituteVariable(command, "Name", nozzle.getName());
-        command = substituteVariable(command, "BooleanValue", on);
-        command = substituteVariable(command, "True", on ? on : null);
-        command = substituteVariable(command, "False", on ? null : on);
-        sendGcode(command);
-
-        for (ReferenceDriver driver : subDrivers) {
-            driver.actuate(nozzle, on);
         }
     }
 
@@ -1467,6 +1450,5 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             return transformedCoordinate;
         }
     }
-    
     
 }

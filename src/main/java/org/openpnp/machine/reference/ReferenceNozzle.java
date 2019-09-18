@@ -56,12 +56,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     @Element(required = false)
     protected String vacuumSenseActuatorName;
     
-    @Element(required = false)
-    protected String zSafeActuatorName = "";
-
-    @Element(required = false)
-    protected String zSafeActuatorValue = "";
-    
     /**
      * If limitRotation is enabled the nozzle will reverse directions when commanded to rotate past
      * 180 degrees. So, 190 degrees becomes -170 and -190 becomes 170.
@@ -310,20 +304,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 safeZ.getValue(), Double.NaN);
         getDriver().moveTo(this, l, getHead().getMaxPartSpeed() * speed);
         getMachine().fireMachineHeadActivity(head);
-        
-        if (this.zSafeActuatorName.length() > 0 && this.zSafeActuatorValue.length() > 0) {
-            Actuator zSafeActuator = getHead().getActuatorByName(zSafeActuatorName);
-            if (zSafeActuator == null) {
-                throw new Exception(String.format("No Actuator found with name %s on Head %s",
-                        zSafeActuatorName, this.getName()));
-            }
-            String zProbeValue = zSafeActuator.read();
-            if (!zProbeValue.equals(zSafeActuatorValue)) {
-                throw new Exception(String.format(
-                        "Safe Z Actuator %s says Nozzle %s is not at safe Z (actuator is reading %s and not %s)",
-                        zSafeActuatorName, this.getName(), zProbeValue, zSafeActuatorValue));
-            }
-        }
     }
     
     @Override
@@ -638,29 +618,5 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         ReferenceNozzleTip nt = getNozzleTip();
         double vacuumLevel = readVacuumLevel();
         return vacuumLevel >= nt.getVacuumLevelPartOffLow() && vacuumLevel <= nt.getVacuumLevelPartOffHigh();
-    }
-    
-    @Override
-    public void purge() throws Exception {
-        getDriver().place(this);
-    }
-    
-    @Override
-    public void actuate(boolean on) throws Exception {
-        getDriver().actuate(this,on);
-    public String getzSafeActuatorName() {
-        return zSafeActuatorName;
-    }
-
-    public void setzSafeActuatorName(String zSafeActuatorName) {
-        this.zSafeActuatorName = zSafeActuatorName;
-    }
-
-    public String getzSafeActuatorValue() {
-        return zSafeActuatorValue;
-    }
-
-    public void setzSafeActuatorValue(String zSafeActuatorValue) {
-        this.zSafeActuatorValue = zSafeActuatorValue;
     }
 }

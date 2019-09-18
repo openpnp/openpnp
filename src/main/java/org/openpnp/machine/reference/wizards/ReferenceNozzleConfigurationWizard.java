@@ -62,20 +62,21 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
     private JTextField pickDwellTf;
     private JTextField placeDwellTf;
     private JLabel lblLimitRota;
-    private JTextField zSafeActuatorName;
-    private JTextField zSafeActuatorValue;
 
     public ReferenceNozzleConfigurationWizard(ReferenceNozzle nozzle) {
         this.nozzle = nozzle;
 
         panelProperties = new JPanel();
-        panelProperties.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
+        panelProperties.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelProperties);
-        panelProperties.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblName = new JLabel("Name");
         panelProperties.add(lblName, "2, 2, right, default");
@@ -124,52 +125,43 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         contentPanel.add(panelSafeZ);
         panelSafeZ.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"),},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblSafeZ = new JLabel("Safe Z Height");
+        JLabel lblSafeZ = new JLabel("Safe Z");
         panelSafeZ.add(lblSafeZ, "2, 2, right, default");
 
         textFieldSafeZ = new JTextField();
         panelSafeZ.add(textFieldSafeZ, "4, 2, fill, default");
         textFieldSafeZ.setColumns(10);
 
-        JLabel lblNewLabel_4 = new JLabel("Safe Z Actuator Name");
-        panelSafeZ.add(lblNewLabel_4, "2, 4, right, default");
-
-        zSafeActuatorName = new JTextField();
-        panelSafeZ.add(zSafeActuatorName, "4, 4, fill, default");
-        zSafeActuatorName.setColumns(15);
-
-        JLabel lblNewLabel_5 = new JLabel("Safe Z Value");
-        panelSafeZ.add(lblNewLabel_5, "2, 6, right, default");
-
-        zSafeActuatorValue = new JTextField();
-        panelSafeZ.add(zSafeActuatorValue, "4, 6, fill, default");
-        zSafeActuatorValue.setColumns(15);
-
 
         panelChanger = new JPanel();
         panelChanger.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
                 "Settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelChanger);
-        panelChanger.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelChanger
+                .setLayout(
+                        new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblLimitRota = new JLabel("Limit Rotation to 180º");
         panelChanger.add(lblLimitRota, "2, 2, right, default");
@@ -210,8 +202,6 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
 
         addWrappedBinding(nozzle, "limitRotation", chckbxLimitRotationTo, "selected");
         addWrappedBinding(nozzle, "safeZ", textFieldSafeZ, "text", lengthConverter);
-        addWrappedBinding(nozzle, "zSafeActuatorName", zSafeActuatorName, "text");
-        addWrappedBinding(nozzle, "zSafeActuatorValue", zSafeActuatorValue, "text");
         addWrappedBinding(nozzle, "pickDwellMilliseconds", pickDwellTf, "text", intConverter);
         addWrappedBinding(nozzle, "placeDwellMilliseconds", placeDwellTf, "text", intConverter);
 
@@ -222,7 +212,5 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationZ);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
-        ComponentDecorators.decorateWithAutoSelect(zSafeActuatorName);
-        ComponentDecorators.decorateWithAutoSelect(zSafeActuatorValue);
     }
 }
