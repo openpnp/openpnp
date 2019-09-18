@@ -65,7 +65,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
 
     public ReferenceNozzleConfigurationWizard(ReferenceNozzle nozzle) {
         this.nozzle = nozzle;
-
+        
         panelProperties = new JPanel();
         panelProperties.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelProperties);
@@ -77,10 +77,10 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
-
+        
         lblName = new JLabel("Name");
         panelProperties.add(lblName, "2, 2, right, default");
-
+        
         nameTf = new JTextField();
         panelProperties.add(nameTf, "4, 2");
         nameTf.setColumns(20);
@@ -162,16 +162,16 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
-
+        
         lblLimitRota = new JLabel("Limit Rotation to 180º");
         panelChanger.add(lblLimitRota, "2, 2, right, default");
 
         chckbxLimitRotationTo = new JCheckBox("");
         panelChanger.add(chckbxLimitRotationTo, "4, 2");
-
+        
         lblPickDwellTime = new JLabel("Pick Dwell Time (ms)");
         panelChanger.add(lblPickDwellTime, "2, 4, right, default");
-
+        
         pickDwellTf = new JTextField();
         panelChanger.add(pickDwellTf, "4, 4, fill, default");
         pickDwellTf.setColumns(10);

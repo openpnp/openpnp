@@ -313,6 +313,6 @@ public class NullDriver implements ReferenceDriver {
 
     @Override
     public void close() throws IOException {
-    
+
     }
 }

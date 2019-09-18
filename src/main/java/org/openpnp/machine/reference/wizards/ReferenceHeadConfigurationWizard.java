@@ -164,7 +164,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
 
         softLimitsEnabled = new JCheckBox("Enabled?");
         panel_1.add(softLimitsEnabled, "2, 8, 7, 1");
-
+        
         JPanel panel_2 = new JPanel();
         panel_2.setBorder(new TitledBorder(null, "Z Probe", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel_2);
@@ -214,7 +214,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(minY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxY);
-
+        
         ComponentDecorators.decorateWithAutoSelect(zProbeActuatorName);
     }
 

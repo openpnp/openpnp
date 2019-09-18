@@ -511,7 +511,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             });
         }
     };
-
+    
     public final Action setEnabledAction = new AbstractAction() {
         {
             putValue(NAME, "Set Enabled");
