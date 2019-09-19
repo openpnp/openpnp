@@ -488,8 +488,25 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
             final Placement placement = jobPlacement.getPlacement();
             final Part part = placement.getPart();
-            
+            final BoardLocation boardLocation = plannedPlacement.jobPlacement.getBoardLocation();
             final Feeder feeder = findFeeder(machine, part);
+            
+            try {
+                HashMap<String, Object> params = new HashMap<>();
+                params.put("job", job);
+                params.put("jobProcessor", this);
+                params.put("part", part);
+                params.put("nozzle", nozzle);
+                params.put("placement", placement);
+                params.put("boardLocation", boardLocation);
+                params.put("feeder", feeder);
+                Configuration.get()
+                             .getScripting()
+                             .on("Job.Placement.Starting", params);
+            }
+            catch (Exception e) {
+                throw new JobProcessorException(null, e);
+            }
 
             feed(feeder, nozzle);
             
