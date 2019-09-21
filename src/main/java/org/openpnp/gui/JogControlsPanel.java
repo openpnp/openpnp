@@ -62,6 +62,7 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -597,8 +598,24 @@ public class JogControlsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
+                try {
+                    Map<String, Object> globals = new HashMap<>();
+                    globals.put("nozzle", nozzle);
+                    Configuration.get().getScripting().on("Job.BeforeDiscard", globals);
+                }
+                catch (Exception e) {
+                    Logger.warn(e);
+                }
                 // discard the part
                 nozzle.place(Configuration.get().getMachine().getDiscardLocation());
+                try {
+                    Map<String, Object> globals = new HashMap<>();
+                    globals.put("nozzle", nozzle);
+                    Configuration.get().getScripting().on("Job.AfterDiscard", globals);
+                }
+                catch (Exception e) {
+                    Logger.warn(e);
+                }
             });
         }
     };
