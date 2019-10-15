@@ -87,6 +87,11 @@ If you need to move in mils or microns see this post on the form:
 
 https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/openpnp/XV44ij3ZKZ0/eUfbsqRdFQAJ
 
+### MOVE_TO_COMPLETE_COMMAND
+
+This command is useful in systems that use multiple controllers where it is desirable to have them move simultaneously.  To use it, remove the "M400 ; Wait for moves to complete before returning" from the MOVE_TO_COMMAND and add it to the MOVE_TO_COMPLETE_COMMAND.  Now the G0 portion of the command will be sent to all involved controllers first.  Then M400 will be sent to each controller in turn, starting from the last one, until all moves are complete.
+
+
 ### PICK_COMMAND
 
 Sent to indicate that the machine should pick a part. Typically turns on a vacuum pump or solenoid.
