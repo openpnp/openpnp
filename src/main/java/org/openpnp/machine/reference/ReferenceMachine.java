@@ -213,6 +213,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(ReferenceTrayFeeder.class);
         l.add(ReferenceRotatedTrayFeeder.class);
         l.add(ReferenceDragFeeder.class);
+        l.add(ReferenceLeverFeeder.class);
         l.add(ReferenceTubeFeeder.class);
         l.add(ReferenceAutoFeeder.class);
         l.add(ReferenceSlotAutoFeeder.class);
