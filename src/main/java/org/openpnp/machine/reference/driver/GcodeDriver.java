@@ -67,6 +67,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         PUMP_ON_COMMAND,
         PUMP_OFF_COMMAND,
         MOVE_TO_COMMAND(true, "Id", "Name", "FeedRate", "X", "Y", "Z", "Rotation"),
+        MOVE_TO_COMPLETE_COMMAND(true),
         MOVE_TO_COMPLETE_REGEX(true),
         PICK_COMMAND(true, "Id", "Name", "VacuumLevelPartOn", "VacuumLevelPartOff"),
         PLACE_COMMAND(true, "Id", "Name"),
@@ -220,7 +221,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         commands.add(new Command(null, CommandType.COMMAND_CONFIRM_REGEX, "^ok.*"));
         commands.add(new Command(null, CommandType.CONNECT_COMMAND, "G21 ; Set millimeters mode\nG90 ; Set absolute positioning mode\nM82 ; Set absolute mode for extruder"));
         commands.add(new Command(null, CommandType.HOME_COMMAND, "G28 ; Home all axes"));
-        commands.add(new Command(null, CommandType.MOVE_TO_COMMAND, "G0 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:E%.4f} F{FeedRate:%.0f} ; Send standard Gcode move\nM400 ; Wait for moves to complete before returning"));
+        commands.add(new Command(null, CommandType.MOVE_TO_COMMAND, "G0 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:E%.4f} F{FeedRate:%.0f} ; Send standard Gcode move"));
+        commands.add(new Command(null, CommandType.MOVE_TO_COMPLETE_COMMAND, "M400 ; Wait for moves to complete before returning"));
     }
 
     public synchronized void connect() throws Exception {
@@ -568,6 +570,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             rotation = rotationAxis.getTransform().toRaw(rotationAxis, hm, rotation);
         }
 
+        // remember if moved
+        boolean hasMoved = false;
+        
         // Only do something if there at least one axis included in the move
         if (xAxis != null || yAxis != null || zAxis != null || rotationAxis != null) {
 
@@ -719,6 +724,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 if (rotationAxis != null) {
                     rotationAxis.setCoordinate(rotation);
                 }
+                
+                hasMoved = true;
 
             } // there is a move
 
@@ -727,6 +734,17 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         // regardless of any action above the subdriver needs its actions based on original input
         for (ReferenceDriver driver : subDrivers) {
             driver.moveTo(hm, locationOriginal, speed);
+        }
+
+        // if there was a move
+        if (hasMoved) {
+            /*
+             * If moveToCompleteCommand is specified, send it
+             */
+            command = getCommand(hm, CommandType.MOVE_TO_COMPLETE_COMMAND);
+            if (command != null) {
+                    sendGcode(command);
+            }
         }
 
     }
