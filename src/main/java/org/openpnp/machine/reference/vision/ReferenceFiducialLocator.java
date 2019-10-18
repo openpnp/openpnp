@@ -31,6 +31,7 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.model.Point;
+import org.openpnp.model.Board.Side;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.PropertySheetHolder;
@@ -132,6 +133,10 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         if (destLocations.size() == 2) {
             Location source0 = sourceLocations.get(0);
             Location source1 = sourceLocations.get(1);
+			if (boardLocation.getSide() == Side.Bottom) {
+				source0 = source0.invert(true,false,false,false);
+				source1 = source1.invert(true,false,false,false);
+			}
             Location dest0 = destLocations.get(0);
             Location dest1 = destLocations.get(1);
             tx = Utils2D.deriveAffineTransform(
@@ -144,6 +149,11 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             Location source0 = sourceLocations.get(0);
             Location source1 = sourceLocations.get(1);
             Location source2 = sourceLocations.get(2);
+			if (boardLocation.getSide() == Side.Bottom) {
+				source0 = source0.invert(true,false,false,false);
+				source1 = source1.invert(true,false,false,false);
+				source2 = source2.invert(true,false,false,false);
+			}
             Location dest0 = destLocations.get(0);
             Location dest1 = destLocations.get(1);
             Location dest2 = destLocations.get(2);
