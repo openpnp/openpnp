@@ -133,48 +133,37 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         if (destLocations.size() == 2) {
             Location source0 = sourceLocations.get(0);
             Location source1 = sourceLocations.get(1);
+			if (boardLocation.getSide() == Side.Bottom) {
+				source0 = source0.invert(true,false,false,false);
+				source1 = source1.invert(true,false,false,false);
+			}
             Location dest0 = destLocations.get(0);
             Location dest1 = destLocations.get(1);
-            if (boardLocation.getSide() == Side.Bottom) {
-                tx = Utils2D.deriveAffineTransform(
-                        -source0.getX(), source0.getY(), 
-                        -source1.getX(), source1.getY(), 
-                        dest0.getX(), dest0.getY(),
-                        dest1.getX(), dest1.getY());
-            }
-            else {
-                tx = Utils2D.deriveAffineTransform(
-                        source0.getX(), source0.getY(), 
-                        source1.getX(), source1.getY(), 
-                        dest0.getX(), dest0.getY(),
-                        dest1.getX(), dest1.getY());
-            }
+            tx = Utils2D.deriveAffineTransform(
+                    source0.getX(), source0.getY(), 
+                    source1.getX(), source1.getY(), 
+                    dest0.getX(), dest0.getY(),
+                    dest1.getX(), dest1.getY());
         }
         else if (destLocations.size() == 3) {
             Location source0 = sourceLocations.get(0);
             Location source1 = sourceLocations.get(1);
             Location source2 = sourceLocations.get(2);
+			if (boardLocation.getSide() == Side.Bottom) {
+				source0 = source0.invert(true,false,false,false);
+				source1 = source1.invert(true,false,false,false);
+				source2 = source2.invert(true,false,false,false);
+			}
             Location dest0 = destLocations.get(0);
             Location dest1 = destLocations.get(1);
             Location dest2 = destLocations.get(2);
-            if (boardLocation.getSide() == Side.Bottom) {
-                tx = Utils2D.deriveAffineTransform(
-                        -source0.getX(), source0.getY(), 
-                        -source1.getX(), source1.getY(), 
-                        -source2.getX(), source2.getY(),
-                        dest0.getX(), dest0.getY(),
-                        dest1.getX(), dest1.getY(),
-                        dest2.getX(), dest2.getY());
-            }
-            else {
-                tx = Utils2D.deriveAffineTransform(
-                        source0.getX(), source0.getY(), 
-                        source1.getX(), source1.getY(), 
-                        source2.getX(), source2.getY(),
-                        dest0.getX(), dest0.getY(),
-                        dest1.getX(), dest1.getY(),
-                        dest2.getX(), dest2.getY());
-            }
+            tx = Utils2D.deriveAffineTransform(
+                    source0.getX(), source0.getY(), 
+                    source1.getX(), source1.getY(), 
+                    source2.getX(), source2.getY(),
+                    dest0.getX(), dest0.getY(),
+                    dest1.getX(), dest1.getY(),
+                    dest2.getX(), dest2.getY());
         }
         else {
             throw new Exception(String.format("Expected 2 or 3 fiducial results, not %d. This is a programmer error. Please tell a programmer.",
