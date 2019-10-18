@@ -30,7 +30,6 @@ import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.openpnp.model.Board.Side;
-import org.pmw.tinylog.Logger;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
