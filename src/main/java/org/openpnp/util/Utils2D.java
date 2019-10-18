@@ -30,6 +30,7 @@ import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.openpnp.model.Board.Side;
+import org.pmw.tinylog.Logger;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -100,6 +101,10 @@ public class Utils2D {
             Location boardLocation = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
             placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
 
+            if (bl.getSide() == Side.Bottom) {
+            	placementLocation = placementLocation.invert(true, false, false, false);
+            }
+            
             // Calculate the apparent angle from the transform. We need this because when we
             // created the transform we captured the apparent angle and that is used to position
             // in X, Y, but we also need the actual value to add to the placement rotation so that
