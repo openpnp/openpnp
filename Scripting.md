@@ -53,6 +53,32 @@ OpenPnP exposes several global variables to the scripting environment for use in
 
 Scripting Events allow you to define scripts that will be run automatically by OpenPnP during certain events. These scripts should be placed in the `.openpnp/scripts/Events` directory. They should be named in accordance with the events described below (e.g. `Job.Placement.Complete.py`). Some Scripting Events include additional global variables. These are described below with each event.
 
+## Scripting Event List
+
+* Camera.AfterCapture: Called after an image capture.
+* Camera.BeforeCapture: Called before an image capture.
+* Camera.BeforeSettle: Called before the camera settle time, preceding a capture.
+* Job.AfterDiscard: Called after a part has been discarded.
+* Job.Finished: Called when a job completes.
+* Job.Placement.BeforeAssembly: Called before the process of handling a placement starts.
+* Job.Placement.Complete: Called after a placement is complete.
+* Job.Starting: Called before the job starts.
+* Machine.AfterHoming: Called after the machine is homed.
+* Nozzle.AfterPick: Called after a nozzle has picked a part.
+* Nozzle.BeforePick: Called before a nozzle picks a part.
+* Nozzle.AfterPlace: Called after a nozzle places a part.
+* Nozzle.BeforePlace: Called before a nozzle places a part.
+* NozzleCalibration.Starting: Called before nozzle calibration begins.
+* NozzleTip.BeforeLoad: Called before a nozzle tip is loaded in a nozzle.
+* NozzleTip.Loaded: Called after a nozzle tip is loaded in a nozzle.
+* NozzleTip.BeforeUnload: Called before a nozzle tip is unloaded from a nozzle.
+* NozzleTip.Unloaded: Called after a nozzle tip is unloaded from a nozzle.
+* Startup: Called after OpenPnP starts.
+* Vision.PartAlignment.After: Called after part alignment / bottom vision is performed on a part.
+* Vision.PartAlignment.Before: Called before part alignment / bottom vision is performed on a part.
+
+## Scripting Event Details
+
 ### Startup
 
 Called when system startup is complete.
