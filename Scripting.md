@@ -55,27 +55,27 @@ Scripting Events allow you to define scripts that will be run automatically by O
 
 ## Scripting Event List
 
-* [Camera.AfterCapture](#Camera.AfterCapture): Called after an image capture.
-* Camera.BeforeCapture: Called before an image capture.
-* Camera.BeforeSettle: Called before the camera settle time, preceding a capture.
-* Job.AfterDiscard: Called after a part has been discarded.
-* Job.Finished: Called when a job completes.
-* Job.Placement.BeforeAssembly: Called before the process of handling a placement starts.
-* Job.Placement.Complete: Called after a placement is complete.
-* Job.Starting: Called before the job starts.
-* Machine.AfterHoming: Called after the machine is homed.
-* Nozzle.AfterPick: Called after a nozzle has picked a part.
-* Nozzle.BeforePick: Called before a nozzle picks a part.
-* Nozzle.AfterPlace: Called after a nozzle places a part.
-* Nozzle.BeforePlace: Called before a nozzle places a part.
-* NozzleCalibration.Starting: Called before nozzle calibration begins.
-* NozzleTip.BeforeLoad: Called before a nozzle tip is loaded in a nozzle.
-* NozzleTip.Loaded: Called after a nozzle tip is loaded in a nozzle.
-* NozzleTip.BeforeUnload: Called before a nozzle tip is unloaded from a nozzle.
-* NozzleTip.Unloaded: Called after a nozzle tip is unloaded from a nozzle.
-* Startup: Called after OpenPnP starts.
-* Vision.PartAlignment.After: Called after part alignment / bottom vision is performed on a part.
-* Vision.PartAlignment.Before: Called before part alignment / bottom vision is performed on a part.
+* [Camera.AfterCapture](#CameraAfterCapture): Called after an image capture.
+* [Camera.BeforeCapture](#Camera.BeforeCapture): Called before an image capture.
+* [Camera.BeforeSettle](#Camera.BeforeSettle): Called before the camera settle time, preceding a capture.
+* [Job.AfterDiscard](#Job.AfterDiscard): Called after a part has been discarded.
+* [Job.Finished](#Job.Finished): Called when a job completes.
+* [Job.Placement.BeforeAssembly](#Job.Placement.BeforeAssembly): Called before the process of handling a placement starts.
+* [Job.Placement.Complete](#Job.Placement.Complete): Called after a placement is complete.
+* [Job.Starting](#Job.Starting): Called before the job starts.
+* [Machine.AfterHoming](#Machine.AfterHoming): Called after the machine is homed.
+* [Nozzle.AfterPick](#Nozzle.AfterPick): Called after a nozzle has picked a part.
+* [Nozzle.BeforePick](#Nozzle.BeforePick): Called before a nozzle picks a part.
+* [Nozzle.AfterPlace](#Nozzle.AfterPlace): Called after a nozzle places a part.
+* [Nozzle.BeforePlace](#Nozzle.BeforePlace): Called before a nozzle places a part.
+* [NozzleCalibration.Starting](#NozzleCalibration.Starting): Called before nozzle calibration begins.
+* [NozzleTip.BeforeLoad](#NozzleTip.BeforeLoad): Called before a nozzle tip is loaded in a nozzle.
+* [NozzleTip.Loaded](#NozzleTip.Loaded): Called after a nozzle tip is loaded in a nozzle.
+* [NozzleTip.BeforeUnload](#NozzleTip.BeforeUnload): Called before a nozzle tip is unloaded from a nozzle.
+* [NozzleTip.Unloaded](#NozzleTip.Unloaded): Called after a nozzle tip is unloaded from a nozzle.
+* [Startup](#Startup): Called after OpenPnP starts.
+* [Vision.PartAlignment.After](#Vision.PartAlignment.After): Called after part alignment / bottom vision is performed on a part.
+* [Vision.PartAlignment.Before](#Vision.PartAlignment.Before): Called before part alignment / bottom vision is performed on a part.
 
 ## Scripting Event Details
 
