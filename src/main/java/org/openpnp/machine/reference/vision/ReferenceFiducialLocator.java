@@ -74,10 +74,14 @@ public class ReferenceFiducialLocator implements FiducialLocator {
     public Location locateBoard(BoardLocation boardLocation, boolean checkPanel) throws Exception {
         List<Placement> fiducials;
 
+        Side boardSide = boardLocation.getSide();  // save for later
+       
         if (checkPanel) {
             Panel panel = MainFrame.get().getJobTab().getJob().getPanels()
                     .get(boardLocation.getPanelId());
             fiducials = panel.getFiducials();
+            // If we are looking for panel fiducials, we need to treat the board as top side
+            boardLocation.setSide(Side.Top);
         }
         else {
             fiducials = getFiducials(boardLocation);
@@ -184,6 +188,9 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         Location result = Utils2D.calculateBoardPlacementLocation(boardLocation, new Location(LengthUnit.Millimeters));
         result = result.convertToUnits(boardLocation.getLocation().getUnits());
         result = result.derive(null, null, boardLocation.getLocation().getZ(), null);
+        if (checkPanel) {
+            boardLocation.setSide(boardSide);	// restore side
+        }
         return result;
     }
     
