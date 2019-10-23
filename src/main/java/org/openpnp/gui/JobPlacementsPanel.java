@@ -498,7 +498,7 @@ public class JobPlacementsPanel extends JPanel {
                 // used after the initial click. Otherwise, button focus is lost
                 // when table is updated
                	Component comp = MainFrame.get().getFocusOwner();
-               	Helpers.selectNextTableRow(table);
+               	Helpers.selectNextTableRow(table, boardLocation.getSide());
                 comp.requestFocus();
                	Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
                         getSelection().getLocation());

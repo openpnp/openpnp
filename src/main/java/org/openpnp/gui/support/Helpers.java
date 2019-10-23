@@ -29,6 +29,7 @@ import javax.swing.JTextField;
 import org.jdesktop.beansbinding.BeanProperty;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
+import org.openpnp.model.Board.Side;
 
 public class Helpers {
     public static void copyLocationIntoTextFields(Location l, JTextField x, JTextField y,
@@ -84,6 +85,29 @@ public class Helpers {
          table.addRowSelectionInterval(index, index);   
     }
     
+    public static void selectNextTableRow(JTable table, Side side){
+    	int index = table.getSelectedRow();
+
+    	if (index == -1){
+			index = 0;
+    	}
+    	 
+        table.clearSelection();
+		
+    	int counter = 0;
+    	for (int i = 0; i < table.getModel().getRowCount(); i++ ) {
+    		if (table.getModel().getValueAt(i, 3) == side) {
+    			counter++;
+    		}
+    	}
+
+    	if (++index > counter - 1) {
+    		index = 0;
+    	}
+
+    	table.addRowSelectionInterval(index, index);   
+	}
+
     public static void selectFirstTableRow(JTable table) {
         table.clearSelection();
         int index = 0;
