@@ -24,7 +24,6 @@ import org.openpnp.spi.base.AbstractNozzleTip;
 import org.openpnp.util.UiUtils;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.Commit;
 
 public class ReferenceNozzleTip extends AbstractNozzleTip {
     @Attribute(required = false)
@@ -46,7 +45,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     private double changerMidToMid2Speed = 1D;
     
     @Element(required = false)
-    private Location changerMidLocation2;
+    private Location changerMidLocation2 = new Location(LengthUnit.Millimeters);
     
     @Element(required = false)
     private double changerMid2ToEndSpeed = 1D;
@@ -73,20 +72,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public ReferenceNozzleTip() {
     }
 
-    @Commit
-    public void commit() {
-        /*
-         * Backwards compatibility. Since this field is being added after the fact, if
-         * the field is not specified in the config then we just make a copy of the
-         * other mid location. The result is that if a user already has a changer
-         * configured they will not suddenly have a move to 0,0,0,0 which would break
-         * everything.
-         */
-        if (changerMidLocation2 == null) {
-            changerMidLocation2 = changerMidLocation.derive(null, null, null, null);
-        }
-    }
-    
     @Override
     public String toString() {
         return getName() + " " + getId();
