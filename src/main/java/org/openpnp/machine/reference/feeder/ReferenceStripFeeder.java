@@ -189,11 +189,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         // so that the part is picked at the right angle
         l = l.derive(null, null, null, angle + getLocation().getRotation());
 
-        // and if vision was performed, add the offsets
-        if (visionEnabled && visionOffsets != null) {
-            l = l.add(visionOffsets);
-        }
-
         return l;
     }
 
