@@ -13,7 +13,6 @@ org.openpnp.gui.wizards
 org.openpnp.imgur
 org.openpnp.logging
 org.openpnp.machine.neoden4
-org.openpnp.machine.openbuilds
 org.openpnp.machine.reference
 org.openpnp.machine.reference.camera
 org.openpnp.machine.reference.camera.wizards
