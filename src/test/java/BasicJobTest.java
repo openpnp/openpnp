@@ -189,7 +189,7 @@ public class BasicJobTest {
                 }
 
             }
-            //? super.actuate(actuator, on);
+            super.actuate(actuator, on);
         }
 
         @Override

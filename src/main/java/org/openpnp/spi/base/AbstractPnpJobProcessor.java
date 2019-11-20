@@ -44,8 +44,12 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
             Logger.warn(e);
         }
         try {
+            // move to the discard location
+            MovableUtils.moveToLocationAtSafeZ(nozzle,
+                    Configuration.get().getMachine().getDiscardLocation());
             // discard the part
-            nozzle.place(Configuration.get().getMachine().getDiscardLocation());
+            nozzle.place();
+            nozzle.moveToSafeZ();
             try {
                 Map<String, Object> globals = new HashMap<>();
                 globals.put("nozzle", nozzle);

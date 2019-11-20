@@ -570,8 +570,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 fireTextStatus("Pick %s from %s for %s.", part.getId(), feeder.getName(),
                         placement.getId());
                 
+                // Move to pick location.
+                MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
+
+
                 // Pick
-                nozzle.pick(feeder);
+                nozzle.pick(part);
+
+                // Retract
+                nozzle.moveToSafeZ();
             }
             catch (Exception e) {
                 throw new JobProcessorException(nozzle, e);
@@ -725,8 +732,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             fireTextStatus("Placing %s for %s.", part.getId(), placement.getId());
             
             try {
+                // Move to the placement location
+                MovableUtils.moveToLocationAtSafeZ(nozzle, placementLocation);
+
                 // Place the part
-                nozzle.place(placementLocation);
+                nozzle.place();
+
+                // Retract
+                nozzle.moveToSafeZ();
             }
             catch (Exception e) {
                 throw new JobProcessorException(nozzle, e);

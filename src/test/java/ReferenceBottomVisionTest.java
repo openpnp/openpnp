@@ -9,7 +9,6 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
-import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment.PartAlignmentOffset;
@@ -41,15 +40,14 @@ public class ReferenceBottomVisionTest {
         Machine machine = Configuration.get().getMachine();
         Nozzle nozzle = machine.getDefaultHead().getDefaultNozzle();
         SimulatedUpCamera camera = (SimulatedUpCamera) VisionUtils.getBottomVisionCamera();
-        Feeder feeder =  Configuration.get().getMachine().getFeeder("F1");
-        Part part = feeder.getPart(); 
+        Part part = Configuration.get().getPart("R0805-1K"); 
         ReferenceBottomVision bottomVision = (ReferenceBottomVision) machine.getPartAlignments().get(0);
         NullDriver driver = (NullDriver) ((ReferenceMachine) machine).getDriver();
         driver.setFeedRateMmPerMinute(0);
         
         camera.setErrorOffsets(error);
         machine.setEnabled(true);
-        nozzle.pick(feeder);
+        nozzle.pick(part);
         PartAlignmentOffset offset = bottomVision.findOffsets(part, null, null, nozzle);
         Location offsets = offset.getLocation();
         assertMaxDelta(offsets.getX(), error.getX(), maxError.getX());

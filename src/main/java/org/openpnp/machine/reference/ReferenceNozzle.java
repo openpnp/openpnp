@@ -26,7 +26,6 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
@@ -130,19 +129,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         return nozzleTip;
     }
 
-    protected void moveToPickLocation(Feeder feeder, Location location) throws Exception {
-        MovableUtils.moveToLocationAtSafeZ(this, location);
-    }
-
-    protected void retractFromPickLocation(Feeder feeder, Location location) throws Exception {
-        moveToSafeZ();
-    }
-
     @Override
-    public void pick(Feeder feeder) throws Exception {
+    public void pick(Part part) throws Exception {
         Logger.debug("{}.pick()", getName());
-        Part part = feeder.getPart();
-        Location location = feeder.getPickLocation();
         if (part == null) {
             throw new Exception("Can't pick null part");
         }
@@ -150,64 +139,45 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             throw new Exception("Can't pick, no nozzle tip loaded");
         }
 
-        moveToPickLocation(feeder, location);
-
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
-            globals.put("feeder", feeder);
             globals.put("part", part);
-            globals.put("location", location);
             Configuration.get().getScripting().on("Nozzle.BeforePick", globals);
         }
         catch (Exception e) {
             Logger.warn(e);
         }
-        
+
         this.part = part;
         actuateVacuumValve(true);
 
         getMachine().fireMachineHeadActivity(head);
-        
+
         // Dwell Time
         Thread.sleep(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
 
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
-            globals.put("feeder", feeder);
             globals.put("part", part);
-            globals.put("location", location);
             Configuration.get().getScripting().on("Nozzle.AfterPick", globals);
         }
         catch (Exception e) {
             Logger.warn(e);
         }
-
-        retractFromPickLocation(feeder, location);
-    }
-
-    protected void moveToPlacementLocation(Location location) throws Exception {
-        MovableUtils.moveToLocationAtSafeZ(this, location);
-    }
-
-    protected void retractFromPlacementLocation(Location location) throws Exception {
-        moveToSafeZ();
     }
 
     @Override
-    public void place(Location location) throws Exception {
+    public void place() throws Exception {
         Logger.debug("{}.place()", getName());
         if (nozzleTip == null) {
             throw new Exception("Can't place, no nozzle tip loaded");
         }
 
-        moveToPlacementLocation(location);
-
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
-            globals.put("location", location);
             Configuration.get().getScripting().on("Nozzle.BeforePlace", globals);
         }
         catch (Exception e) {
@@ -218,23 +188,20 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
         this.part = null;
         getMachine().fireMachineHeadActivity(head);
-        
+
         // Dwell Time
         Thread.sleep(this.getPlaceDwellMilliseconds() + nozzleTip.getPlaceDwellMilliseconds());
-        
+
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
-            globals.put("location", location);
             Configuration.get().getScripting().on("Nozzle.AfterPlace", globals);
         }
         catch (Exception e) {
             Logger.warn(e);
         }
-
-        retractFromPlacementLocation(location);
     }
-    
+
     private ReferenceNozzleTip getUnloadedNozzleTipStandin() {
         for (NozzleTip nozzleTip : this.getCompatibleNozzleTips()) {
             if (nozzleTip instanceof ReferenceNozzleTip) {

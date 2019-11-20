@@ -37,9 +37,9 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
 
 public class ContactProbeNozzle extends ReferenceNozzle {
-    
+
     public ContactProbeNozzle() {
-       super();
+        super();
     }
 
     public ContactProbeNozzle(String id) {
@@ -49,47 +49,68 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     @Element(required = false)
     private String contactProbeActuatorName = "";
 
-    @Element(required = false)
-    private Length probeOffset = new Length(1, LengthUnit.Millimeters);
-
     @Override
     public PropertySheet[] getPropertySheets() {
-        return Collect.concat(super.getPropertySheets(), 
-                new PropertySheet[] { new PropertySheetWizardAdapter(new ContactProbeNozzleWizard(this), "Contact Probe") });
+        return Collect.concat(super.getPropertySheets(), new PropertySheet[] {
+                new PropertySheetWizardAdapter(new ContactProbeNozzleWizard(this), "Contact Probe") });
     }
 
     @Override
-    protected void moveToPickLocation(Feeder feeder, Location location) throws Exception {
-        // Move nozzle to Z offset above the target location.
-        location = location.add(new Location(this.probeOffset.getUnits(), 0, 0, probeOffset.getValue(), 0));
-        MovableUtils.moveToLocationAtSafeZ(this, location);
-        // Probe down from there.
+    public void pick(Part part) throws Exception {
+        try {
+            Map<String, Object> globals = new HashMap<>();
+            globals.put("nozzle", this);
+            globals.put("part", part);
+            Configuration.get().getScripting().on("Nozzle.BeforePickProbe", globals);
+        } catch (Exception e) {
+            Logger.warn(e);
+        }
+
+        // First probe down from current position above the part until the probe sensor
+        // is triggered.
         actuateContactProbe(true);
-    }
-
-    @Override
-    protected void retractFromPickLocation(Feeder feeder, Location location) throws Exception {
-        // Retract nozzle from probing.
+        // Now call the default pick() which usually just turns on the vacuum.
+        super.pick(part);
+        // Retract from probing i.e. until the probe sensor is released.
         actuateContactProbe(false);
-        // Retract nozzle fully.
-        super.retractFromPickLocation(feeder, location);
+
+        try {
+            Map<String, Object> globals = new HashMap<>();
+            globals.put("nozzle", this);
+            globals.put("part", part);
+            Configuration.get().getScripting().on("Nozzle.AfterPickProbe", globals);
+        } catch (Exception e) {
+            Logger.warn(e);
+        }
     }
 
     @Override
-    protected void moveToPlacementLocation(Location location) throws Exception {
-        // Move nozzle to Z offset above the target location.
-        location = location.add(new Location(this.probeOffset.getUnits(), 0, 0, probeOffset.getValue(), 0));
-        MovableUtils.moveToLocationAtSafeZ(this, location);
-        // Probe down from there.
+    public void place() throws Exception {
+        try {
+            Map<String, Object> globals = new HashMap<>();
+            globals.put("nozzle", this);
+            globals.put("part", part);
+            Configuration.get().getScripting().on("Nozzle.BeforePlaceProbe", globals);
+        } catch (Exception e) {
+            Logger.warn(e);
+        }
+
+        // First probe down from current position above the PCB until the probe sensor
+        // is triggered.
         actuateContactProbe(true);
-    }
-
-    @Override
-    protected void retractFromPlacementLocation(Location location) throws Exception {
-        // Retract nozzle from probing.
+        // Now call the default place() which usually just turns off the vacuum.
+        super.place();
+        // Retract from probing i.e. until the probe sensor is released.
         actuateContactProbe(false);
-        // Retract nozzle fully.
-        super.retractFromPlacementLocation(location);
+
+        try {
+            Map<String, Object> globals = new HashMap<>();
+            globals.put("nozzle", this);
+            globals.put("part", part);
+            Configuration.get().getScripting().on("Nozzle.AfterPlaceProbe", globals);
+        } catch (Exception e) {
+            Logger.warn(e);
+        }
     }
 
     protected Actuator getContactProbeActuator() throws Exception {
@@ -99,7 +120,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         }
         return actuator;
     }
-    
+
     protected void actuateContactProbe(boolean on) throws Exception {
         getContactProbeActuator().actuate(on);
     }
@@ -113,18 +134,6 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         this.contactProbeActuatorName = contactProbeActuatorName;
         if (oldValue != contactProbeActuatorName) {
             firePropertyChange("contactProbeActuatorName", oldValue, contactProbeActuatorName);
-        }
-    }
-
-    public Length getProbeOffset() {
-        return probeOffset;
-    }
-
-    public void setProbeOffset(Length probeOffset) {
-        Length oldValue = this.probeOffset;
-        this.probeOffset = probeOffset;
-        if (oldValue != probeOffset) {
-            firePropertyChange("probeOffset", oldValue, probeOffset);
         }
     }
 }

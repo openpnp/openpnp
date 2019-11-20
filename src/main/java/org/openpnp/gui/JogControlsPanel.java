@@ -598,6 +598,7 @@ public class JogControlsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
+                // move to the discard location
                 try {
                     Map<String, Object> globals = new HashMap<>();
                     globals.put("nozzle", nozzle);
@@ -606,8 +607,12 @@ public class JogControlsPanel extends JPanel {
                 catch (Exception e) {
                     Logger.warn(e);
                 }
+                MovableUtils.moveToLocationAtSafeZ(nozzle, Configuration.get()
+                                                                        .getMachine()
+                                                                        .getDiscardLocation());
                 // discard the part
-                nozzle.place(Configuration.get().getMachine().getDiscardLocation());
+                nozzle.place();
+                nozzle.moveToSafeZ();
                 try {
                     Map<String, Object> globals = new HashMap<>();
                     globals.put("nozzle", nozzle);

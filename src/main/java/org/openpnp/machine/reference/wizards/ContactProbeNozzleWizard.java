@@ -54,8 +54,6 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
     private JPanel panel;
     private JLabel lblContactProbeActuator;
     private JComboBox comboBoxContactProbeActuator;
-    private JLabel lblProbeOffset;
-    private JTextField textFieldProbeOffset;
 
     public ContactProbeNozzleWizard(ContactProbeNozzle nozzle) {
         this.nozzle = nozzle;
@@ -82,13 +80,6 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
         comboBoxContactProbeActuator = new JComboBox();
         comboBoxContactProbeActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
         panel.add(comboBoxContactProbeActuator, "2, 2, default, top");
-        
-        lblProbeOffset = new JLabel("Probe Offset");
-        panel.add(lblProbeOffset, "1, 4, right, default");
-        
-        textFieldProbeOffset = new JTextField();
-        panel.add(textFieldProbeOffset, "2, 4, fill, default");
-        textFieldProbeOffset.setColumns(10);
     }
 
     @Override
@@ -97,9 +88,5 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
         IntegerConverter intConverter = new IntegerConverter();
 
         addWrappedBinding(nozzle, "contactProbeActuatorName", comboBoxContactProbeActuator, "selectedItem");
-        addWrappedBinding(nozzle, "probeOffset", textFieldProbeOffset,
-                "text", lengthConverter);
-
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldProbeOffset);
     }
 }
