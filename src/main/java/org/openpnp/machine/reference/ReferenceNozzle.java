@@ -138,7 +138,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (nozzleTip == null) {
             throw new Exception("Can't pick, no nozzle tip loaded");
         }
-
+        
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
@@ -148,15 +148,15 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         catch (Exception e) {
             Logger.warn(e);
         }
-
+        
         this.part = part;
         actuateVacuumValve(true);
 
         getMachine().fireMachineHeadActivity(head);
-
+        
         // Dwell Time
         Thread.sleep(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
-
+        
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
@@ -174,7 +174,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (nozzleTip == null) {
             throw new Exception("Can't place, no nozzle tip loaded");
         }
-
+        
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
@@ -188,10 +188,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
         this.part = null;
         getMachine().fireMachineHeadActivity(head);
-
+        
         // Dwell Time
         Thread.sleep(this.getPlaceDwellMilliseconds() + nozzleTip.getPlaceDwellMilliseconds());
-
+        
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
@@ -201,7 +201,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             Logger.warn(e);
         }
     }
-
+    
     private ReferenceNozzleTip getUnloadedNozzleTipStandin() {
         for (NozzleTip nozzleTip : this.getCompatibleNozzleTips()) {
             if (nozzleTip instanceof ReferenceNozzleTip) {
