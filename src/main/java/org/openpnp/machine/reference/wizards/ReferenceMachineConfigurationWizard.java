@@ -17,11 +17,9 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.neoden4.NeoDen4Driver;
-import org.openpnp.machine.openbuilds.OpenBuildsDriver;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.driver.GcodeDriver;
-import org.openpnp.machine.reference.driver.LinuxCNC;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.model.Configuration;
 import org.simpleframework.xml.Element;
@@ -72,8 +70,6 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         
                 comboBoxDriver.addItem(NullDriver.class.getCanonicalName());
         comboBoxDriver.addItem(GcodeDriver.class.getCanonicalName());
-        comboBoxDriver.addItem(LinuxCNC.class.getCanonicalName());
-        comboBoxDriver.addItem(OpenBuildsDriver.class.getCanonicalName());
         comboBoxDriver.addItem(NeoDen4Driver.class.getCanonicalName());
         
                 JPanel panelLocations = new JPanel();
