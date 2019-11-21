@@ -52,6 +52,8 @@
 				x="50.0" y="0.0" z="0.0" rotation="0.0" />
 			<changer-mid-location units="Millimeters"
 				x="50.0" y="0.0" z="0.0" rotation="0.0" />
+			<changer-mid-location-2 units="Millimeters"
+				x="50.0" y="0.0" z="0.0" rotation="0.0" />
 			<changer-end-location units="Millimeters"
 				x="50.0" y="0.0" z="0.0" rotation="0.0" />
 		</nozzle-tip>
@@ -60,6 +62,8 @@
 			<changer-start-location units="Millimeters"
 				x="70.0" y="0.0" z="0.0" rotation="0.0" />
 			<changer-mid-location units="Millimeters"
+				x="70.0" y="0.0" z="0.0" rotation="0.0" />
+			<changer-mid-location-2 units="Millimeters"
 				x="70.0" y="0.0" z="0.0" rotation="0.0" />
 			<changer-end-location units="Millimeters"
 				x="70.0" y="0.0" z="0.0" rotation="0.0" />
