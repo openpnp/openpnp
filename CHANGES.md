@@ -1,6 +1,50 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-11-24
+
+BREAKING CHANGE: vacuum valve and pump actuation is now modelled with Actuators and  
+made independent from pick() and place() functionality and from the Driver. The changes
+refine and unify the machine model and ease the development of new capabilities. The new 
+ContactProbeNozzle demonstrates this by adding contact probing to pick() and place() 
+which allows for more tolerance and robustness in the Z height handling of parts, feeders 
+and the PCB. 
+* The vacuum Actuator is no longer just used to read the vacuum pressure level but also to
+  actuate the valve (Boolean). 
+* The Nozzle's pick() and place() methods will actuate the valve Actuators as needed.
+* At the same time the Nozzle's pick() and place() methods are now dedicated to what their 
+  names imply, making vacuum switching independent from them.
+* Consequently the Nozzle pick() or place() can now do more than just actuate the vacuum, 
+  they can also be properly sub-classed/overridden for extended functionality. 
+* In turn the valve Actuator is now used independently to test if a part if off after 
+  placement. An "in-the-air" pick() and place() cycle  is no longer used, avoiding 
+  unexpected behavior when pick() and place() do more than vacuum switching.
+* Users can also use the Machine Controls' Actuators tab to test the valve Actuator 
+  independently and to simulate and determine part on/part off vacuum readings. 
+* A new pump Actuator is added to the head. It will actuate the pump as needed.
+* The pick() and place() methods in turn govern the pump Actuator, i.e. as long as at 
+  least one part is on a nozzle, the pump will be switched on.
+* Users can also use the Machine Controls Actuators tab to test the pump Actuator.
+* All pick(), place(), pump and valve actuation are removed from the Driver.
+* Consequently the PICK_COMMAND, PLACE_COMMAND, PUMP_ON_COMMAND, PUMP_OFF_COMMAND are 
+  deprecated in the GCodeDriver. They will no longer work but the fragments are available
+  in the GUI for G-Code migration to the Actuators (these entries will be removed end of 
+  2021).
+* In turn the new Actuators define their G-Code in the proper ACTUATE_BOOLEAN_COMMAND 
+  fragments. 
+* Users must add the new pump Actuator and revisit the vacuum reading Actuator and 
+  migrate their G-Code there. 
+* To ease the now more important plug-and-play of Actuators, they can now be assigned by 
+  ComboBoxes rather than by loose name references. 
+* As a first benefit from the changes, the new ContactProbeNozzle subclasses the 
+  ReferenceNozzle and adds a contact probe to sense when the nozzle tip hits the target
+  i.e. when the pick() makes contact with the part in the feeder or when the place() hits 
+  the PCB with the part on the nozzle (the Liteplacer has such a probing nozzle). This 
+  allows for more tolerance and robustness towards variances in Z height of parts, 
+  feeders and the PCB. Users can more quickly (i.e. more roughly) setup Z heights.
+* More information, guidance and screenshots can be seen in the PR:
+  https://github.com/openpnp/openpnp/pull/859#issue-290920991
+
 # 2019-06-13
 
 ## New Scripting Events
