@@ -17,7 +17,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleCameraOffsetWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleCompatibleNozzleTipsWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleConfigurationWizard;
-import org.openpnp.machine.reference.wizards.ReferenceNozzlePartDetectionWizard;
+import org.openpnp.machine.reference.wizards.ReferenceNozzleVacuumWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleToolChangerWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -34,6 +34,7 @@ import org.openpnp.util.MovableUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMountable {
     @Element
@@ -54,8 +55,15 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     @Element(required = false)
     protected Length safeZ = new Length(0, LengthUnit.Millimeters);
 
+    /**
+     * TODO Deprecated in favor of vacuumActuatorName. Remove Jan 1, 2021.
+     */
+    @Deprecated
     @Element(required = false)
     protected String vacuumSenseActuatorName;
+    
+    @Element(required = false)
+    protected String vacuumActuatorName;
     
     /**
      * If limitRotation is enabled the nozzle will reverse directions when commanded to rotate past
@@ -73,6 +81,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 nozzleTip = (ReferenceNozzleTip) configuration.getMachine().getNozzleTip(currentNozzleTipId);
             }
         });
+    }
+    
+    @Commit
+    public void commit() {
+        if (vacuumActuatorName == null) {
+            vacuumActuatorName = vacuumSenseActuatorName;
+            vacuumSenseActuatorName = null;
+        }
     }
 
     public ReferenceNozzle(String id) {
@@ -116,12 +132,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         ReferenceNozzleTipCalibration.resetAllNozzleTips();
     }
 
-    public String getVacuumSenseActuatorName() {
-        return vacuumSenseActuatorName;
+    public String getVacuumActuatorName() {
+        return vacuumActuatorName;
     }
 
-    public void setVacuumSenseActuatorName(String vacuumSenseActuatorName) {
-        this.vacuumSenseActuatorName = vacuumSenseActuatorName;
+    public void setVacuumActuatorName(String vacuumActuatorName) {
+        this.vacuumActuatorName = vacuumActuatorName;
     }
 
     @Override
@@ -534,7 +550,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard()),
                 new PropertySheetWizardAdapter(new ReferenceNozzleCompatibleNozzleTipsWizard(this), "Nozzle Tips"),
-                new PropertySheetWizardAdapter(new ReferenceNozzlePartDetectionWizard(this), "Part Detection"),
+                new PropertySheetWizardAdapter(new ReferenceNozzleVacuumWizard(this), "Vacuum"),
                 new PropertySheetWizardAdapter(new ReferenceNozzleToolChangerWizard(this), "Tool Changer"),
                 new PropertySheetWizardAdapter(new ReferenceNozzleCameraOffsetWizard(this), "Offset Wizard"),
         };
@@ -599,7 +615,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     protected boolean isVaccumActuatorEnabled() {
-        return vacuumSenseActuatorName != null && !vacuumSenseActuatorName.isEmpty();
+        return vacuumActuatorName != null && !vacuumActuatorName.isEmpty();
     }
 
     @Override
@@ -615,9 +631,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     protected Actuator getVacuumActuator() throws Exception {
-        Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
+        Actuator actuator = getHead().getActuatorByName(vacuumActuatorName);
         if (actuator == null) {
-            throw new Exception(String.format("Can't find vacuum actuator %s", vacuumSenseActuatorName));
+            throw new Exception(String.format("Can't find vacuum actuator %s", vacuumActuatorName));
         }
         return actuator;
     }

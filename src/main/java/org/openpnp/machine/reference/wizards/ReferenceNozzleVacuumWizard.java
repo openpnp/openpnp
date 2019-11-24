@@ -30,7 +30,6 @@ import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.model.AbstractModelObject;
 
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -39,13 +38,13 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class ReferenceNozzlePartDetectionWizard extends AbstractConfigurationWizard {
+public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
     private final ReferenceNozzle nozzle;
     private JLabel label;
     private JPanel panel;
     private JComboBox comboBoxActuator;
 
-    public ReferenceNozzlePartDetectionWizard(ReferenceNozzle nozzle) {
+    public ReferenceNozzleVacuumWizard(ReferenceNozzle nozzle) {
         this.nozzle = nozzle;
         createUi();
     }
@@ -76,6 +75,6 @@ public class ReferenceNozzlePartDetectionWizard extends AbstractConfigurationWiz
         LengthConverter lengthConverter = new LengthConverter();
         IntegerConverter intConverter = new IntegerConverter();
 
-        addWrappedBinding(nozzle, "vacuumSenseActuatorName", comboBoxActuator, "selectedItem");
+        addWrappedBinding(nozzle, "vacuumActuatorName", comboBoxActuator, "selectedItem");
     }
 }
