@@ -3,7 +3,9 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2019-11-24
 
-BREAKING CHANGE: vacuum valve and pump actuation is now modelled with Actuators and  
+## BREAKING CHANGE: Vacuum Valve and Pump Actuation Remodel
+
+Vacuum valves and pump actuation is now modeled with Actuators and  
 made independent from pick() and place() functionality and from the Driver. The changes
 refine and unify the machine model and ease the development of new capabilities. The new 
 ContactProbeNozzle demonstrates this by adding contact probing to pick() and place() 
@@ -44,6 +46,16 @@ and the PCB.
   feeders and the PCB. Users can more quickly (i.e. more roughly) setup Z heights.
 * More information, guidance and screenshots can be seen in the PR:
   https://github.com/openpnp/openpnp/pull/859#issue-290920991
+
+## ReferenceStripFeeder Vision Bug Fix
+
+A long standing bug in ReferenceStripFeeder has been fixed by @tjanuszewski in
+https://github.com/openpnp/openpnp/pull/919. If you have struggled with the vision
+on ReferenceStripFeeder in the past, especially on longer strips, please give it a new
+try as this fix seems to improve it's functionality greatly.
+
+Thank you @tjanuszewski for finding and fixing this!
+
 
 # 2019-06-13
 
