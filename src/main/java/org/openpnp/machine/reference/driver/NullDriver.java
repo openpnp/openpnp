@@ -221,24 +221,6 @@ public class NullDriver implements ReferenceDriver {
     }
 
     @Override
-    public void pick(ReferenceNozzle nozzle) throws Exception {
-        Logger.debug("pick({})", nozzle);
-        checkEnabled();
-        if (feedRateMmPerMinute > 0) {
-            Thread.sleep(500);
-        }
-    }
-
-    @Override
-    public void place(ReferenceNozzle nozzle) throws Exception {
-        Logger.debug("place({})", nozzle);
-        checkEnabled();
-        if (feedRateMmPerMinute > 0) {
-            Thread.sleep(500);
-        }
-    }
-
-    @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
         Logger.debug("actuate({}, {})", actuator, value);
         checkEnabled();

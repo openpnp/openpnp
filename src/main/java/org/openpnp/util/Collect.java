@@ -1,6 +1,7 @@
 package org.openpnp.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -44,5 +45,18 @@ public class Collect {
             }
         }
         return results;
+    }
+
+    /**
+     * Concatenate two arrays. 
+     * 
+     * @param first
+     * @param second
+     * @return
+     */
+    public static <T> T[] concat(T[] first, T[] second) {
+        T[] result = Arrays.copyOf(first, first.length + second.length);
+        System.arraycopy(second, 0, result, first.length, second.length);
+        return result;
     }
 }

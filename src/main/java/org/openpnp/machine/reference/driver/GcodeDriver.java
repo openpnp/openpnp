@@ -64,12 +64,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         POST_VISION_HOME_COMMAND,
         HOME_COMMAND("Id", "Name"),
         HOME_COMPLETE_REGEX(true),
+        @Deprecated
         PUMP_ON_COMMAND,
+        @Deprecated
         PUMP_OFF_COMMAND,
         MOVE_TO_COMMAND(true, "Id", "Name", "FeedRate", "X", "Y", "Z", "Rotation"),
         MOVE_TO_COMPLETE_COMMAND(true),
         MOVE_TO_COMPLETE_REGEX(true),
+        @Deprecated
         PICK_COMMAND(true, "Id", "Name", "VacuumLevelPartOn", "VacuumLevelPartOff"),
+        @Deprecated
         PLACE_COMMAND(true, "Id", "Name"),
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
@@ -185,7 +189,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     private boolean disconnectRequested;
     private boolean connected;
     private LinkedBlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
-    private Set<Nozzle> pickedNozzles = new HashSet<>();
     private GcodeDriver parent = null;
     
     @Commit
@@ -759,44 +762,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
 
     @Override
-    public void pick(ReferenceNozzle nozzle) throws Exception {
-        pickedNozzles.add(nozzle);
-        if (pickedNozzles.size() > 0) {
-            sendGcode(getCommand(nozzle, CommandType.PUMP_ON_COMMAND));
-        }
-
-        String command = getCommand(nozzle, CommandType.PICK_COMMAND);
-        command = substituteVariable(command, "Id", nozzle.getId());
-        command = substituteVariable(command, "Name", nozzle.getName());
-
-        sendGcode(command);
-
-        for (ReferenceDriver driver : subDrivers) {
-            driver.pick(nozzle);
-        }
-    }
-
-    @Override
-    public void place(ReferenceNozzle nozzle) throws Exception {
-
-        String command = getCommand(nozzle, CommandType.PLACE_COMMAND);
-        command = substituteVariable(command, "Id", nozzle.getId());
-        command = substituteVariable(command, "Name", nozzle.getName());
-
-        sendGcode(command);
-
-        pickedNozzles.remove(nozzle);
-        if (pickedNozzles.size() < 1) {
-            sendGcode(getCommand(nozzle, CommandType.PUMP_OFF_COMMAND));
-        }
-
-        for (ReferenceDriver driver : subDrivers) {
-            driver.place(nozzle);
-        }
-    }
-
-
-    @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
         String command = getCommand(actuator, CommandType.ACTUATE_BOOLEAN_COMMAND);
         command = substituteVariable(command, "Id", actuator.getId());
@@ -1008,9 +973,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             }
             line = line.trim();
             Logger.trace("[{}] << {}", getCommunications().getConnectionName(), line);
-            if (!processPositionReport(line)) {
-                responseQueue.offer(line);
-            }
+            // extract a position report, if present
+            processPositionReport(line);
+            // add to the responseQueue (even if it happens to be a position report, it might still also contain the "ok"
+            // acknowledgment e.g. on Smoothieware)
+            responseQueue.offer(line);
         }
     }
 

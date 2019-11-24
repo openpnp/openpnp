@@ -17,6 +17,7 @@
             <nozzles>
                 <nozzle class="org.openpnp.machine.reference.ReferenceNozzle" id="N1" changer-enabled="true" name="N1">
                     <head-offsets x="10" y="0" z="0" rotation="0" units="Millimeters" />
+                    <vacuum-sense-actuator-name>N1VAC</vacuum-sense-actuator-name>
 					<compatible-nozzle-tip-ids class="java.util.ArrayList">
 					   <string>NT1</string>
 					   <string>NT2</string>
@@ -24,6 +25,7 @@
                 </nozzle>
                 <nozzle class="org.openpnp.machine.reference.ReferenceNozzle" id="N2" changer-enabled="true" name="N2">
                     <head-offsets x="20" y="0" z="0" rotation="0" units="Millimeters" />
+                    <vacuum-sense-actuator-name>N2VAC</vacuum-sense-actuator-name>
 					<compatible-nozzle-tip-ids class="java.util.ArrayList">
 					   <string>NT1</string>
 					   <string>NT2</string>
@@ -32,6 +34,12 @@
             </nozzles>
             <actuators>
                 <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="A1" index="0" name="A1">
+                    <head-offsets x="10" y="10" z="0" rotation="0" units="Millimeters" />
+                </actuator>
+                <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="A2" name="N1VAC" index="0">
+                    <head-offsets x="10" y="10" z="0" rotation="0" units="Millimeters" />
+                </actuator>
+                <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="A3" name="N2VAC" index="0">
                     <head-offsets x="10" y="10" z="0" rotation="0" units="Millimeters" />
                 </actuator>
             </actuators>

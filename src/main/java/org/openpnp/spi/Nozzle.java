@@ -2,6 +2,7 @@ package org.openpnp.spi;
 
 import java.util.Set;
 
+import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 
 /**
@@ -24,7 +25,7 @@ public interface Nozzle
      * on the vacuum. When this is called during job processing the processor will have already
      * positioned the nozzle over the part to be picked and lowered it to the correct height. Some
      * implementations may choose to do further work in pick(), such as firing air cylinders,
-     * monitoring pressure sensors, etc.
+     * monitoring pressure sensors, probing for contact etc.
      * 
      * @throws Exception
      */
@@ -75,12 +76,19 @@ public interface Nozzle
     public Part getPart();
     
     /**
-     * Returns true if the isPartDetected() method is available. Some machines do not have
+     * Returns true if the isPartOn() method is available. Some machines do not have
      * vacuum sensors or other part detection sensors, so this feature is optional.
      * @return
      */
-    public boolean isPartDetectionEnabled();
+    public boolean isPartOnEnabled();
     
+    /**
+     * Returns true if the isPartOff() method is available. Some machines do not have
+     * vacuum sensors or other part detection sensors, so this feature is optional.
+     * @return
+     */
+    public boolean isPartOffEnabled();
+
     /**
      * Returns true if a part appears to be on the nozzle. This is typically implemented by
      * checking a vacuum level range, but other methods such as laser or vision detection
