@@ -965,9 +965,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             }
             line = line.trim();
             Logger.trace("[{}] << {}", getCommunications().getConnectionName(), line);
-            if (!processPositionReport(line)) {
-                responseQueue.offer(line);
-            }
+            // extract a position report, if present
+            processPositionReport(line);
+            // add to the responseQueue (even if it happens to be a position report, it might still also contain the "ok"
+            // acknowledgment e.g. on Smoothieware)
+            responseQueue.offer(line);
         }
     }
 
