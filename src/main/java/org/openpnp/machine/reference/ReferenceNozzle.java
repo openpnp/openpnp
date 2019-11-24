@@ -85,6 +85,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     
     @Commit
     public void commit() {
+        /**
+         * Backwards compatibility to change from vacuumSenseActuatorName to vacuumActuatorName.
+         */
         if (vacuumActuatorName == null) {
             vacuumActuatorName = vacuumSenseActuatorName;
             vacuumSenseActuatorName = null;
