@@ -19,7 +19,6 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.MovableUtils;
@@ -36,9 +35,6 @@ import org.simpleframework.xml.core.Commit;
 
 @Root
 public class ReferenceNozzleTipCalibration extends AbstractModelObject {
-    // Reference back to the nozzle tip.
-    private ReferenceNozzleTip nozzleTip;
-
     public static interface RunoutCompensation {
 
         Location getOffset(double angle);
@@ -417,8 +413,10 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     }
 
     @Attribute(required = false)
-    private ReferenceNozzleTipCalibration.RunoutCompensationAlgorithm runoutCompensationAlgorithm = RunoutCompensationAlgorithm.Model;      // modelBased or tableBased? Two implementations are available
-
+    private ReferenceNozzleTipCalibration.RunoutCompensationAlgorithm runoutCompensationAlgorithm = RunoutCompensationAlgorithm.ModelCameraOffset;
+    
+    @Attribute(required = false)
+    private double version = 1.0;
 
     @Attribute(required = false)
     private RecalibrationTrigger recalibrationTrigger = RecalibrationTrigger.NozzleTipChangeInJob;
@@ -433,6 +431,13 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     @Commit
     public void commit() {
         angleIncrement = null;
+        
+        // OpenPNP Version update
+        if (version < 2) {
+            version = 2.0;
+            // Force ModelCameraOffset calibration system.
+            runoutCompensationAlgorithm = RunoutCompensationAlgorithm.ModelCameraOffset;
+        }
     }
 
     // Max allowed linear distance w.r.t. bottom camera for an offset measurement - measurements above threshold are removed from pipelines results 
@@ -450,73 +455,6 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
     public void setRunoutCompensationAlgorithm(ReferenceNozzleTipCalibration.RunoutCompensationAlgorithm runoutCompensationAlgorithm) {
         this.runoutCompensationAlgorithm = runoutCompensationAlgorithm;
-    }
-
-    public ReferenceNozzle getUiCalibrationNozzle(ReferenceNozzleTip nozzleTip) throws Exception {
-        ReferenceNozzle refNozzle; 
-        if (nozzleTip.isUnloadedNozzleTipStandin()) {
-            // The "unloaded" stand-in will not be well-defined if multiple nozzles are currently
-            // naked. Therefore the currently selected nozzle from the machine controls is preferred.
-            Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
-            if (nozzle instanceof ReferenceNozzle) {
-                refNozzle = (ReferenceNozzle)nozzle;
-                if (refNozzle.getCalibrationNozzleTip() == nozzleTip) {
-                    // Yes, it's a match.
-                    return refNozzle; 
-                }
-            }
-            // If not, it just takes the first naked nozzle, if any. 
-        }
-        refNozzle = nozzleTip.getNozzleAttachedTo();
-        if (refNozzle == null) {
-            if (nozzleTip.isUnloadedNozzleTipStandin()) {
-                throw new Exception("Please unload the nozzle tip on the current nozzle.");
-            }
-            else {
-                throw new Exception("Please load the selected nozzle tip on the current nozzle.");
-            }
-        }
-        return refNozzle;
-    }
-
-    private ReferenceNozzleTip getNozzleTip() {
-        // Note this is a bit of a hack, used to get the nozzleTip back from the calibration.
-        for (NozzleTip nozzleTip : Configuration.get().getMachine().getNozzleTips()) {
-            if (nozzleTip instanceof ReferenceNozzleTip) {
-                if (((ReferenceNozzleTip)nozzleTip).getCalibration() == this) {
-                    return (ReferenceNozzleTip)nozzleTip;
-                }
-            }
-        }
-        return null;
-    }
-
-    public String getRunoutCompensationInformation() {
-        StringBuffer info = new StringBuffer();
-        // In the UI property getter (no parameter passing) we need to reconstruct things a bit. 
-        ReferenceNozzleTip nozzleTip = getNozzleTip();
-        ReferenceNozzle nozzle = null;
-        if (nozzleTip != null) {
-            try {
-                nozzle = nozzleTip.getCalibration().getUiCalibrationNozzle(nozzleTip);
-            }
-            catch (Exception e) {
-                info.append(e.getMessage());
-            }
-        }
-        if (nozzle != null) {
-            info.append(nozzleTip.getName());
-            info.append(" on ");
-            info.append(nozzle.getName());
-            info.append(": ");
-            if (isCalibrated(nozzle)) {
-                info.append(getRunoutCompensation(nozzle).toString());
-            }
-            else {
-                info.append("Uncalibrated");
-            }
-        }
-        return info.toString();
     }
 
     public void calibrate(ReferenceNozzle nozzle, boolean homing, boolean calibrateCamera) throws Exception {
@@ -818,7 +756,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         // i.e. just wipe the whole lookup table
         runoutCompensationLookup.clear();
         // inform UI about changed information
-        firePropertyChange("runoutCompensationInformation", null, null);
+        firePropertyChange("calibrationInformation", null, null);
         // deprecated
         runoutCompensation = null;
     }
@@ -842,10 +780,14 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             }
                 
             // inform UI about changed information
-            firePropertyChange("runoutCompensationInformation", null, null);
+            firePropertyChange("calibrationInformation", null, null);
         }
         // deprecated
         runoutCompensation = null;
+    }
+
+    public String getCalibrationInformation(ReferenceNozzle nozzle) { 
+        return getRunoutCompensation(nozzle).toString();
     }
 
     public boolean isCalibrated(ReferenceNozzle nozzle) {

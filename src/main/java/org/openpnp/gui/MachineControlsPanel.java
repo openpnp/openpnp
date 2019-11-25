@@ -127,6 +127,7 @@ public class MachineControlsPanel extends JPanel {
     }
 
     public void setSelectedTool(HeadMountable hm) {
+        HeadMountable oldValue = selectedTool;
         selectedTool = hm;
         for (int i = 0; i < comboBoxHeadMountable.getItemCount(); i++) {
             HeadMountableItem item = (HeadMountableItem) comboBoxHeadMountable.getItemAt(i); 
@@ -136,6 +137,9 @@ public class MachineControlsPanel extends JPanel {
             }
         }
         updateDros();
+        if (oldValue != hm) {
+            firePropertyChange("selectedTool", oldValue, hm);
+        }
     }
 
     public JogControlsPanel getJogControlsPanel() {
@@ -419,8 +423,8 @@ public class MachineControlsPanel extends JPanel {
                     }
                     else if (e.getOldValue() != null && e.getNewValue() == null) {
                         for (int i = 0; i < comboBoxHeadMountable.getItemCount(); i++) {
-                            NozzleItem item = (NozzleItem) comboBoxHeadMountable.getItemAt(i);
-                            if (item.getNozzle() == e.getOldValue()) {
+                            HeadMountableItem item = (HeadMountableItem) comboBoxHeadMountable.getItemAt(i);
+                            if (item.getItem() == e.getOldValue()) {
                                 comboBoxHeadMountable.removeItemAt(i);
                             }
                         }

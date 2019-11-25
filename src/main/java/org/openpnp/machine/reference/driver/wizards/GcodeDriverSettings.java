@@ -72,6 +72,8 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         JLabel lblUnits = new JLabel("Units");
@@ -141,6 +143,18 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         
         visualHoming = new JCheckBox("");
         settingsPanel.add(visualHoming, "8, 10");
+        
+        JLabel lblBackslashEscapedCharacters = new JLabel("Backslash Escaped Characters");
+        lblBackslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
+                + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
+                + "feed, \\r for carriage return, and \\f for form feed.");
+        settingsPanel.add(lblBackslashEscapedCharacters, "2, 12, right, default");
+        
+        backslashEscapedCharacters = new JCheckBox("");
+        backslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
+                + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
+                + "feed, \\r for carriage return, and \\f for form feed.");
+        settingsPanel.add(backslashEscapedCharacters, "4, 12");
     }
 
     @Override
@@ -160,6 +174,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         addWrappedBinding(driver, "connectWaitTimeMilliseconds", connectWaitTimeTf, "text", intConverter);
         addWrappedBinding(driver, "name", driverName, "text");
         addWrappedBinding(driver, "visualHomingEnabled", visualHoming, "selected");
+        addWrappedBinding(driver, "backslashEscapedCharactersEnabled", backslashEscapedCharacters, "selected");
         
         ComponentDecorators.decorateWithAutoSelect(maxFeedRateTf);
         ComponentDecorators.decorateWithAutoSelect(backlashOffsetXTf);
@@ -307,6 +322,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
     private JComboBox unitsCb;
     private JTextField driverName;
     private JCheckBox visualHoming;
+    private JCheckBox backslashEscapedCharacters;
 
     static class HeadMountableItem {
         private HeadMountable hm;

@@ -240,6 +240,7 @@ public class ReferenceMachine extends AbstractMachine {
     public List<Class<? extends Nozzle>> getCompatibleNozzleClasses() {
         List<Class<? extends Nozzle>> l = new ArrayList<>();
         l.add(ReferenceNozzle.class);
+        l.add(ContactProbeNozzle.class);
         return l;
     }
 
@@ -269,6 +270,13 @@ public class ReferenceMachine extends AbstractMachine {
         this.setHomed(false);
         
         super.home();
+
+        try {
+            Configuration.get().getScripting().on("Machine.AfterHoming", null);
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+        }
 
         // if homing went well, set machine homed-flag true
         this.setHomed(true);     

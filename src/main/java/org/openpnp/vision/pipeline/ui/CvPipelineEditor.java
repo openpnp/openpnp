@@ -24,6 +24,7 @@ import org.openpnp.vision.pipeline.stages.CreateFootprintTemplateImage;
 import org.openpnp.vision.pipeline.stages.CreateModelTemplateImage;
 import org.openpnp.vision.pipeline.stages.CreateShapeTemplateImage;
 import org.openpnp.vision.pipeline.stages.DetectCirclesHough;
+import org.openpnp.vision.pipeline.stages.DetectLinesHough;
 import org.openpnp.vision.pipeline.stages.DetectEdgesCanny;
 import org.openpnp.vision.pipeline.stages.DetectEdgesLaplacian;
 import org.openpnp.vision.pipeline.stages.DetectEdgesRobertsCross;
@@ -67,6 +68,7 @@ import org.openpnp.vision.pipeline.stages.SimpleBlobDetector;
 import org.openpnp.vision.pipeline.stages.Threshold;
 import org.openpnp.vision.pipeline.stages.ThresholdAdaptive;
 import org.openpnp.vision.pipeline.stages.WritePartTemplateImage;
+import org.openpnp.vision.pipeline.stages.ActuatorWrite;
 
 /**
  * A JPanel based component for editing a CvPipeline. Allows the user to add and remove stages,
@@ -95,6 +97,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(CreateModelTemplateImage.class);
         registerStageClass(CreateShapeTemplateImage.class);
         registerStageClass(DetectCirclesHough.class);
+        registerStageClass(DetectLinesHough.class);
         registerStageClass(DetectEdgesCanny.class);
         registerStageClass(DetectEdgesRobertsCross.class);
         registerStageClass(DetectEdgesLaplacian.class);
@@ -138,6 +141,8 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(Threshold.class);
         registerStageClass(ThresholdAdaptive.class);
         registerStageClass(WritePartTemplateImage.class);
+        registerStageClass(ActuatorWrite.class);
+        
     }
 
     private final static Set<Class<? extends CvStage>> stageClasses;

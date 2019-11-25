@@ -252,4 +252,54 @@ public abstract class AbstractReferenceDriver extends AbstractModelObject implem
         return new AbstractReferenceDriverConfigurationWizard(this);
     }
 
+    
+    // Replaces each backslash escaped sequence within a string with its actual unicode character
+    public static String unescape(String s) {
+        int i = 0;
+        char c;
+        int len = s.length();
+        StringBuffer sb = new StringBuffer(len);
+        while (i<len) {
+             c = s.charAt(i++);
+             if (c == '\\') {
+                  if (i<len) {
+                       c = s.charAt(i++);
+                       if ((c == 'u') || (c == 'U')) {
+                          try {
+                               c = (char) Integer.parseInt(s.substring(i,i+4),16);
+                               i += 4;
+                          }
+                          catch (Exception e) {
+                              //the escaped unicode character doesn't have the correct form (four hexidecimal digits) so just pass it along
+                              //as a string
+                              sb.append('\\');
+                          }
+                       }
+                       else if ((c == 't') || (c == 'T')) {
+                           c = 0x0009; //unicode tab
+                       }
+                       else if ((c == 'b') || (c == 'B')) {
+                           c = 0x0008; //unicode backspace
+                       }
+                       else if ((c == 'n') || (c == 'N')) {
+                           c = 0x000A; //unicode line feed
+                       }
+                       else if ((c == 'r') || (c == 'R')) {
+                           c = 0x000D; //unicode carriage return
+                       }
+                       else if ((c == 'f') || (c == 'F')) {
+                           c = 0x000C; //unicode form feed
+                       }
+                       else {
+                           //in all other cases just pass the backslash along
+                           sb.append('\\');
+                       }
+                  }
+             }
+        sb.append(c);
+        }
+        return sb.toString();
+    }
+
+
 }
