@@ -19,7 +19,7 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Commit;
 
-@Stage(description="Remove color from an image based on the HSV color space. Pixels that fall between (hueMin, saturationMin, valueMin) and (hueMax, saturationMax, valueMax) are set to black in the output image. This stage expects the input to be in HSV_FULL format, so you should do a ConvertColor with Bgr2HsvFull before this stage and ConvertColor Hsv2BgrFull after. These are not applied internally as to not complicate the use of multiple instances of this stage in series. Note that this stage can be used with any 3 channel, 8 bit per channel color space. The order of the filtered channels is hue, saturation, value, but you can use these ranges for other channels.")
+@Stage(description="Mask color from an image based on the HSV color space. Pixels that fall between (hueMin, saturationMin, valueMin) and (hueMax, saturationMax, valueMax) are set to black in the output image. This stage expects the input to be in HSV_FULL format, so you should do a ConvertColor with Bgr2HsvFull before this stage and ConvertColor Hsv2BgrFull after. These are not applied internally as to not complicate the use of multiple instances of this stage in series. Note that this stage can be used with any 3 channel, 8 bit per channel color space. The order of the filtered channels is hue, saturation, value, but you can use these ranges for other channels.")
 public class MaskHsv extends CvStage {
     @Attribute(required=false)
     @Property(description="Sets each channel's min and max limits such that the pixels falling in and around the channel's histogram peak bin are masked.  The number of histogram bins that get masked is controlled by the value of the fractionToMask parameter.")
@@ -57,6 +57,10 @@ public class MaskHsv extends CvStage {
     @Property(description="Inverts the selection of pixels to mask.")
     private Boolean invert;
     
+    @Attribute(required = false)
+    @Property(description = "If set, the mask is returned directly as a grayscale image with the masked area black, the unmasked white. Otherwise the masked area is blackened in the source image.")
+    private boolean binaryMask = false;
+
     public Boolean getAuto() {
         return auto;
     }
@@ -131,6 +135,13 @@ public class MaskHsv extends CvStage {
         this.invert = invert;
     }
 
+    public boolean isBinaryMask() {
+        return binaryMask;
+    }
+
+    public void setBinaryMask(boolean binaryMask) {
+        this.binaryMask = binaryMask;
+    }
 
     @Commit
     public void commit() {
@@ -154,6 +165,7 @@ public class MaskHsv extends CvStage {
     }
     
     
+
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         Mat mat = pipeline.getWorkingImage();
@@ -419,7 +431,12 @@ public class MaskHsv extends CvStage {
         double fractionActuallyMasked = 1.0 - Core.countNonZero(mask) / (double) ( mat.rows() * mat.cols() ) ;
         Logger.trace( "Fraction actually masked = " + fractionActuallyMasked );
         
-        mat.copyTo(masked, mask);
-        return new Result(masked);
+        if (binaryMask) {
+            return new Result(mask);
+        } 
+        else {
+            mat.copyTo(masked, mask);
+            return new Result(masked);
+        }
     }
 }
