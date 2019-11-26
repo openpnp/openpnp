@@ -6,7 +6,7 @@ Each nozzle in OpenPnP will usually have an attached solenoid valve and vacuum p
 
 Each nozzle will have a valve that controls the vacuum to the nozzle tip. To configure the vacuum valve for a nozzle:
 
-1. [[Create an Actuator|Setup and Configuration: Actuators]] for each nozzle, and one additional Actuator if you want to control your pump.
+1. [[Create an Actuator|Setup and Calibration: Actuators]] for each nozzle, and one additional Actuator if you want to control your pump.
 2. In Machine Setup -> Nozzles, select a nozzle and then select the Vacuum tab.
 3. In the Vacuum tab, select the Actuator you created for this nozzle's valve.
 4. Repeat steps 2 and 3 for all nozzles.
