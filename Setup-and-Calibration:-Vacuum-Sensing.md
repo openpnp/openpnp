@@ -2,7 +2,9 @@ Vacuum sensing allows OpenPnP to determine if a pick operation or a place operat
 
 There is a video that shows how to migrate settings from the old system to this system at https://www.youtube.com/watch?v=FsZ5dy7n1Ag. This video also serves as a useful tutorial for the instructions below.
 
-To set up vacuum sensing:
+Instructions for OpenPnP 1.0 and 2.0 are different. See further down the page for 2.0 instructions.
+
+To set up vacuum sensing in OpenPnP 1.0:
 
 1. Attach a pressure sensor to your machine between the nozzle and the vacuum pump.
 2. Configure your machine controller to be able to read the sensor using a command such as an Mcode or Gcode. How to do this is beyond the scope of this document, but you can ask for help on the mailing list.
@@ -17,6 +19,10 @@ To set up vacuum sensing:
 
     These two values will be specific to your machine and to each NozzleTip. It may require a bit of experimentation to find values that work for you. Set the two values and press Apply. 
 6. With everything fully configured, try performing a Pick operation. You can do this in the Feeders tab. If the pick is good then you should see no error message. If the pick fails you should see an error message. This same error message will appear during a job when there is a pick failure and it will cause the job to pause so you can fix the error.
+
+To set up vacuum sensing in OpenPnP 2.0:
+
+The process is very similar, except instead of creating a new Actuator you will use the same one you [[configured to turn vacuum on and off|Setup and Calibration: Vacuum Setup]]. Skip step 3 above, and assign the commands in the other steps to your vacuum control actuator.
 
 ***
 
