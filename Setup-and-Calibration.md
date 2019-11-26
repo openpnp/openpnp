@@ -10,14 +10,15 @@ You should follow the steps in the order they are listed in this guide since man
 4. [[Steps Per Mm|Setup and Calibration: Steps Per Mm]]
 5. [[Nozzle Setup|Setup and Calibration: Nozzle Setup]]
 6. [[Actuators|Setup and Calibration: Actuators]]
-7. [[Bottom Camera Setup|Setup and Calibration: Bottom Camera Setup]]
-8. [[Park Location|Setup and Calibration: Park Location]]
-9. [[Discard Location|Setup and Calibration: Discard Location]]
-10. [[Feeders|Setup and Calibration: Feeders]]
-11. [[Bottom Vision|Setup and Calibration: Bottom Vision]]
-12. [[Vacuum Sensing|Setup and Calibration: Vacuum Sensing]]
-13. [[Camera Lighting|Setup and Calibration: Camera Lighting]]
-14. [[Next Steps|Setup and Calibration: Next Steps]]
+7. [[Vacuum Setup|Setup and Calibration: Vacuum Setup]]
+8. [[Bottom Camera Setup|Setup and Calibration: Bottom Camera Setup]]
+9. [[Park Location|Setup and Calibration: Park Location]]
+10. [[Discard Location|Setup and Calibration: Discard Location]]
+11. [[Feeders|Setup and Calibration: Feeders]]
+12. [[Bottom Vision|Setup and Calibration: Bottom Vision]]
+13. [[Vacuum Sensing|Setup and Calibration: Vacuum Sensing]]
+14. [[Camera Lighting|Setup and Calibration: Camera Lighting]]
+15. [[Next Steps|Setup and Calibration: Next Steps]]
 
 ***
 
