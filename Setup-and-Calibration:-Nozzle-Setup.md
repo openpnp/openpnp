@@ -12,7 +12,7 @@ In OpenPnP, the thing that actually touches parts is called a Nozzle Tip. A Nozz
 You may have any number of Nozzles on a Head, and any number of Nozzle Tips assigned to a Nozzle.
 
 ## Adding Nozzles
-If you have more than one nozzle on your machine:
+OpenPnP's default configuration includes one nozzle. If you have more than one nozzle on your machine:
 
 1. Open the Machine Setup Tab.
 2. Find the head you want to add a nozzle to and look for the Nozzles item below it. Select it.
