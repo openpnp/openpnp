@@ -19,6 +19,16 @@ Using the [[Scripting]] system you can use Actuators to extend OpenPnP to contro
 2. Select a actuator driver from the provided list and press the "Accept" button. The newly added actuator will show up in the actuators list.
 3. Click on the name of the new actuator to open it's properties.
 
+## Assigning Commands
+
+Once you've created an Actuator, you will generally need to assign commands to it. The most common case is using GcodeDriver and boolean actuators to control something like a switch, a solenoid, a pump, a valve, etc. 
+
+To set the Gcode for an Actuator:
+1. Go to Machine Setup -> Driver -> GcodeDriver -> Gcode. 
+2. Select the Actuator from the dropdown menu.
+3. Select the ACTUATE_BOOLEAN command.
+4. Enter the Gcode fragment. An example would be `{True:M801}{False:M800}`. This will send M801 when the Actuator is turned on, and M800 when it is turned off.
+
 # GcodeDriver
 
 See [actuate-boolean-command](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuate_boolean_command)
