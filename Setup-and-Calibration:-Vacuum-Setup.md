@@ -6,11 +6,18 @@ Each nozzle in OpenPnP will usually have an attached solenoid valve and vacuum p
 
 Each nozzle will have a valve that controls the vacuum to the nozzle tip. To configure the vacuum valve for a nozzle:
 
-1. [[Create an Actuator|Setup and Calibration: Actuators]] for each nozzle, and one additional Actuator if you want to control your pump.
-2. In Machine Setup -> Nozzles, select a nozzle and then select the Vacuum tab.
-3. In the Vacuum tab, select the Actuator you created for this nozzle's valve.
-4. Repeat steps 2 and 3 for all nozzles.
-5. If you want your pump to turn on and off when needed, go to Machine Setup -> Heads and select your Head, then find the Vacuum Pump Actuator field and select the actuator you created for your pump.
+1. [[Create an Actuator|Setup and Calibration: Actuators]] for each nozzle. It should be named something like N1_VAC, N2_VAC, etc.
+2. Set the boolean command for the actuator so that it turns the valve on and off when the actuator is triggered.
+3. In Machine Setup -> Nozzles, select a nozzle and then select the Vacuum tab.
+4. In the Vacuum tab, select the Actuator you created for this nozzle's valve.
+5. Repeat steps 2 and 3 for all nozzles.
+
+## Pump Control Setup
+
+OpenPnP can turn the pump on and off whenever it is needed by any nozzle on the head. As long as at least one nozzle is calling for vacuum, the pump will run. To use this functionality:
+
+1. [[Create an Actuator|Setup and Calibration: Actuators]] and set the boolean command to turn the pump on and off.
+2. Go to Machine Setup -> Heads and select your Head, then find the Vacuum Pump Actuator field and select the actuator you created for your pump.
 
 ***
 
