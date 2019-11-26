@@ -3,6 +3,7 @@ Actuators are generic devices you can attach to your machine to do additional ta
 
 Some of the things OpenPnP uses Actuators for are:
 
+* [[Nozzle valve and vacuum pump control|Setup and Calibration: Vacuum Setup]]
 * [Auto feeder triggers](https://github.com/openpnp/openpnp/wiki/ReferenceAutoFeeder).
 * [Nozzle vacuum pressure sensing](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Sensing).
 * Drag feeder solenoid pins.
