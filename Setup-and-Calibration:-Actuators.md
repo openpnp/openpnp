@@ -28,7 +28,7 @@ To set the Gcode for an Actuator:
 1. Go to Machine Setup -> Driver -> GcodeDriver -> Gcode. 
 2. Select the Actuator from the dropdown menu.
 3. Select the ACTUATE_BOOLEAN command.
-4. Enter the Gcode fragment. An example would be `{True:M801}{False:M800}`. This will send M801 when the Actuator is turned on, and M800 when it is turned off.
+4. Enter the Gcode fragment. An example would be `{True:M801}{False:M800}`. This will send M801 when the Actuator is turned on, and M800 when it is turned off. The text after `True:` or `False:` is what will actually be sent.
 
 # GcodeDriver
 
