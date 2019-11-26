@@ -12,11 +12,7 @@ Each nozzle will have a valve that controls the vacuum to the nozzle tip. To con
 4. Repeat steps 2 and 3 for all nozzles.
 5. If you want your pump to turn on and off when needed, go to Machine Setup -> Heads and select your Head, then find the Vacuum Pump Actuator field and select the actuator you created for your pump.
 
-
-
-
-
-
+***
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
