@@ -288,7 +288,7 @@ public class Location {
      * value from this object instead of the second location.
      * 
      * This is intended as a utility method, useful for creating new Locations based on two existing
-     * ones with one or more values substituded.
+     * ones with one or more values substituted.
      * 
      * @param location
      * @param x
