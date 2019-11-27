@@ -135,6 +135,13 @@ public class MaskHsv extends CvStage {
         this.invert = invert;
     }
 
+    public boolean isBinaryMask() {
+        return binaryMask;
+    }
+
+    public void setBinaryMask(boolean binaryMask) {
+        this.binaryMask = binaryMask;
+    }
 
     @Commit
     public void commit() {
@@ -158,13 +165,6 @@ public class MaskHsv extends CvStage {
     }
     
     
-    public boolean isBinaryMask() {
-        return binaryMask;
-    }
-
-    public void setBinaryMask(boolean binaryMask) {
-        this.binaryMask = binaryMask;
-    }
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
