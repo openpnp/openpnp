@@ -19,10 +19,10 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-// All measuerments in Millimeters.
+// All dimesions in Millimeters.
 
-// Version tag to be printed on the feeder. Should be the same as on the file name.
-version_tag="v124";
+// Version tag to be printed on the feeder. 
+version_tag="v125";
 // If debug is set true, it places the cover on the tray in the opened state.
 // Do not print with true! ;-)
 debug=false; 
@@ -31,7 +31,7 @@ debug=false;
 
 // Overall layer height. Only tested for 0.2mm. 
 layer_height=0.2;
-// Standard extrusion width. Set your slicer to one uniform value for fastest printing.
+// Standard extrusion width. Set your slicer to this uniform value for fastest printing.
 extrusion_width=0.45;
 // Minimum sturdy enough wall width.
 min_width=0.8;
@@ -45,42 +45,109 @@ $fn=20;
 // Epsilon for Boolean body overlap to render nicely in OpenSCAD CSG by Z-Buffer view.
 e=0.01; 
 
+// OpenSCAD has no classes or structs, so we simulate one using an array.
+function TapeDefinition(
+    // Official tape width, only use multiples of 4mm. Use tape_play to adjust.
+    tape_width=8,
+    // Thickness of the tape at the sprocket holes i.e. not counting portruding embossed pockets.
+    tape_thickness=0.5,
+    // Pocket portrusion in an ebossed tape (measured from underside of tape).
+    pocket_portrusion=0,
+    // Pitch of the pockets in the tape. Use 2mm or multiples of 4mm.
+    pocket_pitch=2,
+    // Pocket width across the tape.
+    pocket_width=2.25,
+    // Pocket length along the tape if compartments should be printed to contain the parts directly.
+    // For normal tapes set to 0.
+    pocket_length=0,
+    // Tape play. Use this to adjust the precise tape width and the play for print imperfections.
+    tape_play=0.0,
+    // Horizontal per-side play of the cover to allow for imperfections of the print.
+    cover_play=0.1,    
+    // Whether the cover has blinds.
+    blinds=true, 
+    // Nozzle diameter (only used for drag handle - not supported in the OpenPNP software feeder).
+    nozzle_diameter=1,
+    // Print every nth sprocket thorn. Set to 0 to switch off thorns.
+    sprocket_thorns=1) =
+    [ tape_width, tape_thickness, pocket_portrusion, pocket_pitch, pocket_width, pocket_length, tape_play, cover_play, blinds, nozzle_diameter, sprocket_thorns];
+    
+    function get_tape_width(tape)=tape[0];
+    function get_tape_thickness(tape)=tape[1];
+    function get_pocket_portrusion(tape)=tape[2];
+    function get_pocket_pitch(tape)=tape[3];
+    function get_pocket_width(tape)=tape[4];
+    function get_pocket_length(tape)=tape[5];
+    function get_tape_play(tape)=tape[6];
+    function get_cover_play(tape)=tape[7];
+    function get_blinds(tape)=tape[8];
+    function get_nozzle_diameter(tape)=tape[9];
+    function get_sprocket_thorns(tape)=tape[10];
+// End of pseudoclass TapeDefinition
+
+// Let's create some tape definitions
+tape0402 = TapeDefinition(
+    tape_width=8,
+    tape_thickness=0.5,
+    pocket_pitch=2,
+    pocket_width=2.25,
+    tape_play=-0.03,
+    cover_play=0.14);
+
+tape0603 = TapeDefinition(
+    tape_width=8,
+    tape_thickness=1.1,
+    pocket_pitch=4,
+    pocket_width=2.5,
+    tape_play=-0.0,
+    cover_play=0.1);
+
+tapeSOT3 = TapeDefinition(
+    tape_width=8,
+    tape_thickness=0.4,
+    pocket_portrusion=1.6,
+    pocket_pitch=4,
+    pocket_width=4,
+    tape_play=0.05,
+    cover_play=0.1);
+
+tape12mm = TapeDefinition(
+    tape_width=12,
+    tape_thickness=0.4,
+    pocket_portrusion=1.2,
+    pocket_pitch=8,
+    pocket_width=5,
+    tape_play=0.1,
+    cover_play=0.1,
+    nozzle_diameter=1.5,
+    sprocket_thorns=2);
+    
+trayQLPF64 = TapeDefinition(
+    tape_width=16,
+    tape_thickness=1.6,
+    pocket_pitch=16,
+    pocket_width=12.1,
+    pocket_length=12.1,
+    tape_play=0.1,
+    cover_play=0.1,
+    blinds=false,
+    nozzle_diameter=2,
+    sprocket_thorns=0);
+
+
+
 // Call it
 BlindsFeeder();
 
 module BlindsFeeder(
     // Tape length from feeder edge to edge, usually multiples of 4mm. 
     // Other values are supported if you manually adjust the edge distance in the OpenPNP feeder.
-    tape_length=80,
-    
-    // The arrayed types of tape. Each type of tape has a column of settings:
-    //                       0402      0402    0603     SOT3     x       QLPF64
+    tape_length=44,
     
     // Number of lanes per tape type. If set to 0 it is not produced. 
-    arrayed_tape_lanes=      [0,       1,       1,       1,       1,       1],
-    // Official tape width, only use multiples of 4mm. Use arrayed_tape_play to adjust.
-    arrayed_tape_width=      [8,       8,       8,       8,      12,      16],
-    // Vertical thickness of the tape.
-    arrayed_tape_thickness=  [0.5,     0.5,     1.1,     0.4,     0.4,     1.6],
-    // Pocket depth in an ebossed tape (outside depth from underside of tape).
-    arrayed_pocket_depth=    [0,       0,       0,     1.6,      1.2,      0],
-    // Pitch of the pockets in the tape. Use 2mm or multiples of 4mm.
-    arrayed_pocket_pitch=    [2,       2,       4,       4,       8,      16],
-    // Pocket width across the lane.
-    arrayed_pocket_width=    [2.25,    2.25,    2.5,     4,       5,      12.1],
-    // Pocket length if compartments should be printed to contain the parts directly.
-    // For normal tapes set to 0.
-    arrayed_pocket_length=   [0,       0,       0,       0,       0,      12.1],
-    // Tape play. Use this to adjust the precise tape width and the play for print imperfections.
-    arrayed_tape_play=       [-0.03,   -0.03,   0.0,     0.05,    0.1,     0.1], 
-    // Horizontal per-side play of the cover to allow for imperfections of the print.
-    arrayed_cover_play=      [0.14,    0.16,    0.1,    0.1,     0.1,     0.1], 
-    // Whether the cover has blinds.
-    arrayed_blinds=          [true,    true,    true,    false,   true,    false],
-    // Nozzle diameter (only used for drag handle - not supported in the OpenPNP software feeder).
-    arrayed_nozzle_diameter= [1,       1,       1.5,     1.5,     1.5,     2],
-    // Print every nth sprocket thorn. Set to 0 to switch off thorns.
-    arrayed_sprocket_thorns= [1,       1,       1,       1,       2,       0],
+    arrayed_tape_lanes=      [1,         1,         1,         1,         1],
+    // The arrayed tape definitions.
+    arrayed_tapes=           [tape0402,  tape0603,  tapeSOT3,  tape12mm,  trayQLPF64],
     
     // the wall on each side of the tape. Keep this at multiples of 1mm for automatic OpenPNP support.
     wall_width=1,
@@ -91,22 +158,23 @@ module BlindsFeeder(
     tray=true,
     // Want to print the covers?
     cover=true,
+    
     // How the covers are arranged on the printing bed. 
     // If you want to print very long feeders, set this to false.
     // If you want to print many, many short feeders, set it to true.
     covers_to_the_right=false,
     
-    // Gap between tray and covers as arranged on the printing bed.
+    // Gap between tray and covers, as arranged on the printing bed.
     gap=2,
     
     // Tape orientation in the feeder local coordinate system. We are picking parts further and 
     // further back in the tape and as the pick location advances, that is our +X. Consequently in 
-    // our local coordinate system, the sprocket holes are on the bottom. 
+    // our 2D local coordinate system, the sprocket holes are on the bottom. 
     // But if this were an automatic feeder, the tape would actually be pushed out in -X. Therefore 
-    // the tape orientation is actually -1 by default. 
+    // the tape orientation is actually -1 by default, the sprocket holes at the top. 
     // You can choose to feed your tapes the other way around and set tape_orientation to +1. This is not
     // recommended as it changes the notion of "Rotation in Tape" in OpenPNP. But it is supported by the 
-    // OpenPNP feeder and vision operations. 
+    // OpenPNP BlindsFeeder and its vision operations. 
     tape_orientation=-1,
     
     // The feeder floor thickness This feeder is based on the idea that it is taped/glued to a sturdy 
@@ -204,31 +272,32 @@ module BlindsFeeder(
     ) {
     
     // Calculate the summed width of the arrayed tape lanes up to and including tape t.
-    function arrayed_width(arrayed_tape_lanes, arrayed_tape_width, wall_width, t) 
-        = (t >= 0 ? (arrayed_tape_lanes[t]*(arrayed_tape_width[t]+2*wall_width) 
-            + arrayed_width(arrayed_tape_lanes, arrayed_tape_width, wall_width, t-1)) : 0);
+    function arrayed_width(arrayed_tape_lanes, arrayed_tapes, wall_width, t) 
+        = (t >= 0 ? (arrayed_tape_lanes[t]*(get_tape_width(arrayed_tapes[t])+2*wall_width) 
+            + arrayed_width(arrayed_tape_lanes, arrayed_tapes, wall_width, t-1)) : 0);
     
     
     // Go through all the tapes and construct them.
     for (t = [0:len(arrayed_tape_lanes)-1]) {
-        first = (arrayed_width(arrayed_tape_lanes, arrayed_tape_width, wall_width, t-1) == 0);
-        last  = (arrayed_width(arrayed_tape_lanes, arrayed_tape_width, wall_width, t) == 
-                 arrayed_width(arrayed_tape_lanes, arrayed_tape_width, wall_width, len(arrayed_tape_lanes)-1));
-        translate([0, arrayed_width(arrayed_tape_lanes, arrayed_tape_width, wall_width, t-1), 0]) {
+        first = (arrayed_width(arrayed_tape_lanes, arrayed_tapes, wall_width, t-1) == 0);
+        last  = (arrayed_width(arrayed_tape_lanes, arrayed_tapes, wall_width, t) == 
+                 arrayed_width(arrayed_tape_lanes, arrayed_tapes, wall_width, len(arrayed_tape_lanes)-1));
+        translate([0, arrayed_width(arrayed_tape_lanes, arrayed_tapes, wall_width, t-1), 0]) {
             // take arrayed values
             tape_lanes      = arrayed_tape_lanes[t];
-            tape_width      = arrayed_tape_width[t];
-            tape_thickness  = arrayed_tape_thickness[t];
-            pocket_depth    = arrayed_pocket_depth[t];
-            pocket_width    = arrayed_pocket_width[t];
-            pocket_pitch    = arrayed_pocket_pitch[t];
-            pocket_length   = arrayed_pocket_length[t];
-            blinds          = arrayed_blinds[t];
-            nozzle_diameter = arrayed_nozzle_diameter[t];
-            tape_play       = arrayed_tape_play[t];
-            sprocket_thorns = arrayed_sprocket_thorns[t];
-            cover_play      = arrayed_cover_play[t];
-    
+            tape            = arrayed_tapes[t];
+            // get the properties
+            tape_width      = get_tape_width(tape);
+            tape_thickness  = get_tape_thickness(tape);
+            pocket_portrusion    = get_pocket_portrusion(tape);
+            pocket_width    = get_pocket_width(tape);
+            pocket_pitch    = get_pocket_pitch(tape);
+            pocket_length   = get_pocket_length(tape);
+            blinds          = get_blinds(tape);
+            nozzle_diameter = get_nozzle_diameter(tape);
+            tape_play       = get_tape_play(tape);
+            sprocket_thorns = get_sprocket_thorns(tape);
+            cover_play      = get_cover_play(tape);
             
             // calculate some helper values
             pocket_dist=
@@ -236,7 +305,7 @@ module BlindsFeeder(
             pocket_center_dist_orient = (-sprocket_dist + 0.5)*tape_orientation;
             fiducial_dist = pocket_center_dist_orient + (tape_orientation < 0 ? -5 : -2);
             
-            tape_surface_height_net=floor_thickness+pocket_depth+tape_thickness;
+            tape_surface_height_net=floor_thickness+pocket_portrusion+tape_thickness;
             tape_surface_height=tape_surface_height_net+cover_vertical_play;
             
             tape_std_height=max(floor_thickness+tape_max_thickness, tape_surface_height);
@@ -280,12 +349,12 @@ module BlindsFeeder(
                 [tape_eff*0.5+cover_slot,wall_height-cover_slot_mid-layer_height], 
                 [tape_eff*0.5-overhang,knee_height], 
                 [tape_eff*0.5,tape_surface_height_net], 
-                [tape_eff*0.5+underhang,floor_thickness+pocket_depth], 
-                [pocket_right,floor_thickness+pocket_depth], 
+                [tape_eff*0.5+underhang,floor_thickness+pocket_portrusion], 
+                [pocket_right,floor_thickness+pocket_portrusion], 
                 [pocket_right,floor_thickness], 
                 [pocket_left,floor_thickness], 
-                [pocket_left,floor_thickness+pocket_depth], 
-                [-tape_eff*0.5-underhang,floor_thickness+pocket_depth], 
+                [pocket_left,floor_thickness+pocket_portrusion], 
+                [-tape_eff*0.5-underhang,floor_thickness+pocket_portrusion], 
                 [-tape_eff*0.5,tape_surface_height_net], 
                 [-tape_eff*0.5+overhang,knee_height], 
                 [-tape_eff*0.5-cover_slot,wall_height-cover_slot_mid-layer_height], 
@@ -373,7 +442,7 @@ module BlindsFeeder(
                         difference() {
                             union() {
                                 if (flange_length > 0) {
-                                    thickness= min(tape_thickness+pocket_depth, flange_thickness);
+                                    thickness= min(tape_thickness+pocket_portrusion, flange_thickness);
                                     // simple flange around the tray 
                                     translate([-flange_length, -0.5*tape_width-wall_width, 0]) {
                                         cube([flange_length*2+tape_length+e, tape_width+wall_width*2+e, floor_thickness]);
@@ -388,10 +457,10 @@ module BlindsFeeder(
                                             (pocket_left+pocket_right)*0.5, floor_thickness-e]) {
                                             translate([0, -pocket_width*0.5-extrusion_width*2, 0]) 
                                                 cube([pocket_pitch*0.5+extension_size*0.5, 
-                                                    extrusion_width*2,tape_thickness+pocket_depth+e]);
+                                                    extrusion_width*2,tape_thickness+pocket_portrusion+e]);
                                             translate([0, pocket_width*0.5, 0]) 
                                                 cube([pocket_pitch*0.5+extension_size*0.5, 
-                                                    extrusion_width*2,tape_thickness+pocket_depth+e]);
+                                                    extrusion_width*2,tape_thickness+pocket_portrusion+e]);
                                         }
                                     }
                                 }
@@ -502,14 +571,14 @@ module BlindsFeeder(
                                 union() {
                                     strut=2;
                                     strut_ceiling=2;
-                                    if (pocket_depth > layer_height*strut_ceiling) {
+                                    if (pocket_portrusion > layer_height*strut_ceiling) {
                                         w_left=tape_width*0.5+pocket_left;
                                         steps_left=floor(w_left/min_width/strut);
                                         if (steps_left>0) {
                                             step_left=w_left/steps_left;
                                             for (c = [-tape_width*0.5:step_left:pocket_left-step_left+e]) {
                                                 translate([c, floor_thickness]) 
-                                                    square([step_left-min_width, pocket_depth-layer_height*strut_ceiling+e]);
+                                                    square([step_left-min_width, pocket_portrusion-layer_height*strut_ceiling+e]);
                                             }
                                         }
                                         w_right=tape_width*0.5-pocket_right;
@@ -519,7 +588,7 @@ module BlindsFeeder(
                                             for (c = [pocket_right+extrusion_width:
                                                 step_right:tape_width*0.5+extrusion_width-step_right+e]) {
                                                 translate([c, floor_thickness]) 
-                                                    square([step_right-min_width, pocket_depth-layer_height*strut_ceiling+e]);
+                                                    square([step_right-min_width, pocket_portrusion-layer_height*strut_ceiling+e]);
                                             }
                                         }
                                     }
@@ -527,7 +596,7 @@ module BlindsFeeder(
                             }
                         }
                         // pocket outlines
-                        if (pocket_depth+tape_thickness > 0 && pocket_length > 0) {
+                        if (pocket_portrusion+tape_thickness > 0 && pocket_length > 0) {
                             for (i = [0:pocket_count-1]) { 
                                 x=i*pocket_pitch+pocket_d;
                                 w = extrusion_width;
@@ -540,25 +609,25 @@ module BlindsFeeder(
                                     floor_thickness-e])
                                     cube([x1 - x0, 
                                         pocket_right-pocket_left+2*e, 
-                                        pocket_depth+tape_thickness+e]);
+                                        pocket_portrusion+tape_thickness+e]);
                                 translate([x0, 
                                     pocket_left-w, 
                                     floor_thickness-e])
                                     cube([x3 - x0, 
                                         w, 
-                                        pocket_depth+tape_thickness+e]);
+                                        pocket_portrusion+tape_thickness+e]);
                                 translate([x0, 
                                     pocket_right, 
                                     floor_thickness-e])
                                     cube([x3 - x0, 
                                         w, 
-                                        pocket_depth+tape_thickness+e]);
+                                        pocket_portrusion+tape_thickness+e]);
                                 translate([x2, 
                                     pocket_left-e, 
                                     floor_thickness-e])
                                     cube([x3 - x2, 
                                         pocket_right-pocket_left+2*e, 
-                                        pocket_depth+tape_thickness+e]);
+                                        pocket_portrusion+tape_thickness+e]);
                             }
                         }
                         
@@ -569,7 +638,7 @@ module BlindsFeeder(
                             for (i = [0:sprocket_thorns:sprocket_count]) { 
                                 x=i*sprocket_pitch+sprocket_d;
                                 translate([x, tape_orientation*(tape_width*0.5-sprocket_dist), 
-                                    floor_thickness+pocket_depth-e])
+                                    floor_thickness+pocket_portrusion-e])
                                     cylinder(
                                         d1=sprocket_diameter0+sprocket_slant, 
                                         d2=sprocket_diameter1-sprocket_slant, 
@@ -583,8 +652,7 @@ module BlindsFeeder(
                     if (cover) {
                         translate([(debug ? 0 : 1) * (covers_to_the_right ? tape_length+flange_length+gap : 0), 
                                    (debug ? 0 : 1) * (covers_to_the_right ? 0 : arrayed_width(
-                                arrayed_tape_lanes, 
-                                arrayed_tape_width, wall_width, 
+                                arrayed_tape_lanes, arrayed_tapes, wall_width, 
                                 len(arrayed_tape_lanes)-1)+flange_width+gap), 
                             (debug ? 1 : 0) * tape_surface_height]) union() {
                             difference()  {
@@ -669,14 +737,14 @@ module BlindsFeeder(
                                             minkowski() {
                                                 cube([pocket_pitch*0.5, 2*nozzle_play, 2*e]);
                                                 cylinder(d1=pocket_pitch*0.5, d2=pocket_pitch*0.5+nozzle_play,
-                                                    h=floor_thickness+pocket_depth, $fn=16);
+                                                    h=floor_thickness+pocket_portrusion, $fn=16);
                                             }
                                         translate([tape_length-pocket_d+pocket_pitch*1, 
                                                 (pocket_left+pocket_right)*0.5-nozzle_play, -e])
                                             minkowski() {
                                                 cube([pocket_pitch*0.5, 2*nozzle_play, 2*e]);
                                                 cylinder(d1=pocket_pitch*0.5, d2=pocket_pitch*0.5+nozzle_play,
-                                                    h=floor_thickness+pocket_depth, $fn=16);
+                                                    h=floor_thickness+pocket_portrusion, $fn=16);
                                             }
                                     }
                                 }
