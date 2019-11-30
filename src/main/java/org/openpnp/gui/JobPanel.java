@@ -35,7 +35,9 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
@@ -95,6 +97,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+import org.pmw.tinylog.Logger;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -1254,6 +1257,14 @@ public class JobPanel extends JPanel {
                         MainFrame.get().getCameraViews().ensureCameraVisible(camera);
                         Location location = getSelection().getLocation();
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
+                        try {
+                            Map<String, Object> globals = new HashMap<>();
+                            globals.put("camera", this);
+                            Configuration.get().getScripting().on("Camera.AfterPosition", globals);
+                        }
+                        catch (Exception e) {
+                            Logger.warn(e);
+                        }
                     });
                 }
             };
@@ -1282,6 +1293,14 @@ public class JobPanel extends JPanel {
                         
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
                        
+                        try {
+                            Map<String, Object> globals = new HashMap<>();
+                            globals.put("camera", this);
+                            Configuration.get().getScripting().on("Camera.AfterPosition", globals);
+                        }
+                        catch (Exception e) {
+                            Logger.warn(e);
+                        }
                     });
                 }
             };

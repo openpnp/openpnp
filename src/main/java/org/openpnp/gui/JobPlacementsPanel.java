@@ -11,7 +11,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
@@ -65,6 +67,7 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
 
 public class JobPlacementsPanel extends JPanel {
     private JTable table;
@@ -480,6 +483,14 @@ public class JobPlacementsPanel extends JPanel {
                 Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
+                try {
+                    Map<String, Object> globals = new HashMap<>();
+                    globals.put("camera", this);
+                    Configuration.get().getScripting().on("Camera.AfterPosition", globals);
+                }
+                catch (Exception e) {
+                    Logger.warn(e);
+                }
             });
         }
     };
@@ -506,6 +517,14 @@ public class JobPlacementsPanel extends JPanel {
                         .getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
                 
+                try {
+                    Map<String, Object> globals = new HashMap<>();
+                    globals.put("camera", this);
+                    Configuration.get().getScripting().on("Camera.AfterPosition", globals);
+                }
+                catch (Exception e) {
+                    Logger.warn(e);
+                }
             });
         };
     };
