@@ -58,6 +58,7 @@ Scripting Events allow you to define scripts that will be run automatically by O
 * [Camera.AfterCapture](#CameraAfterCapture): Called after an image capture.
 * [Camera.BeforeCapture](#CameraBeforeCapture): Called before an image capture.
 * [Camera.BeforeSettle](#CameraBeforeSettle): Called before the camera settle time, preceding a capture.
+* [Camera.AfterPosition](#CameraAfterPosition): Called after moving the camera using the Position Camera icon.
 * [Job.AfterDiscard](#JobAfterDiscard): Called after a part has been discarded.
 * [Job.Finished](#JobFinished): Called when a job completes.
 * [Job.Placement.BeforeAssembly](#JobPlacementBeforeAssembly): Called before the process of handling a placement starts.
@@ -236,6 +237,27 @@ Example:
  var downCamLights = machine.getActuatorByName("DownCamLights");
 upCamLights.actuate(false);
 downCamLights.actuate(false);
+```
+
+### Camera.AfterPosition
+
+Called after the camera is moved to a position using the ![Position Camera](https://github.com/openpnp/openpnp/blob/develop/src/main/resources/icons/position-camera.svg) icon. This is intended to be used to turn on lighting and/or adjust camera settings so the object the camera moves to can be seen.
+
+Variables:
+
+| Name  | Type | Description |
+| ------------- | ------------- | -------------- |
+| camera  | [org.openpnp.spi.Camera](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Camera.html) | The Camera which was moved. |
+
+Example:
+
+.scripts/events/Camera.AfterPosition.js
+```js
+/**
+ * Turn on Down Camera Lights
+ */
+ var downCamLights = machine.getActuatorByName("DownCamLights");
+downCamLights.actuate(true);
 ```
 
 ### Vision.PartAlignment.Before
