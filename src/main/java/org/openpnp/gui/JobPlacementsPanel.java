@@ -485,7 +485,7 @@ public class JobPlacementsPanel extends JPanel {
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
                 try {
                     Map<String, Object> globals = new HashMap<>();
-                    globals.put("camera", this);
+                    globals.put("camera", camera);
                     Configuration.get().getScripting().on("Camera.AfterPosition", globals);
                 }
                 catch (Exception e) {
@@ -519,7 +519,7 @@ public class JobPlacementsPanel extends JPanel {
                 
                 try {
                     Map<String, Object> globals = new HashMap<>();
-                    globals.put("camera", this);
+                    globals.put("camera", camera);
                     Configuration.get().getScripting().on("Camera.AfterPosition", globals);
                 }
                 catch (Exception e) {
