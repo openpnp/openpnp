@@ -31,6 +31,12 @@ See [[GcodeDriver: Command Reference]] for the full list of commands, variables 
 
 ## Regular Expressions (Receiving Responses)
 
+GcodeDriver uses Regular Expressions to parse responses from the controller. Regular Expressions are very flexible and can parse nearly any value from nearly any kind of text.
+
+Most of the regular expressions that GcodeDriver uses are just used to match the text, to ensure that a particular response is received. Others include special sequences to capture values from the response.
+
+[RegExr](https://regexr.com/4pvqj) is a good place to experiment with regular expressions. If you click the Explain tab it shows what each part of the expression does and the Details tab shows information about the matches and captured values.
+
 ### COMMAND_CONFIRM_REGEX
 
 The driver uses this regex to look for responses from the controller. After sending a command it will wait for a line that matches this regex before considering the command complete. For many controllers this is simply `ok`, although since some controllers send additional information with command results it's better to use `^ok.*`.
