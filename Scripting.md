@@ -241,7 +241,7 @@ downCamLights.actuate(false);
 
 ### Camera.AfterPosition
 
-Called after the camera is moved to a position using the ![Position Camera](https://github.com/openpnp/openpnp/blob/develop/src/main/resources/icons/position-camera.svg) icon. This is intended to be used to turn on lighting and/or adjust camera settings so the object the camera moves to can be seen.
+Called after the camera is moved to a position using the ![Position Camera](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-camera.svg) icon. This is intended to be used to turn on lighting and/or adjust camera settings so the object the camera moves to can be seen.
 
 Variables:
 
