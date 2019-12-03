@@ -35,7 +35,7 @@ GcodeDriver uses Regular Expressions to parse responses from the controller. Reg
 
 Most of the regular expressions that GcodeDriver uses are just used to match the text, to ensure that a particular response is received. Others include special sequences to capture values from the response.
 
-[RegExr](https://regexr.com/4pvqj) is a good place to experiment with regular expressions. If you click the Explain tab it shows what each part of the expression does and the Details tab shows information about the matches and captured values.
+[RegExr](https://regexr.com/4pvqj) is a good site to experiment with regular expressions. If you click the Explain tab it shows what each part of the expression does and the Details tab shows information about the matches and captured values.
 
 ### COMMAND_CONFIRM_REGEX
 
