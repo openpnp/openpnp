@@ -39,6 +39,8 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
     
     @Element(required=false)
     private Location errorOffsets = new Location(LengthUnit.Millimeters);
+    
+    private Part lastErrorOffsetsPart = null;
 
     public SimulatedUpCamera() {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.0234375D, 0.0234375D, 0, 0));
@@ -87,8 +89,16 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         return image;
     }
 
-
     private void drawNozzle(Graphics2D g, Nozzle nozzle) {
+        if (nozzle.getPart() == null) {
+            errorOffsets = new Location(LengthUnit.Millimeters);
+            lastErrorOffsetsPart = null;
+        }
+        else if (nozzle.getPart() != lastErrorOffsetsPart) {
+            errorOffsets = new Location(LengthUnit.Millimeters, Math.random(), Math.random(), 0, Math.random() * 15);
+            lastErrorOffsetsPart = nozzle.getPart();
+        }
+        
         g.setStroke(new BasicStroke(2f));
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
@@ -101,8 +111,11 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
                 .convertToUnits(units)
                 .subtractWithRotation(getLocation());
         
-        // Create a nozzle shape
-        fillShape(g, new Ellipse2D.Double(-0.5, -0.5, 1, 1), Color.green, unitsPerPixel, offsets, false);
+        // Draw a green nozzle tip body
+        fillShape(g, new Ellipse2D.Double(-4, -4, 8, 8), Color.green, unitsPerPixel, offsets, false);
+        
+        // And a dark grey nozzle tip
+        fillShape(g, new Ellipse2D.Double(-0.5, -0.5, 1, 1), Color.darkGray, unitsPerPixel, offsets, false);
 
         // Draw the part
         Part part = nozzle.getPart();
