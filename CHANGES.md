@@ -1,6 +1,18 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-11-24
+
+## ReferenceStripFeeder Vision Bug Fix
+
+A long standing bug in ReferenceStripFeeder has been fixed by @tjanuszewski in
+https://github.com/openpnp/openpnp/pull/919. If you have struggled with the vision
+on ReferenceStripFeeder in the past, especially on longer strips, please give it a new
+try as this fix seems to improve it's functionality greatly.
+
+Thank you @tjanuszewski for finding and fixing this!
+
+
 # 2019-05-10
 
 ## Bottom Vision Pre-Rotate Updates and Bug Fixes 
