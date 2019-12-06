@@ -1,6 +1,7 @@
 package org.openpnp.gui.pkggen;
 
-import java.awt.FlowLayout;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.Locale;
 
 import javax.swing.JLabel;
@@ -12,8 +13,9 @@ import javax.swing.event.DocumentListener;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import com.jgoodies.forms.layout.FormLayout;
+
 import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
@@ -39,13 +41,13 @@ public class MinNomMaxField extends JPanel implements DocumentListener {
     private void createUi() {
         setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.PREF_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.PREF_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.PREF_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
+                FormSpecs.PREF_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 RowSpec.decode("26px"),}));
@@ -55,15 +57,15 @@ public class MinNomMaxField extends JPanel implements DocumentListener {
         
         min = new JTextField();
         add(min, "4, 2, right, top");
-        min.setColumns(10);
+        min.setColumns(6);
         
         nom = new JTextField();
         add(nom, "6, 2, right, top");
-        nom.setColumns(10);
+        nom.setColumns(6);
         
         max = new JTextField();
         add(max, "8, 2, right, top");
-        max.setColumns(10);
+        max.setColumns(6);
         
         ComponentDecorators.decorateWithAutoSelect(min);
         ComponentDecorators.decorateWithAutoSelect(nom);
@@ -119,14 +121,14 @@ public class MinNomMaxField extends JPanel implements DocumentListener {
         
         try {
             if (source == min || source == max) {
-                double vMin = Double.parseDouble(min.getText());
-                double vMax = Double.parseDouble(max.getText());
-                nom.setText(String.format(format, ((vMax - vMin) / 2 + vMin)));
+                double vMin = getMin();
+                double vMax = getMax();
+                setNom((vMax - vMin) / 2 + vMin);
             }
             else {
-              double vNom = Double.parseDouble(nom.getText());
-              min.setText(String.format(format, vNom));
-              max.setText(String.format(format, vNom));
+              double vNom = getNom();
+              setMin(vNom);
+              setMax(vNom);
             }
         }
         catch (Exception e1) {
@@ -158,14 +160,46 @@ public class MinNomMaxField extends JPanel implements DocumentListener {
     }
     
     public double getMin() {
-        return Double.parseDouble(min.getText());
+        try {
+            return Double.parseDouble(min.getText());
+        }
+        catch (Exception e) {
+            return 0;
+        }
+    }
+    
+    public void setMin(double min) {
+        this.min.setText(String.format(format, min));
+        firePropertyChange("min", null, min);
+        firePropertyChange("nom", null, nom);
     }
     
     public double getNom() {
-        return Double.parseDouble(min.getText());
+        try {
+            return Double.parseDouble(nom.getText());
+        }
+        catch (Exception e) {
+            return 0;
+        }
+    }
+    
+    public void setNom(double nom) {
+        this.nom.setText(String.format(format, nom));
+        firePropertyChange("nom", null, nom);
     }
     
     public double getMax() {
-        return Double.parseDouble(min.getText());
+        try {
+            return Double.parseDouble(max.getText());
+        }
+        catch (Exception e) {
+            return 0;
+        }
+    }
+    
+    public void setMax(double max) {
+        this.max.setText(String.format(format, max));
+        firePropertyChange("max", null, max);
+        firePropertyChange("nom", null, nom);
     }
 }
