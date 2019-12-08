@@ -51,6 +51,9 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     @Element(required = false)
     protected String zProbeActuatorName;
 
+    @Element(required = false)
+    protected String pumpActuatorName;
+
     protected Machine machine;
 
     public AbstractHead() {
@@ -99,6 +102,9 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     @Override
     public Actuator getActuatorByName(String name) {
+        if (name == null || name.isEmpty()) {
+            return null;
+        }
         for (Actuator actuator : actuators) {
             if (actuator.getName().equals(name)) {
                 return actuator;
@@ -300,5 +306,18 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     public void setzProbeActuatorName(String zProbeActuatorName) {
         this.zProbeActuatorName = zProbeActuatorName;
+    }
+
+    @Override
+    public Actuator getPump() {
+        return getActuatorByName(pumpActuatorName); 
+    }
+
+    public String getPumpActuatorName() {
+        return pumpActuatorName;
+    }
+
+    public void setPumpActuatorName(String pumpActuatorName) {
+        this.pumpActuatorName = pumpActuatorName;
     }
 }

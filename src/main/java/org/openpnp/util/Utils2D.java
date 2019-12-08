@@ -100,6 +100,10 @@ public class Utils2D {
             Location boardLocation = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
             placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
 
+            if (bl.getSide() == Side.Bottom) {
+            	placementLocation = placementLocation.invert(true, false, false, false);
+            }
+            
             // Calculate the apparent angle from the transform. We need this because when we
             // created the transform we captured the apparent angle and that is used to position
             // in X, Y, but we also need the actual value to add to the placement rotation so that

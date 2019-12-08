@@ -423,8 +423,8 @@ public class MachineControlsPanel extends JPanel {
                     }
                     else if (e.getOldValue() != null && e.getNewValue() == null) {
                         for (int i = 0; i < comboBoxHeadMountable.getItemCount(); i++) {
-                            NozzleItem item = (NozzleItem) comboBoxHeadMountable.getItemAt(i);
-                            if (item.getNozzle() == e.getOldValue()) {
+                            HeadMountableItem item = (HeadMountableItem) comboBoxHeadMountable.getItemAt(i);
+                            if (item.getItem() == e.getOldValue()) {
                                 comboBoxHeadMountable.removeItemAt(i);
                             }
                         }

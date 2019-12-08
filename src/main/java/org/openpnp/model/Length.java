@@ -71,6 +71,16 @@ public class Length {
         return new Length(value * d, units);
     }
 
+    public double divide(Length length) {
+        length = length.convertToUnits(units);
+        return value / length.getValue();
+    }
+
+    public Length modulo(Length length) {
+        length = length.convertToUnits(units);
+        return new Length(value % length.getValue(), units);
+    }
+
     public double getValue() {
         return value;
     }
