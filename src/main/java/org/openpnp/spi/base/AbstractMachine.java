@@ -161,6 +161,9 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     @Override
     public Actuator getActuatorByName(String name) {
+        if (name == null || name.isEmpty()) {
+            return null;
+        }
         for (Actuator actuator : actuators) {
             if (actuator.getName().equals(name)) {
                 return actuator;

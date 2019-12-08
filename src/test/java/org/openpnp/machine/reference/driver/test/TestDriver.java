@@ -65,16 +65,6 @@ public class TestDriver implements ReferenceDriver {
     }
     
     @Override
-    public void pick(ReferenceNozzle nozzle) throws Exception {
-        delegate.pick(nozzle);
-    }
-
-    @Override
-    public void place(ReferenceNozzle nozzle) throws Exception {
-        delegate.place(nozzle);
-    }
-
-    @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
         delegate.actuate(actuator, on);
     }
@@ -109,16 +99,6 @@ public class TestDriver implements ReferenceDriver {
         @Override
         public Location getLocation(ReferenceHeadMountable hm) {
             return null;
-        }
-
-        @Override
-        public void pick(ReferenceNozzle nozzle) throws Exception {
-
-        }
-
-        @Override
-        public void place(ReferenceNozzle nozzle) throws Exception {
-
         }
 
         @Override
