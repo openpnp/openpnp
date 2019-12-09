@@ -15,7 +15,7 @@ import org.simpleframework.xml.Root;
 
 @Root
 @Stage(description="Applies contrast limited adaptive histogram equalization (CLAHE) to the selected channels of the image.  For gray scale images this will increase the image contrast.  For color images, the results will vary depending on the image format and channels selected for equalization.  Generally applying histogram equalization to a color image will result in a false color image; however, contrast enhancement can be achieved on HSV formats by applying equalization to only the third channel (V).")
-public class AdaptiveHistogramEqualize extends CvStage {
+public class HistogramEqualizeAdaptive extends CvStage {
 
     public enum ChannelsToEqualize {
         First(1),
