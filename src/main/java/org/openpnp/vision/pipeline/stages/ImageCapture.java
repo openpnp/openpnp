@@ -4,6 +4,8 @@ import java.awt.image.BufferedImage;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
+import org.opencv.core.CvType;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -40,6 +42,8 @@ public class ImageCapture extends CvStage {
     public void setCount(int count) {
         if (count > 0) {
             this.count = count;
+        } else {
+            this.count = 1;
         }
     }
 
@@ -49,18 +53,24 @@ public class ImageCapture extends CvStage {
         if (camera == null) {
             throw new Exception("No Camera set on pipeline.");
         }
-        Mat workingMat;
+        Mat image;
+        Mat avgImage;
         if (settleFirst) {
-            workingMat = OpenCvUtils.toMat(camera.settleAndCapture());
+            image = OpenCvUtils.toMat(camera.settleAndCapture());
         }
         else {
-            workingMat = OpenCvUtils.toMat(camera.capture());
+            image = OpenCvUtils.toMat(camera.capture());
         }
+        image.convertTo(image, 6); //6=CV_64F
+        avgImage = image;
         double beta = 1.0/count;
-        Core.addWeighted(workingMat, 0, workingMat, beta, 0, workingMat);
+        Core.addWeighted(avgImage, 0, image, beta, 0, avgImage); // avgImage = image/count
         for (int i=1; i<count; i++) {
-            Core.addWeighted(workingMat, 1, OpenCvUtils.toMat(camera.capture()), beta, 0, workingMat);
+            image = OpenCvUtils.toMat(camera.capture());
+            image.convertTo(image, 6);
+            Core.addWeighted(avgImage, 1, image, beta, 0, avgImage); // avgImage = avgImag + image/count
         }
-        return new Result(workingMat);
+        avgImage.convertTo(avgImage, 0); //0=CV_8U
+        return new Result(avgImage);
     }
 }
