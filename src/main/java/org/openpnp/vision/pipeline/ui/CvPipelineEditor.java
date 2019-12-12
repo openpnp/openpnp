@@ -42,6 +42,7 @@ import org.openpnp.vision.pipeline.stages.FilterRects;
 import org.openpnp.vision.pipeline.stages.FindContours;
 import org.openpnp.vision.pipeline.stages.GrabCut;
 import org.openpnp.vision.pipeline.stages.HistogramEqualize;
+import org.openpnp.vision.pipeline.stages.HistogramEqualizeAdaptive;
 import org.openpnp.vision.pipeline.stages.ImageCapture;
 import org.openpnp.vision.pipeline.stages.ImageRead;
 import org.openpnp.vision.pipeline.stages.ImageRecall;
@@ -116,6 +117,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(FindContours.class);
         registerStageClass(GrabCut.class);
         registerStageClass(HistogramEqualize.class);
+        registerStageClass(HistogramEqualizeAdaptive.class);
         registerStageClass(ImageCapture.class);
         registerStageClass(ImageRead.class);
         registerStageClass(ImageRecall.class);
