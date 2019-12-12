@@ -42,6 +42,18 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
     public void setEnabled(boolean enabled);
 
     /**
+     * Get the owner of this Feeder.
+     * 
+     * @return
+     */
+    public String getOwner();
+
+    /**
+     * Set the owner of this Feeder.
+     */
+    public void setOwner(String owner);
+
+    /**
      * Get the Part that is loaded into this Feeder.
      * 
      * @return

@@ -10,11 +10,16 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.core.Commit;
 
 public abstract class AbstractFeeder extends AbstractModelObject implements Feeder {
     @Attribute
     protected String id;
+
+    @Attribute(required = false)
+    protected String owner;
 
     @Attribute(required = false)
     protected String name;
@@ -39,7 +44,8 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
     public AbstractFeeder() {
         this.id = Configuration.createId("FDR");
-        this.name = getClass().getSimpleName();
+        this.name = getClass().getSimpleName() + "_" + this.id;
+        this.owner = "Machine";
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
@@ -48,6 +54,17 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
         });
     }
 
+
+    @Commit
+    public void commit() {
+        //This method gets called by the deserializer when configuration .xml files are loading.
+        if (owner == null) {
+            Logger.trace( "Old format found in .xml file, converting to new format..." );
+            owner = "Machine";
+        }
+    }
+    
+    
     @Override
     public String getId() {
         return id;
@@ -63,6 +80,16 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
         Object oldValue = this.enabled;
         this.enabled = enabled;
         firePropertyChange("enabled", oldValue, enabled);
+    }
+
+    @Override
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
+
+    @Override
+    public String getOwner() {
+        return owner;
     }
 
     @Override
