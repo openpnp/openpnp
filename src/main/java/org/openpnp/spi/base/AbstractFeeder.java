@@ -44,7 +44,7 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
     public AbstractFeeder() {
         this.id = Configuration.createId("FDR");
-        this.name = getClass().getSimpleName() + "_" + this.id;
+        this.name = getClass().getSimpleName();
         this.owner = "Machine";
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override

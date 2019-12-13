@@ -34,10 +34,10 @@ import org.openpnp.spi.Feeder;
 @SuppressWarnings("serial")
 public class FeederOwnersComboBoxModel extends DefaultComboBoxModel implements PropertyChangeListener {
     private IdentifiableComparator<Feeder> comparator = new IdentifiableComparator<>();
-    private String feederName;
+    private Feeder feeder;
     
     public FeederOwnersComboBoxModel(Feeder feeder) {
-        feederName = feeder.getName();
+        this.feeder = feeder;
         addAllElements();
         Configuration.get().addPropertyChangeListener("feeders", this);
     }
@@ -46,12 +46,9 @@ public class FeederOwnersComboBoxModel extends DefaultComboBoxModel implements P
         ArrayList<Feeder> feeders = new ArrayList<>(Configuration.get().getMachine().getFeeders());
         Collections.sort(feeders, comparator);
         addElement("Machine");
-        for (Feeder feeder : feeders) {
-            if (feeder.getClass() == ReferenceFeederGroup.class) {
-                String name = feeder.getName();
-                if (!name.equals(feederName)) {
-                    addElement(feeder.getName());
-                }
+        for (Feeder fdr : feeders) {
+            if ((fdr.getClass() == ReferenceFeederGroup.class) && (((ReferenceFeederGroup)fdr).isPotentialOwnerOf(feeder))) {
+                addElement(fdr.getName());
             }
         }
     }

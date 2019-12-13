@@ -19,6 +19,8 @@
 
 package org.openpnp.machine.reference.feeder;
 
+import java.util.ArrayList;
+
 import javax.swing.Action;
 
 import org.openpnp.gui.support.Wizard;
@@ -32,6 +34,8 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.openpnp.model.Configuration;
+import org.openpnp.spi.Feeder;
 
 /**
  * Implementation of Feeder that indexes based on an offset. This allows a tray
@@ -56,7 +60,46 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
 	protected Location firstRowLastComponentLocation = new Location(LengthUnit.Millimeters);
 
 	private Location pickLocation;
-
+	private ArrayList<Feeder> children = new ArrayList<>();
+	
+	public ReferenceFeederGroup() {
+	    super();
+	    name = name + "_" + getId();
+	}
+	
+	public boolean add(Feeder feeder) {
+	    return children.add(feeder);
+	}
+	
+	public boolean remove(Feeder feeder) {
+	    return children.remove(feeder);
+	}
+	
+	public boolean isPotentialOwnerOf(Feeder feeder) {
+	    String feederToBeOwned = feeder.getName();
+	    if (getName().equals(feederToBeOwned)) {
+	        //A feeder can never own itself
+	        return false;
+	    }
+	    int maxDepth = 16; //An arbitrary limit just to prevent possible infinite loops
+	    int depth = 0;
+	    String onr = owner;
+	    while (depth < maxDepth) {
+	        if (onr.equals("Machine")) {
+	            //Ok, the ownership traces back to the machine 
+	            return true;
+	        } else if (onr.equals(feederToBeOwned)) {
+	            //The ownership would form a loop so this is not a potential owner
+	            return false;
+	        }
+	        onr = Configuration.get().getMachine().getFeederByName(onr).getOwner();
+	        depth = depth + 1;
+	    }
+	    Logger.warn("Possible loop in feeder ownership detected, check ReferenceFeederGroups in machine.xml");
+	    return false;
+	}
+	
+	
 	@Override
 	public Location getPickLocation() throws Exception {
 		if (pickLocation == null) {
