@@ -67,6 +67,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
+import org.openpnp.machine.reference.feeder.ReferenceFeederGroup;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -366,9 +367,11 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         try {
             Feeder feeder = feederClass.newInstance();
 
-            feeder.setPart(part == null ? Configuration.get().getParts().get(0) : part);
-
+            if (feederClass != ReferenceFeederGroup.class) {
+                feeder.setPart(part == null ? Configuration.get().getParts().get(0) : part);
+            }
             configuration.getMachine().addFeeder(feeder);
+
             tableModel.refresh();
 
             searchTextField.setText("");

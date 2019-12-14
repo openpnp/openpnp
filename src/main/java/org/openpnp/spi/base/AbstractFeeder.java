@@ -59,7 +59,7 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     public void commit() {
         //This method gets called by the deserializer when configuration .xml files are loading.
         if (owner == null) {
-            Logger.trace( "Old format found in .xml file, converting to new format..." );
+            Logger.trace( "Old feeder format found in .xml file, converting to new feeder format..." );
             owner = "Machine";
         }
     }

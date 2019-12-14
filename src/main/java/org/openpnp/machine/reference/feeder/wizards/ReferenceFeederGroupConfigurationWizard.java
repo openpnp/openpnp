@@ -127,12 +127,12 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 		        FormSpecs.RELATED_GAP_COLSPEC,
 		        ColumnSpec.decode("default:grow"),},
 		    new RowSpec[] {
-		        FormSpecs.RELATED_GAP_ROWSPEC,
+/*		        FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC, */
 		        FormSpecs.RELATED_GAP_ROWSPEC,
 		        FormSpecs.DEFAULT_ROWSPEC,}));
 
@@ -144,14 +144,14 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
             // in WindowBuilder but doesn't happen during normal run.
         }
 
-        comboBoxPart = new JComboBox();
+/*        comboBoxPart = new JComboBox();
         try {
             comboBoxPart.setModel(new PartsComboBoxModel());
         } catch (Throwable t) {
             // Swallow this error. This happens during parsing in
             // in WindowBuilder but doesn't happen during normal run.
         }
-
+*/
 		JPanel warningPanel = new JPanel();
 		FlowLayout flowLayout = (FlowLayout) warningPanel.getLayout();
 		contentPanel.add(warningPanel, 0);
@@ -167,7 +167,7 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
         panelPart.add(lblOwner, "2, 2, right, default");
         //comboBoxOwner.setRenderer(new IdentifiableListCellRenderer<Owner>());
         panelPart.add(comboBoxOwner, "4, 2, left, default");
-
+/*
         JLabel lblPart = new JLabel("Part");
         panelPart.add(lblPart, "2, 4, right, default");
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
@@ -188,7 +188,7 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 		pickRetryCount.setText("3");
 		pickRetryCount.setColumns(3);
 		panelPart.add(pickRetryCount, "4, 8, fill, default");
-
+*/
 		if (includePickLocation) {
 			panelLocation = new JPanel();
 			panelLocation.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
@@ -427,10 +427,10 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
         addWrappedBinding(feeder, "owner", comboBoxOwner, "selectedItem");
-        addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
+/*        addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
         addWrappedBinding(feeder, "feedRetryCount", retryCountTf, "text", intConverter);
         addWrappedBinding(feeder, "pickRetryCount", pickRetryCount, "text", intConverter);
-
+*/
 		if (includePickLocation) {
 			MutableLocationProxy location = new MutableLocationProxy();
 			bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
@@ -475,8 +475,8 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsX);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsY);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldTrayRotation);
-        ComponentDecorators.decorateWithAutoSelect(retryCountTf);
-        ComponentDecorators.decorateWithAutoSelect(pickRetryCount);
+//        ComponentDecorators.decorateWithAutoSelect(retryCountTf);
+//        ComponentDecorators.decorateWithAutoSelect(pickRetryCount);
 		ComponentDecorators.decorateWithAutoSelect(textFieldTrayCountRows);
 		ComponentDecorators.decorateWithAutoSelect(textFieldTrayCountCols);
 		ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);

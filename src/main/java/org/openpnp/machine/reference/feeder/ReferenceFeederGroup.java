@@ -65,13 +65,15 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
 	public ReferenceFeederGroup() {
 	    super();
 	    name = name + "_" + getId();
+	    part = null;
+	    partId = "";
 	}
 	
-	public boolean add(Feeder feeder) {
+	public boolean addChild(Feeder feeder) {
 	    return children.add(feeder);
 	}
 	
-	public boolean remove(Feeder feeder) {
+	public boolean removeChild(Feeder feeder) {
 	    return children.remove(feeder);
 	}
 	
