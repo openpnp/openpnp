@@ -5,19 +5,22 @@ import org.openpnp.model.Footprint;
 import org.openpnp.model.Footprint.Pad;
 import org.openpnp.model.LengthUnit;
 
-public class QFNPackageGenerator extends PackageGenerator {
-    double numPinsSideD = 6; // D
-    double numPinsSideE = 8; // E
+public class QFPPackageGenerator extends PackageGenerator {
+    double numPinsSideD = 16; // D
+    double numPinsSideE = 16; // E
     double pinPitch = 0.5; // e
-    double terminalLength = 0.4; // L
+    double leadSpanSideD = 12.9; // D
+    double leadSpanSideE = 12.9; // E
+    double terminalLength = 0.905; // L, note that this only includes the flat part that touches the board, not the whole terminal
     double terminalWidth = 0.25; // b
-    double bodyLength = 4.0; // D
-    double bodyWidth = 5.0; // E
-    double bodyHeight = 0.5; // A
-    double thermalPadLength = 2; // D2
-    double thermalPadWidth = 3; // E2
+    double bodyLength = 10.0; // D1
+    double bodyWidth = 10.0; // E1
+    double bodyHeight = 0.6; // A
+    double bodyOffset = 0.05; // A1
+    double thermalPadLength = 7; // D2
+    double thermalPadWidth = 7; // E2
         
-    public QFNPackageGenerator() {
+    public QFPPackageGenerator() {
         // Ensures that if any property is updated we broadcast a change on the
         // package property.
         addPropertyChangeListener(e -> {
@@ -27,17 +30,20 @@ public class QFNPackageGenerator extends PackageGenerator {
             firePropertyChange("package", null, getPackage());
         });
     }
-    
+
     public String[] getPropertyNames() {
         return new String[] { 
                 "numPinsSideD", 
                 "numPinsSideE", 
                 "pinPitch", 
+                "leadSpanSideD", 
+                "leadSpanSideE", 
                 "terminalLength", 
                 "terminalWidth",
                 "bodyLength",
                 "bodyWidth",
                 "bodyHeight",
+                "bodyOffset",
                 "thermalPadLength",
                 "thermalPadWidth",
                 };
@@ -53,24 +59,15 @@ public class QFNPackageGenerator extends PackageGenerator {
 
         int padNum = 1;
         
-        for (int i = 0; i < numPinsSideD; i++) {
-            pad = new Pad();
-            pad.setName("" + padNum++);
-            pad.setWidth(terminalWidth);
-            pad.setHeight(terminalLength);
-            pad.setX(-bodyWidth / 2 + terminalLength / 2);
-            pad.setY(numPinsSideD / 2 * pinPitch - (i * pinPitch) - (pinPitch / 2));
-            pad.setRotation(90);
-            footprint.addPad(pad);
-        }
+        double pinLength = (leadSpanSideE - bodyWidth) / 2.;
         
         for (int i = 0; i < numPinsSideE; i++) {
             pad = new Pad();
             pad.setName("" + padNum++);
             pad.setWidth(terminalWidth);
-            pad.setHeight(terminalLength);
+            pad.setHeight(pinLength);
             pad.setX(-numPinsSideE / 2 * pinPitch + (i * pinPitch) + (pinPitch / 2));
-            pad.setY(-bodyLength / 2 + terminalLength / 2);
+            pad.setY(-bodyLength / 2 - pinLength / 2);
             footprint.addPad(pad);
         }
         
@@ -78,8 +75,8 @@ public class QFNPackageGenerator extends PackageGenerator {
             pad = new Pad();
             pad.setName("" + padNum++);
             pad.setWidth(terminalWidth);
-            pad.setHeight(terminalLength);
-            pad.setX(bodyWidth / 2 - terminalLength / 2);
+            pad.setHeight(pinLength);
+            pad.setX(bodyLength / 2 + pinLength / 2);
             pad.setY(-numPinsSideD / 2 * pinPitch + (i * pinPitch) + (pinPitch / 2));
             pad.setRotation(90);
             footprint.addPad(pad);
@@ -89,11 +86,23 @@ public class QFNPackageGenerator extends PackageGenerator {
             pad = new Pad();
             pad.setName("" + padNum++);
             pad.setWidth(terminalWidth);
-            pad.setHeight(terminalLength);
+            pad.setHeight(pinLength);
             pad.setX(numPinsSideE / 2 * pinPitch - (i * pinPitch) - (pinPitch / 2));
-            pad.setY(bodyLength / 2 - terminalLength / 2);
+            pad.setY(bodyLength / 2 + pinLength / 2);
             footprint.addPad(pad);
         }
+        
+        for (int i = 0; i < numPinsSideD; i++) {
+            pad = new Pad();
+            pad.setName("" + padNum++);
+            pad.setWidth(terminalWidth);
+            pad.setHeight(pinLength);
+            pad.setX(-bodyLength / 2 - pinLength / 2);
+            pad.setY(numPinsSideD / 2 * pinPitch - (i * pinPitch) - (pinPitch / 2));
+            pad.setRotation(90);
+            footprint.addPad(pad);
+        }
+        
         
         if (thermalPadLength > 0 && thermalPadWidth > 0) {
             pad = new Pad();
@@ -197,5 +206,32 @@ public class QFNPackageGenerator extends PackageGenerator {
     public void setThermalPadWidth(double thermalPadWidth) {
         this.thermalPadWidth = thermalPadWidth;
         firePropertyChange("thermalPadWidth", null, thermalPadWidth);
+    }
+
+    public double getLeadSpanSideD() {
+        return leadSpanSideD;
+    }
+
+    public void setLeadSpanSideD(double leadSpanSideD) {
+        this.leadSpanSideD = leadSpanSideD;
+        firePropertyChange("leadSpanSideD", null, leadSpanSideD);
+    }
+
+    public double getLeadSpanSideE() {
+        return leadSpanSideE;
+    }
+
+    public void setLeadSpanSideE(double leadSpanSideE) {
+        this.leadSpanSideE = leadSpanSideE;
+        firePropertyChange("leadSpanSideE", null, leadSpanSideE);
+    }
+
+    public double getBodyOffset() {
+        return bodyOffset;
+    }
+
+    public void setBodyOffset(double bodyOffset) {
+        this.bodyOffset = bodyOffset;
+        firePropertyChange("bodyOffset", null, bodyOffset);
     }
 }

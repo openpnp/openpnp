@@ -11,8 +11,19 @@ public class ChipPackageGenerator extends PackageGenerator {
     double bodyHeight = 0.35; // A
     double terminalLength = 0.5; // L
     double oddTerminalLength = 0.5; // L1
+    
+    public ChipPackageGenerator() {
+        // Ensures that if any property is updated we broadcast a change on the
+        // package property.
+        addPropertyChangeListener(e -> {
+            if (e.getPropertyName().equals("package")) {
+                return;
+            }
+            firePropertyChange("package", null, getPackage());
+        });
+    }
         
-    public org.openpnp.model.Package generate() {
+    public org.openpnp.model.Package getPackage() {
         Footprint footprint = new Footprint();
         footprint.setUnits(LengthUnit.Millimeters);
         footprint.setBodyWidth(bodyLength);

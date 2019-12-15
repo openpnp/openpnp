@@ -1,8 +1,12 @@
 package org.openpnp.gui.pkggen;
 
 import java.awt.BorderLayout;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,12 +17,18 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.pkggen.pkgs.ChipPackageGenerator;
 import org.openpnp.gui.pkggen.pkgs.QFNPackageGenerator;
+import org.openpnp.gui.pkggen.pkgs.QFPPackageGenerator;
+import org.openpnp.gui.pkggen.pkgs.SOICPackageGenerator;
+import org.openpnp.gui.pkggen.pkgs.SOT23PackageGenerator;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Package;
 import org.openpnp.util.BeanUtils;
+import org.simpleframework.xml.Serializer;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -30,27 +40,34 @@ import com.jgoodies.forms.layout.RowSpec;
  * * Show top and bottom views. Just render pins and body in different order.
  * * Show pin one, maybe as red.
  * * Have the ability to show a dot on the package as the orientation marker.
+ * * Note that SOT23, SOIC, QFN and SOT23 all generate -90 so that the dot is in the
+ *   upper left.
  */
 public class PackageGeneratorUi extends JFrame {
     private JPanel panel;
     private JLabel lblNewLabel;
-    private MinNomMaxField minNomMaxField;
-    private MinNomMaxField minNomMaxField_1;
-    private MinNomMaxField minNomMaxField_2;
+    private MinMaxField minNomMaxField;
+    private MinMaxField minNomMaxField_1;
+    private MinMaxField minNomMaxField_2;
     private JLabel lblNewLabel_1;
     private JComboBox comboBox;
     private JPanel panel_1;
     
     private PackageGenerator generator;
-    private List<MinNomMaxField> fields = new ArrayList<>();
+    private List<MinMaxField> fields = new ArrayList<>();
     private JPanel panel_2;
     private PackageView topPackageView;
     private PackageView bottomPackageView;
+    private JButton btnNewButton;
     
     public PackageGeneratorUi() {
         createUi();
         comboBox.setSelectedItem("Chip");
         topPackageView.setTop(true);
+        
+        btnNewButton = new JButton("Export to Clipboard");
+        btnNewButton.addActionListener(new BtnNewButtonActionListener());
+        panel.add(btnNewButton, "3, 7");
     }
     
     private void createUi() {
@@ -67,7 +84,9 @@ public class PackageGeneratorUi extends JFrame {
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                RowSpec.decode("default:grow"),}));
+                RowSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblNewLabel_1 = new JLabel("Type");
         panel.add(lblNewLabel_1, "1, 2, right, default");
@@ -81,13 +100,13 @@ public class PackageGeneratorUi extends JFrame {
         panel.add(panel_1, "1, 3, 3, 1, default, fill");
         panel_1.setLayout(new BoxLayout(panel_1, BoxLayout.Y_AXIS));
         
-        minNomMaxField = new MinNomMaxField("e");
+        minNomMaxField = new MinMaxField("e");
         panel_1.add(minNomMaxField);
         
-        minNomMaxField_1 = new MinNomMaxField("L");
+        minNomMaxField_1 = new MinMaxField("L");
         panel_1.add(minNomMaxField_1);
         
-        minNomMaxField_2 = new MinNomMaxField("A");
+        minNomMaxField_2 = new MinMaxField("A");
         panel_1.add(minNomMaxField_2);
         
         panel_2 = new JPanel();
@@ -95,9 +114,11 @@ public class PackageGeneratorUi extends JFrame {
         panel_2.setLayout(new BoxLayout(panel_2, BoxLayout.X_AXIS));
         
         topPackageView = new PackageView();
+        topPackageView.setBorder(new TitledBorder("Top"));
         panel_2.add(topPackageView);
         
         bottomPackageView = new PackageView();
+        bottomPackageView.setBorder(new TitledBorder("Bottom"));
         panel_2.add(bottomPackageView);
     }
     
@@ -109,7 +130,7 @@ public class PackageGeneratorUi extends JFrame {
     }
     
     private void render() {
-        Package pkg = generator.generate();
+        Package pkg = generator.getPackage();
         topPackageView.setPkg(pkg);
         bottomPackageView.setPkg(pkg);
     }
@@ -122,18 +143,43 @@ public class PackageGeneratorUi extends JFrame {
             else if (comboBox.getSelectedItem().equals("QFN")) {
                 generator = new QFNPackageGenerator();
             }
+            else if (comboBox.getSelectedItem().equals("QFP")) {
+                generator = new QFPPackageGenerator();
+            }
+            else if (comboBox.getSelectedItem().equals("SOIC / SOP")) {
+                generator = new SOICPackageGenerator();
+            }
+            else if (comboBox.getSelectedItem().equals("SOT23")) {
+                generator = new SOT23PackageGenerator();
+            }
+            generator.addPropertyChangeListener("package", pce -> {
+                render();
+            });
             panel_1.removeAll();
             for (String property : generator.getPropertyNames()) {
-                MinNomMaxField field = new MinNomMaxField(property);
+                MinMaxField field = new MinMaxField(property);
                 BeanUtils.bind(UpdateStrategy.READ_WRITE, generator, property, field, "nom");
-                generator.addPropertyChangeListener(property, pce -> {
-                    render();
-                });
                 panel_1.add(field);
             }
             revalidate();
             repaint();
             render();
+        }
+    }
+    
+    private class BtnNewButtonActionListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            try {
+                Serializer s = Configuration.createSerializer();
+                StringWriter w = new StringWriter();
+                s.write(generator.getPackage(), w);
+                StringSelection stringSelection = new StringSelection(w.toString());
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clipboard.setContents(stringSelection, null);
+            }
+            catch (Exception e1) {
+                e1.printStackTrace();
+            }
         }
     }
 }

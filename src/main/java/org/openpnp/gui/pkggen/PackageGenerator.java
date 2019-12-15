@@ -6,5 +6,5 @@ import org.openpnp.model.Package;
 public abstract class PackageGenerator extends AbstractModelObject {
     public abstract String[] getPropertyNames();
     
-    public abstract Package generate();
+    public abstract Package getPackage();
 }
