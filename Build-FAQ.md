@@ -12,6 +12,13 @@ The current recommendation for a build guideline is:
 * [ELP Model USB100W03M, 720p USB Cameras](http://www.elpcctv.com/hd-720p-usb-cameras-c-85_87.html) which can be purchased on Amazon, AliExpress and eBay. Lenses are standard M12 mount and can be replaced to customize for your machine's geometry. See below for lens and positioning recommendations.
 * Yamaha CL Feeders (available on Aliexpress and [Robotdigg](https://www.robotdigg.com/product/829/CL82-or-CL84-Feeder-4-OpenPnP)) if you want auto feeders. Make sure to get a [mounting block](https://www.robotdigg.com/product/1190/Pick-and-place-machine-Feeder-mounting-block), too. 
 
+## What kind of PC will I need?
+
+OpenPNP has been used on all manner of computing hardware.  OpenPNP is written in Java and makes use of OpenCV.  Hardware that runs Java and OpenCV well will generally run OpenPNP well.  on Dec 19 2019, Jason said, "an i5 w/ 8GB RAM would be a good minimum requirement."  He also added, "OpenCV performance is not critical at all. Everything else is orders of magnitude slower than OpenCV."  You can run OpenPNP on other things but this is a sensible recommendation for an easy machine to start with.
+
+The one hardware constraint worth mentioning has to do with USB Cameras.  In order to use more than one USB camera, you need a machine with more than one USB bus.  On many machines, USB Ports will share a single USB bus.  This does not provide sufficient bandwidth for multiple simultaneous cameras to operate.  Please read the documentation on the [[OpenPnpCaptureCamera]] driver for more details.
+
+
 ## How Far Should Cameras Be Mounted From Objects
 
 This is a hard to answer question since it's specific to the machine, the camera, the lens, the size of parts you want to place, etc. A good guideline is:
