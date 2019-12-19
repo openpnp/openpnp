@@ -19,6 +19,7 @@
 
 package org.openpnp.spi;
 
+import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 import org.openpnp.model.Named;
@@ -80,4 +81,8 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
     public int getFeedRetryCount();
     
     public int getPickRetryCount();
+    
+    public void setWizardContainer(WizardContainer wizardContainer);
+
+
 }

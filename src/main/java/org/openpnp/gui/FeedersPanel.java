@@ -212,6 +212,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
                 Feeder feeder = getSelection();
                 
+                feeder.setWizardContainer(FeedersPanel.this);
+
                 configurationPanel.removeAll();
                 if (feeder != null) {
                     PropertySheet[] propertySheets = feeder.getPropertySheets();

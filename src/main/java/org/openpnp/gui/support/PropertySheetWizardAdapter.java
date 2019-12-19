@@ -9,14 +9,26 @@ public class PropertySheetWizardAdapter implements PropertySheet, WizardContaine
     private final String title;
 
     public PropertySheetWizardAdapter(Wizard wizard) {
-        this(wizard, wizard == null ? null : wizard.getWizardName());
+        this(wizard, wizard == null ? null : wizard.getWizardName(), null);
     }
 
     public PropertySheetWizardAdapter(Wizard wizard, String title) {
+        this(wizard, title, null);
+    }
+
+    public PropertySheetWizardAdapter(Wizard wizard, WizardContainer wizardContainer) {
+        this(wizard, wizard == null ? null : wizard.getWizardName(), wizardContainer);
+    }
+
+    public PropertySheetWizardAdapter(Wizard wizard, String title, WizardContainer wizardContainer) {
         this.wizard = wizard;
         this.title = title;
         if (wizard != null) {
-            wizard.setWizardContainer(this);
+            if (wizardContainer != null) {
+                wizard.setWizardContainer(wizardContainer);
+            } else {
+                wizard.setWizardContainer(this);
+            }
         }
     }
 
