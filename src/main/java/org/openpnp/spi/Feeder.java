@@ -19,6 +19,7 @@
 
 package org.openpnp.spi;
 
+import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 import org.openpnp.model.Named;
@@ -33,14 +34,23 @@ import org.openpnp.model.Part;
  */
 public interface Feeder extends Identifiable, Named, WizardConfigurable, PropertySheetHolder {
     /**
-     * Return true is the Feeder is currently enabled and can be considered in Job planning.
+     * Return true is the Feeder and all its ancestors are currently enabled and therefore can be considered in Job planning.
      * 
      * @return
      */
     public boolean isEnabled();
 
+    /**
+     * Return true is the Feeder is currently enabled.
+     * 
+     * @return
+     */
+    public boolean isLocallyEnabled();
+
     public void setEnabled(boolean enabled);
 
+    public void setWizardContainer(WizardContainer wizardContainer);
+    
     /**
      * Get the owner of this Feeder.
      * 

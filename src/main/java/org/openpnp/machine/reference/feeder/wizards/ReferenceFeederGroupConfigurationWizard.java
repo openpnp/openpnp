@@ -52,9 +52,7 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
-import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.feeder.ReferenceFeederGroup;
-import org.openpnp.machine.reference.feeder.ReferenceRotatedTrayFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 
@@ -134,7 +132,8 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
                 FormSpecs.RELATED_GAP_ROWSPEC,
 		        FormSpecs.DEFAULT_ROWSPEC, */
 		        FormSpecs.RELATED_GAP_ROWSPEC,
-		        FormSpecs.DEFAULT_ROWSPEC,}));
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC}));
 
         comboBoxOwner = new JComboBox();
         try {
@@ -144,14 +143,6 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
             // in WindowBuilder but doesn't happen during normal run.
         }
 
-/*        comboBoxPart = new JComboBox();
-        try {
-            comboBoxPart.setModel(new PartsComboBoxModel());
-        } catch (Throwable t) {
-            // Swallow this error. This happens during parsing in
-            // in WindowBuilder but doesn't happen during normal run.
-        }
-*/
 		JPanel warningPanel = new JPanel();
 		FlowLayout flowLayout = (FlowLayout) warningPanel.getLayout();
 		contentPanel.add(warningPanel, 0);

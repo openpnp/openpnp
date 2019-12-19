@@ -5,6 +5,7 @@ import javax.swing.Icon;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
+import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
@@ -13,6 +14,7 @@ import org.openpnp.spi.Nozzle;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Commit;
+import org.openpnp.machine.reference.feeder.ReferenceFeederGroup;
 
 public abstract class AbstractFeeder extends AbstractModelObject implements Feeder {
     @Attribute
@@ -41,6 +43,8 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     protected int pickRetryCount = 3;
 
     protected Part part;
+    
+    protected WizardContainer wizardContainer;
 
     public AbstractFeeder() {
         this.id = Configuration.createId("FDR");
@@ -72,6 +76,15 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
     @Override
     public boolean isEnabled() {
+        if (owner.equals("Machine")) {
+            return enabled;
+        } else {
+            return enabled && Configuration.get().getMachine().getFeederByName(owner).isEnabled();
+        }
+    }
+
+    @Override
+    public boolean isLocallyEnabled() {
         return enabled;
     }
 
@@ -83,8 +96,19 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     }
 
     @Override
+    public void setWizardContainer(WizardContainer wizardContainer) {
+        this.wizardContainer = wizardContainer;
+    }
+
+    @Override
     public void setOwner(String owner) {
+        if (!this.owner.equals("Machine")) {
+            ((ReferenceFeederGroup) Configuration.get().getMachine().getFeederByName(this.owner)).removeChild(this);
+        }
         this.owner = owner;
+        if (!owner.equals("Machine")) {
+            ((ReferenceFeederGroup) Configuration.get().getMachine().getFeederByName(owner)).addChild(this);
+        }
     }
 
     @Override
@@ -136,7 +160,7 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration")};
+        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration", wizardContainer)};
     }
     
     public void postPick(Nozzle nozzle) throws Exception { }

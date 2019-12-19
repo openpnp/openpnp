@@ -3,20 +3,33 @@ package org.openpnp.gui.support;
 import javax.swing.JPanel;
 
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
+import org.pmw.tinylog.Logger;
 
 public class PropertySheetWizardAdapter implements PropertySheet, WizardContainer {
     private final Wizard wizard;
     private final String title;
 
     public PropertySheetWizardAdapter(Wizard wizard) {
-        this(wizard, wizard == null ? null : wizard.getWizardName());
+        this(wizard, wizard == null ? null : wizard.getWizardName(), null);
     }
 
     public PropertySheetWizardAdapter(Wizard wizard, String title) {
+        this(wizard, title, null);
+    }
+
+    public PropertySheetWizardAdapter(Wizard wizard, WizardContainer wizardContainer) {
+        this(wizard, wizard == null ? null : wizard.getWizardName(), wizardContainer);
+    }
+
+    public PropertySheetWizardAdapter(Wizard wizard, String title, WizardContainer wizardContainer) {
         this.wizard = wizard;
         this.title = title;
         if (wizard != null) {
-            wizard.setWizardContainer(this);
+            if (wizardContainer != null) {
+                wizard.setWizardContainer(wizardContainer);
+            } else {
+                wizard.setWizardContainer(this);
+            }
         }
     }
 
@@ -32,9 +45,11 @@ public class PropertySheetWizardAdapter implements PropertySheet, WizardContaine
 
     @Override
     public void wizardCompleted(Wizard wizard) {
+        Logger.trace("PropertySheetWizardAdaptor.wizardCompleted called!");
     }
 
     @Override
     public void wizardCancelled(Wizard wizard) {
+        Logger.trace("PropertySheetWizardAdaptor.wizardCancelled called!");
     }
 }

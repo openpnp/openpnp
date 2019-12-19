@@ -34,6 +34,7 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Feeder;
 
@@ -77,6 +78,18 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
 	    return children.remove(feeder);
 	}
 	
+    @Override
+    public void setEnabled(boolean enabled) {
+        Object oldValue = this.enabled;
+        this.enabled = enabled;
+        firePropertyChange("enabled", oldValue, enabled);
+        for (Feeder fdr : children) {
+            boolean temp = fdr.isLocallyEnabled();
+            fdr.setEnabled(!temp);
+            fdr.setEnabled(temp);
+        }
+    }
+
 	public boolean isPotentialOwnerOf(Feeder feeder) {
 	    String feederToBeOwned = feeder.getName();
 	    if (getName().equals(feederToBeOwned)) {

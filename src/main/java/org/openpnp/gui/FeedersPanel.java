@@ -64,6 +64,7 @@ import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
@@ -212,6 +213,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 }
 
                 Feeder feeder = getSelection();
+                
+                feeder.setWizardContainer(FeedersPanel.this); /////////////New
                 
                 configurationPanel.removeAll();
                 if (feeder != null) {
