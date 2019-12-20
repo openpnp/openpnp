@@ -5,7 +5,6 @@ import javax.swing.Icon;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
-import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
@@ -37,8 +36,6 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     protected int pickRetryCount = 3;
 
     protected Part part;
-
-    protected WizardContainer wizardContainer;
 
     public AbstractFeeder() {
         this.id = Configuration.createId("FDR");
@@ -111,13 +108,8 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     }
 
     @Override
-    public void setWizardContainer(WizardContainer wizardContainer) {
-        this.wizardContainer = wizardContainer;
-    }
-
-    @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration", wizardContainer)};
+        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration")};
     }
     
     public void postPick(Nozzle nozzle) throws Exception { }

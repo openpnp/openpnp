@@ -103,8 +103,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
     private Preferences prefs = Preferences.userNodeForPackage(FeedersPanel.class);
     
+    private JTabbedPane configurationPanel;
     private int priorRowIndex = -1;
-    private Feeder priorFeeder;
+    private String priorFeederId;
     
     public FeedersPanel(Configuration configuration, MainFrame mainFrame) {
         this.configuration = configuration;
@@ -183,7 +184,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         table.setRowSorter(tableSorter);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
-        JTabbedPane configurationPanel = new JTabbedPane(JTabbedPane.TOP);
+        configurationPanel = new JTabbedPane(JTabbedPane.TOP);
         splitPane.setRightComponent(configurationPanel);
 
         singleSelectActionGroup = new ActionGroup(deleteFeederAction, feedFeederAction,
@@ -216,37 +217,22 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 }
 
                 if (table.getSelectedRow() != priorRowIndex) {
-                    boolean feederConfigurationIsDirty = false;
-                    int i = 0;
-                    while (!feederConfigurationIsDirty && (i<configurationPanel.getComponentCount())) {
-                        feederConfigurationIsDirty = ((AbstractConfigurationWizard) configurationPanel.getComponent(i)).isDirty();
-                        i++;
-                    }
-                    if (feederConfigurationIsDirty) {
-                        int selection = JOptionPane.showOptionDialog(null,
-                                "Configuration changes to '" + priorFeeder.getName() + "' will be lost.  Do you want to proceed?",
-                                "Warning!",
-                                JOptionPane.YES_NO_OPTION,
-                                JOptionPane.WARNING_MESSAGE,
-                                null,
-                                new String[]{"Yes", "No"},
-                                "No");
-                        if (selection != JOptionPane.YES_OPTION) {
-                            table.setRowSelectionInterval(priorRowIndex, priorRowIndex);
-                            return;
-                        }
+                    if (keepUnAppliedFeederConfigurationChanges()) {
+                        table.setRowSelectionInterval(priorRowIndex, priorRowIndex);
+                        return;
                     }
                     priorRowIndex = table.getSelectedRow();
                     
                     Feeder feeder = getSelection();
-                    priorFeeder = feeder;
                     
                     configurationPanel.removeAll();
                     if (feeder != null) {
-                        feeder.setWizardContainer(FeedersPanel.this);
+                        priorFeederId = feeder.getId();
                         PropertySheet[] propertySheets = feeder.getPropertySheets();
                         for (PropertySheet ps : propertySheets) {
-                            configurationPanel.addTab(ps.getPropertySheetTitle(), ps.getPropertySheetPanel());
+                            AbstractConfigurationWizard wizard = (AbstractConfigurationWizard) ps.getPropertySheetPanel();
+                            wizard.setWizardContainer(FeedersPanel.this);
+                            configurationPanel.addTab(ps.getPropertySheetTitle(), wizard);
                         }
                     }
                     
@@ -268,6 +254,30 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         popupMenu.add(setEnabledMenu);
 
         table.setComponentPopupMenu(popupMenu);
+    }
+    
+    private boolean keepUnAppliedFeederConfigurationChanges() {
+        Feeder priorFeeder = configuration.getMachine().getFeeder(priorFeederId);
+        boolean feederConfigurationIsDirty = false;
+        int i = 0;
+        while (!feederConfigurationIsDirty && (i<configurationPanel.getComponentCount())) {
+            feederConfigurationIsDirty = ((AbstractConfigurationWizard) configurationPanel.getComponent(i)).isDirty();
+            i++;
+        }
+        if (feederConfigurationIsDirty && (priorFeeder != null)) {
+            int selection = JOptionPane.showOptionDialog(null,
+                    "Configuration changes to '" + priorFeeder.getName() + "' will be lost.  Do you want to proceed?",
+                    "Warning!",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE,
+                    null,
+                    new String[]{"Yes", "No"},
+                    "No");
+            return (selection != JOptionPane.YES_OPTION);
+        } else {
+            return false;
+        }
+        
     }
     
     @Subscribe
@@ -372,6 +382,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public void wizardCancelled(Wizard wizard) {}
 
     private void newFeeder(Part part) {
+        if (keepUnAppliedFeederConfigurationChanges()) {
+            return;
+        }
+        
         if (Configuration.get().getParts().size() == 0) {
             MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
                     "There are currently no parts defined in the system. Please create at least one part before creating a feeder.");
@@ -395,6 +409,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             return;
         }
         try {
+            priorFeederId = null;
+            
             Feeder feeder = feederClass.newInstance();
 
             feeder.setPart(part == null ? Configuration.get().getParts().get(0) : part);
