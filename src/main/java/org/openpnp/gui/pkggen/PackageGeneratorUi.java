@@ -35,6 +35,12 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
+import javassist.CannotCompileException;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.CtMethod;
+import javassist.NotFoundException;
+
 /**
  * TODO:
  * * Show top and bottom views. Just render pins and body in different order.
@@ -122,7 +128,47 @@ public class PackageGeneratorUi extends JFrame {
         panel_2.add(bottomPackageView);
     }
     
+    private static void monkeyPatchBeansBinding() {
+        // This hack fixes a bug in BeansBinding that will never be released due to to the library
+        // being abandoned. The bug is that in BeansBinding.bind, it chooses to call an uncached
+        // introspection method rather than a cached one. This causes each binding to take upwards
+        // of 50ms on my machine. On a form with many bindings this can cause a huge load time
+        // when loading wizards. This was most apparent on Feeders.
+        // Note that the bug was fixed in Subversion in revision 629:
+        // https://java.net/projects/beansbinding/sources/svn/revision/629
+        // But it is unlikely this will ever be released to Maven.
+        // This hack was found at http://blog.marcnuri.com/beansbinding-performance-issue-37/
+        try {
+            ClassPool cp = ClassPool.getDefault();
+            CtClass cc = cp.get("org.jdesktop.beansbinding.ELProperty");
+            CtMethod m = cc.getDeclaredMethod("getBeanInfo");
+            m.setBody("{" +
+            // "assert $1 != null;" +
+                    "try {" + "return java.beans.Introspector.getBeanInfo($1.getClass());"
+                    + "} catch (java.beans.IntrospectionException ie) {"
+                    + "throw new org.jdesktop.beansbinding.PropertyResolutionException(\"Exception while introspecting \" + $1.getClass().getName(), ie);"
+                    + "} }");
+            Class c = cc.toClass();
+            cc = cp.get("org.jdesktop.beansbinding.BeanProperty");
+            m = cc.getDeclaredMethod("getBeanInfo");
+            m.setBody("{" +
+            // "assert $1 != null;" +
+                    "try {" + "return java.beans.Introspector.getBeanInfo($1.getClass());"
+                    + "} catch (java.beans.IntrospectionException ie) {"
+                    + "throw new org.jdesktop.beansbinding.PropertyResolutionException(\"Exception while introspecting \" + $1.getClass().getName(), ie);"
+                    + "} }");
+            c = cc.toClass();
+        }
+        catch (NotFoundException ex) {
+            ex.printStackTrace();
+        }
+        catch (CannotCompileException ex) {
+            ex.printStackTrace();
+        }
+    }
+    
     public static void main(String[] args) {
+        monkeyPatchBeansBinding();
         PackageGeneratorUi p = new PackageGeneratorUi();
         p.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         p.setSize(1280, 1024);
