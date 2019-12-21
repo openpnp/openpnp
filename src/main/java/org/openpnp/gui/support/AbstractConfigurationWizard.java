@@ -182,4 +182,8 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
             loadFromModel();
         }
     };
+    
+    public Boolean isDirty() {
+        return btnApply.isEnabled();
+    }
 }
