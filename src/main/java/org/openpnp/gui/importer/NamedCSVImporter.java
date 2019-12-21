@@ -222,10 +222,12 @@ public class NamedCSVImporter implements BoardImporter {
         if (input_str.indexOf("ROT") == -1) {
             return false;
         }
-        if (input_str.indexOf("VAL") == -1 && input_str.indexOf("COMMENT") == -1) {
+        if (input_str.indexOf("VAL") == -1 
+        		&& input_str.indexOf("COMMENT") == -1) {
             return false;
         }
-        if (input_str.indexOf("FOOTPRINT") == -1 && input_str.indexOf("PACKAGE") == -1
+        if (input_str.indexOf("FOOTPRINT") == -1 
+        		&& input_str.indexOf("PACKAGE") == -1
                 && input_str.indexOf("PATTERN") == -1) {
             return false;
         }
