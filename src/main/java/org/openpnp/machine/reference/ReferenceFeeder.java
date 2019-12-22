@@ -31,10 +31,10 @@ public abstract class ReferenceFeeder extends AbstractFeeder {
     
     public Location convertToGlobalLocation(Location localLocation) {
         Location globalLocation;
-        if (owner.equals("Machine")) {
+        if (parentId.equals(AbstractFeeder.ROOT_FEEDER_ID)) {
             globalLocation = localLocation;
         } else {
-            Location ownerLocation = ((ReferenceFeederGroup) Configuration.get().getMachine().getFeederByName(owner)).getLocation();
+            Location ownerLocation = ((ReferenceFeederGroup) Configuration.get().getMachine().getFeeder(parentId)).getLocation();
             globalLocation = localLocation.rotateXy(ownerLocation.getRotation()).addWithRotation(ownerLocation);
         }
         return globalLocation;
@@ -42,10 +42,10 @@ public abstract class ReferenceFeeder extends AbstractFeeder {
     
     public Location convertToLocalLocation(Location globalLocation) {
         Location localLocation;
-        if (owner.equals("Machine")) {
+        if (parentId.equals(AbstractFeeder.ROOT_FEEDER_ID)) {
             localLocation = globalLocation;
         } else {
-            Location ownerLocation = ((ReferenceFeederGroup) Configuration.get().getMachine().getFeederByName(owner)).getLocation();
+            Location ownerLocation = ((ReferenceFeederGroup) Configuration.get().getMachine().getFeeder(parentId)).getLocation();
             localLocation = globalLocation.rotateXy(-ownerLocation.getRotation()).subtractWithRotation(ownerLocation);
         }
         return localLocation;

@@ -28,13 +28,13 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.base.AbstractFeeder;
 import org.openpnp.util.BeanUtils;
 
 public class FeedersTableModel extends AbstractTableModel {
     final private Configuration configuration;
 
-    //private String[] columnNames = new String[] {"Name", "Type", "Part", "Enabled"};
-    private String[] columnNames = new String[] {"Owner", "Name", "Type", "Part", "Enabled"};
+    private String[] columnNames = new String[] {"Parent", "Name", "Type", "Part", "Enabled"};
     private List<Feeder> feeders;
 
     public FeedersTableModel(Configuration configuration) {
@@ -73,7 +73,6 @@ public class FeedersTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        //return columnIndex == 0 || columnIndex == 3;
         return columnIndex == 1 || columnIndex == 4;
     }
 
@@ -81,11 +80,9 @@ public class FeedersTableModel extends AbstractTableModel {
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
             Feeder feeder = feeders.get(rowIndex);
-            //if (columnIndex == 0) {
             if (columnIndex == 1) {
                 feeder.setName((String) aValue);
             }
-            //else if (columnIndex == 3) {
             else if (columnIndex == 4) {
                 feeder.setEnabled((Boolean) aValue);
             }
@@ -98,7 +95,6 @@ public class FeedersTableModel extends AbstractTableModel {
 
     @Override
     public Class<?> getColumnClass(int columnIndex) {
-        //if (columnIndex == 3) {
         if (columnIndex == 4) {
             return Boolean.class;
         }
@@ -108,19 +104,24 @@ public class FeedersTableModel extends AbstractTableModel {
     public Object getValueAt(int row, int col) {
         switch (col) {
             case 0:
-                return feeders.get(row).getOwner();
-            case 1: //0:
+                String feederId = feeders.get(row).getParentId();
+                if (feederId.equals(AbstractFeeder.ROOT_FEEDER_ID)) {
+                    return feederId;
+                } else {
+                    return configuration.getMachine().getFeeder(feederId).getName();
+                }
+            case 1:
                 return feeders.get(row).getName();
-            case 2: //1:
+            case 2:
                 return feeders.get(row).getClass().getSimpleName();
-            case 3: /*2:*/ {
+            case 3: {
                 Part part = feeders.get(row).getPart();
                 if (part == null) {
                     return null;
                 }
                 return part.getId();
             }
-            case 4: //3:
+            case 4:
                 return feeders.get(row).isEnabled();
             default:
                 return null;

@@ -34,7 +34,7 @@ import org.openpnp.model.Part;
  */
 public interface Feeder extends Identifiable, Named, WizardConfigurable, PropertySheetHolder {
     /**
-     * Return true is the Feeder and all its ancestors are currently enabled and therefore can be considered in Job planning.
+     * Return true if this feeder and all of its ancestors are currently enabled and therefore can be considered in Job planning.
      * 
      * @return
      */
@@ -52,17 +52,24 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
     public void setWizardContainer(WizardContainer wizardContainer);
     
     /**
-     * Get the owner of this Feeder.
+     * Get the parent of this Feeder.
      * 
      * @return
      */
-    public String getOwner();
+    public String getParentId();
 
     /**
-     * Set the owner of this Feeder.
+     * Set the parent of this Feeder.
      */
-    public void setOwner(String owner);
+    public void setParentId(String parentId);
 
+    /**
+     * Determine if this feeder can be a parent to another feeder.
+     * 
+     * @return
+     */
+    public boolean isPotentialParentOf(Feeder feeder);
+    
     /**
      * Get the Part that is loaded into this Feeder.
      * 

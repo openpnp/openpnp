@@ -21,7 +21,7 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     protected String id;
 
     @Attribute(required = false)
-    protected String owner;
+    protected String parentId;
 
     @Attribute(required = false)
     protected String name;
@@ -45,11 +45,13 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     protected Part part;
     
     protected WizardContainer wizardContainer;
+    
+    public static String ROOT_FEEDER_ID = "Machine";
 
     public AbstractFeeder() {
         this.id = Configuration.createId("FDR");
         this.name = getClass().getSimpleName();
-        this.owner = "Machine";
+        this.parentId = ROOT_FEEDER_ID;
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
@@ -62,9 +64,9 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     @Commit
     public void commit() {
         //This method gets called by the deserializer when configuration .xml files are loading.
-        if (owner == null) {
+        if (parentId == null) {
             Logger.trace( "Old feeder format found in .xml file, converting to new feeder format..." );
-            owner = "Machine";
+            parentId = ROOT_FEEDER_ID;
         }
     }
     
@@ -76,10 +78,10 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
     @Override
     public boolean isEnabled() {
-        if (owner.equals("Machine")) {
+        if (parentId.equals(ROOT_FEEDER_ID)) {
             return enabled;
         } else {
-            return enabled && Configuration.get().getMachine().getFeederByName(owner).isEnabled();
+            return enabled && Configuration.get().getMachine().getFeeder(parentId).isEnabled();
         }
     }
 
@@ -101,21 +103,26 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     }
 
     @Override
-    public void setOwner(String owner) {
-        if (!this.owner.equals("Machine")) {
-            ((ReferenceFeederGroup) Configuration.get().getMachine().getFeederByName(this.owner)).removeChild(this);
+    public void setParentId(String parentId) {
+        if (!this.parentId.equals(ROOT_FEEDER_ID)) {
+            ((ReferenceFeederGroup) Configuration.get().getMachine().getFeeder(this.parentId)).removeChild(this);
         }
-        this.owner = owner;
-        if (!owner.equals("Machine")) {
-            ((ReferenceFeederGroup) Configuration.get().getMachine().getFeederByName(owner)).addChild(this);
+        this.parentId = parentId;
+        if (!parentId.equals(ROOT_FEEDER_ID)) {
+            ((ReferenceFeederGroup) Configuration.get().getMachine().getFeeder(parentId)).addChild(this);
         }
     }
 
     @Override
-    public String getOwner() {
-        return owner;
+    public String getParentId() {
+        return parentId;
     }
 
+    @Override
+    public boolean isPotentialParentOf(Feeder feeder) {
+        return false;
+    };
+    
     @Override
     public void setPart(Part part) {
         this.part = part;

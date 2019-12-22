@@ -20,9 +20,11 @@
 package org.openpnp.machine.reference.feeder.wizards;
 
 import java.awt.Color;
+import java.awt.Event;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -42,19 +44,23 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.jdesktop.beansbinding.Converter;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
-import org.openpnp.gui.support.FeederOwnersComboBoxModel;
+import org.openpnp.gui.support.FeederParentsComboBoxModel;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.feeder.ReferenceFeederGroup;
+import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
+import org.openpnp.spi.Feeder;
+import org.openpnp.spi.base.AbstractFeeder;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -92,7 +98,7 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 
 	private JPanel panelPart;
 
-    private JComboBox<?> comboBoxOwner;
+    private JComboBox<?> comboBoxParent;
     private JComboBox<?> comboBoxPart;
 	private LocationButtonsPanel locationButtonsPanel;
 	private LocationButtonsPanel lastLocationButtonsPanel;
@@ -135,9 +141,9 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 		        FormSpecs.DEFAULT_ROWSPEC,
 		        FormSpecs.RELATED_GAP_ROWSPEC}));
 
-        comboBoxOwner = new JComboBox();
+        comboBoxParent = new JComboBox();
         try {
-            comboBoxOwner.setModel(new FeederOwnersComboBoxModel(feeder));
+            comboBoxParent.setModel(new FeederParentsComboBoxModel(feeder));
         } catch (Throwable t) {
             // Swallow this error. This happens during parsing in
             // in WindowBuilder but doesn't happen during normal run.
@@ -148,16 +154,16 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 		contentPanel.add(warningPanel, 0);
 
 		JLabel lblWarningThisFeeder = new JLabel(
-				"Warning: This feeder is incomplete and experimental. Use at your own risk.");
+				"Warning: This feeder is experimental. Use at your own risk.");
 		lblWarningThisFeeder.setFont(new Font("Lucida Grande", Font.PLAIN, 16));
 		lblWarningThisFeeder.setForeground(Color.RED);
 		lblWarningThisFeeder.setHorizontalAlignment(SwingConstants.LEFT);
 		warningPanel.add(lblWarningThisFeeder);
 
-        JLabel lblOwner = new JLabel("Owner");
-        panelPart.add(lblOwner, "2, 2, right, default");
-        //comboBoxOwner.setRenderer(new IdentifiableListCellRenderer<Owner>());
-        panelPart.add(comboBoxOwner, "4, 2, left, default");
+        JLabel lblParent = new JLabel("Parent");
+        panelPart.add(lblParent, "2, 2, right, default");
+        //comboBoxOwner.setRenderer(new IdentifiableListCellRenderer<Parent>());
+        panelPart.add(comboBoxParent, "4, 2, left, default");
 /*
         JLabel lblPart = new JLabel("Part");
         panelPart.add(lblPart, "2, 4, right, default");
@@ -411,13 +417,14 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 		}
 	}
 
+	
 	@Override
 	public void createBindings() {
 		LengthConverter lengthConverter = new LengthConverter();
 		IntegerConverter intConverter = new IntegerConverter();
+		FeederConverter feederConverter = new FeederConverter();
 		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
-
-        addWrappedBinding(feeder, "owner", comboBoxOwner, "selectedItem");
+        addWrappedBinding(feeder, "parentId", comboBoxParent, "selectedItem", feederConverter);
 /*        addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
         addWrappedBinding(feeder, "feedRetryCount", retryCountTf, "text", intConverter);
         addWrappedBinding(feeder, "pickRetryCount", pickRetryCount, "text", intConverter);
@@ -499,5 +506,29 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 		BigDecimal bd = new BigDecimal(value);
 		bd = bd.setScale(places, RoundingMode.HALF_UP);
 		return bd.doubleValue();
+	}
+	
+	class FeederConverter extends Converter<String, Object> {
+
+        @Override
+        public Object convertForward(String arg0) {
+            if (arg0.equals(AbstractFeeder.ROOT_FEEDER_ID)) {
+                return arg0;
+            } else {
+                return Configuration.get().getMachine().getFeeder(arg0);
+            }
+        }
+
+        @Override
+        public String convertReverse(Object arg0) {
+            String feederId;
+            try {
+                feederId = ((Feeder )arg0).getId();
+            } catch (Exception e) {
+                feederId = (String )arg0;
+            }
+            return feederId;
+        }
+	    
 	}
 }

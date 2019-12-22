@@ -69,6 +69,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
+import org.openpnp.machine.reference.feeder.ReferenceFeederGroup;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -78,6 +79,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
+import org.openpnp.spi.base.AbstractFeeder;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
@@ -106,6 +108,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     private JTabbedPane configurationPanel;
     private int priorRowIndex = -1;
     private String priorFeederId;
+    
+    private JMenu setParentMenu;
     
     public FeedersPanel(Configuration configuration, MainFrame mainFrame) {
         this.configuration = configuration;
@@ -189,10 +193,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
         singleSelectActionGroup = new ActionGroup(deleteFeederAction, feedFeederAction,
                 pickFeederAction, moveCameraToPickLocation, moveToolToPickLocation,
-                setEnabledAction);
+                setEnabledAction, setParentAction);
         singleSelectActionGroup.setEnabled(false);
         
-        multiSelectActionGroup = new ActionGroup(deleteFeederAction, setEnabledAction);
+        multiSelectActionGroup = new ActionGroup(deleteFeederAction, setEnabledAction, setParentAction);
         multiSelectActionGroup.setEnabled(false);
         
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
@@ -216,6 +220,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                     multiSelectActionGroup.setEnabled(true);
                 }
 
+                refreshSetParentMenu(selections);
+                
                 if (table.getSelectedRow() != priorRowIndex) {
                     if (keepUnAppliedFeederConfigurationChanges()) {
                         table.setRowSelectionInterval(priorRowIndex, priorRowIndex);
@@ -253,8 +259,32 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         setEnabledMenu.add(new SetEnabledAction(false));
         popupMenu.add(setEnabledMenu);
 
+        setParentMenu = new JMenu(setParentAction);
+        popupMenu.add(setParentMenu);
+        
         table.setComponentPopupMenu(popupMenu);
     }
+    
+    
+    private void refreshSetParentMenu(List<Feeder> selections) {
+        setParentMenu.removeAll();
+        setParentMenu.add(new SetParentAction(null));
+        List<Feeder> allFeeders = configuration.getMachine().getFeeders();
+        List<Feeder> availableParents;
+        for (Feeder fdr : allFeeders) {
+            boolean ok = true;
+            for (Feeder child : selections) {
+                ok = fdr.isPotentialParentOf(child);
+                if (!ok) {
+                    break;
+                }
+            }
+            if (ok) {
+                setParentMenu.add(new SetParentAction(fdr));
+            }
+        }
+    }
+    
     
     private boolean keepUnAppliedFeederConfigurationChanges() {
         Feeder priorFeeder = configuration.getMachine().getFeeder(priorFeederId);
@@ -584,6 +614,35 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             for (Feeder f : getSelections()) {
                 f.setEnabled(value);
+            }
+            table.repaint();
+        }
+    };
+
+    public final Action setParentAction = new AbstractAction() {
+        {
+            putValue(NAME, "Set Parent");
+            putValue(SHORT_DESCRIPTION, "Set feeder(s) parent to...");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {}
+    };
+
+    class SetParentAction extends AbstractAction {
+        final Feeder value;
+
+        public SetParentAction(Feeder fdr) {
+            this.value = fdr;
+            String name = fdr == null ? AbstractFeeder.ROOT_FEEDER_ID : fdr.getName();
+            putValue(NAME, name);
+            putValue(SHORT_DESCRIPTION, "Set feeder(s) parent to " + name);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            for (Feeder f : getSelections()) {
+                f.setParentId(value == null ? AbstractFeeder.ROOT_FEEDER_ID : value.getId());
             }
             table.repaint();
         }

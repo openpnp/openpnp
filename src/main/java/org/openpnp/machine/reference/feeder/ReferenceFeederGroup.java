@@ -31,6 +31,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.base.AbstractFeeder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -90,27 +91,28 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
         }
     }
 
-	public boolean isPotentialOwnerOf(Feeder feeder) {
-	    String feederToBeOwned = feeder.getName();
-	    if (getName().equals(feederToBeOwned)) {
-	        //A feeder can never own itself
+    @Override
+	public boolean isPotentialParentOf(Feeder feeder) {
+	    String childId = feeder.getId();
+	    if (getId().equals(childId)) {
+	        //A feeder can never be its own parent
 	        return false;
 	    }
 	    int maxDepth = 16; //An arbitrary limit just to prevent possible infinite loops
 	    int depth = 0;
-	    String onr = owner;
+	    String p = parentId;
 	    while (depth < maxDepth) {
-	        if (onr.equals("Machine")) {
-	            //Ok, the ownership traces back to the machine 
+	        if (p.equals(AbstractFeeder.ROOT_FEEDER_ID)) {
+	            //Ok, the family tree traces back to the machine 
 	            return true;
-	        } else if (onr.equals(feederToBeOwned)) {
-	            //The ownership would form a loop so this is not a potential owner
+	        } else if (p.equals(childId)) {
+	            //The family tree would form a loop so this is not a potential parent
 	            return false;
 	        }
-	        onr = Configuration.get().getMachine().getFeederByName(onr).getOwner();
+	        p = Configuration.get().getMachine().getFeeder(p).getParentId();
 	        depth = depth + 1;
 	    }
-	    Logger.warn("Possible loop in feeder ownership detected, check ReferenceFeederGroups in machine.xml");
+	    Logger.warn("Possible loop in feeder parentage detected, check ReferenceFeederGroups in machine.xml");
 	    return false;
 	}
 	
