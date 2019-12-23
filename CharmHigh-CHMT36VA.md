@@ -14,6 +14,7 @@ Matt also has an [example OpenPnP configuration](https://github.com/mattthebaker
 * [Matt Baker's example OpenPnP configuration](https://github.com/mattthebaker/openpnp-config-chmt).
 * [OpenPnP + CHMT Thread](https://groups.google.com/forum/#!msg/desktop-pick-and-place/qaoGrnM7pPw/-2k-5FBHCAAJ) contains tons of good information on making the CHMT work with OpenPnP.
 * [SwitcherCamera Documentation](https://github.com/openpnp/openpnp/wiki/SwitcherCamera): The SwitcherCamera lets OpenPnP switch the camera board on the CHMT between the top and bottom camera.
+* [CharmHigh Conversion](https://github.com/openpnp/openpnp/wiki/Charmhigh-modifications-for-OpenPnP): how to convert the CharmHigh machine to use Smoothieware and OpenPnP.
 
 ---
 
