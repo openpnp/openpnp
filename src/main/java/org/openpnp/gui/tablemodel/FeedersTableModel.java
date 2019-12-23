@@ -25,6 +25,7 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.machine.reference.feeder.ReferenceFeederGroup;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
@@ -82,6 +83,9 @@ public class FeedersTableModel extends AbstractTableModel {
             Feeder feeder = feeders.get(rowIndex);
             if (columnIndex == 1) {
                 feeder.setName((String) aValue);
+                if (feeder.getClass() == ReferenceFeederGroup.class) {
+                    refresh();
+                }
             }
             else if (columnIndex == 4) {
                 feeder.setEnabled((Boolean) aValue);

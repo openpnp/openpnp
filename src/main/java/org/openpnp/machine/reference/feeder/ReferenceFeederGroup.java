@@ -79,6 +79,10 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
 	    return children.remove(feeder);
 	}
 	
+	public ArrayList<Feeder> getChildren() {
+	    return children;
+	}
+	
     @Override
     public void setEnabled(boolean enabled) {
         Object oldValue = this.enabled;
@@ -91,6 +95,11 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
         }
     }
 
+    @Override
+    public void setName(String name) {
+        this.name = name;
+    }
+    
     @Override
 	public boolean isPotentialParentOf(Feeder feeder) {
 	    String childId = feeder.getId();
