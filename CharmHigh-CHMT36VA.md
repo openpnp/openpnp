@@ -1,12 +1,25 @@
-This page will serve as a repository of information on the CharmHigh CHMT36VA and the process of developing an OpenPnP driver for it.
+# Project Status
 
-For more information about how we got here, please see: https://www.gofundme.com/help-openpnp-grow
+The stock firmware on the CHMT36VA turned out to be a dead end. There does not appear to be any command that can be used to rotate the nozzle. The best way forward seems to be to use [Matt Baker's Smoothie port](https://github.com/mattthebaker/Smoothieware-CHMT) which can be flashed on the stock main board.
 
-For more information about the CHMT36VA in general, and SparkFun's experiences with it, see: https://github.com/sparkfunX/Desktop-PickAndPlace-CHMT36VA
+Matt also has an [example OpenPnP configuration](https://github.com/mattthebaker/openpnp-config-chmt) that can help get you started.
 
-# Project Status and Updates
+[This thread on the Desktop PnP list](https://groups.google.com/forum/#!msg/desktop-pick-and-place/qaoGrnM7pPw/-2k-5FBHCAAJ) contains a lot of good information for making everything work together.
 
-See the GoFundMe page for project updates: https://www.gofundme.com/help-openpnp-grow (Click Updates)
+# Helpful Resources
+
+* [The GoFundMe Page](https://www.gofundme.com/help-openpnp-grow)
+* [SparkFun's CHMT36VA Repo](https://github.com/sparkfunX/Desktop-PickAndPlace-CHMT36VA) contains translations, documentation, software, and utilities for working with the machine.
+* [Matt Baker's Smoothie port](https://github.com/mattthebaker/Smoothieware-CHMT) which can be used to flash Smoothie to your CHMT36VA for use with OpenPnP.
+* [Matt Baker's example OpenPnP configuration](https://github.com/mattthebaker/openpnp-config-chmt).
+* [OpenPnP + CHMT Thread](https://groups.google.com/forum/#!msg/desktop-pick-and-place/qaoGrnM7pPw/-2k-5FBHCAAJ) contains tons of good information on making the CHMT work with OpenPnP.
+* [SwitcherCamera Documentation](https://github.com/openpnp/openpnp/wiki/SwitcherCamera): The SwitcherCamera lets OpenPnP switch the camera board on the CHMT between the top and bottom camera.
+
+---
+
+# Native Driver (Obsolete)
+
+The information below pertains to the development of a native driver, which has turned out to be impossible. The information is obsolete but left here for reference.
 
 # Source Code
 
