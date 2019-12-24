@@ -274,7 +274,7 @@ Feeders are where OpenPnP goes to find parts to pick. OpenPnP supports many diff
 
 Most machines will have one or two types of feeders installed, and may have a number of "virtual" feeders, which can be as simple a piece of cut strip taped to the bed of the machine. Some of the most common feeder types are:
 
-- Drag Feeders: A simple feeder that holes SMT tape. The head of the machine is used to drag the tape forward to expost the next part.
+- Drag Feeders: A simple feeder that holds SMT tape. The head of the machine is used to drag the tape forward to expost the next part.
 - Strip Feeders: A "virtual" feeder that uses computer vision to find parts in a piece of cut tape mounted to the machine. This is the easiest feeder to get started with. All you need to do is use double sided tape to stick a strip of parts down.
 - Tray Feeders: A "virtual" feeder that picks parts from a uniform array of parts. Many larger parts come in JEDEC matrix trays and OpenPnP can easily cycle through all the parts in the tray.
 - Auto Feeders: An auto feeder is a mechanism that OpenPnP can command to feed a part. These types of feeders are typically used on commercial machines to feed parts very quickly and accurately.
