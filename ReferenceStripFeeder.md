@@ -4,7 +4,10 @@
 
 When setting the reference hole and second hole on ReferenceStripFeeder either manually or using Auto Setup, you have to choose your reference and second hole or part according to the standards used in SMT tape. Primarily this means that the reference hole should be the first hole 2mm from the first part in the direction of travel.
 
-The direction of travel is fixed, and is always north to south with the holes on the left. The tape can be in any orientation on the table but the direction of travel along the tape always follows this rule. See the image below for clarification:
+For ReferanceStripFeeder the ‘Direction of Travel’ and ‘Direction of Feed’ are confusing since nothing is being fed; the tape is fixed to a location.
+ With the tape laid vertically if the holes are on the left of the part the Direction of Travel is from the top to the bottom, North to South. If the holes are on the right of the part the Direction of Travel is from the bottom to the top, South to North. 
+ With the tape laid horizontally if the holes are on the bottom of the part the Direction of Travel is from the left to the right, West to East. If the holes are on the top of the part the Direction of Travel is from the right to the left, East to West. 
+ The tape can be in any orientation on the table but the direction of travel along the tape always follows this rule. See the image below for clarification:
 
 ![strip feeder orientation](https://user-images.githubusercontent.com/3868450/34457250-6b69f62a-edab-11e7-8030-0eeed21a9692.png)
 
