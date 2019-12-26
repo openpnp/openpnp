@@ -44,7 +44,7 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
     protected Part part;
     
-    protected WizardContainer wizardContainer;
+    //protected WizardContainer wizardContainer;
     
     public static String ROOT_FEEDER_ID = "Machine";
 
@@ -98,18 +98,13 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     }
 
     @Override
-    public void setWizardContainer(WizardContainer wizardContainer) {
-        this.wizardContainer = wizardContainer;
-    }
-
-    @Override
     public void setParentId(String parentId) {
         if (!this.parentId.equals(ROOT_FEEDER_ID)) {
-            ((ReferenceFeederGroup) Configuration.get().getMachine().getFeeder(this.parentId)).removeChild(this);
+            ((ReferenceFeederGroup) Configuration.get().getMachine().getFeeder(this.parentId)).removeChild(getId());
         }
         this.parentId = parentId;
         if (!parentId.equals(ROOT_FEEDER_ID)) {
-            ((ReferenceFeederGroup) Configuration.get().getMachine().getFeeder(parentId)).addChild(this);
+            ((ReferenceFeederGroup) Configuration.get().getMachine().getFeeder(parentId)).addChild(getId());
         }
     }
 
@@ -122,6 +117,13 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     public boolean isPotentialParentOf(Feeder feeder) {
         return false;
     };
+    
+    @Override
+    public void preDeleteCleanUp() {
+        if (!parentId.equals(ROOT_FEEDER_ID)) {
+            ((ReferenceFeederGroup) Configuration.get().getMachine().getFeeder(parentId)).removeChild(getId());
+        }
+    }
     
     @Override
     public void setPart(Part part) {
@@ -167,7 +169,7 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration", wizardContainer)};
+        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration")};
     }
     
     public void postPick(Nozzle nozzle) throws Exception { }

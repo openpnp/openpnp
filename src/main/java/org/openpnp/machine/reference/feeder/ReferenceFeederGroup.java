@@ -20,6 +20,7 @@
 package org.openpnp.machine.reference.feeder;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import javax.swing.Action;
 
@@ -35,35 +36,25 @@ import org.openpnp.spi.base.AbstractFeeder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Feeder;
 
 /**
- * Implementation of Feeder that indexes based on an offset. This allows a tray
- * of parts to be picked from without moving any tape. Can handle trays of
- * arbitrary X and Y count.
+ * Implementation of Feeder that holds other feeders.
  */
 public class ReferenceFeederGroup extends ReferenceFeeder {
 
-	@Attribute
-	private int trayCountCols = 1;
-	@Attribute
-	private int trayCountRows = 1;
-	@Element
-	private Location offsets = new Location(LengthUnit.Millimeters);
-	@Attribute
-	private int feedCount = 0;
-	@Attribute
-	private double trayRotation = 0;
-	@Element
-	protected Location lastComponentLocation = new Location(LengthUnit.Millimeters);
-	@Element
-	protected Location firstRowLastComponentLocation = new Location(LengthUnit.Millimeters);
-
-	private Location pickLocation;
-	private ArrayList<Feeder> children = new ArrayList<>();
-	
+    @Element(required=false)
+    private Location expectedFiducial1 = new Location(LengthUnit.Millimeters);
+    
+    @Element(required=false)
+    private Location expectedFiducial2 = new Location(LengthUnit.Millimeters);
+    
+    @ElementList(required=false)
+    private ArrayList<String> childIds = new ArrayList<>();
+    
 	public ReferenceFeederGroup() {
 	    super();
 	    name = name + "_" + getId();
@@ -71,16 +62,46 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
 	    partId = "";
 	}
 	
-	public boolean addChild(Feeder feeder) {
-	    return children.add(feeder);
+    public void setExpectedFiducial1(Location expectedFiducial1) {
+        this.expectedFiducial1 = expectedFiducial1;
+    }
+    
+    public Location getExpectedFiducial1() {
+        return expectedFiducial1;
+    }
+    
+    public void setExpectedFiducial2(Location expectedFiducial2) {
+        this.expectedFiducial2 = expectedFiducial2;
+    }
+    
+    public Location getExpectedFiducial2() {
+        return expectedFiducial2;
+    }
+    
+	public boolean addChild(String ChildId) {
+	    //Configuration.get().getMachine().getFeeder(ChildId).setParentId(getId());
+	    return childIds.add(ChildId);
 	}
 	
-	public boolean removeChild(Feeder feeder) {
-	    return children.remove(feeder);
+	public boolean removeChild(String ChildId) {
+	    //Configuration.get().getMachine().getFeeder(ChildId).setParentId(parentId);
+	    //if (parentId != AbstractFeeder.ROOT_FEEDER_ID) {
+	    //    ((ReferenceFeederGroup) Configuration.get().getMachine().getFeeder(parentId)).addChild(ChildId);
+	    //}
+	    return childIds.remove(ChildId);
 	}
 	
-	public ArrayList<Feeder> getChildren() {
-	    return children;
+	public ArrayList<String> getChildIds() {
+	    return childIds;
+	}
+	
+	@Override
+	public void setParentId(String parentId) {
+	    //Location oldLastComponentLocation = getLastComponentLocation();
+	    //Location oldFirstRowLastComponentLocation = getFirstRowLastComponentLocation();
+	    super.setParentId(parentId);
+	    //setLastComponentLocation(oldLastComponentLocation);
+	    //setFirstRowLastComponentLocation(oldFirstRowLastComponentLocation);
 	}
 	
     @Override
@@ -88,18 +109,14 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
         Object oldValue = this.enabled;
         this.enabled = enabled;
         firePropertyChange("enabled", oldValue, enabled);
-        for (Feeder fdr : children) {
-            boolean temp = fdr.isLocallyEnabled();
-            fdr.setEnabled(!temp);
-            fdr.setEnabled(temp);
+        for (String childId : childIds) {
+            Feeder child = Configuration.get().getMachine().getFeeder(childId);
+            boolean temp = child.isLocallyEnabled();
+            child.setEnabled(!temp);
+            child.setEnabled(temp);
         }
     }
 
-    @Override
-    public void setName(String name) {
-        this.name = name;
-    }
-    
     @Override
 	public boolean isPotentialParentOf(Feeder feeder) {
 	    String childId = feeder.getId();
@@ -125,11 +142,21 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
 	    return false;
 	}
 	
-	
 	@Override
+    public void preDeleteCleanUp() {
+	    ArrayList<String> toReParent = (ArrayList<String>) childIds.clone();
+	    for (String childId : toReParent) {
+	        Logger.info(this.getName() + " owns " + childId);
+	        Configuration.get().getMachine().getFeeder(childId).setParentId(parentId);
+	    }
+	    super.preDeleteCleanUp();
+	}
+	
+	
+/*	@Override
 	public Location getPickLocation() throws Exception {
 		if (pickLocation == null) {
-			pickLocation = location;
+			pickLocation = getLocation();
 		}
 		int partX, partY;
 
@@ -161,16 +188,17 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
 		// and then add them to the location to get the final pickLocation.
 		// pickLocation = location.add(offsets.multiply(partX, partY, 0.0,
 		// 0.0));
-
-		double delta_x1 = partX * offsets.getX() * Math.cos(Math.toRadians(trayRotation));
-		double delta_y1 = Math.sqrt((partX * offsets.getX() * partX * offsets.getX()) - (delta_x1 * delta_x1));
+	    
+	    Location globalOffsets = getOffsets();
+		double delta_x1 = partX * globalOffsets.getX() * Math.cos(Math.toRadians(trayRotation));
+		double delta_y1 = Math.sqrt((partX * globalOffsets.getX() * partX * globalOffsets.getX()) - (delta_x1 * delta_x1));
 		Location delta1 = new Location(LengthUnit.Millimeters, delta_x1, delta_y1, 0, 0);
 
-		double delta_y2 = partY * offsets.getY() * Math.cos(Math.toRadians(trayRotation)) * -1;
-		double delta_x2 = Math.sqrt((partY * offsets.getY() * partY * offsets.getY()) - (delta_y2 * delta_y2));
+		double delta_y2 = partY * globalOffsets.getY() * Math.cos(Math.toRadians(trayRotation)) * -1;
+		double delta_x2 = Math.sqrt((partY * globalOffsets.getY() * partY * globalOffsets.getY()) - (delta_y2 * delta_y2));
 		Location delta2 = new Location(LengthUnit.Millimeters, delta_x2, delta_y2, 0, 0);
 
-		pickLocation = location.add(delta1.add(delta2));
+		pickLocation = getLocation().add(delta1.add(delta2));
 	}
 
 	public void feed(Nozzle nozzle) throws Exception {
@@ -217,19 +245,19 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
 	}
 
 	public Location getLastComponentLocation() {
-		return lastComponentLocation;
+		return convertToGlobalLocation(lastComponentLocation);
 	}
 
 	public void setLastComponentLocation(Location LastComponentLocation) {
-		this.lastComponentLocation = LastComponentLocation;
+		this.lastComponentLocation = convertToLocalLocation(LastComponentLocation);
 	}
 
 	public Location getFirstRowLastComponentLocation() {
-		return this.firstRowLastComponentLocation;
+		return convertToGlobalLocation(firstRowLastComponentLocation);
 	}
 
 	public void setFirstRowLastComponentLocation(Location FirstRowLastComponentLocation) {
-		this.firstRowLastComponentLocation = FirstRowLastComponentLocation;
+		this.firstRowLastComponentLocation = convertToLocalLocation(FirstRowLastComponentLocation);
 	}
 
 	public Location getOffsets() {
@@ -257,7 +285,7 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
 		this.feedCount = feedCount;
 		firePropertyChange("feedCount", oldValue, feedCount);
 	}
-
+*/
 	@Override
 	public String toString() {
 		return getName();
@@ -282,4 +310,16 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
 	public Action[] getPropertySheetHolderActions() {
 		return null;
 	}
+
+    @Override
+    public Location getPickLocation() throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void feed(Nozzle nozzle) throws Exception {
+        // TODO Auto-generated method stub
+        
+    }
 }

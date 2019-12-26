@@ -498,6 +498,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                     "Delete " + selections.size() + " feeders?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 for (Feeder feeder : selections) {
+                    feeder.preDeleteCleanUp();
                     configuration.getMachine().removeFeeder(feeder);
                     tableModel.refresh();
                 }

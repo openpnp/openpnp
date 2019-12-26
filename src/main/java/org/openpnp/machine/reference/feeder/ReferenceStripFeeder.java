@@ -193,17 +193,17 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
     public Location[] getIdealLineLocations() {
         if (visionLocation == null) {
-            return new Location[] {referenceHoleLocation, lastHoleLocation};
+            return new Location[] {getReferenceHoleLocation(), getLastHoleLocation()};
         }
-        double d1 = referenceHoleLocation.getLinearLengthTo(lastHoleLocation)
+        double d1 = getReferenceHoleLocation().getLinearLengthTo(getLastHoleLocation())
                 .convertToUnits(LengthUnit.Millimeters).getValue();
-        double d2 = referenceHoleLocation.getLinearLengthTo(visionLocation)
+        double d2 = getReferenceHoleLocation().getLinearLengthTo(visionLocation)
                 .convertToUnits(LengthUnit.Millimeters).getValue();
         if (d2 > d1) {
-            return new Location[] {referenceHoleLocation, visionLocation};
+            return new Location[] {getReferenceHoleLocation(), visionLocation};
         }
         else {
-            return new Location[] {referenceHoleLocation, lastHoleLocation};
+            return new Location[] {getReferenceHoleLocation(), getLastHoleLocation()};
         }
     }
 
@@ -325,20 +325,20 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 
     public Location getReferenceHoleLocation() {
-        return referenceHoleLocation;
+        return convertToGlobalLocation(referenceHoleLocation);
     }
 
     public void setReferenceHoleLocation(Location referenceHoleLocation) {
-        this.referenceHoleLocation = referenceHoleLocation;
+        this.referenceHoleLocation = convertToLocalLocation(referenceHoleLocation);
         visionLocation = null;
     }
 
     public Location getLastHoleLocation() {
-        return lastHoleLocation;
+        return convertToGlobalLocation(lastHoleLocation);
     }
 
     public void setLastHoleLocation(Location lastHoleLocation) {
-        this.lastHoleLocation = lastHoleLocation;
+        this.lastHoleLocation = convertToLocalLocation(lastHoleLocation);
         visionLocation = null;
     }
 
@@ -441,11 +441,11 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 // calculating how many parts there are based on the first and last reference hole.
 //// figure out how many parts there should be by taking the delta
 //// between the two holes and dividing it by part pitch
-// double holeToHoleDistance = lastHoleLocation.getLinearDistanceTo(referenceHoleLocation);
+// double holeToHoleDistance = getLastHoleLocation().getLinearDistanceTo(getReferenceHoleLocation());
 //// take the ceil of the distance to account for any minor offset from
 //// center of the hole
 // holeToHoleDistance = Math.ceil(holeToHoleDistance);
-// double partPitch = this.partPitch.convertToUnits(lastHoleLocation.getUnits()).getValue();
+// double partPitch = this.partPitch.convertToUnits(getLastHoleLocation().getUnits()).getValue();
 //// And floor the part count because you can't have a partial part.
 // double partCount = Math.floor(holeToHoleDistance / partPitch);
 //

@@ -50,4 +50,12 @@ public abstract class ReferenceFeeder extends AbstractFeeder {
         }
         return localLocation;
     }
+
+    @Override
+    public void setParentId(String parentId) {
+        Location globalLocation = getLocation();
+        super.setParentId(parentId);
+        setLocation(globalLocation);
+    }
+
 }

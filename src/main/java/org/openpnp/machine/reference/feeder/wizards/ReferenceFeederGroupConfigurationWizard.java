@@ -80,31 +80,22 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 	private JPanel panelLocation;
 	private JPanel panelParameters;
 	private JPanel panelIllustration;
-	private JLabel lblX_1;
-	private JLabel lblY_1;
-	private JLabel lblComponentCount;
+
 	private JTextField textFieldLocationX;
-	private JTextField textFieldLocationY;
-	private JTextField textFieldFirstRowLastLocationX;
-	private JTextField textFieldFirstRowLastLocationY;
-	private JTextField textFieldLastLocationX;
-	private JTextField textFieldLastLocationY;
-
-	private JTextField textFieldTrayCountCols;
-	private JTextField textFieldTrayCountRows;
-	private JTextField textFieldTrayRotation;
-	private JTextField textFieldComponentRotation;
-	private JTextField textFieldComponentZHeight;
-
+    private JTextField textFieldLocationY;
+    private JTextField textFieldLocationZ;
+    private JTextField textFieldLocationR;
+    
+    private JTextField textFieldFid1X;
+    private JTextField textFieldFid1Y;
+    
+    private JTextField textFieldFid2X;
+    private JTextField textFieldFid2Y;
+    
 	private JPanel panelPart;
 
     private JComboBox<?> comboBoxParent;
-    private JComboBox<?> comboBoxPart;
-	private LocationButtonsPanel locationButtonsPanel;
-	private LocationButtonsPanel lastLocationButtonsPanel;
-	private JTextField retryCountTf;
-	private JLabel lblPickRetryCount;
-	private JTextField pickRetryCount;
+//	private LocationButtonsPanel locationButtonsPanel;
 
 	/**
 	 * @wbp.parser.constructor
@@ -119,36 +110,6 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 		this.feeder = feeder;
 		this.includePickLocation = includePickLocation;
 
-		panelPart = new JPanel();
-		panelPart.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General Settings",
-				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		contentPanel.add(panelPart);
-		panelPart.setLayout(new FormLayout(new ColumnSpec[] {
-		        FormSpecs.RELATED_GAP_COLSPEC,
-		        FormSpecs.DEFAULT_COLSPEC,
-		        FormSpecs.RELATED_GAP_COLSPEC,
-		        FormSpecs.DEFAULT_COLSPEC,
-		        FormSpecs.RELATED_GAP_COLSPEC,
-		        ColumnSpec.decode("default:grow"),},
-		    new RowSpec[] {
-/*		        FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-		        FormSpecs.DEFAULT_ROWSPEC, */
-		        FormSpecs.RELATED_GAP_ROWSPEC,
-		        FormSpecs.DEFAULT_ROWSPEC,
-		        FormSpecs.RELATED_GAP_ROWSPEC}));
-
-        comboBoxParent = new JComboBox();
-        try {
-            comboBoxParent.setModel(new FeederParentsComboBoxModel(feeder));
-        } catch (Throwable t) {
-            // Swallow this error. This happens during parsing in
-            // in WindowBuilder but doesn't happen during normal run.
-        }
-
 		JPanel warningPanel = new JPanel();
 		FlowLayout flowLayout = (FlowLayout) warningPanel.getLayout();
 		contentPanel.add(warningPanel, 0);
@@ -159,262 +120,213 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 		lblWarningThisFeeder.setForeground(Color.RED);
 		lblWarningThisFeeder.setHorizontalAlignment(SwingConstants.LEFT);
 		warningPanel.add(lblWarningThisFeeder);
+        try {
+        } catch (Throwable t) {
+            // Swallow this error. This happens during parsing in
+            // in WindowBuilder but doesn't happen during normal run.
+        }
 
+
+        panelPart = new JPanel();
+        panelPart.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General Settings",
+                TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        contentPanel.add(panelPart);
+        panelPart.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC}));
+        
+        comboBoxParent = new JComboBox();
+        comboBoxParent.setModel(new FeederParentsComboBoxModel(feeder));
+                
         JLabel lblParent = new JLabel("Parent");
         panelPart.add(lblParent, "2, 2, right, default");
         //comboBoxOwner.setRenderer(new IdentifiableListCellRenderer<Parent>());
         panelPart.add(comboBoxParent, "4, 2, left, default");
-/*
-        JLabel lblPart = new JLabel("Part");
-        panelPart.add(lblPart, "2, 4, right, default");
-        comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
-        panelPart.add(comboBoxPart, "4, 4, left, default");
 
-		JLabel lblRetryCount = new JLabel("Feed Retry Count");
-		panelPart.add(lblRetryCount, "2, 6, right, default");
 
-		retryCountTf = new JTextField();
-		retryCountTf.setText("3");
-		panelPart.add(retryCountTf, "4, 6");
-		retryCountTf.setColumns(3);
+
+		panelLocation = new JPanel();
+		panelLocation.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+				"Feeder Group Location and Rotation (Machine Coordinates)", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		contentPanel.add(panelLocation);
+		panelLocation.setLayout(new FormLayout(new ColumnSpec[] {
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        ColumnSpec.decode("default:grow"),
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        ColumnSpec.decode("default:grow"),
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        ColumnSpec.decode("default:grow"),
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        ColumnSpec.decode("default:grow"),
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        ColumnSpec.decode("default:grow"),
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        ColumnSpec.decode("default:grow"),
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        ColumnSpec.decode("left:default:grow"),},
+		    new RowSpec[] {
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,}));
+
+		JLabel locationlabel = new JLabel("Location and Rotation");
+		panelLocation.add(locationlabel, "2, 4");
+
+		JLabel lblX_1 = new JLabel("X");
+		panelLocation.add(lblX_1, "4, 2");
+
+		JLabel lblY_1 = new JLabel("Y");
+        panelLocation.add(lblY_1, "6, 2");
+
+        JLabel lblZ_1 = new JLabel("Z");
+        panelLocation.add(lblZ_1, "8, 2");
+
+        JLabel lblR_1 = new JLabel("Rot");
+        panelLocation.add(lblR_1, "10, 2");
+
+        textFieldLocationX = new JTextField();
+        textFieldLocationX.setColumns(6);
+        panelLocation.add(textFieldLocationX, "4, 4");
+
+        textFieldLocationY = new JTextField();
+        textFieldLocationY.setColumns(6);
+        panelLocation.add(textFieldLocationY, "6, 4");
+
+        textFieldLocationZ = new JTextField();
+        textFieldLocationZ.setColumns(6);
+        panelLocation.add(textFieldLocationZ, "8, 4");
+
+        textFieldLocationR = new JTextField();
+        textFieldLocationR.setColumns(6);
+        panelLocation.add(textFieldLocationR, "10, 4");
+
+        LocationButtonsPanel locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX, textFieldLocationY, textFieldLocationZ, textFieldLocationR);
+		panelLocation.add(locationButtonsPanel, "12, 4");
 		
-		lblPickRetryCount = new JLabel("Pick Retry Count");
-		panelPart.add(lblPickRetryCount, "2, 8, right, default");
-		
-		pickRetryCount = new JTextField();
-		pickRetryCount.setText("3");
-		pickRetryCount.setColumns(3);
-		panelPart.add(pickRetryCount, "4, 8, fill, default");
-*/
-		if (includePickLocation) {
-			panelLocation = new JPanel();
-			panelLocation.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-					"Tray Component Locations", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-			contentPanel.add(panelLocation);
-			panelLocation.setLayout(new FormLayout(
-					new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
-							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
-							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
-							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
-							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"), },
-					new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-							FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-							FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-							FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC }));
+        JButton btnSetLocationWithFiducials = new JButton(new AbstractAction("Set Using Fiducial Locations") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //textFieldFeedCount.setText("0");
+                //int componentleft = Integer.parseInt(textFieldTrayCountCols.getText())
+                //      * Integer.parseInt(textFieldTrayCountRows.getText())
+                //      - Integer.parseInt(textFieldFeedCount.getText());
+                //lblComponentCount.setText("Components left: " + String.valueOf(componentleft));
+                //applyAction.actionPerformed(e);
+            }
+        });
+        btnSetLocationWithFiducials.setHorizontalAlignment(SwingConstants.LEFT);
+        panelLocation.add(btnSetLocationWithFiducials, "14, 4, left, default");
 
-			JLabel firstComponent = new JLabel(
-					"<html><b>Point A:</b><br /><span style='font-size:7px'>First Row - First Component</span></html>");
-			panelLocation.add(firstComponent, "2, 4");
 
-			lblX_1 = new JLabel("X");
-			panelLocation.add(lblX_1, "4, 2");
 
-			lblY_1 = new JLabel("Y");
-			panelLocation.add(lblY_1, "6, 2");
+		panelParameters = new JPanel();
+		panelParameters.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+				"Fiducial Locations (Local Coordinates)", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		contentPanel.add(panelParameters);
 
-			textFieldLocationX = new JTextField();
-			panelLocation.add(textFieldLocationX, "4, 4");
-			textFieldLocationX.setColumns(6);
+		panelParameters.setLayout(new FormLayout(
+				new ColumnSpec[] { 
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"), },
+				new RowSpec[] { 
+				        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+						FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, 
+						FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, 
+						FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+						FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, 
+						FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, 
+						FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+						FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, 
+						FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC }));
 
-			textFieldLocationY = new JTextField();
-			panelLocation.add(textFieldLocationY, "6, 4");
-			textFieldLocationY.setColumns(6);
+        JLabel fid1Label = new JLabel("Fiducial1            ");
+        panelParameters.add(fid1Label, "2, 4");
 
-			locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX, textFieldLocationY, null, null);
-			panelLocation.add(locationButtonsPanel, "8, 4");
+        lblX_1 = new JLabel("X");
+        panelParameters.add(lblX_1, "4, 2");
 
-			JLabel firstRowLastComponent = new JLabel(
-					"<html><b>Point B:</b><br /><span style='font-size:8px'>First Row - Last Component</span></html>");
-			panelLocation.add(firstRowLastComponent, "2, 6");
+        lblY_1 = new JLabel("Y");
+        panelParameters.add(lblY_1, "6, 2");
 
-			textFieldFirstRowLastLocationX = new JTextField();
-			panelLocation.add(textFieldFirstRowLastLocationX, "4, 6");
-			textFieldFirstRowLastLocationX.setColumns(6);
+        textFieldFid1X = new JTextField();
+        textFieldFid1X.setColumns(6);
+        panelParameters.add(textFieldFid1X, "4, 4");
 
-			textFieldFirstRowLastLocationY = new JTextField();
-			panelLocation.add(textFieldFirstRowLastLocationY, "6, 6");
-			textFieldFirstRowLastLocationY.setColumns(6);
+        textFieldFid1Y = new JTextField();
+        textFieldFid1Y.setColumns(6);
+        panelParameters.add(textFieldFid1Y, "6, 4");
 
-			lastLocationButtonsPanel = new LocationButtonsPanel(textFieldFirstRowLastLocationX,
-					textFieldFirstRowLastLocationY, null, null);
-			panelLocation.add(lastLocationButtonsPanel, "8, 6");
+        locationButtonsPanel = new LocationButtonsPanel(textFieldFid1X, textFieldFid1Y, null, null);
+        panelParameters.add(locationButtonsPanel, "8, 4");
 
-			JLabel lastComponent = new JLabel(
-					"<html><b>Point C:</b><br /><span style='font-size:8px'>Last Row - Last Component</span></html>");
-			panelLocation.add(lastComponent, "2, 8");
 
-			textFieldLastLocationX = new JTextField();
-			panelLocation.add(textFieldLastLocationX, "4, 8");
-			textFieldLastLocationX.setColumns(6);
+        
+        JLabel fid2Label = new JLabel("Fiducial2            ");
+        panelParameters.add(fid2Label, "2, 8");
 
-			textFieldLastLocationY = new JTextField();
-			panelLocation.add(textFieldLastLocationY, "6, 8");
-			textFieldLastLocationY.setColumns(6);
+        lblX_1 = new JLabel("X");
+        panelParameters.add(lblX_1, "4, 6");
 
-			lastLocationButtonsPanel = new LocationButtonsPanel(textFieldLastLocationX, textFieldLastLocationY, null,
-					null);
-			panelLocation.add(lastLocationButtonsPanel, "8, 8");
+        lblY_1 = new JLabel("Y");
+        panelParameters.add(lblY_1, "6, 6");
 
-			panelParameters = new JPanel();
-			panelParameters.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-					"Tray Parameters", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-			contentPanel.add(panelParameters);
+        textFieldFid2X = new JTextField();
+        textFieldFid2X.setColumns(6);
+        panelParameters.add(textFieldFid2X, "4, 8");
 
-			panelParameters.setLayout(new FormLayout(
-					new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"),
-							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"),
-							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"),
-							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"),
-							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"), },
-					new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-							FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-							FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-							FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-							FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-							FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-							FormSpecs.DEFAULT_ROWSPEC }));
+        textFieldFid2Y = new JTextField();
+        textFieldFid2Y.setColumns(6);
+        panelParameters.add(textFieldFid2Y, "6, 8");
 
-			JLabel lblTrayRows = new JLabel("Number of Tray Rows");
-			panelParameters.add(lblTrayRows, "2, 2");
+        locationButtonsPanel = new LocationButtonsPanel(textFieldFid2X, textFieldFid2Y, null, null);
+        panelParameters.add(locationButtonsPanel, "8, 8");
 
-			textFieldTrayCountRows = new JTextField();
-			panelParameters.add(textFieldTrayCountRows, "4, 2");
-			textFieldTrayCountRows.setColumns(10);
 
-			JLabel lblTrayCols = new JLabel("Number of Tray Columns");
-			panelParameters.add(lblTrayCols, "6, 2");
 
-			textFieldTrayCountCols = new JTextField();
-			panelParameters.add(textFieldTrayCountCols, "8, 2");
-			textFieldTrayCountCols.setColumns(10);
+		panelIllustration = new JPanel();
+		panelIllustration.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+				"Tray Illustration", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		contentPanel.add(panelIllustration);
 
-			JLabel lblFeedCount = new JLabel("Feed Count");
-			panelParameters.add(lblFeedCount, "2, 4");
+		InputStream stream = getClass().getResourceAsStream("/illustrations/rotatedtrayfeeder.png");
+		ImageIcon illustrationicon = null;
+		try {
+			illustrationicon = new ImageIcon(ImageIO.read(stream));
 
-			textFieldFeedCount = new JTextField();
-			panelParameters.add(textFieldFeedCount, "4, 4");
-			textFieldFeedCount.setColumns(10);
-
-			lblComponentCount = new JLabel("Components left:");
-			panelParameters.add(lblComponentCount, "6, 4");
-
-			JButton btnResetFeedCount = new JButton(new AbstractAction("Reset") {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					textFieldFeedCount.setText("0");
-					int componentleft = Integer.parseInt(textFieldTrayCountCols.getText())
-							* Integer.parseInt(textFieldTrayCountRows.getText())
-							- Integer.parseInt(textFieldFeedCount.getText());
-					lblComponentCount.setText("Components left: " + String.valueOf(componentleft));
-					applyAction.actionPerformed(e);
-				}
-			});
-			btnResetFeedCount.setHorizontalAlignment(SwingConstants.LEFT);
-			panelParameters.add(btnResetFeedCount, "8, 4, left, default");
-
-			JLabel lblComponentRotation = new JLabel("Component Rotation [°]");
-			panelParameters.add(lblComponentRotation, "2, 6");
-
-			textFieldComponentRotation = new JTextField();
-			panelParameters.add(textFieldComponentRotation, "4, 6");
-			textFieldComponentRotation.setColumns(10);
-
-			JLabel lblComponentZHeight = new JLabel("Z Height");
-			panelParameters.add(lblComponentZHeight, "6, 6");
-
-			textFieldComponentZHeight = new JTextField();
-			panelParameters.add(textFieldComponentZHeight, "8, 6");
-			textFieldComponentZHeight.setColumns(10);
-
-			JSeparator separator = new JSeparator();
-			panelParameters.add(separator, "1, 9, 8, 1");
-
-			JButton btnCalcOffsetsRotation = new JButton(new AbstractAction("Calculate Offsets & Tray Rotation") {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-
-					if ((Integer.parseInt(textFieldTrayCountCols.getText())
-							* Integer.parseInt(textFieldTrayCountRows.getText()) <= 1)) {
-						MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-								"Need at least 2 components in tray to calculate offsets. Please increase Number of Tray Rows or Columns.");
-					}
-
-					// Distance Point A -> Point B
-					double deltaX1 = (Double.parseDouble(textFieldLocationX.getText())
-							- Double.parseDouble(textFieldFirstRowLastLocationX.getText()));
-					double deltaY1 = (Double.parseDouble(textFieldLocationY.getText())
-							- Double.parseDouble(textFieldFirstRowLastLocationY.getText()));
-
-					double rot_rad1 = Math.atan(deltaY1 / deltaX1);
-					double rot_deg1 = Math.toDegrees(rot_rad1);
-					double delta_length1 = Math.sqrt(deltaX1 * deltaX1 + deltaY1 * deltaY1);
-
-					// Distance Point B -> Point C
-					double deltaX2 = (Double.parseDouble(textFieldFirstRowLastLocationX.getText())
-							- Double.parseDouble(textFieldLastLocationX.getText()));
-					double deltaY2 = (Double.parseDouble(textFieldFirstRowLastLocationY.getText())
-							- Double.parseDouble(textFieldLastLocationY.getText()));
-
-					double delta_length2 = Math.sqrt(deltaX2 * deltaX2 + deltaY2 * deltaY2);
-
-					textFieldTrayRotation.setText(String.valueOf(round(rot_deg1, 3)));
-
-					if (Integer.parseInt(textFieldTrayCountCols.getText()) > 1) {
-						textFieldOffsetsX.setText(String.valueOf(
-								round(delta_length1 / (Integer.parseInt(textFieldTrayCountCols.getText()) - 1), 3)));
-					} else {
-						textFieldOffsetsX.setText("0");
-					}
-
-					if (Integer.parseInt(textFieldTrayCountRows.getText()) > 1) {
-						textFieldOffsetsY.setText(String.valueOf(
-								round(delta_length2 / (Integer.parseInt(textFieldTrayCountRows.getText()) - 1), 3)));
-					} else {
-						textFieldOffsetsY.setText("0");
-					}
-				}
-			});
-			btnCalcOffsetsRotation.setHorizontalAlignment(SwingConstants.LEFT);
-			panelParameters.add(btnCalcOffsetsRotation, "2, 12");
-
-			JLabel lblRowOffset = new JLabel("Row Offset");
-			panelParameters.add(lblRowOffset, "2, 14");
-
-			textFieldOffsetsX = new JTextField();
-			panelParameters.add(textFieldOffsetsX, "4, 14");
-			textFieldOffsetsX.setColumns(10);
-
-			JLabel lblColOffset = new JLabel("Column Offset");
-			panelParameters.add(lblColOffset, "6, 14");
-
-			textFieldOffsetsY = new JTextField();
-			panelParameters.add(textFieldOffsetsY, "8, 14, ");
-			textFieldOffsetsY.setColumns(10);
-
-			JLabel lblTrayRotation = new JLabel("Tray Rotation [°]");
-			panelParameters.add(lblTrayRotation, "2, 16");
-
-			textFieldTrayRotation = new JTextField();
-			panelParameters.add(textFieldTrayRotation, "4, 16");
-			textFieldTrayRotation.setColumns(10);
-
-			panelIllustration = new JPanel();
-			panelIllustration.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-					"Tray Illustration", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-			contentPanel.add(panelIllustration);
-
-			InputStream stream = getClass().getResourceAsStream("/illustrations/rotatedtrayfeeder.png");
-			ImageIcon illustrationicon = null;
-			try {
-				illustrationicon = new ImageIcon(ImageIO.read(stream));
-
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
-			JLabel illustationlabel = new JLabel();
-			illustationlabel.setIcon(illustrationicon);
-			panelIllustration.add(illustationlabel);
+		} catch (IOException e1) {
+			e1.printStackTrace();
 		}
+		JLabel illustationlabel = new JLabel();
+		illustationlabel.setIcon(illustrationicon);
+		panelIllustration.add(illustationlabel);
 	}
 
 	
@@ -425,62 +337,42 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 		FeederConverter feederConverter = new FeederConverter();
 		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         addWrappedBinding(feeder, "parentId", comboBoxParent, "selectedItem", feederConverter);
-/*        addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
-        addWrappedBinding(feeder, "feedRetryCount", retryCountTf, "text", intConverter);
-        addWrappedBinding(feeder, "pickRetryCount", pickRetryCount, "text", intConverter);
-*/
-		if (includePickLocation) {
-			MutableLocationProxy location = new MutableLocationProxy();
-			bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
-			addWrappedBinding(location, "lengthX", textFieldLocationX, "text", lengthConverter);
-			addWrappedBinding(location, "lengthY", textFieldLocationY, "text", lengthConverter);
-			addWrappedBinding(location, "rotation", textFieldComponentRotation, "text", doubleConverter);
-			addWrappedBinding(location, "lengthZ", textFieldComponentZHeight, "text", lengthConverter);
 
-			MutableLocationProxy firstRowLastComponentlocation = new MutableLocationProxy();
-			bind(UpdateStrategy.READ_WRITE, feeder, "firstRowLastComponentLocation", firstRowLastComponentlocation,
-					"location");
-			addWrappedBinding(firstRowLastComponentlocation, "lengthX", textFieldFirstRowLastLocationX, "text",
-					lengthConverter);
-			addWrappedBinding(firstRowLastComponentlocation, "lengthY", textFieldFirstRowLastLocationY, "text",
-					lengthConverter);
+		MutableLocationProxy location = new MutableLocationProxy();
+		bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
+		addWrappedBinding(location, "lengthX", textFieldLocationX, "text", lengthConverter);
+		addWrappedBinding(location, "lengthY", textFieldLocationY, "text", lengthConverter);
+		addWrappedBinding(location, "lengthZ", textFieldLocationZ, "text", lengthConverter);
+        addWrappedBinding(location, "rotation", textFieldLocationR, "text", doubleConverter);
 
-			MutableLocationProxy lastComponentlocation = new MutableLocationProxy();
-			bind(UpdateStrategy.READ_WRITE, feeder, "lastComponentLocation", lastComponentlocation, "location");
-			addWrappedBinding(lastComponentlocation, "lengthX", textFieldLastLocationX, "text", lengthConverter);
-			addWrappedBinding(lastComponentlocation, "lengthY", textFieldLastLocationY, "text", lengthConverter);
+        MutableLocationProxy fid1Location = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, feeder, "expectedFiducial1", fid1Location,
+                "location");
+        addWrappedBinding(fid1Location, "lengthX", textFieldFid1X, "text",
+                lengthConverter);
+        addWrappedBinding(fid1Location, "lengthY", textFieldFid1Y, "text",
+                lengthConverter);
 
-			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
-			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationY);
-			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldComponentRotation);
-			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldComponentZHeight);
-			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFirstRowLastLocationX);
-			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFirstRowLastLocationY);
-			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLastLocationX);
-			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLastLocationY);
-		}
+        MutableLocationProxy fid2Location = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, feeder, "expectedFiducial2", fid2Location,
+                "location");
+        addWrappedBinding(fid2Location, "lengthX", textFieldFid2X, "text",
+                lengthConverter);
+        addWrappedBinding(fid2Location, "lengthY", textFieldFid2Y, "text",
+                lengthConverter);
 
-		MutableLocationProxy offsets = new MutableLocationProxy();
-		bind(UpdateStrategy.READ_WRITE, feeder, "offsets", offsets, "location");
-		addWrappedBinding(offsets, "lengthX", textFieldOffsetsX, "text", lengthConverter);
-		addWrappedBinding(offsets, "lengthY", textFieldOffsetsY, "text", lengthConverter);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationY);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationR);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFid1X);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFid1Y);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFid2X);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFid2Y);
 
-		addWrappedBinding(feeder, "trayCountCols", textFieldTrayCountCols, "text", intConverter);
-		addWrappedBinding(feeder, "trayCountRows", textFieldTrayCountRows, "text", intConverter);
-		addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", intConverter);
-		addWrappedBinding(feeder, "trayRotation", textFieldTrayRotation, "text", doubleConverter);
-
-		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsX);
-		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsY);
-		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldTrayRotation);
-//        ComponentDecorators.decorateWithAutoSelect(retryCountTf);
-//        ComponentDecorators.decorateWithAutoSelect(pickRetryCount);
-		ComponentDecorators.decorateWithAutoSelect(textFieldTrayCountRows);
-		ComponentDecorators.decorateWithAutoSelect(textFieldTrayCountCols);
-		ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
 	}
 
-	@Override
+/*	@Override
 	protected void saveToModel() {
 		super.saveToModel();
 
@@ -497,7 +389,7 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 					"Row Offset must be greater than 0 if Number of Tray Rows is greater than 1 or feed failure will occur.");
 		}
 	}
-
+*/
 	public static double round(double value, int places) {
 		if (places < 0) {
 			throw new IllegalArgumentException();

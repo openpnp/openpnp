@@ -49,8 +49,6 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
 
     public void setEnabled(boolean enabled);
 
-    public void setWizardContainer(WizardContainer wizardContainer);
-    
     /**
      * Get the parent of this Feeder.
      * 
@@ -69,6 +67,11 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
      * @return
      */
     public boolean isPotentialParentOf(Feeder feeder);
+    
+    /**
+     * Performs any necessary clean-up before the feeder can be deleted.
+     */
+    public void preDeleteCleanUp();
     
     /**
      * Get the Part that is loaded into this Feeder.
