@@ -4,10 +4,6 @@ The stock firmware on the CHMT36VA turned out to be a dead end. There does not a
 
 Using the Smoothie firmware is an irreversible operation. Once you flash it, there does not appear to be a way to go back to the stock firmware, so consider carefully if you want to do that.
 
-Matt has an [example OpenPnP configuration](https://github.com/mattthebaker/openpnp-config-chmt) that can help get you started.
-
-[This thread on the Desktop PnP list](https://groups.google.com/forum/#!msg/desktop-pick-and-place/qaoGrnM7pPw/-2k-5FBHCAAJ) contains a lot of good information for making everything work together.
-
 # Setup Guide
 
 The following can be used as a rough guide to getting OpenPnP working on your CHMT36VA. Reminder: **Installing Smoothie on the main board is a irreversible operation. Once you install Smoothie you will not be able to flash the stock firmware, and you will not be able to use the OEM software.**
