@@ -1080,12 +1080,29 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          */
         @Override
         public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements) {
+            /**
+             * Create an empty List<PlannedPlacement> which will hold the results.
+             */
             List<PlannedPlacement> plannedPlacements = new ArrayList<>();
             
+            /**
+             * Get a list of all the nozzles. We make a copy of the list so that we can modify
+             * it within this function without modifying the machine. This makes the logic below
+             * easier. As we plan a nozzle we'll remove it from the list until none are left.
+             */
             List<Nozzle> nozzles = new ArrayList<>(head.getNozzles());
+            
+            /**
+             * Same as above, except for NozzleTips.
+             */
             List<NozzleTip> nozzleTips = new ArrayList<>(head.getMachine().getNozzleTips());
             
-            // First we plan any placements that can be done without a nozzle change.
+            /**
+             * First we plan any placements that can be done without a nozzle change. For each
+             * nozzle we see if there is a placement that we can handle without doing a nozzletip
+             * change. If there is, we remove the nozzle, nozzle tip and job placement from their
+             * respective lists so that we don't plan the same one again.
+             */
             for (Nozzle nozzle : new ArrayList<>(nozzles)) {
                 PlannedPlacement plannedPlacement = planWithoutNozzleTipChange(nozzle, jobPlacements);
                 if (plannedPlacement != null) {
@@ -1096,8 +1113,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
             }
             
-            // Now we'll try to plan any nozzles that didn't get planned on the first pass by
-            // seeing if a nozzle change helps.
+            /**
+             * Now we'll try to plan any nozzles that didn't get planned on the first pass by
+             * seeing if a nozzle change helps. This is nearly the same as above, except this
+             * time we allow a nozzle tip change to happen.
+             */
             for (Nozzle nozzle : new ArrayList<>(nozzles)) {
                 PlannedPlacement plannedPlacement = planWithNozzleTipChange(nozzle, jobPlacements, nozzleTips);
                 if (plannedPlacement != null) {
@@ -1108,6 +1128,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
             }
 
+            /**
+             * Finally, we sort any planned placements by the nozzle name so that they are
+             * performed in the order of nozzle name. This is not really necessary but some users
+             * prefer it that way and it does no harm
+             */
             plannedPlacements.sort(Comparator.comparing(plannedPlacement -> {
                 return plannedPlacement.nozzle.getName();
             }));
@@ -1115,6 +1140,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return plannedPlacements;
         }
         
+        /**
+         * Try to find a planning solution for the given nozzle that does not require
+         * a nozzle tip change. This essentially just checks if there are any job placements
+         * remaining that are compatible with the currently loaded nozzle tip.
+         * @param nozzle
+         * @param jobPlacements
+         * @return
+         */
         protected PlannedPlacement planWithoutNozzleTipChange(Nozzle nozzle, 
                 List<JobPlacement> jobPlacements) {
             if (nozzle.getNozzleTip() == null) {
@@ -1131,7 +1164,17 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             return null;
         }
-        
+
+        /**
+         * Try to find a planning solution that allows for a nozzle tip change. This is very
+         * similar to planWithoutNozzleTipChange() except that it considers all available nozzle
+         * tips on the machine that are compatible with both the nozzle and the placement, 
+         * instead of just the one that is loaded.
+         * @param nozzle
+         * @param jobPlacements
+         * @param nozzleTips
+         * @return
+         */
         protected PlannedPlacement planWithNozzleTipChange(Nozzle nozzle, 
                 List<JobPlacement> jobPlacements,
                 List<NozzleTip> nozzleTips) {
