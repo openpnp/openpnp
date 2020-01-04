@@ -14,7 +14,7 @@ The following can be used as a rough guide to getting OpenPnP working on your CH
 
 If you want to proceed, follow these steps:
 
-1. Install [Matt Baker's Smoothie port](https://github.com/mattthebaker/Smoothieware-CHMT) on your CHMT36VA main board. This requires some familiarity with the STM32 tools, and requires a flash tool. See the [Smoothie on STM32/CHMT Thread](https://groups.google.com/d/msg/desktop-pick-and-place/C-n9dksqhDQ/xZdmKPh3CAAJ) for more information on this. **TBD: Expand this section or add a new page with full instructions.**
+1. Install [Matt Baker's Smoothie port](https://github.com/mattthebaker/Smoothieware-CHMT) on your CHMT36VA main board. This requires some familiarity with the STM32 tools, and requires a flash tool. See [[Charmhigh Modifications for OpenPnP]] and the [Smoothie on STM32/CHMT Thread](https://groups.google.com/d/msg/desktop-pick-and-place/C-n9dksqhDQ/xZdmKPh3CAAJ) for more information on this.
 2. Either Install [Matt Baker's example OpenPnP configuration](https://github.com/mattthebaker/openpnp-config-chmt) to get started or configure from scratch using the [[Setup and Calibration]] Guide. It is recommended to step through the guide even if you use the example config and check that each setting applies to your machine and works correctly.
 3. If you are using the stock cameras and camera board, see the [SwitcherCamera Documentation](https://github.com/openpnp/openpnp/wiki/SwitcherCamera) for how to set up the multiplexer.
 4. Please consider joining the [OpenPnP Discussion Group](http://groups.google.com/group/openpnp) and the [SparkFun Desktop Pick and Place Discussion Group](https://groups.google.com/forum/#!forum/desktop-pick-and-place) to post questions and information about your setup.
