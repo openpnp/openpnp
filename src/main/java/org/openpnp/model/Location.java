@@ -335,6 +335,14 @@ public class Location {
         location = location.add(center);
         return location;
     }
+    
+    public Location vectorAdd(Location a) {
+        return this.rotateXy(a.getRotation()).addWithRotation(a);
+    }
+
+    public Location vectorSubtract(Location a) {
+        return this.subtractWithRotation(a).rotateXy(-a.getRotation());
+    }
 
     @Override
     public String toString() {

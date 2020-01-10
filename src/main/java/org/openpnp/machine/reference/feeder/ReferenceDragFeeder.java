@@ -101,24 +101,44 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     protected Location visionOffset;
     protected Location partPitch;
 
+    private Location getVisionOffset() {
+        return convertToGlobalDeltaLocation(visionOffset);
+    }
+    
+    private void setVisionOffset(Location visionOffset) {
+        this.visionOffset = convertToLocalDeltaLocation(visionOffset);
+    }
+    
+    private Location getPartPitch() {
+        return convertToGlobalDeltaLocation(partPitch);
+    }
+    
+    private void setPartPitch(Location partPitch) {
+        this.partPitch = convertToLocalDeltaLocation(partPitch);
+    }
+    
     @Override
     public Location getPickLocation() throws Exception {
         if (pickLocation == null) {
-            pickLocation = location;
+            setPickLocation(getLocation());
         }
 
         if (vision.isEnabled() && visionOffset != null) {
 			if (this.isPart0402() && partPitch != null) {
-				return pickLocation.subtract(visionOffset).add(partPitch);
+				return convertToGlobalLocation(pickLocation).subtract(getVisionOffset()).add(getPartPitch());
 			}
 			else {
-				return pickLocation.subtract(visionOffset);
+				return convertToGlobalLocation(pickLocation).subtract(getVisionOffset());
 			}
         }
 
-        return pickLocation;
+        return convertToGlobalLocation(pickLocation);
     }
 
+    public void setPickLocation(Location pickLocation) {
+        this.pickLocation = convertToLocalLocation(pickLocation);
+    }
+    
     @Override
     public void feed(Nozzle nozzle) throws Exception {
         Logger.debug("feed({})", nozzle);
@@ -167,10 +187,10 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
                 // and skip checking the vision first.
                 Logger.debug("First feed, running vision pre-flight.");
 
-                visionOffset = getVisionOffsets(head, location);
+                setVisionOffset(getVisionOffsets(head, getLocation()));
                 feededCount = 0;
             }
-            Logger.debug("visionOffsets " + visionOffset);
+            Logger.debug("visionOffsets " + getVisionOffset());
         }
 
         // Now we have visionOffsets (if we're using them) so we
@@ -178,13 +198,13 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         // feedEndLocation and pickLocation. pickLocation will be saved
         // for the pick operation while feed start and end are used
         // here and then discarded.
-        pickLocation = this.location;
+        pickLocation = this.getLocation();
 
         if (feededCount == 0) {
-            Location feedStartLocation = this.feedStartLocation;
-            Location feedEndLocation = this.feedEndLocation;
+            Location feedStartLocation = getFeedStartLocation();
+            Location feedEndLocation = getFeedEndLocation();
 	        if (vision.isEnabled() && visionOffset != null) {
-	            feedStartLocation = feedStartLocation.subtract(visionOffset);
+	            feedStartLocation = feedStartLocation.subtract(getVisionOffset());
 	            Logger.debug("New drag distance with visionOffset " + feedStartLocation.subtract(feedEndLocation));
 	        }
 
@@ -228,22 +248,22 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         head.moveToSafeZ();
 
         if (vision.isEnabled()) {
-            visionOffset = getVisionOffsets(head, location);
+            setVisionOffset(getVisionOffsets(head, getLocation()));
 
 			if (feededCount > 0) {
 				feededCount--;
 				if (feededCount > 0) {
-					partPitch = new Location(LengthUnit.Millimeters, partsPitchX * feededCount,
-							partsPitchY * feededCount, 0, 0);
+					setPartPitch(new Location(LengthUnit.Millimeters, partsPitchX * feededCount,
+							partsPitchY * feededCount, 0, 0));
 				} 
 				else {
 					partPitch = null;
 				}
 			}
 
-            Logger.debug("final visionOffsets " + visionOffset);
+            Logger.debug("final visionOffsets " + getVisionOffset());
 
-            Logger.debug("Modified pickLocation {}", pickLocation.subtract(visionOffset));
+            Logger.debug("Modified pickLocation {}", pickLocation.subtract(getVisionOffset()));
         }
     }
 
@@ -356,21 +376,30 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 	}
 
     public Location getFeedStartLocation() {
-        return feedStartLocation;
+        return convertToGlobalLocation(feedStartLocation);
     }
 
     public void setFeedStartLocation(Location feedStartLocation) {
-        this.feedStartLocation = feedStartLocation;
+        this.feedStartLocation = convertToLocalLocation(feedStartLocation);
     }
 
     public Location getFeedEndLocation() {
-        return feedEndLocation;
+        return convertToGlobalLocation(feedEndLocation);
     }
 
     public void setFeedEndLocation(Location feedEndLocation) {
-        this.feedEndLocation = feedEndLocation;
+        this.feedEndLocation = convertToLocalLocation(feedEndLocation);
     }
 
+    @Override
+    public void setParentId(String parentId) {
+        Location oldFeedStartLocation = getFeedStartLocation();
+        Location oldFeedEndLocation = getFeedEndLocation();
+        super.setParentId(parentId);
+        setFeedStartLocation(oldFeedStartLocation);
+        setFeedEndLocation(oldFeedEndLocation);
+    }
+    
     public Double getFeedSpeed() {
         return feedSpeed;
     }

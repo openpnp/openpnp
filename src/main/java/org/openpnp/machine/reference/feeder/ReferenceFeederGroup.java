@@ -78,17 +78,14 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
         return expectedFiducial2;
     }
     
-	public boolean addChild(String ChildId) {
-	    //Configuration.get().getMachine().getFeeder(ChildId).setParentId(getId());
-	    return childIds.add(ChildId);
+    @Override
+	public void addChild(String ChildId) {
+	    childIds.add(ChildId);
 	}
 	
-	public boolean removeChild(String ChildId) {
-	    //Configuration.get().getMachine().getFeeder(ChildId).setParentId(parentId);
-	    //if (parentId != AbstractFeeder.ROOT_FEEDER_ID) {
-	    //    ((ReferenceFeederGroup) Configuration.get().getMachine().getFeeder(parentId)).addChild(ChildId);
-	    //}
-	    return childIds.remove(ChildId);
+    @Override
+	public void removeChild(String ChildId) {
+	    childIds.remove(ChildId);
 	}
 	
 	public ArrayList<String> getChildIds() {
@@ -110,7 +107,7 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
         this.enabled = enabled;
         firePropertyChange("enabled", oldValue, enabled);
         for (String childId : childIds) {
-            Feeder child = Configuration.get().getMachine().getFeeder(childId);
+            ReferenceFeeder child = (ReferenceFeeder) Configuration.get().getMachine().getFeeder(childId);
             boolean temp = child.isLocallyEnabled();
             child.setEnabled(!temp);
             child.setEnabled(temp);
@@ -118,24 +115,25 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
     }
 
     @Override
-	public boolean isPotentialParentOf(Feeder feeder) {
-	    String childId = feeder.getId();
+	public boolean isPotentialParentOf(Feeder child) {
+        //Searches the family tree of this feeder to ensure the child doesn't become its own ancestor
+	    String childId = child.getId();
 	    if (getId().equals(childId)) {
 	        //A feeder can never be its own parent
 	        return false;
 	    }
-	    int maxDepth = 16; //An arbitrary limit just to prevent possible infinite loops
+	    int maxDepth = 32; //An arbitrary limit just to prevent possible infinite loops if someone has manually edited machine.xml
 	    int depth = 0;
 	    String p = parentId;
 	    while (depth < maxDepth) {
-	        if (p.equals(AbstractFeeder.ROOT_FEEDER_ID)) {
+	        if (p.equals(ROOT_FEEDER_ID)) {
 	            //Ok, the family tree traces back to the machine 
 	            return true;
 	        } else if (p.equals(childId)) {
 	            //The family tree would form a loop so this is not a potential parent
 	            return false;
 	        }
-	        p = Configuration.get().getMachine().getFeeder(p).getParentId();
+	        p = ((ReferenceFeeder) Configuration.get().getMachine().getFeeder(p)).getParentId();
 	        depth = depth + 1;
 	    }
 	    Logger.warn("Possible loop in feeder parentage detected, check ReferenceFeederGroups in machine.xml");
@@ -144,148 +142,16 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
 	
 	@Override
     public void preDeleteCleanUp() {
-	    ArrayList<String> toReParent = (ArrayList<String>) childIds.clone();
+	    //Set the parent of all of this feeder group's children to the parent of this feeder group
+	    @SuppressWarnings("unchecked")
+        ArrayList<String> toReParent = (ArrayList<String>) childIds.clone();
 	    for (String childId : toReParent) {
 	        Logger.info(this.getName() + " owns " + childId);
-	        Configuration.get().getMachine().getFeeder(childId).setParentId(parentId);
+	        ((ReferenceFeeder) Configuration.get().getMachine().getFeeder(childId)).setParentId(parentId);
 	    }
 	    super.preDeleteCleanUp();
 	}
 	
-	
-/*	@Override
-	public Location getPickLocation() throws Exception {
-		if (pickLocation == null) {
-			pickLocation = getLocation();
-		}
-		int partX, partY;
-
-		if (feedCount >= (trayCountCols * trayCountRows)) {
-			throw new Exception("Tray empty.");
-		}
-
-		if (trayCountCols >= trayCountRows) {
-			// X major axis.
-			partX = feedCount / trayCountRows;
-			partY = feedCount % trayCountRows;
-		} else {
-			// Y major axis.
-			partX = feedCount % trayCountCols;
-			partY = feedCount / trayCountCols;
-		}
-
-		calculatePickLocation(partX, partY);
-	
-		Logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
-		
-		return pickLocation;
-	}
-
-	private void calculatePickLocation(int partX, int partY) throws Exception {
-
-		// Multiply the offsets by the X/Y part indexes to get the total offsets
-		// and then add the pickLocation to offset the final value.
-		// and then add them to the location to get the final pickLocation.
-		// pickLocation = location.add(offsets.multiply(partX, partY, 0.0,
-		// 0.0));
-	    
-	    Location globalOffsets = getOffsets();
-		double delta_x1 = partX * globalOffsets.getX() * Math.cos(Math.toRadians(trayRotation));
-		double delta_y1 = Math.sqrt((partX * globalOffsets.getX() * partX * globalOffsets.getX()) - (delta_x1 * delta_x1));
-		Location delta1 = new Location(LengthUnit.Millimeters, delta_x1, delta_y1, 0, 0);
-
-		double delta_y2 = partY * globalOffsets.getY() * Math.cos(Math.toRadians(trayRotation)) * -1;
-		double delta_x2 = Math.sqrt((partY * globalOffsets.getY() * partY * globalOffsets.getY()) - (delta_y2 * delta_y2));
-		Location delta2 = new Location(LengthUnit.Millimeters, delta_x2, delta_y2, 0, 0);
-
-		pickLocation = getLocation().add(delta1.add(delta2));
-	}
-
-	public void feed(Nozzle nozzle) throws Exception {
-		Logger.debug("{}.feed({})", getName(), nozzle);
-
-		int partX, partY;
-
-		if (feedCount >= (trayCountCols * trayCountRows)) {
-			throw new Exception("Tray empty.");
-		}
-
-		if (trayCountCols >= trayCountRows) {
-			// X major axis.
-			partX = feedCount / trayCountRows;
-			partY = feedCount % trayCountRows;
-		} else {
-			// Y major axis.
-			partX = feedCount % trayCountCols;
-			partY = feedCount / trayCountCols;
-		}
-
-		calculatePickLocation(partX, partY);
-
-		Logger.debug(String.format("Feeding part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f", feedCount, partX, partY,
-				pickLocation.getX(), pickLocation.getY(), pickLocation.getRotation()));
-
-		setFeedCount(getFeedCount() + 1);
-	}
-
-	public int getTrayCountCols() {
-		return trayCountCols;
-	}
-
-	public void setTrayCountCols(int trayCountCols) {
-		this.trayCountCols = trayCountCols;
-	}
-
-	public int getTrayCountRows() {
-		return trayCountRows;
-	}
-
-	public void setTrayCountRows(int trayCountRows) {
-		this.trayCountRows = trayCountRows;
-	}
-
-	public Location getLastComponentLocation() {
-		return convertToGlobalLocation(lastComponentLocation);
-	}
-
-	public void setLastComponentLocation(Location LastComponentLocation) {
-		this.lastComponentLocation = convertToLocalLocation(LastComponentLocation);
-	}
-
-	public Location getFirstRowLastComponentLocation() {
-		return convertToGlobalLocation(firstRowLastComponentLocation);
-	}
-
-	public void setFirstRowLastComponentLocation(Location FirstRowLastComponentLocation) {
-		this.firstRowLastComponentLocation = convertToLocalLocation(FirstRowLastComponentLocation);
-	}
-
-	public Location getOffsets() {
-		return offsets;
-	}
-
-	public void setOffsets(Location offsets) {
-		this.offsets = offsets;
-	}
-
-	public double getTrayRotation() {
-		return trayRotation;
-	}
-
-	public void setTrayRotation(double trayrotation) {
-		this.trayRotation = trayrotation;
-	}
-
-	public int getFeedCount() {
-		return feedCount;
-	}
-
-	public void setFeedCount(int feedCount) {
-		int oldValue = this.feedCount;
-		this.feedCount = feedCount;
-		firePropertyChange("feedCount", oldValue, feedCount);
-	}
-*/
 	@Override
 	public String toString() {
 		return getName();
@@ -313,13 +179,11 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
 
     @Override
     public Location getPickLocation() throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+        throw new Exception("ReferenceFeederGroups don't have a pick location: " + getName());
     }
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
-        // TODO Auto-generated method stub
-        
+        throw new Exception("ReferenceFeederGroups can't feed: " + getName());
     }
 }

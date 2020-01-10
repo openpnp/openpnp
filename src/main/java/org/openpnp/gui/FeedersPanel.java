@@ -32,7 +32,6 @@ import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -54,11 +53,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
-import org.openpnp.events.BoardLocationSelectedEvent;
 import org.openpnp.events.FeederSelectedEvent;
-import org.openpnp.gui.JobPanel.SetCheckFidsAction;
-import org.openpnp.gui.JobPanel.SetEnabledAction;
-import org.openpnp.gui.JobPanel.SetSideAction;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
@@ -70,8 +65,6 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
 import org.openpnp.machine.reference.feeder.ReferenceFeederGroup;
-import org.openpnp.model.Board;
-import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -79,7 +72,6 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
-import org.openpnp.spi.base.AbstractFeeder;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
@@ -443,9 +435,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             
             Feeder feeder = feederClass.newInstance();
 
-            if (feederClass != ReferenceFeederGroup.class) {
-                feeder.setPart(part == null ? Configuration.get().getParts().get(0) : part);
-            }
+            feeder.setPart(part == null ? Configuration.get().getParts().get(0) : part);
+
             configuration.getMachine().addFeeder(feeder);
             tableModel.refresh();
 
@@ -635,7 +626,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
         public SetParentAction(Feeder fdr) {
             this.value = fdr;
-            String name = fdr == null ? AbstractFeeder.ROOT_FEEDER_ID : fdr.getName();
+            String name = (fdr == null ? Feeder.ROOT_FEEDER_ID : fdr.getName());
             putValue(NAME, name);
             putValue(SHORT_DESCRIPTION, "Set feeder(s) parent to " + name);
         }
@@ -643,7 +634,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Feeder f : getSelections()) {
-                f.setParentId(value == null ? AbstractFeeder.ROOT_FEEDER_ID : value.getId());
+                f.setParentId(value == null ? Feeder.ROOT_FEEDER_ID : value.getId());
             }
             table.repaint();
         }

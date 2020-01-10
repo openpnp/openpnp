@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Sebastian Pichelhofer & Jason von Nieda <jason@vonnieda.org>
+ * Copyright (C) 2017, 2020 Tony Luken,  Sebastian Pichelhofer & Jason von Nieda <jason@vonnieda.org>
  * 
  * This file is part of OpenPnP.
  * 
@@ -19,12 +19,15 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
+import java.awt.AWTEvent;
 import java.awt.Color;
 import java.awt.Event;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.TextEvent;
+import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -40,27 +43,38 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
+import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.Converter;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.FeederParentsComboBoxModel;
+import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.gui.support.PartsComboBoxModel;
+import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceFeederGroup;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.base.AbstractFeeder;
+import org.openpnp.util.UiUtils;
+import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -70,12 +84,6 @@ import com.jgoodies.forms.layout.RowSpec;
 @SuppressWarnings("serial")
 public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurationWizard {
 	private final ReferenceFeederGroup feeder;
-	private final boolean includePickLocation;
-
-	private JTextField textFieldOffsetsX;
-	private JTextField textFieldOffsetsY;
-
-	private JTextField textFieldFeedCount;
 
 	private JPanel panelLocation;
 	private JPanel panelParameters;
@@ -95,7 +103,20 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 	private JPanel panelPart;
 
     private JComboBox<?> comboBoxParent;
-//	private LocationButtonsPanel locationButtonsPanel;
+    private JComboBox<?> comboBoxPart;
+    private JPanel panel;
+    
+    private JButton btnSetLocationWithFiducials;
+    private boolean fid1;
+    private Location fid1Captured;
+    private Location fid2Captured;
+    
+    MutableLocationProxy upToDateLocation;
+    MutableLocationProxy fid1LocalLocation;
+    MutableLocationProxy fid2LocalLocation;
+    LocationButtonsPanel locationButtonsPanelFid1;
+    LocationButtonsPanel locationButtonsPanelFid2;
+
 
 	/**
 	 * @wbp.parser.constructor
@@ -106,10 +127,10 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 
 	public ReferenceFeederGroupConfigurationWizard(ReferenceFeederGroup feeder,
 			boolean includePickLocation) {
-		// super(feeder);
 		this.feeder = feeder;
-		this.includePickLocation = includePickLocation;
-
+        fid1Captured = null;
+        fid2Captured = null;
+		
 		JPanel warningPanel = new JPanel();
 		FlowLayout flowLayout = (FlowLayout) warningPanel.getLayout();
 		contentPanel.add(warningPanel, 0);
@@ -143,10 +164,6 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC}));
         
         comboBoxParent = new JComboBox();
@@ -154,8 +171,15 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
                 
         JLabel lblParent = new JLabel("Parent");
         panelPart.add(lblParent, "2, 2, right, default");
-        //comboBoxOwner.setRenderer(new IdentifiableListCellRenderer<Parent>());
         panelPart.add(comboBoxParent, "4, 2, left, default");
+
+        comboBoxPart = new JComboBox();
+        comboBoxPart.setModel(new PartsComboBoxModel());
+        comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
+
+        JLabel lblFiducial = new JLabel("Fiducial");
+        panelPart.add(lblFiducial, "2, 4, right, default");
+        panelPart.add(comboBoxPart, "4, 4, left, default");
 
 
 
@@ -177,14 +201,14 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 		        FormSpecs.RELATED_GAP_COLSPEC,
 		        ColumnSpec.decode("default:grow"),
 		        FormSpecs.RELATED_GAP_COLSPEC,
-		        ColumnSpec.decode("left:default:grow"),},
+		        ColumnSpec.decode("default:grow"),},
 		    new RowSpec[] {
 		        FormSpecs.RELATED_GAP_ROWSPEC,
 		        FormSpecs.DEFAULT_ROWSPEC,
 		        FormSpecs.RELATED_GAP_ROWSPEC,
 		        FormSpecs.DEFAULT_ROWSPEC,
 		        FormSpecs.RELATED_GAP_ROWSPEC,
-		        FormSpecs.DEFAULT_ROWSPEC,
+		        RowSpec.decode("default:grow"),
 		        FormSpecs.RELATED_GAP_ROWSPEC,
 		        FormSpecs.DEFAULT_ROWSPEC,
 		        FormSpecs.RELATED_GAP_ROWSPEC,
@@ -226,19 +250,94 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
         LocationButtonsPanel locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX, textFieldLocationY, textFieldLocationZ, textFieldLocationR);
 		panelLocation.add(locationButtonsPanel, "12, 4");
 		
-        JButton btnSetLocationWithFiducials = new JButton(new AbstractAction("Set Using Fiducial Locations") {
+        btnSetLocationWithFiducials = new JButton(new AbstractAction("Set Location Using Fiducials") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //textFieldFeedCount.setText("0");
-                //int componentleft = Integer.parseInt(textFieldTrayCountCols.getText())
-                //      * Integer.parseInt(textFieldTrayCountRows.getText())
-                //      - Integer.parseInt(textFieldFeedCount.getText());
-                //lblComponentCount.setText("Components left: " + String.valueOf(componentleft));
-                //applyAction.actionPerformed(e);
+                ((TitledBorder )panel.getBorder()).setTitle("Jog camera over Fiducial A and Click Ok");
+                panel.setVisible(true);
+                fid1 = true;
+                btnSetLocationWithFiducials.setEnabled(false);
             }
         });
         btnSetLocationWithFiducials.setHorizontalAlignment(SwingConstants.LEFT);
         panelLocation.add(btnSetLocationWithFiducials, "14, 4, left, default");
+        
+        panel = new JPanel();
+        panel.setVisible(false);
+        panel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+                "Jog camera over Fiducial1 and Click Ok", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(255, 0, 0)));
+        panelLocation.add(panel, "4, 6, fill, fill");
+        panel.setLayout(new FormLayout(
+                new ColumnSpec[] { 
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"), },
+                new RowSpec[] { 
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, 
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC }));
+
+
+
+        JButton btnOk = new JButton(new AbstractAction("Ok") {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (fid1) {
+                        UiUtils.submitUiMachineTask(() -> {
+                            fid1Captured = MainFrame.get().getMachineControls().getSelectedNozzle().getHead().getDefaultCamera().getLocation();
+                            Part fidPart = (Part) comboBoxPart.getSelectedItem();
+                            if (fidPart != null) {
+                                Configuration.get().getMachine().getFiducialLocator()
+                                        .getHomeFiducialLocation(fid1Captured, fidPart);
+                                fid1Captured = MainFrame.get().getMachineControls().getSelectedNozzle().getHead().getDefaultCamera().getLocation();
+                            }
+                            SwingUtilities.invokeLater(new Runnable() {
+                                public void run() {
+                                    Logger.trace("Fid1 capture location = " + fid1Captured);
+                                    ((TitledBorder )panel.getBorder()).setTitle("Jog camera over Fiducial B and Click Ok");
+                                    panel.repaint();
+                                }
+                            });
+                        });
+                        fid1 = false;
+                    } else {
+                        UiUtils.submitUiMachineTask(() -> {
+                            fid2Captured = MainFrame.get().getMachineControls().getSelectedNozzle().getHead().getDefaultCamera().getLocation();
+                            Part fidPart = (Part) comboBoxPart.getSelectedItem();
+                            if (fidPart != null) {
+                                Configuration.get().getMachine().getFiducialLocator()
+                                        .getHomeFiducialLocation(fid2Captured, fidPart);
+                                fid2Captured = MainFrame.get().getMachineControls().getSelectedNozzle().getHead().getDefaultCamera().getLocation();
+                            }
+                            SwingUtilities.invokeLater(new Runnable() {
+                                public void run() {
+                                    Logger.trace("Fid2 capture location = " + fid2Captured);
+                                    ((TitledBorder )panel.getBorder()).setTitle("Jog camera over Fiducial A and Click Ok");
+                                    panel.setVisible(false);
+                                    fid1 = true;
+                                    btnSetLocationWithFiducials.setEnabled(true);
+                                    computeLocationFromFiducials();
+                                }
+                            });
+                        });
+                   }
+                }
+            });
+        btnOk.setHorizontalAlignment(SwingConstants.LEFT);
+        btnOk.setForeground(new Color(255,0,0));
+        panel.add(btnOk, "2, 2, left, default");
+    
+    
+    
+        JButton btnCancel = new JButton(new AbstractAction("Cancel") {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    ((TitledBorder )panel.getBorder()).setTitle("Jog camera over Fiducial1 and Click Ok");
+                    panel.setVisible(false);
+                    fid1 = true;
+                    btnSetLocationWithFiducials.setEnabled(true);
+                }
+            });
+        btnOk.setHorizontalAlignment(SwingConstants.LEFT);
+        panel.add(btnCancel, "4, 2, left, default");
 
 
 
@@ -267,7 +366,7 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 						FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, 
 						FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC }));
 
-        JLabel fid1Label = new JLabel("Fiducial1            ");
+        JLabel fid1Label = new JLabel("Fiducial A            ");
         panelParameters.add(fid1Label, "2, 4");
 
         lblX_1 = new JLabel("X");
@@ -284,30 +383,93 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
         textFieldFid1Y.setColumns(6);
         panelParameters.add(textFieldFid1Y, "6, 4");
 
-        locationButtonsPanel = new LocationButtonsPanel(textFieldFid1X, textFieldFid1Y, null, null);
-        panelParameters.add(locationButtonsPanel, "8, 4");
+        locationButtonsPanelFid1 = new LocationButtonsPanel(textFieldFid1X, textFieldFid1Y, null, null);
+        locationButtonsPanelFid1.setBaseLocation(feeder.getLocation());
+        panelParameters.add(locationButtonsPanelFid1, "8, 4");
+
+        JButton btnFid1Vision = new JButton(new AbstractAction("Set Using Vision Pipeline") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                UiUtils.submitUiMachineTask(() -> {
+                    Location fid1Captured = MainFrame.get().getMachineControls().getSelectedNozzle().getHead().
+                            getDefaultCamera().getLocation();
+                    Part fidPart = (Part) comboBoxPart.getSelectedItem();
+                    if (fidPart != null) {
+                        Configuration.get().getMachine().getFiducialLocator()
+                                .getHomeFiducialLocation(fid1Captured, fidPart);
+                        fid1Captured = MainFrame.get().getMachineControls().getSelectedNozzle().getHead().
+                                getDefaultCamera().getLocation();
+                    }
+                    final Location fid1 = fid1Captured;
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            Location fid1Captured = ReferenceFeeder.convertToLocalLocation(upToDateLocation.getLocation(), fid1);
+                            Helpers.copyLocationIntoTextFields(fid1Captured, 
+                                    textFieldFid1X, 
+                                    textFieldFid1Y, 
+                                    null,
+                                    null);
+                        }
+                    });
+                });
+            }
+        });
+        btnFid1Vision.setHorizontalAlignment(SwingConstants.LEFT);
+        btnFid1Vision.setToolTipText("Manually jog camera over approximate location of the fiducial and then " + 
+                "click this button to use the vision pipeline to capture the exact center.  WARNING - may cause machine motion!");
+        btnFid1Vision.setForeground(new Color(255,0,0));
+        panelParameters.add(btnFid1Vision, "10, 4, left, default");
+
 
 
         
-        JLabel fid2Label = new JLabel("Fiducial2            ");
-        panelParameters.add(fid2Label, "2, 8");
-
-        lblX_1 = new JLabel("X");
-        panelParameters.add(lblX_1, "4, 6");
-
-        lblY_1 = new JLabel("Y");
-        panelParameters.add(lblY_1, "6, 6");
+        JLabel fid2Label = new JLabel("Fiducial B            ");
+        panelParameters.add(fid2Label, "2, 6");
 
         textFieldFid2X = new JTextField();
         textFieldFid2X.setColumns(6);
-        panelParameters.add(textFieldFid2X, "4, 8");
+        panelParameters.add(textFieldFid2X, "4, 6");
 
         textFieldFid2Y = new JTextField();
         textFieldFid2Y.setColumns(6);
-        panelParameters.add(textFieldFid2Y, "6, 8");
+        panelParameters.add(textFieldFid2Y, "6, 6");
 
-        locationButtonsPanel = new LocationButtonsPanel(textFieldFid2X, textFieldFid2Y, null, null);
-        panelParameters.add(locationButtonsPanel, "8, 8");
+        locationButtonsPanelFid2 = new LocationButtonsPanel(textFieldFid2X, textFieldFid2Y, null, null);
+        locationButtonsPanelFid2.setBaseLocation(feeder.getLocation());
+        panelParameters.add(locationButtonsPanelFid2, "8, 6");
+
+        JButton btnFid2Vision = new JButton(new AbstractAction("Set Using Vision Pipeline") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                UiUtils.submitUiMachineTask(() -> {
+                    Location fid2Captured = MainFrame.get().getMachineControls().getSelectedNozzle().getHead().
+                            getDefaultCamera().getLocation();
+                    Part fidPart = (Part) comboBoxPart.getSelectedItem();
+                    if (fidPart != null) {
+                        Configuration.get().getMachine().getFiducialLocator()
+                                .getHomeFiducialLocation(fid2Captured, fidPart);
+                        fid2Captured = MainFrame.get().getMachineControls().getSelectedNozzle().getHead().
+                                getDefaultCamera().getLocation();
+                    }
+                    final Location fid2 = fid2Captured;
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            Location fid2Captured = ReferenceFeeder.convertToLocalLocation(upToDateLocation.getLocation(), fid2);
+                            Helpers.copyLocationIntoTextFields(fid2Captured, 
+                                    textFieldFid2X, 
+                                    textFieldFid2Y, 
+                                    null,
+                                    null);
+                        }
+                    });
+                });
+            }
+        });
+        btnFid2Vision.setHorizontalAlignment(SwingConstants.LEFT);
+        btnFid2Vision.setToolTipText("Manually jog camera over approximate location of the fiducial and then " + 
+                "click this button to use the vision pipeline to capture the exact center.  WARNING - may cause machine motion!");
+        btnFid2Vision.setForeground(new Color(255,0,0));
+        panelParameters.add(btnFid2Vision, "10, 6, left, default");
 
 
 
@@ -336,30 +498,43 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 		IntegerConverter intConverter = new IntegerConverter();
 		FeederConverter feederConverter = new FeederConverter();
 		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+		
         addWrappedBinding(feeder, "parentId", comboBoxParent, "selectedItem", feederConverter);
-
+        addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
+        
 		MutableLocationProxy location = new MutableLocationProxy();
 		bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
-		addWrappedBinding(location, "lengthX", textFieldLocationX, "text", lengthConverter);
-		addWrappedBinding(location, "lengthY", textFieldLocationY, "text", lengthConverter);
-		addWrappedBinding(location, "lengthZ", textFieldLocationZ, "text", lengthConverter);
+        addWrappedBinding(location, "lengthX", textFieldLocationX, "text", lengthConverter);
+        addWrappedBinding(location, "lengthY", textFieldLocationY, "text", lengthConverter);
+        addWrappedBinding(location, "lengthZ", textFieldLocationZ, "text", lengthConverter);
         addWrappedBinding(location, "rotation", textFieldLocationR, "text", doubleConverter);
 
-        MutableLocationProxy fid1Location = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, feeder, "expectedFiducial1", fid1Location,
+        upToDateLocation = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_ONCE, feeder, "location", upToDateLocation, "location");
+        bind(UpdateStrategy.READ_WRITE, upToDateLocation, "lengthX", textFieldLocationX, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, upToDateLocation, "lengthY", textFieldLocationY, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, upToDateLocation, "lengthZ", textFieldLocationZ, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, upToDateLocation, "rotation", textFieldLocationR, "text", doubleConverter);
+        bind(UpdateStrategy.READ, upToDateLocation, "location", locationButtonsPanelFid1, "baseLocation");
+        bind(UpdateStrategy.READ, upToDateLocation, "location", locationButtonsPanelFid2, "baseLocation");
+        
+        
+        fid1LocalLocation = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, feeder, "expectedFiducial1", fid1LocalLocation,
                 "location");
-        addWrappedBinding(fid1Location, "lengthX", textFieldFid1X, "text",
+        addWrappedBinding(fid1LocalLocation, "lengthX", textFieldFid1X, "text",
                 lengthConverter);
-        addWrappedBinding(fid1Location, "lengthY", textFieldFid1Y, "text",
+        addWrappedBinding(fid1LocalLocation, "lengthY", textFieldFid1Y, "text",
                 lengthConverter);
 
-        MutableLocationProxy fid2Location = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, feeder, "expectedFiducial2", fid2Location,
+        fid2LocalLocation = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, feeder, "expectedFiducial2", fid2LocalLocation,
                 "location");
-        addWrappedBinding(fid2Location, "lengthX", textFieldFid2X, "text",
+        addWrappedBinding(fid2LocalLocation, "lengthX", textFieldFid2X, "text",
                 lengthConverter);
-        addWrappedBinding(fid2Location, "lengthY", textFieldFid2Y, "text",
+        addWrappedBinding(fid2LocalLocation, "lengthY", textFieldFid2Y, "text",
                 lengthConverter);
+
 
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationY);
@@ -372,39 +547,40 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 
 	}
 
-/*	@Override
-	protected void saveToModel() {
-		super.saveToModel();
-
-		int componentleft = (Integer.parseInt(textFieldTrayCountCols.getText())
-				* Integer.parseInt(textFieldTrayCountRows.getText())) - Integer.parseInt(textFieldFeedCount.getText());
-		lblComponentCount.setText("Components left: " + String.valueOf(componentleft));
-
-		if ((feeder.getOffsets().getX() == 0) && (feeder.getTrayCountCols() > 1)) {
-			MessageBoxes.errorBox(this, "Error",
-					"Column Offset  must be greater than 0 if Number of Tray Columns is greater than 1 or feed failure will occur.");
-		}
-		if ((feeder.getOffsets().getY() == 0) && (feeder.getTrayCountRows() > 1)) {
-			MessageBoxes.errorBox(this, "Error",
-					"Row Offset must be greater than 0 if Number of Tray Rows is greater than 1 or feed failure will occur.");
-		}
-	}
-*/
-	public static double round(double value, int places) {
-		if (places < 0) {
-			throw new IllegalArgumentException();
-		}
-
-		BigDecimal bd = new BigDecimal(value);
-		bd = bd.setScale(places, RoundingMode.HALF_UP);
-		return bd.doubleValue();
-	}
+	private void computeLocationFromFiducials()  {
+	    double[][] source = { {fid1LocalLocation.getLocation().getX(),fid2LocalLocation.getLocation().getX()},
+	                          {fid1LocalLocation.getLocation().getY(),fid2LocalLocation.getLocation().getY()} };
+        double[][] dest = { {fid1Captured.getX(),fid2Captured.getX()},
+                            {fid1Captured.getY(),fid2Captured.getY()} };
+        
+	    //Utils2D.testComputeScalingRotationAndTranslation();
+	    //double[][] source = { {-1.0, 1.0, 0.0}, {-1.0, -1.0, 2.0} };
+	    //double[][] dest =   { {1.0, 1.0, -2.0}, {-0.25, 0.25, 0.0} }; 
+        //AffineTransform at = Utils2D.deriveAffineTransform(source, dest);
+        //Logger.trace("Transform = " + at);
+        
+        
+        double rotAngleDeg = Math.toDegrees( Math.atan2(dest[1][0] - dest[1][1], dest[0][0] - dest[0][1]) - 
+                Math.atan2(source[1][0] - source[1][1], source[0][0] - source[0][1] ) );
+      
+        Location sourceMid = new Location(LengthUnit.Millimeters, (source[0][0] + source[0][1]) / 2.0,
+                (source[1][0] + source[1][1]) / 2.0, 0.0, 0.0);
+      
+        Location destMid = new Location(LengthUnit.Millimeters, (dest[0][0] + dest[0][1]) / 2.0,
+                (dest[1][0] + dest[1][1]) / 2.0, 0.0, rotAngleDeg);
+      
+        Location newLocation = destMid.subtract(sourceMid).rotateXyCenterPoint(destMid, rotAngleDeg)
+                .derive(upToDateLocation.getLocation(), false, false, true, false);
+        Logger.trace("New Location = " + newLocation);
+        upToDateLocation.setLocation(newLocation);
+    }
+	
 	
 	class FeederConverter extends Converter<String, Object> {
 
         @Override
         public Object convertForward(String arg0) {
-            if (arg0.equals(AbstractFeeder.ROOT_FEEDER_ID)) {
+            if (arg0.equals(Feeder.ROOT_FEEDER_ID)) {
                 return arg0;
             } else {
                 return Configuration.get().getMachine().getFeeder(arg0);
@@ -423,4 +599,5 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
         }
 	    
 	}
+	
 }

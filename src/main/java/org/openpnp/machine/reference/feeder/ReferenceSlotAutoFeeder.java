@@ -65,7 +65,7 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
     @Override
     public Location getPickLocation() throws Exception {
         if (getFeeder() == null) {
-            return location;
+            return getLocation();
         }
         
         // Start with the slot's location.

@@ -59,7 +59,7 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 	@Override
 	public Location getPickLocation() throws Exception {
 		if (pickLocation == null) {
-			pickLocation = location;
+			setPickLocation(getLocation());
 		}
 		int partX, partY;
 
@@ -79,11 +79,15 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 
 		calculatePickLocation(partX, partY);
 	
-		Logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
+		Logger.debug("{}.getPickLocation => {}", getName(), convertToGlobalLocation(pickLocation));
 		
-		return pickLocation;
+		return convertToGlobalLocation(pickLocation);
 	}
 
+	private void setPickLocation(Location pickLocation) {
+	    this.pickLocation = convertToLocalLocation(pickLocation);
+	}
+	
 	private void calculatePickLocation(int partX, int partY) throws Exception {
 
 		// Multiply the offsets by the X/Y part indexes to get the total offsets
@@ -92,15 +96,15 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 		// pickLocation = location.add(offsets.multiply(partX, partY, 0.0,
 		// 0.0));
 
-		double delta_x1 = partX * offsets.getX() * Math.cos(Math.toRadians(trayRotation));
-		double delta_y1 = Math.sqrt((partX * offsets.getX() * partX * offsets.getX()) - (delta_x1 * delta_x1));
+		double delta_x1 = partX * getOffsets().getX() * Math.cos(Math.toRadians(trayRotation));
+		double delta_y1 = Math.sqrt((partX * getOffsets().getX() * partX * getOffsets().getX()) - (delta_x1 * delta_x1));
 		Location delta1 = new Location(LengthUnit.Millimeters, delta_x1, delta_y1, 0, 0);
 
-		double delta_y2 = partY * offsets.getY() * Math.cos(Math.toRadians(trayRotation)) * -1;
-		double delta_x2 = Math.sqrt((partY * offsets.getY() * partY * offsets.getY()) - (delta_y2 * delta_y2));
+		double delta_y2 = partY * getOffsets().getY() * Math.cos(Math.toRadians(trayRotation)) * -1;
+		double delta_x2 = Math.sqrt((partY * getOffsets().getY() * partY * getOffsets().getY()) - (delta_y2 * delta_y2));
 		Location delta2 = new Location(LengthUnit.Millimeters, delta_x2, delta_y2, 0, 0);
 
-		pickLocation = location.add(delta1.add(delta2));
+		setPickLocation(getLocation().add(delta1.add(delta2)));
 	}
 
 	public void feed(Nozzle nozzle) throws Exception {
@@ -125,7 +129,7 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 		calculatePickLocation(partX, partY);
 
 		Logger.debug(String.format("Feeding part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f", feedCount, partX, partY,
-				pickLocation.getX(), pickLocation.getY(), pickLocation.getRotation()));
+				getPickLocation().getX(), getPickLocation().getY(), getPickLocation().getRotation()));
 
 		setFeedCount(getFeedCount() + 1);
 	}
@@ -147,27 +151,27 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 	}
 
 	public Location getLastComponentLocation() {
-		return lastComponentLocation;
+		return convertToGlobalLocation(lastComponentLocation);
 	}
 
 	public void setLastComponentLocation(Location LastComponentLocation) {
-		this.lastComponentLocation = LastComponentLocation;
+		this.lastComponentLocation = convertToLocalLocation(LastComponentLocation);
 	}
 
 	public Location getFirstRowLastComponentLocation() {
-		return this.firstRowLastComponentLocation;
+		return convertToGlobalLocation(firstRowLastComponentLocation);
 	}
 
 	public void setFirstRowLastComponentLocation(Location FirstRowLastComponentLocation) {
-		this.firstRowLastComponentLocation = FirstRowLastComponentLocation;
+		this.firstRowLastComponentLocation = convertToLocalLocation(FirstRowLastComponentLocation);
 	}
 
 	public Location getOffsets() {
-		return offsets;
+		return convertToGlobalDeltaLocation(offsets);
 	}
 
 	public void setOffsets(Location offsets) {
-		this.offsets = offsets;
+		this.offsets = convertToLocalDeltaLocation(offsets);
 	}
 
 	public double getTrayRotation() {

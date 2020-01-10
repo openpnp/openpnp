@@ -26,6 +26,7 @@ import java.util.Collections;
 
 import javax.swing.DefaultComboBoxModel;
 
+import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceFeederGroup;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
@@ -46,9 +47,9 @@ public class FeederParentsComboBoxModel extends DefaultComboBoxModel implements 
     private void addAllElements() {
         ArrayList<Feeder> feeders = new ArrayList<>(Configuration.get().getMachine().getFeeders());
         Collections.sort(feeders, comparator);
-        addElement(AbstractFeeder.ROOT_FEEDER_ID);
+        addElement(ReferenceFeeder.ROOT_FEEDER_ID);
         for (Feeder fdr : feeders) {
-            if (fdr.isPotentialParentOf(feeder)) {
+            if (((ReferenceFeeder) fdr).isPotentialParentOf(feeder)) {
                 addElement(fdr);
             }
         }

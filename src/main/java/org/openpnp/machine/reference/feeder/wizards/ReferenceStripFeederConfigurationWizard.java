@@ -354,9 +354,11 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get()
                                                                            .getLengthDisplayFormat());
 
-        MutableLocationProxy location = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
-        addWrappedBinding(location, "rotation", textFieldLocationRotation, "text", doubleConverter);
+//        MutableLocationProxy location = new MutableLocationProxy();
+//        bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
+//        addWrappedBinding(location, "rotation", textFieldLocationRotation, "text", doubleConverter);
+
+        addWrappedBinding(feeder, "rotationInTape", textFieldLocationRotation, "text", doubleConverter);
 
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
         addWrappedBinding(feeder, "feedRetryCount", retryCountTf, "text", intConverter);

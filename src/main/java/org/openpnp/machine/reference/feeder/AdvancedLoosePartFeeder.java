@@ -55,17 +55,22 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
 
     @Override
     public Location getPickLocation() throws Exception {
-        return pickLocation == null ? location : pickLocation;
+        return pickLocation == null ? getLocation() : convertToGlobalLocation(pickLocation);
+    }
+    
+    public void setPickLocation(Location pickLocation) {
+        this.pickLocation = convertToLocalLocation(pickLocation);
     }
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
         Camera camera = nozzle.getHead().getDefaultCamera();
         // Move to the feeder pick location
-        MovableUtils.moveToLocationAtSafeZ(camera, location);
+        MovableUtils.moveToLocationAtSafeZ(camera, getLocation());
         for (int i = 0; i < 3; i++) {
-            pickLocation = getPickLocation(camera, nozzle);
+            Location pickLocation = getPickLocation(camera, nozzle);
             camera.moveTo(pickLocation);
+            setPickLocation(pickLocation);
         }
     }
 
@@ -98,7 +103,7 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
             // plus the part height.
             location =
                     location.derive(null, null,
-                            this.location.convertToUnits(location.getUnits()).getZ()
+                            this.getLocation().convertToUnits(location.getUnits()).getZ()
                                     + part.getHeight().convertToUnits(location.getUnits()).getValue(),
                             null);
             MainFrame.get().getCameraViews().getCameraView(camera)

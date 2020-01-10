@@ -48,7 +48,11 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
 
     @Override
     public Location getPickLocation() throws Exception {
-        return pickLocation == null ? location : pickLocation;
+        return pickLocation == null ? getLocation() : convertToGlobalLocation(pickLocation);
+    }
+    
+    private void setPickLocation(Location pickLocation) {
+        this.pickLocation = convertToLocalLocation(pickLocation);
     }
 
     @Override
@@ -56,11 +60,11 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         Camera camera = nozzle.getHead()
                               .getDefaultCamera();
         // Move to the feeder pick location
-        MovableUtils.moveToLocationAtSafeZ(camera, location);
+        MovableUtils.moveToLocationAtSafeZ(camera, getLocation());
         try (CvPipeline pipeline = getPipeline()) {
             for (int i = 0; i < 3; i++) {
-                pickLocation = getPickLocation(pipeline, camera, nozzle);
-                camera.moveTo(pickLocation.derive(null, null, null, 0.0));
+                setPickLocation(getPickLocation(pipeline, camera, nozzle));
+                camera.moveTo(getPickLocation().derive(null, null, null, 0.0));
             }
             MainFrame.get()
                      .getCameraViews()
@@ -95,10 +99,10 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         // Get the result's Location
         Location location = VisionUtils.getPixelLocation(camera, result.center.x, result.center.y);
         // Update the location's rotation with the result's angle
-        location = location.derive(null, null, null, result.angle + this.location.getRotation());
+        location = location.derive(null, null, null, result.angle + this.getLocation().getRotation());
         // Update the location with the correct Z, which is the configured Location's Z
         // plus the part height.
-        double z = this.location.convertToUnits(location.getUnits()).getZ()
+        double z = this.getLocation().convertToUnits(location.getUnits()).getZ()
                 + part.getHeight().convertToUnits(location.getUnits()).getValue(); 
         location = location.derive(null, null, z, null);
         return location;

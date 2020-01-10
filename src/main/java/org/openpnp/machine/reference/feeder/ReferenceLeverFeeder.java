@@ -94,24 +94,44 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
     protected Location visionOffset;
     protected Location partPick;
 
+    private Location getVisionOffset() {
+        return convertToGlobalDeltaLocation(visionOffset);
+    }
+    
+    private void setVisionOffset(Location visionOffset) {
+        this.visionOffset = convertToLocalDeltaLocation(visionOffset);
+    }
+    
+    private Location getPartPick() {
+        return convertToGlobalDeltaLocation(partPick);
+    }
+    
+    private void setPartPick(Location partPick) {
+        this.partPick = convertToLocalDeltaLocation(partPick);
+    }
+    
     @Override
     public Location getPickLocation() throws Exception {
         if (pickLocation == null) {
-            pickLocation = location;
+            setPickLocation(getLocation());
         }
 
         if (vision.isEnabled() && visionOffset != null) {
 			if (partPitch.convertToUnits(LengthUnit.Millimeters).getValue() == 2 && partPick != null) {
-				return pickLocation.subtract(visionOffset).add(partPick);
+				return convertToGlobalLocation(pickLocation).subtract(getVisionOffset()).add(getPartPick());
 			}
 			else {
-				return pickLocation.subtract(visionOffset);
+				return convertToGlobalLocation(pickLocation).subtract(getVisionOffset());
 			}
         }
 
-        return pickLocation;
+        return convertToGlobalLocation(pickLocation);
     }
 
+    private void setPickLocation(Location pickLocation) {
+        this.pickLocation = convertToLocalLocation(pickLocation);
+    }
+    
     @Override
     public void feed(Nozzle nozzle) throws Exception {
         Logger.debug("feed({})", nozzle);
@@ -138,7 +158,7 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
 
         head.moveToSafeZ();
 
-        pickLocation = this.location;
+        pickLocation = this.getLocation();
 
         if (feededCount == 0) {
             Location feedStartLocation = this.feedStartLocation;
@@ -185,8 +205,8 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
 		if (feededCount > 0) {
 			feededCount--;
 			if (feededCount > 0) {
-				partPick = new Location(LengthUnit.Millimeters, partsPitchX * feededCount,
-						partsPitchY * feededCount, 0, 0);
+				setPartPick(new Location(LengthUnit.Millimeters, partsPitchX * feededCount,
+						partsPitchY * feededCount, 0, 0));
 			} 
 			else {
 				partPick = null;
@@ -194,11 +214,11 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
 		}
 
         if (vision.isEnabled()) {
-            visionOffset = getVisionOffsets(head, location);
+            setVisionOffset(getVisionOffsets(head, getLocation()));
 
-            Logger.debug("final visionOffsets " + visionOffset);
+            Logger.debug("final visionOffsets " + getVisionOffset());
 
-            Logger.debug("Modified pickLocation {}", pickLocation.subtract(visionOffset));
+            Logger.debug("Modified pickLocation {}", pickLocation.subtract(getVisionOffset()));
         }
     }
 

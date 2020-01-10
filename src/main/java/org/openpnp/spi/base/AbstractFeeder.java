@@ -46,12 +46,10 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     
     //protected WizardContainer wizardContainer;
     
-    public static String ROOT_FEEDER_ID = "Machine";
-
     public AbstractFeeder() {
         this.id = Configuration.createId("FDR");
-        this.name = getClass().getSimpleName();
         this.parentId = ROOT_FEEDER_ID;
+        this.name = getClass().getSimpleName();
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
@@ -70,7 +68,6 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
         }
     }
     
-    
     @Override
     public String getId() {
         return id;
@@ -86,26 +83,14 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     }
 
     @Override
-    public boolean isLocallyEnabled() {
-        return enabled;
-    }
-
-    @Override
     public void setEnabled(boolean enabled) {
         Object oldValue = this.enabled;
         this.enabled = enabled;
         firePropertyChange("enabled", oldValue, enabled);
     }
-
-    @Override
-    public void setParentId(String parentId) {
-        if (!this.parentId.equals(ROOT_FEEDER_ID)) {
-            ((ReferenceFeederGroup) Configuration.get().getMachine().getFeeder(this.parentId)).removeChild(getId());
-        }
-        this.parentId = parentId;
-        if (!parentId.equals(ROOT_FEEDER_ID)) {
-            ((ReferenceFeederGroup) Configuration.get().getMachine().getFeeder(parentId)).addChild(getId());
-        }
+    
+    public boolean isLocallyEnabled() {
+        return enabled;
     }
 
     @Override
@@ -113,17 +98,46 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
         return parentId;
     }
 
+    /*
+     * Any class extending AbstractFeeder that intends to support feeder nesting, needs to override
+     * setParentId, addChild, removeChild, removeAllChildern, and isPotentialParentOf to provide the
+     * required functionality
+     */
+    @Override
+    public void setParentId(String parentId) {
+        if (!this.parentId.equals(ROOT_FEEDER_ID)) {
+            Configuration.get().getMachine().getFeeder(this.parentId).removeChild(getId());
+        }
+        this.parentId = parentId;
+        if (!parentId.equals(ROOT_FEEDER_ID)) {
+            Configuration.get().getMachine().getFeeder(parentId).addChild(getId());
+        }
+    }
+
+    @Override
+    public void addChild(String childId) {
+    }
+    
+    @Override
+    public void removeChild(String childId) {
+    }
+    
+    @Override
+    public void removeAllChildren() {
+    }
+    
     @Override
     public boolean isPotentialParentOf(Feeder feeder) {
         return false;
-    };
-    
+    }
+
     @Override
     public void preDeleteCleanUp() {
         if (!parentId.equals(ROOT_FEEDER_ID)) {
-            ((ReferenceFeederGroup) Configuration.get().getMachine().getFeeder(parentId)).removeChild(getId());
+            Configuration.get().getMachine().getFeeder(parentId).removeChild(getId());
         }
     }
+    
     
     @Override
     public void setPart(Part part) {

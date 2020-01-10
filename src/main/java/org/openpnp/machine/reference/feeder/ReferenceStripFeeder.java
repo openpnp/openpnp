@@ -43,8 +43,10 @@ import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 
 /**
@@ -84,6 +86,9 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         }
     }
 
+    @Attribute(required = false)
+    private Double rotationInTape;
+    
     @Element(required = false)
     private Location referenceHoleLocation = new Location(LengthUnit.Millimeters);
 
@@ -144,6 +149,15 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         return new Length(0.5, LengthUnit.Millimeters);
     }
 
+    @Commit
+    public void commit() {
+        //This method gets called by the deserializer when configuration .xml files are loading.
+        if (rotationInTape == null) {
+            Logger.trace( "Old strip feeder format found in .xml file, converting to new feeder format..." );
+            rotationInTape = getLocation().getRotation();
+        }
+    }
+    
     @Override
     public Location getPickLocation() throws Exception {
         int feedCount = this.feedCount;
@@ -186,7 +200,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         l = l.add(new Location(l.getUnits(), p.x, p.y, 0, 0));
         // Add in the angle of the tape plus the angle of the part in the tape
         // so that the part is picked at the right angle
-        l = l.derive(null, null, null, angle + getLocation().getRotation());
+        l = l.derive(null, null, null, angle + rotationInTape);
 
         return l;
     }
@@ -197,10 +211,10 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         }
         double d1 = getReferenceHoleLocation().getLinearLengthTo(getLastHoleLocation())
                 .convertToUnits(LengthUnit.Millimeters).getValue();
-        double d2 = getReferenceHoleLocation().getLinearLengthTo(visionLocation)
+        double d2 = getReferenceHoleLocation().getLinearLengthTo(getVisionLocation())
                 .convertToUnits(LengthUnit.Millimeters).getValue();
         if (d2 > d1) {
-            return new Location[] {getReferenceHoleLocation(), visionLocation};
+            return new Location[] {getReferenceHoleLocation(), getVisionLocation()};
         }
         else {
             return new Location[] {getReferenceHoleLocation(), getLastHoleLocation()};
@@ -249,7 +263,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         if (distance.getValue() > 2) {
             throw new Exception("Unable to locate reference hole. End of strip?");
         }
-        visionLocation = actualLocation;
+        setVisionLocation(actualLocation);
     }
 
     private Location findClosestHole(Camera camera) throws Exception {
@@ -315,6 +329,14 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         Length tapeWidth = this.tapeWidth.convertToUnits(LengthUnit.Millimeters);
         return new Length(tapeWidth.getValue() / 2 - 0.5, LengthUnit.Millimeters);
     }
+    
+    public Double getRotationInTape() {
+        return rotationInTape;
+    }
+
+    public void setRotationInTape(Double rotationInTape) {
+        this.rotationInTape = rotationInTape;
+    }
 
     public TapeType getTapeType() {
         return tapeType;
@@ -340,6 +362,14 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     public void setLastHoleLocation(Location lastHoleLocation) {
         this.lastHoleLocation = convertToLocalLocation(lastHoleLocation);
         visionLocation = null;
+    }
+
+    public Location getVisionLocation() {
+        return convertToGlobalLocation(visionLocation);
+    }
+
+    public void setVisionLocation(Location visionLocation) {
+        this.lastHoleLocation = convertToLocalLocation(visionLocation);
     }
 
     public Length getHoleDiameter() {

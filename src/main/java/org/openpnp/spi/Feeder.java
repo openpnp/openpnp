@@ -20,6 +20,8 @@
 package org.openpnp.spi;
 
 import org.openpnp.gui.support.WizardContainer;
+import org.openpnp.machine.reference.feeder.ReferenceFeederGroup;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 import org.openpnp.model.Named;
@@ -33,52 +35,62 @@ import org.openpnp.model.Part;
  * a pick source.
  */
 public interface Feeder extends Identifiable, Named, WizardConfigurable, PropertySheetHolder {
+    public static String ROOT_FEEDER_ID = "Machine";
+
     /**
-     * Return true if this feeder and all of its ancestors are currently enabled and therefore can be considered in Job planning.
+     * Return true if this feeder is currently enabled and therefore can be considered in Job planning.
      * 
      * @return
      */
     public boolean isEnabled();
 
-    /**
-     * Return true is the Feeder is currently enabled.
-     * 
-     * @return
-     */
-    public boolean isLocallyEnabled();
-
     public void setEnabled(boolean enabled);
 
-    /**
-     * Get the parent of this Feeder.
-     * 
-     * @return
-     */
-    public String getParentId();
-
-    /**
-     * Set the parent of this Feeder.
-     */
-    public void setParentId(String parentId);
-
-    /**
-     * Determine if this feeder can be a parent to another feeder.
-     * 
-     * @return
-     */
-    public boolean isPotentialParentOf(Feeder feeder);
-    
-    /**
-     * Performs any necessary clean-up before the feeder can be deleted.
-     */
-    public void preDeleteCleanUp();
-    
     /**
      * Get the Part that is loaded into this Feeder.
      * 
      * @return
      */
     public Part getPart();
+
+    /**
+     * Get the ParentId of this Feeder.
+     * 
+     * @return
+     */
+    public String getParentId();
+
+    /**
+     * Set the ParentId of this Feeder.
+     */
+    public void setParentId(String parentId);
+    
+    /**
+     * Adds the specified child to this feeder and sets its parent to this Feeder.
+     */
+    public void addChild(String childId);
+    
+    /**
+     * Removes the specified child from this Feeder and sets its parent to the parent of this Feeder.
+     */
+    public void removeChild(String childId);
+    
+    /**
+     * Removes all children from this Feeder and sets their parent to the parent of this Feeder.
+     */
+    public void removeAllChildren();
+
+    /**
+     * Determine if this Feeder could be a parent to feeder.
+     * 
+     * @return
+     */
+    public boolean isPotentialParentOf(Feeder feeder);
+
+    /**
+     * Should be called prior to this Feeder being deleted.
+     */
+    public void preDeleteCleanUp();
 
     /**
      * Set the Part that is loaded into this Feeder.

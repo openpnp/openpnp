@@ -1,6 +1,5 @@
 package org.openpnp.machine.reference;
 
-import org.openpnp.machine.reference.feeder.ReferenceFeederGroup;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -9,53 +8,79 @@ import org.simpleframework.xml.Element;
 
 public abstract class ReferenceFeeder extends AbstractFeeder {
     @Element
-    protected Location location = new Location(LengthUnit.Millimeters);
-
-    protected Location getLocalLocation() {
-        return location;
-    }
-
-    public Location getLocation() {
-        return convertToGlobalLocation(location);
-    }
-
-    protected void setLocalLocation(Location localLocation) {
-        Object oldValue = this.location;
-        this.location = localLocation;
-        firePropertyChange("location", oldValue, localLocation);
-    }
-    
-    public void setLocation(Location globalLocation) {
-        setLocalLocation(convertToLocalLocation(globalLocation));
-    }
-    
-    public Location convertToGlobalLocation(Location localLocation) {
-        Location globalLocation;
-        if (parentId.equals(AbstractFeeder.ROOT_FEEDER_ID)) {
-            globalLocation = localLocation;
-        } else {
-            Location ownerLocation = ((ReferenceFeederGroup) Configuration.get().getMachine().getFeeder(parentId)).getLocation();
-            globalLocation = localLocation.rotateXy(ownerLocation.getRotation()).addWithRotation(ownerLocation);
-        }
-        return globalLocation;
-    }
-    
-    public Location convertToLocalLocation(Location globalLocation) {
-        Location localLocation;
-        if (parentId.equals(AbstractFeeder.ROOT_FEEDER_ID)) {
-            localLocation = globalLocation;
-        } else {
-            Location ownerLocation = ((ReferenceFeederGroup) Configuration.get().getMachine().getFeeder(parentId)).getLocation();
-            localLocation = globalLocation.rotateXy(-ownerLocation.getRotation()).subtractWithRotation(ownerLocation);
-        }
-        return localLocation;
-    }
+    private Location location = new Location(LengthUnit.Millimeters);
 
     @Override
     public void setParentId(String parentId) {
         Location globalLocation = getLocation();
         super.setParentId(parentId);
         setLocation(globalLocation);
+    }
+
+    private Location getLocalLocation() {
+        return location;
+    }
+
+    private void setLocalLocation(Location localLocation) {
+        Object oldValue = this.location;
+        this.location = localLocation;
+        firePropertyChange("location", oldValue, localLocation);
+    }
+    
+    public Location getLocation() {
+        Location parentLocation;
+        if (parentId.equals(ROOT_FEEDER_ID)) {
+            parentLocation = new Location(LengthUnit.Millimeters,0,0,0,0);
+        } else {
+            parentLocation = ((ReferenceFeeder) Configuration.get().getMachine().getFeeder(parentId)).getLocation();
+        }
+        return convertToGlobalLocation(parentLocation, getLocalLocation());
+    }
+
+    public void setLocation(Location globalLocation) {
+        Location parentLocation;
+        if (parentId.equals(ROOT_FEEDER_ID)) {
+            parentLocation = new Location(LengthUnit.Millimeters,0,0,0,0);
+        } else {
+            parentLocation = ((ReferenceFeeder) Configuration.get().getMachine().getFeeder(parentId)).getLocation();
+        }
+        setLocalLocation(convertToLocalLocation(parentLocation, globalLocation));
+    }
+    
+    public Location convertToGlobalLocation(Location localLocation) {
+        Location originLocation = getLocation();
+        return convertToGlobalLocation(originLocation, localLocation);
+    }
+    
+    public Location convertToLocalLocation(Location globalLocation) {
+        Location originLocation = getLocation();
+        return convertToLocalLocation(originLocation, globalLocation);
+    }
+
+    public Location convertToGlobalDeltaLocation(Location localDeltaLocation) {
+        Location originLocation = getLocation();
+        return convertToGlobalDeltaLocation(originLocation, localDeltaLocation);
+    }
+    
+    public Location convertToLocalDeltaLocation(Location globalDeltaLocation) {
+        Location originLocation = getLocation();
+        return convertToLocalDeltaLocation(originLocation, globalDeltaLocation);
+    }
+
+    static public Location convertToGlobalLocation(Location origin, Location localLocation) {
+        return localLocation.vectorAdd(origin);
+    }
+    
+    static public Location convertToLocalLocation(Location origin, Location globalLocation) {
+        return globalLocation.vectorSubtract(origin);
+    }
+    
+    static public Location convertToGlobalDeltaLocation(Location origin, Location localDeltaLocation) {
+        return convertToGlobalLocation(origin, localDeltaLocation).subtract(origin);
+    }
+
+    static public Location convertToLocalDeltaLocation(Location origin, Location globalDeltaLocation) {
+        return convertToLocalLocation(origin, globalDeltaLocation.add(origin));
     }
 
 }

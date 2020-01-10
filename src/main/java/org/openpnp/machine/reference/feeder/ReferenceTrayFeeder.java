@@ -56,7 +56,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
     @Override
     public Location getPickLocation() throws Exception {
         if (pickLocation == null) {
-            pickLocation = location;
+            pickLocation = getLocation();
         }
         Logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
         return pickLocation;
@@ -84,7 +84,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
         // Multiply the offsets by the X/Y part indexes to get the total offsets
         // and then add the pickLocation to offset the final value.
         // and then add them to the location to get the final pickLocation.
-        pickLocation = location.add(offsets.multiply(partX, partY, 0.0, 0.0));
+        pickLocation = getLocation().add(offsets.multiply(partX, partY, 0.0, 0.0));
 
         Logger.debug(String.format("Feeding part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f",
                 feedCount, partX, partY, pickLocation.getX(), pickLocation.getY(),
