@@ -101,19 +101,27 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     /*
      * Any class extending AbstractFeeder that intends to support feeder nesting, needs to override
      * setParentId, addChild, removeChild, removeAllChildern, and isPotentialParentOf to provide the
-     * required functionality
+     * required functionality.  Any class, that desires to only have the machine as its parent, should
+     * override isParentIdChangable to return false.
      */
     @Override
     public void setParentId(String parentId) {
-        if (!this.parentId.equals(ROOT_FEEDER_ID)) {
-            Configuration.get().getMachine().getFeeder(this.parentId).removeChild(getId());
-        }
-        this.parentId = parentId;
-        if (!parentId.equals(ROOT_FEEDER_ID)) {
-            Configuration.get().getMachine().getFeeder(parentId).addChild(getId());
+        if (isParentIdChangable()) {
+            if (!this.parentId.equals(ROOT_FEEDER_ID)) {
+                Configuration.get().getMachine().getFeeder(this.parentId).removeChild(getId());
+            }
+            this.parentId = parentId;
+            if (!parentId.equals(ROOT_FEEDER_ID)) {
+                Configuration.get().getMachine().getFeeder(parentId).addChild(getId());
+            }
         }
     }
 
+    @Override
+    public boolean isParentIdChangable() {
+        return true;
+    }
+    
     @Override
     public void addChild(String childId) {
     }

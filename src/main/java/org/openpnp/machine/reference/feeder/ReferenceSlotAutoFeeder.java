@@ -63,6 +63,11 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
     }
 
     @Override
+    public boolean isParentIdChangable() {
+        return false;
+    }
+    
+    @Override
     public Location getPickLocation() throws Exception {
         if (getFeeder() == null) {
             return getLocation();

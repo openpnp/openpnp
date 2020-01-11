@@ -66,6 +66,11 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
     public void setParentId(String parentId);
     
     /**
+     * Check to see if the ParentId of this Feeder can be changed.
+     */
+    public boolean isParentIdChangable();
+    
+    /**
      * Adds the specified child to this feeder and sets its parent to this Feeder.
      */
     public void addChild(String childId);
