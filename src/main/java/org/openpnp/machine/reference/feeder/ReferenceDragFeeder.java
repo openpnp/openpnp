@@ -198,7 +198,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         // feedEndLocation and pickLocation. pickLocation will be saved
         // for the pick operation while feed start and end are used
         // here and then discarded.
-        pickLocation = this.getLocation();
+        setPickLocation(this.getLocation());
 
         if (feededCount == 0) {
             Location feedStartLocation = getFeedStartLocation();
@@ -263,7 +263,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
             Logger.debug("final visionOffsets " + getVisionOffset());
 
-            Logger.debug("Modified pickLocation {}", pickLocation.subtract(getVisionOffset()));
+            Logger.debug("Modified pickLocation {}", convertToGlobalLocation(pickLocation).subtract(getVisionOffset()));
         }
     }
 
@@ -391,15 +391,6 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         this.feedEndLocation = convertToLocalLocation(feedEndLocation);
     }
 
-    @Override
-    public void setParentId(String parentId) {
-        Location oldFeedStartLocation = getFeedStartLocation();
-        Location oldFeedEndLocation = getFeedEndLocation();
-        super.setParentId(parentId);
-        setFeedStartLocation(oldFeedStartLocation);
-        setFeedEndLocation(oldFeedEndLocation);
-    }
-    
     public Double getFeedSpeed() {
         return feedSpeed;
     }

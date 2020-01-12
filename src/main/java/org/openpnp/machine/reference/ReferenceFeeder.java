@@ -68,18 +68,30 @@ public abstract class ReferenceFeeder extends AbstractFeeder {
     }
 
     static public Location convertToGlobalLocation(Location origin, Location localLocation) {
+        if (localLocation == null) {
+            return null;
+        }
         return localLocation.vectorAdd(origin);
     }
     
     static public Location convertToLocalLocation(Location origin, Location globalLocation) {
+        if (globalLocation == null) {
+            return null;
+        }
         return globalLocation.vectorSubtract(origin);
     }
     
     static public Location convertToGlobalDeltaLocation(Location origin, Location localDeltaLocation) {
+        if (localDeltaLocation == null) {
+            return null;
+        }
         return convertToGlobalLocation(origin, localDeltaLocation).subtract(origin);
     }
 
     static public Location convertToLocalDeltaLocation(Location origin, Location globalDeltaLocation) {
+        if (globalDeltaLocation == null) {
+            return null;
+        }
         return convertToLocalLocation(origin, globalDeltaLocation.add(origin));
     }
 

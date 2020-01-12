@@ -31,6 +31,7 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 /**
  * Implementation of Feeder that indexes based on an offset. This allows a tray
@@ -47,7 +48,9 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 	private Location offsets = new Location(LengthUnit.Millimeters);
 	@Attribute
 	private int feedCount = 0;
-	@Attribute
+    @Attribute(required = false)
+    private Double rotationInTray;
+  	@Attribute
 	private double trayRotation = 0;
 	@Element
 	protected Location lastComponentLocation = new Location(LengthUnit.Millimeters);
@@ -56,6 +59,16 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 
 	private Location pickLocation;
 
+    @Commit
+    public void commit() {
+        //This method gets called by the deserializer when configuration .xml files are loading.
+        if (rotationInTray == null) {
+            Logger.trace( "Old rotated tray feeder format found in .xml file, converting to new feeder format..." );
+            rotationInTray = getLocation().getRotation();
+            setLocation(getLocation().derive(null, null, null, trayRotation));
+        }
+    }
+    
 	@Override
 	public Location getPickLocation() throws Exception {
 		if (pickLocation == null) {
@@ -96,15 +109,15 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 		// pickLocation = location.add(offsets.multiply(partX, partY, 0.0,
 		// 0.0));
 
-		double delta_x1 = partX * getOffsets().getX() * Math.cos(Math.toRadians(trayRotation));
+		double delta_x1 = partX * getOffsets().getX() * Math.cos(Math.toRadians(getLocation().getRotation()));
 		double delta_y1 = Math.sqrt((partX * getOffsets().getX() * partX * getOffsets().getX()) - (delta_x1 * delta_x1));
 		Location delta1 = new Location(LengthUnit.Millimeters, delta_x1, delta_y1, 0, 0);
 
-		double delta_y2 = partY * getOffsets().getY() * Math.cos(Math.toRadians(trayRotation)) * -1;
+		double delta_y2 = partY * getOffsets().getY() * Math.cos(Math.toRadians(getLocation().getRotation())) * -1;
 		double delta_x2 = Math.sqrt((partY * getOffsets().getY() * partY * getOffsets().getY()) - (delta_y2 * delta_y2));
 		Location delta2 = new Location(LengthUnit.Millimeters, delta_x2, delta_y2, 0, 0);
 
-		setPickLocation(getLocation().add(delta1.add(delta2)));
+		setPickLocation(getLocation().add(delta1.add(delta2)).derive(null, null, null, getLocation().getRotation()+rotationInTray));
 	}
 
 	public void feed(Nozzle nozzle) throws Exception {
@@ -173,6 +186,14 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 	public void setOffsets(Location offsets) {
 		this.offsets = convertToLocalDeltaLocation(offsets);
 	}
+
+    public Double getRotationInTray() {
+        return rotationInTray;
+    }
+
+    public void setRotationInTray(Double rotationInTray) {
+        this.rotationInTray = rotationInTray;
+    }
 
 	public double getTrayRotation() {
 		return trayRotation;

@@ -158,7 +158,7 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
 
         head.moveToSafeZ();
 
-        pickLocation = this.getLocation();
+        setPickLocation(this.getLocation());
 
         if (feededCount == 0) {
             Location feedStartLocation = this.feedStartLocation;
@@ -218,7 +218,7 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
 
             Logger.debug("final visionOffsets " + getVisionOffset());
 
-            Logger.debug("Modified pickLocation {}", pickLocation.subtract(getVisionOffset()));
+            Logger.debug("Modified pickLocation {}", convertToGlobalLocation(pickLocation).subtract(getVisionOffset()));
         }
     }
 

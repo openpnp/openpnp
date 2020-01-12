@@ -417,7 +417,8 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 			bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
 			addWrappedBinding(location, "lengthX", textFieldLocationX, "text", lengthConverter);
 			addWrappedBinding(location, "lengthY", textFieldLocationY, "text", lengthConverter);
-			addWrappedBinding(location, "rotation", textFieldComponentRotation, "text", doubleConverter);
+            //addWrappedBinding(location, "rotation", textFieldComponentRotation, "text", doubleConverter);
+            addWrappedBinding(location, "rotation", textFieldTrayRotation, "text", doubleConverter);
 			addWrappedBinding(location, "lengthZ", textFieldComponentZHeight, "text", lengthConverter);
 
 			MutableLocationProxy firstRowLastComponentlocation = new MutableLocationProxy();
@@ -451,7 +452,8 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		addWrappedBinding(feeder, "trayCountCols", textFieldTrayCountCols, "text", intConverter);
 		addWrappedBinding(feeder, "trayCountRows", textFieldTrayCountRows, "text", intConverter);
 		addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", intConverter);
-		addWrappedBinding(feeder, "trayRotation", textFieldTrayRotation, "text", doubleConverter);
+        //addWrappedBinding(feeder, "trayRotation", textFieldTrayRotation, "text", doubleConverter);
+        addWrappedBinding(feeder, "rotationInTray", textFieldComponentRotation, "text", doubleConverter);
 
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsX);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsY);

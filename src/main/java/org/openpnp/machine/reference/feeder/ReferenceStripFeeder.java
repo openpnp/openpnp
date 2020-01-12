@@ -155,6 +155,9 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         if (rotationInTape == null) {
             Logger.trace( "Old strip feeder format found in .xml file, converting to new feeder format..." );
             rotationInTape = getLocation().getRotation();
+            Location delta = getReferenceHoleLocation().subtract(getLastHoleLocation());
+            double feederAngleDeg = Math.toDegrees(Math.atan2(delta.getY(), delta.getX()));
+            setLocation(getLocation().derive(null, null, null, feederAngleDeg));
         }
     }
     
