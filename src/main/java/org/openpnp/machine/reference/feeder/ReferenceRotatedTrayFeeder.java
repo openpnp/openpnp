@@ -49,9 +49,9 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 	@Attribute
 	private int feedCount = 0;
     @Attribute(required = false)
-    private Double rotationInTray;
+    private Double rotationInTray = 0.0;
   	@Attribute
-	private double trayRotation = 0;
+	private double trayRotation = 0; //No longer used - tray rotation is now part of location - only kept to satisfy xml parser
 	@Element
 	protected Location lastComponentLocation = new Location(LengthUnit.Millimeters);
 	@Element
@@ -66,6 +66,7 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
             Logger.trace( "Old rotated tray feeder format found in .xml file, converting to new feeder format..." );
             rotationInTray = getLocation().getRotation();
             setLocation(getLocation().derive(null, null, null, trayRotation));
+            offsets = offsets.derive(null, -offsets.getY(), null, null);
         }
     }
     
@@ -109,15 +110,9 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 		// pickLocation = location.add(offsets.multiply(partX, partY, 0.0,
 		// 0.0));
 
-		double delta_x1 = partX * getOffsets().getX() * Math.cos(Math.toRadians(getLocation().getRotation()));
-		double delta_y1 = Math.sqrt((partX * getOffsets().getX() * partX * getOffsets().getX()) - (delta_x1 * delta_x1));
-		Location delta1 = new Location(LengthUnit.Millimeters, delta_x1, delta_y1, 0, 0);
-
-		double delta_y2 = partY * getOffsets().getY() * Math.cos(Math.toRadians(getLocation().getRotation())) * -1;
-		double delta_x2 = Math.sqrt((partY * getOffsets().getY() * partY * getOffsets().getY()) - (delta_y2 * delta_y2));
-		Location delta2 = new Location(LengthUnit.Millimeters, delta_x2, delta_y2, 0, 0);
-
-		setPickLocation(getLocation().add(delta1.add(delta2)).derive(null, null, null, getLocation().getRotation()+rotationInTray));
+		Location pickOffset = convertToGlobalDeltaLocation(offsets.derive(partX*offsets.getX(), partY*offsets.getY(), 0.0, 0.0));
+		
+		setPickLocation(getLocation().add(pickOffset).derive(null, null, null, getLocation().getRotation()+rotationInTray));
 	}
 
 	public void feed(Nozzle nozzle) throws Exception {
@@ -180,11 +175,11 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 	}
 
 	public Location getOffsets() {
-		return convertToGlobalDeltaLocation(offsets);
+		return offsets; //convertToGlobalDeltaLocation(offsets);
 	}
 
 	public void setOffsets(Location offsets) {
-		this.offsets = convertToLocalDeltaLocation(offsets);
+		this.offsets = offsets; //convertToLocalDeltaLocation(offsets);
 	}
 
     public Double getRotationInTray() {

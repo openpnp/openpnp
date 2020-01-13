@@ -325,22 +325,22 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 					}
 
 					// Distance Point A -> Point B
-					double deltaX1 = (Double.parseDouble(textFieldLocationX.getText())
-							- Double.parseDouble(textFieldFirstRowLastLocationX.getText()));
-					double deltaY1 = (Double.parseDouble(textFieldLocationY.getText())
-							- Double.parseDouble(textFieldFirstRowLastLocationY.getText()));
+					double deltaX1 = Double.parseDouble(textFieldFirstRowLastLocationX.getText())
+							- Double.parseDouble(textFieldLocationX.getText());
+					double deltaY1 = Double.parseDouble(textFieldFirstRowLastLocationY.getText())
+							- Double.parseDouble(textFieldLocationY.getText());
 
-					double rot_rad1 = Math.atan(deltaY1 / deltaX1);
+					double rot_rad1 = Math.atan2(deltaY1, deltaX1);
 					double rot_deg1 = Math.toDegrees(rot_rad1);
 					double delta_length1 = Math.sqrt(deltaX1 * deltaX1 + deltaY1 * deltaY1);
 
 					// Distance Point B -> Point C
-					double deltaX2 = (Double.parseDouble(textFieldFirstRowLastLocationX.getText())
-							- Double.parseDouble(textFieldLastLocationX.getText()));
-					double deltaY2 = (Double.parseDouble(textFieldFirstRowLastLocationY.getText())
-							- Double.parseDouble(textFieldLastLocationY.getText()));
+					double deltaX2 = Double.parseDouble(textFieldLastLocationX.getText())
+							- Double.parseDouble(textFieldFirstRowLastLocationX.getText());
+					double deltaY2 = Double.parseDouble(textFieldLastLocationY.getText())
+							- Double.parseDouble(textFieldFirstRowLastLocationY.getText());
 
-					double delta_length2 = Math.sqrt(deltaX2 * deltaX2 + deltaY2 * deltaY2);
+					double delta_length2 = Math.signum(deltaX1*deltaY2-deltaY1*deltaX2) * Math.sqrt(deltaX2 * deltaX2 + deltaY2 * deltaY2);
 
 					textFieldTrayRotation.setText(String.valueOf(round(rot_deg1, 3)));
 
@@ -417,7 +417,6 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 			bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
 			addWrappedBinding(location, "lengthX", textFieldLocationX, "text", lengthConverter);
 			addWrappedBinding(location, "lengthY", textFieldLocationY, "text", lengthConverter);
-            //addWrappedBinding(location, "rotation", textFieldComponentRotation, "text", doubleConverter);
             addWrappedBinding(location, "rotation", textFieldTrayRotation, "text", doubleConverter);
 			addWrappedBinding(location, "lengthZ", textFieldComponentZHeight, "text", lengthConverter);
 
@@ -452,7 +451,6 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		addWrappedBinding(feeder, "trayCountCols", textFieldTrayCountCols, "text", intConverter);
 		addWrappedBinding(feeder, "trayCountRows", textFieldTrayCountRows, "text", intConverter);
 		addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", intConverter);
-        //addWrappedBinding(feeder, "trayRotation", textFieldTrayRotation, "text", doubleConverter);
         addWrappedBinding(feeder, "rotationInTray", textFieldComponentRotation, "text", doubleConverter);
 
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsX);
