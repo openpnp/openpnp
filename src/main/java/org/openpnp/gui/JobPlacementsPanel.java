@@ -183,7 +183,7 @@ public class JobPlacementsPanel extends JPanel {
                 if (e.getKeyChar() == ' ') {
                     Placement placement = getSelection();
                     placement.setEnabled(!placement.isEnabled());
-                    tableModel.fireTableRowsUpdated(table.getSelectedRow(), table.getSelectedRow());
+                    refreshSelectedRow();
                     updateActivePlacements();
                 }
                 else {
@@ -303,6 +303,11 @@ public class JobPlacementsPanel extends JPanel {
     public void refresh() {
         tableModel.fireTableDataChanged();
         updateActivePlacements();
+    }
+
+    public void refreshSelectedRow() {
+        int index = table.convertRowIndexToModel(table.getSelectedRow());
+        tableModel.fireTableRowsUpdated(index, index);
     }
 
     public void selectPlacement(Placement placement) {
@@ -559,6 +564,9 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
+                if (getSelection().getSide() == Side.Bottom) {
+                    throw new Exception("This feature is currently broken for board bottoms. See https://github.com/openpnp/openpnp/issues/813 for more information.");
+                }
                 HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
                 Location placementLocation = Utils2D.calculateBoardPlacementLocationInverse(
@@ -579,11 +587,16 @@ public class JobPlacementsPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
-            Location placementLocation = Utils2D
-                    .calculateBoardPlacementLocationInverse(boardLocation, nozzle.getLocation());
-            getSelection().setLocation(placementLocation);
-            table.repaint();
+            UiUtils.messageBoxOnException(() -> {
+                if (getSelection().getSide() == Side.Bottom) {
+                    throw new Exception("This feature is currently broken for board bottoms. See https://github.com/openpnp/openpnp/issues/813 for more information.");
+                }
+                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                Location placementLocation = Utils2D
+                        .calculateBoardPlacementLocationInverse(boardLocation, nozzle.getLocation());
+                getSelection().setLocation(placementLocation);
+                table.repaint();
+            });
         }
     };
 
