@@ -63,6 +63,16 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
     public Location getPickLocation() throws Exception;
 
     /**
+     * Prepares a Feeder for usage in a Job. This is done for all the feeders that are enabled and 
+     * contain Parts that are used in pending placements. Preparation is done when the Job is started, 
+     * so it can perform one-time initialization that cannot be postponed until the Nozzle.feed() 
+     * operation due to cost in time etc.    
+     * 
+     * @throws Exception
+     */
+    public void prepareForJob() throws Exception;
+    
+    /**
      * Commands the Feeder to do anything it needs to do to prepare the part to be picked by the
      * specified Nozzle. If the Feeder requires Head interaction to feed it will perform those
      * operations during this call.

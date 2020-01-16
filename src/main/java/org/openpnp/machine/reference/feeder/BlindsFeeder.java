@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 <mark@makr.zone>
+ * Copyright (C) 2019-2020 <mark@makr.zone>
  * based on the ReferenceStripFeeder 
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
  * 
@@ -22,7 +22,6 @@
 package org.openpnp.machine.reference.feeder;
 
 
-
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
@@ -38,21 +37,17 @@ import java.util.Map;
 
 import javax.swing.Action;
 
-import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.io.IOUtils;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
+import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
-import org.openpnp.gui.components.CameraView;
-import org.openpnp.gui.components.CameraViewFilter;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
-import org.openpnp.machine.reference.camera.BufferedImageCamera;
-import org.openpnp.machine.reference.feeder.BlindsFeeder.FindFeatures;
 import org.openpnp.machine.reference.feeder.wizards.BlindsFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -70,12 +65,11 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.HslColor;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
-import org.openpnp.util.Utils2D;
+import org.openpnp.util.TravellingSalesman;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.Ransac.Line;
 import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.CvStage;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -90,6 +84,10 @@ import org.simpleframework.xml.Element;
  */
 
 
+/**
+ * @author Markus
+ *
+ */
 public class BlindsFeeder extends ReferenceFeeder {
 
     static public final Location nullLocation = new Location(LengthUnit.Millimeters);
@@ -140,14 +138,17 @@ public class BlindsFeeder extends ReferenceFeeder {
     private int pocketCount = 0;
 
     @Attribute(required = false)
-    private int pocketsEmpty = 0;
+    private int firstPocket = 1;
+
+    @Attribute(required = false)
+    private int lastPocket = 0;
 
     @Element(required = false)
     private Length sprocketPitch = new Length(4, LengthUnit.Millimeters);
 
     @Element(required = false)
     private Length edgeOpenDistance = new Length(2, LengthUnit.Millimeters); 
-    
+
     @Element(required = false)
     private Length edgeClosedDistance = new Length(2, LengthUnit.Millimeters); 
 
@@ -158,20 +159,17 @@ public class BlindsFeeder extends ReferenceFeeder {
     @Attribute(required = false)
     private double pushSpeed = 0.1;
 
-    @Attribute(required = false)
-    private boolean pushHigh = false;
-    
     // These internal setting are not on the GUI but can be changed in the XML.
     @Attribute(required = false)
     private int fidLocMaxPasses = 3;
 
     @Attribute(required = false)
-    private double fidLocToleranceMillimeter = 0.5;
+    private double fidLocToleranceMm = 0.5;
 
     @Attribute(required = false)
-    private double pocketPosToleranceMillimeter = 0.1;
+    private double pocketPosToleranceMm = 0.1;
 
-    // Transient stuff
+    // Transient state
     private Length pocketPosition = new Length(Double.NaN, LengthUnit.Millimeters);
     private Length pocketDistance = new Length(Double.NaN, LengthUnit.Millimeters);
     private boolean calibrating = false;
@@ -206,27 +204,30 @@ public class BlindsFeeder extends ReferenceFeeder {
         });
     }
 
-     private void recalculate() {
-        // Geometry must correspond to 3D printed feeder. So this code must remain in sync with the
-        // OpenSCAD BlindsFeeder_v???.scad file. 
+    private void recalculateGeometry() {
+        // This geometry must match the 3D printed feeder. So this code must remain in sync with the OpenSCAD file. 
+        // @see /openpnp/src/main/resources/org/openpnp/machine/reference/feeder/BlindsFeeder-Library.scad 
+        // and search for "recalculateGeometry()". 
 
-        // The fiducials give us the first and last sprocket position directly (in feeder-local X-coordinates).
-        // The pockets are then aligned to the sprockets according to the EIA 481-C-2003 standard. 
+        // The fiducials give us the first and last sprocket hole positions directly (in feeder-local X-coordinates).
+        // The pockets are then aligned to the sprocket holes according to the EIA 481-C-2003 standard. 
 
-        // According to the standard, pockets align with the mid-point between two sprocket holes, however for the 
-        // 2mm pitch tapes (0402 and smaller) there is another row of pocket interleaved and aligned with the sprocket hole.
-        // This means that for 2mm pitch parts there is one more pocket in the tape and the first one starts right on
-        // the sprocket pitch instead of half the pocket pitch away. 
+        // According to the EIA-481-C, pockets align with the mid-point between two sprocket holes, 
+        // however for the 2mm pitch tapes (0402 and smaller) obviously the pockets also directly 
+        // align with sprocket holes.
+        // This means that for 2mm pitch parts we can accommodate one more pocket in the tape i.e. 
+        // the first one aligns with the sprocket instead of half the sprocket pitch away. 
         boolean isSmallPitch = Math.round(sprocketPitch.divide(pocketPitch)) == 2;
         setPocketCount((int)(Math.floor(tapeLength.divide(pocketPitch)))
                 + (isSmallPitch ? 1 : 0));
         // The wanted pocket center position relative to the pocket pitch is 0.25 for blinds covers,
         // but 0.5 for all other cover types where the part can be larger than half the pitch.  
         double pitchRelativePosition = (coverType == CoverType.BlindsCover ? 0.25 : 0.5);
-        // Align pocket center to sprocketPitch. Make sure to round 0.5 downwards (hence the -0.001).
+        // Align the pocket center to the nearest sprocketPitch. Make sure to round 0.5 downwards 
+        // (hence the -0.001).
         Length pocketAlign = sprocketPitch
                 .multiply(Math.round(pocketPitch.multiply(pitchRelativePosition).divide(sprocketPitch) - 0.001)); 
-        // Now shift that to a mid-point between two sprockets (unless it is small pitch)
+        // Now shift that to a mid-point between two sprocket holes (unless it is small pitch)
         setPocketDistance(sprocketPitch.multiply(isSmallPitch ? 0.0 : 0.5)
                 .add(pocketAlign)); 
     }
@@ -238,29 +239,38 @@ public class BlindsFeeder extends ReferenceFeeder {
                 calibrateFeederLocations();
             }
         }
-        recalculate();
+        recalculateGeometry();
     }
 
-    public Location getPickLocation(double feedCount) {
-        recalculate();
+    /**  
+     * @param pocketNumber 1-based number of the pocket 
+     * @return the Location of the pocket with the given number in the tape
+     */
+    public Location getPickLocation(double pocketNumber) {
+        recalculateGeometry();
 
-        // Calculate the next pick location in local feeder coordinates. 
-        Length feederX = pocketPitch.multiply(feedCount-1.0).convertToUnits(location.getUnits()).add(pocketDistance);
+        // Calculate the pick location in local feeder coordinates. 
+        Length feederX = pocketPitch.multiply(pocketNumber-1.0).convertToUnits(location.getUnits()).add(pocketDistance);
         Length feederY = pocketCenterline.convertToUnits(location.getUnits());
 
         Location feederLocation = new Location(location.getUnits(), feederX.getValue(), feederY.getValue(), 
-                location.getZ(), getTapeOrientationRotation());
+                location.getZ(), getPickRotationInTape());
         Location machineLocation = transformFeederToMachineLocation(feederLocation);
         return machineLocation;
     }
 
     @Override
     public Location getPickLocation() {
-        return getPickLocation(this.feedCount);
+        return getPickLocation(this.getFedPocketNumber());
+    }
+
+    private int getFedPocketNumber() {
+        return this.getFeedCount()+this.getFirstPocket()-1;
     }
 
     public boolean isCoverOpenState(boolean openState) {
         if (coverType == CoverType.NoCover) {
+            // with no cover it is always open
             return openState == true;
         }
         if (Double.isNaN(pocketPosition.getValue())) {
@@ -269,10 +279,10 @@ public class BlindsFeeder extends ReferenceFeeder {
         }
         if (coverType == CoverType.BlindsCover) {
             double positionError = Math.abs(pocketPosition.subtract(pocketDistance).convertToUnits(LengthUnit.Millimeters).getValue());
-            return (positionError < pocketPosToleranceMillimeter) == openState;
+            return (positionError < pocketPosToleranceMm) == openState;
         }
         if (coverType == CoverType.PushCover) {
-            Length feederX = pocketPitch.multiply(feedCount).add(pocketDistance).convertToUnits(location.getUnits());
+            Length feederX = pocketPitch.multiply(getFedPocketNumber()).add(pocketDistance).convertToUnits(location.getUnits());
             return (pocketPosition.convertToUnits(location.getUnits()).getValue() > feederX.getValue()) == openState;
         }
 
@@ -294,7 +304,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                     .getMachine()
                     .getDefaultHead()
                     .getDefaultCamera();
-            Location cameraOpenPosition = getPickLocation(3);
+            Location cameraOpenPosition = getPickLocation(4);
             // Move the camera over the blinds to check the open position.
             MovableUtils.moveToLocationAtSafeZ(camera, cameraOpenPosition);
             findPocketPosition(camera);
@@ -306,10 +316,10 @@ public class BlindsFeeder extends ReferenceFeeder {
 
 
     public void feed(Nozzle nozzle) throws Exception {
-        if (getFeedCount() + getPocketsEmpty() >= getPocketCount()) {
+        if (getFeedCount() + getLastPocket() >= getPocketCount()) {
             throw new Exception("Feeder "+getName()+" part "+getPart().getId()+" empty.");
         }
-        
+
         assertCalibration();
         if (coverType == CoverType.BlindsCover) {
             if (coverActuation == CoverActuation.CheckOpen) {
@@ -319,8 +329,9 @@ public class BlindsFeeder extends ReferenceFeeder {
                     throw new Exception("Feeder "+getName()+" "+getPart().getName()+": cover is not open. Please open manually.");
                 }
             }
-            else if (coverActuation == CoverActuation.OpenOnFirstUse) {
+            else if (coverActuation == CoverActuation.OpenOnFirstUse || coverActuation == CoverActuation.OpenOnJobStart) {
                 if (!isCoverOpen()) {
+                    // Note, with CoverActuation.OpenOnJobStart, this should only happen with a manual feed.
                     actuateCover(true);
                 }
             }
@@ -396,6 +407,81 @@ public class BlindsFeeder extends ReferenceFeeder {
             }
         }
 
+        // number the parts in the pockets
+        private void drawPartNumbers(Mat mat, Color color) {
+            // make sure the numbers are not too dense
+            if (getPocketPitchMm() < 1.) {
+                // feeder not set up yet
+                return;
+            }
+            // calculate the diagonal text size
+            Size size = Imgproc.getTextSize(String.valueOf(getPocketCount()), Core.FONT_HERSHEY_PLAIN, 1., 1, new int[] {});
+            Location textSizeMm = VisionUtils.getPixelCenterOffsets(camera, size.width, size.height).convertToUnits(LengthUnit.Millimeters);
+            double textSizePitchCount = textSizeMm.getLinearDistanceTo(nullLocation)/getPocketPitchMm();
+            int step;
+            if (textSizePitchCount < 0.75) {
+                step = 1;
+            }
+            else if (textSizePitchCount < 1.5) {
+                step = 2;
+            }
+            else if (textSizePitchCount < 4) {
+                step = 5;
+            }
+            else {
+                // something must be wrong - feeder probably not set up correctly (yet)
+                return;
+            }
+            // go through all the pockets, step-wise 
+            for (int i = step; i <= getPocketCount(); i += step) {
+                String text = String.valueOf(i);
+                Size textSize = Imgproc.getTextSize(text, Core.FONT_HERSHEY_PLAIN, 1., 1, new int[] {});
+
+                Location partLocation = getPickLocation(i).convertToUnits(LengthUnit.Millimeters);
+                // go below the pocket
+                Location textLocation = transformMachineToFeederLocation(partLocation);
+                textLocation = textLocation.add(new Location(LengthUnit.Millimeters, 0., getPocketSizeMm()*0.5+textSizeMm.getY()*0.2, 0., 0.));
+                textLocation = transformFeederToMachineLocation(textLocation).convertToUnits(LengthUnit.Millimeters);
+                Point p = VisionUtils.getLocationPixels(camera, textLocation);
+                if (p.x > 0 && p.x < camera.getWidth() && p.y > 0 && p.y < camera.getHeight()) {
+                    // roughly in the visible range - draw it
+                    // determine the alignment based on where the text is located in relation to the pocket
+                    double dx = textLocation.getX() - partLocation.getX();
+                    double dy = textLocation.getY() - partLocation.getY();
+                    // the alignment, in relation to the upper left corner of the text
+                    double alignX, alignY;
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                        // more horizontal displacement 
+                        if (dx < 0) {
+                            // to the left
+                            alignX = -textSize.width;
+                            alignY = -textSize.height/2;
+                        }
+                        else {
+                            // to the right
+                            alignX = 0.;
+                            alignY = -textSize.height/2;
+                        }
+                    }
+                    else {
+                        // more vertical displacement
+                        if (dx < 0) {
+                            // above
+                            alignX = -textSize.width/2;
+                            alignY = -textSize.height;
+                        }
+                        else {
+                            // below
+                            alignX = -textSize.width/2;
+                            alignY = 0.;
+                        }
+                    }
+                    Imgproc.putText(mat, text, new org.opencv.core.Point(p.x + alignX, p.y + alignY), Core.FONT_HERSHEY_PLAIN, 1.0, FluentCv.colorToScalar(color));
+                }
+            }
+
+        }
+
         private double angleNorm(double angle) {
             while (angle > 45) {
                 angle -= 90;
@@ -406,18 +492,6 @@ public class BlindsFeeder extends ReferenceFeeder {
             return angle;
         }
 
-        // TODO: when PR #825 is merged, take Vision Utils method instead
-        public Point getLocationPixels(Camera camera, Location location) {
-            // get the units per pixel scale 
-            Location unitsPerPixel = camera.getUnitsPerPixel();
-            // convert inputs to the same units, center on camera and scale
-            location = location.convertToUnits(unitsPerPixel.getUnits())
-                    .subtract(camera.getLocation())
-                    .multiply(1./unitsPerPixel.getX(), -1./unitsPerPixel.getY(), 0., 0.);
-            // relative to upper left corner of camera in pixels
-            return new Point(location.getX()+camera.getWidth()/2, location.getY()+camera.getHeight()/2);
-        }
-        
         /** 
          * Very simple histogram with zero knowledge about the range. 
          * Good only for low numbers of measurements.
@@ -663,8 +737,8 @@ public class BlindsFeeder extends ReferenceFeeder {
                         Location l2 = new Location(LengthUnit.Millimeters, +100., bestY, 0., 0.);
                         l1 = transformFeederToMachineLocation(l1);
                         l2 = transformFeederToMachineLocation(l2);
-                        Point p1 = getLocationPixels(camera, l1);
-                        Point p2 = getLocationPixels(camera, l2);
+                        Point p1 = VisionUtils.getLocationPixels(camera, l1);
+                        Point p2 = VisionUtils.getLocationPixels(camera, l2);
                         Line line = new Line(new org.opencv.core.Point(p1.x, p1.y), new org.opencv.core.Point(p2.x, p2.y));
                         lines.add(line);
                     }
@@ -723,8 +797,8 @@ public class BlindsFeeder extends ReferenceFeeder {
                     Location l2 = new Location(LengthUnit.Millimeters, pocketPositionMm, pocketCenterlineMm+100., 0., 0.);
                     l1 = transformFeederToMachineLocation(l1);
                     l2 = transformFeederToMachineLocation(l2);
-                    Point p1 = getLocationPixels(camera, l1);
-                    Point p2 = getLocationPixels(camera, l2);
+                    Point p1 = VisionUtils.getLocationPixels(camera, l1);
+                    Point p2 = VisionUtils.getLocationPixels(camera, l2);
                     Line line = new Line(new org.opencv.core.Point(p1.x, p1.y), new org.opencv.core.Point(p2.x, p2.y));
                     lines.add(line);
                 }
@@ -735,6 +809,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                     drawRotatedRects(resultMat, getBlinds(), Color.blue);
                     drawRotatedRects(resultMat, getFiducials(), Color.white);
                     drawLines(resultMat, getLines(), Color.yellow);
+                    drawPartNumbers(resultMat, Color.orange);
                     File file = Configuration.get().createResourceFile(getClass(), "blinds-feeder", ".png");
                     Imgcodecs.imwrite(file.getAbsolutePath(), resultMat);
                     BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
@@ -750,7 +825,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             return this;
         }
     }
-    
+
     public void showFeatures() throws Exception {
         Camera camera = Configuration.get()
                 .getMachine()
@@ -773,7 +848,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 setPocketCenterline(new Length(0., LengthUnit.Millimeters)); 
                 setPocketPitch(new Length(0., LengthUnit.Millimeters)); 
                 setPocketSize(new Length(0., LengthUnit.Millimeters)); 
-                
+
                 // Try to clone from another feeder.
                 updateFromConnectedFeeder(camera.getLocation(), false);
 
@@ -836,7 +911,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 .getMachine()
                 .getDefaultHead()
                 .getDefaultCamera();
-        
+
         // Calculate the wanted open/closed positions.
         assertCalibration();
         Length pitchHalf = pocketPitch.multiply(0.5).convertToUnits(LengthUnit.Millimeters);
@@ -844,9 +919,9 @@ public class BlindsFeeder extends ReferenceFeeder {
         Length wantedClosedPosition = getPocketDistance().add(pitchHalf).modulo(pocketPitch);
         Location cameraOpenPosition = getPickLocation(4);
         Location cameraClosedPosition = getPickLocation(3.5);
-        
+
         double damping = 1.0;
-        
+
         // Close cover to start with a known opposite position.
         actuateCover(false);
 
@@ -870,7 +945,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             // Apply the error to the edge.
             setEdgeOpenDistance(getEdgeOpenDistance()
                     .add(offsetOpen.multiply(damping)));
-            
+
             // Close the cover.
             actuateCover(false);
             // Move the camera over the blinds to check the closed position.
@@ -890,14 +965,14 @@ public class BlindsFeeder extends ReferenceFeeder {
             setEdgeClosedDistance(getEdgeClosedDistance().subtract(offsetClosed.multiply(damping)));
 
             // Test against half the tolerance used for the "check open" test.
-            if (Math.abs(offsetOpen.getValue()) < pocketPosToleranceMillimeter*0.5
-                    && Math.abs(offsetClosed.getValue()) < pocketPosToleranceMillimeter*0.5) {
+            if (Math.abs(offsetOpen.getValue()) < pocketPosToleranceMm*0.5
+                    && Math.abs(offsetClosed.getValue()) < pocketPosToleranceMm*0.5) {
                 // Both good enough - no more passes needed.
                 break;
             }
         }
     }
-    
+
     private Location locateFiducial(Camera camera, Location location) throws Exception {
         if (location.equals(nullLocation)) {
             throw new Exception("Feeder " + getName() + ": Fiducial location not set.");
@@ -931,7 +1006,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 // update location
                 location = bestFiducialLocation;
 
-                if (mmDistance < fidLocToleranceMillimeter) {
+                if (mmDistance < fidLocToleranceMm) {
                     // Already a good enough fix - skip further passes
                     break;
                 }
@@ -982,7 +1057,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         NoCover, BlindsCover, PushCover
     }
     public enum CoverActuation {
-        Manual, CheckOpen, OpenOnFirstUse
+        Manual, CheckOpen, OpenOnFirstUse, OpenOnJobStart
     }
 
     @Attribute(required = false)
@@ -995,66 +1070,129 @@ public class BlindsFeeder extends ReferenceFeeder {
         // Filter out all the BlindsFeeders with blinds cover. 
         List<BlindsFeeder> feederList = new ArrayList<>();
         for (Feeder feeder : Configuration.get().getMachine().getFeeders())  {
-            if (feeder instanceof BlindsFeeder) {
-                BlindsFeeder blindsFeeder = (BlindsFeeder)feeder;
-                if (blindsFeeder.coverType == CoverType.BlindsCover) {
-                    if (!blindsFeeder.isCoverOpenState(openState)) {
-                        feederList.add(blindsFeeder);
+            if (feeder.isEnabled()) {
+                if (feeder instanceof BlindsFeeder) {
+                    BlindsFeeder blindsFeeder = (BlindsFeeder)feeder;
+                    if (blindsFeeder.coverType == CoverType.BlindsCover) {
+                        if (!blindsFeeder.isCoverOpenState(openState)) {
+                            feederList.add(blindsFeeder);
+                        }
                     }
                 }
             }
         }
 
-        // Sort feeders by position
-        Collections.sort(feederList, new Comparator<BlindsFeeder>() {
-            @Override
-            public int compare(BlindsFeeder o1, BlindsFeeder o2) {
-                Location l1 = o1.getPickLocation(0).convertToUnits(LengthUnit.Millimeters);
-                Location l2 = o2.getPickLocation(0).convertToUnits(LengthUnit.Millimeters);
-                // Sort in bands by X.
-                int xBand1 = (int)(l1.getX()/100.0);
-                int xBand2 = (int)(l2.getX()/100.0);
-                if (Integer.compare(xBand1, xBand2) != 0) {
-                    return Integer.compare(xBand1, xBand2);
-                }
-                // Same band - sort by Y. 
-                return Double.compare(l1.getY(), l2.getY());    
-            }
-        });
+        // Get the nozzle for the current position.
+        Nozzle nozzle = BlindsFeeder.nozzleForPushing(false);
+        // Use a Travelling Salesman algorithm to optimize the path to actuate all the feeder covers.
+        TravellingSalesman<BlindsFeeder> tsm = new TravellingSalesman<>(
+                feederList, 
+                new TravellingSalesman.Locator<BlindsFeeder>() { 
+                    @Override
+                    public Location getLocation(BlindsFeeder locatable) {
+                        return locatable.getPickLocation(0);
+                    }
+                }, 
+                // start from current location
+                nozzle != null ? nozzle.getLocation() : null, 
+                        // no end location
+                        null);
 
-        // Finally actuate the feeders
-        for (BlindsFeeder blindsFeeder : feederList) {
+        // Solve it using the default heuristics.
+        tsm.solve(false);
+
+        // Finally actuate the feeders along the travel path.
+        for (BlindsFeeder blindsFeeder : tsm.getTravel()) {
             blindsFeeder.actuateCover(openState);
         }
     }
-    
-    public double getTapeOrientationRotation() {
-        // Our local feeder coordinate system has the positive X axis advance the pick location. Y is the direction in which 
-        // the feeders are arrayed. With the feeders arranged around and the first parts oriented towards the PCB, this results 
-        // in a counter-clockwise layout of the feeders when seen from above (like pins on an electronics part). 
-        // Consequently the sprocket holes are at the bottom when seen in an upright Cartesian coordinate system, which 
-        // corresponds to a feeder on the right side of the machine, which again corresponds to 0 degrees in a Cartesian coordinate 
-        // system.
+
+    public double getPickRotationInTape() {
+        // Get the pick rotation in relation to the tape orientation (feeder local coordinates).
+
+        // * What is 0° for the rotation of the part is determined by how the part footprint
+        //   is drawn in the ECAD. However look up "Zero Component Orientation" for the 
+        //   standardized way to do this. 
+        // * What is 0° for the rotation of the tape is defined in accordance to the 
+        //   EIA-481-C "Quadrant designations" ("upper left" etc.).
+        // * Consequently a pick rotation of 0° means that the part is oriented upwards as 
+        //   drawn in the ECAD, when holding the tape horizontal with the sprocket holes 
+        //   at the top. If the tape has sprocket holes on both sides, look at the round, not 
+        //   the elongated holes. 
+        // * Also consult "EIA-481-C" to see how parts should be oriented in the tape.
+
+        // Our local feeder coordinate system has the positive X axis advance the pick location. 
+        // Y is the direction in which the feeders are arrayed. With the feeders arranged around 
+        // the machine and the first parts facing the center, this results in a counter-clockwise 
+        // layout of the feeders when seen from above (like pins on an electronics part).
+        // Following the pins analogy, and in accordance with the EIA-481-C "Quadrant designations", 
+        // the first feeders should be in the upper left quadrant, with our local coordinate system 
+        // rotated by 180°. Consequently the sprocket holes are then on top like in the EIA-481-C 
+        // definition. The same meaning is adopted in the OpenPNP ReferenceStripFeeder. 
         // 
-        // However in an automatic feeder it is actually the tape that is advanced and the positive "X" direction is seen the 
-        // other way. Consequently the sprocket holes are usually shown on top (i.e. in EIA-481-C) and this was adopted as 0 degrees 
-        // in the OpenPNP ReferenceStripFeeder. 
-        // 
-        // This means that we need to rotate by 180 degrees from our feeder local coordinate system to have the same understanding. 
+        // This means that we need to rotate by 180 degrees from our feeder local coordinate system. 
         return location.getRotation() + 180.;
     }
 
+    public static Nozzle nozzleForPushing(boolean loadNozzleTipIfNeeded) throws Exception {
+        // first search for any NozzleTip already loaded that may be used for pushing 
+        Machine machine = Configuration.get().getMachine();
+        for (Head head : machine.getHeads()) {
+            for (Nozzle nozzle :  head.getNozzles()) {
+                NozzleTip nozzleTip = nozzle.getNozzleTip();
+                if (nozzleTip.isPushAndDragAllowed()) {
+                    // Return the nozzle.
+                    return nozzle;
+                }
+            }
+        }
+        // We arrived here, so none was found.
+        if (loadNozzleTipIfNeeded) {
+            for (Head head : machine.getHeads()) {
+                for (Nozzle nozzle :  head.getNozzles()) {
+                    for (NozzleTip pushNozzleTip : nozzle.getCompatibleNozzleTips()) {
+                        if (pushNozzleTip.isPushAndDragAllowed()) {
+                            // Alas, found one for pushing, load it
+                            nozzle.loadNozzleTip(pushNozzleTip);
+                            // And return the nozzle.
+                            return nozzle;
+                        }
+                    }
+                }
+            }
+            // None could be loaded.
+            throw new Exception("BlindsFeeder: No Nozzle/NozzleTip found that allows pushing.");
+        }
+        // None compatible.
+        return null;
+    }
+
+    @Override
+    public void prepareForJob() throws Exception {
+        super.prepareForJob();
+        if (getCoverActuation() == CoverActuation.OpenOnJobStart) {
+            actuateCover(true, true);
+        }
+    }
+
     public void actuateCover(boolean openState) throws Exception {
+        actuateCover(openState, false);
+    }    
+
+    public void actuateCover(boolean openState, boolean loadNozzleTipIfNeeded) throws Exception {
         if (coverType == CoverType.NoCover) {
             throw new Exception("Feeder " + getName() + ": has no cover to actuate.");
         }
         else {
-            Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+            Nozzle nozzle = BlindsFeeder.nozzleForPushing(loadNozzleTipIfNeeded);
             NozzleTip nozzleTip = (nozzle == null ? null : nozzle.getNozzleTip());
             if (nozzleTip == null) {
                 throw new Exception("Feeder " + getName() + ": no nozzle tip loaded.");
             }
-            Length nozzleTipDiameter = pushHigh ? nozzleTip.getDiameterHigh() : nozzleTip.getDiameterLow(); 
+            if (! nozzleTip.isPushAndDragAllowed()) {
+                throw new Exception("Feeder " + getName() + ": loaded nozzle tip "+nozzleTip.getId()+" does not allow pushing. Check the nozzle tip configuration.");
+            }
+            Length nozzleTipDiameter = nozzleTip.getDiameterLow(); 
             if (nozzleTipDiameter.getValue() == 0.) {
                 throw new Exception("Feeder " + getName() + ": current nozzle tip "+nozzleTip.getId()+" has push diameter not set. Check the nozzle tip configuration.");
             }
@@ -1085,8 +1223,8 @@ public class BlindsFeeder extends ReferenceFeeder {
                         .convertToUnits(location.getUnits());
                 Length feederZ = location.getLengthZ().add(pushZOffset);
 
-                Location feederLocation0 = new Location(location.getUnits(), feederX0.getValue(), feederY.getValue(), feederZ.getValue(), getTapeOrientationRotation());
-                Location feederLocation1 = new Location(location.getUnits(), feederX1.getValue(), feederY.getValue(), feederZ.getValue(), getTapeOrientationRotation());
+                Location feederLocation0 = new Location(location.getUnits(), feederX0.getValue(), feederY.getValue(), feederZ.getValue(), getPickRotationInTape());
+                Location feederLocation1 = new Location(location.getUnits(), feederX1.getValue(), feederY.getValue(), feederZ.getValue(), getPickRotationInTape());
 
                 // Convert to machine locations
                 Location machineLocation0 = transformFeederToMachineLocation(feederLocation0);
@@ -1101,7 +1239,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             }
             else if (coverType == CoverType.PushCover && openState) {
                 // Calculate the motion for the cover to be pushed in feeder local coordinates.
-                Location pickLocation = getPickLocation(getFeedCount()+1);
+                Location pickLocation = getPickLocation(getFedPocketNumber()+1);
                 Location pickFeederLocation = transformMachineToFeederLocation(pickLocation);
                 Length feederX0 = (getFeedCount() == 0 || !isCoverOpen()?
                         pocketPitch.multiply(-0.5)
@@ -1120,8 +1258,8 @@ public class BlindsFeeder extends ReferenceFeeder {
                         .convertToUnits(location.getUnits());
                 Length feederZ = location.getLengthZ().subtract(pushZOffset);
 
-                Location feederLocation0 = new Location(location.getUnits(), feederX0.getValue(), feederY.getValue(), feederZ.getValue(), getTapeOrientationRotation());
-                Location feederLocation1 = new Location(location.getUnits(), feederX1.getValue(), feederY.getValue(), feederZ.getValue(), getTapeOrientationRotation());
+                Location feederLocation0 = new Location(location.getUnits(), feederX0.getValue(), feederY.getValue(), feederZ.getValue(), getPickRotationInTape());
+                Location feederLocation1 = new Location(location.getUnits(), feederX1.getValue(), feederY.getValue(), feederZ.getValue(), getPickRotationInTape());
 
                 // Convert to machine locations
                 Location machineLocation0 = transformFeederToMachineLocation(feederLocation0);
@@ -1189,7 +1327,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         // Fiducial 3 may be the one across from fiducial 1 or 2 - the nearer one is it. 
         Location ref = (fiducial3Location.convertToUnits(origin.getUnits()).getLinearDistanceTo(fiducial2Location) 
                 < fiducial3Location.convertToUnits(origin.getUnits()).getLinearDistanceTo(fiducial1Location) ?
-                fiducial2Location : fiducial1Location).convertToUnits(origin.getUnits());
+                        fiducial2Location : fiducial1Location).convertToUnits(origin.getUnits());
         distance = fiducial3Location.equals(nullLocation) ? 0 : ref.getLinearDistanceTo(fiducial3Location);
         if (normalize || distance < 1*mm) {
             // We want to normalize or fiducial 3 is not set or has no distance. 
@@ -1214,6 +1352,9 @@ public class BlindsFeeder extends ReferenceFeeder {
         // an approximation valid for lines parallel to the tapes (as is most useful). It ignores shear in the
         // transform.
         txRotation = Math.toDegrees(Math.atan2(axisX.getY(), axisX.getX()));
+
+        // recalculate the geometry
+        recalculateGeometry();
         return true;
     }
 
@@ -1357,7 +1498,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 setPocketPosition(feeder.pocketPosition);
                 setEdgeOpenDistance(feeder.edgeOpenDistance);
                 setEdgeClosedDistance(feeder.edgeClosedDistance);
-              }
+            }
             setCalibrated(feeder.calibrated);
             isUpdating = false;
         }
@@ -1639,16 +1780,29 @@ public class BlindsFeeder extends ReferenceFeeder {
         int oldValue = this.pocketCount;
         this.pocketCount = pocketCount;
         firePropertyChange("pocketCount", oldValue, pocketCount);
+        // adapt the first and last pocket to a new count
+        this.setFirstPocket(Math.max(1, Math.min(pocketCount, this.getFirstPocket()))); 
+        this.setLastPocket(Math.min(pocketCount, Math.max(this.getFirstPocket(), this.getLastPocket() - oldValue + pocketCount))); 
     }
 
-    public int getPocketsEmpty() {
-        return pocketsEmpty;
+    public int getFirstPocket() {
+        return firstPocket;
     }
 
-    public void setPocketsEmpty(int pocketsEmpty) {
-        int oldValue = this.pocketsEmpty;
-        this.pocketsEmpty = pocketsEmpty;
-        firePropertyChange("pocketsEmpty", oldValue, pocketsEmpty);
+    public void setFirstPocket(int firstPocket) {
+        int oldValue = this.firstPocket;
+        this.firstPocket = firstPocket;
+        firePropertyChange("firstPocket", oldValue, firstPocket);
+    }
+
+    public int getLastPocket() {
+        return lastPocket;
+    }
+
+    public void setLastPocket(int lastPocket) {
+        int oldValue = this.lastPocket;
+        this.lastPocket = lastPocket;
+        firePropertyChange("lastPocket", oldValue, lastPocket);
     }
 
     public Length getPocketDistance() {
@@ -1755,18 +1909,6 @@ public class BlindsFeeder extends ReferenceFeeder {
         Length oldValue = this.pushZOffset;
         this.pushZOffset = pushZOffset;
         firePropertyChange("pushZOffset", oldValue, pushZOffset);
-    }
-    
-    
-
-    public boolean isPushHigh() {
-        return pushHigh;
-    }
-
-    public void setPushHigh(boolean pushHigh) {
-        boolean oldValue = this.pushHigh;
-        this.pushHigh = pushHigh;
-        firePropertyChange("pushHigh", oldValue, pushHigh);
     }
 
     public CoverType getCoverType() {

@@ -73,8 +73,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     @Element(required = false)
     private Length diameterLow = new Length(0, LengthUnit.Millimeters);
 
-    @Element(required = false)
-    private Length diameterHigh = new Length(0, LengthUnit.Millimeters);
+    @Attribute(required = false)
+    private boolean isPushAndDragAllowed = false;
 
     public ReferenceNozzleTip() {
     }
@@ -244,12 +244,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     @Override
-    public Length getDiameterHigh() {
-        return diameterHigh;
+    public boolean isPushAndDragAllowed() {
+        return isPushAndDragAllowed;
     }
 
-    public void setDiameterHigh(Length diameterHigh) {
-        this.diameterHigh = diameterHigh;
+    public void setPushAndDragAllowed(boolean isPushAndDragAllowed) {
+        this.isPushAndDragAllowed = isPushAndDragAllowed;
     }
 
     public boolean isUnloadedNozzleTipStandin() {
