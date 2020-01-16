@@ -553,11 +553,11 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
         double[][] dest = { {fid1Captured.getX(),fid2Captured.getX()},
                             {fid1Captured.getY(),fid2Captured.getY()} };
         
-	    //Utils2D.testComputeScalingRotationAndTranslation();
-	    //double[][] source = { {-1.0, 1.0, 0.0}, {-1.0, -1.0, 2.0} };
-	    //double[][] dest =   { {1.0, 1.0, -2.0}, {-0.25, 0.25, 0.0} }; 
-        //AffineTransform at = Utils2D.deriveAffineTransform(source, dest);
-        //Logger.trace("Transform = " + at);
+//	    Utils2D.testComputeScalingRotationAndTranslation();
+//	    double[][] source = { {-1.0, 1.0, 0.0}, {-1.0, -1.0, 2.0} };
+//	    double[][] dest =   { {1.0, 1.0, -2.0}, {-0.25, 0.25, 0.0} }; 
+//        AffineTransform at = Utils2D.deriveAffineTransform(source, dest);
+//        Logger.trace("Transform = " + at);
         
         
         double rotAngleDeg = Math.toDegrees( Math.atan2(dest[1][0] - dest[1][1], dest[0][0] - dest[0][1]) - 

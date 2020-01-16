@@ -86,9 +86,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         }
     }
 
-    @Attribute(required = false)
-    private Double rotationInTape;
-    
     @Element(required = false)
     private Location referenceHoleLocation = new Location(LengthUnit.Millimeters);
 
@@ -149,12 +146,11 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         return new Length(0.5, LengthUnit.Millimeters);
     }
 
+    @Override
     @Commit
     public void commit() {
-        //This method gets called by the deserializer when configuration .xml files are loading.
-        if (rotationInTape == null) {
-            Logger.trace( "Old strip feeder format found in .xml file, converting to new feeder format..." );
-            rotationInTape = getLocation().getRotation();
+        if (rotationInFeeder == null) {
+            super.commit();
             Location delta = getReferenceHoleLocation().subtract(getLastHoleLocation());
             double feederAngleDeg = Math.toDegrees(Math.atan2(delta.getY(), delta.getX()));
             setLocation(getLocation().derive(null, null, null, feederAngleDeg));
@@ -203,7 +199,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         l = l.add(new Location(l.getUnits(), p.x, p.y, 0, 0));
         // Add in the angle of the tape plus the angle of the part in the tape
         // so that the part is picked at the right angle
-        l = l.derive(null, null, null, angle + rotationInTape);
+        l = l.derive(null, null, null, angle + rotationInFeeder);
 
         return l;
     }
@@ -333,14 +329,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         return new Length(tapeWidth.getValue() / 2 - 0.5, LengthUnit.Millimeters);
     }
     
-    public Double getRotationInTape() {
-        return rotationInTape;
-    }
-
-    public void setRotationInTape(Double rotationInTape) {
-        this.rotationInTape = rotationInTape;
-    }
-
     public TapeType getTapeType() {
         return tapeType;
     }

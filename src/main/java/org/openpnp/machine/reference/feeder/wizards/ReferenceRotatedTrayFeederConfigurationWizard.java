@@ -52,6 +52,7 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
+import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceRotatedTrayFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
@@ -87,7 +88,6 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 	private JTextField textFieldTrayCountCols;
 	private JTextField textFieldTrayCountRows;
 	private JTextField textFieldTrayRotation;
-	private JTextField textFieldComponentRotation;
 	private JTextField textFieldComponentZHeight;
 
 	private JPanel panelPart;
@@ -98,6 +98,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 	private JTextField retryCountTf;
 	private JLabel lblPickRetryCount;
 	private JTextField pickRetryCount;
+    private JTextField rotationInFeeder;
 
 	/**
 	 * @wbp.parser.constructor
@@ -108,9 +109,9 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 
 	public ReferenceRotatedTrayFeederConfigurationWizard(ReferenceRotatedTrayFeeder feeder,
 			boolean includePickLocation) {
-		// super(feeder);
-		this.feeder = feeder;
-		this.includePickLocation = includePickLocation;
+		//super(feeder);
+	    this.feeder = feeder;
+	    this.includePickLocation = includePickLocation;
 
 		panelPart = new JPanel();
 		panelPart.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General Settings",
@@ -126,8 +127,10 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		    new RowSpec[] {
 		        FormSpecs.RELATED_GAP_ROWSPEC,
 		        FormSpecs.DEFAULT_ROWSPEC,
-		        FormSpecs.RELATED_GAP_ROWSPEC,
-		        FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
 		        FormSpecs.RELATED_GAP_ROWSPEC,
 		        FormSpecs.DEFAULT_ROWSPEC,}));
 
@@ -155,21 +158,28 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
 		panelPart.add(comboBoxPart, "4, 2, left, default");
 
+        JLabel lblRotationInFeeder = new JLabel("Rotation In Feeder");
+        panelPart.add(lblRotationInFeeder, "2, 4, left, default");
+
+        rotationInFeeder = new JTextField();
+        panelPart.add(rotationInFeeder, "4, 4, fill, default");
+        rotationInFeeder.setColumns(4);
+
 		JLabel lblRetryCount = new JLabel("Feed Retry Count");
-		panelPart.add(lblRetryCount, "2, 4, right, default");
+		panelPart.add(lblRetryCount, "2, 6, right, default");
 
 		retryCountTf = new JTextField();
 		retryCountTf.setText("3");
-		panelPart.add(retryCountTf, "4, 4");
+		panelPart.add(retryCountTf, "4, 6");
 		retryCountTf.setColumns(3);
 		
 		lblPickRetryCount = new JLabel("Pick Retry Count");
-		panelPart.add(lblPickRetryCount, "2, 6, right, default");
+		panelPart.add(lblPickRetryCount, "2, 8, right, default");
 		
 		pickRetryCount = new JTextField();
 		pickRetryCount.setText("3");
 		pickRetryCount.setColumns(3);
-		panelPart.add(pickRetryCount, "4, 6, fill, default");
+		panelPart.add(pickRetryCount, "4, 8, fill, default");
 
 		if (includePickLocation) {
 			panelLocation = new JPanel();
@@ -297,13 +307,13 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 			btnResetFeedCount.setHorizontalAlignment(SwingConstants.LEFT);
 			panelParameters.add(btnResetFeedCount, "8, 4, left, default");
 
-			JLabel lblComponentRotation = new JLabel("Component Rotation [°]");
-			panelParameters.add(lblComponentRotation, "2, 6");
-
-			textFieldComponentRotation = new JTextField();
-			panelParameters.add(textFieldComponentRotation, "4, 6");
-			textFieldComponentRotation.setColumns(10);
-
+//			JLabel lblComponentRotation = new JLabel("Component Rotation [°]");
+//			panelParameters.add(lblComponentRotation, "2, 6");
+//
+//			textFieldComponentRotation = new JTextField();
+//			panelParameters.add(textFieldComponentRotation, "4, 6");
+//			textFieldComponentRotation.setColumns(10);
+//
 			JLabel lblComponentZHeight = new JLabel("Z Height");
 			panelParameters.add(lblComponentZHeight, "6, 6");
 
@@ -409,6 +419,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
 		addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
+        addWrappedBinding(feeder, "rotationInFeeder", rotationInFeeder, "text", intConverter);
         addWrappedBinding(feeder, "feedRetryCount", retryCountTf, "text", intConverter);
         addWrappedBinding(feeder, "pickRetryCount", pickRetryCount, "text", intConverter);
 
@@ -435,7 +446,6 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 
 			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
 			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationY);
-			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldComponentRotation);
 			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldComponentZHeight);
 			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFirstRowLastLocationX);
 			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFirstRowLastLocationY);
@@ -451,11 +461,10 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		addWrappedBinding(feeder, "trayCountCols", textFieldTrayCountCols, "text", intConverter);
 		addWrappedBinding(feeder, "trayCountRows", textFieldTrayCountRows, "text", intConverter);
 		addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", intConverter);
-        addWrappedBinding(feeder, "rotationInTray", textFieldComponentRotation, "text", doubleConverter);
 
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsX);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsY);
-		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldTrayRotation);
+		ComponentDecorators.decorateWithAutoSelect(textFieldTrayRotation);
         ComponentDecorators.decorateWithAutoSelect(retryCountTf);
         ComponentDecorators.decorateWithAutoSelect(pickRetryCount);
 		ComponentDecorators.decorateWithAutoSelect(textFieldTrayCountRows);

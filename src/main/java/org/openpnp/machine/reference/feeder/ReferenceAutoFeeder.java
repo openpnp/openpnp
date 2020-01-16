@@ -25,6 +25,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceAutoFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Nozzle;
@@ -58,7 +59,7 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
 
     @Override
     public Location getPickLocation() throws Exception {
-        return getLocation();
+        return getLocation().addWithRotation(new Location(LengthUnit.Millimeters, 0, 0, 0, rotationInFeeder));
     }
 
     @Override

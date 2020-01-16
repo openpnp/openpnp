@@ -120,7 +120,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     @Override
     public Location getPickLocation() throws Exception {
         if (pickLocation == null) {
-            setPickLocation(getLocation());
+            setPickLocation(getLocation().addWithRotation(new Location(LengthUnit.Millimeters, 0, 0, 0, rotationInFeeder)));
         }
 
         if (vision.isEnabled() && visionOffset != null) {

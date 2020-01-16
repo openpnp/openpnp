@@ -72,6 +72,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
     private JTextField feedRetryCount;
     private JLabel lblPickRetryCount;
     private JTextField pickRetryCount;
+    private JTextField rotationInFeeder;
 
     /**
      * @wbp.parser.constructor
@@ -102,6 +103,8 @@ public abstract class AbstractReferenceFeederConfigurationWizard
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         comboBoxPart = new JComboBox();
@@ -118,21 +121,28 @@ public abstract class AbstractReferenceFeederConfigurationWizard
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
         panelPart.add(comboBoxPart, "4, 2, left, default");
         
+        JLabel lblRotationInFeeder = new JLabel("Rotation In Feeder");
+        panelPart.add(lblRotationInFeeder, "2, 4, left, default");
+
+        rotationInFeeder = new JTextField();
+        panelPart.add(rotationInFeeder, "4, 4, fill, default");
+        rotationInFeeder.setColumns(4);
+
         JLabel lblRetryCount = new JLabel("Feed Retry Count");
-        panelPart.add(lblRetryCount, "2, 4, right, default");
+        panelPart.add(lblRetryCount, "2, 6, right, default");
         
         feedRetryCount = new JTextField();
         feedRetryCount.setText("3");
-        panelPart.add(feedRetryCount, "4, 4");
+        panelPart.add(feedRetryCount, "4, 6");
         feedRetryCount.setColumns(3);
         
         lblPickRetryCount = new JLabel("Pick Retry Count");
-        panelPart.add(lblPickRetryCount, "2, 6, right, default");
+        panelPart.add(lblPickRetryCount, "2, 8, right, default");
         
         pickRetryCount = new JTextField();
         pickRetryCount.setText("3");
         pickRetryCount.setColumns(3);
-        panelPart.add(pickRetryCount, "4, 6");
+        panelPart.add(pickRetryCount, "4, 8");
 
         if (includePickLocation) {
             panelLocation = new JPanel();
@@ -197,6 +207,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
+        addWrappedBinding(feeder, "rotationInFeeder", rotationInFeeder, "text", doubleConverter);
         addWrappedBinding(feeder, "feedRetryCount", feedRetryCount, "text", intConverter);
         addWrappedBinding(feeder, "pickRetryCount", pickRetryCount, "text", intConverter);
 
@@ -213,6 +224,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
             ComponentDecorators.decorateWithAutoSelect(textFieldLocationC);
         }
 
+        ComponentDecorators.decorateWithAutoSelect(rotationInFeeder);
         ComponentDecorators.decorateWithAutoSelect(feedRetryCount);
         ComponentDecorators.decorateWithAutoSelect(pickRetryCount);
     }

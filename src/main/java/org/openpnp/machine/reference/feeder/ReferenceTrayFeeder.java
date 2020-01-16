@@ -33,6 +33,7 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 
 /**
@@ -55,11 +56,16 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 
     @Override
     public Location getPickLocation() throws Exception {
-        if (pickLocation == null) {
-            pickLocation = getLocation();
+        if ((pickLocation == null) || (feedCount == 0)) {
+            setPickLocation(getLocation().addWithRotation(new Location(LengthUnit.Millimeters, 0, 0, 0, rotationInFeeder)));
         }
-        Logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
-        return pickLocation;
+        
+        Logger.debug("{}.getPickLocation => {}", getName(), convertToGlobalLocation(pickLocation));
+        return convertToGlobalLocation(pickLocation);
+    }
+    
+    private void setPickLocation(Location pickLocation) {
+        this.pickLocation = convertToLocalLocation(pickLocation);
     }
 
     public void feed(Nozzle nozzle) throws Exception {
@@ -84,11 +90,12 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
         // Multiply the offsets by the X/Y part indexes to get the total offsets
         // and then add the pickLocation to offset the final value.
         // and then add them to the location to get the final pickLocation.
-        pickLocation = getLocation().add(convertToGlobalDeltaLocation(offsets.multiply(partX, partY, 0.0, 0.0)));
+        setPickLocation(getLocation().add(convertToGlobalDeltaLocation(offsets.multiply(partX, partY, 0.0, 0.0))).
+                addWithRotation(new Location(LengthUnit.Millimeters, 0, 0, 0, rotationInFeeder)));
 
         Logger.debug(String.format("Feeding part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f",
-                feedCount, partX, partY, pickLocation.getX(), pickLocation.getY(),
-                pickLocation.getRotation()));
+                feedCount, partX, partY, getPickLocation().getX(), getPickLocation().getY(),
+                getPickLocation().getRotation()));
 
         setFeedCount(getFeedCount() + 1);
     }

@@ -48,7 +48,7 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
 
     @Override
     public Location getPickLocation() throws Exception {
-        return pickLocation == null ? getLocation() : convertToGlobalLocation(pickLocation);
+        return pickLocation == null ? getLocation().derive(null, null, null, 0.0) : convertToGlobalLocation(pickLocation);
     }
     
     private void setPickLocation(Location pickLocation) {
@@ -99,7 +99,7 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         // Get the result's Location
         Location location = VisionUtils.getPixelLocation(camera, result.center.x, result.center.y);
         // Update the location's rotation with the result's angle
-        location = location.derive(null, null, null, result.angle + this.getLocation().getRotation());
+        location = location.derive(null, null, null, result.angle + rotationInFeeder);
         // Update the location with the correct Z, which is the configured Location's Z
         // plus the part height.
         double z = this.getLocation().convertToUnits(location.getUnits()).getZ()

@@ -351,7 +351,7 @@ public class Utils2D {
         for (int t=0; t<10; t++) {
             double eps = 0.0;
             int nDims = 2;
-            int nPoints = (int) Math.round(1.0+10.0*Math.random());
+            int nPoints = 3; //(int) Math.round(1.0+10.0*Math.random());
             RealMatrix source = MatrixUtils.createRealMatrix(nDims,nPoints);
             RealMatrix noise = MatrixUtils.createRealMatrix(nDims,nPoints);
             //RealMatrix destination = MatrixUtils.createRealMatrix(nDims,nPoints);
@@ -359,13 +359,15 @@ public class Utils2D {
             RealMatrix rotation = MatrixUtils.createRealMatrix(nDims,nDims);
             RealMatrix translation = MatrixUtils.createRealMatrix(nDims,1);
             for (int i=0; i<nDims; i++) {
+                double so = 500.0*(Math.random()-0.5);
                 for (int j=0; j<nPoints; j++) {
-                    source.setEntry(i, j, 500.0*(Math.random()-0.5));
+                    source.setEntry(i, j, 500.0*(Math.random()-0.5)+so);
                     noise.setEntry(i, j, eps*(Math.random()-0.5));
                 }
-                scaling.setEntry(i, i, 1.0+0.02*(Math.random()-0.5));
+                scaling.setEntry(i, i, 1.0+0.01*(Math.random()-0.5));
                 translation.setEntry(i, 0, 150.0*(Math.random()-0.5));
             }
+
             double theta = Math.PI * Math.random();
             rotation.setColumn(0, new double[] {Math.cos(theta), Math.sin(theta)});
             rotation.setColumn(1, new double[] {-Math.sin(theta), Math.cos(theta)});
@@ -445,6 +447,8 @@ public class Utils2D {
             
             sMat = sMat.preMultiply(sc);
     
+//            SingularValueDecomposition newsSVD = new SingularValueDecomposition(sMat.multiply(sMat.transpose()));
+            
             SingularValueDecomposition dstSVD = new SingularValueDecomposition(dMat.multiply(sMat.transpose()));
             
             RealMatrix rot = dstSVD.getU().multiply(dstSVD.getVT());
@@ -454,7 +458,7 @@ public class Utils2D {
                 rot = dstSVD.getU().multiply(s).multiply(dstSVD.getVT());
             }
             
-            RealMatrix tr = dMean.subtract(rot.multiply(sMean));
+            RealMatrix tr = dMean.subtract(rot.multiply(sc).multiply(sMean));
      
             RealMatrix test = rot.multiply(sc).multiply(source);
             for (int i=0; i<nPoints; i++) {

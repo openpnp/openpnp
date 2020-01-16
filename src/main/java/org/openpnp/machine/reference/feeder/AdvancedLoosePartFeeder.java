@@ -30,6 +30,7 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.AdvancedLoosePartFeederConfigurationWizard;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
@@ -39,11 +40,9 @@ import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.simpleframework.xml.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class AdvancedLoosePartFeeder extends ReferenceFeeder {
-    private final static Logger logger = LoggerFactory.getLogger(AdvancedLoosePartFeeder.class);
+//    private final static Logger logger = LoggerFactory.getLogger(AdvancedLoosePartFeeder.class);
 
     @Element(required = false)
     private CvPipeline pipeline = createDefaultPipeline();
@@ -55,7 +54,7 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
 
     @Override
     public Location getPickLocation() throws Exception {
-        return pickLocation == null ? getLocation() : convertToGlobalLocation(pickLocation);
+        return pickLocation == null ? getLocation().derive(null, null, null, 0.0) : convertToGlobalLocation(pickLocation);
     }
     
     public void setPickLocation(Location pickLocation) {
@@ -98,7 +97,7 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
             Location location = VisionUtils.getPixelLocation(camera, result.center.x, result.center.y);
             // Get the result's Location
             // Update the location with the result's rotation
-            location = location.derive(null, null, null, -(result.angle + getLocation().getRotation()));
+            location = location.derive(null, null, null, -(result.angle + rotationInFeeder));
             // Update the location with the correct Z, which is the configured Location's Z
             // plus the part height.
             location =

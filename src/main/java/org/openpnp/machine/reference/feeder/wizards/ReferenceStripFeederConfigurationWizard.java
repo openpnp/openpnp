@@ -130,6 +130,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private List<Location> part1HoleLocations;
     private Camera autoSetupCamera;
 
+    private JTextField textFieldRotationInTape;
+
 
     public ReferenceStripFeederConfigurationWizard(ReferenceStripFeeder feeder) {
         this.feeder = feeder;
@@ -171,9 +173,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         lblRotationInTape = new JLabel("Rotation In Tape");
         panelPart.add(lblRotationInTape, "2, 4, left, default");
 
-        textFieldLocationRotation = new JTextField();
-        panelPart.add(textFieldLocationRotation, "4, 4, fill, default");
-        textFieldLocationRotation.setColumns(4);
+        textFieldRotationInTape = new JTextField();
+        panelPart.add(textFieldRotationInTape, "4, 4, fill, default");
+        textFieldRotationInTape.setColumns(4);
 
         lblRetryCount = new JLabel("Feed Retry Count");
         panelPart.add(lblRetryCount, "2, 6, right, default");
@@ -358,9 +360,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 //        bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
 //        addWrappedBinding(location, "rotation", textFieldLocationRotation, "text", doubleConverter);
 
-        addWrappedBinding(feeder, "rotationInTape", textFieldLocationRotation, "text", doubleConverter);
 
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
+        addWrappedBinding(feeder, "rotationInFeeder", textFieldRotationInTape, "text", doubleConverter);
         addWrappedBinding(feeder, "feedRetryCount", retryCountTf, "text", intConverter);
         addWrappedBinding(feeder, "pickRetryCount", pickRetryCount, "text", intConverter);
         addWrappedBinding(feeder, "tapeType", comboBoxTapeType, "selectedItem");
@@ -387,7 +389,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
         addWrappedBinding(feeder, "visionEnabled", chckbxUseVision, "selected");
 
-        ComponentDecorators.decorateWithAutoSelect(textFieldLocationRotation);
+        ComponentDecorators.decorateWithAutoSelect(textFieldRotationInTape);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldTapeWidth);
         ComponentDecorators.decorateWithAutoSelect(retryCountTf);
         ComponentDecorators.decorateWithAutoSelect(pickRetryCount);

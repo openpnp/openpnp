@@ -48,8 +48,6 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 	private Location offsets = new Location(LengthUnit.Millimeters);
 	@Attribute
 	private int feedCount = 0;
-    @Attribute(required = false)
-    private Double rotationInTray = 0.0;
   	@Attribute
 	private double trayRotation = 0; //No longer used - tray rotation is now part of location - only kept to satisfy xml parser
 	@Element
@@ -59,40 +57,22 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 
 	private Location pickLocation;
 
+    @Override
     @Commit
     public void commit() {
-        //This method gets called by the deserializer when configuration .xml files are loading.
-        if (rotationInTray == null) {
-            Logger.trace( "Old rotated tray feeder format found in .xml file, converting to new feeder format..." );
-            rotationInTray = getLocation().getRotation();
+        if (rotationInFeeder == null) {
+            super.commit();
             setLocation(getLocation().derive(null, null, null, trayRotation));
-            offsets = offsets.derive(null, -offsets.getY(), null, null);
+            offsets = offsets.derive(null, -offsets.getY(), null, null); //flip Y offset to be consistent with referenceTrayFeeder
         }
     }
     
 	@Override
 	public Location getPickLocation() throws Exception {
-		if (pickLocation == null) {
-			setPickLocation(getLocation());
+		if ((pickLocation == null) || (feedCount == 0)) {
+			setPickLocation(getLocation().addWithRotation(new Location(LengthUnit.Millimeters, 0, 0, 0, rotationInFeeder)));
 		}
-		int partX, partY;
-
-		if (feedCount >= (trayCountCols * trayCountRows)) {
-			throw new Exception("Tray empty.");
-		}
-
-		if (trayCountCols >= trayCountRows) {
-			// X major axis.
-			partX = feedCount / trayCountRows;
-			partY = feedCount % trayCountRows;
-		} else {
-			// Y major axis.
-			partX = feedCount % trayCountCols;
-			partY = feedCount / trayCountCols;
-		}
-
-		calculatePickLocation(partX, partY);
-	
+		
 		Logger.debug("{}.getPickLocation => {}", getName(), convertToGlobalLocation(pickLocation));
 		
 		return convertToGlobalLocation(pickLocation);
@@ -112,7 +92,7 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 
 		Location pickOffset = convertToGlobalDeltaLocation(offsets.derive(partX*offsets.getX(), partY*offsets.getY(), 0.0, 0.0));
 		
-		setPickLocation(getLocation().add(pickOffset).derive(null, null, null, getLocation().getRotation()+rotationInTray));
+		setPickLocation(getLocation().add(pickOffset).addWithRotation(new Location(LengthUnit.Millimeters, 0, 0, 0, rotationInFeeder)));
 	}
 
 	public void feed(Nozzle nozzle) throws Exception {
@@ -175,20 +155,12 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 	}
 
 	public Location getOffsets() {
-		return offsets; //convertToGlobalDeltaLocation(offsets);
+		return offsets;  //no conversion necessary as offsets is already in local reference frame (and only used in that frame)
 	}
 
 	public void setOffsets(Location offsets) {
-		this.offsets = offsets; //convertToLocalDeltaLocation(offsets);
+		this.offsets = offsets;  //no conversion necessary as offsets is already in local reference frame
 	}
-
-    public Double getRotationInTray() {
-        return rotationInTray;
-    }
-
-    public void setRotationInTray(Double rotationInTray) {
-        this.rotationInTray = rotationInTray;
-    }
 
 	public double getTrayRotation() {
 		return trayRotation;
