@@ -22,6 +22,9 @@ package org.openpnp.gui.components;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
@@ -44,6 +47,7 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.util.Cycles;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+import org.pmw.tinylog.Logger;
 
 /**
  * A JPanel of 4 small buttons that assist in setting locations. The buttons are Capture Camera
@@ -269,6 +273,14 @@ public class LocationButtonsPanel extends JPanel {
                             location = location.addWithRotation(baseLocation);
                         }
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
+                        try {
+                            Map<String, Object> globals = new HashMap<>();
+                            globals.put("camera", camera);
+                            Configuration.get().getScripting().on("Camera.AfterPosition", globals);
+                        }
+                        catch (Exception e) {
+                            Logger.warn(e);
+                        }
                     });
                 }
             };

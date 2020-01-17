@@ -11,7 +11,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
@@ -65,6 +67,7 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
 
 public class JobPlacementsPanel extends JPanel {
     private JTable table;
@@ -180,7 +183,7 @@ public class JobPlacementsPanel extends JPanel {
                 if (e.getKeyChar() == ' ') {
                     Placement placement = getSelection();
                     placement.setEnabled(!placement.isEnabled());
-                    tableModel.fireTableRowsUpdated(table.getSelectedRow(), table.getSelectedRow());
+                    refreshSelectedRow();
                     updateActivePlacements();
                 }
                 else {
@@ -300,6 +303,11 @@ public class JobPlacementsPanel extends JPanel {
     public void refresh() {
         tableModel.fireTableDataChanged();
         updateActivePlacements();
+    }
+
+    public void refreshSelectedRow() {
+        int index = table.convertRowIndexToModel(table.getSelectedRow());
+        tableModel.fireTableRowsUpdated(index, index);
     }
 
     public void selectPlacement(Placement placement) {
@@ -480,6 +488,14 @@ public class JobPlacementsPanel extends JPanel {
                 Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
+                try {
+                    Map<String, Object> globals = new HashMap<>();
+                    globals.put("camera", camera);
+                    Configuration.get().getScripting().on("Camera.AfterPosition", globals);
+                }
+                catch (Exception e) {
+                    Logger.warn(e);
+                }
             });
         }
     };
@@ -506,6 +522,14 @@ public class JobPlacementsPanel extends JPanel {
                         .getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
                 
+                try {
+                    Map<String, Object> globals = new HashMap<>();
+                    globals.put("camera", camera);
+                    Configuration.get().getScripting().on("Camera.AfterPosition", globals);
+                }
+                catch (Exception e) {
+                    Logger.warn(e);
+                }
             });
         };
     };
@@ -540,6 +564,9 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
+                if (getSelection().getSide() == Side.Bottom) {
+                    throw new Exception("This feature is currently broken for board bottoms. See https://github.com/openpnp/openpnp/issues/813 for more information.");
+                }
                 HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
                 Location placementLocation = Utils2D.calculateBoardPlacementLocationInverse(
@@ -560,11 +587,16 @@ public class JobPlacementsPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
-            Location placementLocation = Utils2D
-                    .calculateBoardPlacementLocationInverse(boardLocation, nozzle.getLocation());
-            getSelection().setLocation(placementLocation);
-            table.repaint();
+            UiUtils.messageBoxOnException(() -> {
+                if (getSelection().getSide() == Side.Bottom) {
+                    throw new Exception("This feature is currently broken for board bottoms. See https://github.com/openpnp/openpnp/issues/813 for more information.");
+                }
+                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                Location placementLocation = Utils2D
+                        .calculateBoardPlacementLocationInverse(boardLocation, nozzle.getLocation());
+                getSelection().setLocation(placementLocation);
+                table.repaint();
+            });
         }
     };
 

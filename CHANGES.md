@@ -1,6 +1,12 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2019-12-03
+	
+## New feeder: ReferenceLeverFeeder
+
+This is for feeders where a lever is pushed by a actuator (usually the head) to advance the parts.  It was made from the ReferenceDragFeeder.  A Part Pitch field is added and multiple feed operations will be performed as required.
+
 # 2019-11-24
 
 ## BREAKING CHANGE: Vacuum Valve and Pump Actuation Remodel

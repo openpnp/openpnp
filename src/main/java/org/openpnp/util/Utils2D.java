@@ -138,33 +138,80 @@ public class Utils2D {
 
     public static Location calculateBoardPlacementLocation(Location boardLocation, Side side,
             double offset, Location placementLocation) {
-        // The Z value of the placementLocation is always ignored, so zero it out to make sure.
-        placementLocation = placementLocation.derive(null, null, 0D, null);
+            // The Z value of the placementLocation is always ignored, so zero it out to make sure.
+            placementLocation = placementLocation.derive(null, null, 0D, null);
 
 
-        // We will work in the units of the placementLocation, so convert
-        // anything that isn't in those units to it.
+            // We will work in the units of the placementLocation, so convert
+            // anything that isn't in those units to it.
         boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
 
-        // If we are placing the bottom of the board we need to invert
-        // the placement location.
+            // If we are placing the bottom of the board we need to invert
+            // the placement location.
         if (side == Side.Bottom) {
-            placementLocation = placementLocation.invert(true, false, false, false)
+                placementLocation = placementLocation.invert(true, false, false, false)
                     .add(new Location(placementLocation.getUnits(), offset, 0.0, 0.0, 0.0));
+            }
+
+            // Rotate and translate the point into the same coordinate space
+            // as the board
+            placementLocation = placementLocation.rotateXy(boardLocation.getRotation())
+                    .addWithRotation(boardLocation);
+            return placementLocation;
         }
 
-        // Rotate and translate the point into the same coordinate space
-        // as the board
-        placementLocation = placementLocation.rotateXy(boardLocation.getRotation())
-                .addWithRotation(boardLocation);
-        return placementLocation;
-    }
 
-
-    public static Location calculateBoardPlacementLocationInverse(BoardLocation boardLocation,
+    public static Location calculateBoardPlacementLocationInverse(BoardLocation bl,
             Location placementLocation) {
-        return calculateBoardPlacementLocationInverse(boardLocation.getLocation(),
-                boardLocation.getSide(), boardLocation.getBoard().getDimensions().getX(),
+        if (bl.getPlacementTransform() != null) {
+            AffineTransform tx = bl.getPlacementTransform();
+            
+            try {
+                tx = tx.createInverse();
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+            // The affine calculations are always done in millimeters, so we convert everything
+            // before we start calculating and then we'll convert it back to the original
+            // units at the end.
+            LengthUnit placementUnits = placementLocation.getUnits();
+            Location boardLocation = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
+            placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
+
+            if (bl.getSide() == Side.Bottom) {
+                placementLocation = placementLocation.invert(true, false, false, false);
+            }
+            
+            // Calculate the apparent angle from the transform. We need this because when we
+            // created the transform we captured the apparent angle and that is used to position
+            // in X, Y, but we also need the actual value to add to the placement rotation so that
+            // the nozzle is rotated to the correct angle as well.
+            // Note, there is probably a better way to do this. If you know how, please let me know!
+            Point2D.Double a = new Point2D.Double(0, 0);
+            Point2D.Double b = new Point2D.Double(1, 1);
+            Point2D.Double c = new Point2D.Double(0, 0);
+            Point2D.Double d = new Point2D.Double(1, 1);
+            c = (Point2D.Double) tx.transform(c, null);
+            d = (Point2D.Double) tx.transform(d, null);
+            double angle = Math.toDegrees(Math.atan2(d.y - c.y, d.x - c.x) - Math.atan2(b.y - a.y, b.x - a.x));
+            
+            Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
+            p = tx.transform(p, null);
+            
+            // The final result is the transformed X,Y, the BoardLocation's Z, and the
+            // transform angle + placement angle.
+            Location l = new Location(LengthUnit.Millimeters, 
+                    p.getX(), 
+                    p.getY(), 
+                    boardLocation.getZ(), 
+                    angle + placementLocation.getRotation());
+            l = l.convertToUnits(placementUnits);
+            return l;
+        }
+        return calculateBoardPlacementLocationInverse(bl.getLocation(),
+                bl.getSide(), bl.getBoard().getDimensions().getX(),
                 placementLocation);
     }
 
@@ -190,6 +237,9 @@ public class Utils2D {
      * are on - it's existing Location is not considered. The returned Location is the
      * absolute Location of the board, including it's angle, with the Z value set to the
      * Z value in the input BoardLocation.
+     * 
+     * TODO Replace this with deriveAffineTransform. This is essentially a two fiducial check.
+     * 
      * @param boardLocation
      * @param placementA
      * @param placementB
