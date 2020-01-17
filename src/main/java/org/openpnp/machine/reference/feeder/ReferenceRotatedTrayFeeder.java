@@ -57,13 +57,16 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 
 	private Location pickLocation;
 
-    @Override
     @Commit
     public void commit() {
         if (rotationInFeeder == null) {
+            Location lastComponentLocation = this.lastComponentLocation;
+            Location firstRowLastComponentLocation = this.firstRowLastComponentLocation;
             super.commit();
             setLocation(getLocation().derive(null, null, null, trayRotation));
             offsets = offsets.derive(null, -offsets.getY(), null, null); //flip Y offset to be consistent with referenceTrayFeeder
+            setLastComponentLocation(lastComponentLocation);
+            setFirstRowLastComponentLocation(firstRowLastComponentLocation);
         }
     }
     

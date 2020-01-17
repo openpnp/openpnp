@@ -118,6 +118,21 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
     private Location visionLocation;
 
+    @Commit
+    public void commit() {
+        if (rotationInFeeder == null) {
+            Location referenceHoleLocation = this.referenceHoleLocation;
+            Location lastHoleLocation = this.lastHoleLocation;
+            super.commit();
+            rotationInFeeder = rotationInFeeder - 90;
+            Location delta = getReferenceHoleLocation().subtract(getLastHoleLocation());
+            double feederAngleDeg = Math.toDegrees(Math.atan2(delta.getY(), delta.getX()));
+            setLocation(getLocation().derive(null, null, null, feederAngleDeg));
+            setReferenceHoleLocation(referenceHoleLocation);
+            setLastHoleLocation(lastHoleLocation);
+        }
+    }
+    
     public Length getHoleDiameterMin() {
         return getHoleDiameter().multiply(0.9);
     }
@@ -147,17 +162,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 
     @Override
-    @Commit
-    public void commit() {
-        if (rotationInFeeder == null) {
-            super.commit();
-            Location delta = getReferenceHoleLocation().subtract(getLastHoleLocation());
-            double feederAngleDeg = Math.toDegrees(Math.atan2(delta.getY(), delta.getX()));
-            setLocation(getLocation().derive(null, null, null, feederAngleDeg));
-        }
-    }
-    
-    @Override
     public Location getPickLocation() throws Exception {
         int feedCount = this.feedCount;
 
@@ -186,12 +190,18 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
                 new Length((feedCount - 1) * partPitchAdjusted, partPitch.getUnits()));
         // Create the offsets that are required to go from a reference hole
         // to the part in the tape
-        Length x = getHoleToPartLateral().convertToUnits(l.getUnits());
-        Length y = referenceHoleToPartLinear.convertToUnits(l.getUnits());
-        Point p = new Point(x.getValue(), y.getValue());
+//        Length x = getHoleToPartLateral().convertToUnits(l.getUnits());
+//        Length y = referenceHoleToPartLinear.convertToUnits(l.getUnits());
+//        Point p = new Point(x.getValue(), y.getValue());
+//
+//        // Determine the angle that the tape is at
+//        double angle = Utils2D.getAngleFromPoint(lineLocations[0], lineLocations[1]);
+        Length x = referenceHoleToPartLinear.convertToUnits(l.getUnits());
+        Length y = getHoleToPartLateral().convertToUnits(l.getUnits());
+        Point p = new Point(x.getValue(), -y.getValue());
 
-		// Determine the angle that the tape is at
-		double angle = Utils2D.getAngleFromPoint(lineLocations[0], lineLocations[1]);
+        // Determine the angle that the tape is at
+        double angle = Utils2D.getAngleFromPoint(lineLocations[1], lineLocations[0]);
 		// Rotate the part offsets by the angle to move it into the right
         // coordinate space
         p = Utils2D.rotatePoint(p, angle);

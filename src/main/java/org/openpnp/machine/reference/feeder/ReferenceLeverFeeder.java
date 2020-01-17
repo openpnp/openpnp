@@ -48,6 +48,7 @@ import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
 /**
@@ -94,6 +95,17 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
     protected Location visionOffset;
     protected Location partPick;
 
+    @Commit
+    public void commit() {
+        if (rotationInFeeder == null) {
+            Location feedStartLocation = this.feedStartLocation;
+            Location feedEndLocation = this.feedEndLocation;
+            super.commit();
+            setFeedStartLocation(feedStartLocation);
+            setFeedEndLocation(feedEndLocation);
+        }
+    }
+    
     private Location getVisionOffset() {
         return convertToGlobalDeltaLocation(visionOffset);
     }
@@ -161,8 +173,8 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
         setPickLocation(this.getLocation().addWithRotation(new Location(LengthUnit.Millimeters, 0, 0, 0, rotationInFeeder)));
 
         if (feededCount == 0) {
-            Location feedStartLocation = this.feedStartLocation;
-            Location feedEndLocation = this.feedEndLocation;
+            Location feedStartLocation = getFeedStartLocation();
+            Location feedEndLocation = getFeedEndLocation();
 
 		    for (double i = partPitch.convertToUnits(LengthUnit.Millimeters).getValue(); i > 0; i=i-4) {  // perform multiple feeds if required
 		    
@@ -326,19 +338,19 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
 	}
 
     public Location getFeedStartLocation() {
-        return feedStartLocation;
+        return convertToGlobalLocation(feedStartLocation);
     }
 
     public void setFeedStartLocation(Location feedStartLocation) {
-        this.feedStartLocation = feedStartLocation;
+        this.feedStartLocation = convertToLocalLocation(feedStartLocation);
     }
 
     public Location getFeedEndLocation() {
-        return feedEndLocation;
+        return convertToGlobalLocation(feedEndLocation);
     }
 
     public void setFeedEndLocation(Location feedEndLocation) {
-        this.feedEndLocation = feedEndLocation;
+        this.feedEndLocation = convertToLocalLocation(feedEndLocation);
     }
 
     public Length getPartPitch() {

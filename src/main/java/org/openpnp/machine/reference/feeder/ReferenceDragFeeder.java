@@ -48,6 +48,7 @@ import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
 /**
@@ -101,6 +102,17 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     protected Location visionOffset;
     protected Location partPitch;
 
+    @Commit
+    public void commit() {
+        if (rotationInFeeder == null) {
+            Location feedStartLocation = this.feedStartLocation;
+            Location feedEndLocation = this.feedEndLocation;
+            super.commit();
+            setFeedStartLocation(feedStartLocation);
+            setFeedEndLocation(feedEndLocation);
+        }
+    }
+    
     private Location getVisionOffset() {
         return convertToGlobalDeltaLocation(visionOffset);
     }
@@ -198,7 +210,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         // feedEndLocation and pickLocation. pickLocation will be saved
         // for the pick operation while feed start and end are used
         // here and then discarded.
-        setPickLocation(this.getLocation());
+        setPickLocation(getLocation().addWithRotation(new Location(LengthUnit.Millimeters, 0, 0, 0, rotationInFeeder)));
 
         if (feededCount == 0) {
             Location feedStartLocation = getFeedStartLocation();

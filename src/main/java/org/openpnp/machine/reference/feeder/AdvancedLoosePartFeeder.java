@@ -40,6 +40,7 @@ import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 public class AdvancedLoosePartFeeder extends ReferenceFeeder {
 //    private final static Logger logger = LoggerFactory.getLogger(AdvancedLoosePartFeeder.class);

@@ -32,6 +32,7 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceAutoFeeder extends ReferenceFeeder {
     public enum ActuatorType {

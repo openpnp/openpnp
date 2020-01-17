@@ -419,7 +419,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
 		addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
-        addWrappedBinding(feeder, "rotationInFeeder", rotationInFeeder, "text", intConverter);
+        addWrappedBinding(feeder, "rotationInFeeder", rotationInFeeder, "text", doubleConverter);
         addWrappedBinding(feeder, "feedRetryCount", retryCountTf, "text", intConverter);
         addWrappedBinding(feeder, "pickRetryCount", pickRetryCount, "text", intConverter);
 

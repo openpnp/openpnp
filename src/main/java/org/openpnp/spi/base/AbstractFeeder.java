@@ -5,7 +5,6 @@ import javax.swing.Icon;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
-import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
@@ -14,7 +13,6 @@ import org.openpnp.spi.Nozzle;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Commit;
-import org.openpnp.machine.reference.feeder.ReferenceFeederGroup;
 
 public abstract class AbstractFeeder extends AbstractModelObject implements Feeder {
     @Attribute
@@ -58,16 +56,6 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
         });
     }
 
-
-    @Commit
-    public void commit() {
-        //This method gets called by the deserializer when configuration .xml files are loading.
-        if (parentId == null) {
-            Logger.trace( "Old feeder format found in .xml file, converting to new feeder format..." );
-            parentId = ROOT_FEEDER_ID;
-        }
-    }
-    
     @Override
     public String getId() {
         return id;

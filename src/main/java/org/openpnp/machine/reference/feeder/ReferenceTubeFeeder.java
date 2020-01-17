@@ -35,7 +35,6 @@ import org.openpnp.spi.PropertySheetHolder;
  */
 public class ReferenceTubeFeeder extends ReferenceFeeder {
 
-
     @Override
     public Location getPickLocation() throws Exception {
         return getLocation().addWithRotation(new Location(LengthUnit.Millimeters, 0, 0, 0, rotationInFeeder));

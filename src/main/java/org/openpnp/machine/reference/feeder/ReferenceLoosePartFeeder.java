@@ -39,6 +39,7 @@ import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceLoosePartFeeder extends ReferenceFeeder {
     @Element(required = false)
