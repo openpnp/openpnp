@@ -82,12 +82,6 @@ import org.simpleframework.xml.Element;
  * less than half the pocket pitch as is usually the case with punched paper carrier tapes 
  * but also for some plastic/embossed carrier tapes.  
  */
-
-
-/**
- * @author Markus
- *
- */
 public class BlindsFeeder extends ReferenceFeeder {
 
     static public final Location nullLocation = new Location(LengthUnit.Millimeters);
@@ -157,7 +151,7 @@ public class BlindsFeeder extends ReferenceFeeder {
     private Length pushZOffset = new Length(0.25, LengthUnit.Millimeters); 
 
     @Attribute(required = false)
-    private double pushSpeed = 0.1;
+    private double pushSpeed = 0.025;
 
     // These internal setting are not on the GUI but can be changed in the XML.
     @Attribute(required = false)
@@ -178,6 +172,7 @@ public class BlindsFeeder extends ReferenceFeeder {
     private void checkHomedState(Machine machine) {
         if (!machine.isHomed()) {
             this.setCalibrated(false);
+            this.setPocketDistance(new Length(Double.NaN, LengthUnit.Millimeters));
         }
     }
 
@@ -217,19 +212,22 @@ public class BlindsFeeder extends ReferenceFeeder {
         // align with sprocket holes.
         // This means that for 2mm pitch parts we can accommodate one more pocket in the tape i.e. 
         // the first one aligns with the sprocket instead of half the sprocket pitch away. 
-        boolean isSmallPitch = Math.round(sprocketPitch.divide(pocketPitch)) == 2;
-        setPocketCount((int)(Math.floor(tapeLength.divide(pocketPitch)))
-                + (isSmallPitch ? 1 : 0));
-        // The wanted pocket center position relative to the pocket pitch is 0.25 for blinds covers,
-        // but 0.5 for all other cover types where the part can be larger than half the pitch.  
-        double pitchRelativePosition = (coverType == CoverType.BlindsCover ? 0.25 : 0.5);
-        // Align the pocket center to the nearest sprocketPitch. Make sure to round 0.5 downwards 
-        // (hence the -0.001).
-        Length pocketAlign = sprocketPitch
-                .multiply(Math.round(pocketPitch.multiply(pitchRelativePosition).divide(sprocketPitch) - 0.001)); 
-        // Now shift that to a mid-point between two sprocket holes (unless it is small pitch)
-        setPocketDistance(sprocketPitch.multiply(isSmallPitch ? 0.0 : 0.5)
-                .add(pocketAlign)); 
+
+        if (pocketPitch.getValue() > 0.0) {
+            boolean isSmallPitch = Math.round(sprocketPitch.divide(pocketPitch)) == 2;
+            setPocketCount((int)(Math.floor(tapeLength.divide(pocketPitch)))
+                    + (isSmallPitch ? 1 : 0));
+            // The wanted pocket center position relative to the pocket pitch is 0.25 for blinds covers,
+            // but 0.5 for all other cover types where the part can be larger than half the pitch.  
+            double pitchRelativePosition = (coverType == CoverType.BlindsCover ? 0.25 : 0.5);
+            // Align the pocket center to the nearest sprocketPitch. Make sure to round 0.5 downwards 
+            // (hence the -0.001).
+            Length pocketAlign = sprocketPitch
+                    .multiply(Math.round(pocketPitch.multiply(pitchRelativePosition).divide(sprocketPitch) - 0.001)); 
+            // Now shift that to a mid-point between two sprocket holes (unless it is small pitch)
+            setPocketDistance(sprocketPitch.multiply(isSmallPitch ? 0.0 : 0.5)
+                    .add(pocketAlign)); 
+        }
     }
 
     private void assertCalibration() throws Exception {
@@ -316,7 +314,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
 
     public void feed(Nozzle nozzle) throws Exception {
-        if (getFeedCount() + getLastPocket() >= getPocketCount()) {
+        if (getFirstPocket() + getFeedCount() > getLastPocket()) {
             throw new Exception("Feeder "+getName()+" part "+getPart().getId()+" empty.");
         }
 
@@ -410,14 +408,31 @@ public class BlindsFeeder extends ReferenceFeeder {
         // number the parts in the pockets
         private void drawPartNumbers(Mat mat, Color color) {
             // make sure the numbers are not too dense
-            if (getPocketPitchMm() < 1.) {
+            int [] baseLine = null;
+            double feederPocketPitchMm =  getPocketPitch().convertToUnits(LengthUnit.Millimeters).getValue();
+            if (feederPocketPitchMm < 1.) {
+                // feeder not set up yet
+                return;
+            }
+            double feederPocketSizeMm =  getPocketSize().convertToUnits(LengthUnit.Millimeters).getValue();
+            if (feederPocketSizeMm < 1.) {
                 // feeder not set up yet
                 return;
             }
             // calculate the diagonal text size
-            Size size = Imgproc.getTextSize(String.valueOf(getPocketCount()), Core.FONT_HERSHEY_PLAIN, 1., 1, new int[] {});
-            Location textSizeMm = VisionUtils.getPixelCenterOffsets(camera, size.width, size.height).convertToUnits(LengthUnit.Millimeters);
-            double textSizePitchCount = textSizeMm.getLinearDistanceTo(nullLocation)/getPocketPitchMm();
+            double fontScale = 1.0;
+            Size size = Imgproc.getTextSize(String.valueOf(getPocketCount()), Core.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
+            Location textSizeMm = camera.getUnitsPerPixel().multiply(size.width, size.height, 0., 0.)
+                    .convertToUnits(LengthUnit.Millimeters);
+            if (textSizeMm.getY() < 0.0) {
+                textSizeMm = textSizeMm.multiply(1.0, -1.0, 0.0, 0.0);
+            }
+            final double minFontSizeMm = 0.6;
+            if (textSizeMm.getY() < minFontSizeMm) {
+                fontScale = minFontSizeMm / textSizeMm.getY();
+                textSizeMm = textSizeMm.multiply(fontScale, fontScale, 0.0, 0.0);
+            }
+            double textSizePitchCount = textSizeMm.getLinearDistanceTo(nullLocation)/feederPocketPitchMm;
             int step;
             if (textSizePitchCount < 0.75) {
                 step = 1;
@@ -435,12 +450,12 @@ public class BlindsFeeder extends ReferenceFeeder {
             // go through all the pockets, step-wise 
             for (int i = step; i <= getPocketCount(); i += step) {
                 String text = String.valueOf(i);
-                Size textSize = Imgproc.getTextSize(text, Core.FONT_HERSHEY_PLAIN, 1., 1, new int[] {});
+                Size textSize = Imgproc.getTextSize(text, Core.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
 
                 Location partLocation = getPickLocation(i).convertToUnits(LengthUnit.Millimeters);
                 // go below the pocket
                 Location textLocation = transformMachineToFeederLocation(partLocation);
-                textLocation = textLocation.add(new Location(LengthUnit.Millimeters, 0., getPocketSizeMm()*0.5+textSizeMm.getY()*0.2, 0., 0.));
+                textLocation = textLocation.add(new Location(LengthUnit.Millimeters, 0., -feederPocketSizeMm*0.5-textSizeMm.getY()*0.25, 0., 0.));
                 textLocation = transformFeederToMachineLocation(textLocation).convertToUnits(LengthUnit.Millimeters);
                 Point p = VisionUtils.getLocationPixels(camera, textLocation);
                 if (p.x > 0 && p.x < camera.getWidth() && p.y > 0 && p.y < camera.getHeight()) {
@@ -448,35 +463,39 @@ public class BlindsFeeder extends ReferenceFeeder {
                     // determine the alignment based on where the text is located in relation to the pocket
                     double dx = textLocation.getX() - partLocation.getX();
                     double dy = textLocation.getY() - partLocation.getY();
-                    // the alignment, in relation to the upper left corner of the text
+                    // the alignment, in relation to the lower left corner of the text
                     double alignX, alignY;
                     if (Math.abs(dx) > Math.abs(dy)) {
                         // more horizontal displacement 
                         if (dx < 0) {
                             // to the left
                             alignX = -textSize.width;
-                            alignY = -textSize.height/2;
+                            alignY = textSize.height/2;
                         }
                         else {
                             // to the right
                             alignX = 0.;
-                            alignY = -textSize.height/2;
+                            alignY = textSize.height/2;
                         }
                     }
                     else {
                         // more vertical displacement
-                        if (dx < 0) {
+                        if (dy > 0) {
                             // above
                             alignX = -textSize.width/2;
-                            alignY = -textSize.height;
+                            alignY = 0.0;
                         }
                         else {
                             // below
                             alignX = -textSize.width/2;
-                            alignY = 0.;
+                            alignY = textSize.height;
                         }
                     }
-                    Imgproc.putText(mat, text, new org.opencv.core.Point(p.x + alignX, p.y + alignY), Core.FONT_HERSHEY_PLAIN, 1.0, FluentCv.colorToScalar(color));
+                    Imgproc.putText(mat, text, 
+                            new org.opencv.core.Point(p.x + alignX, p.y + alignY), 
+                            Core.FONT_HERSHEY_PLAIN, 
+                            fontScale, 
+                            FluentCv.colorToScalar(color), 2, 0, false);
                 }
             }
 
@@ -786,7 +805,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                         pocketPositionMm, pocketPitchPosMm);
 
                 if (!Double.isNaN(pocketPositionMm)) {
-                    if (pocketPositionMm < 0.) {
+                    if (pocketPositionMm < 0.0) {
                         pocketPositionMm += pocketPitchMm;
                     }
                     if (pocketPositionMm > pocketPitchMm) {
@@ -808,7 +827,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                     Mat resultMat = pipeline.getWorkingImage().clone();
                     drawRotatedRects(resultMat, getBlinds(), Color.blue);
                     drawRotatedRects(resultMat, getFiducials(), Color.white);
-                    drawLines(resultMat, getLines(), Color.yellow);
+                    drawLines(resultMat, getLines(), new Color(0, 0, 128));
                     drawPartNumbers(resultMat, Color.orange);
                     File file = Configuration.get().createResourceFile(getClass(), "blinds-feeder", ".png");
                     Imgcodecs.imwrite(file.getAbsolutePath(), resultMat);
@@ -835,7 +854,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
             // Process vision and show feature without applying anything
             pipeline.process();
-            new FindFeatures(camera, pipeline, 1000).invoke();
+            new FindFeatures(camera, pipeline, 2000).invoke();
         }
     }
 
@@ -917,8 +936,9 @@ public class BlindsFeeder extends ReferenceFeeder {
         Length pitchHalf = pocketPitch.multiply(0.5).convertToUnits(LengthUnit.Millimeters);
         Length wantedOpenPosition = getPocketDistance();
         Length wantedClosedPosition = getPocketDistance().add(pitchHalf).modulo(pocketPitch);
-        Location cameraOpenPosition = getPickLocation(4);
-        Location cameraClosedPosition = getPickLocation(3.5);
+        double cameraPocket = Math.floor((getFirstPocket()+getLastPocket())/2.0);
+        Location cameraOpenPosition = getPickLocation(cameraPocket);
+        Location cameraClosedPosition = getPickLocation(cameraPocket-0.5);
 
         double damping = 1.0;
 
@@ -1070,16 +1090,21 @@ public class BlindsFeeder extends ReferenceFeeder {
         // Filter out all the BlindsFeeders with blinds cover. 
         List<BlindsFeeder> feederList = new ArrayList<>();
         for (Feeder feeder : Configuration.get().getMachine().getFeeders())  {
-            if (feeder.isEnabled()) {
-                if (feeder instanceof BlindsFeeder) {
-                    BlindsFeeder blindsFeeder = (BlindsFeeder)feeder;
-                    if (blindsFeeder.coverType == CoverType.BlindsCover) {
+            if (feeder instanceof BlindsFeeder) {
+                BlindsFeeder blindsFeeder = (BlindsFeeder)feeder;
+                if (blindsFeeder.coverType == CoverType.BlindsCover) {
+                    // only take enabled and/or positively opened feeders to be closed now
+                    if (feeder.isEnabled() || (blindsFeeder.isCoverOpenState(true) && ! openState)) {
                         if (!blindsFeeder.isCoverOpenState(openState)) {
                             feederList.add(blindsFeeder);
                         }
                     }
                 }
             }
+        }
+
+        if (feederList.size() < 1) {
+            throw new Exception("[BlindsFeeder] No feeders found to "+(openState ? "open." : "close."));
         }
 
         // Get the nozzle for the current position.
@@ -1099,7 +1124,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                         null);
 
         // Solve it using the default heuristics.
-        tsm.solve(false);
+        tsm.solve();
 
         // Finally actuate the feeders along the travel path.
         for (BlindsFeeder blindsFeeder : tsm.getTravel()) {
@@ -1222,6 +1247,9 @@ public class BlindsFeeder extends ReferenceFeeder {
                 Length feederY = pocketCenterline
                         .convertToUnits(location.getUnits());
                 Length feederZ = location.getLengthZ().add(pushZOffset);
+                if (location.getZ() == 0.0) {
+                    throw new Exception("Feeder " + getName() + " Part Z not set.");
+                }
 
                 Location feederLocation0 = new Location(location.getUnits(), feederX0.getValue(), feederY.getValue(), feederZ.getValue(), getPickRotationInTape());
                 Location feederLocation1 = new Location(location.getUnits(), feederX1.getValue(), feederY.getValue(), feederZ.getValue(), getPickRotationInTape());
@@ -1485,22 +1513,27 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     public void updateFromConnectedFeeder(BlindsFeeder feeder) {
         if (this != feeder && ! isUpdating) {
-            isUpdating = true;
-            setFiducial1Location(feeder.fiducial1Location);
-            setFiducial2Location(feeder.fiducial2Location);
-            setFiducial3Location(feeder.fiducial3Location);
-            setTapeLength(feeder.tapeLength);
-            setFeederExtent(feeder.feederExtent);
-            setNormalize(feeder.normalize);
-            if (this.pocketCenterline.equals(feeder.pocketCenterline)) {
-                // The tape is shared by two feeders -> update the pocket position (open/close state) and calibrated edges.
-                // NOTE: the user is responsible to ensure a non-overlapping feedCount/emptyPocketCount range 
-                setPocketPosition(feeder.pocketPosition);
-                setEdgeOpenDistance(feeder.edgeOpenDistance);
-                setEdgeClosedDistance(feeder.edgeClosedDistance);
+            try {
+                isUpdating = true; 
+                setFiducial1Location(feeder.fiducial1Location);
+                setFiducial2Location(feeder.fiducial2Location);
+                setFiducial3Location(feeder.fiducial3Location);
+                setTapeLength(feeder.tapeLength);
+                setFeederExtent(feeder.feederExtent);
+                setNormalize(feeder.normalize);
+                if (this.pocketCenterline.equals(feeder.pocketCenterline)) {
+                    // The tape is shared by two feeders -> update the pocket position (open/close state) and calibrated edges.
+                    // NOTE: the user is responsible to ensure a non-overlapping first pocket/last pocket range 
+                    setPocketPosition(feeder.pocketPosition);
+                    setEdgeOpenDistance(feeder.edgeOpenDistance);
+                    setEdgeClosedDistance(feeder.edgeClosedDistance);
+                }
+                setCalibrated(feeder.calibrated);
+                setVisionEnabled(feeder.visionEnabled);
             }
-            setCalibrated(feeder.calibrated);
-            isUpdating = false;
+            finally {
+                isUpdating = false;
+            }
         }
     }
 
@@ -1537,16 +1570,20 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     public void updateConnectedFeedersFromThis(Location location, boolean fiducial1MatchOnly) {
         if (! isUpdating) {
-            isUpdating = true;
-            // Transform might have changed.
-            updateFeederToMachineTransform();
-            // Update all the feeders on the same 3D printed holder from this.
-            for (BlindsFeeder feeder : getConnectedFeedersByLocation(location, fiducial1MatchOnly)) {
-                if (feeder != this) {
-                    feeder.updateFromConnectedFeeder(this);
+            try {
+                isUpdating = true;
+                // Transform might have changed.
+                updateFeederToMachineTransform();
+                // Update all the feeders on the same 3D printed holder from this.
+                for (BlindsFeeder feeder : getConnectedFeedersByLocation(location, fiducial1MatchOnly)) {
+                    if (feeder != this) {
+                        feeder.updateFromConnectedFeeder(this);
+                    }
                 }
             }
-            isUpdating = false;
+            finally {
+                isUpdating = false;
+            }
         }
     }
     public void updateConnectedFeedersFromThis() {
@@ -1848,8 +1885,11 @@ public class BlindsFeeder extends ReferenceFeeder {
         boolean oldValue = this.visionEnabled;
         this.visionEnabled = visionEnabled;
         firePropertyChange("visionEnabled", oldValue, visionEnabled);
+        if (oldValue != visionEnabled) {
+            firePropertyChange("visionEnabled", oldValue, visionEnabled);
+            this.updateConnectedFeedersFromThis();
+        }
     }
-
 
     public int getFeederNo() {
         return feederNo;

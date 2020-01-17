@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2020 <mark@makr.zone>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
+ */
+
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -11,7 +30,14 @@ import org.openpnp.util.TravellingSalesman;
 
 public class TavellingSalesmanTest {
     /**
-     * Test org.openpnp.util.TravellingSalesman<T> with random Locations.
+     * Test org.openpnp.util.TravellingSalesman<T> with random Locations like on a typical PNP machine. 
+     * 
+     * It generates Locations roughly arranged in X- and Y-aligned rows, like feeders would be. Plus some additional 
+     * random Locations strewn in all over. Minimal Z scattering too.
+     *  
+     * The test generates an SVG rendering of the solution, saved as a temporary file.
+     * 
+     * As the actual Unit Test it checks the solution travel distance against a target. 
      * 
      * @throws Exception
      */
@@ -44,12 +70,14 @@ public class TavellingSalesmanTest {
                     }, 
                     // start from origin 
                     new Location(LengthUnit.Millimeters), 
-                    // in the middle test go back, otherwise no given end location
-                    t == 1 ? new Location(LengthUnit.Millimeters) : null);
+                    // across, loop, and no given end location respectively
+                    (t == 1 ? new Location(LengthUnit.Millimeters) : 
+                        (t == 0 ? new Location(LengthUnit.Millimeters, 1000.0, 500.0, 0.0, 0.0) : 
+                            null)));
             // now solve the bugger
-            double bestDistance = tsm.solve(false);
+            double bestDistance = tsm.solve();
             // for the unit test, roughly check expected solution distance   
-            double target = new double [] { 2750.0, 5100.0, 12000.0 } [t];
+            double target = new double [] { 3000.0, 5100.0, 12000.0 } [t];
             System.out.println("TavellingSalesmanTest.testTravellingSalesman() solved "+list.size()+" locations, distance: "+Math.round(bestDistance)+"mm, target: "+target+"mm, time: "+tsm.getSolverDuration()+"ms");
             // save the solution, so we can have a look
             File file = File.createTempFile("travelling-salesman", ".svg");

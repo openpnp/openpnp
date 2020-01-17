@@ -175,7 +175,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         
         addWrappedBinding(nozzleTip, "diameterLow", textFieldLowDiameter, "text", lengthConverter);
         
-        addWrappedBinding(nozzleTip, "limitRotation", chckbxPushAndDragAllowed, "selected");
+        addWrappedBinding(nozzleTip, "pushAndDragAllowed", chckbxPushAndDragAllowed, "selected");
         
         ComponentDecorators.decorateWithAutoSelect(nameTf);
         

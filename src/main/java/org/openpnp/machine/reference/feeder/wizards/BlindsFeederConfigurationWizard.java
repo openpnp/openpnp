@@ -285,7 +285,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelTapeSettings.add(textFieldPocketCenterline, "10, 6");
         textFieldPocketCenterline.setColumns(5);
 
-        lblFirstPocket = new JLabel("FirstPocket");
+        lblFirstPocket = new JLabel("First Pocket");
         lblFirstPocket.setToolTipText("First pocket of the tape that contains a part. Use the Show Features Button to indicate pocket numbers.");
         panelTapeSettings.add(lblFirstPocket, "2, 8, right, default");
 
@@ -405,6 +405,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelCover.add(btnOpenAll, "14, 6");
 
         btnCloseAll = new JButton(closeAllCovers);
+        btnCloseAll.setToolTipText("Close the opened covers of all the feeders of the machine (including those of enabled feeders where the cover state is unknown).");
         panelCover.add(btnCloseAll, "14, 8");
 
         lblEdgeBeginDistance = new JLabel("Edge Distance Open");
@@ -555,7 +556,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblUseVision = new JLabel("Use Vision?");
+        lblUseVision = new JLabel("Use Fiducial Vision?");
+        lblUseVision.setToolTipText("<html><p>Use vision for fiducial calibration when the feeder is first used. </p>\r\n<p>Even if fiducial vision is disabled, vision will still be used for setup and <br />\r\ncover open checking</p><html>");
         panelVision.add(lblUseVision, "2, 2");
 
         JButton btnEditPipeline = new JButton("Edit Pipeline");
