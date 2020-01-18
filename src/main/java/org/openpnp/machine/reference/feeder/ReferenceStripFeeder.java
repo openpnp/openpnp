@@ -370,7 +370,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 
     public void setVisionLocation(Location visionLocation) {
-        this.lastHoleLocation = convertToLocalLocation(visionLocation);
+        this.visionLocation = convertToLocalLocation(visionLocation);
     }
 
     public Length getHoleDiameter() {
