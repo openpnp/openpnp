@@ -3,7 +3,7 @@
  *
  * This 3D printed feeder is inteded to be used together with the "BlindsFeeder" feeder in OpenPNP. 
  *
- * TODO: This file is intended to become part of OpenPnP. 
+ * This file is part of OpenPnP. 
  *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the

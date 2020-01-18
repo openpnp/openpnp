@@ -3,7 +3,7 @@
  *
  * This 3D printed feeder is inteded to be used together with the "BlindsFeeder" feeder in OpenPNP. 
  *
- * TODO: This file is intended to become part of OpenPnP. 
+ * This file is part of OpenPnP. 
  *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
@@ -84,7 +84,7 @@ trayQLPF64 = TapeDefinition(
 BlindsFeeder(
     // Tape length from feeder edge to edge, usually multiples of 4mm. 
     // Other values are supported if you manually adjust the edge distance in the OpenPNP feeder.
-    tape_length=44,
+    tape_length=84,
     
     // Number of lanes per tape definition.  
     arrayed_tape_lanes=      [1,         1,         1,         1,         1],
