@@ -34,6 +34,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
@@ -238,15 +239,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelTapeSettings.add(textFieldFeederExtent, "10, 2");
         textFieldFeederExtent.setColumns(10);
 
-        btnShowInfo = new JButton("Show Features");
-        btnShowInfo.setToolTipText("Show the features recognized by the pipeline.");
-        btnShowInfo.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                UiUtils.submitUiMachineTask(() -> {
-                    feeder.showFeatures();
-                });
-            }
-        });
+        btnShowInfo = new JButton(showFeaturesAction);
         panelTapeSettings.add(btnShowInfo, "14, 2");
 
         btnAutoSetup = new JButton(autoSetup);
@@ -326,13 +319,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelTapeSettings.add(textFieldFeedCount, "4, 12");
         textFieldFeedCount.setColumns(5);
 
-        btnResetFeedCount = new JButton(new AbstractAction("Reset") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                textFieldFeedCount.setText("0");
-                applyAction.actionPerformed(e);
-            }
-        });
+        btnResetFeedCount = new JButton(resetFeedCountAction);
         panelTapeSettings.add(btnResetFeedCount, "14, 12");
 
         panelCover = new JPanel();
@@ -424,14 +411,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelCover.add(textFieldEdgeClosingDistance, "10, 10, fill, default");
         textFieldEdgeClosingDistance.setColumns(10);
 
-        btnCalibrateEdges = new JButton("Calibrate Edges");
-        btnCalibrateEdges.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                UiUtils.submitUiMachineTask(() -> {
-                    feeder.calibrateCoverEdges();
-                });
-            };
-        });
+        btnCalibrateEdges = new JButton(calibrateEdgesAction);
         panelCover.add(btnCalibrateEdges, "14, 10");
 
         panelLocations = new JPanel();
@@ -531,12 +511,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         chckbxNormalize.setToolTipText("");
         panelLocations.add(chckbxNormalize, "4, 10");
 
-        btnCalibrateFiducials = new JButton("Calibrate Fiducials");
-        btnCalibrateFiducials.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                calibrateFiducials();
-            }
-        });
+        btnCalibrateFiducials = new JButton(calibrateFiducialsAction);
         panelLocations.add(btnCalibrateFiducials, "12, 10");
 
         JPanel panelVision = new JPanel();
@@ -560,35 +535,15 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         lblUseVision.setToolTipText("<html><p>Use vision for fiducial calibration when the feeder is first used. </p>\r\n<p>Even if fiducial vision is disabled, vision will still be used for setup and <br />\r\ncover open checking</p><html>");
         panelVision.add(lblUseVision, "2, 2");
 
-        JButton btnEditPipeline = new JButton("Edit Pipeline");
-        btnEditPipeline.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                UiUtils.messageBoxOnException(() -> {
-                    editPipeline();
-                });
-            }
-        });
+        JButton btnEditPipeline = new JButton(editPipelineAction);
 
         chckbxUseVision = new JCheckBox("");
         panelVision.add(chckbxUseVision, "4, 2");
         panelVision.add(btnEditPipeline, "2, 4");
 
-        JButton btnResetPipeline = new JButton("Reset Pipeline");
-        btnResetPipeline.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                resetPipeline();
-            }
-        });
+        JButton btnResetPipeline = new JButton(resetPipelineAction);
 
-        btnPipelineToAllFeeders = new JButton("Set Pipeline To All Feeders");
-        btnPipelineToAllFeeders.setToolTipText("Set this pipeline to all the other feeders on this holder.");
-        btnPipelineToAllFeeders.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                UiUtils.messageBoxOnException(() -> {
-                    setPipelineToAllFeeders();
-                });
-            }
-        });
+        btnPipelineToAllFeeders = new JButton(setPipelineToAllAction);
         panelVision.add(btnPipelineToAllFeeders, "4, 4");
         panelVision.add(btnResetPipeline, "6, 4");
         initDataBindings();
@@ -674,6 +629,116 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         return MainFrame.get().getMachineControls().getSelectedNozzle();
     }
 
+    private Action showFeaturesAction =
+            new AbstractAction("Show Features") {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Show the features recognized by vision, taking the camera center and/or already set feeder properties into consideration.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.submitUiMachineTask(() -> {
+                feeder.showFeatures();
+            });
+        }
+    };
+
+    private Action calibrateFiducialsAction =
+            new AbstractAction("Calibrate Fiducials") {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Calibrate the fiducials to redetermine their precise locations.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
+            calibrateFiducials();
+        }
+    };
+
+    private Action editPipelineAction =
+            new AbstractAction("Edit Pipeline") {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Edit the Pipeline to be used for all vision operations of this feeder.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.messageBoxOnException(() -> {
+                editPipeline();
+            });
+        }
+    };
+
+    private Action resetPipelineAction =
+            new AbstractAction("Reset Pipeline") {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Reset the Pipeline for this feeder to the OpenPNP standard.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.messageBoxOnException(() -> {
+                resetPipeline();
+            });
+        }
+    };
+
+    private Action setPipelineToAllAction =
+            new AbstractAction("Set Pipeline To All") {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Set this pipeline to all the BlindsFeeders on the machine.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.messageBoxOnException(() -> {
+                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "This will replace the pipeline of all the other BlindsFeeders on the machine with the pipeline of this BlindsFeeder. Are you sure?",
+                        null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (result == JOptionPane.YES_OPTION) {
+                    UiUtils.messageBoxOnException(() -> {
+                        setPipelineToAllFeeders();
+                    });
+                }
+            });
+        }
+    };
+
+    private Action calibrateEdgesAction =
+            new AbstractAction("Calibrate Cover Edges") {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Calibrate the cover edges against the nozzle tip to get precise open/close positioning.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
+            UiUtils.submitUiMachineTask(() -> {
+                feeder.calibrateCoverEdges();
+            });
+        };
+    };
+
+    private Action resetFeedCountAction =
+            new AbstractAction("Reset") {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Reset the Feed Count to 0 (for a newly loaded tape).");
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            textFieldFeedCount.setText("0");
+            applyAction.actionPerformed(e);
+        }
+    };
+
     private Action captureToolCoordinatesAction =
             new AbstractAction("Get Tool Z", Icons.captureTool) {
         {
@@ -699,6 +764,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
                 Camera camera = Configuration.get()
                         .getMachine()
@@ -718,6 +784,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
                 feeder.actuateCover(true);
             });
@@ -731,6 +798,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
                 feeder.actuateCover(false);
             });
@@ -745,6 +813,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
                 BlindsFeeder.actuateAllFeederCovers(true);
             });
@@ -759,6 +828,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
                 BlindsFeeder.actuateAllFeederCovers(false);
             });
