@@ -26,13 +26,17 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.PrintWriter;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -40,6 +44,7 @@ import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
+import org.apache.commons.io.IOUtils;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
@@ -62,6 +67,7 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
+import org.openpnp.vision.pipeline.ui.StandaloneEditor;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -125,24 +131,30 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         contentPanel.add(panelPart);
         panelPart.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("right:default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
         try {
         }
         catch (Throwable t) {
@@ -156,11 +168,11 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         comboBoxPart = new JComboBox();
         comboBoxPart.setModel(new PartsComboBoxModel());
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
-        panelPart.add(comboBoxPart, "4, 2, fill, default");
+        panelPart.add(comboBoxPart, "4, 2, 13, 1, left, default");
 
         lblRotationInTape = new JLabel("Rotation In Tape");
         lblRotationInTape.setToolTipText("<html><p>The part rotation in relation to the tape orientation. </p>\r\n<ul><li>What is 0° <strong>for the rotation of the part</strong> is determined by how the part footprint<br />\r\nis drawn in your ECAD. However look up \"Zero Component Orientation\" for the <br />\r\nstandardized way to do this. </li>\r\n<li>What is 0° <strong>for the rotation of the tape</strong> is defined in accordance to the <br />\r\nEIA-481-C \"Quadrant designations\".</li>\r\n<li>Consequently a <strong>Rotation In Tape</strong> of 0° means that the part is oriented upwards as <br />\r\ndrawn in the ECAD, when holding the tape horizontal with the sprocket holes <br/>\r\nat the top. If the tape has sprocket holes on both sides, look at the round, not <br/>\r\nthe elongated holes.</li>\r\n<li>Also consult \"EIA-481-C\" to see how parts should be oriented in the tape.</li></html>\r\n");
-        panelPart.add(lblRotationInTape, "2, 4, left, default");
+        panelPart.add(lblRotationInTape, "2, 4, right, default");
 
         textFieldLocationRotation = new JTextField();
         panelPart.add(textFieldLocationRotation, "4, 4, fill, default");
@@ -168,15 +180,18 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         lblPartTopZ = new JLabel("Part Z");
         lblPartTopZ.setToolTipText("Part pickup Z");
-        panelPart.add(lblPartTopZ, "6, 4, right, default");
+        panelPart.add(lblPartTopZ, "8, 4, right, default");
 
         textFieldPartZ = new JTextField();
-        panelPart.add(textFieldPartZ, "8, 4");
+        panelPart.add(textFieldPartZ, "10, 4, fill, default");
         textFieldPartZ.setColumns(8);
 
         btnCaptureToolZ = new JButton(captureToolCoordinatesAction);
         btnCaptureToolZ.setHideActionText(true);
-        panelPart.add(btnCaptureToolZ, "10, 4");
+        panelPart.add(btnCaptureToolZ, "12, 4, left, default");
+
+        btnExtractOpenscadModel = new JButton(extract3DPrintingAction);
+        panelPart.add(btnExtractOpenscadModel, "16, 4");
 
         lblRetryCount = new JLabel("Retry Count");
         panelPart.add(lblRetryCount, "2, 6, right, default");
@@ -629,6 +644,39 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         return MainFrame.get().getMachineControls().getSelectedNozzle();
     }
 
+    private Action extract3DPrintingAction =
+            new AbstractAction("Extract 3D-Printing Files", Icons.openSCadIcon) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Extract OpenSCAD files to generate models for 3D-printing the BlindsFeeders.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.messageBoxOnException(() -> {
+                JFileChooser j = new JFileChooser();
+                //j.setSelectedFile(directory);
+                j.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                j.setMultiSelectionEnabled(false);
+                if (j.showOpenDialog(getTopLevelAncestor()) == JFileChooser.APPROVE_OPTION) {
+                    File directory = j.getSelectedFile();
+                    for (String fileName : new String[] { "BlindsFeeder-Library.scad", "BlindsFeeder-3DPrinting.scad" }) {
+                        String fileContent = IOUtils.toString(BlindsFeeder.class
+                                .getResource(fileName));
+                        File file = new File(directory,  fileName);
+                        if (file.exists()) {
+                            throw new Exception("File "+file.getAbsolutePath()+" already esists.");
+                        }
+                        try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
+                            out.print(fileContent);
+                        }
+                        java.awt.Desktop.getDesktop().edit(file);
+                    }
+                }
+            });
+        }
+    };
+
     private Action showFeaturesAction =
             new AbstractAction("Show Features") {
         {
@@ -868,6 +916,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     private JButton btnOpenAllButton;
     private JTextField textFieldFirstPocket;
     private JLabel lblFirstPocket;
+    private JButton btnExtractOpenscadModel;
 
     private void calibrateFiducials() {
         UiUtils.submitUiMachineTask(() -> {
@@ -894,6 +943,14 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         feeder.setPipelineToAllFeeders();
     }
     protected void initDataBindings() {
+    }
+    private class SwingAction extends AbstractAction {
+        public SwingAction() {
+            putValue(NAME, "SwingAction");
+            putValue(SHORT_DESCRIPTION, "Some short description");
+        }
+        public void actionPerformed(ActionEvent e) {
+        }
     }
 }
 
