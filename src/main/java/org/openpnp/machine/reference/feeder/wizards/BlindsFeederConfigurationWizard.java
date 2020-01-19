@@ -67,7 +67,6 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
-import org.openpnp.vision.pipeline.ui.StandaloneEditor;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
