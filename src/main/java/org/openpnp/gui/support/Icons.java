@@ -82,7 +82,6 @@ public class Icons {
     public static Icon lockOpenOutline = getIcon("/icons/lock-open-outline.svg");
     public static Icon lockQuestion = getIcon("/icons/lock-question.svg");
 
-    
     public static Icon getIcon(String resourceName, int width, int height) {
         if (resourceName.endsWith(".svg")) {
             return new SvgIcon(Icons.class.getResource(resourceName), width, height);

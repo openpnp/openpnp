@@ -18,7 +18,7 @@ public abstract class ReferenceFeeder extends AbstractFeeder {
         this.location = location;
         firePropertyChange("location", oldValue, location);
     }
-    
+
     @Override
     public void prepareForJob() throws Exception {
         // the default RefrenceFeeder needs no prep.
