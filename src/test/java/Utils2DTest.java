@@ -55,7 +55,7 @@ public class Utils2DTest {
             }
         }
     }
-    
+
     public static Placement randomPlacement() {
         Placement placement = new Placement("" + Math.random());
         placement.setLocation(randomLocation());
@@ -111,6 +111,37 @@ public class Utils2DTest {
         else if (value < target - plusMinus) {
             throw new Exception(name + " " + value + " is less than " + (target - plusMinus));
         }
+    }
+
+    /**
+     * Test calculating a board location with affine transformations and without. Check that
+     * the results are the same and that they match the gold results.
+     * @throws Exception
+     */
+    @Test
+    public void testCalculateBoardPlacementLocationSimple() throws Exception {
+        Board board = new Board();
+        
+        BoardLocation boardLocation = new BoardLocation(board);
+        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 5, 15, -8, -6));
+
+        Placement placement = new Placement("T1");
+        placement.setLocation(new Location(LengthUnit.Millimeters, 55, 5, 0, 90));
+        board.addPlacement(placement);
+        
+        AffineTransform tx = new AffineTransform();
+        tx.translate(5, 15);
+        tx.rotate(Math.toRadians(-6));
+        
+        Location locationBefore = Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation());
+        System.out.println(locationBefore);
+        
+        boardLocation.setPlacementTransform(tx);
+        Location locationAfter = Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation());
+        System.out.println(locationAfter);
+        
+        check(locationBefore, 60.22, 14.22, -8, 84);
+        check(locationAfter, 60.22, 14.22, -8, 84);
     }
 }
 

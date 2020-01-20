@@ -613,11 +613,13 @@ public class JobPlacementsPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
-            Location placementLocation = Utils2D
-                    .calculateBoardPlacementLocationInverse(boardLocation, nozzle.getLocation());
-            getSelection().setLocation(placementLocation);
-            table.repaint();
+            UiUtils.messageBoxOnException(() -> {
+                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                Location placementLocation = Utils2D
+                        .calculateBoardPlacementLocationInverse(boardLocation, nozzle.getLocation());
+                getSelection().setLocation(placementLocation);
+                table.repaint();
+            });
         }
     };
 

@@ -97,10 +97,11 @@ public class Utils2D {
      * @param bl
      * @return
      */
-    static AffineTransform getDefaultBoardPlacementLocationTransform(BoardLocation bl) {
+    private static AffineTransform getDefaultBoardPlacementLocationTransform(BoardLocation bl) {
         Location l = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
         AffineTransform tx = new AffineTransform();
         tx.translate(l.getX(), l.getY());
+        tx.rotate(Math.toRadians(l.getRotation()));
         if (bl.getSide() == Side.Bottom) {
             /**
              * Translate by the board width. This is used to support the "New" Board Location
@@ -108,45 +109,17 @@ public class Utils2D {
              */
             tx.translate(bl.getBoard().getDimensions().convertToUnits(LengthUnit.Millimeters).getX(), 0);
         }
-        tx.rotate(Math.toRadians(l.getRotation()));
         return tx;
     }
     
-    static Location calculateBoardPlacementLocationHelper(BoardLocation bl, Location placementLocation, boolean invert) {
-        // The affine calculations are always done in millimeters, so we convert everything
-        // before we start calculating and then we'll convert it back to the original
-        // units at the end.
-        LengthUnit placementUnits = placementLocation.getUnits();
-        Location boardLocation = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
-        placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
-        
-        /**
-         * If this is a bottom side placement we invert the X since the board has been flipped
-         * with regards to the origin.
-         */
-        if (bl.getSide() == Side.Bottom) {
-            placementLocation = placementLocation.multiply(-1, 1, 1, 1);
-        }
-        
-        AffineTransform tx = bl.getPlacementTransform();
-        if (tx == null) {
-            tx = getDefaultBoardPlacementLocationTransform(bl);
-        }
-        
-        if (invert) {
-            try {
-                tx = tx.createInverse();
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        
-        // Calculate the apparent angle from the transform. We need this because when we
-        // created the transform we captured the apparent angle and that is used to position
-        // in X, Y, but we also need the actual value to add to the placement rotation so that
-        // the nozzle is rotated to the correct angle as well.
-        // Note, there is probably a better way to do this. If you know how, please let me know!
+    /**
+     * Calculate the apparent angle from the transform. We need this because when we
+     * created the transform we captured the apparent angle and that is used to position
+     * in X, Y, but we also need the actual value to add to the placement rotation so that
+     * the nozzle is rotated to the correct angle as well.
+     * Note, there is probably a better way to do this. If you know how, please let me know!
+     */
+    private static double getTransformAngle(AffineTransform tx) {
         Point2D.Double a = new Point2D.Double(0, 0);
         Point2D.Double b = new Point2D.Double(1, 1);
         Point2D.Double c = new Point2D.Double(0, 0);
@@ -154,6 +127,28 @@ public class Utils2D {
         c = (Point2D.Double) tx.transform(c, null);
         d = (Point2D.Double) tx.transform(d, null);
         double angle = Math.toDegrees(Math.atan2(d.y - c.y, d.x - c.x) - Math.atan2(b.y - a.y, b.x - a.x));
+        return angle;
+    }
+
+    public static Location calculateBoardPlacementLocation(BoardLocation bl,
+            Location placementLocation) {
+        AffineTransform tx = bl.getPlacementTransform();        
+        if (tx == null) {
+            tx = getDefaultBoardPlacementLocationTransform(bl);
+        }
+        
+        // The affine calculations are always done in millimeters, so we convert everything
+        // before we start calculating and then we'll convert it back to the original
+        // units at the end.
+        LengthUnit placementUnits = placementLocation.getUnits();
+        Location boardLocation = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
+        placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
+
+        if (bl.getSide() == Side.Bottom) {
+        	placementLocation = placementLocation.invert(true, false, false, false);
+        }
+
+        double angle = getTransformAngle(tx);
         
         Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
         p = tx.transform(p, null);
@@ -169,14 +164,40 @@ public class Utils2D {
         return l;
     }
 
-    public static Location calculateBoardPlacementLocation(BoardLocation bl,
-            Location placementLocation) {
-        return calculateBoardPlacementLocationHelper(bl, placementLocation, false);
-    }
-
     public static Location calculateBoardPlacementLocationInverse(BoardLocation bl,
             Location placementLocation) {
-        return calculateBoardPlacementLocationHelper(bl, placementLocation, true);
+        AffineTransform tx = bl.getPlacementTransform();
+        if (tx == null) {
+            tx = getDefaultBoardPlacementLocationTransform(bl);
+        }
+        
+        try {
+            tx = tx.createInverse();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        // The affine calculations are always done in millimeters, so we convert everything
+        // before we start calculating and then we'll convert it back to the original
+        // units at the end.
+        LengthUnit placementUnits = placementLocation.getUnits();
+        placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
+
+        double angle = getTransformAngle(tx);
+        
+        Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
+        p = tx.transform(p, null);
+        
+        // The final result is the transformed X,Y, Z = 0, and the
+        // transform angle + placement angle.
+        Location l = new Location(LengthUnit.Millimeters, 
+                bl.getSide() == Side.Bottom ? -p.getX() : p.getX(), 
+                p.getY(), 
+                0., 
+                angle + placementLocation.getRotation());
+        l = l.convertToUnits(placementUnits);
+        return l;
     }
 
     /**
@@ -186,6 +207,9 @@ public class Utils2D {
      * are on - it's existing Location is not considered. The returned Location is the
      * absolute Location of the board, including it's angle, with the Z value set to the
      * Z value in the input BoardLocation.
+     * 
+     * TODO Replace this with deriveAffineTransform. This is essentially a two fiducial check.
+     * 
      * @param boardLocation
      * @param placementA
      * @param placementB
@@ -289,6 +313,34 @@ public class Utils2D {
     
     public static double distance(Point2D.Double a, Point2D.Double b) {
         return (Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2)));
+    }
+    
+    public static AffineTransform deriveAffineTransform(Location source1, Location source2, Location source3,
+            Location dest1, Location dest2, Location dest3) {
+        source1 = source1.convertToUnits(LengthUnit.Millimeters);
+        source2 = source2.convertToUnits(LengthUnit.Millimeters);
+        source3 = source3.convertToUnits(LengthUnit.Millimeters);
+        dest1 = dest1.convertToUnits(LengthUnit.Millimeters);
+        dest2 = dest2.convertToUnits(LengthUnit.Millimeters);
+        dest3 = dest3.convertToUnits(LengthUnit.Millimeters);
+        return deriveAffineTransform(source1.getX(), source1.getY(), 
+                source2.getX(), source2.getY(),
+                source3.getX(), source3.getY(),
+                dest1.getX(), dest1.getY(),
+                dest2.getX(), dest2.getY(),
+                dest3.getX(), dest3.getY());
+    }
+    
+    public static AffineTransform deriveAffineTransform(Location source1, Location source2,
+            Location dest1, Location dest2) {
+        source1 = source1.convertToUnits(LengthUnit.Millimeters);
+        source2 = source2.convertToUnits(LengthUnit.Millimeters);
+        dest1 = dest1.convertToUnits(LengthUnit.Millimeters);
+        dest2 = dest2.convertToUnits(LengthUnit.Millimeters);
+        return deriveAffineTransform(source1.getX(), source1.getY(), 
+                source2.getX(), source2.getY(),
+                dest1.getX(), dest1.getY(),
+                dest2.getX(), dest2.getY());
     }
     
     // https://stackoverflow.com/questions/21270892/generate-affinetransform-from-3-points

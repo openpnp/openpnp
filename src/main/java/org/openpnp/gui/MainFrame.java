@@ -1146,7 +1146,7 @@ public class MainFrame extends JFrame {
         }
     };
     
-    public final Action undoAction = new AbstractAction("Undo") {
+    public final Action undoAction = new AbstractAction(Translations.getString("Menu.Edit.Undo")) {
         {
             putValue(MNEMONIC_KEY, KeyEvent.VK_Z);
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke('Z',
@@ -1164,7 +1164,7 @@ public class MainFrame extends JFrame {
         }
     };
     
-    public final Action redoAction = new AbstractAction("Redo") {
+    public final Action redoAction = new AbstractAction(Translations.getString("Menu.Edit.Redo")) {
         {
 //            putValue(MNEMONIC_KEY, KeyEvent.VK_Y);
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke('Z',
