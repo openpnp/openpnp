@@ -132,13 +132,9 @@ public class Utils2D {
 
     public static Location calculateBoardPlacementLocation(BoardLocation bl,
             Location placementLocation) {
-        AffineTransform tx;
-        
-        if (bl.getPlacementTransform() == null) {
+        AffineTransform tx = bl.getPlacementTransform();        
+        if (tx == null) {
             tx = getDefaultBoardPlacementLocationTransform(bl);
-        }
-        else {
-            tx = bl.getPlacementTransform();
         }
         
         // The affine calculations are always done in millimeters, so we convert everything
@@ -170,55 +166,38 @@ public class Utils2D {
 
     public static Location calculateBoardPlacementLocationInverse(BoardLocation bl,
             Location placementLocation) {
-        if (bl.getPlacementTransform() != null) {
-            AffineTransform tx = bl.getPlacementTransform();
-            
-            try {
-                tx = tx.createInverse();
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            
-            // The affine calculations are always done in millimeters, so we convert everything
-            // before we start calculating and then we'll convert it back to the original
-            // units at the end.
-            LengthUnit placementUnits = placementLocation.getUnits();
-            placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
-
-            double angle = getTransformAngle(tx);
-            
-            Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
-            p = tx.transform(p, null);
-            
-            // The final result is the transformed X,Y, Z = 0, and the
-            // transform angle + placement angle.
-            Location l = new Location(LengthUnit.Millimeters, 
-                    bl.getSide() == Side.Bottom ? -p.getX() : p.getX(), 
-                    p.getY(), 
-                    0., 
-                    angle + placementLocation.getRotation());
-            l = l.convertToUnits(placementUnits);
-            return l;
+        AffineTransform tx = bl.getPlacementTransform();
+        if (tx == null) {
+            tx = getDefaultBoardPlacementLocationTransform(bl);
         }
-        return calculateBoardPlacementLocationInverse(bl.getLocation(),
-                bl.getSide(), bl.getBoard().getDimensions().getX(),
-                placementLocation);
-    }
-
-    public static Location calculateBoardPlacementLocationInverse(Location boardLocation, Side side,
-            double offset, Location placementLocation) {
-        // inverse steps of calculateBoardPlacementLocation
-        boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
-        placementLocation = placementLocation.subtractWithRotation(boardLocation)
-                .rotateXy(-boardLocation.getRotation());
-        if (side == Side.Bottom) {
-            placementLocation = placementLocation.invert(true, false, false, false)
-                    .add(new Location(placementLocation.getUnits(), offset, 0.0, 0.0, 0.0));
+        
+        try {
+            tx = tx.createInverse();
         }
-        // The Z value of the placementLocation is always ignored, so zero it out to make sure.
-        placementLocation = placementLocation.derive(null, null, 0D, null);
-        return placementLocation;
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        // The affine calculations are always done in millimeters, so we convert everything
+        // before we start calculating and then we'll convert it back to the original
+        // units at the end.
+        LengthUnit placementUnits = placementLocation.getUnits();
+        placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
+
+        double angle = getTransformAngle(tx);
+        
+        Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
+        p = tx.transform(p, null);
+        
+        // The final result is the transformed X,Y, Z = 0, and the
+        // transform angle + placement angle.
+        Location l = new Location(LengthUnit.Millimeters, 
+                bl.getSide() == Side.Bottom ? -p.getX() : p.getX(), 
+                p.getY(), 
+                0., 
+                angle + placementLocation.getRotation());
+        l = l.convertToUnits(placementUnits);
+        return l;
     }
 
     /**
