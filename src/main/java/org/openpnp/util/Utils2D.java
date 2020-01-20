@@ -88,52 +88,82 @@ public class Utils2D {
     public static Point scalePoint(Point point, double scaleX, double scaleY) {
         return new Point(point.getX() * scaleX, point.getY() * scaleY);
     }
+    
+    /**
+     * Creates an AffineTransform for a BoardLocation which handles it's position and
+     * rotation. This is used when the BoardLocation does not yet have a transform created
+     * by a fiducial check.
+     * 
+     * @param bl
+     * @return
+     */
+    private static AffineTransform getDefaultBoardPlacementLocationTransform(BoardLocation bl) {
+        Location l = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
+        AffineTransform tx = new AffineTransform();
+        tx.translate(l.getX(), l.getY());
+        tx.rotate(Math.toRadians(l.getRotation()));
+        if (bl.getSide() == Side.Bottom) {
+            /**
+             * Translate by the board width. This is used to support the "New" Board Location
+             * system ala https://github.com/openpnp/openpnp/wiki/Board-Locations.
+             */
+            tx.translate(bl.getBoard().getDimensions().convertToUnits(LengthUnit.Millimeters).getX(), 0);
+        }
+        return tx;
+    }
 
+    /**
+     * TODO STOPSHIP first, convert each to affine only using getDefaultTransform. Then 
+     * convert the big test that calls this directly. And then remove the offset versions.
+     */
+    
     public static Location calculateBoardPlacementLocation(BoardLocation bl,
             Location placementLocation) {
-        if (bl.getPlacementTransform() != null) {
-            AffineTransform tx = bl.getPlacementTransform();
-            // The affine calculations are always done in millimeters, so we convert everything
-            // before we start calculating and then we'll convert it back to the original
-            // units at the end.
-            LengthUnit placementUnits = placementLocation.getUnits();
-            Location boardLocation = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
-            placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
-
-            if (bl.getSide() == Side.Bottom) {
-            	placementLocation = placementLocation.invert(true, false, false, false);
-            }
-            
-            // Calculate the apparent angle from the transform. We need this because when we
-            // created the transform we captured the apparent angle and that is used to position
-            // in X, Y, but we also need the actual value to add to the placement rotation so that
-            // the nozzle is rotated to the correct angle as well.
-            // Note, there is probably a better way to do this. If you know how, please let me know!
-            Point2D.Double a = new Point2D.Double(0, 0);
-            Point2D.Double b = new Point2D.Double(1, 1);
-            Point2D.Double c = new Point2D.Double(0, 0);
-            Point2D.Double d = new Point2D.Double(1, 1);
-            c = (Point2D.Double) tx.transform(c, null);
-            d = (Point2D.Double) tx.transform(d, null);
-            double angle = Math.toDegrees(Math.atan2(d.y - c.y, d.x - c.x) - Math.atan2(b.y - a.y, b.x - a.x));
-            
-            Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
-            p = tx.transform(p, null);
-            
-            // The final result is the transformed X,Y, the BoardLocation's Z, and the
-            // transform angle + placement angle.
-            Location l = new Location(LengthUnit.Millimeters, 
-                    p.getX(), 
-                    p.getY(), 
-                    boardLocation.getZ(), 
-                    angle + placementLocation.getRotation());
-            l = l.convertToUnits(placementUnits);
-            return l;
+        AffineTransform tx;
+        
+        if (bl.getPlacementTransform() == null) {
+            tx = getDefaultBoardPlacementLocationTransform(bl);
         }
         else {
-            return calculateBoardPlacementLocation(bl.getLocation(), bl.getSide(),
-                    bl.getBoard().getDimensions().getX(), placementLocation);
+            tx = bl.getPlacementTransform();
         }
+        
+        // The affine calculations are always done in millimeters, so we convert everything
+        // before we start calculating and then we'll convert it back to the original
+        // units at the end.
+        LengthUnit placementUnits = placementLocation.getUnits();
+        Location boardLocation = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
+        placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
+
+        if (bl.getSide() == Side.Bottom) {
+        	placementLocation = placementLocation.invert(true, false, false, false);
+        }
+        
+        // Calculate the apparent angle from the transform. We need this because when we
+        // created the transform we captured the apparent angle and that is used to position
+        // in X, Y, but we also need the actual value to add to the placement rotation so that
+        // the nozzle is rotated to the correct angle as well.
+        // Note, there is probably a better way to do this. If you know how, please let me know!
+        Point2D.Double a = new Point2D.Double(0, 0);
+        Point2D.Double b = new Point2D.Double(1, 1);
+        Point2D.Double c = new Point2D.Double(0, 0);
+        Point2D.Double d = new Point2D.Double(1, 1);
+        c = (Point2D.Double) tx.transform(c, null);
+        d = (Point2D.Double) tx.transform(d, null);
+        double angle = Math.toDegrees(Math.atan2(d.y - c.y, d.x - c.x) - Math.atan2(b.y - a.y, b.x - a.x));
+        
+        Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
+        p = tx.transform(p, null);
+        
+        // The final result is the transformed X,Y, the BoardLocation's Z, and the
+        // transform angle + placement angle.
+        Location l = new Location(LengthUnit.Millimeters, 
+                p.getX(), 
+                p.getY(), 
+                boardLocation.getZ(), 
+                angle + placementLocation.getRotation());
+        l = l.convertToUnits(placementUnits);
+        return l;
     }
 
     public static Location calculateBoardPlacementLocation(Location boardLocation, Side side,
