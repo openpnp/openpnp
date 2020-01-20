@@ -111,12 +111,25 @@ public class Utils2D {
         }
         return tx;
     }
-
-    /**
-     * TODO STOPSHIP first, convert each to affine only using getDefaultTransform. Then 
-     * convert the big test that calls this directly. And then remove the offset versions.
-     */
     
+    /**
+     * Calculate the apparent angle from the transform. We need this because when we
+     * created the transform we captured the apparent angle and that is used to position
+     * in X, Y, but we also need the actual value to add to the placement rotation so that
+     * the nozzle is rotated to the correct angle as well.
+     * Note, there is probably a better way to do this. If you know how, please let me know!
+     */
+    private static double getTransformAngle(AffineTransform tx) {
+        Point2D.Double a = new Point2D.Double(0, 0);
+        Point2D.Double b = new Point2D.Double(1, 1);
+        Point2D.Double c = new Point2D.Double(0, 0);
+        Point2D.Double d = new Point2D.Double(1, 1);
+        c = (Point2D.Double) tx.transform(c, null);
+        d = (Point2D.Double) tx.transform(d, null);
+        double angle = Math.toDegrees(Math.atan2(d.y - c.y, d.x - c.x) - Math.atan2(b.y - a.y, b.x - a.x));
+        return angle;
+    }
+
     public static Location calculateBoardPlacementLocation(BoardLocation bl,
             Location placementLocation) {
         AffineTransform tx;
@@ -138,19 +151,8 @@ public class Utils2D {
         if (bl.getSide() == Side.Bottom) {
         	placementLocation = placementLocation.invert(true, false, false, false);
         }
-        
-        // Calculate the apparent angle from the transform. We need this because when we
-        // created the transform we captured the apparent angle and that is used to position
-        // in X, Y, but we also need the actual value to add to the placement rotation so that
-        // the nozzle is rotated to the correct angle as well.
-        // Note, there is probably a better way to do this. If you know how, please let me know!
-        Point2D.Double a = new Point2D.Double(0, 0);
-        Point2D.Double b = new Point2D.Double(1, 1);
-        Point2D.Double c = new Point2D.Double(0, 0);
-        Point2D.Double d = new Point2D.Double(1, 1);
-        c = (Point2D.Double) tx.transform(c, null);
-        d = (Point2D.Double) tx.transform(d, null);
-        double angle = Math.toDegrees(Math.atan2(d.y - c.y, d.x - c.x) - Math.atan2(b.y - a.y, b.x - a.x));
+
+        double angle = getTransformAngle(tx);
         
         Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
         p = tx.transform(p, null);
@@ -182,35 +184,19 @@ public class Utils2D {
             // before we start calculating and then we'll convert it back to the original
             // units at the end.
             LengthUnit placementUnits = placementLocation.getUnits();
-            Location boardLocation = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
             placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
 
-            if (bl.getSide() == Side.Bottom) {
-                placementLocation = placementLocation.invert(true, false, false, false);
-            }
-            
-            // Calculate the apparent angle from the transform. We need this because when we
-            // created the transform we captured the apparent angle and that is used to position
-            // in X, Y, but we also need the actual value to add to the placement rotation so that
-            // the nozzle is rotated to the correct angle as well.
-            // Note, there is probably a better way to do this. If you know how, please let me know!
-            Point2D.Double a = new Point2D.Double(0, 0);
-            Point2D.Double b = new Point2D.Double(1, 1);
-            Point2D.Double c = new Point2D.Double(0, 0);
-            Point2D.Double d = new Point2D.Double(1, 1);
-            c = (Point2D.Double) tx.transform(c, null);
-            d = (Point2D.Double) tx.transform(d, null);
-            double angle = Math.toDegrees(Math.atan2(d.y - c.y, d.x - c.x) - Math.atan2(b.y - a.y, b.x - a.x));
+            double angle = getTransformAngle(tx);
             
             Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
             p = tx.transform(p, null);
             
-            // The final result is the transformed X,Y, the BoardLocation's Z, and the
+            // The final result is the transformed X,Y, Z = 0, and the
             // transform angle + placement angle.
             Location l = new Location(LengthUnit.Millimeters, 
-                    p.getX(), 
+                    bl.getSide() == Side.Bottom ? -p.getX() : p.getX(), 
                     p.getY(), 
-                    boardLocation.getZ(), 
+                    0., 
                     angle + placementLocation.getRotation());
             l = l.convertToUnits(placementUnits);
             return l;

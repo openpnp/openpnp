@@ -10,6 +10,218 @@ import org.openpnp.model.Placement;
 import org.openpnp.util.Utils2D;
 
 public class CalculateBoardLocationTests {
+    @Test
+    public void calculateBoardLocation_Top_NoAffine_NoWidth() throws Exception {
+        BoardLocation boardLocation = createTestBoardLocation(Side.Top, false);
+        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
+        
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        
+        Utils2DTest.checkNormalized(p1l, 23.160, 130.902, -10.00, 119.628);
+    }
+    
+    @Test
+    public void calculateBoardLocation_Top_WithAffine_NoWidth() throws Exception {
+        BoardLocation boardLocation = createTestBoardLocation(Side.Top, false);
+        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
+
+        AffineTransform tx = simulateFiducialCheck(boardLocation);
+        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
+        boardLocation.setPlacementTransform(tx);
+        
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        
+        Utils2DTest.checkNormalized(p1l, 23.160, 130.902, -10.00, 119.628);
+    }
+    
+    @Test
+    public void calculateBoardLocation_Top_NoAffine_WithWidth() throws Exception {
+        BoardLocation boardLocation = createTestBoardLocation(Side.Top, true);
+        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
+
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        
+        Utils2DTest.checkNormalized(p1l, 23.160, 130.902, -10.00, 119.628);
+    }
+    
+    @Test
+    public void calculateBoardLocation_Top_WithAffine_WithWidth() throws Exception {
+        BoardLocation boardLocation = createTestBoardLocation(Side.Top, true);
+        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
+
+        AffineTransform tx = simulateFiducialCheck(boardLocation);
+        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
+        boardLocation.setPlacementTransform(tx);
+        
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        
+        Utils2DTest.checkNormalized(p1l, 23.160, 130.902, -10.00, 119.628);
+    }
+    
+    @Test
+    public void calculateBoardLocation_Bottom_NoAffine_NoWidth() throws Exception {
+        BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, false);
+        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
+
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        
+        Utils2DTest.checkNormalized(p1l, 91.015, 79.253, -10.00, 81.585);
+    }
+    
+    @Test
+    public void calculateBoardLocation_Bottom_WithAffine_NoWidth() throws Exception {
+        BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, false);
+        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
+
+        AffineTransform tx = simulateFiducialCheck(boardLocation);
+        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
+        boardLocation.setPlacementTransform(tx);
+        
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        
+        Utils2DTest.checkNormalized(p1l, 91.015, 79.253, -10.00, 81.585);
+    }
+    
+    @Test
+    public void calculateBoardLocation_Bottom_NoAffine_WithWidth() throws Exception {
+        BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, true);
+        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
+        
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        
+        Utils2DTest.checkNormalized(p1l, 91.025, 79.246, -10.00, 81.662);
+    }
+    
+    @Test
+    public void calculateBoardLocation_Bottom_WithAffine_WithWidth() throws Exception {
+        BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, true);
+        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
+
+        AffineTransform tx = simulateFiducialCheck(boardLocation);
+        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
+        boardLocation.setPlacementTransform(tx);
+        
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        
+        Utils2DTest.checkNormalized(p1l, 91.025, 79.246, -10.00, 81.662);
+    }
+    
+    @Test
+    public void calculateBoardLocationInverse_Top_NoAffine_NoWidth() throws Exception {
+        BoardLocation boardLocation = createTestBoardLocation(Side.Top, false);
+        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
+        
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        
+        Location p1li = Utils2D.calculateBoardPlacementLocationInverse(boardLocation, p1l);
+        
+        Utils2DTest.checkNormalized(p1.getLocation(), p1li);
+    }
+    
+    @Test
+    public void calculateBoardLocationInverse_Top_WithAffine_NoWidth() throws Exception {
+        BoardLocation boardLocation = createTestBoardLocation(Side.Top, false);
+        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
+        
+        AffineTransform tx = simulateFiducialCheck(boardLocation);
+        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
+        boardLocation.setPlacementTransform(tx);
+        
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        
+        Location p1li = Utils2D.calculateBoardPlacementLocationInverse(boardLocation, p1l);
+        
+        Utils2DTest.checkNormalized(p1.getLocation(), p1li);
+    }
+    
+    @Test
+    public void calculateBoardLocationInverse_Top_NoAffine_WithWidth() throws Exception {
+        BoardLocation boardLocation = createTestBoardLocation(Side.Top, true);
+        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
+        
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        
+        Location p1li = Utils2D.calculateBoardPlacementLocationInverse(boardLocation, p1l);
+        
+        Utils2DTest.checkNormalized(p1.getLocation(), p1li);
+    }
+    
+    @Test
+    public void calculateBoardLocationInverse_Top_WithAffine_WithWidth() throws Exception {
+        BoardLocation boardLocation = createTestBoardLocation(Side.Top, true);
+        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
+        
+        AffineTransform tx = simulateFiducialCheck(boardLocation);
+        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
+        boardLocation.setPlacementTransform(tx);
+        
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        
+        Location p1li = Utils2D.calculateBoardPlacementLocationInverse(boardLocation, p1l);
+        
+        Utils2DTest.checkNormalized(p1.getLocation(), p1li);
+    }
+    
+    @Test
+    public void calculateBoardLocationInverse_Bottom_NoAffine_NoWidth() throws Exception {
+        BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, false);
+        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
+        
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        
+        Location p1li = Utils2D.calculateBoardPlacementLocationInverse(boardLocation, p1l);
+        
+        Utils2DTest.checkNormalized(p1.getLocation(), p1li);
+    }
+    
+    @Test
+    public void calculateBoardLocationInverse_Bottom_WithAffine_NoWidth() throws Exception {
+        BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, false);
+        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
+        
+        AffineTransform tx = simulateFiducialCheck(boardLocation);
+        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
+        boardLocation.setPlacementTransform(tx);
+        
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        
+        Location p1li = Utils2D.calculateBoardPlacementLocationInverse(boardLocation, p1l);
+        
+        Utils2DTest.checkNormalized(p1.getLocation(), p1li);
+    }
+    
+    @Test
+    public void calculateBoardLocationInverse_Bottom_NoAffine_WithWidth() throws Exception {
+        BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, true);
+        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
+        
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        
+        Location p1li = Utils2D.calculateBoardPlacementLocationInverse(boardLocation, p1l);
+        
+        Utils2DTest.checkNormalized(p1.getLocation(), p1li);
+    }
+    
+    @Test
+    public void calculateBoardLocationInverse_Bottom_WithAffine_WithWidth() throws Exception {
+        BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, true);
+        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
+        
+        AffineTransform tx = simulateFiducialCheck(boardLocation);
+        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
+        boardLocation.setPlacementTransform(tx);
+        
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        
+        Location p1li = Utils2D.calculateBoardPlacementLocationInverse(boardLocation, p1l);
+        
+        Utils2DTest.checkNormalized(p1.getLocation(), p1li);
+    }
+    
+    
+    
+    
+    
     /**
      * Simulates a 3 point fiducial check by generating 3 placements at fixed locations,
      * calculating their board placement location and running deriveAffineTransform.
@@ -94,101 +306,5 @@ public class CalculateBoardLocationTests {
         }
         
         return boardLocation;
-    }
-    
-    @Test
-    public void calculateBoardLocationTop_NoAffine_NoWidth() throws Exception {
-        BoardLocation boardLocation = createTestBoardLocation(Side.Top, false);
-        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
-        
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
-        
-        Utils2DTest.checkNormalized(p1l, 23.160, 130.902, -10.00, 119.628);
-    }
-    
-    @Test
-    public void calculateBoardLocationTop_WithAffine_NoWidth() throws Exception {
-        BoardLocation boardLocation = createTestBoardLocation(Side.Top, false);
-        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
-
-        AffineTransform tx = simulateFiducialCheck(boardLocation);
-        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
-        boardLocation.setPlacementTransform(tx);
-        
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
-        
-        Utils2DTest.checkNormalized(p1l, 23.160, 130.902, -10.00, 119.628);
-    }
-    
-    @Test
-    public void calculateBoardLocationTop_NoAffine_WithWidth() throws Exception {
-        BoardLocation boardLocation = createTestBoardLocation(Side.Top, true);
-        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
-
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
-        
-        Utils2DTest.checkNormalized(p1l, 23.160, 130.902, -10.00, 119.628);
-    }
-    
-    @Test
-    public void calculateBoardLocationTop_WithAffine_WithWidth() throws Exception {
-        BoardLocation boardLocation = createTestBoardLocation(Side.Top, true);
-        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
-
-        AffineTransform tx = simulateFiducialCheck(boardLocation);
-        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
-        boardLocation.setPlacementTransform(tx);
-        
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
-        
-        Utils2DTest.checkNormalized(p1l, 23.160, 130.902, -10.00, 119.628);
-    }
-    
-    @Test
-    public void calculateBoardLocationBottom_NoAffine_NoWidth() throws Exception {
-        BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, false);
-        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
-
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
-        
-        Utils2DTest.checkNormalized(p1l, 91.015, 79.253, -10.00, 81.585);
-    }
-    
-    @Test
-    public void calculateBoardLocationBottom_WithAffine_NoWidth() throws Exception {
-        BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, false);
-        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
-
-        AffineTransform tx = simulateFiducialCheck(boardLocation);
-        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
-        boardLocation.setPlacementTransform(tx);
-        
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
-        
-        Utils2DTest.checkNormalized(p1l, 91.015, 79.253, -10.00, 81.585);
-    }
-    
-    @Test
-    public void calculateBoardLocationBottom_NoAffine_WithWidth() throws Exception {
-        BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, true);
-        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
-        
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
-        
-        Utils2DTest.checkNormalized(p1l, 91.025, 79.246, -10.00, 81.662);
-    }
-    
-    @Test
-    public void calculateBoardLocationBottom_WithAffine_WithWidth() throws Exception {
-        BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, true);
-        Placement p1 = boardLocation.getBoard().getPlacements().get(0);
-
-        AffineTransform tx = simulateFiducialCheck(boardLocation);
-        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
-        boardLocation.setPlacementTransform(tx);
-        
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
-        
-        Utils2DTest.checkNormalized(p1l, 91.025, 79.246, -10.00, 81.662);
     }
 }
