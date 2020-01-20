@@ -192,7 +192,11 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         // Probably need to let the user specify some limits.
         
         // Return the compensated board location
-        Location result = Utils2D.calculateBoardPlacementLocation(boardLocation, new Location(LengthUnit.Millimeters));
+        Location origin = new Location(LengthUnit.Millimeters);
+        if (boardLocation.getSide() == Side.Bottom) {
+            origin = origin.add(boardLocation.getBoard().getDimensions().derive(null, 0., 0., 0.));
+        }
+        Location result = Utils2D.calculateBoardPlacementLocation(boardLocation, origin);
         result = result.convertToUnits(boardLocation.getLocation().getUnits());
         result = result.derive(null, null, boardLocation.getLocation().getZ(), null);
         if (checkPanel) {
