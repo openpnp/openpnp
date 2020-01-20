@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -1066,26 +1067,137 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
     }
     
+    /**
+     * A very simple planner that processes the job placements in the other they are specified
+     * and does not support nozzle tip changes. The planner will return placements that work
+     * with the loaded nozzle tips until none are left, and then the job will end.
+     */
     @Root
-    public static class SimplePnpJobPlanner implements PnpJobPlanner {
-        /**
-         * A simple two-pass planner which tries to fill each nozzle with a placement on
-         * each cycle while minimizing nozzle tip changes.
-         * 
-         * The first pass tries to find a placement for each nozzle which will not require a
-         * nozzle tip change.
-         * 
-         * The second pass allows nozzle tip changes while respecting any already used nozzle
-         * tips for the cycle.
-         */
+    public static class TrivialPnpJobPlanner implements PnpJobPlanner {
         @Override
         public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements) {
+            /**
+             * Create a List<PlannedPlacement> that we will fill up and then return.
+             */
             List<PlannedPlacement> plannedPlacements = new ArrayList<>();
             
+            /**
+             * Loop over each nozzle in the head and assign a placement to it.
+             */
+            for (Nozzle nozzle : head.getNozzles()) {
+                /**
+                 * If the nozzle does not have a nozzle tip attached then we won't process it. We
+                 * could choose to specify a nozzle tip change, but for the purpose of this simple
+                 * example we assume the user only wants to process using the currently loaded
+                 * nozzle tips.
+                 */
+                if (nozzle.getNozzleTip() == null) {
+                    continue;
+                }
+                
+                /**
+                 * If there are no more placements to process then we're done, so exit the loop.
+                 */
+                if (jobPlacements.isEmpty()) {
+                    break;
+                }
+                
+                /**
+                 * Loop through the remaining job placements and find the first one that is
+                 * compatible with the nozzle and nozzle tip. Note that we use an Iterator here,
+                 * instead of the normal for each loop. The reason is that we need to remove
+                 * the job placement later in the loop, and Java does not support removing an
+                 * item from a list while it's being stepped through. The iterator has a special
+                 * method of Iterator.remove() which allows this.
+                 */
+                for (Iterator<JobPlacement> iterator = jobPlacements.iterator(); iterator.hasNext(); ) {
+                    /**
+                     * Get the next JobPlacement from the Iterator.
+                     */
+                    JobPlacement jobPlacement = iterator.next();
+                    
+                    /**
+                     * Assign some local temporary variables to make the code below easier to read. 
+                     */
+                    Placement placement = jobPlacement.getPlacement();
+                    Part part = placement.getPart();
+                    org.openpnp.model.Package packag = part.getPackage();
+                    NozzleTip nozzleTip = nozzle.getNozzleTip();
+                    
+                    /**
+                     * Check if the job placemen't package is compatible with the nozzle tip
+                     * attached to this nozzle.
+                     */
+                    if (packag.getCompatibleNozzleTips().contains(nozzleTip)) {
+                        /**
+                         * It's compatible, so create a PlannedPlacement which is a holder for a 
+                         * nozzle, nozzle tip and a job placement.
+                         */
+                        PlannedPlacement plannedPlacement = new PlannedPlacement(nozzle, nozzle.getNozzleTip(), jobPlacement);
+                        
+                        /**
+                         * Store it in the results.
+                         */
+                        plannedPlacements.add(plannedPlacement);
+                        
+                        /**
+                         * And remove the job placement from the list. This ensures we don't process
+                         * the same one again later.
+                         */
+                        iterator.remove();
+                        
+                        /**
+                         * And exit the loop, because we are done with this nozzle.
+                         */
+                        break;
+                    }
+                }
+            }
+            
+            /**
+             * Return the results
+             */
+            return plannedPlacements;
+        }
+    }    
+    
+    /**
+     * A simple two-pass planner which tries to fill each nozzle with a placement on
+     * each cycle while minimizing nozzle tip changes.
+     * 
+     * The first pass tries to find a placement for each nozzle which will not require a
+     * nozzle tip change.
+     * 
+     * The second pass allows nozzle tip changes while respecting any already used nozzle
+     * tips for the cycle.
+     */
+    @Root
+    public static class SimplePnpJobPlanner implements PnpJobPlanner {
+        @Override
+        public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements) {
+            /**
+             * Create an empty List<PlannedPlacement> which will hold the results.
+             */
+            List<PlannedPlacement> plannedPlacements = new ArrayList<>();
+            
+            /**
+             * Get a list of all the nozzles. We make a copy of the list so that we can modify
+             * it within this function without modifying the machine. This makes the logic below
+             * easier. As we plan a nozzle we'll remove it from the list until none are left.
+             */
             List<Nozzle> nozzles = new ArrayList<>(head.getNozzles());
+            
+            /**
+             * Same as above, except for NozzleTips.
+             */
             List<NozzleTip> nozzleTips = new ArrayList<>(head.getMachine().getNozzleTips());
             
-            // First we plan any placements that can be done without a nozzle change.
+            /**
+             * First we plan any placements that can be done without a nozzle change. For each
+             * nozzle we see if there is a placement that we can handle without doing a nozzletip
+             * change. If there is, we remove the nozzle, nozzle tip and job placement from their
+             * respective lists so that we don't plan the same one again.
+             */
             for (Nozzle nozzle : new ArrayList<>(nozzles)) {
                 PlannedPlacement plannedPlacement = planWithoutNozzleTipChange(nozzle, jobPlacements);
                 if (plannedPlacement != null) {
@@ -1096,8 +1208,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
             }
             
-            // Now we'll try to plan any nozzles that didn't get planned on the first pass by
-            // seeing if a nozzle change helps.
+            /**
+             * Now we'll try to plan any nozzles that didn't get planned on the first pass by
+             * seeing if a nozzle change helps. This is nearly the same as above, except this
+             * time we allow a nozzle tip change to happen.
+             */
             for (Nozzle nozzle : new ArrayList<>(nozzles)) {
                 PlannedPlacement plannedPlacement = planWithNozzleTipChange(nozzle, jobPlacements, nozzleTips);
                 if (plannedPlacement != null) {
@@ -1108,6 +1223,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
             }
 
+            /**
+             * Finally, we sort any planned placements by the nozzle name so that they are
+             * performed in the order of nozzle name. This is not really necessary but some users
+             * prefer it that way and it does no harm
+             */
             plannedPlacements.sort(Comparator.comparing(plannedPlacement -> {
                 return plannedPlacement.nozzle.getName();
             }));
@@ -1115,6 +1235,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return plannedPlacements;
         }
         
+        /**
+         * Try to find a planning solution for the given nozzle that does not require
+         * a nozzle tip change. This essentially just checks if there are any job placements
+         * remaining that are compatible with the currently loaded nozzle tip.
+         * @param nozzle
+         * @param jobPlacements
+         * @return
+         */
         protected PlannedPlacement planWithoutNozzleTipChange(Nozzle nozzle, 
                 List<JobPlacement> jobPlacements) {
             if (nozzle.getNozzleTip() == null) {
@@ -1131,7 +1259,17 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             return null;
         }
-        
+
+        /**
+         * Try to find a planning solution that allows for a nozzle tip change. This is very
+         * similar to planWithoutNozzleTipChange() except that it considers all available nozzle
+         * tips on the machine that are compatible with both the nozzle and the placement, 
+         * instead of just the one that is loaded.
+         * @param nozzle
+         * @param jobPlacements
+         * @param nozzleTips
+         * @return
+         */
         protected PlannedPlacement planWithNozzleTipChange(Nozzle nozzle, 
                 List<JobPlacement> jobPlacements,
                 List<NozzleTip> nozzleTips) {

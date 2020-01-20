@@ -112,17 +112,14 @@ public class NamedCSVImporter implements BoardImporter {
     // if((str.indexOf("val")!=-1||str.indexOf("comment"))&&str.indexOf("val")!=-1&&str.indexOf("val")!=-1&&
 
     private static final String Refs[] =
-            {"Designator", "designator", "Part", "part", "Component", "component", "RefDes", "Ref"};
-    private static final String Vals[] = {"Value", "value", "Val", "val", "Comment", "comment"};
-    private static final String Packs[] =
-            {"Footprint", "footprint", "Package", "package", "Pattern", "pattern"};
-    private static final String Xs[] =
-            {"X", "x", "X (mm)", "x (mm)", "Ref X", "ref x", "PosX", "Ref-X(mm)", "Ref-X(mil)"};
-    private static final String Ys[] =
-            {"Y", "y", "Y (mm)", "y (mm)", "Ref Y", "ref y", "PosY", "Ref-Y(mm)", "Ref-Y(mil)"};
-    private static final String Rots[] = {"Rotation", "rotation", "Rot", "rot", "Rotate"};
-    private static final String TBs[] = {"Layer", "layer", "Side", "side", "TB", "tb"};
-    private static final String Heights[] = {"Height", "height", "Height(mil)", "Height(mm)"};
+            {"DESIGNATOR", "PART", "COMPONENT", "REFDES", "REF"};
+    private static final String Vals[] = {"VALUE", "VAL", "COMMENT", "COMP_VALUE"};
+    private static final String Packs[] = {"FOOTPRINT", "PACKAGE", "PATTERN", "COMP_PACKAGE"};
+    private static final String Xs[] = {"X", "X (MM)", "REF X", "POSX", "REF-X(MM)", "REF-X(MIL)", "SYM_X"};
+    private static final String Ys[] = {"Y", "Y (MM)", "REF Y", "POSY", "REF-Y(MM)", "REF-Y(MIL)", "SYM_Y"};
+    private static final String Rots[] = {"ROTATION", "ROT", "ROTATE", "SYM_ROTATE"};
+    private static final String TBs[] = {"LAYER", "SIDE", "TB", "SYM_MIRROR"};
+    private static final String Heights[] = {"HEIGHT", "HEIGHT(MIL)", "HEIGHT(MM)"};
     //////////////////////////////////////////////////////////
     static private int Ref = -1, Val = -1, Pack = -1, X = -1, Y = -1, Rot = -1, TB = -1, HT = -1,
             Len = 0;
@@ -143,16 +140,16 @@ public class NamedCSVImporter implements BoardImporter {
                     // check for mil units
                     // TODO This should be done better, but at moment I don't know a better way...
                     // -trampas
-                    if (val[j].equals("Ref-X(mil)")) {
+                    if (val[j].equals("REF-X(MIL)")) {
                         units_mils_x = 1;
                         Logger.trace("X units are in mils");
                     }
-                    if (val[j].equals("Ref-Y(mil)")) {
+                    if (val[j].equals("REF-Y(MIL)")) {
                         units_mils_y = 1;
                         Logger.trace("Y units are in mils");
                     }
 
-                    if (val[j].equals("Height(mil)")) {
+                    if (val[j].equals("HEIGHT(MIL)")) {
                         units_mils_height = 1;
                         Logger.trace("Height units are in mils");
                     }
@@ -208,50 +205,52 @@ public class NamedCSVImporter implements BoardImporter {
 
     private static boolean checkLine(String str) throws Exception {
         Logger.trace("checkLine: " + str);
+        String input_str = str.toUpperCase();
         int e = 0;
-        if (str.charAt(0) == '#') {
-            str = str.substring(1);
+        if (input_str.charAt(0) == '#') {
+            input_str = input_str.substring(1);
         }
-        if (str == null) {
+        if (input_str == null) {
             return false;
         }
-        if (str.indexOf("X") == -1 && str.indexOf("x") == -1) {
+        if (input_str.indexOf("X") == -1) {
             return false;
         }
-        if (str.indexOf("Y") == -1 && str.indexOf("y") == -1) {
+        if (input_str.indexOf("Y") == -1) {
             return false;
         }
-        if (str.indexOf("Rot") == -1 && str.indexOf("rot") == -1) {
+        if (input_str.indexOf("ROT") == -1) {
             return false;
         }
-        if (str.indexOf("val") == -1 && str.indexOf("Val") == -1 && str.indexOf("Comment") == -1
-                && str.indexOf("comment") == -1) {
+        if (input_str.indexOf("VAL") == -1 
+        		&& input_str.indexOf("COMMENT") == -1) {
             return false;
         }
-        if (str.indexOf("ootprint") == -1 && str.indexOf("ackage") == -1
-                && str.indexOf("attern") == -1) {
+        if (input_str.indexOf("FOOTPRINT") == -1 
+        		&& input_str.indexOf("PACKAGE") == -1
+                && input_str.indexOf("PATTERN") == -1) {
             return false;
         }
-        if (str.indexOf("Designator") == -1 && str.indexOf("designator") == -1
-                && str.indexOf("Part") == -1 && str.indexOf("part") == -1
-                && str.indexOf("Component") == -1 && str.indexOf("component") == -1
-                && str.indexOf("RefDes") == -1 && str.indexOf("Ref") == -1) {
+        if (input_str.indexOf("DESIGNATOR") == -1
+                && input_str.indexOf("PART") == -1
+                && input_str.indexOf("COMP") == -1
+                && input_str.indexOf("REF") == -1) {
             return false;
         }
         // seems to have data
         String as[], at[][];
-        CSVParser csvParser = new CSVParser(new StringReader(str));
+        CSVParser csvParser = new CSVParser(new StringReader(input_str));
         as = csvParser.getLine();
         comma = ',';
         if (as.length >= 6 && checkCSV(as)) {
             return true;
         }
-        at = csvParser.parse(str, comma = '\t');
+        at = CSVParser.parse(input_str, comma = '\t');
         if (at.length > 0 && at[0].length >= 6 && checkCSV(at[0])) {
             return true;
         }
         /*
-         * at=csvParser.parse(str,comma=' '); if(at.length>0&&at[0].length>=6&&checkCSV(at[0]))
+         * at=csvParser.parse(input_str,comma=' '); if(at.length>0&&at[0].length>=6&&checkCSV(at[0]))
          * return true;
          */
         return false;
@@ -367,9 +366,9 @@ public class NamedCSVImporter implements BoardImporter {
 
                 char c = 0;
                 if (TB != -1) {
-                    c = as[TB].charAt(0);
+                    c = as[TB].toUpperCase().charAt(0);
                 }
-                placement.setSide(c == 'B' || c == 'b' ? Side.Bottom : Side.Top);
+                placement.setSide(c == 'B' || c == 'Y' ? Side.Bottom : Side.Top);
                 c = 0;
                 placements.add(placement);
             }
