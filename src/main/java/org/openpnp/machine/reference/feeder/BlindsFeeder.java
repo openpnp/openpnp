@@ -328,8 +328,9 @@ public class BlindsFeeder extends ReferenceFeeder {
             }
             else if (coverActuation == CoverActuation.OpenOnFirstUse || coverActuation == CoverActuation.OpenOnJobStart) {
                 if (!isCoverOpen()) {
-                    // Note, with CoverActuation.OpenOnJobStart, this should only happen with a manual feed.
-                    actuateCover(true);
+                    // Note, with CoverActuation.OpenOnJobStart, this should only happen with a manual or exceptional feed.
+                    // Also restore the previously loaded NozzleTip afterwards. 
+                    actuateCover(true, true, true);
                 }
             }
         }
@@ -578,11 +579,12 @@ public class BlindsFeeder extends ReferenceFeeder {
             }
         }
 
+        @SuppressWarnings("unchecked")
         public FindFeatures invoke() throws Exception {
             List<RotatedRect> results = null;
             try {
                 // Grab the results
-                results = (List<RotatedRect>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
+                results = ((List<RotatedRect>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model);
                 if (results == null /*???|| results.isEmpty()*/) {
                     throw new Exception("Feeder " + getName() + ": No features found.");
                 }
@@ -1086,29 +1088,52 @@ public class BlindsFeeder extends ReferenceFeeder {
     @Attribute(required = false)
     private CoverActuation coverActuation = CoverActuation.OpenOnFirstUse;
 
-    public static void actuateAllFeederCovers(boolean openState) throws Exception  {
-        // Filter out all the BlindsFeeders with blinds cover. 
+    public static List<BlindsFeeder> getFeedersWithCoverToActuate(List<Feeder> feederPool, 
+            CoverActuation [] coverActuations,
+            boolean openState) {
+        // Filter out all the BlindsFeeders  
         List<BlindsFeeder> feederList = new ArrayList<>();
-        for (Feeder feeder : Configuration.get().getMachine().getFeeders())  {
+        for (Feeder feeder : feederPool)  {
             if (feeder instanceof BlindsFeeder) {
                 BlindsFeeder blindsFeeder = (BlindsFeeder)feeder;
-                if (blindsFeeder.coverType == CoverType.BlindsCover) {
-                    // only take enabled and/or positively opened feeders to be closed now
-                    if (feeder.isEnabled() || (blindsFeeder.isCoverOpenState(true) && ! openState)) {
-                        if (!blindsFeeder.isCoverOpenState(openState)) {
-                            feederList.add(blindsFeeder);
+                // Take only those with blinds cover.
+                if (blindsFeeder.getCoverType() == CoverType.BlindsCover) {
+                    // Filter by cover actuation.
+                    for (CoverActuation coverActuation : coverActuations) {
+                        if (blindsFeeder.getCoverActuation() == coverActuation) {
+                            // Take only enabled and/or positively opened feeders to be closed now
+                            if (feeder.isEnabled() || (blindsFeeder.isCoverOpenState(true) && ! openState)) {
+                                if (!blindsFeeder.isCoverOpenState(openState)) {
+                                    feederList.add(blindsFeeder);
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+        return feederList;
+    }
 
-        if (feederList.size() < 1) {
+    public static void actuateAllFeederCovers(boolean openState) throws Exception  {
+        List<BlindsFeeder> feederList = getFeedersWithCoverToActuate(Configuration.get().getMachine().getFeeders(), 
+                new CoverActuation [] { CoverActuation.Manual, CoverActuation.CheckOpen, CoverActuation.OpenOnFirstUse, CoverActuation.OpenOnJobStart }, 
+                openState); 
+        if (feederList.size() == 0) {
             throw new Exception("[BlindsFeeder] No feeders found to "+(openState ? "open." : "close."));
         }
+        actuateListedFeederCovers(feederList, openState, false);
+    }
 
-        // Get the nozzle for the current position.
-        Nozzle nozzle = BlindsFeeder.nozzleForPushing(false);
+    public static void actuateListedFeederCovers(List<BlindsFeeder> feederList, boolean openState, boolean restoreNozzleTip) throws Exception  {
+        if (feederList.size() == 0) {
+            // nothing to do, avoid changing the nozzle tip for nothing.
+            return;
+        }
+
+        // Get the push nozzle for the current position. This will also throw if none is allowed.
+        NozzleAndTipForPushing nozzleAndTipForPushing = BlindsFeeder.getNozzleAndTipForPushing(true);
+
         // Use a Travelling Salesman algorithm to optimize the path to actuate all the feeder covers.
         TravellingSalesman<BlindsFeeder> tsm = new TravellingSalesman<>(
                 feederList, 
@@ -1119,9 +1144,9 @@ public class BlindsFeeder extends ReferenceFeeder {
                     }
                 }, 
                 // start from current location
-                nozzle != null ? nozzle.getLocation() : null, 
-                        // no end location
-                        null);
+                nozzleAndTipForPushing.getNozzle().getLocation(), 
+                // no end location
+                null);
 
         // Solve it using the default heuristics.
         tsm.solve();
@@ -1129,6 +1154,10 @@ public class BlindsFeeder extends ReferenceFeeder {
         // Finally actuate the feeders along the travel path.
         for (BlindsFeeder blindsFeeder : tsm.getTravel()) {
             blindsFeeder.actuateCover(openState);
+        }
+
+        if (restoreNozzleTip) {
+            nozzleAndTipForPushing.restoreNozzleTipLoadedBefore();
         }
     }
 
@@ -1159,28 +1188,59 @@ public class BlindsFeeder extends ReferenceFeeder {
         return location.getRotation() + 180.;
     }
 
-    public static Nozzle nozzleForPushing(boolean loadNozzleTipIfNeeded) throws Exception {
+    public static class NozzleAndTipForPushing {
+        private Nozzle nozzle;
+        private NozzleTip nozzleTipLoadedBefore;
+
+        public NozzleAndTipForPushing(Nozzle nozzle, NozzleTip nozzleTipLoadedBefore) {
+            super();
+            this.nozzle = nozzle;
+            this.nozzleTipLoadedBefore = nozzleTipLoadedBefore;
+        }
+        void restoreNozzleTipLoadedBefore() throws Exception {
+            if (this.nozzle != null & this.nozzleTipLoadedBefore != null) {
+                if (this.nozzleTipLoadedBefore != this.nozzle.getNozzleTip()) {
+                    this.nozzle.loadNozzleTip(this.nozzleTipLoadedBefore);
+                }
+            }
+        }
+        public Nozzle getNozzle() {
+            return nozzle;
+        }
+        public NozzleTip getNozzleTip() {
+            if (this.nozzle != null) {
+                return this.nozzle.getNozzleTip();
+            }
+            return null;
+        }
+        public NozzleTip getNozzleTipLoadedBefore() {
+            return nozzleTipLoadedBefore;
+        }
+    }
+    public static NozzleAndTipForPushing getNozzleAndTipForPushing(boolean loadNozzleTipIfNeeded) throws Exception {
         // first search for any NozzleTip already loaded that may be used for pushing 
         Machine machine = Configuration.get().getMachine();
         for (Head head : machine.getHeads()) {
             for (Nozzle nozzle :  head.getNozzles()) {
                 NozzleTip nozzleTip = nozzle.getNozzleTip();
                 if (nozzleTip.isPushAndDragAllowed()) {
-                    // Return the nozzle.
-                    return nozzle;
+                    // Return the nozzle and nozzle tip.
+                    return new NozzleAndTipForPushing(nozzle, nozzleTip);
                 }
             }
         }
+
         // We arrived here, so none was found.
         if (loadNozzleTipIfNeeded) {
             for (Head head : machine.getHeads()) {
                 for (Nozzle nozzle :  head.getNozzles()) {
                     for (NozzleTip pushNozzleTip : nozzle.getCompatibleNozzleTips()) {
                         if (pushNozzleTip.isPushAndDragAllowed()) {
+                            NozzleTip nozzleTip = nozzle.getNozzleTip();
                             // Alas, found one for pushing, load it
                             nozzle.loadNozzleTip(pushNozzleTip);
-                            // And return the nozzle.
-                            return nozzle;
+                            // And return the nozzle and nozzle tip.
+                            return new NozzleAndTipForPushing(nozzle, nozzleTip);
                         }
                     }
                 }
@@ -1189,40 +1249,54 @@ public class BlindsFeeder extends ReferenceFeeder {
             throw new Exception("BlindsFeeder: No Nozzle/NozzleTip found that allows pushing.");
         }
         // None compatible.
-        return null;
+        return new NozzleAndTipForPushing(null, null);
     }
 
     @Override
-    public void prepareForJob() throws Exception {
-        super.prepareForJob();
-        if (getCoverActuation() == CoverActuation.OpenOnJobStart) {
-            actuateCover(true, true);
+    public void prepareForJob(List<Feeder> feedersToPrepare) throws Exception {
+        super.prepareForJob(feedersToPrepare);
+        if (getCoverActuation() == CoverActuation.OpenOnJobStart
+                && ! isCoverOpen()) {
+            // Note, we will not only open our own cover, but all the BlindFeeders' covers in bulk
+            // to allow for the TravellingSalesman optimization.
+            // prepareForJob() will be called for subsequent BlindsFeeders, but because the covers 
+            // are already registered as open, there will be no further action. 
+            List<BlindsFeeder> feederList = getFeedersWithCoverToActuate(feedersToPrepare, 
+                    new CoverActuation[] { CoverActuation.OpenOnJobStart }, 
+                    true); 
+            // Now bulk-open the covers. 
+            // If needed, load a NozzleTip that allows pushing and then restore the previous NozzleTip.
+            // The restore may result in one unnecessary change but the alternative is unexpected behaviour
+            // as the planner will take the currently loaded nozzle tips into consideration and therefore 
+            // favor the pushing nozzle tip, which might be completely unwanted.
+            actuateListedFeederCovers(feederList, true, false);
         }
     }
 
     public void actuateCover(boolean openState) throws Exception {
-        actuateCover(openState, false);
-    }    
+        // If needed, load a NozzleTip that allows pushing but do not restore the previously loaded NozzleTip. 
+        actuateCover(openState, true, false);
+    }
 
-    public void actuateCover(boolean openState, boolean loadNozzleTipIfNeeded) throws Exception {
+    public void actuateCover(boolean openState, boolean loadNozzleTipIfNeeded, boolean restoreNozzleTip) throws Exception {
         if (coverType == CoverType.NoCover) {
             throw new Exception("Feeder " + getName() + ": has no cover to actuate.");
         }
         else {
-            Nozzle nozzle = BlindsFeeder.nozzleForPushing(loadNozzleTipIfNeeded);
-            NozzleTip nozzleTip = (nozzle == null ? null : nozzle.getNozzleTip());
-            if (nozzleTip == null) {
-                throw new Exception("Feeder " + getName() + ": no nozzle tip loaded.");
+            if (location.getZ() == 0.0) {
+                throw new Exception("Feeder " + getName() + " Part Z not set.");
             }
-            if (! nozzleTip.isPushAndDragAllowed()) {
-                throw new Exception("Feeder " + getName() + ": loaded nozzle tip "+nozzleTip.getId()+" does not allow pushing. Check the nozzle tip configuration.");
+
+            // Get the nozzle for pushing
+            NozzleAndTipForPushing nozzleAndTipForPushing = BlindsFeeder.getNozzleAndTipForPushing(loadNozzleTipIfNeeded);
+            Nozzle nozzle = nozzleAndTipForPushing.getNozzle();
+            NozzleTip nozzleTip = nozzleAndTipForPushing.getNozzleTip();
+            if (nozzleTip == null) {
+                throw new Exception("Feeder " + getName() + ": loaded nozzle tips do not allow pushing. Check the nozzle tip configuration or change the nozzle tip.");
             }
             Length nozzleTipDiameter = nozzleTip.getDiameterLow(); 
             if (nozzleTipDiameter.getValue() == 0.) {
                 throw new Exception("Feeder " + getName() + ": current nozzle tip "+nozzleTip.getId()+" has push diameter not set. Check the nozzle tip configuration.");
-            }
-            if (location.getZ() == 0.0) {
-                throw new Exception("Feeder " + getName() + " Part Z not set.");
             }
 
             assertCalibration();
@@ -1251,8 +1325,16 @@ public class BlindsFeeder extends ReferenceFeeder {
                         .convertToUnits(location.getUnits());
                 Length feederZ = location.getLengthZ().add(pushZOffset);
 
-                Location feederLocation0 = new Location(location.getUnits(), feederX0.getValue(), feederY.getValue(), feederZ.getValue(), getPickRotationInTape());
-                Location feederLocation1 = new Location(location.getUnits(), feederX1.getValue(), feederY.getValue(), feederZ.getValue(), getPickRotationInTape());
+                Location feederLocation0 = new Location(location.getUnits(), 
+                        feederX0.getValue(), 
+                        feederY.getValue(), 
+                        feederZ.getValue(), 
+                        getPickRotationInTape());
+                Location feederLocation1 = new Location(location.getUnits(), 
+                        feederX1.getValue(), 
+                        feederY.getValue(), 
+                        feederZ.getValue(), 
+                        getPickRotationInTape());
 
                 // Convert to machine locations
                 Location machineLocation0 = transformFeederToMachineLocation(feederLocation0);
@@ -1285,8 +1367,16 @@ public class BlindsFeeder extends ReferenceFeeder {
                         .convertToUnits(location.getUnits());
                 Length feederZ = location.getLengthZ().subtract(pushZOffset);
 
-                Location feederLocation0 = new Location(location.getUnits(), feederX0.getValue(), feederY.getValue(), feederZ.getValue(), getPickRotationInTape());
-                Location feederLocation1 = new Location(location.getUnits(), feederX1.getValue(), feederY.getValue(), feederZ.getValue(), getPickRotationInTape());
+                Location feederLocation0 = new Location(location.getUnits(), 
+                        feederX0.getValue(), 
+                        feederY.getValue(), 
+                        feederZ.getValue(), 
+                        getPickRotationInTape());
+                Location feederLocation1 = new Location(location.getUnits(), 
+                        feederX1.getValue(), 
+                        feederY.getValue(), 
+                        feederZ.getValue(), 
+                        getPickRotationInTape());
 
                 // Convert to machine locations
                 Location machineLocation0 = transformFeederToMachineLocation(feederLocation0);
@@ -1299,6 +1389,9 @@ public class BlindsFeeder extends ReferenceFeeder {
                 // do not: nozzle.getHead().moveToSafeZ();
                 // Store the newly uncovered pocket position.
                 setCoverPosition(pickFeederLocation.getLengthX());
+            }
+            if (restoreNozzleTip) {
+                nozzleAndTipForPushing.restoreNozzleTipLoadedBefore();
             }
         }
     }

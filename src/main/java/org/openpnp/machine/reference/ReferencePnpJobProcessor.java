@@ -298,20 +298,24 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // Everything still looks good, so prepare the feeders.
             fireTextStatus("Preparing feeders.");
             Machine machine = Configuration.get().getMachine();
+            List<Feeder> feederList = new ArrayList<>();
             // Get all the feeders that are used in the pending placements.
             for (Feeder feeder : machine.getFeeders()) {
                 if (feeder.isEnabled() && feeder.getPart() != null) {
                     for (JobPlacement placement : getPendingJobPlacements()) {
                         if (placement.getPartId() == feeder.getPart().getId()) {
-                            try {
-                                // feeder is used in this job, prep it.
-                                feeder.prepareForJob();
-                            }
-                            catch (Exception e) {
-                                throw new JobProcessorException(feeder, e);
-                            }
+                            feederList.add(feeder);
                         }
                     }
+                }
+            }
+            for (Feeder feeder : feederList) {
+                try {
+                    // feeder is used in this job, prep it.
+                    feeder.prepareForJob(feederList);
+                }
+                catch (Exception e) {
+                    throw new JobProcessorException(feeder, e);
                 }
             }
         }
