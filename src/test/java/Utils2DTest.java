@@ -9,8 +9,6 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
 import org.openpnp.util.Utils2D;
 
-import junit.framework.Assert;
-
 public class Utils2DTest {
     /**
      * Test Utils2D.calculateBoardLocation with 100k random BoardLocations.
@@ -58,37 +56,37 @@ public class Utils2DTest {
         }
     }
 
-    private static Placement randomPlacement() {
+    public static Placement randomPlacement() {
         Placement placement = new Placement("" + Math.random());
         placement.setLocation(randomLocation());
         return placement;
     }
 
-    private static BoardLocation randomBoardLocation() {
+    public static BoardLocation randomBoardLocation() {
         BoardLocation bl = new BoardLocation(new Board());
         bl.setLocation(randomLocation());
         bl.setSide(randomSide());
         return bl;
     }
 
-    private static Side randomSide() {
+    public static Side randomSide() {
         return Math.random() > 0.5d ? Side.Bottom : Side.Top;
     }
 
-    private static Location randomLocation() {
+    public static Location randomLocation() {
         return new Location(LengthUnit.Millimeters, Math.random() * 100, Math.random() * 100, 0,
                 Math.random() * 720 - 360);
     }
 
-    private static void checkNormalized(Location loc, Location tst) throws Exception {
+    public static void checkNormalized(Location loc, Location tst) throws Exception {
         checkNormalized(loc, tst.getX(), tst.getY(), tst.getZ(), tst.getRotation());
     }
 
-    private static void check(Location loc, Location tst) throws Exception {
+    public static void check(Location loc, Location tst) throws Exception {
         check(loc, tst.getX(), tst.getY(), tst.getZ(), tst.getRotation());
     }
 
-    private static void check(Location results, double x, double y, double z, double c)
+    public static void check(Location results, double x, double y, double z, double c)
             throws Exception {
         within("angle", results.getRotation(), c, 0.001);
         within("x", results.getX(), x, 0.01);
@@ -96,7 +94,7 @@ public class Utils2DTest {
         within("z", results.getZ(), z, 0.01);
     }
 
-    private static void checkNormalized(Location results, double x, double y, double z, double c)
+    public static void checkNormalized(Location results, double x, double y, double z, double c)
             throws Exception {
         within("angle", Utils2D.normalizeAngle(results.getRotation()), Utils2D.normalizeAngle(c),
                 0.001);

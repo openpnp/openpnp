@@ -137,29 +137,28 @@ public class Utils2D {
     }
 
     public static Location calculateBoardPlacementLocation(Location boardLocation, Side side,
-            double offset, Location placementLocation) {
-            // The Z value of the placementLocation is always ignored, so zero it out to make sure.
-            placementLocation = placementLocation.derive(null, null, 0D, null);
+        double offset, Location placementLocation) {
+        // The Z value of the placementLocation is always ignored, so zero it out to make sure.
+        placementLocation = placementLocation.derive(null, null, 0D, null);
 
 
-            // We will work in the units of the placementLocation, so convert
-            // anything that isn't in those units to it.
+        // We will work in the units of the placementLocation, so convert
+        // anything that isn't in those units to it.
         boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
 
-            // If we are placing the bottom of the board we need to invert
-            // the placement location.
+        // If we are placing the bottom of the board we need to invert
+        // the placement location.
         if (side == Side.Bottom) {
-                placementLocation = placementLocation.invert(true, false, false, false)
-                    .add(new Location(placementLocation.getUnits(), offset, 0.0, 0.0, 0.0));
-            }
-
-            // Rotate and translate the point into the same coordinate space
-            // as the board
-            placementLocation = placementLocation.rotateXy(boardLocation.getRotation())
-                    .addWithRotation(boardLocation);
-            return placementLocation;
+            placementLocation = placementLocation.invert(true, false, false, false)
+                .add(new Location(placementLocation.getUnits(), offset, 0.0, 0.0, 0.0));
         }
 
+        // Rotate and translate the point into the same coordinate space
+        // as the board
+        placementLocation = placementLocation.rotateXy(boardLocation.getRotation())
+                .addWithRotation(boardLocation);
+        return placementLocation;
+    }
 
     public static Location calculateBoardPlacementLocationInverse(BoardLocation bl,
             Location placementLocation) {
@@ -343,6 +342,34 @@ public class Utils2D {
     
     public static double distance(Point2D.Double a, Point2D.Double b) {
         return (Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2)));
+    }
+    
+    public static AffineTransform deriveAffineTransform(Location source1, Location source2, Location source3,
+            Location dest1, Location dest2, Location dest3) {
+        source1 = source1.convertToUnits(LengthUnit.Millimeters);
+        source2 = source2.convertToUnits(LengthUnit.Millimeters);
+        source3 = source3.convertToUnits(LengthUnit.Millimeters);
+        dest1 = dest1.convertToUnits(LengthUnit.Millimeters);
+        dest2 = dest2.convertToUnits(LengthUnit.Millimeters);
+        dest3 = dest3.convertToUnits(LengthUnit.Millimeters);
+        return deriveAffineTransform(source1.getX(), source1.getY(), 
+                source2.getX(), source2.getY(),
+                source3.getX(), source3.getY(),
+                dest1.getX(), dest1.getY(),
+                dest2.getX(), dest2.getY(),
+                dest3.getX(), dest3.getY());
+    }
+    
+    public static AffineTransform deriveAffineTransform(Location source1, Location source2,
+            Location dest1, Location dest2) {
+        source1 = source1.convertToUnits(LengthUnit.Millimeters);
+        source2 = source2.convertToUnits(LengthUnit.Millimeters);
+        dest1 = dest1.convertToUnits(LengthUnit.Millimeters);
+        dest2 = dest2.convertToUnits(LengthUnit.Millimeters);
+        return deriveAffineTransform(source1.getX(), source1.getY(), 
+                source2.getX(), source2.getY(),
+                dest1.getX(), dest1.getY(),
+                dest2.getX(), dest2.getY());
     }
     
     // https://stackoverflow.com/questions/21270892/generate-affinetransform-from-3-points
