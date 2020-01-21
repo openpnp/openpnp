@@ -460,6 +460,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 
 		addWrappedBinding(feeder, "trayCountCols", textFieldTrayCountCols, "text", intConverter);
 		addWrappedBinding(feeder, "trayCountRows", textFieldTrayCountRows, "text", intConverter);
+		
 		addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", intConverter);
 
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsX);

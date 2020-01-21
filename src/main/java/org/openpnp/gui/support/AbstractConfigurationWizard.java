@@ -36,6 +36,7 @@ import javax.swing.JScrollPane;
 import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.BeanProperty;
+import org.jdesktop.beansbinding.BindingListener;
 import org.jdesktop.beansbinding.Bindings;
 import org.jdesktop.beansbinding.Converter;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
@@ -51,7 +52,7 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
 
     private List<WrappedBinding> wrappedBindings = new ArrayList<>();
     private ApplyResetBindingListener listener;
-
+    
     public AbstractConfigurationWizard() {
         setLayout(new BorderLayout());
 
@@ -132,6 +133,18 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
                 JBindings.bind(source, sourceProperty, target, targetProperty));
     }
 
+//    public WrappedBinding addWrappedBinding(Object source, String sourceProperty,
+//            Object target, String targetProperty, Converter converter, BindingListener... listeners) {
+//        return addWrappedBinding(
+//                JBindings.bind(source, sourceProperty, target, targetProperty, converter, listeners));
+//    }
+//
+//    public WrappedBinding addWrappedBinding(Object source, String sourceProperty,
+//            Object target, String targetProperty, BindingListener... listeners) {
+//        return addWrappedBinding(
+//                JBindings.bind(source, sourceProperty, target, targetProperty, listeners));
+//    }
+
     public AutoBinding bind(UpdateStrategy updateStrategy, Object source, String sourceProperty,
             Object target, String targetProperty) {
         return BeanUtils.bind(updateStrategy, source, sourceProperty, target, targetProperty);
@@ -186,4 +199,12 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
     public Boolean isDirty() {
         return btnApply.isEnabled();
     }
+    
+//    public void setBlockApplyResetAction(boolean blockApplyResetAction) {
+//        this.blockApplyResetAction = blockApplyResetAction;
+//    }
+//    
+//    public boolean getBlockApplyResetAction() {
+//        return blockApplyResetAction;
+//    }
 }

@@ -33,6 +33,7 @@ import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -41,7 +42,10 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
+import org.jdesktop.beansbinding.AbstractBindingListener;
+import org.jdesktop.beansbinding.Binding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.jdesktop.beansbinding.Binding.SyncFailure;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
@@ -57,6 +61,7 @@ import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
@@ -116,7 +121,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JLabel lblTapeType;
     private JComboBox comboBoxTapeType;
     private JLabel lblRotationInTape;
-    private JTextField textFieldLocationRotation;
+    private JTextField textFieldRotationInTape;
     private JButton btnAutoSetup;
     private JCheckBox chckbxUseVision;
     private JLabel lblUseVision;
@@ -129,8 +134,6 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private Location secondPartLocation;
     private List<Location> part1HoleLocations;
     private Camera autoSetupCamera;
-
-    private JTextField textFieldRotationInTape;
 
 
     public ReferenceStripFeederConfigurationWizard(ReferenceStripFeeder feeder) {
@@ -356,13 +359,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get()
                                                                            .getLengthDisplayFormat());
 
-//        MutableLocationProxy location = new MutableLocationProxy();
-//        bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
-//        addWrappedBinding(location, "rotation", textFieldLocationRotation, "text", doubleConverter);
-
+        addWrappedBinding(feeder, "rotationInFeeder", textFieldRotationInTape, "text", doubleConverter);
 
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
-        addWrappedBinding(feeder, "rotationInFeeder", textFieldRotationInTape, "text", doubleConverter);
         addWrappedBinding(feeder, "feedRetryCount", retryCountTf, "text", intConverter);
         addWrappedBinding(feeder, "pickRetryCount", pickRetryCount, "text", intConverter);
         addWrappedBinding(feeder, "tapeType", comboBoxTapeType, "selectedItem");
@@ -949,4 +948,26 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             throw new Error(e);
         }
     }
+
+//    class JOneWayTextField extends JTextField {
+//        @Override
+//        public void setText(String text) {
+//            if (!isDirty()) {
+//                super.setText(text);
+//                setBlockApplyResetAction(Boolean.TRUE);
+//            } else {
+//                super.setText(text);
+//            }
+//        }
+//    }
+//    
+//    private class JComponentNoApplyNeeded extends AbstractBindingListener {
+//
+//        @Override
+//        public void synced(Binding binding) {
+//            applyAction.setEnabled(false);
+//            resetAction.setEnabled(false);
+//        }
+//    }
+
 }

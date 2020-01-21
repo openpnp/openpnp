@@ -81,6 +81,12 @@ public class JBindings {
         }
 
         public WrappedBinding(SS source, String sourcePropertyName, TS target,
+                String targetPropertyName, Converter<SV, TV> converter, boolean oneWayFlag,
+                BindingListener... listeners) {
+            
+        }
+        
+        public WrappedBinding(SS source, String sourcePropertyName, TS target,
                 String targetPropertyName, Converter<SV, TV> converter,
                 BindingListener... listeners) {
             this.source = source;
