@@ -1,10 +1,8 @@
 package org.openpnp.gui;
 
-import java.awt.AlphaComposite;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -12,10 +10,6 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,13 +41,8 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
 
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.imgproc.Imgproc;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
-import org.openpnp.gui.components.CameraView;
-import org.openpnp.gui.components.CameraViewFilter;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
@@ -63,29 +52,21 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
-import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.ErrorHandling;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Feeder;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.NozzleTip;
-import org.openpnp.spi.PartAlignment;
-import org.openpnp.spi.PartAlignment.PartAlignmentOffset;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
-import org.openpnp.util.VisionUtils;
-import org.openpnp.vision.FluentCv;
 import org.pmw.tinylog.Logger;
 
 public class JobPlacementsPanel extends JPanel {
@@ -105,6 +86,8 @@ public class JobPlacementsPanel extends JPanel {
     private static Color statusColorReady = new Color(157, 255, 168);
     private static Color statusColorError = new Color(255, 157, 157);
     private static Color statusColorDisabled = new Color(180, 180, 180);
+    
+    private TrainPlacementAction trainPlacementAction = new TrainPlacementAction();
 
     public JobPlacementsPanel(JobPanel jobPanel) {
     	this.jobPanel = jobPanel;
@@ -634,260 +617,6 @@ public class JobPlacementsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             Placement placement = getSelection();
             MainFrame.get().getFeedersTab().showFeederForPart(placement.getPart());
-        }
-    };
-
-    public final Action trainPlacementAction = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.partAlign);
-            putValue(NAME, "Train Placement");
-            putValue(SHORT_DESCRIPTION, "Use a bottom vision overlay to train the placement.");
-        }
-        
-        Nozzle findNozzle(Part part) throws Exception {
-            org.openpnp.model.Package packag = part.getPackage();
-            
-            for (Nozzle nozzle : Configuration.get().getMachine().getDefaultHead().getNozzles()) {
-                if (nozzle.getNozzleTip() == null) {
-                    continue;
-                }
-                if (packag.getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
-                    return nozzle;
-                }
-            }
-            
-            for (Nozzle nozzle : Configuration.get().getMachine().getDefaultHead().getNozzles()) {
-                for (NozzleTip nozzleTip : nozzle.getCompatibleNozzleTips()) {
-                    if (packag.getCompatibleNozzleTips().contains(nozzleTip)) {
-                        nozzle.loadNozzleTip(nozzleTip);
-                        return nozzle;
-                    }
-                }
-            }
-            
-            throw new Exception("No compatible nozzle and nozzle tip found for " + part.getName());
-        }
-        
-        Feeder findFeeder(Part part) throws Exception {
-            for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
-                if (!feeder.isEnabled()) {
-                    continue;
-                }
-                if (feeder.getPart() == part) {
-                    return feeder;
-                }
-            }
-            throw new Exception("No enabled feeder found for " + part.getName());
-        }
-        
-        void pick(Part part, Feeder feeder, Nozzle nozzle) throws Exception {
-            feeder.feed(nozzle);
-            Location pickLocation = feeder.getPickLocation();
-            MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
-            nozzle.pick(part);
-            nozzle.moveToSafeZ();
-            if (nozzle.getPart() != part) {
-                throw new Exception("Picked part does not match expected part. How?");
-            }
-        }
-        
-        PartAlignmentOffset align(Nozzle nozzle) throws Exception {
-            ((SimulatedUpCamera) VisionUtils.getBottomVisionCamera())
-                .setErrorOffsets(
-                        new Location(LengthUnit.Millimeters, Math.random(), Math.random(), 0, Math.random() * 10));
-            
-            for (PartAlignment alignment : Configuration.get().getMachine().getPartAlignments()) {
-                if (!alignment.canHandle(nozzle.getPart())) {
-                    continue;
-                }
-                return VisionUtils.findPartAlignmentOffsets(
-                        alignment, nozzle.getPart(), null, new Location(LengthUnit.Millimeters), nozzle);
-            }
-
-            ((SimulatedUpCamera) VisionUtils.getBottomVisionCamera())
-            .setErrorOffsets(
-                    new Location(LengthUnit.Millimeters));
-            
-            throw new Exception("No compatible part alignment found for " + nozzle.getPart().getName());
-        }
-        
-        Location transformCameraLocation(Part part, Location cameraLocation,
-                PartAlignmentOffset alignmentOffsets) {
-            if (alignmentOffsets.getPreRotated()) {
-                cameraLocation =
-                        cameraLocation.subtractWithRotation(alignmentOffsets.getLocation());
-            }
-            else {
-                Location alignmentOffsetsLocation = alignmentOffsets.getLocation();
-                Location location = new Location(LengthUnit.Millimeters).rotateXyCenterPoint(
-                        alignmentOffsetsLocation,
-                        cameraLocation.getRotation() - alignmentOffsetsLocation.getRotation());
-                location = location.derive(null, null, null,
-                        cameraLocation.getRotation() - alignmentOffsetsLocation.getRotation());
-                location = location.add(cameraLocation);
-                location = location.subtract(alignmentOffsetsLocation);
-                cameraLocation = location;
-            }
-            cameraLocation = cameraLocation.add(
-                    new Location(part.getHeight().getUnits(), 0, 0, part.getHeight().getValue(), 0));
-
-            return cameraLocation;
-        }
-
-        BufferedImage captureImage(Nozzle nozzle, PartAlignmentOffset offsets) throws Exception {
-            ((SimulatedUpCamera) VisionUtils.getBottomVisionCamera())
-                .setDrawNozzle(false);
-            Camera camera = VisionUtils.getBottomVisionCamera();
-            Location location = camera.getLocation();
-            location = transformCameraLocation(nozzle.getPart(), location, offsets);
-            MovableUtils.moveToLocationAtSafeZ(nozzle, location);
-            BufferedImage image = camera.settleAndCapture();
-            ((SimulatedUpCamera) VisionUtils.getBottomVisionCamera())
-                .setDrawNozzle(true);
-            return image;
-        }
-        
-        void discard(Nozzle nozzle) throws Exception {
-            Location discardLocation = Configuration.get().getMachine().getDiscardLocation();
-            MovableUtils.moveToLocationAtSafeZ(nozzle, discardLocation);
-            nozzle.place();
-            nozzle.moveToSafeZ();
-        }
-        
-        BufferedImage filterImage(BufferedImage image) {
-            // Convert to gray and threshold using Otsu's method
-            Mat mat = new FluentCv().toMat(image).toGray().threshold(0).mat();
-            
-            // Convert to RGBA so we have an alpha channel
-            Imgproc.cvtColor(mat, mat, Imgproc.COLOR_GRAY2BGRA);
-            
-            // Turn all black pixels transparent and change channel order to match
-            // the BufferedImage we'll create below.
-            byte[] pixel = new byte[4];
-            for (int y = 0; y < mat.cols(); y++) {
-                for (int x = 0; x < mat.rows(); x++) {
-                    mat.get(y, x, pixel);
-                    if (pixel[0] == 0 && pixel[1] == 0 && pixel[2] == 0) {
-                        pixel[3] = 0;
-                    }
-                    byte b = pixel[0];
-                    byte g = pixel[1];
-                    byte r = pixel[2];
-                    byte a = pixel[3];
-                    pixel[0] = a;
-                    pixel[1] = b;
-                    pixel[2] = g;
-                    pixel[3] = r;
-                    mat.put(y, x, pixel);
-                }
-            }
-
-            // Convert the Mat back to BufferedImage
-            image = new BufferedImage(mat.cols(), mat.rows(), BufferedImage.TYPE_4BYTE_ABGR);
-            mat.get(0, 0, ((DataBufferByte) image.getRaster().getDataBuffer()).getData());
-            mat.release();
-            
-            return image;
-        }
-        
-        Camera moveCameraToPlacement(BoardLocation boardLocation, Placement placement) throws Exception {
-            Part part = placement.getPart();
-            Location placementLocation =
-                    Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation());
-            placementLocation = placementLocation.add(new Location(part.getHeight().getUnits(), 0,
-                    0, part.getHeight().getValue(), 0));
-            Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-            MovableUtils.moveToLocationAtSafeZ(camera, placementLocation);
-            return camera;
-        }
-        
-        void render(Camera camera, BufferedImage image) {
-            try {
-                CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
-                cameraView.setCameraViewFilter(new CameraViewFilter() {
-                    @Override
-                    public BufferedImage filterCameraImage(Camera camera, BufferedImage cameraImage) {
-                        BufferedImage overlay = image;
-                        AffineTransform tx;
-                        AffineTransformOp op;
-                        // TODO STOPSHIP something wrong with rotation when angles are not multiples
-                        // of 90*.
-                        // Rotate the image about it's center, to the camera's rotation
-                        tx = AffineTransform.getRotateInstance(Math.toRadians(-camera.getLocation().getRotation()),
-                                overlay.getWidth() / 2, 
-                                overlay.getHeight() / 2);
-                        op = new AffineTransformOp(tx, AffineTransformOp.TYPE_BILINEAR);
-                        overlay = op.filter(overlay, null);
-                        
-                        // Scale the overlay to the camera units per pixel
-                        double scaleX = 1, scaleY = 1;
-                        try {
-                            Location bottomUpp = VisionUtils.getBottomVisionCamera().getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters);
-                            Location topUpp = camera.getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters);
-                            scaleX = bottomUpp.getX() / topUpp.getX();
-                            scaleY = bottomUpp.getY() / topUpp.getY();
-                        }
-                        catch (Exception e) {
-                            
-                        }
-                        tx = AffineTransform.getScaleInstance(scaleX, scaleY);
-                        op = new AffineTransformOp(tx, AffineTransformOp.TYPE_BILINEAR);
-                        overlay = op.filter(overlay, null);
-                        
-                        // Create the image that will be used as the final image
-                        BufferedImage target = new BufferedImage(cameraImage.getWidth(), cameraImage.getHeight(), cameraImage.getType());
-                        Graphics2D g = (Graphics2D) target.getGraphics();
-                        
-                        // Draw the camera image first
-                        g.drawImage(cameraImage, 0, 0, null);
-
-                        // And draw the overlay, centered
-                        g.drawImage(overlay, 
-                                target.getWidth() / 2 - overlay.getWidth() / 2, 
-                                target.getHeight() / 2 - overlay.getHeight() / 2, 
-                                null);                
-                        g.setColor(Color.red);
-                        g.drawRect(target.getWidth() / 2 - overlay.getWidth() / 2,
-                                target.getHeight() / 2 - overlay.getHeight() / 2,
-                                overlay.getWidth(), 
-                                overlay.getHeight());
-                        g.dispose();
-                        return target;
-                    }
-                });
-            }
-            catch (Exception e) {
-                // Throw away, just means we're running outside of the UI.
-            }
-        }
-        
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            Placement placement = getSelection();
-            Part part = placement.getPart();
-            UiUtils.submitUiMachineTask(() -> {
-                /**
-                 * Find a nozzle that can pick the part
-                 * Find a feeder that can feeder the part
-                 * Pick the part
-                 * Align the part
-                 * Position at bottom vision (using alignment offsets)
-                 * Settle and capture image
-                 * Discard or replace part
-                 * Move camera to placement
-                 * Render image over placement center at 20% opaque
-                 */
-                
-                Nozzle nozzle = findNozzle(part);
-                Feeder feeder = findFeeder(part);
-                pick(part, feeder, nozzle);
-                PartAlignmentOffset offsets = align(nozzle);
-                BufferedImage image = captureImage(nozzle, offsets);
-                discard(nozzle);
-                image = filterImage(image);
-                Camera camera = moveCameraToPlacement(boardLocation, placement);
-                render(camera, image);
-            });
         }
     };
 

@@ -347,6 +347,10 @@ public class CameraView extends JComponent implements CameraListener {
             }
         }, 0, 30, TimeUnit.MILLISECONDS);
     }
+    
+    public CameraViewFilter getCameraViewFilter() {
+        return this.cameraViewFilter;
+    }
 
     public void setCameraViewFilter(CameraViewFilter cameraViewFilter) {
         this.cameraViewFilter = cameraViewFilter;
