@@ -42,7 +42,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.spi.Feeder;
 
 /**
- * Implementation of Feeder that holds other feeders.
+ * Implementation of Feeder that can be the parent to other feeders.
  */
 public class ReferenceFeederGroup extends ReferenceFeeder {
 
@@ -90,15 +90,6 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
 	
 	public ArrayList<String> getChildIds() {
 	    return childIds;
-	}
-	
-	@Override
-	public void setParentId(String parentId) {
-	    //Location oldLastComponentLocation = getLastComponentLocation();
-	    //Location oldFirstRowLastComponentLocation = getFirstRowLastComponentLocation();
-	    super.setParentId(parentId);
-	    //setLastComponentLocation(oldLastComponentLocation);
-	    //setFirstRowLastComponentLocation(oldFirstRowLastComponentLocation);
 	}
 	
     @Override

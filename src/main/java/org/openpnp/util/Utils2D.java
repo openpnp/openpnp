@@ -326,21 +326,15 @@ public class Utils2D {
         return a.add(new Location(a.getUnits(), vu.x, vu.y, 0, 0));
     }
 
+    /**
+     * Calculate the angle between a ray from the first point in the positive x direction to
+     * the ray from the first point to the second point.
+     * @param firstPoint
+     * @param secondPoint
+     * @return
+     */
     static public double getAngleFromPoint(Location firstPoint, Location secondPoint) {
         secondPoint = secondPoint.convertToUnits(firstPoint.getUnits());
-        
-//        double angle = 0.0;
-//        // above 0 to 180 degrees
-//        if ((secondPoint.getX() > firstPoint.getX())) {
-//            angle = (Math.atan2((secondPoint.getX() - firstPoint.getX()),
-//                    (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
-//        }
-//        // above 180 degrees to 360/0
-//        else if ((secondPoint.getX() <= firstPoint.getX())) {
-//            angle = 360 - (Math.atan2((firstPoint.getX() - secondPoint.getX()),
-//                    (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
-//        }
-//        return angle;
         return Math.toDegrees(Math.atan2(secondPoint.getY() - firstPoint.getY(), secondPoint.getX() - firstPoint.getX()));
     }
     
@@ -348,207 +342,130 @@ public class Utils2D {
         return (Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2)));
     }
 
-    public static void testComputeScalingRotationAndTranslation() {
-        for (int t=0; t<10; t++) {
-            double eps = 0.0;
-            int nDims = 2;
-            int nPoints = 3; //(int) Math.round(1.0+10.0*Math.random());
-            RealMatrix source = MatrixUtils.createRealMatrix(nDims,nPoints);
-            RealMatrix noise = MatrixUtils.createRealMatrix(nDims,nPoints);
-            //RealMatrix destination = MatrixUtils.createRealMatrix(nDims,nPoints);
-            RealMatrix scaling = MatrixUtils.createRealIdentityMatrix(nDims);
-            RealMatrix rotation = MatrixUtils.createRealMatrix(nDims,nDims);
-            RealMatrix translation = MatrixUtils.createRealMatrix(nDims,1);
-            for (int i=0; i<nDims; i++) {
-                double so = 500.0*(Math.random()-0.5);
-                for (int j=0; j<nPoints; j++) {
-                    source.setEntry(i, j, 500.0*(Math.random()-0.5)+so);
-                    noise.setEntry(i, j, eps*(Math.random()-0.5));
-                }
-                scaling.setEntry(i, i, 1.0+0.01*(Math.random()-0.5));
-                translation.setEntry(i, 0, 150.0*(Math.random()-0.5));
-            }
-
-            double theta = Math.PI * Math.random();
-            rotation.setColumn(0, new double[] {Math.cos(theta), Math.sin(theta)});
-            rotation.setColumn(1, new double[] {-Math.sin(theta), Math.cos(theta)});
-            
-            RealMatrix destination = rotation.multiply(scaling).multiply(source.add(noise));
-            for (int j=0; j<nPoints; j++) {
-                destination.setColumnMatrix(j, destination.getColumnMatrix(j).add(translation));
-            }
-
-            RealMatrix sc = MatrixUtils.createRealMatrix(nDims,nDims);
-            RealMatrix rot = MatrixUtils.createRealMatrix(nDims,nDims);
-            RealMatrix tr = MatrixUtils.createRealMatrix(nDims,1);
-            
-            computeScalingRotationAndTranslation(source, destination, sc, rot, tr);
-            
-            RealMatrix test = rot.multiply(sc).multiply(source);
-            for (int i=0; i<nPoints; i++) {
-                test.setColumnMatrix(i, test.getColumnMatrix(i).add(tr));
-            }
-            test = test.subtract(destination);
-            double rmsError = Math.sqrt(test.multiply(test.transpose()).getTrace() / nPoints);
-            Logger.trace("RMS Error = " + rmsError);
-            
-            Logger.trace("scaling error = " + sc.subtract(scaling) );
-            Logger.trace("rotation error = " + rot.subtract(rotation) );
-            Logger.trace("translation error = " + tr.subtract(translation) );
-            
-            
-
-        }
-    }
-    
-    public static void computeScalingRotationAndTranslation(RealMatrix source, RealMatrix destination, RealMatrix scaling, RealMatrix rotation, RealMatrix translation) {
-        int nPoints = source.getColumnDimension();
-        int nDims = source.getRowDimension();
-
-        RealMatrix sMat = source.copy();
-        RealMatrix dMat = destination.copy();
-
-        RealMatrix sMean = MatrixUtils.createRealMatrix(nDims,1);
-        RealMatrix dMean = MatrixUtils.createRealMatrix(nDims,1);
-
-        for (int i=0; i<nPoints; i++) {
-            sMean = sMean.add(sMat.getColumnMatrix(i));
-            dMean = dMean.add(dMat.getColumnMatrix(i));
-        }
-        sMean = sMean.scalarMultiply(1.0/nPoints);
-        dMean = dMean.scalarMultiply(1.0/nPoints);
-        
-        for (int i=0; i<nPoints; i++) {
-            sMat.setColumnMatrix(i, sMat.getColumnMatrix(i).subtract(sMean));
-            dMat.setColumnMatrix(i, dMat.getColumnMatrix(i).subtract(dMean));
-        }        
-        
-        SingularValueDecomposition sSVD = new SingularValueDecomposition(sMat.multiply(sMat.transpose()));
-        SingularValueDecomposition dSVD = new SingularValueDecomposition(dMat.multiply(dMat.transpose()));
-        RealMatrix sS = sSVD.getS();
-        RealMatrix dS = dSVD.getS();
-
-        ArrayList<Integer> p = new ArrayList<>();
-        for (int i=0; i<nDims; i++) {
-            p.add(i);
-        }
-        ArrayList<ArrayList<Integer>> permutations = createPermutations(p);
-        
-        double bestRmsError = 1e99;
-        
-        for (ArrayList<Integer> perm : permutations) {
-            RealMatrix sc = MatrixUtils.createRealIdentityMatrix(nDims);
-    
-            for (int i=0; i<nDims; i++) {
-                if (sS.getEntry(i,i) > 1e-9) {
-                    sc.setEntry(i, i, Math.sqrt(dS.getEntry(perm.get(i),perm.get(i))/sS.getEntry(i,i)));
-                } 
-            }
-            sc = sc.multiply(sSVD.getVT()).preMultiply(sSVD.getV());
-            
-            sMat = sMat.preMultiply(sc);
-    
-//            SingularValueDecomposition newsSVD = new SingularValueDecomposition(sMat.multiply(sMat.transpose()));
-            
-            SingularValueDecomposition dstSVD = new SingularValueDecomposition(dMat.multiply(sMat.transpose()));
-            
-            RealMatrix rot = dstSVD.getU().multiply(dstSVD.getVT());
-            if ((new LUDecomposition(rot).getDeterminant()) < 0) {
-                RealMatrix s = MatrixUtils.createRealIdentityMatrix(nDims);
-                s.multiplyEntry(nDims-1, nDims-1, -1);
-                rot = dstSVD.getU().multiply(s).multiply(dstSVD.getVT());
-            }
-            
-            RealMatrix tr = dMean.subtract(rot.multiply(sc).multiply(sMean));
-     
-            RealMatrix test = rot.multiply(sc).multiply(source);
-            for (int i=0; i<nPoints; i++) {
-                test.setColumnMatrix(i, test.getColumnMatrix(i).add(tr));
-            }
-            test = destination.subtract(test);
-            double rmsError = Math.sqrt(test.multiply(test.transpose()).getTrace() / nPoints);
-            
-            if (rmsError < bestRmsError) {
-                bestRmsError = rmsError;
-                scaling.setSubMatrix(sc.getData(), 0, 0);
-                rotation.setSubMatrix(rot.getData(), 0, 0);
-                translation.setSubMatrix(tr.getData(), 0, 0);
-            }
-        }
-    }
-
-    private static ArrayList<ArrayList<Integer>> createPermutations(ArrayList<Integer> d) {
-        ArrayList<ArrayList<Integer>> p = new ArrayList<>();
-        int n = d.size();
-        if (n == 1) {
-            p.add( d );
-        } else if (n == 2) {
-            p.add( d );
-            ArrayList<Integer> dd = new ArrayList<>();
-            dd.add(d.get(1));
-            dd.add(d.get(0));
-            p.add( dd );
-        } else {
-            for (int i=0; i<n; i++) {
-                ArrayList<Integer> dr = (ArrayList<Integer>) d.clone();
-                dr.remove(i);
-                ArrayList<ArrayList<Integer>> pe = createPermutations(dr);
-                
-                for (int j=0; j<pe.size(); j++) {
-                    ArrayList<Integer> q = new ArrayList<>();
-                    q.add(d.get(i));
-                    q.addAll(pe.get(j));
-                    p.add(q);
-                }
-            }
-        }
-        return p;
-    }
-    
-    public static AffineTransform deriveAffineTransform(RealMatrix scaling, RealMatrix rotation, RealMatrix translation ) {
-        RealMatrix rs = rotation.multiply(scaling);
-        
-        double m00 = rs.getEntry(0, 0);
-        double m01 = rs.getEntry(0, 1);
-        double m02 = translation.getEntry(0, 0);
-        double m10 = rs.getEntry(1, 0);
-        double m11 = rs.getEntry(1, 1);
-        double m12 = translation.getEntry(1, 0);
-
-        return new AffineTransform(m00, m10, m01, m11, m02, m12);       
-    }
-    
-    public static AffineTransform deriveAffineTransform(double[][] source, double[][] destination) {
-        
-        RealMatrix sourceMat = MatrixUtils.createRealMatrix(source);
-        RealMatrix destMat = MatrixUtils.createRealMatrix(destination);
-        
-        RealMatrix scaling = MatrixUtils.createRealMatrix(2, 2);
-        RealMatrix rotation = MatrixUtils.createRealMatrix(2, 2);
-        RealMatrix translation = MatrixUtils.createRealMatrix(2, 1);
-        
-        computeScalingRotationAndTranslation(sourceMat, destMat, scaling, rotation, translation);
-
-        return deriveAffineTransform(scaling, rotation, translation);       
-    }
-    
-    public static AffineTransform deriveAffineTransform(ArrayList<Point2D.Double> source, ArrayList<Point2D.Double> destination) {
-        int nPoints = source.size();
-        double[][] s = new double[2][nPoints];
-        double[][] d = new double[2][nPoints];
-        
-        for (int i=0; i<nPoints; i++) {
-            Point2D.Double p = source.get(i);
-            s[0][i] = p.x;
-            s[1][i] = p.y;
-            
-            p = destination.get(i);
-            d[0][i] = p.x;
-            d[1][i] = p.y;
-        }
-
-        return deriveAffineTransform(s, d);       
-    }  
+//    public static void testComputeRotationAndTranslation() {
+//        for (int t=0; t<20; t++) {
+//            double eps = 0.0;
+//            int nDims = 2;
+//            int nPoints = 2; //(int) Math.round(1.0+10.0*Math.random());
+//            RealMatrix source = MatrixUtils.createRealMatrix(nDims,nPoints);
+//            RealMatrix noise = MatrixUtils.createRealMatrix(nDims,nPoints);
+//            RealMatrix rotation = MatrixUtils.createRealMatrix(nDims,nDims);
+//            RealMatrix translation = MatrixUtils.createRealMatrix(nDims,1);
+//            for (int i=0; i<nDims; i++) {
+//                double so = 500.0*(Math.random()-0.5);
+//                for (int j=0; j<nPoints; j++) {
+//                    source.setEntry(i, j, 500.0*(Math.random()-0.5)+so);
+//                    noise.setEntry(i, j, eps*(Math.random()-0.5));
+//                }
+//                translation.setEntry(i, 0, 150.0*(Math.random()-0.5));
+//            }
+//
+//            double theta = 2 * Math.PI * (Math.random()-0.5);
+//            rotation.setRow(0, new double[] {Math.cos(theta), -Math.sin(theta)});
+//            rotation.setRow(1, new double[] {Math.sin(theta),  Math.cos(theta)});
+//            
+//            RealMatrix destination = rotation.multiply(source.add(noise));
+//            for (int j=0; j<nPoints; j++) {
+//                destination.setColumnMatrix(j, destination.getColumnMatrix(j).add(translation));
+//            }
+//
+//            RealMatrix rot = MatrixUtils.createRealMatrix(nDims,nDims);
+//            RealMatrix tr = MatrixUtils.createRealMatrix(nDims,1);
+//            
+//            computeRotationAndTranslation(source, destination, rot, tr);
+//            
+//            RealMatrix test = rot.multiply(source);
+//            for (int i=0; i<nPoints; i++) {
+//                test.setColumnMatrix(i, test.getColumnMatrix(i).add(tr));
+//            }
+//            test = test.subtract(destination);
+//            double rmsError = Math.sqrt(test.multiply(test.transpose()).getTrace() / nPoints);
+//            Logger.trace("RMS Error = " + rmsError);
+//            
+//            Logger.trace("rotation error = " + rot.subtract(rotation) );
+//            Logger.trace("translation error = " + tr.subtract(translation) );
+//        }
+//    }
+//    
+//    public static void computeRotationAndTranslation(RealMatrix source, RealMatrix destination, RealMatrix rotation, RealMatrix translation) {
+//        int nPoints = source.getColumnDimension();
+//        int nDims = source.getRowDimension();
+//
+//        RealMatrix sMat = source.copy();
+//        RealMatrix dMat = destination.copy();
+//
+//        RealMatrix sMean = MatrixUtils.createRealMatrix(nDims,1);
+//        RealMatrix dMean = MatrixUtils.createRealMatrix(nDims,1);
+//
+//        for (int i=0; i<nPoints; i++) {
+//            sMean = sMean.add(sMat.getColumnMatrix(i));
+//            dMean = dMean.add(dMat.getColumnMatrix(i));
+//        }
+//        sMean = sMean.scalarMultiply(1.0/nPoints);
+//        dMean = dMean.scalarMultiply(1.0/nPoints);
+//        
+//        for (int i=0; i<nPoints; i++) {
+//            sMat.setColumnMatrix(i, sMat.getColumnMatrix(i).subtract(sMean));
+//            dMat.setColumnMatrix(i, dMat.getColumnMatrix(i).subtract(dMean));
+//        }        
+//        
+//           
+//        SingularValueDecomposition dstSVD = new SingularValueDecomposition(dMat.multiply(sMat.transpose()));
+//        
+//        RealMatrix rot = dstSVD.getU().multiply(dstSVD.getVT());
+//        if ((new LUDecomposition(rot).getDeterminant()) < 0) {
+//            RealMatrix s = MatrixUtils.createRealIdentityMatrix(nDims);
+//            s.multiplyEntry(nDims-1, nDims-1, -1);
+//            rot = dstSVD.getU().multiply(s).multiply(dstSVD.getVT());
+//        }
+//        
+//        RealMatrix tr = dMean.subtract(rot.multiply(sMean));
+// 
+//        rotation.setSubMatrix(rot.getData(), 0, 0);
+//        translation.setSubMatrix(tr.getData(), 0, 0);
+//    }
+//
+//    public static AffineTransform deriveAffineTransform(RealMatrix rotation, RealMatrix translation ) {
+//        double m00 = rotation.getEntry(0, 0);
+//        double m01 = rotation.getEntry(0, 1);
+//        double m02 = translation.getEntry(0, 0);
+//        double m10 = rotation.getEntry(1, 0);
+//        double m11 = rotation.getEntry(1, 1);
+//        double m12 = translation.getEntry(1, 0);
+//
+//        return new AffineTransform(m00, m10, m01, m11, m02, m12);       
+//    }
+//    
+//    public static AffineTransform deriveAffineTransform(double[][] source, double[][] destination) {
+//        
+//        RealMatrix sourceMat = MatrixUtils.createRealMatrix(source);
+//        RealMatrix destMat = MatrixUtils.createRealMatrix(destination);
+//        
+//        RealMatrix rotation = MatrixUtils.createRealMatrix(2, 2);
+//        RealMatrix translation = MatrixUtils.createRealMatrix(2, 1);
+//        
+//        computeRotationAndTranslation(sourceMat, destMat, rotation, translation);
+//
+//        return deriveAffineTransform(rotation, translation);       
+//    }
+//    
+//    public static AffineTransform deriveAffineTransform(ArrayList<Point2D.Double> source, ArrayList<Point2D.Double> destination) {
+//        int nPoints = source.size();
+//        double[][] s = new double[2][nPoints];
+//        double[][] d = new double[2][nPoints];
+//        
+//        for (int i=0; i<nPoints; i++) {
+//            Point2D.Double p = source.get(i);
+//            s[0][i] = p.x;
+//            s[1][i] = p.y;
+//            
+//            p = destination.get(i);
+//            d[0][i] = p.x;
+//            d[1][i] = p.y;
+//        }
+//
+//        return deriveAffineTransform(s, d);       
+//    }  
     
     
     // https://stackoverflow.com/questions/21270892/generate-affinetransform-from-3-points

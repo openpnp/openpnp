@@ -64,6 +64,7 @@ import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.util.UiUtils;
+import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -97,6 +98,7 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
     private JButton btnSetLocationWithFiducials;
     private Location fid1Captured;
     private Location fid2Captured;
+    private JButton btnDefineFiducialLocations;
     
     private MutableLocationProxy upToDateLocation;
     private MutableLocationProxy fid1LocalLocation;
@@ -240,12 +242,15 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 		
         btnSetLocationWithFiducials = new JButton(setLocationWithFiducials);
         btnSetLocationWithFiducials.setHorizontalAlignment(SwingConstants.LEFT);
+        btnSetLocationWithFiducials.setToolTipText("<html><p width=\"400\">" + 
+                "Use to re-align the feeder group after it has been moved.  Follow instructions in the Down Camera view..." +
+                "</p></html>");
         panelLocation.add(btnSetLocationWithFiducials, "14, 4, left, default");
         
 
 		panelParameters = new JPanel();
 		panelParameters.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-				"Fiducial Locations (Local Coordinates)", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+				"Definition of Fiducial Locations (Local Coordinates)", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		contentPanel.add(panelParameters);
 
 		panelParameters.setLayout(new FormLayout(
@@ -289,40 +294,12 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
         locationButtonsPanelFid1.setBaseLocation(feeder.getLocation());
         panelParameters.add(locationButtonsPanelFid1, "8, 4");
 
-        JButton btnFid1Vision = new JButton(new AbstractAction("Set Using Vision Pipeline") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                UiUtils.submitUiMachineTask(() -> {
-                    Location fid1Captured = MainFrame.get().getMachineControls().getSelectedNozzle().getHead().
-                            getDefaultCamera().getLocation();
-                    Part fidPart = (Part) comboBoxPart.getSelectedItem();
-                    if (fidPart != null) {
-                        Configuration.get().getMachine().getFiducialLocator()
-                                .getHomeFiducialLocation(fid1Captured, fidPart);
-                        fid1Captured = MainFrame.get().getMachineControls().getSelectedNozzle().getHead().
-                                getDefaultCamera().getLocation();
-                    }
-                    final Location fid1 = fid1Captured;
-                    SwingUtilities.invokeLater(new Runnable() {
-                        public void run() {
-                            Location fid1Captured = ReferenceFeeder.convertToLocalLocation(upToDateLocation.getLocation(), fid1);
-                            Helpers.copyLocationIntoTextFields(fid1Captured, 
-                                    textFieldFid1X, 
-                                    textFieldFid1Y, 
-                                    null,
-                                    null);
-                        }
-                    });
-                });
-            }
-        });
-        btnFid1Vision.setHorizontalAlignment(SwingConstants.LEFT);
-        btnFid1Vision.setToolTipText("Manually jog camera over approximate location of the fiducial and then " + 
-                "click this button to use the vision pipeline to capture the exact center.  WARNING - may cause machine motion!");
-        btnFid1Vision.setForeground(new Color(255,0,0));
-        panelParameters.add(btnFid1Vision, "10, 4, left, default");
-
-
+        btnDefineFiducialLocations = new JButton(defineFiducialLocations);
+        btnDefineFiducialLocations.setHorizontalAlignment(SwingConstants.LEFT);
+        btnDefineFiducialLocations.setToolTipText("<html><p width=\"400\">" + 
+                "Use vision to define the local locations of the fiducials of a new feeder group.  Follow instructions in the Down Camera view..." +
+                "</p></html>");
+        panelParameters.add(btnDefineFiducialLocations, "10, 4, 1, 3, left, center");
 
         
         JLabel fid2Label = new JLabel("Fiducial B            ");
@@ -339,58 +316,6 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
         locationButtonsPanelFid2 = new LocationButtonsPanel(textFieldFid2X, textFieldFid2Y, null, null);
         locationButtonsPanelFid2.setBaseLocation(feeder.getLocation());
         panelParameters.add(locationButtonsPanelFid2, "8, 6");
-
-        JButton btnFid2Vision = new JButton(new AbstractAction("Set Using Vision Pipeline") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                UiUtils.submitUiMachineTask(() -> {
-                    Location fid2Captured = MainFrame.get().getMachineControls().getSelectedNozzle().getHead().
-                            getDefaultCamera().getLocation();
-                    Part fidPart = (Part) comboBoxPart.getSelectedItem();
-                    if (fidPart != null) {
-                        Configuration.get().getMachine().getFiducialLocator()
-                                .getHomeFiducialLocation(fid2Captured, fidPart);
-                        fid2Captured = MainFrame.get().getMachineControls().getSelectedNozzle().getHead().
-                                getDefaultCamera().getLocation();
-                    }
-                    final Location fid2 = fid2Captured;
-                    SwingUtilities.invokeLater(new Runnable() {
-                        public void run() {
-                            Location fid2Captured = ReferenceFeeder.convertToLocalLocation(upToDateLocation.getLocation(), fid2);
-                            Helpers.copyLocationIntoTextFields(fid2Captured, 
-                                    textFieldFid2X, 
-                                    textFieldFid2Y, 
-                                    null,
-                                    null);
-                        }
-                    });
-                });
-            }
-        });
-        btnFid2Vision.setHorizontalAlignment(SwingConstants.LEFT);
-        btnFid2Vision.setToolTipText("Manually jog camera over approximate location of the fiducial and then " + 
-                "click this button to use the vision pipeline to capture the exact center.  WARNING - may cause machine motion!");
-        btnFid2Vision.setForeground(new Color(255,0,0));
-        panelParameters.add(btnFid2Vision, "10, 6, left, default");
-
-
-
-		panelIllustration = new JPanel();
-		panelIllustration.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-				"Tray Illustration", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		contentPanel.add(panelIllustration);
-
-		InputStream stream = getClass().getResourceAsStream("/illustrations/rotatedtrayfeeder.png");
-		ImageIcon illustrationicon = null;
-		try {
-			illustrationicon = new ImageIcon(ImageIO.read(stream));
-
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		JLabel illustationlabel = new JLabel();
-		illustationlabel.setIcon(illustrationicon);
-		panelIllustration.add(illustationlabel);
 	}
 
 	
@@ -467,7 +392,7 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
             CameraView cameraView = MainFrame.get()
                                              .getCameraViews()
                                              .getCameraView(autoSetupCamera);
-            cameraView.addActionListener(setLocationWithFiducials1Clicked);
+            cameraView.addActionListener(setLocationWithFiducialsAClicked);
             cameraView.setText("Click on " + feeder.getName() + " Fiducial A.");
             cameraView.flash();
         }
@@ -482,12 +407,12 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
                                              .getCameraView(autoSetupCamera);
             cameraView.setText(null);
             cameraView.setCameraViewFilter(null);
-            cameraView.removeActionListener(setLocationWithFiducials1Clicked);
-            cameraView.removeActionListener(setLocationWithFiducials2Clicked);
+            cameraView.removeActionListener(setLocationWithFiducialsAClicked);
+            cameraView.removeActionListener(setLocationWithFiducialsBClicked);
         }
     };
 
-    private CameraViewActionListener setLocationWithFiducials1Clicked = new CameraViewActionListener() {
+    private CameraViewActionListener setLocationWithFiducialsAClicked = new CameraViewActionListener() {
         @Override
         public void actionPerformed(final CameraViewActionEvent action) {
             fid1Captured = action.getLocation();
@@ -512,11 +437,11 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
                 cameraView.flash();
             }
 
-            cameraView.addActionListener(setLocationWithFiducials2Clicked);
+            cameraView.addActionListener(setLocationWithFiducialsBClicked);
         }
     };
 
-    private CameraViewActionListener setLocationWithFiducials2Clicked = new CameraViewActionListener() {
+    private CameraViewActionListener setLocationWithFiducialsBClicked = new CameraViewActionListener() {
         @Override
         public void actionPerformed(final CameraViewActionEvent action) {
             fid2Captured = action.getLocation();
@@ -543,34 +468,138 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
     };
 
     private void computeLocationFromFiducials()  {
+        LengthUnit units = fid1LocalLocation.getLocation().getUnits();
 	    double[][] source = { {fid1LocalLocation.getLocation().getX(),fid2LocalLocation.getLocation().getX()},
 	                          {fid1LocalLocation.getLocation().getY(),fid2LocalLocation.getLocation().getY()} };
         double[][] dest = { {fid1Captured.getX(),fid2Captured.getX()},
                             {fid1Captured.getY(),fid2Captured.getY()} };
         
-//	    Utils2D.testComputeScalingRotationAndTranslation();
-//	    double[][] source = { {-1.0, 1.0, 0.0}, {-1.0, -1.0, 2.0} };
-//	    double[][] dest =   { {1.0, 1.0, -2.0}, {-0.25, 0.25, 0.0} }; 
-//        AffineTransform at = Utils2D.deriveAffineTransform(source, dest);
-//        Logger.trace("Transform = " + at);
-        
-        
         double rotAngleDeg = Math.toDegrees( Math.atan2(dest[1][0] - dest[1][1], dest[0][0] - dest[0][1]) - 
                 Math.atan2(source[1][0] - source[1][1], source[0][0] - source[0][1] ) );
       
-        Location sourceMid = new Location(LengthUnit.Millimeters, (source[0][0] + source[0][1]) / 2.0,
+        Location sourceMid = new Location(units, (source[0][0] + source[0][1]) / 2.0,
                 (source[1][0] + source[1][1]) / 2.0, 0.0, 0.0);
       
-        Location destMid = new Location(LengthUnit.Millimeters, (dest[0][0] + dest[0][1]) / 2.0,
+        Location destMid = new Location(units, (dest[0][0] + dest[0][1]) / 2.0,
                 (dest[1][0] + dest[1][1]) / 2.0, 0.0, rotAngleDeg);
       
         Location newLocation = destMid.subtract(sourceMid).rotateXyCenterPoint(destMid, rotAngleDeg)
                 .derive(upToDateLocation.getLocation(), false, false, true, false);
-        Logger.trace("New Location = " + newLocation);
+
         upToDateLocation.setLocation(newLocation);
     }
 	
-	
+    private Action defineFiducialLocations = new AbstractAction("Define Fiducial Locations Using Vision") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            try {
+                autoSetupCamera = Configuration.get()
+                                               .getMachine()
+                                               .getDefaultHead()
+                                               .getDefaultCamera();
+            }
+            catch (Exception ex) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Define Fiducial Locations Failure", ex);
+                return;
+            }
+
+            btnDefineFiducialLocations.setAction(defineFiducialLocationsCancel);
+
+            CameraView cameraView = MainFrame.get()
+                                             .getCameraViews()
+                                             .getCameraView(autoSetupCamera);
+            cameraView.addActionListener(defineFiducialLocationsAClicked);
+            cameraView.setText("Click on " + feeder.getName() + " Fiducial A.");
+            cameraView.flash();
+        }
+    };
+    
+    private Action defineFiducialLocationsCancel = new AbstractAction("Cancel Define Fiducial Locations") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            btnDefineFiducialLocations.setAction(defineFiducialLocations);
+            CameraView cameraView = MainFrame.get()
+                                             .getCameraViews()
+                                             .getCameraView(autoSetupCamera);
+            cameraView.setText(null);
+            cameraView.setCameraViewFilter(null);
+            cameraView.removeActionListener(defineFiducialLocationsAClicked);
+            cameraView.removeActionListener(defineFiducialLocationsBClicked);
+        }
+    };
+
+    private CameraViewActionListener defineFiducialLocationsAClicked = new CameraViewActionListener() {
+        @Override
+        public void actionPerformed(final CameraViewActionEvent action) {
+            fid1Captured = action.getLocation();
+            final CameraView cameraView = MainFrame.get()
+                                                   .getCameraViews()
+                                                   .getCameraView(autoSetupCamera);
+            cameraView.removeActionListener(this);
+            Part fidPart = (Part) comboBoxPart.getSelectedItem();
+            if (fidPart != null) {
+                UiUtils.submitUiMachineTask(() -> {
+                    cameraView.setText("Checking Fiducial A...");
+                    Configuration.get().getMachine().getFiducialLocator()
+                        .getHomeFiducialLocation(fid1Captured, fidPart);
+                    fid1Captured = MainFrame.get().getMachineControls().getSelectedNozzle().getHead().getDefaultCamera().getLocation();
+                    cameraView.setText(
+                            "Now click on Fiducial B.");
+                    cameraView.flash();
+                });
+            } else {
+                cameraView.setText(
+                        "Now click on Fiducial B.");
+                cameraView.flash();
+            }
+
+            cameraView.addActionListener(defineFiducialLocationsBClicked);
+        }
+    };
+
+    private CameraViewActionListener defineFiducialLocationsBClicked = new CameraViewActionListener() {
+        @Override
+        public void actionPerformed(final CameraViewActionEvent action) {
+            fid2Captured = action.getLocation();
+            final CameraView cameraView = MainFrame.get()
+                                                   .getCameraViews()
+                                                   .getCameraView(autoSetupCamera);
+            cameraView.removeActionListener(this);
+            Part fidPart = (Part) comboBoxPart.getSelectedItem();
+            if (fidPart != null) {
+                UiUtils.submitUiMachineTask(() -> {
+                    cameraView.setText("Checking Fiducial B...");
+                    Configuration.get().getMachine().getFiducialLocator()
+                        .getHomeFiducialLocation(fid2Captured, fidPart);
+                    fid2Captured = MainFrame.get().getMachineControls().getSelectedNozzle().getHead().getDefaultCamera().getLocation();
+                    final Location fid1 = fid1Captured;
+                    final Location fid2 = fid2Captured;
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            Location fid1Captured = ReferenceFeeder.convertToLocalLocation(upToDateLocation.getLocation(), fid1);
+                            Helpers.copyLocationIntoTextFields(fid1Captured, 
+                                    textFieldFid1X, 
+                                    textFieldFid1Y, 
+                                    null,
+                                    null);
+                            Location fid2Captured = ReferenceFeeder.convertToLocalLocation(upToDateLocation.getLocation(), fid2);
+                            Helpers.copyLocationIntoTextFields(fid2Captured, 
+                                    textFieldFid2X, 
+                                    textFieldFid2Y, 
+                                    null,
+                                    null);
+                        }
+                    });
+                    cameraView.setText("Setup complete!");
+                    Thread.sleep(1500);
+                    cameraView.setText(null);
+                    cameraView.setCameraViewFilter(null);
+                    btnDefineFiducialLocations.setAction(defineFiducialLocations);
+                });
+            }
+        }
+    };
+
     class FeederConverter extends Converter<String, Object> {
 
         @Override
