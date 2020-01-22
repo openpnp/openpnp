@@ -60,6 +60,7 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
 	    name = name + "_" + getId();
 	    part = null;
 	    partId = "";
+	    rotationInFeeder = 0.0;
 	}
 	
     public void setExpectedFiducial1(Location expectedFiducial1) {
