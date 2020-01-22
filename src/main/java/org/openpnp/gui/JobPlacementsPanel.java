@@ -564,9 +564,6 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                if (getSelection().getSide() == Side.Bottom) {
-                    throw new Exception("This feature is currently broken for board bottoms. See https://github.com/openpnp/openpnp/issues/813 for more information.");
-                }
                 HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
                 Location placementLocation = Utils2D.calculateBoardPlacementLocationInverse(
@@ -588,9 +585,6 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                if (getSelection().getSide() == Side.Bottom) {
-                    throw new Exception("This feature is currently broken for board bottoms. See https://github.com/openpnp/openpnp/issues/813 for more information.");
-                }
                 Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
                 Location placementLocation = Utils2D
                         .calculateBoardPlacementLocationInverse(boardLocation, nozzle.getLocation());

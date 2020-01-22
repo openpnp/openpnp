@@ -138,6 +138,13 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             Location source0 = sourceLocations.get(0);
             Location source1 = sourceLocations.get(1);
 			if (boardLocation.getSide() == Side.Bottom) {
+			    /**
+			     * Here, and in the block below, if the side is bottom we need to invert the
+			     * source fiducial locations. This is because it was done by getFiducialLocation
+			     * when calling calculateBoardPlacementLocation. Further, they are inverted because
+			     * we calculate board bottom placements as if X is mirrored to account for the
+			     * board being flipped over.
+			     */
 				source0 = source0.invert(true,false,false,false);
 				source1 = source1.invert(true,false,false,false);
 			}
@@ -185,7 +192,11 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         // Probably need to let the user specify some limits.
         
         // Return the compensated board location
-        Location result = Utils2D.calculateBoardPlacementLocation(boardLocation, new Location(LengthUnit.Millimeters));
+        Location origin = new Location(LengthUnit.Millimeters);
+        if (boardLocation.getSide() == Side.Bottom) {
+            origin = origin.add(boardLocation.getBoard().getDimensions().derive(null, 0., 0., 0.));
+        }
+        Location result = Utils2D.calculateBoardPlacementLocation(boardLocation, origin);
         result = result.convertToUnits(boardLocation.getLocation().getUnits());
         result = result.derive(null, null, boardLocation.getLocation().getZ(), null);
         if (checkPanel) {

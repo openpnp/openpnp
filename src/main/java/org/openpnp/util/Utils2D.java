@@ -29,7 +29,6 @@ import java.util.List;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Length;
@@ -37,7 +36,6 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
-import org.pmw.tinylog.Logger;
 
 
 public class Utils2D {
@@ -90,146 +88,116 @@ public class Utils2D {
     public static Point scalePoint(Point point, double scaleX, double scaleY) {
         return new Point(point.getX() * scaleX, point.getY() * scaleY);
     }
+    
+    /**
+     * Creates an AffineTransform for a BoardLocation which handles it's position and
+     * rotation. This is used when the BoardLocation does not yet have a transform created
+     * by a fiducial check.
+     * 
+     * @param bl
+     * @return
+     */
+    private static AffineTransform getDefaultBoardPlacementLocationTransform(BoardLocation bl) {
+        Location l = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
+        AffineTransform tx = new AffineTransform();
+        tx.translate(l.getX(), l.getY());
+        tx.rotate(Math.toRadians(l.getRotation()));
+        if (bl.getSide() == Side.Bottom) {
+            /**
+             * Translate by the board width. This is used to support the "New" Board Location
+             * system ala https://github.com/openpnp/openpnp/wiki/Board-Locations.
+             */
+            tx.translate(bl.getBoard().getDimensions().convertToUnits(LengthUnit.Millimeters).getX(), 0);
+        }
+        return tx;
+    }
+    
+    /**
+     * Calculate the apparent angle from the transform. We need this because when we
+     * created the transform we captured the apparent angle and that is used to position
+     * in X, Y, but we also need the actual value to add to the placement rotation so that
+     * the nozzle is rotated to the correct angle as well.
+     * Note, there is probably a better way to do this. If you know how, please let me know!
+     */
+    private static double getTransformAngle(AffineTransform tx) {
+        Point2D.Double a = new Point2D.Double(0, 0);
+        Point2D.Double b = new Point2D.Double(1, 1);
+        Point2D.Double c = new Point2D.Double(0, 0);
+        Point2D.Double d = new Point2D.Double(1, 1);
+        c = (Point2D.Double) tx.transform(c, null);
+        d = (Point2D.Double) tx.transform(d, null);
+        double angle = Math.toDegrees(Math.atan2(d.y - c.y, d.x - c.x) - Math.atan2(b.y - a.y, b.x - a.x));
+        return angle;
+    }
 
     public static Location calculateBoardPlacementLocation(BoardLocation bl,
             Location placementLocation) {
-        if (bl.getPlacementTransform() != null) {
-            AffineTransform tx = bl.getPlacementTransform();
-            // The affine calculations are always done in millimeters, so we convert everything
-            // before we start calculating and then we'll convert it back to the original
-            // units at the end.
-            LengthUnit placementUnits = placementLocation.getUnits();
-            Location boardLocation = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
-            placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
+        AffineTransform tx = bl.getPlacementTransform();        
+        if (tx == null) {
+            tx = getDefaultBoardPlacementLocationTransform(bl);
+        }
+        
+        // The affine calculations are always done in millimeters, so we convert everything
+        // before we start calculating and then we'll convert it back to the original
+        // units at the end.
+        LengthUnit placementUnits = placementLocation.getUnits();
+        Location boardLocation = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
+        placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
 
-            if (bl.getSide() == Side.Bottom) {
-                placementLocation = placementLocation.invert(true, false, false, false);
-            }
-            
-            // Calculate the apparent angle from the transform. We need this because when we
-            // created the transform we captured the apparent angle and that is used to position
-            // in X, Y, but we also need the actual value to add to the placement rotation so that
-            // the nozzle is rotated to the correct angle as well.
-            // Note, there is probably a better way to do this. If you know how, please let me know!
-            Point2D.Double a = new Point2D.Double(0, 0);
-            Point2D.Double b = new Point2D.Double(1, 1);
-            Point2D.Double c = new Point2D.Double(0, 0);
-            Point2D.Double d = new Point2D.Double(1, 1);
-            c = (Point2D.Double) tx.transform(c, null);
-            d = (Point2D.Double) tx.transform(d, null);
-            double angle = Math.toDegrees(Math.atan2(d.y - c.y, d.x - c.x) - Math.atan2(b.y - a.y, b.x - a.x));
-            
-            Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
-            p = tx.transform(p, null);
-            
-            // The final result is the transformed X,Y, the BoardLocation's Z, and the
-            // transform angle + placement angle.
-            Location l = new Location(LengthUnit.Millimeters, 
-                    p.getX(), 
-                    p.getY(), 
-                    boardLocation.getZ(), 
-                    angle + placementLocation.getRotation());
-            l = l.convertToUnits(placementUnits);
-            return l;
+        if (bl.getSide() == Side.Bottom) {
+        	placementLocation = placementLocation.invert(true, false, false, false);
         }
-        else {
-            return calculateBoardPlacementLocation(bl.getLocation(), bl.getSide(),
-                    bl.getBoard().getDimensions().getX(), placementLocation);
-        }
+
+        double angle = getTransformAngle(tx);
+        
+        Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
+        p = tx.transform(p, null);
+        
+        // The final result is the transformed X,Y, the BoardLocation's Z, and the
+        // transform angle + placement angle.
+        Location l = new Location(LengthUnit.Millimeters, 
+                p.getX(), 
+                p.getY(), 
+                boardLocation.getZ(), 
+                angle + placementLocation.getRotation());
+        l = l.convertToUnits(placementUnits);
+        return l;
     }
-
-    public static Location calculateBoardPlacementLocation(Location boardLocation, Side side,
-            double offset, Location placementLocation) {
-            // The Z value of the placementLocation is always ignored, so zero it out to make sure.
-            placementLocation = placementLocation.derive(null, null, 0D, null);
-
-
-            // We will work in the units of the placementLocation, so convert
-            // anything that isn't in those units to it.
-        boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
-
-            // If we are placing the bottom of the board we need to invert
-            // the placement location.
-        if (side == Side.Bottom) {
-                placementLocation = placementLocation.invert(true, false, false, false)
-                    .add(new Location(placementLocation.getUnits(), offset, 0.0, 0.0, 0.0));
-            }
-
-            // Rotate and translate the point into the same coordinate space
-            // as the board
-            placementLocation = placementLocation.rotateXy(boardLocation.getRotation())
-                    .addWithRotation(boardLocation);
-            return placementLocation;
-        }
-
 
     public static Location calculateBoardPlacementLocationInverse(BoardLocation bl,
             Location placementLocation) {
-        if (bl.getPlacementTransform() != null) {
-            AffineTransform tx = bl.getPlacementTransform();
-            
-            try {
-                tx = tx.createInverse();
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            
-            // The affine calculations are always done in millimeters, so we convert everything
-            // before we start calculating and then we'll convert it back to the original
-            // units at the end.
-            LengthUnit placementUnits = placementLocation.getUnits();
-            Location boardLocation = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
-            placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
-
-            if (bl.getSide() == Side.Bottom) {
-                placementLocation = placementLocation.invert(true, false, false, false);
-            }
-            
-            // Calculate the apparent angle from the transform. We need this because when we
-            // created the transform we captured the apparent angle and that is used to position
-            // in X, Y, but we also need the actual value to add to the placement rotation so that
-            // the nozzle is rotated to the correct angle as well.
-            // Note, there is probably a better way to do this. If you know how, please let me know!
-            Point2D.Double a = new Point2D.Double(0, 0);
-            Point2D.Double b = new Point2D.Double(1, 1);
-            Point2D.Double c = new Point2D.Double(0, 0);
-            Point2D.Double d = new Point2D.Double(1, 1);
-            c = (Point2D.Double) tx.transform(c, null);
-            d = (Point2D.Double) tx.transform(d, null);
-            double angle = Math.toDegrees(Math.atan2(d.y - c.y, d.x - c.x) - Math.atan2(b.y - a.y, b.x - a.x));
-            
-            Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
-            p = tx.transform(p, null);
-            
-            // The final result is the transformed X,Y, the BoardLocation's Z, and the
-            // transform angle + placement angle.
-            Location l = new Location(LengthUnit.Millimeters, 
-                    p.getX(), 
-                    p.getY(), 
-                    boardLocation.getZ(), 
-                    angle + placementLocation.getRotation());
-            l = l.convertToUnits(placementUnits);
-            return l;
+        AffineTransform tx = bl.getPlacementTransform();
+        if (tx == null) {
+            tx = getDefaultBoardPlacementLocationTransform(bl);
         }
-        return calculateBoardPlacementLocationInverse(bl.getLocation(),
-                bl.getSide(), bl.getBoard().getDimensions().getX(),
-                placementLocation);
-    }
-
-    public static Location calculateBoardPlacementLocationInverse(Location boardLocation, Side side,
-            double offset, Location placementLocation) {
-        // inverse steps of calculateBoardPlacementLocation
-        boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
-        placementLocation = placementLocation.subtractWithRotation(boardLocation)
-                .rotateXy(-boardLocation.getRotation());
-        if (side == Side.Bottom) {
-            placementLocation = placementLocation.invert(true, false, false, false)
-                    .add(new Location(placementLocation.getUnits(), offset, 0.0, 0.0, 0.0));
+        
+        try {
+            tx = tx.createInverse();
         }
-        // The Z value of the placementLocation is always ignored, so zero it out to make sure.
-        placementLocation = placementLocation.derive(null, null, 0D, null);
-        return placementLocation;
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        // The affine calculations are always done in millimeters, so we convert everything
+        // before we start calculating and then we'll convert it back to the original
+        // units at the end.
+        LengthUnit placementUnits = placementLocation.getUnits();
+        placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
+
+        double angle = getTransformAngle(tx);
+        
+        Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
+        p = tx.transform(p, null);
+        
+        // The final result is the transformed X,Y, Z = 0, and the
+        // transform angle + placement angle.
+        Location l = new Location(LengthUnit.Millimeters, 
+                bl.getSide() == Side.Bottom ? -p.getX() : p.getX(), 
+                p.getY(), 
+                0., 
+                angle + placementLocation.getRotation());
+        l = l.convertToUnits(placementUnits);
+        return l;
     }
 
     /**
@@ -341,132 +309,34 @@ public class Utils2D {
     public static double distance(Point2D.Double a, Point2D.Double b) {
         return (Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2)));
     }
-
-//    public static void testComputeRotationAndTranslation() {
-//        for (int t=0; t<20; t++) {
-//            double eps = 0.0;
-//            int nDims = 2;
-//            int nPoints = 2; //(int) Math.round(1.0+10.0*Math.random());
-//            RealMatrix source = MatrixUtils.createRealMatrix(nDims,nPoints);
-//            RealMatrix noise = MatrixUtils.createRealMatrix(nDims,nPoints);
-//            RealMatrix rotation = MatrixUtils.createRealMatrix(nDims,nDims);
-//            RealMatrix translation = MatrixUtils.createRealMatrix(nDims,1);
-//            for (int i=0; i<nDims; i++) {
-//                double so = 500.0*(Math.random()-0.5);
-//                for (int j=0; j<nPoints; j++) {
-//                    source.setEntry(i, j, 500.0*(Math.random()-0.5)+so);
-//                    noise.setEntry(i, j, eps*(Math.random()-0.5));
-//                }
-//                translation.setEntry(i, 0, 150.0*(Math.random()-0.5));
-//            }
-//
-//            double theta = 2 * Math.PI * (Math.random()-0.5);
-//            rotation.setRow(0, new double[] {Math.cos(theta), -Math.sin(theta)});
-//            rotation.setRow(1, new double[] {Math.sin(theta),  Math.cos(theta)});
-//            
-//            RealMatrix destination = rotation.multiply(source.add(noise));
-//            for (int j=0; j<nPoints; j++) {
-//                destination.setColumnMatrix(j, destination.getColumnMatrix(j).add(translation));
-//            }
-//
-//            RealMatrix rot = MatrixUtils.createRealMatrix(nDims,nDims);
-//            RealMatrix tr = MatrixUtils.createRealMatrix(nDims,1);
-//            
-//            computeRotationAndTranslation(source, destination, rot, tr);
-//            
-//            RealMatrix test = rot.multiply(source);
-//            for (int i=0; i<nPoints; i++) {
-//                test.setColumnMatrix(i, test.getColumnMatrix(i).add(tr));
-//            }
-//            test = test.subtract(destination);
-//            double rmsError = Math.sqrt(test.multiply(test.transpose()).getTrace() / nPoints);
-//            Logger.trace("RMS Error = " + rmsError);
-//            
-//            Logger.trace("rotation error = " + rot.subtract(rotation) );
-//            Logger.trace("translation error = " + tr.subtract(translation) );
-//        }
-//    }
-//    
-//    public static void computeRotationAndTranslation(RealMatrix source, RealMatrix destination, RealMatrix rotation, RealMatrix translation) {
-//        int nPoints = source.getColumnDimension();
-//        int nDims = source.getRowDimension();
-//
-//        RealMatrix sMat = source.copy();
-//        RealMatrix dMat = destination.copy();
-//
-//        RealMatrix sMean = MatrixUtils.createRealMatrix(nDims,1);
-//        RealMatrix dMean = MatrixUtils.createRealMatrix(nDims,1);
-//
-//        for (int i=0; i<nPoints; i++) {
-//            sMean = sMean.add(sMat.getColumnMatrix(i));
-//            dMean = dMean.add(dMat.getColumnMatrix(i));
-//        }
-//        sMean = sMean.scalarMultiply(1.0/nPoints);
-//        dMean = dMean.scalarMultiply(1.0/nPoints);
-//        
-//        for (int i=0; i<nPoints; i++) {
-//            sMat.setColumnMatrix(i, sMat.getColumnMatrix(i).subtract(sMean));
-//            dMat.setColumnMatrix(i, dMat.getColumnMatrix(i).subtract(dMean));
-//        }        
-//        
-//           
-//        SingularValueDecomposition dstSVD = new SingularValueDecomposition(dMat.multiply(sMat.transpose()));
-//        
-//        RealMatrix rot = dstSVD.getU().multiply(dstSVD.getVT());
-//        if ((new LUDecomposition(rot).getDeterminant()) < 0) {
-//            RealMatrix s = MatrixUtils.createRealIdentityMatrix(nDims);
-//            s.multiplyEntry(nDims-1, nDims-1, -1);
-//            rot = dstSVD.getU().multiply(s).multiply(dstSVD.getVT());
-//        }
-//        
-//        RealMatrix tr = dMean.subtract(rot.multiply(sMean));
-// 
-//        rotation.setSubMatrix(rot.getData(), 0, 0);
-//        translation.setSubMatrix(tr.getData(), 0, 0);
-//    }
-//
-//    public static AffineTransform deriveAffineTransform(RealMatrix rotation, RealMatrix translation ) {
-//        double m00 = rotation.getEntry(0, 0);
-//        double m01 = rotation.getEntry(0, 1);
-//        double m02 = translation.getEntry(0, 0);
-//        double m10 = rotation.getEntry(1, 0);
-//        double m11 = rotation.getEntry(1, 1);
-//        double m12 = translation.getEntry(1, 0);
-//
-//        return new AffineTransform(m00, m10, m01, m11, m02, m12);       
-//    }
-//    
-//    public static AffineTransform deriveAffineTransform(double[][] source, double[][] destination) {
-//        
-//        RealMatrix sourceMat = MatrixUtils.createRealMatrix(source);
-//        RealMatrix destMat = MatrixUtils.createRealMatrix(destination);
-//        
-//        RealMatrix rotation = MatrixUtils.createRealMatrix(2, 2);
-//        RealMatrix translation = MatrixUtils.createRealMatrix(2, 1);
-//        
-//        computeRotationAndTranslation(sourceMat, destMat, rotation, translation);
-//
-//        return deriveAffineTransform(rotation, translation);       
-//    }
-//    
-//    public static AffineTransform deriveAffineTransform(ArrayList<Point2D.Double> source, ArrayList<Point2D.Double> destination) {
-//        int nPoints = source.size();
-//        double[][] s = new double[2][nPoints];
-//        double[][] d = new double[2][nPoints];
-//        
-//        for (int i=0; i<nPoints; i++) {
-//            Point2D.Double p = source.get(i);
-//            s[0][i] = p.x;
-//            s[1][i] = p.y;
-//            
-//            p = destination.get(i);
-//            d[0][i] = p.x;
-//            d[1][i] = p.y;
-//        }
-//
-//        return deriveAffineTransform(s, d);       
-//    }  
     
+    public static AffineTransform deriveAffineTransform(Location source1, Location source2, Location source3,
+            Location dest1, Location dest2, Location dest3) {
+        source1 = source1.convertToUnits(LengthUnit.Millimeters);
+        source2 = source2.convertToUnits(LengthUnit.Millimeters);
+        source3 = source3.convertToUnits(LengthUnit.Millimeters);
+        dest1 = dest1.convertToUnits(LengthUnit.Millimeters);
+        dest2 = dest2.convertToUnits(LengthUnit.Millimeters);
+        dest3 = dest3.convertToUnits(LengthUnit.Millimeters);
+        return deriveAffineTransform(source1.getX(), source1.getY(), 
+                source2.getX(), source2.getY(),
+                source3.getX(), source3.getY(),
+                dest1.getX(), dest1.getY(),
+                dest2.getX(), dest2.getY(),
+                dest3.getX(), dest3.getY());
+    }
+    
+    public static AffineTransform deriveAffineTransform(Location source1, Location source2,
+            Location dest1, Location dest2) {
+        source1 = source1.convertToUnits(LengthUnit.Millimeters);
+        source2 = source2.convertToUnits(LengthUnit.Millimeters);
+        dest1 = dest1.convertToUnits(LengthUnit.Millimeters);
+        dest2 = dest2.convertToUnits(LengthUnit.Millimeters);
+        return deriveAffineTransform(source1.getX(), source1.getY(), 
+                source2.getX(), source2.getY(),
+                dest1.getX(), dest1.getY(),
+                dest2.getX(), dest2.getY());
+    }
     
     // https://stackoverflow.com/questions/21270892/generate-affinetransform-from-3-points
     public static AffineTransform deriveAffineTransform(
