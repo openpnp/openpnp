@@ -87,7 +87,7 @@ public class TravellingSalesman<T> {
      * Plain old data TravelLocation for faster processing. Improved solving by a factor of 6 from using
      * OpenPNP Locations directly. These are always in Millimeters, no conversions needed.  
      */
-    private class TravelLocation {
+    private static class TravelLocation {
         private  double x, y, z;
         private  int index;
 

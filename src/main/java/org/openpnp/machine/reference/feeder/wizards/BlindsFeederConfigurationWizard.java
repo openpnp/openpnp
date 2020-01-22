@@ -60,6 +60,8 @@ import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.feeder.BlindsFeeder;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
@@ -783,6 +785,10 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         public void actionPerformed(ActionEvent e) {
             textFieldFeedCount.setText("0");
             applyAction.actionPerformed(e);
+            UiUtils.submitUiMachineTask(() -> {
+                // when resetting the feed count, we also assume we fumbled with the cover 
+                feeder.setCoverPosition(new Length(Double.NaN, LengthUnit.Millimeters));
+            });
         }
     };
 
