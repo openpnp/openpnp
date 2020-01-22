@@ -622,7 +622,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 if (pocketSizePreset > 0) {
                     positionTolerance = pocketSizePreset*0.45; 
                 }
-
+                double pocketRange = Math.max(w, 2)*3.5;
                 // Convert camera center.
                 Location cameraFeederLocation = transformMachineToFeederLocation(camera.getLocation())
                         .convertToUnits(LengthUnit.Millimeters);
@@ -684,36 +684,42 @@ public class BlindsFeeder extends ReferenceFeeder {
                                     result, center);
                         }
                         if (positionTolerant || Math.abs(cameraFeederY - center.getY()) < positionTolerance) {
-                            if (angleTolerant || Math.abs(angleNorm(angle - 0)) < angleTolerance) {
-                                if (mmSize.getX() > blindMin && mmSize.getX() < blindMax && mmSize.getY() > blindMin && mmSize.getY() < blindMax
-                                        && mmSize.getX()/mmSize.getY() < blindAspect 
-                                        && mmSize.getY()/mmSize.getX() < blindAspect) {
-                                    // Fits the size requirements.
-                                    if (!positionTolerant) {
-                                        // Add corners' Y to histogram for later pocket size analysis. 
-                                        for (org.opencv.core.Point point : points) {
-                                            Location corner = transformMachineToFeederLocation(VisionUtils.getPixelLocation(camera, point.x, point.y))
-                                                    .convertToUnits(LengthUnit.Millimeters);
-                                            if (corner.getY() < cameraFeederY) {
-                                                histogramLower.add(corner.getY(), 1.);
-                                            }
-                                            else {
-                                                histogramUpper.add(corner.getY(), 1.);
+                            if (positionTolerant || Math.abs(cameraFeederX - center.getX()) < pocketRange) {
+                                    if (angleTolerant || Math.abs(angleNorm(angle - 0)) < angleTolerance) {
+                                    if (mmSize.getX() > blindMin && mmSize.getX() < blindMax && mmSize.getY() > blindMin && mmSize.getY() < blindMax
+                                            && mmSize.getX()/mmSize.getY() < blindAspect 
+                                            && mmSize.getY()/mmSize.getX() < blindAspect) {
+                                        // Fits the size requirements.
+                                        if (!positionTolerant) {
+                                            // Add corners' Y to histogram for later pocket size analysis. 
+                                            for (org.opencv.core.Point point : points) {
+                                                Location corner = transformMachineToFeederLocation(VisionUtils.getPixelLocation(camera, point.x, point.y))
+                                                        .convertToUnits(LengthUnit.Millimeters);
+                                                if (corner.getY() < cameraFeederY) {
+                                                    histogramLower.add(corner.getY(), 1.);
+                                                }
+                                                else {
+                                                    histogramUpper.add(corner.getY(), 1.);
+                                                }
                                             }
                                         }
+                                        blinds.add(result);
+                                        Logger.debug("[BlindsFeeder] accepted pocket candidate: result {}, mmSize {}", 
+                                                result, mmSize);
                                     }
-                                    blinds.add(result);
-                                    Logger.debug("[BlindsFeeder] accepted pocket candidate: result {}, mmSize {}", 
-                                            result, mmSize);
+                                    else {
+                                        Logger.debug("[BlindsFeeder] dismissed pocket candidate: result {}, mmSize {}", 
+                                                result, mmSize);
+                                    }
                                 }
                                 else {
-                                    Logger.debug("[BlindsFeeder] dismissed pocket candidate: result {}, mmSize {}", 
-                                            result, mmSize);
+                                    Logger.debug("[BlindsFeeder] dismissed pocket candidate: result {}, angle {}", 
+                                            result, angle);
                                 }
                             }
                             else {
-                                Logger.debug("[BlindsFeeder] dismissed pocket candidate: result {}, angle {}", 
-                                        result, angle);
+                                Logger.debug("[BlindsFeeder] dismissed pocket candidate: result {}, X {}", 
+                                        result, center.getX());
                             }
                         }
                         else {
