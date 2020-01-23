@@ -111,6 +111,8 @@ public interface Nozzle
     
     public void removeCompatibleNozzleTip(NozzleTip nt);
     
+    boolean isNozzleTipChangedOnManualFeed();
+
     public void calibrate() throws Exception;
     public boolean isCalibrated();
 }
