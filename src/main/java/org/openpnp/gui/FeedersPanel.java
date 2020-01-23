@@ -552,15 +552,15 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 nozzle.pick(feeder.getPart());
                 nozzle.moveToSafeZ();
 
+                // After the pick. 
+                feeder.postPick(nozzle);
+
                 // Perform the vacuum check, if enabled.
                 if (nozzle.isPartOnEnabled()) {
                     if(!nozzle.isPartOn()) {
                         throw new JobProcessorException(nozzle, "No part detected.");
                     }
                 }
-
-                // Anything else? 
-                feeder.postPick(nozzle);
             });
         }
     };
