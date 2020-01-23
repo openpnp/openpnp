@@ -164,6 +164,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             prepMachine();
             
+            prepFeeders();
+            
             scriptJobStarting();
 
             return new PanelFiducialCheck();
@@ -291,7 +293,33 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // Discard any currently picked parts
             discardAll(head);
         }
-        
+
+        private void prepFeeders() throws JobProcessorException {
+            // Everything still looks good, so prepare the feeders.
+            fireTextStatus("Preparing feeders.");
+            Machine machine = Configuration.get().getMachine();
+            List<Feeder> feederList = new ArrayList<>();
+            // Get all the feeders that are used in the pending placements.
+            for (Feeder feeder : machine.getFeeders()) {
+                if (feeder.isEnabled() && feeder.getPart() != null) {
+                    for (JobPlacement placement : getPendingJobPlacements()) {
+                        if (placement.getPartId() == feeder.getPart().getId()) {
+                            feederList.add(feeder);
+                        }
+                    }
+                }
+            }
+            for (Feeder feeder : feederList) {
+                try {
+                    // feeder is used in this job, prep it.
+                    feeder.prepareForJob(feederList);
+                }
+                catch (Exception e) {
+                    throw new JobProcessorException(feeder, e);
+                }
+            }
+        }
+
         private void checkDuplicateRefs(BoardLocation boardLocation) throws JobProcessorException {
             // Check for ID duplicates - throw error if any are found
             HashSet<String> idlist = new HashSet<String>();
