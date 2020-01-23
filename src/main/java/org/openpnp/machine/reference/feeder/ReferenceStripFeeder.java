@@ -121,12 +121,11 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     @Commit
     public void commit() {
         if (rotationInFeeder == null) {
+            Logger.trace(name + ": Old feeder format found, updating to new format..." );
             Location referenceHoleLocation = this.referenceHoleLocation;
             Location lastHoleLocation = this.lastHoleLocation;
-            super.commit();
-            rotationInFeeder = rotationInFeeder - 90;
-            Location delta = getReferenceHoleLocation().subtract(getLastHoleLocation());
-            double feederAngleDeg = Math.toDegrees(Math.atan2(delta.getY(), delta.getX()));
+            rotationInFeeder = Utils2D.normalizeAngle180(getLocation().getRotation() - 90.0);
+            double feederAngleDeg = Utils2D.getAngleFromPoint(lastHoleLocation, referenceHoleLocation) ;
             setLocation(getLocation().derive(null, null, null, feederAngleDeg));
             setReferenceHoleLocation(referenceHoleLocation);
             setLastHoleLocation(lastHoleLocation);
@@ -190,12 +189,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
                 new Length((feedCount - 1) * partPitchAdjusted, partPitch.getUnits()));
         // Create the offsets that are required to go from a reference hole
         // to the part in the tape
-//        Length x = getHoleToPartLateral().convertToUnits(l.getUnits());
-//        Length y = referenceHoleToPartLinear.convertToUnits(l.getUnits());
-//        Point p = new Point(x.getValue(), y.getValue());
-//
-//        // Determine the angle that the tape is at
-//        double angle = Utils2D.getAngleFromPoint(lineLocations[0], lineLocations[1]);
         Length x = referenceHoleToPartLinear.convertToUnits(l.getUnits());
         Length y = getHoleToPartLateral().convertToUnits(l.getUnits());
         Point p = new Point(x.getValue(), -y.getValue());

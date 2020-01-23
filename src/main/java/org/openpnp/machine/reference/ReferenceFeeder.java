@@ -4,6 +4,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.base.AbstractFeeder;
+import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -25,30 +26,14 @@ public abstract class ReferenceFeeder extends AbstractFeeder {
         if (rotationInFeeder == null) {
             /*
              * Originally the rotation of the part was stored in the feeder's location field
-             * and there really was no concept of the feeder's rotation.  Now, with the introduction
+             * and there was really no concept of the feeder's rotation.  Now, with the introduction
              * of feeder groups, the rotation of the part in the feeder is independent of the
              * rotation of the feeder.  The feeder's location field now contains the location and
              * rotation of the feeder relative to its parent and the rotationInFeeder field contains
-             * the rotation of the part relative to the feeder.  The below conversion from old to new
-             * style assumes all multiple of 90 degree rotations in the old location field are due to
-             * part rotation in the feeder and the remainder is due to actual rotation of the feeder.
-             * While this may not necessarily be true, it doesn't hurt anything since for most feeders,
-             * the pick rotation will just be the sum of the two rotations.  And for those feeders
-             * where the pick rotation is not the sum of the two (namely loose part feeders), the
-             * rotation of the part in the feeder is what is needed to compute the pick rotation relative
-             * to the vision system (the feeder's actual rotation is irrelevant).
+             * the rotation of the part relative to the feeder.
              */
             Logger.trace(name + ": Old feeder format found, updating to new format..." );
-            double r = getLocation().getRotation();
-            while (r <= -180) {
-                r = r + 360;
-            }
-            while (r > 180) {
-                r = r - 360;
-            }
-            double n = Math.round(r/90);
-            rotationInFeeder = n*90;
-            setLocation(getLocation().derive(null, null, null, r-rotationInFeeder));
+            rotationInFeeder = 0.0;
         }
     }
     

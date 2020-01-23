@@ -37,7 +37,6 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
 
-
 public class Utils2D {
     public static Point rotateTranslateScalePoint(Point point, double c, double x, double y,
             double scaleX, double scaleY) {
@@ -276,6 +275,16 @@ public class Utils2D {
         return angle;
     }
     
+    public static double normalizeAngle180(double angle) {
+        while (angle >= 180) {
+            angle -= 360;
+        }
+        while (angle < -180) {
+            angle += 360;
+        }
+        return angle;
+    }
+    
     /**
      * Calculate the Location along the line formed by a and b with distance from a.
      * @param a
@@ -283,7 +292,7 @@ public class Utils2D {
      * @param distance
      * @return
      */
-    static public Location getPointAlongLine(Location a, Location b, Length distance) {
+    public static Location getPointAlongLine(Location a, Location b, Length distance) {
         b = b.convertToUnits(a.getUnits());
         distance = distance.convertToUnits(a.getUnits());
         
@@ -295,13 +304,13 @@ public class Utils2D {
     }
 
     /**
-     * Calculate the angle between a ray from the first point in the positive x direction to
+     * Calculate the angle in degrees between a ray from the first point in the positive x direction to
      * the ray from the first point to the second point.
      * @param firstPoint
      * @param secondPoint
      * @return
      */
-    static public double getAngleFromPoint(Location firstPoint, Location secondPoint) {
+    public static double getAngleFromPoint(Location firstPoint, Location secondPoint) {
         secondPoint = secondPoint.convertToUnits(firstPoint.getUnits());
         return Math.toDegrees(Math.atan2(secondPoint.getY() - firstPoint.getY(), secondPoint.getX() - firstPoint.getX()));
     }

@@ -949,25 +949,4 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         }
     }
 
-//    class JOneWayTextField extends JTextField {
-//        @Override
-//        public void setText(String text) {
-//            if (!isDirty()) {
-//                super.setText(text);
-//                setBlockApplyResetAction(Boolean.TRUE);
-//            } else {
-//                super.setText(text);
-//            }
-//        }
-//    }
-//    
-//    private class JComponentNoApplyNeeded extends AbstractBindingListener {
-//
-//        @Override
-//        public void synced(Binding binding) {
-//            applyAction.setEnabled(false);
-//            resetAction.setEnabled(false);
-//        }
-//    }
-
 }

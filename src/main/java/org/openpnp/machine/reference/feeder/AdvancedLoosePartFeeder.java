@@ -37,8 +37,10 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
+import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
@@ -53,6 +55,15 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
 
     private Location pickLocation;
 
+    @Commit
+    public void commit() {
+        if (rotationInFeeder == null) {
+            Logger.trace(name + ": Old feeder format found, updating to new format..." );
+            rotationInFeeder = Utils2D.normalizeAngle180(-getLocation().getRotation());
+            setLocation(getLocation().derive(null, null, null, 0.0));
+        }
+    }
+    
     @Override
     public Location getPickLocation() throws Exception {
         return pickLocation == null ? getLocation().derive(null, null, null, 0.0) : convertToGlobalLocation(pickLocation);
@@ -98,7 +109,7 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
             Location location = VisionUtils.getPixelLocation(camera, result.center.x, result.center.y);
             // Get the result's Location
             // Update the location with the result's rotation
-            location = location.derive(null, null, null, -(result.angle + rotationInFeeder));
+            location = location.derive(null, null, null, rotationInFeeder-result.angle);
             // Update the location with the correct Z, which is the configured Location's Z
             // plus the part height.
             location =

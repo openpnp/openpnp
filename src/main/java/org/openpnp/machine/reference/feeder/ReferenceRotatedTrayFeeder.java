@@ -28,6 +28,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -60,10 +61,12 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
     @Commit
     public void commit() {
         if (rotationInFeeder == null) {
+            Logger.trace(name + ": Old feeder format found, updating to new format..." );
             Location lastComponentLocation = this.lastComponentLocation;
             Location firstRowLastComponentLocation = this.firstRowLastComponentLocation;
-            super.commit();
-            setLocation(getLocation().derive(null, null, null, trayRotation));
+            double actualTrayRotation = Utils2D.getAngleFromPoint(getLocation(), firstRowLastComponentLocation);
+            rotationInFeeder = Utils2D.normalizeAngle180(getLocation().getRotation() - actualTrayRotation);
+            setLocation(getLocation().derive(null, null, null, actualTrayRotation));
             offsets = offsets.derive(null, -offsets.getY(), null, null); //flip Y offset to be consistent with referenceTrayFeeder
             setLastComponentLocation(lastComponentLocation);
             setFirstRowLastComponentLocation(firstRowLastComponentLocation);

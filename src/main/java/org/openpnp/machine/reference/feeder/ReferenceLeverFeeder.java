@@ -98,11 +98,9 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
     @Commit
     public void commit() {
         if (rotationInFeeder == null) {
-            Location feedStartLocation = this.feedStartLocation;
-            Location feedEndLocation = this.feedEndLocation;
             super.commit();
-            setFeedStartLocation(feedStartLocation);
-            setFeedEndLocation(feedEndLocation);
+            setFeedStartLocation(this.feedStartLocation);
+            setFeedEndLocation(this.feedEndLocation);
         }
     }
     

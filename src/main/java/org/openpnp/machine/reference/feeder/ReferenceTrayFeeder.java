@@ -30,6 +30,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -54,6 +55,15 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 
     private Location pickLocation;
 
+    @Commit
+    public void commit() {
+        if (rotationInFeeder == null) {
+            Logger.trace(name + ": Old feeder format found, updating to new format..." );
+            rotationInFeeder = Utils2D.normalizeAngle180(getLocation().getRotation());
+            setLocation(getLocation().derive(null, null, null, 0.0));
+        }
+    }
+    
     @Override
     public Location getPickLocation() throws Exception {
         if ((pickLocation == null) || (feedCount == 0)) {
