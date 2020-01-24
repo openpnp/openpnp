@@ -261,11 +261,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         setParentMenu.removeAll();
         setParentMenu.add(new SetParentAction(null));
         List<Feeder> allFeeders = configuration.getMachine().getFeeders();
-        List<Feeder> availableParents;
         for (Feeder fdr : allFeeders) {
             boolean ok = true;
             for (Feeder child : selections) {
-                ok = fdr.isPotentialParentOf(child);
+                ok = fdr.isPotentialParentOf(child) && child.isParentIdChangable();
                 if (!ok) {
                     break;
                 }
