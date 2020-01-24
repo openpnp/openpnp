@@ -81,6 +81,11 @@ public abstract class ReferenceFeeder extends AbstractFeeder {
         }
         setLocalLocation(convertToLocalLocation(parentLocation, globalLocation));
     }
+
+    @Override
+    public void prepareForJob(List<Feeder> feedersToPrepare) throws Exception {
+        // the default RefrenceFeeder needs no prep.
+    }
     
     public Location convertToGlobalLocation(Location localLocation) {
         Location originLocation = getLocation();
@@ -131,3 +136,4 @@ public abstract class ReferenceFeeder extends AbstractFeeder {
     }
 
 }
+

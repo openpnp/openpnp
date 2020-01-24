@@ -264,6 +264,29 @@ public class Location {
     }
 
     /**
+     * Returns the unit vector of the vector between this and l. 
+     * 
+     * @param l
+     * @return
+     */
+    public Location unitVectorTo(Location l) {
+        Location vector = l.subtract(this);
+        double norm = 1/this.getXyzDistanceTo(l);
+        return vector.multiply(norm, norm, norm, 0.0);
+    }
+
+    /**
+     * Return the dot product of this and l. Can be used to calculate the cosinus between two unit vectors. 
+     * 
+     * @param l
+     * @return
+     */
+    public Length dotProduct(Location l) {
+        l = l.convertToUnits(units);
+        return new Length(x * l.getX() + y * l.getY() + z * l.getZ(), getUnits());
+    }
+
+    /**
      * Returns a new Location with the same units as this one but with values updated to the passed
      * in values. A caveat is that if a specified value is null, the new Location will contain the
      * value from this object instead of the new value.
