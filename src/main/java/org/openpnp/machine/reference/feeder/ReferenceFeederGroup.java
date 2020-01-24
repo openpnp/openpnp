@@ -45,7 +45,9 @@ import org.openpnp.spi.Feeder;
  * Implementation of Feeder that can be the parent to other feeders.
  */
 public class ReferenceFeederGroup extends ReferenceFeeder {
-
+    //Limit on how many generations can exist (prevents infinite loops in the event someone manually edited machine.xml) 
+    private final int maxGenerations = 32; 
+    
     @Element(required=false)
     private Location expectedFiducial1 = new Location(LengthUnit.Millimeters);
     
@@ -89,10 +91,14 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
 	    childIds.remove(ChildId);
 	}
 	
-	public ArrayList<String> getChildIds() {
-	    return childIds;
-	}
-	
+    public ArrayList<String> getChildIds() {
+        return childIds;
+    }
+    
+    public boolean hasChildren() {
+        return !childIds.isEmpty();
+    }
+    
     @Override
     public void setEnabled(boolean enabled) {
         Object oldValue = this.enabled;
@@ -108,16 +114,19 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
 
     @Override
 	public boolean isPotentialParentOf(Feeder child) {
-        //Searches the family tree of this feeder to ensure the child doesn't become its own ancestor
+        if ( expectedFiducial1.equals(expectedFiducial2) ) {
+            //The feeder group hasn't been setup so it can't have children
+            return false;
+        }
 	    String childId = child.getId();
 	    if (getId().equals(childId)) {
 	        //A feeder can never be its own parent
 	        return false;
 	    }
-	    int maxDepth = 32; //An arbitrary limit just to prevent possible infinite loops if someone has manually edited machine.xml
-	    int depth = 0;
+        //Search the family tree of this feeder to ensure the child doesn't become its own ancestor
+	    int generation = 0;
 	    String p = parentId;
-	    while (depth < maxDepth) {
+	    while (generation < maxGenerations) {
 	        if (p.equals(ROOT_FEEDER_ID)) {
 	            //Ok, the family tree traces back to the machine 
 	            return true;
@@ -126,7 +135,7 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
 	            return false;
 	        }
 	        p = ((ReferenceFeeder) Configuration.get().getMachine().getFeeder(p)).getParentId();
-	        depth = depth + 1;
+	        generation = generation + 1;
 	    }
 	    Logger.warn("Possible loop in feeder parentage detected, check ReferenceFeederGroups in machine.xml");
 	    return false;

@@ -78,11 +78,9 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 
 	private JPanel panelLocation;
 	private JPanel panelParameters;
-	private JPanel panelIllustration;
 
 	private JTextField textFieldLocationX;
     private JTextField textFieldLocationY;
-    private JTextField textFieldLocationZ;
     private JTextField textFieldLocationR;
     
     private JTextField textFieldFid1X;
@@ -121,6 +119,8 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 		this.feeder = feeder;
         fid1Captured = null;
         fid2Captured = null;
+        
+        boolean hasChildren = feeder.hasChildren();
 		
 		JPanel warningPanel = new JPanel();
 		contentPanel.add(warningPanel, 0);
@@ -215,37 +215,34 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 		JLabel lblY_1 = new JLabel("Y");
         panelLocation.add(lblY_1, "6, 2");
 
-        JLabel lblZ_1 = new JLabel("Z");
-        panelLocation.add(lblZ_1, "8, 2");
-
         JLabel lblR_1 = new JLabel("Rot");
-        panelLocation.add(lblR_1, "10, 2");
+        panelLocation.add(lblR_1, "8, 2");
 
         textFieldLocationX = new JTextField();
         textFieldLocationX.setColumns(6);
+        textFieldLocationX.setEnabled(!hasChildren);
         panelLocation.add(textFieldLocationX, "4, 4");
 
         textFieldLocationY = new JTextField();
         textFieldLocationY.setColumns(6);
+        textFieldLocationY.setEnabled(!hasChildren);
         panelLocation.add(textFieldLocationY, "6, 4");
-
-        textFieldLocationZ = new JTextField();
-        textFieldLocationZ.setColumns(6);
-        panelLocation.add(textFieldLocationZ, "8, 4");
 
         textFieldLocationR = new JTextField();
         textFieldLocationR.setColumns(6);
-        panelLocation.add(textFieldLocationR, "10, 4");
+        textFieldLocationR.setEnabled(!hasChildren);
+        panelLocation.add(textFieldLocationR, "8, 4");
 
-        LocationButtonsPanel locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX, textFieldLocationY, textFieldLocationZ, textFieldLocationR);
-		panelLocation.add(locationButtonsPanel, "12, 4");
+        LocationButtonsPanel locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX, textFieldLocationY, null, textFieldLocationR);
+        locationButtonsPanel.setEnabledCapture(!hasChildren);
+		panelLocation.add(locationButtonsPanel, "10, 4");
 		
         btnSetLocationWithFiducials = new JButton(setLocationWithFiducials);
         btnSetLocationWithFiducials.setHorizontalAlignment(SwingConstants.LEFT);
         btnSetLocationWithFiducials.setToolTipText("<html><p width=\"400\">" + 
                 "Use to re-align the feeder group after it has been moved.  Follow instructions in the Down Camera view..." +
                 "</p></html>");
-        panelLocation.add(btnSetLocationWithFiducials, "14, 4, left, default");
+        panelLocation.add(btnSetLocationWithFiducials, "12, 4, left, default");
         
 
 		panelParameters = new JPanel();
@@ -284,14 +281,17 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 
         textFieldFid1X = new JTextField();
         textFieldFid1X.setColumns(6);
+        textFieldFid1X.setEnabled(!hasChildren);
         panelParameters.add(textFieldFid1X, "4, 4");
 
         textFieldFid1Y = new JTextField();
         textFieldFid1Y.setColumns(6);
+        textFieldFid1Y.setEnabled(!hasChildren);
         panelParameters.add(textFieldFid1Y, "6, 4");
 
         locationButtonsPanelFid1 = new LocationButtonsPanel(textFieldFid1X, textFieldFid1Y, null, null);
         locationButtonsPanelFid1.setBaseLocation(feeder.getLocation());
+        locationButtonsPanelFid1.setEnabledCapture(!hasChildren);
         panelParameters.add(locationButtonsPanelFid1, "8, 4");
 
         btnDefineFiducialLocations = new JButton(defineFiducialLocations);
@@ -299,6 +299,7 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
         btnDefineFiducialLocations.setToolTipText("<html><p width=\"400\">" + 
                 "Use vision to define the local locations of the fiducials of a new feeder group.  Follow instructions in the Down Camera view..." +
                 "</p></html>");
+        btnDefineFiducialLocations.setEnabled(!hasChildren);
         panelParameters.add(btnDefineFiducialLocations, "10, 4, 1, 3, left, center");
 
         
@@ -307,14 +308,17 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 
         textFieldFid2X = new JTextField();
         textFieldFid2X.setColumns(6);
+        textFieldFid2X.setEnabled(!hasChildren);
         panelParameters.add(textFieldFid2X, "4, 6");
 
         textFieldFid2Y = new JTextField();
         textFieldFid2Y.setColumns(6);
+        textFieldFid2Y.setEnabled(!hasChildren);
         panelParameters.add(textFieldFid2Y, "6, 6");
 
         locationButtonsPanelFid2 = new LocationButtonsPanel(textFieldFid2X, textFieldFid2Y, null, null);
         locationButtonsPanelFid2.setBaseLocation(feeder.getLocation());
+        locationButtonsPanelFid2.setEnabledCapture(!hasChildren);
         panelParameters.add(locationButtonsPanelFid2, "8, 6");
 	}
 
@@ -332,14 +336,12 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 		bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
         addWrappedBinding(location, "lengthX", textFieldLocationX, "text", lengthConverter);
         addWrappedBinding(location, "lengthY", textFieldLocationY, "text", lengthConverter);
-        addWrappedBinding(location, "lengthZ", textFieldLocationZ, "text", lengthConverter);
         addWrappedBinding(location, "rotation", textFieldLocationR, "text", doubleConverter);
 
         upToDateLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_ONCE, feeder, "location", upToDateLocation, "location");
         bind(UpdateStrategy.READ_WRITE, upToDateLocation, "lengthX", textFieldLocationX, "text", lengthConverter);
         bind(UpdateStrategy.READ_WRITE, upToDateLocation, "lengthY", textFieldLocationY, "text", lengthConverter);
-        bind(UpdateStrategy.READ_WRITE, upToDateLocation, "lengthZ", textFieldLocationZ, "text", lengthConverter);
         bind(UpdateStrategy.READ_WRITE, upToDateLocation, "rotation", textFieldLocationR, "text", doubleConverter);
         bind(UpdateStrategy.READ, upToDateLocation, "location", locationButtonsPanelFid1, "baseLocation");
         bind(UpdateStrategy.READ, upToDateLocation, "location", locationButtonsPanelFid2, "baseLocation");
@@ -364,7 +366,6 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
 
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationY);
-		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationR);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFid1X);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFid1Y);

@@ -60,9 +60,12 @@ public class LocationButtonsPanel extends JPanel {
     private JTextField textFieldX, textFieldY, textFieldZ, textFieldC;
     private String actuatorName;
 
+    private JButton buttonCenterCamera;
     private JButton buttonCenterTool;
     private JButton buttonCaptureCamera;
     private JButton buttonCaptureTool;
+    private JButton buttonCenterToolNoSafeZ;
+    private JSeparator separator;
     
     private Location baseLocation;
 
@@ -76,7 +79,7 @@ public class LocationButtonsPanel extends JPanel {
         this.textFieldZ = textFieldZ;
         this.textFieldC = textFieldC;
         
-        JButton buttonCenterCamera = new JButton(positionCameraAction);
+        buttonCenterCamera = new JButton(positionCameraAction);
         buttonCenterCamera.setHideActionText(true);
         add(buttonCenterCamera);
 
@@ -100,6 +103,47 @@ public class LocationButtonsPanel extends JPanel {
         add(buttonCaptureTool);
 
         setActuatorName(null);
+    }
+    
+    @Override
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        buttonCenterCamera.setEnabled(enabled);
+        buttonCenterTool.setEnabled(enabled);
+        buttonCenterToolNoSafeZ.setEnabled(enabled);
+        buttonCaptureCamera.setEnabled(enabled);
+        buttonCaptureTool.setEnabled(enabled);
+    }
+    
+    public void setEnabledCenterCamera(boolean enabled) {
+        buttonCenterCamera.setEnabled(enabled);
+    }
+    
+    public void setEnabledCenterTool(boolean enabled) {
+        buttonCenterTool.setEnabled(enabled);
+    }
+    
+    public void setEnabledCenterToolNoSafeZ(boolean enabled) {
+        buttonCenterToolNoSafeZ.setEnabled(enabled);
+    }
+    
+    public void setEnabledCaptureCamera(boolean enabled) {
+        buttonCaptureCamera.setEnabled(enabled);
+    }
+    
+    public void setEnabledCaptureTool(boolean enabled) {
+        buttonCaptureTool.setEnabled(enabled);
+    }
+    
+    public void setEnabledCenter(boolean enabled) {
+        buttonCenterCamera.setEnabled(enabled);
+        buttonCenterTool.setEnabled(enabled);
+        buttonCenterToolNoSafeZ.setEnabled(enabled);
+    }
+    
+    public void setEnabledCapture(boolean enabled) {
+        buttonCaptureCamera.setEnabled(enabled);
+        buttonCaptureTool.setEnabled(enabled);
     }
     
     public Location getBaseLocation() {
@@ -346,6 +390,4 @@ public class LocationButtonsPanel extends JPanel {
                     });
                 }
             };
-    private JButton buttonCenterToolNoSafeZ;
-    private JSeparator separator;
 }
