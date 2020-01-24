@@ -171,6 +171,11 @@ public class BlindsFeeder extends ReferenceFeeder {
     private boolean calibrating = false;
     private boolean calibrated = false;
 
+    @Override
+    public boolean isParentIdChangable() {
+        return false;
+    }
+    
     private void checkHomedState(Machine machine) {
         if (!machine.isHomed()) {
             this.setCalibrated(false);
@@ -249,11 +254,11 @@ public class BlindsFeeder extends ReferenceFeeder {
     public Location getUncalibratedPickLocation(double pocketNumber)  {
         recalculateGeometry();
         // Calculate the pick location in local feeder coordinates. 
-        Length feederX = pocketPitch.multiply(pocketNumber-1.0).convertToUnits(location.getUnits()).add(pocketDistance);
-        Length feederY = pocketCenterline.convertToUnits(location.getUnits());
+        Length feederX = pocketPitch.multiply(pocketNumber-1.0).convertToUnits(getLocation().getUnits()).add(pocketDistance);
+        Length feederY = pocketCenterline.convertToUnits(getLocation().getUnits());
 
-        Location feederLocation = new Location(location.getUnits(), feederX.getValue(), feederY.getValue(), 
-                location.getZ(), getPickRotationInTape());
+        Location feederLocation = new Location(getLocation().getUnits(), feederX.getValue(), feederY.getValue(), 
+                getLocation().getZ(), getPickRotationInTape());
         Location machineLocation = transformFeederToMachineLocation(feederLocation);
         return machineLocation;
     } 
@@ -1197,7 +1202,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         // definition. The same meaning is adopted in the OpenPNP ReferenceStripFeeder. 
         // 
         // This means that we need to rotate by 180 degrees from our feeder local coordinate system. 
-        return location.getRotation() + 180.;
+        return getLocation().getRotation() + 180.;
     }
 
     public static class NozzleAndTipForPushing {
@@ -1295,7 +1300,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             throw new Exception("Feeder " + getName() + ": has no cover to actuate.");
         }
         else {
-            if (location.getZ() == 0.0) {
+            if (getLocation().getZ() == 0.0) {
                 throw new Exception("Feeder " + getName() + " Part Z not set.");
             }
 
@@ -1350,7 +1355,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                             .add(sprocketPitch.multiply(0.5)) // go half sprocket too far
                             .add(nozzleTipDiameter.multiply(0.5)))
                             .subtract(backlashOffset.multiply(backlashClose))
-                        .convertToUnits(location.getUnits());
+                        .convertToUnits(getLocation().getUnits());
                 Length feederX1 = (openState ? 
                         edgeOpenDistance.multiply(-1.0)
                         .subtract(nozzleTipDiameter.multiply(0.5)) 
@@ -1360,17 +1365,17 @@ public class BlindsFeeder extends ReferenceFeeder {
                             .add(tapeLength)
                             .add(nozzleTipDiameter.multiply(0.5)))
                             .subtract(backlashOffset.multiply(backlashClose))
-                        .convertToUnits(location.getUnits());
+                        .convertToUnits(getLocation().getUnits());
                 Length feederY = pocketCenterline
-                        .convertToUnits(location.getUnits());
-                Length feederZ = location.getLengthZ().add(pushZOffset);
+                        .convertToUnits(getLocation().getUnits());
+                Length feederZ = getLocation().getLengthZ().add(pushZOffset);
 
-                Location feederLocation0 = new Location(location.getUnits(), 
+                Location feederLocation0 = new Location(getLocation().getUnits(), 
                         feederX0.getValue(), 
                         feederY.getValue(), 
                         feederZ.getValue(), 
                         getPickRotationInTape());
-                Location feederLocation1 = new Location(location.getUnits(), 
+                Location feederLocation1 = new Location(getLocation().getUnits(), 
                         feederX1.getValue(), 
                         feederY.getValue(), 
                         feederZ.getValue(), 
@@ -1398,21 +1403,21 @@ public class BlindsFeeder extends ReferenceFeeder {
                             coverPosition
                             .subtract(pocketPitch.multiply(0.5))  
                             .subtract(nozzleTipDiameter.multiply(1)))
-                        .convertToUnits(location.getUnits());
+                        .convertToUnits(getLocation().getUnits());
                 Length feederX1 = pickFeederLocation.getLengthX()
                         .add(pocketPitch.multiply(0.5))
                         .subtract(nozzleTipDiameter.multiply(0.5))
-                        .convertToUnits(location.getUnits());
+                        .convertToUnits(getLocation().getUnits());
                 Length feederY = pickFeederLocation.getLengthY()
-                        .convertToUnits(location.getUnits());
-                Length feederZ = location.getLengthZ().subtract(pushZOffset);
+                        .convertToUnits(getLocation().getUnits());
+                Length feederZ = getLocation().getLengthZ().subtract(pushZOffset);
 
-                Location feederLocation0 = new Location(location.getUnits(), 
+                Location feederLocation0 = new Location(getLocation().getUnits(), 
                         feederX0.getValue(), 
                         feederY.getValue(), 
                         feederZ.getValue(), 
                         getPickRotationInTape());
-                Location feederLocation1 = new Location(location.getUnits(), 
+                Location feederLocation1 = new Location(getLocation().getUnits(), 
                         feederX1.getValue(), 
                         feederY.getValue(), 
                         feederZ.getValue(), 

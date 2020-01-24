@@ -1,8 +1,11 @@
 package org.openpnp.machine.reference;
 
+import java.util.List;
+
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Feeder;
 import org.openpnp.spi.base.AbstractFeeder;
 import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
  * 
