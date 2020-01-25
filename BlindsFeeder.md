@@ -106,7 +106,7 @@ Then press Export as STL:
 
 ## 3D Printing the Feeder
 
-Import the STL into your slicer. Showing PrusaSlicer for a PRUSA i3 MK3 here:
+Import the STL into your slicer. PrusaSlicer for a PRUSA i3 MK3 is the example here:
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73121124-01147f00-3f77-11ea-821b-2c1633de0b52.png)
 
@@ -116,9 +116,11 @@ The Print Settings (derived from 0.2mm SPEED MK3) have only been changed minimal
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73121167-59e41780-3f77-11ea-8c89-90a19fe6cd79.png)
 
-The essential one is "Detect thin walls", that allows the slicer to create walls that are only one extrusion thin. Reducing the solid layers speeds up the print (only for embossed plastic tapes). 
+The essential one is "Detect thin walls", that allows the slicer to create walls that are only one extrusion thin. 
 
-Similarly, the extrusion widths have all ben unified for printing speed. The slicer will not disrupt the fast rectlinear filling pattern across multiple tape lanes of varying height. 
+Reducing the Solid layers settings speeds up the print (only for embossed plastic tapes). 
+
+The extrusion widths have all been unified for printing speed. With these, the slicer will not disrupt the fast rectlinear filling pattern across multiple tape lanes of varying height. 
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73121202-1342ed00-3f78-11ea-982d-c4fb639171e4.png)
 
@@ -140,7 +142,7 @@ Use the slicer and then press Export G-code to write the print to the SD card.
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73121514-0378d800-3f7b-11ea-8a71-36d390341d39.png)
 
-**Side Note**: I tried using USB to print directly but this was no good. The filigrane structures of the BlindsFeeder create so many G-codes per time unit that the serial transmission and/or the G-code interpreter/motion planner were overwhelmed. The Printer kept slowing down to a crawl, especially on the sprocket thorns. The quality of the 3D print is not indifferent to speed, the sprocket thorns come out differently. It still does that to a degree even from the SD card (guess that's the 8bit controller finally showing its limits). 
+**Side Note**: Don't try printing using USB. The filigrane structures of the BlindsFeeder create so many G-codes per time unit that the serial transmission and/or the G-code interpreter/motion planner are overwhelmed. The Printer slows down to a crawl, especially on the sprocket thorns. The quality of the 3D print is affected by this, the sprocket thorns come out differently. It still does that to a degree even from the SD card (guess that's the 8bit controller finally showing its limits). 
 
 ### 3D Print
 
@@ -154,7 +156,7 @@ Then go for it:
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73121741-a894b000-3f7d-11ea-8aa3-e11e69d8ce6b.png)
 
-After the print, you might want to add an anti-static coating and let it dry (for ESD sensitive parts, and for all 0402 packages, because those will fly out of pockets just by static force).
+After the print, you might want to add an anti-static coating and let it dry (for ESD sensitive parts, and for all 0402 packages, because those will fly out of pockets just by static forces).
 
 ## Mounting the Feeder 
 
