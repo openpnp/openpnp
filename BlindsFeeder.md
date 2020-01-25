@@ -193,9 +193,9 @@ Ideally the camera can reach all four fiducials. However the feeder will also wo
 
 ## Feeder Setup in OpenPNP
 
-Once the feeder is mounted on the machine and loaded with tape (computer vision wont work without), we can go back to OpenPNP and the BlindsFeeder that we already added for the OpenSCAD file extraction. Or just add a new one. You can give the feeder a name (use F2 on the list entry). A structured naming scheme, numbering the array and then individual feeder _on_ the array, is recommended. Something like "001_01 Resistors 1%". OpenPNP can sort feeders by name, so they will be properly grouped this way.  
+Once the feeder is mounted on the machine and loaded with tape (computer vision won't work without), we can go back to OpenPNP and the BlindsFeeder that we already added earlier (or just add a new one). You can give the feeder a name (use F2 on the list entry). A structured naming scheme, numbering the array and then individual feeder _on_ the array, is recommended. Something like "001_01 Resistors 1%". OpenPNP can sort feeders by name, so they will be properly grouped this way.  
 
-### Nail down the Fiducials
+### Pin down the Fiducials
 
 To define the feeder array position and rotation, we need to capture three out of the four fiducials. You must use number 1 and 2 (see the graphic above), but you can freely choose 3a or 3b as the third. Usually 3b is the better choice (faster to reach). 
 
@@ -205,16 +205,63 @@ It is best to always press Apply after each capture, as there are some automatis
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73122938-91a88a80-3f8a-11ea-9680-eb607389211b.png)
 
-Once you "nailed down" the first feeder in the whole array, it becomes real easy.
+Once you pinned down the first feeder in the whole array, it becomes real easy.
 
-### Auto Setup
+### Auto Setup of the Tape
 
+Roughly move the camera onto the parts in the tape and press Auto Setup. Using computer vision i.e. the "green screen" effect, OpenPNP will automatically recognize the blinds in the cover and determine the tape centerline, the pocket pitch and the pocket size. 
 
-___
+![grafik](https://user-images.githubusercontent.com/9963310/73123368-a0de0700-3f8f-11ea-98d1-f7c6fd46f0a0.png)
 
-## Advanced
+The BlindsFeeder implements the EIA-481-C standard and its own geometry makes sure, all the relevant specs are integral millimeter values. Therefore computer vision does not need to be super precise. 
+
+### Setting the Z 
+
+Like on other feeders, set the Part Z. For the BlindsFeeder this the surface of the tape. With paper tape, best capture it between the pockets. 
+
+![grafik](https://user-images.githubusercontent.com/9963310/73123737-70986780-3f93-11ea-88df-8e1646aad3c9.png)
+
+Lower the nozzle tip down until it barely touches the tape, then press the Part Z capture button.
+
+![grafik](https://user-images.githubusercontent.com/9963310/73123684-b30d7480-3f92-11ea-9299-0d01613977f6.png)
+
+### Allowing the Nozzle Tip to Push the Cover
+
+Before the BlindsFeeder can automatically open and close a cover, you need to set up the Nozzle Tip, to allow this and set the diameter of the tip:
+
+![grafik](https://user-images.githubusercontent.com/9963310/73123775-fddbbc00-3f93-11ea-8263-ba4d73fc692f.png)
+
+### Open and Close the Cover Edges
+
+You can press Calibrate Cover Edges to find the best pushing offsets for opening and closing the cover. OpenPNP uses computer vision to optimize this automatically.
+
+Test ![grafik](https://user-images.githubusercontent.com/9963310/73123845-befa3600-3f94-11ea-9910-c986cb925341.png) and ![grafik](https://user-images.githubusercontent.com/9963310/73123851-d6392380-3f94-11ea-8fdc-692476ae26a4.png).
+
+Use the Pick Location button to have a look with the camera:
+
+![grafik](https://user-images.githubusercontent.com/9963310/73123886-36c86080-3f95-11ea-9c46-394041f340b5.png)
+
+![BlindsFeeder-Open-Close](https://user-images.githubusercontent.com/9963310/72674123-85489d00-3a73-11ea-8f32-46258859b0a4.gif)
+
+### Choosing when the Cover will be opened
+
+You can choose when the cover will automatically be opened. If using the OpenOnJobStart option, OpenPNP will automatically open those feeders that are enabled and will be used in the Job. Tho speed this process up, it will even optimize the path throught the feeders using a Travelling Salesman solver. 
+
+![grafik](https://user-images.githubusercontent.com/9963310/73123956-d685ee80-3f95-11ea-8ef8-5341e6c447e3.png)
+
+### More Feeders on the same Array
+
+For the next Feeder on the same array, you can go directly to the Auto Setup ("one click setup"). Knowing the camera position is on the area pinned down by the fiducials, it can now copy the fiducials (and other information) from the first feeder on the array. 
+
+The two feeders are now linkend and all the common information is constantly synced, if you change it later. 
+
+## Advanced 
+
+TODO: other cover types etc. 
 
 ### Adjusting Play Values
+
+(preliminary, copied from group discussion)
 
 Be sure to set your filament diameter precisely in the slicer, then print small sample feeders. TIP: you can print a series of almost identical `TapeDefinitions` where you vary the `tape_play`, `cover_play` values systematically.
 
