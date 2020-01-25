@@ -2,9 +2,7 @@
 
 ## What is it?
 
-A step up from the [[ReferenceStripFeeder]], this light 3D-printed feeder can hold and reload cut pieces of SMT tape and protect the parts using a sliding cover. The cover can be opened/closed automatically by the nozzle tip. Feeders are printed in whole arrays. Uses computer vision and fiducials for setup and operation. 
-
-For prototyping and very small runs only.
+A step up from the [[ReferenceStripFeeder]], this light 3D-printed feeder can hold and reload cut pieces of SMT tape and protect the parts using a sliding cover. The cover can be opened/closed automatically by the nozzle tip. Feeders are printed in whole arrays. Uses computer vision and fiducials for setup and operation. Intended for prototyping and very small runs.
 
 ![BlindsFeeder on Wood](https://user-images.githubusercontent.com/9963310/72673056-398ef700-3a65-11ea-92c5-51b565d0a16a.jpg)
 
@@ -36,7 +34,7 @@ For prototyping and very small runs only.
 22.	Can later move/rotate a whole feeder array on the machine table, by recapturing one fiducial (move) or two (move and rotate). 
 23.	Z height capture.
 
-# Setup a Feeder
+# Setting up a Feeder
 
 ## Modelling the Feeder
 
@@ -81,7 +79,7 @@ The `tape_thickness`, `pocket_portrusion `you must get from the datasheet or mea
 
 `tape_play`, `cover_play` (negative or positive) are empirical. Start from the examples. There is more about those later.
 
-### Building Up The Feeder Array
+### Building up the Feeder Array
 
 Once you've defined your `TapeDefinition`s, you can multiply and mix them to build up a feeder array. This is done at the end of the file:
 
@@ -93,7 +91,7 @@ The `arrayed_tape_lanes` and the `arrayed_tapes` contain the number and definiti
 
 You can set `debug=true` to see how the feeder will look when the covers are mounted. 
 
-## Creating The STL File
+## Creating the STL File
 
 Once you're ready, press the Render button. This will now calculate a true solids model. Takes a while. 
 
@@ -103,7 +101,7 @@ Then press Export as STL:
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73121034-f9080f80-3f75-11ea-8472-a3293d5004d6.png)
 
-## Printing The Feeder
+## 3D Printing the Feeder
 
 Import the STL into your slicer. Showing PrusaSlicer for a PRUSA i3 MK3 here:
 
@@ -133,7 +131,7 @@ Enter the Diameter and also make sure to set the correct temperatures given by t
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73121306-07a3f600-3f79-11ea-9f8e-70b98b53d184.png)
 
-### Slice And Export The G-Code
+### Slice and Export The G-Code
 
 Use the slicer and then press Export G-code to write the print to the SD card.
 
@@ -141,17 +139,76 @@ Use the slicer and then press Export G-code to write the print to the SD card.
 
 **Side Note**: I tried using USB to print directly but this was no good. The filigrane structures of the BlindsFeeder create so many G-codes per time unit that the serial transmission and/or the G-code interpreter/motion planner were overwhelmed. The Printer kept slowing down to a crawl, especially on the sprocket thorns. The quality of the 3D print is not indifferent to speed, the sprocket thorns come out differently. It still does that to a degree even from the SD card (guess that's the 8bit controller finally showing its limits). 
 
-### Print
+### 3D Print
 
-Getting the first layer right, is probably the key element for success here. 
+Getting the first layer right, is probably the key element for success. 
 
-Be sure to prepare the print bed with an adhesive. We have single extrusion structures on the first layer, it simply won't work without. I use a [3D-printing adhesive spray](https://www.3dlac.com/) with very reliable results. Use plenty, until the platter looks slightly wet for a moment. 
+Be sure to prepare the print bed with an adhesive. Having single extrusion structures on the first layer, it simply won't work without. I use a [3D-printing adhesive spray](https://www.3dlac.com/) with very reliable results. Use plenty, until the platter looks slightly wet for a moment. 
 
 Also make sure your first layer calibration is right. Follow the [manual of your printer](https://help.prusa3d.com/article/ZhBlGFD9Ah-live-adjust-z).
 
 Then go for it:
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73121741-a894b000-3f7d-11ea-8aa3-e11e69d8ce6b.png)
+
+After the print, you might want to add an anti-static coating and let it dry (for ESD sensitive parts, and for all 0402 packages, because those will fly out of pockets just by static force).
+
+## Mounting the Feeder 
+
+Using double-sided tape or even glue, mount the feeder on a flat sturdy surface. The mechanical stability comes from the surface, not the 3D print. The flat surface is also essential to give the feeders the right tension against their covers (otherwise it will bend backwards and the covers will just fall out). 
+
+![grafik](https://user-images.githubusercontent.com/9963310/73122117-5c4b6f00-3f81-11ea-8de8-12502589ef25.png)
+
+You can directly attach the feeder to the machine table or use a detachable "slate" design. The BlindsFeeder nicely supports the later, because it can work with mounting tolerances of up to +/-2mm.
+
+## Loading Tapes
+
+Align with the sprocket thorns and wedge the tape in, sprocket side first. I use the smooth back of the tweezers to press both tape edges down. Cut to length. 
+
+![grafik](https://user-images.githubusercontent.com/9963310/73123053-b9e4b900-3f8b-11ea-9744-7b18afa21b8f.png)
+
+Make sure your feeder is now rock stable. If your "slate" is too light to damp vibrations, clamp it down on a table. 
+
+Now remove the cover foil, carefully. It is usually no problem with 0603 and up, but for 0402 it can be tricky. 
+
+## Closing the Cover
+
+For 0603 and up: Align the cover with the blinds openings _between _the parts (closed position) and press-snap it down. 
+
+For 0402: Better to _very carefully_ slide the cover in from the side. Take your time. 
+
+## Positioning and orienting the Feeder on the Machine Table 
+
+The feeder position and orientation is defined by the four fiducials (the diamond shaped holes in the corner). The first fiducial is the one with the square besides it. Note the fiducial numbers from this graphic for later. 
+
+![grafik](https://user-images.githubusercontent.com/9963310/73122287-72f2c580-3f83-11ea-8beb-7f3da3e8f459.png)
+
+Feeding starts from the right edge, this side usually points towards the center of the machine table. 
+
+Obviously the nozzle needs to be able to reach _all_ of the feeder area (and a bit beyond). 
+
+Ideally the camera can reach all four fiducials. However the feeder will also work if it can reach the right half of the feeder (highlighted in yellow here). This way you can exploit more of the space on your machine table. The BlindsFeeder will automatically do the right thing, if you have defined and enabled your machine Soft Limits on the Head (do that now, it will help later). 
+
+![grafik](https://user-images.githubusercontent.com/9963310/73122508-23fa5f80-3f86-11ea-96cf-db3cbbb35039.png)
+
+## Feeder Setup in OpenPNP
+
+Once the feeder is mounted on the machine and loaded with tape (computer vision wont work without), we can go back to OpenPNP and the BlindsFeeder that we already added for the OpenSCAD file extraction. Or just add a new one. You can give the feeder a name (use F2 on the list entry). A structured naming scheme, numbering the array and then individual feeder _on_ the array, is recommended. Something like "001_01 Resistors 1%". OpenPNP can sort feeders by name, so they will be properly grouped this way.  
+
+### Nail down the Fiducials
+
+To define the feeder array position and rotation, we need to capture three out of the four fiducials. You must use number 1 and 2 (see the graphic above), but you can freely choose 3a or 3b as the third. Usually 3b is the better choice (faster to reach). 
+
+Capture them using the camera ![grafik](https://user-images.githubusercontent.com/9963310/73122674-c6ffa900-3f87-11ea-8e25-9397dbeae895.png) or the nozzle tip (if not reachable by the camera) ![grafik](https://user-images.githubusercontent.com/9963310/73122686-f0203980-3f87-11ea-8b15-d4b0c1783caf.png). 
+
+It is best to always press Apply after each capture, as there are some automatisms at play internally (that will come handy later).  
+
+![grafik](https://user-images.githubusercontent.com/9963310/73122938-91a88a80-3f8a-11ea-9680-eb607389211b.png)
+
+Once you "nailed down" the first feeder in the whole array, it becomes real easy.
+
+### Auto Setup
+
 
 ___
 
