@@ -8,6 +8,9 @@ A step up from the [[ReferenceStripFeeder]], this light 3D-printed feeder can ho
 
 ![BlindsFeeder-Open-Close](https://user-images.githubusercontent.com/9963310/72674123-85489d00-3a73-11ea-8f32-46258859b0a4.gif)
 
+Watch the Quick Demo Video:
+https://youtu.be/dGde59Iv6eY
+
 ## Features and Use Cases
 
 1.	Holds cut tape strips. Indexed to sprocket holes.
