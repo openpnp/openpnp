@@ -18,6 +18,10 @@ Here is a short description of the feeder types supported by OpenPnP:
 
   See [[ReferenceStripFeeder]]'s page for more information and help.
 
+* **BlindsFeeder**: A step up from the ReferenceStripFeeder, this light 3D-printed feeder can hold and reload cut pieces of SMT tape and protect the parts using a sliding cover. The cover can be opened/closed automatically by the nozzle tip. Feeders are printed in whole arrays. Uses computer vision and fiducials for setup and operation. 
+
+  See [[BlindsFeeder]]'s page for more information and help.
+
 * **ReferenceDragFeeder**: A "drag" feeder which allows the use of an Actuator, typically a solenoid with a pin, to advance the tape by dragging it. Basic vision for part center detection is also supported.
 
 * **ReferenceLeverFeeder**: A feeder where a lever is pushed by a Actuator, typically the head, to advance the tape.  All part pitches are supported with multiple lever presses as required.
