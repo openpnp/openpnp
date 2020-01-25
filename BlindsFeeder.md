@@ -164,7 +164,7 @@ Using double-sided tape or even glue, mount the feeder on a flat sturdy surface.
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73122117-5c4b6f00-3f81-11ea-8de8-12502589ef25.png)
 
-You can directly attach the feeder to the machine table or use a detachable "slate" design. The BlindsFeeder nicely supports the later, because it can work with mounting tolerances of up to +/-2mm.
+You can directly attach the feeder to the machine table or use a detachable "slate" design. The BlindsFeeder nicely supports the later, because it can work with mounting tolerances of up to +/-2mm through the use of fiducials.
 
 ## Loading Tapes
 
@@ -178,7 +178,7 @@ Now remove the cover foil, carefully. It is usually no problem with 0603 and up,
 
 ## Closing the Cover
 
-For 0603 and up: Align the cover with the blinds openings _between _the parts (closed position) and press-snap it down. 
+For 0603 and up: Align the cover with the blinds openings _between_ the parts (closed position) and press-snap it down. 
 
 For 0402: Better to _very carefully_ slide the cover in from the side. Take your time. 
 
