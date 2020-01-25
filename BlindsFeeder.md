@@ -184,7 +184,7 @@ For 0402: Better to _very carefully_ slide the cover in from the side. Take your
 
 ## Positioning and orienting the Feeder on the Machine Table 
 
-The feeder position and orientation is defined by the four fiducials (the diamond shaped holes in the corner). The first fiducial is the one with the square besides it. Note the fiducial numbers from this graphic for later. 
+The feeder position and orientation is defined by the four fiducials (the diamond shaped holes in the corners). The first fiducial is the one with the square besides it. Note the fiducial numbers from this graphic for later. 
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73122287-72f2c580-3f83-11ea-8beb-7f3da3e8f459.png)
 
@@ -198,13 +198,17 @@ Ideally the camera can reach all four fiducials. However the feeder will also wo
 
 ## Feeder Setup in OpenPNP
 
-Once the feeder is mounted on the machine and loaded with tape (computer vision won't work without), we can go back to OpenPNP and the BlindsFeeder that we already added earlier (or just add a new one). You can give the feeder a name (use F2 on the list entry). A structured naming scheme, numbering the array and then individual feeder _on_ the array, is recommended. Something like "001_01 Resistors 1%". OpenPNP can sort feeders by name, so they will be properly grouped this way.  
+Once the feeder is mounted on the machine and loaded with tape (computer vision won't work without), we can go back to OpenPNP and the BlindsFeeder that we already added earlier (or just add a new one). 
+
+You can give the feeder a name (use F2 on the list entry). A structured naming scheme, numbering the array and then individual feeder _on_ the array, is recommended. Something like "001_01 Resistors 1%". OpenPNP can sort feeders by name, so they will be properly grouped this way.  
+
+You might want to enable the feeder.
 
 ### Pin down the Fiducials
 
 To define the feeder array position and rotation, we need to capture three out of the four fiducials. You must use number 1 and 2 (see the graphic above), but you can freely choose 3a or 3b as the third. Usually 3b is the better choice (faster to reach). 
 
-Capture them using the camera ![grafik](https://user-images.githubusercontent.com/9963310/73122674-c6ffa900-3f87-11ea-8e25-9397dbeae895.png) or the nozzle tip (if not reachable by the camera) ![grafik](https://user-images.githubusercontent.com/9963310/73122686-f0203980-3f87-11ea-8b15-d4b0c1783caf.png). 
+Capture them using the camera ![grafik](https://user-images.githubusercontent.com/9963310/73122674-c6ffa900-3f87-11ea-8e25-9397dbeae895.png) or the nozzle tip, if not reachable by the camera ![grafik](https://user-images.githubusercontent.com/9963310/73122686-f0203980-3f87-11ea-8b15-d4b0c1783caf.png). 
 
 It is best to always press Apply after each capture, as there are some automatisms at play internally (that will come handy later).  
 
@@ -232,17 +236,17 @@ Lower the nozzle tip down until it barely touches the tape, then press the Part 
 
 ### Allowing the Nozzle Tip to Push the Cover
 
-Before the BlindsFeeder can automatically open and close a cover, you need to set up the Nozzle Tip, to allow this and set the diameter of the tip:
+Before the BlindsFeeder can automatically open and close a cover, you need to set up the Nozzle Tip's Push and Drag Usage:
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73123775-fddbbc00-3f93-11ea-8263-ba4d73fc692f.png)
 
 ### Open and Close the Cover Edges
 
-You can press Calibrate Cover Edges to find the best pushing offsets for opening and closing the cover. OpenPNP uses computer vision to optimize this automatically.
+You can now press the Calibrate Cover Edges button to find the best pushing offsets for opening and closing the cover. OpenPNP uses computer vision to optimize this automatically.
 
-Test ![grafik](https://user-images.githubusercontent.com/9963310/73123845-befa3600-3f94-11ea-9910-c986cb925341.png) and ![grafik](https://user-images.githubusercontent.com/9963310/73123851-d6392380-3f94-11ea-8fdc-692476ae26a4.png).
+Then test ![grafik](https://user-images.githubusercontent.com/9963310/73123845-befa3600-3f94-11ea-9910-c986cb925341.png) and ![grafik](https://user-images.githubusercontent.com/9963310/73123851-d6392380-3f94-11ea-8fdc-692476ae26a4.png).
 
-Use the Pick Location button to have a look with the camera:
+Hint: use the Pick Location button to have a look with the camera:
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73123886-36c86080-3f95-11ea-9c46-394041f340b5.png)
 
@@ -250,15 +254,17 @@ Use the Pick Location button to have a look with the camera:
 
 ### Choosing when the Cover will be opened
 
-You can choose when the cover will automatically be opened. If using the OpenOnJobStart option, OpenPNP will automatically open those feeders that are enabled and will be used in the Job. Tho speed this process up, it will even optimize the path throught the feeders using a Travelling Salesman solver. 
+You can choose when the cover will automatically be opened. 
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73123956-d685ee80-3f95-11ea-8ef8-5341e6c447e3.png)
 
+If using the OpenOnJobStart option, OpenPNP will automatically open all the feeders, that are enabled and will be used in the Job. For best speed, the path throught the feeders is optimized using the Travelling Salesman solver. You can also use the Open / Close all Covers buttons.
+
 ### More Feeders on the same Array
 
-For the next Feeder on the same array, you can go directly to the Auto Setup ("one click setup"). Knowing the camera position is on the area pinned down by the fiducials, it can now copy the fiducials (and other information) from the first feeder on the array. 
+For the next Feeder on the same array, you can go directly to the Auto Setup ("one click setup"). OpenPNP knows that the camera position is on the area already pinned down by the fiducials of the first feeder. It can simply copy the fiducials (and other information) over. 
 
-The two feeders are now linkend and all the common information is constantly synced, if you change it later. 
+The feeders are now linkend and all the common information is constantly synced, if you change it on any one of them. 
 
 ## Advanced 
 
