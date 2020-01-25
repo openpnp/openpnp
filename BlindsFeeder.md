@@ -66,31 +66,31 @@ In the source code window, you see several `TapeDefinition`s. You can use those 
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73120954-f2c56380-3f74-11ea-836c-487b2edcae4e.png)
 
-The parameters (and there are more available) are all documented in the `BlindsFeeder-Library.scad` file. We'll only explain the most important here.
+The parameters (and there are more available) are all documented in the `BlindsFeeder-Library.scad` file. We'll only explain the most important ones here.
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73120618-0e2e6f80-3f71-11ea-9f4f-9a11b8229e85.png)
 
 Measure your tapes or look at datasheets for parts/tapes that you don't have yet. There are [generic datasheets](https://www.analog.com/media/en/technical-documentation/white-papers/tape-and-reel-packaging.pdf) that may also help.
 
-Use the _nominal_ `tape_width`, this must be 8mm, 12mm, 16mm etc. (increments of 4mm). Any inaccuracy in the real tape width must **not** be entered here. Instead, we will adjust these later, using `tape_play`. 
+Use the _nominal_ `tape_width`: must be 8mm, 12mm, 16mm etc. (increments of 4mm). Any inaccuracy in the real tape width must **not** be entered here. Instead, we will adjust these later, using `tape_play`. 
 
-Again, use the _nominal_ `pocket_pitch`, this must be 2mm, 4mm, 8mm, 12mm etc. (increments of 4mm).
+Use the _nominal_ `pocket_pitch`: must be 2mm, 4mm, 8mm, 12mm etc. (increments of 4mm).
  
-The `tape_thickness`, `pocket_portrusion `you must get from the datasheet or measure from the physical tape. Probably need a caliper. But don't worry too much, the printer can only resolve this in layers of e.g. 0.2mm and that's good enough.
+Get the `tape_thickness`, `pocket_portrusion` from the datasheets or measure from the physical tape. You probably need a caliper. But don't worry too much, the printer can only resolve this in layers of e.g. 0.2mm and that's good enough.
 
-`pocket_width` is the width the physical pocket across the tape. You can make it a bit larger, as long as there is space. The model will make the blinds opening slightly larger.
+The `pocket_width` is the width the physical pocket across the tape. You can make it a bit larger, as long as there is space. The model will make the blinds opening in the cover slightly larger than that.
 
-`tape_play`, `cover_play` (negative or positive) are empirical. Start from the examples. There is more about those later.
+`tape_play`, `cover_play` (negative or positive) are empirical. Start from the examples. There is more about those in the [Advanced](#Advanced) section.
 
 ### Building up the Feeder Array
 
-Once you've defined your `TapeDefinition`s, you can multiply and mix them to build up a feeder array. This is done at the end of the file:
+Once you've defined your `TapeDefinition`s, you can multiply and mix them to build up a feeder array i.e. print many feeders in one piece (at end of the `BlindsFeeder-3DPrinting.scad` file):
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73120868-66ff0780-3f73-11ea-90d3-940594bee1ff.png)
 
 The `tape_length`, should again be specified in multiples of 4mm. 
 
-The `arrayed_tape_lanes` and the `arrayed_tapes` contain the number and definitions of tapes to be arrayed, respectively. Just set the lanes to `0` to not print a tape definition at all (no need to delete definitions from the array).
+The `arrayed_tape_lanes` and the `arrayed_tapes` contain the number and definitions of tapes to be arrayed. Just set the lanes entry to `0` to not print a tape definition at all (no need to delete slots from the arrays).
 
 You can set `debug=true` to see how the feeder will look when the covers are mounted. 
 
