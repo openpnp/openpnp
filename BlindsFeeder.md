@@ -61,21 +61,13 @@ Rotate the preview for the Y axis to point downwards to get the standard view (w
 
 In the source code window, you see several `TapeDefinition`s. You can use those to define the geometrical properties of your SMT tapes and assign names to them. You can have as many as you like, and there is no need to delete any, as you can later decide which to print and which not. The idea is that you will build up a repository of proven `TapeDefinition`s over time. 
 
-tapeSOT3 = TapeDefinition(
-    tape_width=8,
-    tape_thickness=0.4,
-    pocket_portrusion=1.6,
-    pocket_pitch=4,
-    pocket_width=4,
-    tape_play=0.05,
-    cover_play=0.1,
-    blinds=false);
+![grafik](https://user-images.githubusercontent.com/9963310/73120954-f2c56380-3f74-11ea-836c-487b2edcae4e.png)
 
 The parameters (and there are more available) are all documented in the `BlindsFeeder-Library.scad` file. We'll only explain the most important here.
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73120618-0e2e6f80-3f71-11ea-9f4f-9a11b8229e85.png)
 
-Measure your tapes or look at datasheets for parts/tapes that you don't have yet. There are [generic datasheets] (https://www.analog.com/media/en/technical-documentation/white-papers/tape-and-reel-packaging.pdf) that may also help.
+Measure your tapes or look at datasheets for parts/tapes that you don't have yet. There are [generic datasheets](https://www.analog.com/media/en/technical-documentation/white-papers/tape-and-reel-packaging.pdf) that may also help.
 
 Use the _nominal_ `tape_width`, this must be 8mm, 12mm, 16mm etc. (increments of 4mm). Any inaccuracy in the real tape width must **not** be entered here. Instead, we will adjust these later, using `tape_play`. 
 
