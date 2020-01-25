@@ -94,13 +94,14 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
     private JComboBox<?> comboBoxParent;
     private JComboBox<?> comboBoxPart;
     private JButton btnSetLocationWithFiducials;
+    private JButton btnFineTuneLocationWithFiducials;
     private Location fid1Captured;
     private Location fid2Captured;
     private JButton btnDefineFiducialLocations;
     
     private MutableLocationProxy upToDateLocation;
-    private MutableLocationProxy fid1LocalLocation;
-    private MutableLocationProxy fid2LocalLocation;
+    private MutableLocationProxy upToDateFid1LocalLocation;
+    private MutableLocationProxy upToDateFid2LocalLocation;
     private LocationButtonsPanel locationButtonsPanelFid1;
     private LocationButtonsPanel locationButtonsPanelFid2;
 
@@ -240,9 +241,16 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
         btnSetLocationWithFiducials = new JButton(setLocationWithFiducials);
         btnSetLocationWithFiducials.setHorizontalAlignment(SwingConstants.LEFT);
         btnSetLocationWithFiducials.setToolTipText("<html><p width=\"400\">" + 
-                "Use to re-align the feeder group after it has been moved.  Follow instructions in the Down Camera view..." +
+                "Use to manually re-align the feeder group after it has been moved.  Follow instructions in the Down Camera view..." +
                 "</p></html>");
         panelLocation.add(btnSetLocationWithFiducials, "12, 4, left, default");
+        
+        btnFineTuneLocationWithFiducials = new JButton(fineTuneLocationWithFiducials);
+        btnFineTuneLocationWithFiducials.setHorizontalAlignment(SwingConstants.LEFT);
+        btnFineTuneLocationWithFiducials.setToolTipText("<html><p width=\"400\">" + 
+                "Attempts to automatically re-align the feeder group after it has been moved slightly.  If the fiducials can't be located automatically, it falls back to the manual method (follow instructions in the Down Camera view...)" +
+                "</p></html>");
+        panelLocation.add(btnFineTuneLocationWithFiducials, "14, 4, left, default");
         
 
 		panelParameters = new JPanel();
@@ -347,7 +355,7 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
         bind(UpdateStrategy.READ, upToDateLocation, "location", locationButtonsPanelFid2, "baseLocation");
         
         
-        fid1LocalLocation = new MutableLocationProxy();
+        MutableLocationProxy fid1LocalLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "expectedFiducial1", fid1LocalLocation,
                 "location");
         addWrappedBinding(fid1LocalLocation, "lengthX", textFieldFid1X, "text",
@@ -355,7 +363,12 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
         addWrappedBinding(fid1LocalLocation, "lengthY", textFieldFid1Y, "text",
                 lengthConverter);
 
-        fid2LocalLocation = new MutableLocationProxy();
+        upToDateFid1LocalLocation = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_ONCE, feeder, "expectedFiducial1", upToDateFid1LocalLocation, "location");
+        bind(UpdateStrategy.READ_WRITE, upToDateFid1LocalLocation, "lengthX", textFieldFid1X, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, upToDateFid1LocalLocation, "lengthY", textFieldFid1Y, "text", lengthConverter);
+        
+        MutableLocationProxy fid2LocalLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "expectedFiducial2", fid2LocalLocation,
                 "location");
         addWrappedBinding(fid2LocalLocation, "lengthX", textFieldFid2X, "text",
@@ -363,6 +376,11 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
         addWrappedBinding(fid2LocalLocation, "lengthY", textFieldFid2Y, "text",
                 lengthConverter);
 
+        upToDateFid2LocalLocation = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_ONCE, feeder, "expectedFiducial2", upToDateFid2LocalLocation, "location");
+        bind(UpdateStrategy.READ_WRITE, upToDateFid2LocalLocation, "lengthX", textFieldFid2X, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, upToDateFid2LocalLocation, "lengthY", textFieldFid2Y, "text", lengthConverter);
+        
 
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationY);
@@ -377,6 +395,10 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
     private Action setLocationWithFiducials = new AbstractAction("Set Location With Fiducials") {
         @Override
         public void actionPerformed(ActionEvent e) {
+            if (upToDateFid1LocalLocation.getLocation().equals(upToDateFid2LocalLocation.getLocation())) {
+                MessageBoxes.infoBox("Can't set location" , "Fiducial locations need to be defined first");
+                return;
+            }
             try {
                 autoSetupCamera = Configuration.get()
                                                .getMachine()
@@ -396,6 +418,8 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
             cameraView.addActionListener(setLocationWithFiducialsAClicked);
             cameraView.setText("Click on " + feeder.getName() + " Fiducial A.");
             cameraView.flash();
+            cameraView.flash();
+            cameraView.flash();
         }
     };
 
@@ -403,6 +427,7 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
         @Override
         public void actionPerformed(ActionEvent e) {
             btnSetLocationWithFiducials.setAction(setLocationWithFiducials);
+            btnFineTuneLocationWithFiducials.setAction(fineTuneLocationWithFiducials);
             CameraView cameraView = MainFrame.get()
                                              .getCameraViews()
                                              .getCameraView(autoSetupCamera);
@@ -431,10 +456,14 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
                     cameraView.setText(
                             "Now click on Fiducial B.");
                     cameraView.flash();
+                    cameraView.flash();
+                    cameraView.flash();
                 });
             } else {
                 cameraView.setText(
                         "Now click on Fiducial B.");
+                cameraView.flash();
+                cameraView.flash();
                 cameraView.flash();
             }
 
@@ -459,6 +488,9 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
                     fid2Captured = MainFrame.get().getMachineControls().getSelectedNozzle().getHead().getDefaultCamera().getLocation();
                     computeLocationFromFiducials();
                     cameraView.setText("Setup complete!");
+                    cameraView.flash();
+                    cameraView.flash();
+                    cameraView.flash();
                     Thread.sleep(1500);
                     cameraView.setText(null);
                     cameraView.setCameraViewFilter(null);
@@ -468,12 +500,92 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
         }
     };
 
+    private Action fineTuneLocationWithFiducials = new AbstractAction("Fine Tune Location") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            Part fidPart = (Part) comboBoxPart.getSelectedItem();
+            if (fidPart == null) {
+                MessageBoxes.infoBox("Can't fine tune location" , "Select a fiducial part first");
+                return;
+            }
+            if (upToDateFid1LocalLocation.getLocation().equals(upToDateFid2LocalLocation.getLocation())) {
+                MessageBoxes.infoBox("Can't fine tune location" , "Fiducial locations need to be defined first");
+                return;
+            }
+            try {
+                autoSetupCamera = Configuration.get()
+                                               .getMachine()
+                                               .getDefaultHead()
+                                               .getDefaultCamera();
+            }
+            catch (Exception ex) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Fine Tune Location With Fiducials Failure", ex);
+                return;
+            }
+
+            btnFineTuneLocationWithFiducials.setAction(setLocationWithFiducialsCancel);
+
+            CameraView cameraView = MainFrame.get()
+                                             .getCameraViews()
+                                             .getCameraView(autoSetupCamera);
+            cameraView.setText("Attempting to locate " + feeder.getName() + " Fiducial A.");
+            cameraView.flash();
+            cameraView.flash();
+            cameraView.flash();
+            fid1Captured = ReferenceFeeder.convertToGlobalLocation(upToDateLocation.getLocation(), upToDateFid1LocalLocation.getLocation());
+            UiUtils.submitUiMachineTask(() -> {
+                fid1Captured = Configuration.get().getMachine().getFiducialLocator()
+                    .getHomeFiducialLocation(fid1Captured, fidPart);
+                if (fid1Captured == null) {
+                    cameraView.setText("Failed to find " + feeder.getName() + " Fiducial A.");
+                    cameraView.flash();
+                    cameraView.flash();
+                    cameraView.flash();
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            defineFiducialLocations.actionPerformed(e);
+                        }
+                    });
+                    return;
+                }
+                cameraView.setText("Attempting to locate " + feeder.getName() + " Fiducial B.");
+                cameraView.flash();
+                cameraView.flash();
+                cameraView.flash();
+                fid2Captured = ReferenceFeeder.convertToGlobalLocation(upToDateLocation.getLocation(), upToDateFid2LocalLocation.getLocation());
+                fid2Captured = Configuration.get().getMachine().getFiducialLocator()
+                    .getHomeFiducialLocation(fid2Captured, fidPart);
+                if (fid1Captured == null) {
+                    cameraView.setText("Failed to find " + feeder.getName() + " Fiducial B.");
+                    cameraView.flash();
+                    cameraView.flash();
+                    cameraView.flash();
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            defineFiducialLocations.actionPerformed(e);
+                        }
+                    });
+                    return;
+                }
+                computeLocationFromFiducials();
+                cameraView.setText("Fine tune complete!");
+                cameraView.flash();
+                cameraView.flash();
+                cameraView.flash();
+                Thread.sleep(1500);
+                cameraView.setText(null);
+                cameraView.setCameraViewFilter(null);
+                btnFineTuneLocationWithFiducials.setAction(fineTuneLocationWithFiducials);
+            });
+        }
+    };
+
     private void computeLocationFromFiducials()  {
-        LengthUnit units = fid1LocalLocation.getLocation().getUnits();
-	    double[][] source = { {fid1LocalLocation.getLocation().getX(),fid2LocalLocation.getLocation().getX()},
-	                          {fid1LocalLocation.getLocation().getY(),fid2LocalLocation.getLocation().getY()} };
-        double[][] dest = { {fid1Captured.getX(),fid2Captured.getX()},
-                            {fid1Captured.getY(),fid2Captured.getY()} };
+        LengthUnit units = upToDateFid1LocalLocation.getLocation().getUnits();
+	    double[][] source = { {upToDateFid1LocalLocation.getLocation().getX(),upToDateFid2LocalLocation.getLocation().convertToUnits(units).getX()},
+	                          {upToDateFid1LocalLocation.getLocation().getY(),upToDateFid2LocalLocation.getLocation().convertToUnits(units).getY()} };
+        double[][] dest = { {fid1Captured.convertToUnits(units).getX(),fid2Captured.convertToUnits(units).getX()},
+                            {fid1Captured.convertToUnits(units).getY(),fid2Captured.convertToUnits(units).getY()} };
         
         double rotAngleDeg = Math.toDegrees( Math.atan2(dest[1][0] - dest[1][1], dest[0][0] - dest[0][1]) - 
                 Math.atan2(source[1][0] - source[1][1], source[0][0] - source[0][1] ) );
@@ -512,6 +624,8 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
             cameraView.addActionListener(defineFiducialLocationsAClicked);
             cameraView.setText("Click on " + feeder.getName() + " Fiducial A.");
             cameraView.flash();
+            cameraView.flash();
+            cameraView.flash();
         }
     };
     
@@ -547,10 +661,14 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
                     cameraView.setText(
                             "Now click on Fiducial B.");
                     cameraView.flash();
+                    cameraView.flash();
+                    cameraView.flash();
                 });
             } else {
                 cameraView.setText(
                         "Now click on Fiducial B.");
+                cameraView.flash();
+                cameraView.flash();
                 cameraView.flash();
             }
 
@@ -592,6 +710,9 @@ public class ReferenceFeederGroupConfigurationWizard extends AbstractConfigurati
                         }
                     });
                     cameraView.setText("Setup complete!");
+                    cameraView.flash();
+                    cameraView.flash();
+                    cameraView.flash();
                     Thread.sleep(1500);
                     cameraView.setText(null);
                     cameraView.setCameraViewFilter(null);

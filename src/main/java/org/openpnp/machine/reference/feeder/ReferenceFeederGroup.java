@@ -114,7 +114,7 @@ public class ReferenceFeederGroup extends ReferenceFeeder {
 
     @Override
 	public boolean isPotentialParentOf(Feeder child) {
-        if ( expectedFiducial1.equals(expectedFiducial2) ) {
+        if (expectedFiducial1.equals(expectedFiducial2)) {
             //The feeder group hasn't been setup so it can't have children
             return false;
         }
