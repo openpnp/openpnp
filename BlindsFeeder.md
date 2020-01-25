@@ -36,6 +36,8 @@ For prototyping and very small runs only.
 22.	Can later move/rotate a whole feeder array on the machine table, by recapturing one fiducial (move) or two (move and rotate). 
 23.	Z height capture.
 
+# Setup a Feeder
+
 ## Modelling the Feeder
 
 The feeder is created using the cool Open Source program [OpenSCAD](https://www.openscad.org/downloads.html). Download and install it to proceed.  
@@ -90,6 +92,70 @@ The `tape_length`, should again be specified in multiples of 4mm.
 The `arrayed_tape_lanes` and the `arrayed_tapes` contain the number and definitions of tapes to be arrayed, respectively. Just set the lanes to `0` to not print a tape definition at all (no need to delete definitions from the array).
 
 You can set `debug=true` to see how the feeder will look when the covers are mounted. 
+
+## Creating The STL File
+
+Once you're ready, press the Render button. This will now calculate a true solids model. Takes a while. 
+
+![grafik](https://user-images.githubusercontent.com/9963310/73120998-8860f300-3f75-11ea-9bf5-1226204737c2.png)
+
+Then press Export as STL:
+
+![grafik](https://user-images.githubusercontent.com/9963310/73121034-f9080f80-3f75-11ea-8472-a3293d5004d6.png)
+
+## Printing The Feeder
+
+Import the STL into your slicer. Showing PrusaSlicer for a PRUSA i3 MK3 here:
+
+![grafik](https://user-images.githubusercontent.com/9963310/73121124-01147f00-3f77-11ea-821b-2c1633de0b52.png)
+
+### Print Settings
+
+The Print Settings (derived from 0.2mm SPEED MK3) have only been changed minimally (indicated by the orange Unlocked Lock symbols):
+
+![grafik](https://user-images.githubusercontent.com/9963310/73121167-59e41780-3f77-11ea-8c89-90a19fe6cd79.png)
+
+The essential one is "Detect thin walls", that allows the slicer to create walls that are only one extrusion thin. Reducing the solid layers speeds up the print (only for embossed plastic tapes). 
+
+Similarly, the extrusion widths have all ben unified for printing speed. The slicer will not disrupt the fast rectlinear filling pattern across multiple tape lanes of varying height. 
+
+![grafik](https://user-images.githubusercontent.com/9963310/73121202-1342ed00-3f78-11ea-982d-c4fb639171e4.png)
+
+### Filament Settings
+
+You need a vivid green filament to allow for the "green screen" computer vision effect that the BlindsFeeder uses extensively. Other vivid colors will work too, but you will have to more profoundly tweak the OpenPNP vision pipeline. I recommend PETG because it is easy to print, doesn't smell and is surprisingly tough and elastic. 
+
+Measure your filament. This is important for the precision we need (and for repeatability):
+
+![grafik](https://user-images.githubusercontent.com/9963310/73121357-9add2b80-3f79-11ea-84af-1d3d5685e195.png)
+
+Enter the Diameter and also make sure to set the correct temperatures given by the filament manufacturer. The [Extrudr PETG signal green](https://www.extrudr.com/en/products/catalogue/petg-signalgrun_1767/) I used, surprisingly needed 20°C less than the generic PETG profile (and it mattered).
+
+![grafik](https://user-images.githubusercontent.com/9963310/73121306-07a3f600-3f79-11ea-9f8e-70b98b53d184.png)
+
+### Slice And Export The G-Code
+
+Use the slicer and then press Export G-code to write the print to the SD card.
+
+![grafik](https://user-images.githubusercontent.com/9963310/73121514-0378d800-3f7b-11ea-8a71-36d390341d39.png)
+
+**Side Note**: I tried using USB to print directly but this was no good. The filigrane structures of the BlindsFeeder create so many G-codes per time unit that the serial transmission and/or the G-code interpreter/motion planner were overwhelmed. The Printer kept slowing down to a crawl, especially on the sprocket thorns. The quality of the 3D print is not indifferent to speed, the sprocket thorns come out differently. It still does that to a degree even from the SD card (guess that's the 8bit controller finally showing its limits). 
+
+### Print
+
+Getting the first layer right, is probably the key element for success here. 
+
+Be sure to prepare the print bed with an adhesive. We have single extrusion structures on the first layer, it simply won't work without. I use a [3D-printing adhesive spray](https://www.3dlac.com/) with very reliable results. Use plenty, until the platter looks slightly wet for a moment. 
+
+Also make sure your first layer calibration is right. Follow the [manual of your printer](https://help.prusa3d.com/article/ZhBlGFD9Ah-live-adjust-z).
+
+Then go for it:
+
+![grafik](https://user-images.githubusercontent.com/9963310/73121741-a894b000-3f7d-11ea-8aa3-e11e69d8ce6b.png)
+
+___
+
+## Advanced
 
 ### Adjusting Play Values
 
