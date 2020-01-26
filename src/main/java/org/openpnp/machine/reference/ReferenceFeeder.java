@@ -45,6 +45,9 @@ public abstract class ReferenceFeeder extends AbstractFeeder {
     }
     
     public Double getRotationInFeeder() {
+        if (rotationInFeeder == null) {
+            rotationInFeeder = 0.0;
+        }
         return rotationInFeeder;
     }
         
