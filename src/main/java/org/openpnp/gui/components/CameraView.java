@@ -1464,6 +1464,9 @@ public class CameraView extends JComponent implements CameraListener {
                 new CameraViewPopupMenu(CameraView.this).show(e.getComponent(), e.getX(), e.getY());
                 return;
             }
+            else if (e.isShiftDown()) {
+                moveToClick(e);
+            }
             else if (selectionEnabled) {
                 beginSelection(e);
             }
