@@ -167,7 +167,7 @@ Sent whenever an Actuator's actuate(double) method is called. This is currently 
 
 ### ACTUATOR_READ_COMMAND
 
-Sent whenever an Actuator's read() method is called. Along with ACTUATOR_READ_REGEX this can be used to read a value from any type of attached sensor or device.
+Sent whenever an Actuator's read() method is called. Along with [ACTUATOR_READ_REGEX](https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex) this can be used to read a value from any type of attached sensor or device.
 
 | Variable Name  |   Type   | Description |
 | -------------- | -------- | ----------- |
