@@ -30,6 +30,19 @@ To set the Gcode for an Actuator:
 3. Select the ACTUATE_BOOLEAN command.
 4. Enter the Gcode fragment. An example would be `{True:M801}{False:M800}`. This will send M801 when the Actuator is turned on, and M800 when it is turned off. The text after `True:` or `False:` is what will actually be sent.
 
+## Reading Sensors
+
+Another common use of Actuators is to read a sensor, with [vacuum level sensors](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Sensing) being the most common. To read a sensor
+using the GcodeDriver the steps are a little different than the above.
+
+To set the Gcode for an Actuator that reads a sensor:
+1. Go to Machine Setup -> Driver -> GcodeDriver -> Gcode. 
+2. Select the Actuator from the dropdown menu.
+3. Select the [ACTUATOR_READ_COMMAND](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuator_read_command) command.
+4. Enter the Gcode fragment. This should be whatever command you need to send to your controller to cause it to respond with the sensor value.
+5. Select the [ACTUATOR_READ_REGEX](https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex).
+6. Enter a [regex](https://github.com/openpnp/openpnp/wiki/GcodeDriver#regular-expressions-receiving-responses) that matches the response that will come from the controller.
+
 # GcodeDriver
 
 See [actuate-boolean-command](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuate_boolean_command)
