@@ -27,8 +27,6 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
-import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConsole;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverGcodes;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverSettings;
@@ -794,45 +792,77 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     
     @Override
     public String actuatorRead(ReferenceActuator actuator) throws Exception {
+        /**
+         * The logic here is a little complicated. This is the only driver method that is
+         * not fire and forget when it comes to sub-drivers. In this case, we need to know
+         * if the command was serviced or not and throw an Exception if no (sub)driver was
+         * able to service it.
+         * 
+         * So, the rules are:
+         * 
+         * 1. If a (sub)driver has a command and regex defined, it is the servicer and must
+         *    either return a value or throw an Exception.
+         * 2. If a (sub)driver cannot service the command it should defer to to any
+         *    child sub-drivers.
+         * 3. If the top level driver cannot either service the command or have a sub-driver
+         *    service the command it should throw. 
+         */
         String command = getCommand(actuator, CommandType.ACTUATOR_READ_COMMAND);
         String regex = getCommand(actuator, CommandType.ACTUATOR_READ_REGEX);
-        if (command == null || regex == null) {
-            // If the command or regex is null we'll query the subdrivers. The first
-            // to respond with a non-null value wins.
+        if (command != null && regex != null) {
+            /**
+             * This driver has the command and regex defined, so it must service the command.
+             */
+            command = substituteVariable(command, "Id", actuator.getId());
+            command = substituteVariable(command, "Name", actuator.getName());
+            command = substituteVariable(command, "Index", actuator.getIndex());
+
+            List<String> responses = sendGcode(command);
+
+            Pattern pattern = Pattern.compile(regex);
+            for (String line : responses) {
+                Matcher matcher = pattern.matcher(line);
+                if (matcher.matches()) {
+                    Logger.trace("actuatorRead response: {}", line);
+                    try {
+                        String s = matcher.group("Value");
+                        return s;
+                    }
+                    catch (IllegalArgumentException e) {
+                        throw new Exception(String.format("Actuator \"%s\" read error: Regex is missing \"Value\" capturing group. See https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex", 
+                                actuator.getName()), e);
+                    }
+                    catch (Exception e) {
+                        throw new Exception(String.format("Actuator \"%s\" read error: Failed to parse response. See https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex", 
+                                actuator.getName()), e);
+                    }
+                }
+            }
+            
+            throw new Exception(String.format("Actuator \"%s\" read error: No matching responses found.", actuator.getName()));
+        }
+        else {
+            /**
+             * If the command or regex is null we'll query the subdrivers. The first to respond
+             * with a non-null value wins.
+             */
             for (ReferenceDriver driver : subDrivers) {
                 String val = driver.actuatorRead(actuator);
                 if (val != null) {
                     return val;
                 }
             }
-            // If none of the subdrivers returned a value there's nothing left to
-            // do, so return null.
-            return null;
-        }
-
-        command = substituteVariable(command, "Id", actuator.getId());
-        command = substituteVariable(command, "Name", actuator.getName());
-        command = substituteVariable(command, "Index", actuator.getIndex());
-
-        List<String> responses = sendGcode(command);
-
-        for (String line : responses) {
-            if (line.matches(regex)) {
-                Logger.trace("actuatorRead response: {}", line);
-                Matcher matcher = Pattern.compile(regex).matcher(line);
-                matcher.matches();
-
-                try {
-                    String s = matcher.group("Value");
-                    return s;
-                }
-                catch (Exception e) {
-                    throw new Exception("Failed to read Actuator " + actuator.getName(), e);
-                }
+            /**
+             * If none of the subdrivers returned a value and this is the top level driver then
+             * we've exhausted all the options to service the command, so throw an error.
+             */
+            if (parent == null) {
+                throw new Exception(String.format("Actuator \"%s\" read error: Driver configuration is missing ACTUATOR_READ_COMMAND or ACTUATOR_READ_REGEX.", actuator.getName()));
+            }
+            else {
+                return null;
             }
         }
-
-        return null;
     }
 
     public synchronized void disconnect() {
