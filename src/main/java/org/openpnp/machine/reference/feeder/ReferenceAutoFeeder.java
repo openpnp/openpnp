@@ -86,6 +86,9 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
     
     @Override
     public void postPick(Nozzle nozzle) throws Exception {
+        if (postPickActuatorName == null || postPickActuatorName.equals("")) {
+            return;
+        }
         Actuator actuator = nozzle.getHead().getActuatorByName(postPickActuatorName);
         if (actuator == null) {
             actuator = Configuration.get().getMachine().getActuatorByName(postPickActuatorName);
