@@ -65,7 +65,7 @@ This would read a response from the controller in the form of `read:255`. The re
 
 1. `read:` is fixed text that the controller sends before the value.
 2. The parentheses around the rest of the regex mark everything else as the value we want to capture. This is called a capturing group.
-3. The `?<Value>` gives the capturing group the name "Value", which OpenPnP will use to read the result.
+3. The `?<Value>` gives the capturing group the name "Value", which OpenPnP will use to read the result. This text is required to be somewhere in the regex. It must appear exactly as `?<Value>` and should be surrounded by parentheses that also include the value matching portion of the regex.
 4. `-?` allows for an optional negative sign before the value.
 5. `\d+` means one or more digits, which represent the value itself.
 
