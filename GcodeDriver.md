@@ -57,7 +57,7 @@ Example: `.*vel:0.00.*`
 
 ### ACTUATOR_READ_REGEX
 
-Used to parse a value from an actuator after sending a ACTUATOR_READ_COMMAND. The regex should contain a named group called Value that includes the required response value.
+Used to parse a value from an actuator after sending a [ACTUATOR_READ_COMMAND](https://github.com/openpnp/openpnp/wiki/GcodeDriver:-Command-Reference#actuator_read_command). The regex should contain a named group called Value that includes the required response value.
 
 Example: `read:(?<Value>-?\d+)`
 
