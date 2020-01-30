@@ -40,6 +40,21 @@ The last write / read might be repeated, until the read is actually the correct 
 
 **NOTE!** Home seems to be `(-437, 437)`, eg left top corner.
 
+## Controlling the movement speed
+
+<pre>
+46 -> 0a
+c6 -> 02
+PP0900c800000000XX
+06 -> 06
+06 -> 42
+</pre>
+
+PP is speed, in percentage (from 10 to 130 in the software, in increments of 10)
+0a => 10% speed.
+XX is checksum
+
+
 ## Moving the head
 
 <pre>
