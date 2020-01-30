@@ -108,6 +108,19 @@ public class KicadPosImporter implements BoardImporter {
             double placementRotation = Double.parseDouble(matcher.group(6));
             String placementLayer = matcher.group(7);
 
+            if (placementLayer.contains("bottom")) {
+            	/* With the board origin set to the lower left, KiCad exports the position
+            	 * for the bottom parts with negative X position. The negative number is the distance from the
+            	 * 'right border' if the board is turned around with the original origin now on the right lower side.
+            	 * In order to work with the 'new' bottom coordinate and origin system, the X value has to be inverted.
+            	 * See https://github.com/openpnp/openpnp/wiki/Board-Locations
+            	 * */
+            	placementX = -placementX;
+            }
+            if (placementRotation==-0.0) { /* KiCad might report the rotation as -0.0 which does not make much sense, fixing this */
+            	placementRotation = 0.0;
+            }
+
             Placement placement = new Placement(placementId);
             placement.setLocation(new Location(LengthUnit.Millimeters, placementX, placementY, 0,
                     placementRotation));
