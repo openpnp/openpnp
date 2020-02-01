@@ -146,6 +146,9 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
         chckbxIncludeZ = new JCheckBox("");
         panel.add(chckbxIncludeZ);
         
+        JLabel lblWarningOnlyFor = new JLabel("<html><span style=\"color:red\">WARNING:</span> Only for machines with Safe Z &gt; Camera Z</html>");
+        panel.add(lblWarningOnlyFor);
+        
         JLabel step7Label = new JLabel("7. Press \"Store nozzle mark position\".");
         instructionPanel.add(step7Label, "2, 23");
         
@@ -282,8 +285,8 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
                 Location cameraLocation = currentCamera.getLocation();
                 Location headOffsets = cameraLocation.subtract(nozzleMarkLocation.getLocation());
                 if (!chckbxIncludeZ.isSelected()) {
-                    // set the Z to zero
-                    headOffsets = new Location(headOffsets.getUnits(), headOffsets.getX(), headOffsets.getY(), 0.0, headOffsets.getRotation());
+                    // keep the old Z offset
+                    headOffsets = headOffsets.derive(nozzle.getHeadOffsets(), false, false, true, false);
                 }
                 nozzleOffsetLocation.setLocation(headOffsets);
                 Logger.info("Nozzle offset wizard set head offset to location: " + headOffsets.toString());
