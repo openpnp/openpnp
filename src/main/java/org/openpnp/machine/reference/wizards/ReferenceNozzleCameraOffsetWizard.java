@@ -44,28 +44,49 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
         JPanel instructionPanel = new JPanel();
         instructionPanel.setBorder(new TitledBorder(null, "Nozzle Offset Wizard Steps", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
-        instructionPanel.setLayout(new FormLayout(
-                new ColumnSpec[] {
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                },
-
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC
-                })
+        instructionPanel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,})
         );
 
         JLabel introductionLabel = new JLabel("The Semi Automatic Nozzle Offset Wizard will help you to measure the offset between machine head and this nozzle.");
@@ -110,23 +131,41 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
         JLabel step4Label = new JLabel("4. Lower the nozzle tip (jog panel) until the tip leaves a mark on the object.");
         instructionPanel.add(step4Label, "2, 15");
 
-        JLabel step5Label = new JLabel("5. To exclude tip runout from the measurement turn the nozzle about 360°. Afterwards press \"Store nozzle mark position\".");
+        JLabel step5Label = new JLabel("5. To exclude tip runout from the measurement turn the nozzle about 360°. ");
         instructionPanel.add(step5Label, "2, 17");
+        
+        JLabel step6Label = new JLabel("6. If you want an offset in Z, switch the \"Include Z?\" checkbox on. Move the nozzle to the desired offset Z. ");
+        instructionPanel.add(step6Label, "2, 19");
+        
+        JPanel panel = new JPanel();
+        instructionPanel.add(panel, "2, 21, left, fill");
+        
+        JLabel lblIncludeZ = new JLabel("Include Z?");
+        panel.add(lblIncludeZ);
+        
+        chckbxIncludeZ = new JCheckBox("");
+        panel.add(chckbxIncludeZ);
+        
+        JLabel step7Label = new JLabel("7. Press \"Store nozzle mark position\".");
+        instructionPanel.add(step7Label, "2, 23");
         
         JPanel nozzleMarkPositionPanel = new JPanel();
         nozzleMarkPositionPanel.setBorder(new TitledBorder(null, "Nozzle mark position", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
-        nozzleMarkPositionPanel.setLayout(new FormLayout(
-                new ColumnSpec[] {
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                },
-
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                })
+        nozzleMarkPositionPanel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,})
         );
 
         JLabel nozzleMarkLocationXLabel = new JLabel("X");
@@ -150,32 +189,35 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
         nozzleMarkPositionPanel.add(nozzleMarkLocationZ, "6, 4");
         nozzleMarkLocationZ.setColumns(5);
 
-        instructionPanel.add(nozzleMarkPositionPanel, "2, 19");
+        instructionPanel.add(nozzleMarkPositionPanel, "2, 25");
 
         JButton measureButton = new JButton("Store position");
         measureButton.setAction(storePositionAction);
-        instructionPanel.add(measureButton, "2, 21");
+        instructionPanel.add(measureButton, "2, 27");
 
-        JLabel step6Label = new JLabel("6. Jog the camera over the center of the mark. Press \"Calculate nozzle offset\" when finished.");
-        instructionPanel.add(step6Label, "2, 23");
+        JLabel step8Label = new JLabel("8. Jog the camera over the center of the mark. Press \"Calculate nozzle offset\" when finished.");
+        instructionPanel.add(step8Label, "2, 29");
 
         JButton applyNozzleOffsetButton = new JButton("Calculate nozzle offset");
         applyNozzleOffsetButton.setAction(applyNozzleOffsetAction);
-        instructionPanel.add(applyNozzleOffsetButton, "2, 25");
+        instructionPanel.add(applyNozzleOffsetButton, "2, 31");
 
         JPanel nozzleOffsetPanel = new JPanel();
         nozzleOffsetPanel.setBorder(new TitledBorder(null, "Nozzle head offsets", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        nozzleOffsetPanel.setLayout(new FormLayout(
-                new ColumnSpec[] {
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                },
-
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                })
+        nozzleOffsetPanel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,})
         );
 
         JLabel nozzleOffsetXLabel = new JLabel("X");
@@ -199,15 +241,15 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
         nozzleOffsetPanel.add(nozzleOffsetLocationZ, "6, 4");
         nozzleOffsetLocationZ.setColumns(5);
 
-        instructionPanel.add(nozzleOffsetPanel, "2, 27");
-
-        JLabel step7Label = new JLabel("7. Confirm the new settings by toggling the position camera / nozzle buttons from the Jog Panel.");
-        instructionPanel.add(step7Label, "2, 29");
-
-        JLabel step8Label = new JLabel("8. Apply the new nozzle offsets by pressing the \"Apply\" button");
-        instructionPanel.add(step8Label, "2, 31");
+        instructionPanel.add(nozzleOffsetPanel, "2, 33");
 
         contentPanel.add(instructionPanel);
+                
+                        JLabel step9Label = new JLabel("9. Apply the new nozzle offsets by pressing the \"Apply\" button");
+                        instructionPanel.add(step9Label, "2, 35");
+                
+                        JLabel step10Label = new JLabel("10. Confirm the new settings by toggling the position camera / nozzle buttons from the Jog Panel.");
+                        instructionPanel.add(step10Label, "2, 37");
     }
 
     private Action openAdviceUrl = new AbstractAction("Open Advice Url") {
@@ -239,12 +281,17 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
                 Camera currentCamera = selectedCameraItem.getCamera();
                 Location cameraLocation = currentCamera.getLocation();
                 Location headOffsets = cameraLocation.subtract(nozzleMarkLocation.getLocation());
-
+                if (!chckbxIncludeZ.isSelected()) {
+                    // set the Z to zero
+                    headOffsets = new Location(headOffsets.getUnits(), headOffsets.getX(), headOffsets.getY(), 0.0, headOffsets.getRotation());
+                }
                 nozzleOffsetLocation.setLocation(headOffsets);
                 Logger.info("Nozzle offset wizard set head offset to location: " + headOffsets.toString());
             }
         }
     };
+
+    private JCheckBox chckbxIncludeZ;
 
     @Override
     public void createBindings() {
