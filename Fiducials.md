@@ -35,9 +35,10 @@ For additional information on using your fiducials, please watch this video tuto
 If OpenPnP is not finding your fiducials, try the following:
 
 1. Make sure you have set the Units Per Pixel values for your camera. A quick way to test this is to right click the camera view, turn on the Ruler Reticle and see if it matches a ruler placed on the machine.
-2. Change the log level to DEBUG or TRACE. See https://github.com/openpnp/openpnp/wiki/FAQ#how-do-i-turn-on-debug-logging for more information.
-3. Restart OpenPnP and try to run your fidicual check again.
-4. After you run it there will be a new directory in your `.openpnp` [directory](https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located) called `openpnp/org.openpnp.vision.pipeline.stages.ImageWriteDebug` and under that directory will be some images. The images show the process of trying to find the fiducials.
+2. Don't set a **body** width and length for fiducials, leave them 0.  You only need the pad definition.
+3. Change the log level to DEBUG or TRACE. See https://github.com/openpnp/openpnp/wiki/FAQ#how-do-i-turn-on-debug-logging for more information.
+4. Restart OpenPnP and try to run your fidicual check again.
+5. After you run it there will be a new directory in your `.openpnp` [directory](https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located) called `openpnp/org.openpnp.vision.pipeline.stages.ImageWriteDebug` and under that directory will be some images. The images show the process of trying to find the fiducials.
 
   If you understand computer vision a bit, take a look at the images and see if you can find any problems. Common problems are lighting and template size related. If it doesn't help, please post your images to [the OpenPnP mailing list](http://groups.google.com/group/openpnp) and someone will try to help.
 
