@@ -922,10 +922,7 @@ public class JobPanel extends JPanel {
              */
             
             MessageBoxes.errorBox(getTopLevelAncestor(), "Job Error", t.getMessage());
-            // We are either Running or Stepping. If Stepping, there is nothing to do. Just
-            // clear the dialog and let the user take control. If Running we need to transition
-            // to Stepping.
-            if (state == State.Running) {
+            if (state == State.Running || state == State.Pausing) {
                 try {
                     setState(State.Paused);
                 }
