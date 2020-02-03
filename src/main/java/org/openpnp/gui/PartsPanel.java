@@ -176,10 +176,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
         splitPane.setLeftComponent(new JScrollPane(table));
         splitPane.setRightComponent(tabbedPane);
         
-        JButton btnNewPart = toolBar.add(newPartAction);
-        btnNewPart.setToolTipText("");
-        JButton btnDeletePart = toolBar.add(deletePartAction);
-        btnDeletePart.setToolTipText("");
+        toolBar.add(newPartAction);
+        toolBar.add(deletePartAction);
         toolBar.addSeparator();
         toolBar.add(pickPartAction);
         
