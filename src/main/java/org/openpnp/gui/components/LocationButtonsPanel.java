@@ -21,7 +21,6 @@ package org.openpnp.gui.components;
 
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,13 +31,13 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
@@ -200,11 +199,14 @@ public class LocationButtonsPanel extends JPanel {
                             l = l.subtractWithRotation(baseLocation);
                             l = l.rotateXy(-baseLocation.getRotation());
                         }
-                        Helpers.copyLocationIntoTextFields(l, 
-                                textFieldX, 
-                                textFieldY, 
-                                lz == null ? null : textFieldZ,
-                                textFieldC);
+                        final Location lf = l;
+                        SwingUtilities.invokeAndWait(() -> {
+                            Helpers.copyLocationIntoTextFields(lf, 
+                                    textFieldX, 
+                                    textFieldY, 
+                                    lz == null ? null : textFieldZ,
+                                    textFieldC);
+                        });
                     });
                 }
             };
@@ -224,8 +226,11 @@ public class LocationButtonsPanel extends JPanel {
                             l = l.subtractWithRotation(baseLocation);
                             l = l.rotateXy(-baseLocation.getRotation());
                         }
-                        Helpers.copyLocationIntoTextFields(l, textFieldX, textFieldY, textFieldZ,
-                                textFieldC);
+                        final Location lf = l;
+                        SwingUtilities.invokeAndWait(() -> {
+                            Helpers.copyLocationIntoTextFields(lf, textFieldX, textFieldY, textFieldZ,
+                                    textFieldC);
+                        });
                     });
                 }
             };
@@ -249,8 +254,11 @@ public class LocationButtonsPanel extends JPanel {
                             l = l.subtractWithRotation(baseLocation);
                             l = l.rotateXy(-baseLocation.getRotation());
                         }
-                        Helpers.copyLocationIntoTextFields(l, textFieldX,
-                                textFieldY, textFieldZ, textFieldC);
+                        final Location lf = l;
+                        SwingUtilities.invokeAndWait(() -> {
+                            Helpers.copyLocationIntoTextFields(lf, textFieldX,
+                                    textFieldY, textFieldZ, textFieldC);
+                        });
                     });
 
                 }

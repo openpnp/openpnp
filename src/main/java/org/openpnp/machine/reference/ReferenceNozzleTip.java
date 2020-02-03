@@ -15,6 +15,7 @@ import org.openpnp.machine.reference.wizards.ReferenceNozzleTipConfigurationWiza
 import org.openpnp.machine.reference.wizards.ReferenceNozzleTipPartDetectionWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleTipToolChangerWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
@@ -68,7 +69,13 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     
     @Element(required = false)
     private double vacuumLevelPartOffHigh;
-    
+
+    @Element(required = false)
+    private Length diameterLow = new Length(0, LengthUnit.Millimeters);
+
+    @Attribute(required = false)
+    private boolean isPushAndDragAllowed = false;
+
     public ReferenceNozzleTip() {
     }
 
@@ -225,6 +232,24 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     public void setVacuumLevelPartOffHigh(double vacuumLevelPartOffHigh) {
         this.vacuumLevelPartOffHigh = vacuumLevelPartOffHigh;
+    }
+
+    @Override
+    public Length getDiameterLow() {
+        return diameterLow;
+    }
+
+    public void setDiameterLow(Length diameterLow) {
+        this.diameterLow = diameterLow;
+    }
+
+    @Override
+    public boolean isPushAndDragAllowed() {
+        return isPushAndDragAllowed;
+    }
+
+    public void setPushAndDragAllowed(boolean isPushAndDragAllowed) {
+        this.isPushAndDragAllowed = isPushAndDragAllowed;
     }
 
     public boolean isUnloadedNozzleTipStandin() {

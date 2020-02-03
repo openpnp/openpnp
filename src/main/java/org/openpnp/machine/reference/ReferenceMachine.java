@@ -39,6 +39,7 @@ import org.openpnp.machine.reference.camera.SwitcherCamera;
 import org.openpnp.machine.reference.camera.Webcams;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.feeder.AdvancedLoosePartFeeder;
+import org.openpnp.machine.reference.feeder.BlindsFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceDragFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceLeverFeeder;
@@ -219,6 +220,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(ReferenceSlotAutoFeeder.class);
         l.add(ReferenceLoosePartFeeder.class);
         l.add(AdvancedLoosePartFeeder.class);
+        l.add(BlindsFeeder.class);
         l.addAll(registeredFeederClasses);
         return l;
     }

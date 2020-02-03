@@ -183,7 +183,7 @@ public class JobPlacementsPanel extends JPanel {
                 if (e.getKeyChar() == ' ') {
                     Placement placement = getSelection();
                     placement.setEnabled(!placement.isEnabled());
-                    tableModel.fireTableRowsUpdated(table.getSelectedRow(), table.getSelectedRow());
+                    refreshSelectedRow();
                     updateActivePlacements();
                 }
                 else {
@@ -303,6 +303,11 @@ public class JobPlacementsPanel extends JPanel {
     public void refresh() {
         tableModel.fireTableDataChanged();
         updateActivePlacements();
+    }
+
+    public void refreshSelectedRow() {
+        int index = table.convertRowIndexToModel(table.getSelectedRow());
+        tableModel.fireTableRowsUpdated(index, index);
     }
 
     public void selectPlacement(Placement placement) {
@@ -579,11 +584,13 @@ public class JobPlacementsPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
-            Location placementLocation = Utils2D
-                    .calculateBoardPlacementLocationInverse(boardLocation, nozzle.getLocation());
-            getSelection().setLocation(placementLocation);
-            table.repaint();
+            UiUtils.messageBoxOnException(() -> {
+                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                Location placementLocation = Utils2D
+                        .calculateBoardPlacementLocationInverse(boardLocation, nozzle.getLocation());
+                getSelection().setLocation(placementLocation);
+                table.repaint();
+            });
         }
     };
 
