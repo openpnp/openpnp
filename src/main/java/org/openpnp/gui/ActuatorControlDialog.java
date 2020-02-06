@@ -101,7 +101,7 @@ public class ActuatorControlDialog extends JDialog {
         readBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.submitUiMachineTask(() -> {
-                    String s = actuator.read();
+                    String s = actuator.read(Double.parseDouble(doubleTf.getText()));
                     readTf.setText(s == null ? "" : s);
                 });
             }
