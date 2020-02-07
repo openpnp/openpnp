@@ -59,7 +59,7 @@ public class LocationButtonsPanel extends JPanel {
     private JTextField textFieldX, textFieldY, textFieldZ, textFieldC;
     private String actuatorName;
 
-    private JButton buttonCenterCamera;
+    JButton buttonCenterCamera;
     private JButton buttonCenterTool;
     private JButton buttonCaptureCamera;
     private JButton buttonCaptureTool;
