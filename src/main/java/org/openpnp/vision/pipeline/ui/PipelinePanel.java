@@ -154,7 +154,7 @@ public class PipelinePanel extends JPanel {
     }
     
     public void initializeFocus() {
-    	stagesTable.grabFocus();
+        stagesTable.grabFocus();
     }
 
     public void onStagePropertySheetValueChanged(Object aValue, int row, int column) {

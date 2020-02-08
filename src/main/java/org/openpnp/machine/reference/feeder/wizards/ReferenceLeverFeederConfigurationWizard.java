@@ -81,7 +81,7 @@ public class ReferenceLeverFeederConfigurationWizard
     private JTextField textFieldFeedRate;
     private JLabel lblPartPitch;
     private JTextField textFieldPartPitch;
-	private JLabel lblFeedRate;
+    private JLabel lblFeedRate;
     private JLabel lblActuatorId;
     private JLabel lblPeelOffActuatorId;
     private JTextField textFieldActuatorId;
@@ -301,7 +301,7 @@ public class ReferenceLeverFeederConfigurationWizard
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {
-						FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
@@ -555,7 +555,7 @@ public class ReferenceLeverFeederConfigurationWizard
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-				feeder.resetVisionOffsets();
+                feeder.resetVisionOffsets();
             });
         }
     };

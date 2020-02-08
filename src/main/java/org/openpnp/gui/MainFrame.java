@@ -348,7 +348,7 @@ public class MainFrame extends JFrame {
         menuItem = new JCheckBoxMenuItem(new LanguageSelectionAction(new Locale("fr")));
         buttonGroup.add(menuItem);
         mnLanguage.add(menuItem);
-		
+        
         menuItem = new JCheckBoxMenuItem(new LanguageSelectionAction(new Locale("it")));
         buttonGroup.add(menuItem);
         mnLanguage.add(menuItem);
@@ -565,7 +565,7 @@ public class MainFrame extends JFrame {
                 machineControlsPanel.getJogControlsPanel().setIncrement4Action);
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F5, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
                 machineControlsPanel.getJogControlsPanel().setIncrement5Action);
-				
+                
         tabs = new JTabbedPane(JTabbedPane.TOP);
         splitPaneMachineAndTabs.setRightComponent(tabs);
 
@@ -746,7 +746,7 @@ public class MainFrame extends JFrame {
     }
 
     private void registerBoardImporters() {
-    	registerBoardImporter(LabcenterProteusImporter.class);
+        registerBoardImporter(LabcenterProteusImporter.class);
         registerBoardImporter(EagleBoardImporter.class);
         registerBoardImporter(EagleMountsmdUlpImporter.class);
         registerBoardImporter(KicadPosImporter.class);
@@ -851,13 +851,13 @@ public class MainFrame extends JFrame {
             configuration.save();
         }
         catch (Exception e) {
-			String message = "There was a problem saving the configuration. The reason was:\n\n" + e.getMessage() //$NON-NLS-1$
-					+ "\n\n"; //$NON-NLS-1$
-			message = message.replaceAll("\n", "<br/>"); //$NON-NLS-1$ //$NON-NLS-2$
-			message = message.replaceAll("\r", ""); //$NON-NLS-1$ //$NON-NLS-2$
-			message = "<html><body width=\"400\">" + message + "</body></html>"; //$NON-NLS-1$ //$NON-NLS-2$
-			JOptionPane.showMessageDialog(this, message, "Configuration Save Error", JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
-			return false;
+            String message = "There was a problem saving the configuration. The reason was:\n\n" + e.getMessage() //$NON-NLS-1$
+                    + "\n\n"; //$NON-NLS-1$
+            message = message.replaceAll("\n", "<br/>"); //$NON-NLS-1$ //$NON-NLS-2$
+            message = message.replaceAll("\r", ""); //$NON-NLS-1$ //$NON-NLS-2$
+            message = "<html><body width=\"400\">" + message + "</body></html>"; //$NON-NLS-1$ //$NON-NLS-2$
+            JOptionPane.showMessageDialog(this, message, "Configuration Save Error", JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+            return false;
         }
 
         Logger.debug("Config saved successfully!"); //$NON-NLS-1$
@@ -920,7 +920,7 @@ public class MainFrame extends JFrame {
     public void setPlacementCompletionStatus(int totalPlacementsCompleted, int totalPlacements, int boardPlacementsCompleted, int boardPlacements) {
         SwingUtilities.invokeLater(() -> {
             lblPlacements.setText(String.format(" Placements: %d / %d Total | %d / %d Selected Board ", totalPlacementsCompleted, totalPlacements, boardPlacementsCompleted, boardPlacements));
-        	prgbrPlacements.setValue((int)(((float)totalPlacementsCompleted / (float)totalPlacements) * 100.0f));
+            prgbrPlacements.setValue((int)(((float)totalPlacementsCompleted / (float)totalPlacements) * 100.0f));
         });
     }
 
@@ -1018,7 +1018,7 @@ public class MainFrame extends JFrame {
     private Action saveConfigAction = new AbstractAction(Translations.getString("Menu.File.SaveConfiguration")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-			saveConfig();
+            saveConfig();
         }
     };
 

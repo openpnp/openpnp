@@ -341,6 +341,9 @@
 											<property name="format" value="^[a-z][a-zA-Z0-9_]*$" />
 										</module>
 									</module>
+									<module name="FileTabCharacter">
+ 										<property name="eachLine" value="true"/>
+									</module>
 								</module>
 							</checkstyleRules>
 							<encoding>UTF-8</encoding>

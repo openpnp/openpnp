@@ -949,11 +949,11 @@ public class JobPanel extends JPanel {
     }
     
     private void updatePanelizationIconState() {
-    	// If more than board is in the job list, then autopanelize isn't allowed
+        // If more than board is in the job list, then autopanelize isn't allowed
         if (getJob().isUsingPanel() == false && table.getRowCount() > 1){
-        	panelizeAction.setEnabled(false);
-        	panelizeFiducialCheck.setEnabled(false);
-            panelizeXOutAction.setEnabled(false);	
+            panelizeAction.setEnabled(false);
+            panelizeFiducialCheck.setEnabled(false);
+            panelizeXOutAction.setEnabled(false);   
         }
         
         if (getJob().getBoardLocations() == null) {
@@ -1284,9 +1284,9 @@ public class JobPanel extends JPanel {
                         // Need to keep current focus owner so that the space bar can be
                         // used after the initial click. Otherwise, button focus is lost
                         // when table is updated
-                    	Component comp = MainFrame.get().getFocusOwner();
-                    	Helpers.selectNextTableRow(table);
-                    	comp.requestFocus();
+                        Component comp = MainFrame.get().getFocusOwner();
+                        Helpers.selectNextTableRow(table);
+                        comp.requestFocus();
                        HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                         Camera camera = tool.getHead().getDefaultCamera();
                         MainFrame.get().getCameraViews().ensureCameraVisible(camera);
@@ -1580,25 +1580,25 @@ public class JobPanel extends JPanel {
     };
     
     boolean isAllPlaced() {
-    	for (BoardLocation boardLocation : job.getBoardLocations()) {
-    	    if (!boardLocation.isEnabled()) {
-    	        continue;
-    	    }
-        	for (Placement placement : boardLocation.getBoard().getPlacements()) {
+        for (BoardLocation boardLocation : job.getBoardLocations()) {
+            if (!boardLocation.isEnabled()) {
+                continue;
+            }
+            for (Placement placement : boardLocation.getBoard().getPlacements()) {
                 if (placement.getType() != Type.Placement) {
                     continue;
                 }
                 if (!placement.isEnabled()) {
                     continue;
                 }
-        	    if (placement.getSide() != boardLocation.getSide()) {
-        	        continue;
-        	    }
-        		if (!boardLocation.getPlaced(placement.getId())) {
-    				return false;
-        		}
-        	}
-    	}
-    	return true;
+                if (placement.getSide() != boardLocation.getSide()) {
+                    continue;
+                }
+                if (!boardLocation.getPlaced(placement.getId())) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

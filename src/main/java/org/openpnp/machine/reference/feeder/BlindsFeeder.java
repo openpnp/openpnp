@@ -1603,7 +1603,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             // No fiducial 1 match but one is required.
             return false;
         }
-        // No match on the fiducial 1, so check whole feeder holder area.	
+        // No match on the fiducial 1, so check whole feeder holder area.   
         Location feederLocation = transformMachineToFeederLocation(location);
         double mm = new Length(1, LengthUnit.Millimeters).convertToUnits(feederLocation.getUnits()).getValue();
         if (feederLocation.getX() >= -1*mm && feederLocation.getX() <= tapeLength.convertToUnits(feederLocation.getUnits()).getValue() + 1*mm) {

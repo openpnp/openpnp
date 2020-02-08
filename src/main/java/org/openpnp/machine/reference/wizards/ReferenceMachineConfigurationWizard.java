@@ -30,7 +30,7 @@ import com.jgoodies.forms.layout.RowSpec;
 
 public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWizard {
 
-	private final ReferenceMachine machine;
+    private final ReferenceMachine machine;
     private JComboBox comboBoxDriver;
     private JCheckBox checkBoxHomeAfterEnabled;
     private String driverClassName;

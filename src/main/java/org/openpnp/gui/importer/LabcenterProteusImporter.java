@@ -99,58 +99,58 @@ public class LabcenterProteusImporter implements BoardImporter {
                 new BufferedReader(new InputStreamReader(new FileInputStream(file)));
         ArrayList<Placement> placements = new ArrayList<>();
         String line;
-		double mul = 1.0;
+        double mul = 1.0;
         int lineCount = 0;
-		int [] ind = {0,1,2,3,4,5,6};
-		if (stockCodesIncluded) {
-			
-			 ind = new int[]{0,1,2,4,5,6,7};
-		}
-		// state of the check boxes in log file
-		Logger.trace("include stock codes " + stockCodesIncluded);
-		Logger.trace("create Missing Parts " + createMissingParts);
+        int [] ind = {0,1,2,3,4,5,6};
+        if (stockCodesIncluded) {
+            
+             ind = new int[]{0,1,2,4,5,6,7};
+        }
+        // state of the check boxes in log file
+        Logger.trace("include stock codes " + stockCodesIncluded);
+        Logger.trace("create Missing Parts " + createMissingParts);
         // 
         // Default format for Proteus pkp file 
         // Part ID, Value, Package,[Stock Code,] Layer, Rotation, X, Y
         // "R1","10k","0402",[Stock Code,]TOP,270,15.1678,15.24
-		// "R18","10k","0402",[Stock Code,]TOP,270,16.7172,15.24
-		// "R11","22","0402",[Stock Code,]TOP,-180,2.6416,11.5062
+        // "R18","10k","0402",[Stock Code,]TOP,270,16.7172,15.24
+        // "R11","22","0402",[Stock Code,]TOP,-180,2.6416,11.5062
         // <etc>
-		// [Stock Code] is optional, chosen when the file is exported from Proteus. 
+        // [Stock Code] is optional, chosen when the file is exported from Proteus. 
         
-		while ((line = reader.readLine()) != null) {
-        	
-        	// Skip blank lines
-        	if (line.length() == 0)  {
+        while ((line = reader.readLine()) != null) {
+            
+            // Skip blank lines
+            if (line.length() == 0)  {
                 Logger.trace("Blank line must skip this"); // helpful to know what's happening during parse
-				continue;
+                continue;
             }
-			// check for units in thou. default is mm
-			if(line.matches("^.*?\\bUnits\\b.*?\\bthou\\b.*?$"))
-				{
-					Logger.trace("units are inches");
-					mul = .0254;
-					continue;
-				}
-			// Skip line if it does not start with "
-			if (line.charAt(0) != '"') {
-				Logger.trace("skipping : " + line); // helpful to see the line being skipped
-				continue;
-			}
-			
-			// Looks like we have a valid line of data, parse it now
+            // check for units in thou. default is mm
+            if(line.matches("^.*?\\bUnits\\b.*?\\bthou\\b.*?$"))
+                {
+                    Logger.trace("units are inches");
+                    mul = .0254;
+                    continue;
+                }
+            // Skip line if it does not start with "
+            if (line.charAt(0) != '"') {
+                Logger.trace("skipping : " + line); // helpful to see the line being skipped
+                continue;
+            }
+            
+            // Looks like we have a valid line of data, parse it now
             line = line.trim();
             String[] tokens = line.split(",");
             
-            String placementId = tokens[ind[0]].replaceAll("^\"|\"$", "");	// RefDes in Proteus pkp file
+            String placementId = tokens[ind[0]].replaceAll("^\"|\"$", "");  // RefDes in Proteus pkp file
             String partValue = tokens[ind[1]].replaceAll("^\"|\"$", "");    // Value in Proteus pkp file
             String pkgName = tokens[ind[2]].replaceAll("^\"|\"$", "");      // Name in Proteus pkp file
-            double placementX = Double.parseDouble(tokens[ind[5]])*mul;   		// X (mm) in Proteus pkp file
-            double placementY = Double.parseDouble(tokens[ind[6]])*mul;   		// Y (mm) in Proteus pkp file
-            double placementRotation = Double.parseDouble(tokens[ind[4]]); 	// Rotate in Proteus pkp file
-            String placementLayer = tokens[ind[3]];    						// Layer in Proteus pkp file
-			
-			
+            double placementX = Double.parseDouble(tokens[ind[5]])*mul;         // X (mm) in Proteus pkp file
+            double placementY = Double.parseDouble(tokens[ind[6]])*mul;         // Y (mm) in Proteus pkp file
+            double placementRotation = Double.parseDouble(tokens[ind[4]]);  // Rotate in Proteus pkp file
+            String placementLayer = tokens[ind[3]];                         // Layer in Proteus pkp file
+            
+            
             Placement placement = new Placement(placementId);
             placement.setLocation(new Location(LengthUnit.Millimeters, placementX, placementY, 0,
                     placementRotation));
@@ -187,8 +187,8 @@ public class LabcenterProteusImporter implements BoardImporter {
         private final Action importAction = new SwingAction_2();
         private final Action cancelAction = new SwingAction_3();
         private JCheckBox chckbxCreateMissingParts;
-		private JCheckBox chckbxStockCodesIncluded;
-		
+        private JCheckBox chckbxStockCodesIncluded;
+        
         public Dlg(Frame parent) {
             super(parent, DESCRIPTION, true);
             getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
@@ -222,13 +222,13 @@ public class LabcenterProteusImporter implements BoardImporter {
             panel_1.setLayout(new FormLayout(
                     new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                     new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-					RowSpec.decode("default:grow")}));
+                    RowSpec.decode("default:grow")}));
 
             chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
             chckbxCreateMissingParts.setSelected(true);
             panel_1.add(chckbxCreateMissingParts, "2, 2");
-			
-			chckbxStockCodesIncluded = new JCheckBox("Stock Codes Included");
+            
+            chckbxStockCodesIncluded = new JCheckBox("Stock Codes Included");
             chckbxStockCodesIncluded.setSelected(false);
             panel_1.add(chckbxStockCodesIncluded, "2, 3");
 
@@ -265,7 +265,7 @@ public class LabcenterProteusImporter implements BoardImporter {
             }
 
             public void actionPerformed(ActionEvent e) {
-            	
+                
                 FileDialog fileDialog = new FileDialog(Dlg.this);
                 fileDialog.setFilenameFilter(new FilenameFilter() {
                     @Override
@@ -302,10 +302,10 @@ public class LabcenterProteusImporter implements BoardImporter {
                 }
                 catch (Exception e1) {
                     MessageBoxes.errorBox(Dlg.this, "Import Error", "The expected file format is the default file export in Labcenter Proteus "
-                    		+ "Data after header information should be :\n"
-							+ "Part ID, Value, Package,[Stock Code,] Layer, Rotation, X, Y\n"
-                    		+ "Likely cause: the number of data fields does not match expected input\n"
-							+ "ie: Include stock codes check box is not checked but file has stock codes");
+                            + "Data after header information should be :\n"
+                            + "Part ID, Value, Package,[Stock Code,] Layer, Rotation, X, Y\n"
+                            + "Likely cause: the number of data fields does not match expected input\n"
+                            + "ie: Include stock codes check box is not checked but file has stock codes");
                     return;
                 }
                 for (Placement placement : placements) {

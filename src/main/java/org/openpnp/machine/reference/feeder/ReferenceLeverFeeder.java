@@ -86,7 +86,7 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
     private double feededCount = 0;
     private double partsPitchX = -2; //-2mm for 2 mm part pitch (2 parts per feed)
     private double partsPitchY = 0;
-	
+    
     /*
      * visionOffset contains the difference between where the part was expected to be and where it
      * is. Subtracting these offsets from the pickLocation produces the correct pick location.
@@ -101,12 +101,12 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
         }
 
         if (vision.isEnabled() && visionOffset != null) {
-			if (partPitch.convertToUnits(LengthUnit.Millimeters).getValue() == 2 && partPick != null) {
-				return pickLocation.subtract(visionOffset).add(partPick);
-			}
-			else {
-				return pickLocation.subtract(visionOffset);
-			}
+            if (partPitch.convertToUnits(LengthUnit.Millimeters).getValue() == 2 && partPick != null) {
+                return pickLocation.subtract(visionOffset).add(partPick);
+            }
+            else {
+                return pickLocation.subtract(visionOffset);
+            }
         }
 
         return pickLocation;
@@ -130,11 +130,11 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
                     actuatorName, head.getName()));
         }
 
-		Actuator peelOffActuator = null;
+        Actuator peelOffActuator = null;
 
-		if (peelOffActuatorName != null) {
-			peelOffActuator = head.getActuatorByName(peelOffActuatorName);
-		}
+        if (peelOffActuatorName != null) {
+            peelOffActuator = head.getActuatorByName(peelOffActuatorName);
+        }
 
         head.moveToSafeZ();
 
@@ -144,54 +144,54 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
             Location feedStartLocation = this.feedStartLocation;
             Location feedEndLocation = this.feedEndLocation;
 
-		    for (double i = partPitch.convertToUnits(LengthUnit.Millimeters).getValue(); i > 0; i=i-4) {  // perform multiple feeds if required
-		    
-	            // Move the actuator to the feed start location.
-	            actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
-		    
-	            // enable actuator (may do nothing)
-		    	actuator.actuate(true);
-		    
-	            // Push the lever
-	            actuator.moveTo(feedEndLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
-		    
-			    // Start the take up actuator
-		    	if (peelOffActuator != null) {
-		    		peelOffActuator.actuate(true);
-		    	}
-	            // Now move back to the start location to move the tape.
-	            actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
-		    
-			    // Stop the take up actuator
-		    	if (peelOffActuator != null) {
-		    		peelOffActuator.actuate(false);
-		    	}
-		    
-	            // disable actuator
-		    	actuator.actuate(false);
-			}
+            for (double i = partPitch.convertToUnits(LengthUnit.Millimeters).getValue(); i > 0; i=i-4) {  // perform multiple feeds if required
+            
+                // Move the actuator to the feed start location.
+                actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
+            
+                // enable actuator (may do nothing)
+                actuator.actuate(true);
+            
+                // Push the lever
+                actuator.moveTo(feedEndLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
+            
+                // Start the take up actuator
+                if (peelOffActuator != null) {
+                    peelOffActuator.actuate(true);
+                }
+                // Now move back to the start location to move the tape.
+                actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
+            
+                // Stop the take up actuator
+                if (peelOffActuator != null) {
+                    peelOffActuator.actuate(false);
+                }
+            
+                // disable actuator
+                actuator.actuate(false);
+            }
 
-	        if (partPitch.convertToUnits(LengthUnit.Millimeters).getValue() == 2) {
-				feededCount = 2;
-	        }
+            if (partPitch.convertToUnits(LengthUnit.Millimeters).getValue() == 2) {
+                feededCount = 2;
+            }
         } 
         else {
-			Logger.debug("Multi parts Lever feeder: skipping feed " + feededCount);
+            Logger.debug("Multi parts Lever feeder: skipping feed " + feededCount);
         }
 
 
         head.moveToSafeZ();
 
-		if (feededCount > 0) {
-			feededCount--;
-			if (feededCount > 0) {
-				partPick = new Location(LengthUnit.Millimeters, partsPitchX * feededCount,
-						partsPitchY * feededCount, 0, 0);
-			} 
-			else {
-				partPick = null;
-			}
-		}
+        if (feededCount > 0) {
+            feededCount--;
+            if (feededCount > 0) {
+                partPick = new Location(LengthUnit.Millimeters, partsPitchX * feededCount,
+                        partsPitchY * feededCount, 0, 0);
+            } 
+            else {
+                partPick = null;
+            }
+        }
 
         if (vision.isEnabled()) {
             visionOffset = getVisionOffsets(head, location);
@@ -296,14 +296,14 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
         return String.format("ReferenceTapeFeeder id %s", id);
     }
 
-	public void resetVisionOffsets() {
-		if (visionOffset != null) {
-			visionOffset = null;
-			Logger.debug("resetVisionOffsets " + visionOffset);
-		}
+    public void resetVisionOffsets() {
+        if (visionOffset != null) {
+            visionOffset = null;
+            Logger.debug("resetVisionOffsets " + visionOffset);
+        }
 
-		partPick = null;
-	}
+        partPick = null;
+    }
 
     public Location getFeedStartLocation() {
         return feedStartLocation;

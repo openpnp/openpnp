@@ -13,7 +13,7 @@ public class DetectEdgesLaplacian extends CvStage {
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         Mat mat = pipeline.getWorkingImage();
-	Imgproc.Laplacian(mat, mat, mat.depth());
+    Imgproc.Laplacian(mat, mat, mat.depth());
         return null;
     }
 }

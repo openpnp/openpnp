@@ -60,13 +60,13 @@ public class CameraPanel extends JPanel {
     private Preferences prefs = Preferences.userNodeForPackage(CameraPanel.class);
 
     public CameraPanel() {
-		SwingUtilities.invokeLater(() -> {
-			createUi();
-		});
+        SwingUtilities.invokeLater(() -> {
+            createUi();
+        });
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationComplete(Configuration configuration) throws Exception {
-            	SwingUtilities.invokeLater(() -> {
+                SwingUtilities.invokeLater(() -> {
                     for (Head head : Configuration.get().getMachine().getHeads()) {
                         for (Camera camera : head.getCameras()) {
                             addCamera(camera);
@@ -94,8 +94,8 @@ public class CameraPanel extends JPanel {
                         catch (Exception e) {
                             e.printStackTrace();
                         }
-                    });           		
-            	});
+                    });                 
+                });
             }
         });
     }
@@ -200,12 +200,12 @@ public class CameraPanel extends JPanel {
                 if (rows == 0) {
                     rows = 1;
                 }
-				if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_H)) {
-					camerasPanel.setLayout(new GridLayout(rows, 0, 1, 1));
-				}
-				else {
-					camerasPanel.setLayout(new GridLayout(0, rows, 1, 1));
-				}
+                if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_H)) {
+                    camerasPanel.setLayout(new GridLayout(rows, 0, 1, 1));
+                }
+                else {
+                    camerasPanel.setLayout(new GridLayout(0, rows, 1, 1));
+                }
 
                 for (CameraView cameraView : cameraViews.values()) {
                     cameraView.setShowName(true);

@@ -36,7 +36,7 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
     private MutableLocationProxy nozzleMarkLocation, nozzleOffsetLocation;
 
     public ReferenceNozzleCameraOffsetWizard(ReferenceNozzle nozzle) {
-    	
+        
         this.nozzle = nozzle;
         this.nozzleMarkLocation = new MutableLocationProxy();
         this.nozzleOffsetLocation = new MutableLocationProxy();
@@ -213,12 +213,12 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
     private Action openAdviceUrl = new AbstractAction("Open Advice Url") {
         @Override
         public void actionPerformed(ActionEvent e) {
-        	try {
-				Desktop.getDesktop().browse(new URI("https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Nozzle-Setup#head-offsets"));
-			} catch (IOException | URISyntaxException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+            try {
+                Desktop.getDesktop().browse(new URI("https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Nozzle-Setup#head-offsets"));
+            } catch (IOException | URISyntaxException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
             
         }
     };

@@ -108,26 +108,26 @@ public class BoardLocation extends AbstractModelObject {
     }
     
     public int getTotalActivePlacements(){
-    	if (board == null) {
-    		return 0;
-    	}
-    	int counter = 0;
-    	for(Placement placement : board.getPlacements()) {
-    		if (placement.getSide() == getSide()
-    		        && placement.getType() == Type.Placement
-    		        && placement.isEnabled()) {
-    				counter++;
-        	}
-    	}
-    	return counter;
+        if (board == null) {
+            return 0;
+        }
+        int counter = 0;
+        for(Placement placement : board.getPlacements()) {
+            if (placement.getSide() == getSide()
+                    && placement.getType() == Type.Placement
+                    && placement.isEnabled()) {
+                    counter++;
+            }
+        }
+        return counter;
     }
     
     public int getActivePlacements() {
-    	if (board == null) {
-    		return 0;
-    	}
-    	int counter = 0;
-	    for(Placement placement : board.getPlacements()) {
+        if (board == null) {
+            return 0;
+        }
+        int counter = 0;
+        for(Placement placement : board.getPlacements()) {
             if (placement.getSide() == getSide()
                     && placement.getType() == Type.Placement
                     && placement.isEnabled()
@@ -135,7 +135,7 @@ public class BoardLocation extends AbstractModelObject {
                     counter++;
             }
         }
-    	return counter;
+        return counter;
     }
 
     public void setSide(Side side) {

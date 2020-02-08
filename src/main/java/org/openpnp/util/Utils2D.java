@@ -145,7 +145,7 @@ public class Utils2D {
         placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
 
         if (bl.getSide() == Side.Bottom) {
-        	placementLocation = placementLocation.invert(true, false, false, false);
+            placementLocation = placementLocation.invert(true, false, false, false);
         }
 
         double angle = getTransformAngle(tx);

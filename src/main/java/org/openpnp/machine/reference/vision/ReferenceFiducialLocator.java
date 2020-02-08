@@ -137,17 +137,17 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         if (destLocations.size() == 2) {
             Location source0 = sourceLocations.get(0);
             Location source1 = sourceLocations.get(1);
-			if (boardLocation.getSide() == Side.Bottom) {
-			    /**
-			     * Here, and in the block below, if the side is bottom we need to invert the
-			     * source fiducial locations. This is because it was done by getFiducialLocation
-			     * when calling calculateBoardPlacementLocation. Further, they are inverted because
-			     * we calculate board bottom placements as if X is mirrored to account for the
-			     * board being flipped over.
-			     */
-				source0 = source0.invert(true,false,false,false);
-				source1 = source1.invert(true,false,false,false);
-			}
+            if (boardLocation.getSide() == Side.Bottom) {
+                /**
+                 * Here, and in the block below, if the side is bottom we need to invert the
+                 * source fiducial locations. This is because it was done by getFiducialLocation
+                 * when calling calculateBoardPlacementLocation. Further, they are inverted because
+                 * we calculate board bottom placements as if X is mirrored to account for the
+                 * board being flipped over.
+                 */
+                source0 = source0.invert(true,false,false,false);
+                source1 = source1.invert(true,false,false,false);
+            }
             Location dest0 = destLocations.get(0);
             Location dest1 = destLocations.get(1);
             tx = Utils2D.deriveAffineTransform(
@@ -160,11 +160,11 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             Location source0 = sourceLocations.get(0);
             Location source1 = sourceLocations.get(1);
             Location source2 = sourceLocations.get(2);
-			if (boardLocation.getSide() == Side.Bottom) {
-				source0 = source0.invert(true,false,false,false);
-				source1 = source1.invert(true,false,false,false);
-				source2 = source2.invert(true,false,false,false);
-			}
+            if (boardLocation.getSide() == Side.Bottom) {
+                source0 = source0.invert(true,false,false,false);
+                source1 = source1.invert(true,false,false,false);
+                source2 = source2.invert(true,false,false,false);
+            }
             Location dest0 = destLocations.get(0);
             Location dest1 = destLocations.get(1);
             Location dest2 = destLocations.get(2);
@@ -200,7 +200,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         result = result.convertToUnits(boardLocation.getLocation().getUnits());
         result = result.derive(null, null, boardLocation.getLocation().getZ(), null);
         if (checkPanel) {
-            boardLocation.setSide(boardSide);	// restore side
+            boardLocation.setSide(boardSide);   // restore side
         }
         return result;
     }
@@ -344,7 +344,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         
         int repeatFiducialRecognition = 3;
         if ( this.repeatFiducialRecognition > 3 ) {
-        	repeatFiducialRecognition = this.repeatFiducialRecognition;
+            repeatFiducialRecognition = this.repeatFiducialRecognition;
         }
 
         Logger.debug("Looking for {} at {}", part.getId(), location);
@@ -404,8 +404,8 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                 camera.moveTo(location);
     
                 if (i > 0) {
-                	//to average, keep a list of all matches except the first, since its probably most off
-                	matchedLocations.add(location);
+                    //to average, keep a list of all matches except the first, since its probably most off
+                    matchedLocations.add(location);
                 }
             
                 Logger.debug("{} located at {}", part.getId(), location);
@@ -459,7 +459,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
     }
 
     public int getRepeatFiducialRecognition() {
-    	return this.repeatFiducialRecognition;
+        return this.repeatFiducialRecognition;
     }
     
     public void setRepeatFiducialRecognition(int repeatFiducialRecognition) {

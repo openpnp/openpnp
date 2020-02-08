@@ -180,7 +180,7 @@ public class CvPipelineEditor extends JPanel {
     }
     
     public void initializeFocus() {
-        pipelinePanel.initializeFocus();    	
+        pipelinePanel.initializeFocus();        
     }
     
     public CvPipeline getPipeline() {

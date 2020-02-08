@@ -642,41 +642,41 @@ public class JogControlsPanel extends JPanel {
                     Math.max(sliderIncrements.getMinimum(), sliderIncrements.getValue() - 1));
         }
     };
-	
+    
     @SuppressWarnings("serial")
     public Action setIncrement1Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.FirstJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(1);
-		}
+        }
     };
     @SuppressWarnings("serial")
     public Action setIncrement2Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.SecondJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(2);
-		}
+        }
     };
     @SuppressWarnings("serial")
     public Action setIncrement3Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.ThirdJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(3);
-		}
+        }
     };
     @SuppressWarnings("serial")
     public Action setIncrement4Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.FourthJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(4);
-		}
+        }
     };
     @SuppressWarnings("serial")
     public Action setIncrement5Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.FifthJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(5);
-		}
+        }
     };
 
 

@@ -158,48 +158,48 @@ public class ReferenceAutoFeederConfigurationWizard
     }
 
     private Action testFeedActuatorAction = new AbstractAction("Test feed") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			UiUtils.messageBoxOnException(() -> {
-				if (feeder.getActuatorName() == null || feeder.getActuatorName().equals("")) {
-					Logger.warn("No actuatorName specified for feeder {}.", feeder.getName());
-					return;
-				}
-				Actuator actuator = Configuration.get().getMachine().getActuatorByName(feeder.getActuatorName());
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.messageBoxOnException(() -> {
+                if (feeder.getActuatorName() == null || feeder.getActuatorName().equals("")) {
+                    Logger.warn("No actuatorName specified for feeder {}.", feeder.getName());
+                    return;
+                }
+                Actuator actuator = Configuration.get().getMachine().getActuatorByName(feeder.getActuatorName());
 
-				if (actuator == null) {
-					throw new Exception("Feed failed. Unable to find an actuator named " + feeder.getActuatorName());
-				}
-				if (feeder.getActuatorType() == ActuatorType.Boolean) {
-					actuator.actuate(feeder.getActuatorValue() != 0);
-				} else {
-					actuator.actuate(feeder.getActuatorValue());
-				}
-			});
-		}
+                if (actuator == null) {
+                    throw new Exception("Feed failed. Unable to find an actuator named " + feeder.getActuatorName());
+                }
+                if (feeder.getActuatorType() == ActuatorType.Boolean) {
+                    actuator.actuate(feeder.getActuatorValue() != 0);
+                } else {
+                    actuator.actuate(feeder.getActuatorValue());
+                }
+            });
+        }
     };
 
     private Action testPostPickActuatorAction = new AbstractAction("Test post pick") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			UiUtils.messageBoxOnException(() -> {
-				if (feeder.getPostPickActuatorName() == null || feeder.getPostPickActuatorName().equals("")) {
-					Logger.warn("No postPickActuatorName specified for feeder {}.", feeder.getName());
-					return;
-				}
-				Actuator actuator = Configuration.get().getMachine()
-						.getActuatorByName(feeder.getPostPickActuatorName());
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.messageBoxOnException(() -> {
+                if (feeder.getPostPickActuatorName() == null || feeder.getPostPickActuatorName().equals("")) {
+                    Logger.warn("No postPickActuatorName specified for feeder {}.", feeder.getName());
+                    return;
+                }
+                Actuator actuator = Configuration.get().getMachine()
+                        .getActuatorByName(feeder.getPostPickActuatorName());
 
-				if (actuator == null) {
-					throw new Exception(
-							"Feed failed. Unable to find an actuator named " + feeder.getPostPickActuatorName());
-				}
-				if (feeder.getPostPickActuatorType() == ActuatorType.Boolean) {
-					actuator.actuate(feeder.getPostPickActuatorValue() != 0);
-				} else {
-					actuator.actuate(feeder.getPostPickActuatorValue());
-				}
-			});
-		}
+                if (actuator == null) {
+                    throw new Exception(
+                            "Feed failed. Unable to find an actuator named " + feeder.getPostPickActuatorName());
+                }
+                if (feeder.getPostPickActuatorType() == ActuatorType.Boolean) {
+                    actuator.actuate(feeder.getPostPickActuatorValue() != 0);
+                } else {
+                    actuator.actuate(feeder.getPostPickActuatorValue());
+                }
+            });
+        }
     };
 }

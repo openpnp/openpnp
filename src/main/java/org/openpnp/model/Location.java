@@ -373,16 +373,16 @@ public class Location {
      * Checks if targetLocation is contained in current location given the current location represents a rectangular item with the origin in originLocation.
      */
     public boolean containsLocation(Location originLocation, Location targetLocation) {
-    	Location target = targetLocation.convertToUnits(this.units);
-    	double x = target.getX();
-    	double y = target.getY();
-    	Location origin = originLocation.convertToUnits(this.units);
-    	double x1 = origin.getX();
-    	double y1 = origin.getY();
-    	double x2 = x1 + getX();
-    	double y2 = y1 + getY();
-    	
-    	return (x >= x1) && (x <= x2) && (y > y1) && (y < y2);
+        Location target = targetLocation.convertToUnits(this.units);
+        double x = target.getX();
+        double y = target.getY();
+        Location origin = originLocation.convertToUnits(this.units);
+        double x1 = origin.getX();
+        double y1 = origin.getY();
+        double x2 = x1 + getX();
+        double y2 = y1 + getY();
+        
+        return (x >= x1) && (x <= x2) && (y > y1) && (y < y2);
     }
 
     /**

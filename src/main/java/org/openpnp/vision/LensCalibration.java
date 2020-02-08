@@ -71,17 +71,17 @@ public class LensCalibration {
     }
     
     public void close() {
-    	if (cameraMatrix != null) {
-    		cameraMatrix.release();
-    	}
-    	if (distortionCoefficients != null) {
-    		distortionCoefficients.release();
-    	}
-    	
-    	objectPoints.release();
-    	for (Mat imagePoints : imagePointsList) {
-    		imagePoints.release();
-    	}
+        if (cameraMatrix != null) {
+            cameraMatrix.release();
+        }
+        if (distortionCoefficients != null) {
+            distortionCoefficients.release();
+        }
+        
+        objectPoints.release();
+        for (Mat imagePoints : imagePointsList) {
+            imagePoints.release();
+        }
     }
 
     public Mat apply(Mat mat) {
@@ -144,11 +144,11 @@ public class LensCalibration {
         }
 
         for (Mat rvec : rvecs) {
-        	rvec.release();
+            rvec.release();
         }
         rvecs.clear();
         for (Mat tvec : tvecs) {
-        	tvec.release();
+            tvec.release();
         }
         tvecs.clear();
         
@@ -160,8 +160,8 @@ public class LensCalibration {
             this.cameraMatrix = cameraMatrix;
             this.distortionCoefficients = distortionCoefficients;
         } else {
-        	cameraMatrix.release();
-        	distortionCoefficients.release();
+            cameraMatrix.release();
+            distortionCoefficients.release();
         }
 
         return ok;
@@ -214,10 +214,10 @@ public class LensCalibration {
                 break;
         }
         if (found) {
-        	return imagePoints;
+            return imagePoints;
         } else {
-        	imagePoints.release();
-        	return null;
+            imagePoints.release();
+            return null;
         }
     }
 

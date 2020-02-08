@@ -69,29 +69,29 @@ public class Add extends CvStage {
         Mat first = pipeline.getResult(firstStageName).image;
         Mat second = pipeline.getResult(secondStageName).image;
 
-				if(this.firstScalar < 0){
-					throw new Exception("firstScalar >= 0!");
-				}
+                if(this.firstScalar < 0){
+                    throw new Exception("firstScalar >= 0!");
+                }
 
         Mat f = first.clone();
-				if(this.firstScalar != 1.0){
-					Core.multiply(first, new Scalar(this.firstScalar), f);
-				}
+                if(this.firstScalar != 1.0){
+                    Core.multiply(first, new Scalar(this.firstScalar), f);
+                }
 
         Mat s = second.clone();
-				if(this.secondScalar != 1.0){
-					Core.multiply(second, new Scalar(Math.abs(this.secondScalar)), s);
-				}
+                if(this.secondScalar != 1.0){
+                    Core.multiply(second, new Scalar(Math.abs(this.secondScalar)), s);
+                }
         
         Mat out = new Mat();
-				if(this.secondScalar > 0){
-	        Core.add(f, s, out);
-				}
-				else{
-	        Core.subtract(f, s, out);
-				}
-				f.release();
-				s.release();
+                if(this.secondScalar > 0){
+            Core.add(f, s, out);
+                }
+                else{
+            Core.subtract(f, s, out);
+                }
+                f.release();
+                s.release();
 
         return new Result(out);
     }

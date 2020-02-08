@@ -84,33 +84,33 @@ public class DetectLinesHough extends CvStage {
     public Result process(CvPipeline pipeline) throws Exception {
         Mat mat = pipeline.getWorkingImage();
 
-				double m = mat.width();
-				double q = mat.height();
+                double m = mat.width();
+                double q = mat.height();
 
 
-				m = m * m;
-				q = q * q;
-				m = Math.sqrt(m + q);
-				q = m;
+                m = m * m;
+                q = q * q;
+                m = Math.sqrt(m + q);
+                q = m;
 
-				m *= this.minLineLength / 100.0;
-				q *= this.maxLineGap / 100.0;
+                m *= this.minLineLength / 100.0;
+                q *= this.maxLineGap / 100.0;
 
         Mat output = new Mat();
 
         Imgproc.HoughLinesP(mat, output, this.rho, this.theta,
-					this.threshold, m, q);
+                    this.threshold, m, q);
 
         List<MatOfPoint> contours = new ArrayList<>();
         for (int i = 0; i < output.rows(); i++) {
-        	List<Point> tmp = new ArrayList<>();
-					tmp.add(new Point(output.get(i, 0)[0],output.get(i, 0)[1]));
-					tmp.add(new Point(output.get(i, 0)[2],output.get(i, 0)[3]));
-					MatOfPoint mp = new MatOfPoint();
-					mp.fromList(tmp);
-					contours.add(mp);
+            List<Point> tmp = new ArrayList<>();
+                    tmp.add(new Point(output.get(i, 0)[0],output.get(i, 0)[1]));
+                    tmp.add(new Point(output.get(i, 0)[2],output.get(i, 0)[3]));
+                    MatOfPoint mp = new MatOfPoint();
+                    mp.fromList(tmp);
+                    contours.add(mp);
         }
-				output.release();
+                output.release();
 
         return new Result(null, contours);
     }

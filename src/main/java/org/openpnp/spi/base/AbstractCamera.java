@@ -210,7 +210,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
             Logger.warn(e);
         }
         
-    	
+        
         if (getSettleTimeMs() >= 0) {
             try {
                 Thread.sleep(getSettleTimeMs());

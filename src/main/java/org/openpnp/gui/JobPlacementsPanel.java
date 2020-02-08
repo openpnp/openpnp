@@ -88,7 +88,7 @@ public class JobPlacementsPanel extends JPanel {
     private static Color statusColorDisabled = new Color(180, 180, 180);
 
     public JobPlacementsPanel(JobPanel jobPanel) {
-    	this.jobPanel = jobPanel;
+        this.jobPanel = jobPanel;
         createUi();
     }
     private void createUi() {
@@ -434,11 +434,11 @@ public class JobPlacementsPanel extends JPanel {
             
             // Check if the new placement ID is unique
             for(Placement compareplacement : boardLocation.getBoard().getPlacements()) {
-            	if (compareplacement.getId().equals(id)) {
-            		MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
+                if (compareplacement.getId().equals(id)) {
+                    MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
                             "The ID for the new placement already exists");
                     return;
-            	}
+                }
             }
             
             Placement placement = new Placement(id);
@@ -513,10 +513,10 @@ public class JobPlacementsPanel extends JPanel {
                 // Need to keep current focus owner so that the space bar can be
                 // used after the initial click. Otherwise, button focus is lost
                 // when table is updated
-               	Component comp = MainFrame.get().getFocusOwner();
-               	Helpers.selectNextTableRow(table);
+                Component comp = MainFrame.get().getFocusOwner();
+                Helpers.selectNextTableRow(table);
                 comp.requestFocus();
-               	Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
+                Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
                         getSelection().getLocation());
                 Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();

@@ -64,7 +64,7 @@ public class PlacementsTableModel extends AbstractTableModel {
     }
     
     public void setJobPlacementsPanel(JobPlacementsPanel jobPlacementsPanel) {
-    	this.jobPlacementsPanel = jobPlacementsPanel;
+        this.jobPlacementsPanel = jobPlacementsPanel;
     }
 
     public void setBoardLocation(BoardLocation boardLocation) {
@@ -197,8 +197,8 @@ public class PlacementsTableModel extends AbstractTableModel {
         Placement placement = board.getPlacements().get(row);
         Location loc = placement.getLocation();
         switch (col) {
-			case 0:
-				return placement.isEnabled();
+            case 0:
+                return placement.isEnabled();
             case 1:
                 return new PartCellValue(placement.getId());
             case 2:
@@ -217,8 +217,8 @@ public class PlacementsTableModel extends AbstractTableModel {
                 // TODO STOPSHIP: Both of these are huge performance hogs and do not belong
                 // in the render process. At the least we should cache this information but it
                 // would be better if the information was updated out of band by a listener.
-            	jobPlacementsPanel.updateActivePlacements();
-            	return boardLocation.getPlaced(placement.getId());
+                jobPlacementsPanel.updateActivePlacements();
+                return boardLocation.getPlaced(placement.getId());
             case 9:
                 return getPlacementStatus(placement);
             case 10:

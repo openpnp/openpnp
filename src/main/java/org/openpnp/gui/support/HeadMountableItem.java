@@ -26,7 +26,7 @@ public class HeadMountableItem {
     protected HeadMountable hm;
     
     public HeadMountableItem(HeadMountable hm){
-    	this.hm = hm;
+        this.hm = hm;
     }
 
     public HeadMountable getItem() {
@@ -36,6 +36,6 @@ public class HeadMountableItem {
     @Override
     public String toString() {
         return String.format("HeadMountable: %s - %s", hm.getName(),
-        		hm.getHead() != null ? String.format("(Head: %s)", hm.getHead().getName()) : "");
+                hm.getHead() != null ? String.format("(Head: %s)", hm.getHead().getName()) : "");
     }
 }

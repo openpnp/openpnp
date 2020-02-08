@@ -153,8 +153,8 @@ public class ReferenceDragFeederConfigurationWizard
         textFieldPeelOffActuatorId.setColumns(5);
 
         if (feeder.isPart0402()) {
-	        lbl0402PartDetected = new JLabel("0402 Part DETECTED");
-	        panelGeneral.add(lbl0402PartDetected, "6, 2");
+            lbl0402PartDetected = new JLabel("0402 Part DETECTED");
+            panelGeneral.add(lbl0402PartDetected, "6, 2");
         }
 
         panelLocations = new JPanel();
@@ -301,7 +301,7 @@ public class ReferenceDragFeederConfigurationWizard
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {
-						FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
@@ -556,7 +556,7 @@ public class ReferenceDragFeederConfigurationWizard
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-				feeder.resetVisionOffsets();
+                feeder.resetVisionOffsets();
             });
         }
     };

@@ -130,8 +130,8 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
      * by the Nozzles on the Head. The slowest part will dictate the max.
      * @return
      */
-	public double getMaxPartSpeed(); 
-	
+    public double getMaxPartSpeed(); 
+    
     public Actuator getZProbe(); 
     
     public Actuator getPump(); 

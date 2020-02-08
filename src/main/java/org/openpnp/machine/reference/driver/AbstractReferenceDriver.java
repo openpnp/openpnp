@@ -119,11 +119,11 @@ public abstract class AbstractReferenceDriver extends AbstractModelObject implem
     }
     
     public boolean getConnectionKeepAlive() {
-    	return connectionKeepAlive;
+        return connectionKeepAlive;
     }
     
     public void setConnectionKeepAlive(boolean connectionKeepAlive) {
-    	this.connectionKeepAlive = connectionKeepAlive;
+        this.connectionKeepAlive = connectionKeepAlive;
     }
     
     protected ReferenceDriverCommunications getCommunications() {

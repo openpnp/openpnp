@@ -276,9 +276,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             driver.setEnabled(enabled);
         }
         if (connected && !enabled) {
-        	if (!connectionKeepAlive) {
-            	disconnect();
-        	}
+            if (!connectionKeepAlive) {
+                disconnect();
+            }
         }
     }
 
@@ -344,12 +344,12 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         
         for (Axis axis : axes) {
             if (axis == xAxis) {
-            	// for X use the coordinate adjusted for non-squareness.
-            	axis.setCoordinate(xHomeCoordinateSquare);
+                // for X use the coordinate adjusted for non-squareness.
+                axis.setCoordinate(xHomeCoordinateSquare);
             }
             else {
-            	// otherwise just use the standard coordinate.
-            	axis.setCoordinate(axis.getHomeCoordinate());
+                // otherwise just use the standard coordinate.
+                axis.setCoordinate(axis.getHomeCoordinate());
             }
         }
 
@@ -372,10 +372,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 // homeOffset contains the offset, but we are not really concerned with that,
                 // we just reset X,Y back to the home-coordinate at this point.
                 if (xAxis != null) { 
-                	xAxis.setCoordinate(xHomeCoordinateSquare);
+                    xAxis.setCoordinate(xHomeCoordinateSquare);
                 }
                 if (yAxis != null) { 
-                	yAxis.setCoordinate(yHomeCoordinate);
+                    yAxis.setCoordinate(yHomeCoordinate);
                 }
                 
                 String g92command = getCommand(null, CommandType.POST_VISION_HOME_COMMAND);
@@ -522,15 +522,15 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         // Handle NaNs, which means don't move this axis for this move. We set the appropriate
         // axis reference to null, which we'll check for later. If the axis is force-included 
         // take the recorded current coordinate instead.  
-    	
+        
         // For each given coordinate, if the axis has a transform, transform the target coordinate
         // to it's raw value.
         if (Double.isNaN(x)) {
             if (includeX) {
-            	x = xAxis.getCoordinate();
+                x = xAxis.getCoordinate();
             }
             else {
-            	xAxis = null;
+                xAxis = null;
             }
         }
         else if (xAxis != null && xAxis.getTransform() != null) {
@@ -538,11 +538,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         }
         
         if (Double.isNaN(y)) {
-        	if (includeY) {
-            	y = yAxis.getCoordinate();
+            if (includeY) {
+                y = yAxis.getCoordinate();
             }
             else {
-            	yAxis = null;
+                yAxis = null;
             }
         }
         else if (yAxis != null && yAxis.getTransform() != null) {
@@ -550,11 +550,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         }
         
         if (Double.isNaN(z)) {
-        	if (includeZ) {
-            	z = zAxis.getCoordinate();
+            if (includeZ) {
+                z = zAxis.getCoordinate();
             }
             else {
-            	zAxis = null;
+                zAxis = null;
             }
         }
         else if (zAxis != null && zAxis.getTransform() != null) {
@@ -562,11 +562,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         }
         
         if (Double.isNaN(rotation)) {
-        	if (includeRotation) {
-            	rotation = rotationAxis.getCoordinate();
+            if (includeRotation) {
+                rotation = rotationAxis.getCoordinate();
             }
             else {
-            	rotationAxis = null;
+                rotationAxis = null;
             }
         }
         else if (rotationAxis != null && rotationAxis.getTransform() != null) {
@@ -624,16 +624,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 xAxis.setCoordinate(x);
             }
             else {
-            	command = substituteVariable(command, "X", null);
-            	command = substituteVariable(command, "XF", null);
+                command = substituteVariable(command, "X", null);
+                command = substituteVariable(command, "XF", null);
                 command = substituteVariable(command, "BacklashOffsetX", null); // Backlash Compensation
                 command = substituteVariable(command, "XDecreasing", null);
                 command = substituteVariable(command, "XIncreasing", null);
             }
 
             if (includeY) {
-            	command = substituteVariable(command, "Y", y);
-            	command = substituteVariable(command, "YF", y);
+                command = substituteVariable(command, "Y", y);
+                command = substituteVariable(command, "YF", y);
                 command = substituteVariable(command, "BacklashOffsetY", y + backlashOffsetY); // Backlash Compensation
                 command = substituteVariable(command, "YDecreasing", y < yAxis.getCoordinate() ? true : null);
                 command = substituteVariable(command, "YIncreasing", y > yAxis.getCoordinate() ? true : null);
@@ -644,16 +644,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 }
             }
             else {
-            	command = substituteVariable(command, "Y", null);
-            	command = substituteVariable(command, "YF", null);
+                command = substituteVariable(command, "Y", null);
+                command = substituteVariable(command, "YF", null);
                 command = substituteVariable(command, "BacklashOffsetY", null); // Backlash Compensation
                 command = substituteVariable(command, "YDecreasing", null);
                 command = substituteVariable(command, "YIncreasing", null);
             }
 
             if (includeZ) {
-            	command = substituteVariable(command, "Z", z);
-            	command = substituteVariable(command, "ZF", z);
+                command = substituteVariable(command, "Z", z);
+                command = substituteVariable(command, "ZF", z);
                 command = substituteVariable(command, "ZDecreasing", z < zAxis.getCoordinate() ? true : null);
                 command = substituteVariable(command, "ZIncreasing", z > zAxis.getCoordinate() ? true : null);
                 if (zAxis.getPreMoveCommand() != null) {
@@ -670,8 +670,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             }
 
             if (includeRotation) {
-            	command = substituteVariable(command, "Rotation", rotation);
-            	command = substituteVariable(command, "RotationF", rotation);
+                command = substituteVariable(command, "Rotation", rotation);
+                command = substituteVariable(command, "RotationF", rotation);
                 command = substituteVariable(command, "RotationDecreasing", rotation < rotationAxis.getCoordinate() ? true : null);
                 command = substituteVariable(command, "RotationIncreasing", rotation > rotationAxis.getCoordinate() ? true : null);
                 if (rotationAxis.getPreMoveCommand() != null) {

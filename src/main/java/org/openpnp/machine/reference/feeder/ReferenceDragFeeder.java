@@ -108,12 +108,12 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         }
 
         if (vision.isEnabled() && visionOffset != null) {
-			if (this.isPart0402() && partPitch != null) {
-				return pickLocation.subtract(visionOffset).add(partPitch);
-			}
-			else {
-				return pickLocation.subtract(visionOffset);
-			}
+            if (this.isPart0402() && partPitch != null) {
+                return pickLocation.subtract(visionOffset).add(partPitch);
+            }
+            else {
+                return pickLocation.subtract(visionOffset);
+            }
         }
 
         return pickLocation;
@@ -144,16 +144,16 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
                     actuatorName, head.getName()));
         }
 
-		Actuator peelOffActuator = null;
+        Actuator peelOffActuator = null;
 
-		if (peelOffActuatorName != null) {
-			peelOffActuator = head.getActuatorByName(peelOffActuatorName);
+        if (peelOffActuatorName != null) {
+            peelOffActuator = head.getActuatorByName(peelOffActuatorName);
 
-	        if (peelOffActuator == null) {
-	            throw new Exception(String.format("No Actuator found with name %s on feed Head %s",
-						peelOffActuatorName, head.getName()));
-	        }
-		}
+            if (peelOffActuator == null) {
+                throw new Exception(String.format("No Actuator found with name %s on feed Head %s",
+                        peelOffActuatorName, head.getName()));
+            }
+        }
 
         head.moveToSafeZ();
 
@@ -183,45 +183,45 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         if (feededCount == 0) {
             Location feedStartLocation = this.feedStartLocation;
             Location feedEndLocation = this.feedEndLocation;
-	        if (vision.isEnabled() && visionOffset != null) {
-	            feedStartLocation = feedStartLocation.subtract(visionOffset);
-	            Logger.debug("New drag distance with visionOffset " + feedStartLocation.subtract(feedEndLocation));
-	        }
+            if (vision.isEnabled() && visionOffset != null) {
+                feedStartLocation = feedStartLocation.subtract(visionOffset);
+                Logger.debug("New drag distance with visionOffset " + feedStartLocation.subtract(feedEndLocation));
+            }
 
-	        // Move the actuator to the feed start location.
-	        actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
+            // Move the actuator to the feed start location.
+            actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
 
-	        // extend the pin
-	        actuator.actuate(true);
+            // extend the pin
+            actuator.actuate(true);
 
-	        // insert the pin
-	        actuator.moveTo(feedStartLocation);
+            // insert the pin
+            actuator.moveTo(feedStartLocation);
 
-	        // drag the tape
-	        actuator.moveTo(feedEndLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
+            // drag the tape
+            actuator.moveTo(feedEndLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
 
-			if (peelOffActuator != null) {
-				// peel off before backoff
-				peelOffActuator.actuate(true);
-				peelOffActuator.actuate(false);
-			}
+            if (peelOffActuator != null) {
+                // peel off before backoff
+                peelOffActuator.actuate(true);
+                peelOffActuator.actuate(false);
+            }
 
-	        // backoff to release tension from the pin
-	        if (backoffDistance.getValue() != 0) {
-	            Location backoffLocation = Utils2D.getPointAlongLine(feedEndLocation, feedStartLocation, backoffDistance);
-	            actuator.moveTo(backoffLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
-	        }
+            // backoff to release tension from the pin
+            if (backoffDistance.getValue() != 0) {
+                Location backoffLocation = Utils2D.getPointAlongLine(feedEndLocation, feedStartLocation, backoffDistance);
+                actuator.moveTo(backoffLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
+            }
 
-	        // retract the pin
-	        actuator.actuate(false);
+            // retract the pin
+            actuator.actuate(false);
 
-	        if (this.isPart0402() == true) {
-				// can change it to "feededCount = parts_count_userSettings;"
-				feededCount = 2;
-	        }
+            if (this.isPart0402() == true) {
+                // can change it to "feededCount = parts_count_userSettings;"
+                feededCount = 2;
+            }
         } 
         else {
-			Logger.debug("Multi parts drag feeder: skipping drag " + feededCount);
+            Logger.debug("Multi parts drag feeder: skipping drag " + feededCount);
         }
 
 
@@ -230,16 +230,16 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         if (vision.isEnabled()) {
             visionOffset = getVisionOffsets(head, location);
 
-			if (feededCount > 0) {
-				feededCount--;
-				if (feededCount > 0) {
-					partPitch = new Location(LengthUnit.Millimeters, partsPitchX * feededCount,
-							partsPitchY * feededCount, 0, 0);
-				} 
-				else {
-					partPitch = null;
-				}
-			}
+            if (feededCount > 0) {
+                feededCount--;
+                if (feededCount > 0) {
+                    partPitch = new Location(LengthUnit.Millimeters, partsPitchX * feededCount,
+                            partsPitchY * feededCount, 0, 0);
+                } 
+                else {
+                    partPitch = null;
+                }
+            }
 
             Logger.debug("final visionOffsets " + visionOffset);
 
@@ -341,19 +341,19 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         return String.format("ReferenceTapeFeeder id %s", id);
     }
 
-	public void resetVisionOffsets() {
-		if (visionOffset != null) {
-			visionOffset = null;
-			Logger.debug("resetVisionOffsets " + visionOffset);
-		}
+    public void resetVisionOffsets() {
+        if (visionOffset != null) {
+            visionOffset = null;
+            Logger.debug("resetVisionOffsets " + visionOffset);
+        }
 
-		partPitch = null;
-	}
+        partPitch = null;
+    }
 
-	public boolean isPart0402() {
-		return this.getPart().getPackage().getId().contains("C0402")
-				|| this.getPart().getPackage().getId().contains("R0402");
-	}
+    public boolean isPart0402() {
+        return this.getPart().getPackage().getId().contains("C0402")
+                || this.getPart().getPackage().getId().contains("R0402");
+    }
 
     public Location getFeedStartLocation() {
         return feedStartLocation;

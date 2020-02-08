@@ -177,9 +177,9 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         Length y = referenceHoleToPartLinear.convertToUnits(l.getUnits());
         Point p = new Point(x.getValue(), y.getValue());
 
-		// Determine the angle that the tape is at
-		double angle = Utils2D.getAngleFromPoint(lineLocations[0], lineLocations[1]);
-		// Rotate the part offsets by the angle to move it into the right
+        // Determine the angle that the tape is at
+        double angle = Utils2D.getAngleFromPoint(lineLocations[0], lineLocations[1]);
+        // Rotate the part offsets by the angle to move it into the right
         // coordinate space
         p = Utils2D.rotatePoint(p, angle);
         // And add the offset to the location we calculated previously

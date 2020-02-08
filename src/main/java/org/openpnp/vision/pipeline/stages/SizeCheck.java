@@ -50,14 +50,14 @@ public class SizeCheck extends CvStage {
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
 
-    	Object model = pipeline.getWorkingModel();
-    	RotatedRect r = (RotatedRect)model; 
+        Object model = pipeline.getWorkingModel();
+        RotatedRect r = (RotatedRect)model; 
     
-    	if(Math.abs(Math.max(r.size.width, r.size.height)-Math.max(sizeH, sizeW))<=tolerance) { 
-    		if(Math.abs(Math.min(r.size.width, r.size.height)-Math.min(sizeH, sizeW))<=tolerance) {
-    			return new Result(null,model);
-    		}
-    	}
-    	return null;
+        if(Math.abs(Math.max(r.size.width, r.size.height)-Math.max(sizeH, sizeW))<=tolerance) { 
+            if(Math.abs(Math.min(r.size.width, r.size.height)-Math.min(sizeH, sizeW))<=tolerance) {
+                return new Result(null,model);
+            }
+        }
+        return null;
     }
 }

@@ -140,7 +140,7 @@ public class ReferenceBottomVision implements PartAlignment {
                 // will change too, as the off-center part rotates around the nozzle axis.
                 // So we need to compensate for that.
                 offsets = offsets.rotateXy(-angleOffset)
-                        .derive(null, null,	null, angleOffset);
+                        .derive(null, null, null, angleOffset);
                 nozzleLocation = nozzleLocation.subtractWithRotation(offsets);
 
                 if (++pass >= maxVisionPasses) {

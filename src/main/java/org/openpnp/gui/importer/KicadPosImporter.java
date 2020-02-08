@@ -68,7 +68,7 @@ public class KicadPosImporter implements BoardImporter {
     }
 
     static List<Placement> parseFile(File file, Side side, boolean createMissingParts, 
-    		boolean useOnlyValueAsPartId)
+            boolean useOnlyValueAsPartId)
             throws Exception {
         BufferedReader reader =
                 new BufferedReader(new InputStreamReader(new FileInputStream(file)));
@@ -109,16 +109,16 @@ public class KicadPosImporter implements BoardImporter {
             String placementLayer = matcher.group(7);
 
             if (placementLayer.contains("bottom")) {
-            	/* With the board origin set to the lower left, KiCad exports the position
-            	 * for the bottom parts with negative X position. The negative number is the distance from the
-            	 * 'right border' if the board is turned around with the original origin now on the right lower side.
-            	 * In order to work with the 'new' bottom coordinate and origin system, the X value has to be inverted.
-            	 * See https://github.com/openpnp/openpnp/wiki/Board-Locations
-            	 * */
-            	placementX = -placementX;
+                /* With the board origin set to the lower left, KiCad exports the position
+                 * for the bottom parts with negative X position. The negative number is the distance from the
+                 * 'right border' if the board is turned around with the original origin now on the right lower side.
+                 * In order to work with the 'new' bottom coordinate and origin system, the X value has to be inverted.
+                 * See https://github.com/openpnp/openpnp/wiki/Board-Locations
+                 * */
+                placementX = -placementX;
             }
             if (placementRotation==-0.0) { /* KiCad might report the rotation as -0.0 which does not make much sense, fixing this */
-            	placementRotation = 0.0;
+                placementRotation = 0.0;
             }
 
             Placement placement = new Placement(placementId);
@@ -128,9 +128,9 @@ public class KicadPosImporter implements BoardImporter {
             if (cfg != null && createMissingParts) {
                 String partId;
                 if(useOnlyValueAsPartId == true) {
-                	partId = partValue;
+                    partId = partValue;
                 }else {
-                	partId = pkgName + "-" + partValue;
+                    partId = pkgName + "-" + partValue;
                 }
                 Part part = cfg.getPart(partId);
                 if (part == null) {

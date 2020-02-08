@@ -91,14 +91,14 @@ public class RulerReticle extends CrosshairReticle {
             int x = (int) (i * pixelsPerTickX);
             
             if (i % 10 == 0){
-            	g2d.drawLine(x, -tentickLength, x, tentickLength);
+                g2d.drawLine(x, -tentickLength, x, tentickLength);
                 g2d.drawLine(-x, -tentickLength, -x, tentickLength);
             }
             else if (i % 5 == 0){
-            	g2d.drawLine(x, -fivetickLength, x, fivetickLength);
+                g2d.drawLine(x, -fivetickLength, x, fivetickLength);
                 g2d.drawLine(-x, -fivetickLength, -x, fivetickLength);
             } else { 
-            	g2d.drawLine(x, -tickLength, x, tickLength);
+                g2d.drawLine(x, -tickLength, x, tickLength);
                 g2d.drawLine(-x, -tickLength, -x, tickLength);
             }
         }
@@ -107,21 +107,21 @@ public class RulerReticle extends CrosshairReticle {
             int y = (int) (i * pixelsPerTickY);
             g2d.setColor(color);
             if (i % 10 == 0){
-            	g2d.drawLine(-tentickLength, y, tentickLength, y);
+                g2d.drawLine(-tentickLength, y, tentickLength, y);
             }
             else if (i % 5 == 0){
-            	g2d.drawLine(-fivetickLength, y, fivetickLength, y);
+                g2d.drawLine(-fivetickLength, y, fivetickLength, y);
             } else { 
-            	g2d.drawLine(-tickLength, y, tickLength, y);
+                g2d.drawLine(-tickLength, y, tickLength, y);
             }
             g2d.setColor(complimentaryColor);
             if (i % 10 == 0){
-            	g2d.drawLine(-tentickLength, -y, tentickLength, -y);
+                g2d.drawLine(-tentickLength, -y, tentickLength, -y);
             }
             else if (i % 5 == 0){
-            	g2d.drawLine(-fivetickLength, -y, fivetickLength, -y);
+                g2d.drawLine(-fivetickLength, -y, fivetickLength, -y);
             } else { 
-            	g2d.drawLine(-tickLength, -y, tickLength, -y);
+                g2d.drawLine(-tickLength, -y, tickLength, -y);
             }
         }
         g2d.setTransform(origTx);

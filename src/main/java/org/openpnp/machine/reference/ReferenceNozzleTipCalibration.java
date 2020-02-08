@@ -284,7 +284,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 Location measuredLocation = nozzleTipMeasuredLocationsIterator.next();
 
                 // get the measurement rotation
-                angle = measuredLocation.getRotation();		// the angle at which the measurement was made was stored to the nozzleTipMeasuredLocation into the rotation attribute
+                angle = measuredLocation.getRotation();     // the angle at which the measurement was made was stored to the nozzleTipMeasuredLocation into the rotation attribute
 
                 // move the offset-location by the centerY/centerY. by this all offset-locations are wrt. the 0/0 origin
                 Location centeredLocation = measuredLocation.subtract(new Location(this.units,this.centerX,this.centerY,0.,0.));
@@ -538,7 +538,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 Location offset = findCircle(measureLocation);
                 if (offset != null) {
                     // for later usage in the algorithm, the measureAngle is stored to the offset location in millimeter unit 
-                    offset = offset.derive(null, null, null, measureAngle);		
+                    offset = offset.derive(null, null, null, measureAngle);     
 
                     // add offset to array
                     nozzleTipMeasuredLocations.add(offset);

@@ -24,7 +24,7 @@ import org.openpnp.spi.Camera;
 public class CameraItem extends HeadMountableItem {
 
     public CameraItem(Camera camera) {
-    	super(camera);
+        super(camera);
     }
 
     public Camera getCamera() {

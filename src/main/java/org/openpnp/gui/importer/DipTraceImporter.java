@@ -104,22 +104,22 @@ public class DipTraceImporter implements BoardImporter {
         // <etc>
 
         while ((line = reader.readLine()) != null) {
-        	
-        	// Skip first line as it's always header
-        	if (lineCount++ == 0 || line.length() == 0)  {
+            
+            // Skip first line as it's always header
+            if (lineCount++ == 0 || line.length() == 0)  {
                 continue;
             }
             line = line.trim();
             
             String[] tokens = line.split(",");
             
-            String placementId = tokens[0];  							// RefDes in Diptrace export
-            String partValue = tokens[6];    							// Value in Diptrace export
-            String pkgName = tokens[1];      							// Name in Diptrace export
-            double placementX = Double.parseDouble(tokens[2]);   		// X (mm) in Diptrace export
-            double placementY = Double.parseDouble(tokens[3]);   		// Y (mm) in Diptrace export
-            double placementRotation = Double.parseDouble(tokens[5]); 	// Rotate in Diptrace export
-            String placementLayer = tokens[4];    						// Side in Diptrace export
+            String placementId = tokens[0];                             // RefDes in Diptrace export
+            String partValue = tokens[6];                               // Value in Diptrace export
+            String pkgName = tokens[1];                                 // Name in Diptrace export
+            double placementX = Double.parseDouble(tokens[2]);          // X (mm) in Diptrace export
+            double placementY = Double.parseDouble(tokens[3]);          // Y (mm) in Diptrace export
+            double placementRotation = Double.parseDouble(tokens[5]);   // Rotate in Diptrace export
+            String placementLayer = tokens[4];                          // Side in Diptrace export
 
             Placement placement = new Placement(placementId);
             placement.setLocation(new Location(LengthUnit.Millimeters, placementX, placementY, 0,
@@ -263,8 +263,8 @@ public class DipTraceImporter implements BoardImporter {
                 }
                 catch (Exception e1) {
                     MessageBoxes.errorBox(Dlg.this, "Import Error", "The expected file format is the default file export in DipTrace "
-                    		+ "PCB: File -> Export -> Pick and Place. The first line indicates RefDes, Name, X (mm), Y (mm), Side, Rotate, Value."
-                    		+ "The lines that follow are data.");
+                            + "PCB: File -> Export -> Pick and Place. The first line indicates RefDes, Name, X (mm), Y (mm), Side, Rotate, Value."
+                            + "The lines that follow are data.");
                     return;
                 }
                 for (Placement placement : placements) {
