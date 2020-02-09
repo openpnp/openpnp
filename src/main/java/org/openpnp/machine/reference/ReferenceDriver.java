@@ -106,7 +106,7 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
      * @return 
      * @throws Exception
      */
-    public default String actuatorRead(ReferenceActuator actuator, double parameter) throws Exception {
+    public default String actuatorReadWithDouble(ReferenceActuator actuator, double parameter) throws Exception {
         return null;
     }
 
