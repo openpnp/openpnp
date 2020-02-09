@@ -27,8 +27,6 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
-import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConsole;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverGcodes;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverSettings;
@@ -837,14 +835,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
 
     @Override
-    public String actuatorReadWithDouble(ReferenceActuator actuator, double parameter) throws Exception {
+    public String actuatorRead(ReferenceActuator actuator, double parameter) throws Exception {
         String command = getCommand(actuator, CommandType.ACTUATOR_READ_WITH_DOUBLE_COMMAND);
         String regex = getCommand(actuator, CommandType.ACTUATOR_READ_REGEX);
         if (command == null || regex == null) {
             // If the command or regex is null we'll query the subdrivers. The first
             // to respond with a non-null value wins.
             for (ReferenceDriver driver : subDrivers) {
-                String val = driver.actuatorReadWithDouble(actuator, parameter);
+                String val = driver.actuatorRead(actuator, parameter);
                 if (val != null) {
                     return val;
                 }
