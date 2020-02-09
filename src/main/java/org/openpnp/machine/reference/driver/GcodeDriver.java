@@ -864,7 +864,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
 
         for (String line : responses) {
             if (line.matches(regex)) {
-                Logger.trace("actuatorRead response: {}", line);
+                Logger.trace("actuatorReadWithDouble response: {}", line);
                 Matcher matcher = Pattern.compile(regex).matcher(line);
                 matcher.matches();
 

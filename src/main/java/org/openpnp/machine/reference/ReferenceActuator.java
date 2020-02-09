@@ -109,7 +109,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     @Override
     public String readWithDouble(double parameter) throws Exception {
         String value = getDriver().actuatorReadWithDouble(this, parameter);
-        Logger.debug("{}.read({}): {}", getName(), parameter, value);
+        Logger.debug("{}.readWithDouble({}): {}", getName(), parameter, value);
         getMachine().fireMachineHeadActivity(head);
         return value;
     }
