@@ -44,4 +44,6 @@ public interface Actuator
     public void actuate(double value) throws Exception;
     
     public String read() throws Exception;
+
+    public String readWithDouble(double value) throws Exception;
 }
