@@ -258,7 +258,12 @@ You can choose when the cover will automatically be opened.
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73123956-d685ee80-3f95-11ea-8ef8-5341e6c447e3.png)
 
-If using the OpenOnJobStart option, OpenPNP will automatically open all the feeders, that are enabled and will be used in the Job. For best speed, the path throught the feeders is optimized using the Travelling Salesman solver. You can also use the Open / Close all Covers buttons.
+* **Manual**: The user is responsible to open the cover manually. OpenPNP will just go ahead and pick.
+* **CheckOpen**: The user must still open the cover manually, but OpenPNP will check if the cover is open using computer vision. If not, the operation is stopped. The check is only performed before the first pick after machine homing, or after pressing the feed count Reset button. 
+* **OpenOnFirstUse**: The cover is opened before the first pick after machine homing, or after pressing the feed count Reset button.
+* **OpenOnJobStart**: The cover is opened when the job starts. This happens collectively for all the BlindsFeeders with this setting. OpenPNP solves the [Travelling Salesman Problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem) using [Simulated Annealing](https://en.wikipedia.org/wiki/Simulated_annealing) to optimize the path among the feeders. If the pick happens outside a job, or if the feeder wasn't opened on job start (feeder enabled later, reloaded tape and reset, etc.), it behaves like **OpenOnFirstUse**. 
+ 
+You can also use the Open / Close all Covers buttons.
 
 ### More Feeders on the same Array
 
