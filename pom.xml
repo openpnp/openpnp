@@ -411,7 +411,7 @@
 		</repository>
 		<repository>
 			<id>javacv</id>
-			<url>http://maven2.javacv.googlecode.com/git</url>
+			<url>https://maven2.javacv.googlecode.com/git</url>
 		</repository>
 	</repositories>
 </project>
