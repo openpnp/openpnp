@@ -110,7 +110,7 @@ PPNN000000000000XX
 
 `XX` is the checksum of the message.<br>
 `NN` is 01, 02, 03 or 04. For nozzle 1-4.<br>
-`PP` 01 => blow, 00 => idle, ff => max suction.<br>
+`PP`int8: 01-7f (1-127) => blow, 00 => idle, ff-80 (-1 - -128) => max suction.<br>
 
 ### Status (vacuum / suction)
 <pre>
