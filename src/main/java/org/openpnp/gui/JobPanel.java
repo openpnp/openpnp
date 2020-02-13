@@ -923,15 +923,10 @@ public class JobPanel extends JPanel {
             
             MessageBoxes.errorBox(getTopLevelAncestor(), "Job Error", t.getMessage());
             if (state == State.Running || state == State.Pausing) {
-                try {
-                    setState(State.Paused);
-                }
-                catch (Exception e) {
-                    // Since we are checking if we're in the Running state this should not
-                    // ever happen. If it does, the Error will let us know.
-                    e.printStackTrace();
-                    throw new Error(e);
-                }
+                setState(State.Paused);
+            }
+            else if (state == State.Stopping) {
+                setState(State.Stopped);
             }
         });
     }
