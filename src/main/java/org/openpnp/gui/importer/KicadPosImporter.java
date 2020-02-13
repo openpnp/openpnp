@@ -116,6 +116,10 @@ public class KicadPosImporter implements BoardImporter {
             	 * See https://github.com/openpnp/openpnp/wiki/Board-Locations
             	 * */
             	placementX = -placementX;
+            	/* Bottom parts need to be rotated, KiCad exports the rotation of the part as 'looking through the board' 
+            	 * If the part is at 45 degrees, it needs to be mirrored for the bottom side on the 90 degree axis
+            	 */
+            	placementRotation = 180-placementRotation;
             }
             if (placementRotation==-0.0) { /* KiCad might report the rotation as -0.0 which does not make much sense, fixing this */
             	placementRotation = 0.0;
