@@ -56,6 +56,10 @@ Unfortunately, due to some strange quirks in TinyG, it's not a great solution fo
 
 [Aprinter](https://github.com/ambrop72/aprinter) is a modern 3D printer firmware that may be useful for OpenPnP. I don't think of any machines using it yet, but the features list says all the right things and it may be worth looking into.
 
+## Duet + RepRapFirmware
+
+Those interested in using Duet 2 or Duet3 with OpenPnP, for help and support please contact dc42 on the OpenPnP forum at https://groups.google.com/forum/#!forum/openpnp or the Duet3D forum at https://forum.duet3d.com/.
+
 ## Marlin and Other 3D Printer Firmwares
 
 Every 3D printer is by definition at least a 4 axis machine and this makes 3D printer firmware tempting for pick and place motion control. The most popular of the bunch is [Marlin](https://github.com/MarlinFirmware/Marlin). Marlin can be used with OpenPnP but it has some inherent limitations based on it's focus on 3D printing. It can be difficult to get acceleration and maximum velocity set up correctly since these are often tied together on a 3D printer. In addition, configuration is complex because you have to remove a lot of the 3D printing functionality. 
