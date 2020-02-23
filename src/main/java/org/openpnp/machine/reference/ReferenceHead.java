@@ -31,9 +31,9 @@ import org.openpnp.machine.reference.psh.NozzlesPropertySheetHolder;
 import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractHead;
-import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.pmw.tinylog.Logger;
 
 public class ReferenceHead extends AbstractHead {
@@ -41,6 +41,7 @@ public class ReferenceHead extends AbstractHead {
     public void home() throws Exception {
         Logger.debug("{}.home()", getName());
         getDriver().home(this);
+        super.home();
         getMachine().fireMachineHeadActivity(this);
     }
 
@@ -60,7 +61,6 @@ public class ReferenceHead extends AbstractHead {
         children.add(new NozzlesPropertySheetHolder(this, "Nozzles", getNozzles(), null));
         children.add(new CamerasPropertySheetHolder(this, "Cameras", getCameras(), null));
         children.add(new ActuatorsPropertySheetHolder(this, "Actuators", getActuators(), null));
-        children.add(new SimplePropertySheetHolder("Paste Dispensers", getPasteDispensers()));
         return children.toArray(new PropertySheetHolder[] {});
     }
 
@@ -79,22 +79,32 @@ public class ReferenceHead extends AbstractHead {
         Logger.debug("{}.moveToSafeZ({})", getName(), speed);
         super.moveToSafeZ(speed);
     }
-    
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed) throws Exception {
+
+    @Override 
+    public boolean isInsideSoftLimits(HeadMountable hm, Location location)  throws Exception {
         if (isSoftLimitsEnabled()) {
             /**
              * Since minLocation and maxLocation are captured with the Camera's coordinates, we need
              * to know where the Camera will land, not the HeadMountable.
              */
-            Location cameraLocation = location.subtract(hm.getHeadOffsets());
-            cameraLocation = cameraLocation.add(((ReferenceCamera) getDefaultCamera()).getHeadOffsets());
-            Location minLocation = this.minLocation.convertToUnits(cameraLocation.getUnits());
-            Location maxLocation = this.maxLocation.convertToUnits(cameraLocation.getUnits());
-            if (cameraLocation.getX() < minLocation.getX() || cameraLocation.getX() > maxLocation.getX() ||
-                    cameraLocation.getY() < minLocation.getY() || cameraLocation.getY() > maxLocation.getY()) {
-                throw new Exception(String.format("Can't move %s to %s, outside of soft limits on head %s.",
-                        hm.getName(), location, getName()));
+            if (hm instanceof ReferenceHeadMountable) {
+                Location cameraLocation = location.subtract(((ReferenceHeadMountable)hm).getHeadOffsets());
+                cameraLocation = cameraLocation.add(((ReferenceCamera) getDefaultCamera()).getHeadOffsets());
+                Location minLocation = this.minLocation.convertToUnits(cameraLocation.getUnits());
+                Location maxLocation = this.maxLocation.convertToUnits(cameraLocation.getUnits());
+                if (cameraLocation.getX() < minLocation.getX() || cameraLocation.getX() > maxLocation.getX() ||
+                        cameraLocation.getY() < minLocation.getY() || cameraLocation.getY() > maxLocation.getY()) {
+                    return false;
+                }
             }
+        }
+        return true;
+    }
+
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed) throws Exception {
+        if (! isInsideSoftLimits(hm, location)) {
+            throw new Exception(String.format("Can't move %s to %s, outside of soft limits on head %s.",
+                    hm.getName(), location, getName()));
         }
         getDriver().moveTo(hm, location, speed);
         getMachine().fireMachineHeadActivity(this);

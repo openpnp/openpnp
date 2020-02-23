@@ -10,7 +10,6 @@ import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.machine.reference.ReferencePasteDispenser;
 import org.openpnp.machine.reference.driver.AbstractReferenceDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
@@ -276,10 +275,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         }
     }
 
-    @Override
-    public void dispense(ReferencePasteDispenser dispenser,Location startLocation,Location endLocation,long dispenseTimeMilliseconds) throws Exception {
-    }
-    
     int read() throws Exception {
         return read(true);
     }
@@ -562,25 +557,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
                     this.c4 = c;
                 }
                 break;
-        }
-    }
-
-    @Override
-    public void pick(ReferenceNozzle nozzle) throws Exception {
-        pickedNozzles.add(nozzle);
-        if (pickedNozzles.size() > 0) {
-            // TODO STOPSHIP turn on pump
-        }
-        // TODO STOPSHIP send pick
-    }
-
-    @Override
-    public void place(ReferenceNozzle nozzle) throws Exception {
-        // TODO STOPSHIP send place
-        
-        pickedNozzles.remove(nozzle);
-        if (pickedNozzles.size() < 1) {
-            // TODO STOPSHIP turn off pump
         }
     }
 

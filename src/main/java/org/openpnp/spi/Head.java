@@ -63,6 +63,13 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
      */
     public Actuator getActuator(String id);
 
+    /**
+     * Get the Actuator attached to this Head that has the specified name.
+     * Returns null if the name is null or empty.
+     * 
+     * @param id
+     * @return
+     */
     public Actuator getActuatorByName(String name);
 
     /**
@@ -102,16 +109,10 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
 
     public void moveToSafeZ() throws Exception;
 
-    public List<PasteDispenser> getPasteDispensers();
-
-    public PasteDispenser getPasteDispenser(String id);
-
     public Camera getDefaultCamera() throws Exception;
 
     public Nozzle getDefaultNozzle() throws Exception;
 
-    public PasteDispenser getDefaultPasteDispenser() throws Exception;
-    
     public void setMachine(Machine machine);
     
     public Machine getMachine();
@@ -130,4 +131,16 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
      * @return
      */
 	public double getMaxPartSpeed(); 
+	
+    public Actuator getZProbe(); 
+    
+    public Actuator getPump(); 
+
+    /**
+     * Returns true if the given HeadMountable can go to the specified location within soft-limits.
+     * @param hm
+     * @param location
+     * @return
+     */
+    public boolean isInsideSoftLimits(HeadMountable hm, Location location) throws Exception;
 }

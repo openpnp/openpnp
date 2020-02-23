@@ -45,21 +45,21 @@ import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.swingx.JXCollapsiblePane;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
+import org.openpnp.gui.support.ActuatorItem;
 import org.openpnp.gui.support.CameraItem;
 import org.openpnp.gui.support.HeadMountableItem;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NozzleItem;
-import org.openpnp.gui.support.PasteDispenserItem;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
@@ -116,18 +116,6 @@ public class MachineControlsPanel extends JPanel {
     }
 
 
-    public PasteDispenser getSelectedPasteDispenser() {
-        if (selectedTool instanceof PasteDispenser) {
-            return (PasteDispenser) selectedTool;
-        }
-        try {
-            return Configuration.get().getMachine().getDefaultHead().getDefaultPasteDispenser();
-        }
-        catch (Exception e) {
-            return null;
-        }
-    }
-
     /**
      * Currently returns the selected Nozzle. Intended to eventually return either the selected
      * Nozzle or PasteDispenser.
@@ -139,6 +127,7 @@ public class MachineControlsPanel extends JPanel {
     }
 
     public void setSelectedTool(HeadMountable hm) {
+        HeadMountable oldValue = selectedTool;
         selectedTool = hm;
         for (int i = 0; i < comboBoxHeadMountable.getItemCount(); i++) {
             HeadMountableItem item = (HeadMountableItem) comboBoxHeadMountable.getItemAt(i); 
@@ -148,6 +137,9 @@ public class MachineControlsPanel extends JPanel {
             }
         }
         updateDros();
+        if (oldValue != hm) {
+            firePropertyChange("selectedTool", oldValue, hm);
+        }
     }
 
     public JogControlsPanel getJogControlsPanel() {
@@ -316,7 +308,7 @@ public class MachineControlsPanel extends JPanel {
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable tool = getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
-                MovableUtils.moveToLocationAtSafeZ(tool, camera.getLocation());
+                MovableUtils.moveToLocationAtSafeZ(tool, camera.getLocation(tool));
             });
         }
     };
@@ -407,8 +399,8 @@ public class MachineControlsPanel extends JPanel {
                     comboBoxHeadMountable.addItem(new CameraItem(camera));
                 }
                 
-                for (PasteDispenser dispenser : head.getPasteDispensers()) {
-                    comboBoxHeadMountable.addItem(new PasteDispenserItem(dispenser));
+                for (Actuator actuator : head.getActuators()) {
+                    comboBoxHeadMountable.addItem(new ActuatorItem(actuator));
                 }
             }
 
@@ -431,8 +423,8 @@ public class MachineControlsPanel extends JPanel {
                     }
                     else if (e.getOldValue() != null && e.getNewValue() == null) {
                         for (int i = 0; i < comboBoxHeadMountable.getItemCount(); i++) {
-                            NozzleItem item = (NozzleItem) comboBoxHeadMountable.getItemAt(i);
-                            if (item.getNozzle() == e.getOldValue()) {
+                            HeadMountableItem item = (HeadMountableItem) comboBoxHeadMountable.getItemAt(i);
+                            if (item.getItem() == e.getOldValue()) {
                                 comboBoxHeadMountable.removeItemAt(i);
                             }
                         }

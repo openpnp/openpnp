@@ -264,6 +264,29 @@ public class Location {
     }
 
     /**
+     * Returns the unit vector of the vector between this and l. 
+     * 
+     * @param l
+     * @return
+     */
+    public Location unitVectorTo(Location l) {
+        Location vector = l.subtract(this);
+        double norm = 1/this.getXyzDistanceTo(l);
+        return vector.multiply(norm, norm, norm, 0.0);
+    }
+
+    /**
+     * Return the dot product of this and l. Can be used to calculate the cosinus between two unit vectors. 
+     * 
+     * @param l
+     * @return
+     */
+    public Length dotProduct(Location l) {
+        l = l.convertToUnits(units);
+        return new Length(x * l.getX() + y * l.getY() + z * l.getZ(), getUnits());
+    }
+
+    /**
      * Returns a new Location with the same units as this one but with values updated to the passed
      * in values. A caveat is that if a specified value is null, the new Location will contain the
      * value from this object instead of the new value.
@@ -280,6 +303,30 @@ public class Location {
     public Location derive(Double x, Double y, Double z, Double rotation) {
         return new Location(units, x == null ? this.x : x, y == null ? this.y : y,
                 z == null ? this.z : z, rotation == null ? this.rotation : rotation);
+    }
+
+    /**
+     * Returns a new Location with the same units as this one but with values updated from 
+     * a second Location. If a specified boolean is false, the new Location will contain the
+     * value from this object instead of the second location.
+     * 
+     * This is intended as a utility method, useful for creating new Locations based on two existing
+     * ones with one or more values substituted.
+     * 
+     * @param location
+     * @param x
+     * @param y
+     * @param z
+     * @param rotation
+     * @return
+     */
+    public Location derive(Location location, boolean x, boolean y, boolean z, boolean rotation) {
+        location = location.convertToUnits(this.getUnits());
+        return new Location(units, 
+                x ? location.x : this.x, 
+                        y ? location.y : this.y,
+                                z ? location.z : this.z, 
+                                        rotation ? location.rotation : this.rotation);
     }
 
     /**

@@ -114,7 +114,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
     private Length referenceHoleToPartLinear = new Length(2, LengthUnit.Millimeters);
 
-    private Location visionOffsets;
     private Location visionLocation;
 
     public Length getHoleDiameterMin() {
@@ -189,11 +188,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         // so that the part is picked at the right angle
         l = l.derive(null, null, null, angle + getLocation().getRotation());
 
-        // and if vision was performed, add the offsets
-        if (visionEnabled && visionOffsets != null) {
-            l = l.add(visionOffsets);
-        }
-
         return l;
     }
 
@@ -255,7 +249,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         if (distance.getValue() > 2) {
             throw new Exception("Unable to locate reference hole. End of strip?");
         }
-        visionOffsets = actualLocation.subtract(expectedLocation).derive(null, null, 0d, 0d);
         visionLocation = actualLocation;
     }
 
@@ -388,7 +381,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     public void setFeedCount(int feedCount) {
         int oldValue = this.feedCount;
         this.feedCount = feedCount;
-        this.visionOffsets = null;
         firePropertyChange("feedCount", oldValue, feedCount);
     }
 

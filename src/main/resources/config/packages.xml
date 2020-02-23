@@ -14,6 +14,9 @@
 			<pad name="2" x="0.825" y="0.0" width="0.35" height="1.25"
 				rotation="0.0" roundness="0.0" />
 		</footprint>
+		<compatible-nozzle-tip-ids class="java.util.ArrayList">
+			<string>NT1</string>
+		</compatible-nozzle-tip-ids>
 	</package>
 	<package id="R0603">
 		<outline units="Millimeters" />
@@ -23,6 +26,9 @@
 			<pad name="2" x="0.675" y="0.0" width="0.25" height="0.8"
 				rotation="0.0" roundness="0.0" />
 		</footprint>
+		<compatible-nozzle-tip-ids class="java.util.ArrayList">
+			<string>NT1</string>
+		</compatible-nozzle-tip-ids>
 	</package>
 	<package id="R0402">
 		<outline units="Millimeters" />
@@ -32,6 +38,9 @@
 			<pad name="2" x="0.375" y="0.0" width="0.25" height="0.5"
 				rotation="0.0" roundness="0.0" />
 		</footprint>
+		<compatible-nozzle-tip-ids class="java.util.ArrayList">
+			<string>NT1</string>
+		</compatible-nozzle-tip-ids>
 	</package>
 	<package id="R0201">
 		<outline units="Millimeters" />
@@ -41,6 +50,9 @@
 			<pad name="2" x="0.225" y="0.0" width="0.15" height="0.3"
 				rotation="0.0" roundness="0.0" />
 		</footprint>
+		<compatible-nozzle-tip-ids class="java.util.ArrayList">
+			<string>NT1</string>
+		</compatible-nozzle-tip-ids>
 	</package>
 	<package id="TQFP32">
 		<outline units="Millimeters" />
@@ -110,5 +122,8 @@
 			<pad name="32" x="2.625" y="4.0" width="0.36" height="1.0"
 				rotation="0.0" roundness="0.0" />
 		</footprint>
+		<compatible-nozzle-tip-ids class="java.util.ArrayList">
+			<string>NT1</string>
+		</compatible-nozzle-tip-ids>
 	</package>
 </openpnp-packages>

@@ -1,7 +1,8 @@
 package org.openpnp.spi;
 
-import java.util.List;
+import java.util.Set;
 
+import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 
 /**
@@ -24,7 +25,7 @@ public interface Nozzle
      * on the vacuum. When this is called during job processing the processor will have already
      * positioned the nozzle over the part to be picked and lowered it to the correct height. Some
      * implementations may choose to do further work in pick(), such as firing air cylinders,
-     * monitoring pressure sensors, etc.
+     * monitoring pressure sensors, probing for contact etc.
      * 
      * @throws Exception
      */
@@ -39,13 +40,6 @@ public interface Nozzle
      * @throws Exception
      */
     public void place() throws Exception;
-
-    /**
-     * Get a list of the NozzleTips currently attached to the Nozzle.
-     * 
-     * @return
-     */
-    public List<NozzleTip> getNozzleTips();
 
     /**
      * Changer interface:
@@ -81,7 +75,42 @@ public interface Nozzle
      */
     public Part getPart();
     
-    public void addNozzleTip(NozzleTip nozzleTip) throws Exception;
+    /**
+     * Returns true if the isPartOn() method is available. Some machines do not have
+     * vacuum sensors or other part detection sensors, so this feature is optional.
+     * @return
+     */
+    public boolean isPartOnEnabled();
     
-    public void removeNozzleTip(NozzleTip nozzleTip);
+    /**
+     * Returns true if the isPartOff() method is available. Some machines do not have
+     * vacuum sensors or other part detection sensors, so this feature is optional.
+     * @return
+     */
+    public boolean isPartOffEnabled();
+
+    /**
+     * Returns true if a part appears to be on the nozzle. This is typically implemented by
+     * checking a vacuum level range, but other methods such as laser or vision detection
+     * are possible.
+     * @return
+     */
+    public boolean isPartOn() throws Exception;
+    
+    /**
+     * Returns true if a part appears to be off the nozzle. This is typically implemented by
+     * checking a vacuum level range, but other methods such as laser or vision detection
+     * are possible.
+     * @return
+     */
+    public boolean isPartOff() throws Exception;
+    
+    public Set<NozzleTip> getCompatibleNozzleTips();
+    
+    public void addCompatibleNozzleTip(NozzleTip nt);
+    
+    public void removeCompatibleNozzleTip(NozzleTip nt);
+    
+    public void calibrate() throws Exception;
+    public boolean isCalibrated();
 }

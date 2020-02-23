@@ -151,11 +151,13 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
     @Override
     public void setWizardContainer(WizardContainer wizardContainer) {
         this.wizardContainer = wizardContainer;
-        scrollPane.getVerticalScrollBar()
-                .setUnitIncrement(Configuration.get().getVerticalScrollUnitIncrement());
-        listener = new ApplyResetBindingListener(applyAction, resetAction);
-        createBindings();
-        loadFromModel();
+        if (listener == null) { //only allow bindings to be created the first time
+            scrollPane.getVerticalScrollBar()
+                    .setUnitIncrement(Configuration.get().getVerticalScrollUnitIncrement());
+            listener = new ApplyResetBindingListener(applyAction, resetAction);
+            createBindings();
+            loadFromModel();
+        }
     }
 
     @Override
@@ -182,4 +184,8 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
             loadFromModel();
         }
     };
+    
+    public Boolean isDirty() {
+        return btnApply.isEnabled();
+    }
 }

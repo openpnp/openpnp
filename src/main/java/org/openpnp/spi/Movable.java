@@ -20,4 +20,12 @@ public interface Movable extends Locatable {
     public void moveToSafeZ(double speed) throws Exception;
 
     public void moveToSafeZ() throws Exception;
+    
+    /**
+     * Perform any homing operation on each movable. The head and driver have already been homed
+     * at this time. 
+     * 
+     * @throws Exception
+     */
+    public void home() throws Exception;
 }

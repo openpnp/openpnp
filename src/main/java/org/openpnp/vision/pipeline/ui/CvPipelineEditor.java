@@ -22,7 +22,9 @@ import org.openpnp.vision.pipeline.stages.ConvertModelToKeyPoints;
 import org.openpnp.vision.pipeline.stages.ConvertModelToPoints;
 import org.openpnp.vision.pipeline.stages.CreateFootprintTemplateImage;
 import org.openpnp.vision.pipeline.stages.CreateModelTemplateImage;
+import org.openpnp.vision.pipeline.stages.CreateShapeTemplateImage;
 import org.openpnp.vision.pipeline.stages.DetectCirclesHough;
+import org.openpnp.vision.pipeline.stages.DetectLinesHough;
 import org.openpnp.vision.pipeline.stages.DetectEdgesCanny;
 import org.openpnp.vision.pipeline.stages.DetectEdgesLaplacian;
 import org.openpnp.vision.pipeline.stages.DetectEdgesRobertsCross;
@@ -30,6 +32,7 @@ import org.openpnp.vision.pipeline.stages.DetectFixedCirclesHough;
 import org.openpnp.vision.pipeline.stages.DilateModel;
 import org.openpnp.vision.pipeline.stages.DrawCircles;
 import org.openpnp.vision.pipeline.stages.DrawContours;
+import org.openpnp.vision.pipeline.stages.DrawEllipses;
 import org.openpnp.vision.pipeline.stages.DrawImageCenter;
 import org.openpnp.vision.pipeline.stages.DrawKeyPoints;
 import org.openpnp.vision.pipeline.stages.DrawRotatedRects;
@@ -39,6 +42,7 @@ import org.openpnp.vision.pipeline.stages.FilterRects;
 import org.openpnp.vision.pipeline.stages.FindContours;
 import org.openpnp.vision.pipeline.stages.GrabCut;
 import org.openpnp.vision.pipeline.stages.HistogramEqualize;
+import org.openpnp.vision.pipeline.stages.HistogramEqualizeAdaptive;
 import org.openpnp.vision.pipeline.stages.ImageCapture;
 import org.openpnp.vision.pipeline.stages.ImageRead;
 import org.openpnp.vision.pipeline.stages.ImageRecall;
@@ -53,6 +57,7 @@ import org.openpnp.vision.pipeline.stages.MatchPartTemplate;
 import org.openpnp.vision.pipeline.stages.MatchTemplate;
 import org.openpnp.vision.pipeline.stages.MinAreaRect;
 import org.openpnp.vision.pipeline.stages.MinAreaRectContours;
+import org.openpnp.vision.pipeline.stages.FitEllipseContours;
 import org.openpnp.vision.pipeline.stages.Normalize;
 import org.openpnp.vision.pipeline.stages.OrientRotatedRects;
 import org.openpnp.vision.pipeline.stages.ReadModelProperty;
@@ -61,9 +66,11 @@ import org.openpnp.vision.pipeline.stages.Rotate;
 import org.openpnp.vision.pipeline.stages.ScriptRun;
 import org.openpnp.vision.pipeline.stages.SetColor;
 import org.openpnp.vision.pipeline.stages.SimpleBlobDetector;
+import org.openpnp.vision.pipeline.stages.SizeCheck;
 import org.openpnp.vision.pipeline.stages.Threshold;
 import org.openpnp.vision.pipeline.stages.ThresholdAdaptive;
 import org.openpnp.vision.pipeline.stages.WritePartTemplateImage;
+import org.openpnp.vision.pipeline.stages.ActuatorWrite;
 
 /**
  * A JPanel based component for editing a CvPipeline. Allows the user to add and remove stages,
@@ -90,7 +97,9 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(ConvertModelToKeyPoints.class);
         registerStageClass(CreateFootprintTemplateImage.class);
         registerStageClass(CreateModelTemplateImage.class);
+        registerStageClass(CreateShapeTemplateImage.class);
         registerStageClass(DetectCirclesHough.class);
+        registerStageClass(DetectLinesHough.class);
         registerStageClass(DetectEdgesCanny.class);
         registerStageClass(DetectEdgesRobertsCross.class);
         registerStageClass(DetectEdgesLaplacian.class);
@@ -101,12 +110,14 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(DrawImageCenter.class);
         registerStageClass(DrawKeyPoints.class);
         registerStageClass(DrawRotatedRects.class);
+        registerStageClass(DrawEllipses.class);
         registerStageClass(DrawTemplateMatches.class);
         registerStageClass(FilterContours.class);
         registerStageClass(FilterRects.class);
         registerStageClass(FindContours.class);
         registerStageClass(GrabCut.class);
         registerStageClass(HistogramEqualize.class);
+        registerStageClass(HistogramEqualizeAdaptive.class);
         registerStageClass(ImageCapture.class);
         registerStageClass(ImageRead.class);
         registerStageClass(ImageRecall.class);
@@ -121,6 +132,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(MatchPartTemplate.class);
         registerStageClass(MinAreaRect.class);
         registerStageClass(MinAreaRectContours.class);
+        registerStageClass(FitEllipseContours.class);
         registerStageClass(Normalize.class);
         registerStageClass(OrientRotatedRects.class);
         registerStageClass(ReadModelProperty.class);
@@ -129,9 +141,12 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(SetColor.class);
         registerStageClass(ScriptRun.class);
         registerStageClass(SimpleBlobDetector.class);
+        registerStageClass(SizeCheck.class);
         registerStageClass(Threshold.class);
         registerStageClass(ThresholdAdaptive.class);
         registerStageClass(WritePartTemplateImage.class);
+        registerStageClass(ActuatorWrite.class);
+        
     }
 
     private final static Set<Class<? extends CvStage>> stageClasses;

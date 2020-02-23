@@ -148,7 +148,7 @@ public class Scripting {
         this.menu = menu;
         // Add a separator and the Refresh Scripts and Open Scripts Directory items
         menu.addSeparator();
-        menu.add(new AbstractAction("Refresh Scripts") {
+        menu.add(new AbstractAction(Translations.getString("Scripting.Action.Refresh")) {
             {
                 putValue(MNEMONIC_KEY, KeyEvent.VK_R);
             }
@@ -158,7 +158,7 @@ public class Scripting {
                 synchronizeMenu(menu, getScriptsDirectory());
             }
         });
-        menu.add(new AbstractAction("Open Scripts Directory") {
+        menu.add(new AbstractAction(Translations.getString("Scripting.Action.OpenScriptsDirectory")) {
             {
                 putValue(MNEMONIC_KEY, KeyEvent.VK_O);
             }

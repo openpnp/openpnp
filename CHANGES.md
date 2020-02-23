@@ -1,6 +1,362 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2020-01-22
+
+## Camera Jogging Update
+
+A new camera jogging system has been implemented which allows for rotation and better precision
+for XY. See https://www.youtube.com/watch?v=0TvqQBkTGP8 for details.
+
+# 2019-12-03
+	
+## New feeder: ReferenceLeverFeeder
+
+This is for feeders where a lever is pushed by a actuator (usually the head) to advance the parts.  It was made from the ReferenceDragFeeder.  A Part Pitch field is added and multiple feed operations will be performed as required.
+
+# 2019-11-24
+
+## BREAKING CHANGE: Vacuum Valve and Pump Actuation Remodel
+
+Vacuum valves and pump actuation is now modeled with Actuators and  
+made independent from pick() and place() functionality and from the Driver. The changes
+refine and unify the machine model and ease the development of new capabilities. The new 
+ContactProbeNozzle demonstrates this by adding contact probing to pick() and place() 
+which allows for more tolerance and robustness in the Z height handling of parts, feeders 
+and the PCB. 
+* The vacuum Actuator is no longer just used to read the vacuum pressure level but also to
+  actuate the valve (Boolean). 
+* The Nozzle's pick() and place() methods will actuate the valve Actuators as needed.
+* At the same time the Nozzle's pick() and place() methods are now dedicated to what their 
+  names imply, making vacuum switching independent from them.
+* Consequently the Nozzle pick() or place() can now do more than just actuate the vacuum, 
+  they can also be properly sub-classed/overridden for extended functionality. 
+* In turn the valve Actuator is now used independently to test if a part if off after 
+  placement. An "in-the-air" pick() and place() cycle  is no longer used, avoiding 
+  unexpected behavior when pick() and place() do more than vacuum switching.
+* Users can also use the Machine Controls' Actuators tab to test the valve Actuator 
+  independently and to simulate and determine part on/part off vacuum readings. 
+* A new pump Actuator is added to the head. It will actuate the pump as needed.
+* The pick() and place() methods in turn govern the pump Actuator, i.e. as long as at 
+  least one part is on a nozzle, the pump will be switched on.
+* Users can also use the Machine Controls Actuators tab to test the pump Actuator.
+* All pick(), place(), pump and valve actuation are removed from the Driver.
+* Consequently the PICK_COMMAND, PLACE_COMMAND, PUMP_ON_COMMAND, PUMP_OFF_COMMAND are 
+  deprecated in the GCodeDriver. They will no longer work but the fragments are available
+  in the GUI for G-Code migration to the Actuators (these entries will be removed end of 
+  2021).
+* In turn the new Actuators define their G-Code in the proper ACTUATE_BOOLEAN_COMMAND 
+  fragments. 
+* Users must add the new pump Actuator and revisit the vacuum reading Actuator and 
+  migrate their G-Code there. 
+* To ease the now more important plug-and-play of Actuators, they can now be assigned by 
+  ComboBoxes rather than by loose name references. 
+* As a first benefit from the changes, the new ContactProbeNozzle subclasses the 
+  ReferenceNozzle and adds a contact probe to sense when the nozzle tip hits the target
+  i.e. when the pick() makes contact with the part in the feeder or when the place() hits 
+  the PCB with the part on the nozzle (the Liteplacer has such a probing nozzle). This 
+  allows for more tolerance and robustness towards variances in Z height of parts, 
+  feeders and the PCB. Users can more quickly (i.e. more roughly) setup Z heights.
+* More information, guidance and screenshots can be seen in the PR:
+  https://github.com/openpnp/openpnp/pull/859#issue-290920991
+
+## ReferenceStripFeeder Vision Bug Fix
+
+A long standing bug in ReferenceStripFeeder has been fixed by @tjanuszewski in
+https://github.com/openpnp/openpnp/pull/919. If you have struggled with the vision
+on ReferenceStripFeeder in the past, especially on longer strips, please give it a new
+try as this fix seems to improve it's functionality greatly.
+
+Thank you @tjanuszewski for finding and fixing this!
+
+
+# 2019-06-13
+
+## New Scripting Events
+
+Added several new scripting events for pick and place events:
+
+* Nozzle.BeforePick
+* Nozzle.AfterPick
+* Nozzle.BeforePlace
+* Nozzle.AfterPlace
+
+# 2019-06-12
+
+## Switcher Camera and Camera Interface Changes
+
+This update adds a new camera type called a SwitcherCamera. This camera is a virtual camera
+that allows you to have multiple virtual cameras sharing the same physical capture device. This
+is a common configuration on commercial desktop pick and place machines, where a single capture
+card captures images from two analog cameras. A serial command is used to switch which camera
+is currently streaming.
+
+Some small changes were also made to the camera interface in general. Two new methods were added:
+* Camera.captureForPreview(): Captures an image and applies transforms, but does not perform
+  scripting or lighting events.
+* Camera.captureRaw(): Returns a raw image from the capture device, with no transforms.
+
+The first is mainly for future expansion - in the near future changes will be made to how camera
+streaming works to improve performance and make the cameras more context sensitive.
+
+The second is added specifically for the new SwitcherCamera, so that it can get raw images from
+the source camera. This new method is also being used to clean up and consolidate the camera
+code across various camera implementations.
+
+In general, if you aren't using the SwitcherCamera you shouldn't notice any differences with
+this update. If you notice new problems with cameras, please report an issue.
+
+See https://github.com/openpnp/openpnp/wiki/SwitcherCamera for more information.
+
+
+# 2019-06-10
+
+## Global Nozzle Tip Update
+
+The nozzle tip system has been overhauled so that nozzle tips belong to the machine, rather than
+to each nozzle. This removes the need to duplicate nozzle tips for each nozzle, and better
+fits how nozzle changers typically work.
+
+Additionally, you can now easily set package compatibility directly from the
+packages panel.
+
+This is a large, breaking change. For more information on why this change happened, please see:
+https://github.com/openpnp/openpnp/issues/183
+
+Thank you to @markmaker for reviewing and for merging in his recent calibration changes. He has
+also provided some help for migrating:
+
+- copy the big `<nozzle-tips/>` XML block to the right place (I took a default OpenPNP 2.0 `machine.xml` as a guide). 
+- start OpenPNP again and again, note the elements/attributes no longer supported and delete them (would be so nice to have a command-line option for the XML parser to ignore unknown elements and attributes, but it seems the parser in OpenPNP has no such thing*)
+- define nozzle tip to nozzle compatibility on the Nozzle
+- learn the new way to change nozzle tips (by clicking the checkbox in the list)
+- define vacuum levels not forgetting the fact that isPartOff is now measured with opened valve for a moment (but see #855).
+
+
+# 2019-06-02
+
+## Runout Compensation and Bottom Camera Position and Rotation Calibration
+
+Feature changes:
+* Using the Runout calibration facility, an automatic bottom camera position and rotation offset 
+  calibration is provided. In a multi-nozzle machine, this should be done with the first/best nozzle.
+* For all the other nozzles in a multi-nozzle machine, a new "Model & Camera Offset" calibration system is
+  provided, compensating for any offset introduced through imperfect Z travel when the bottom camera focal 
+  plane does not match the PCB surface plane. 
+* The user can not set how many missed vision detections are tolerated in Runout Calibration for more 
+  robustness inside a job.
+* The user can set a Z offset for calibrate per nozzle tip to allow the focal plane of the vision-detected 
+  feature to be further up on the nozzle tip (e.g. receded air hole in a cup shaped nozzle tip).
+* If a nozzle tip is named "unloaded" it is used as a stand-in when no nozzle tip is loaded. 
+  Very useful when the nozzle tip holder itself has so much runout that even nozzle tip changing 
+  is scary without calibration. Again use the Z offset to calibrate the bare nozzle tip holder in the 
+  focal plane. 
+* User settable automatic recalibration trigger:
+   - On each nozzle tip change
+   - On each nozzle tip change if used in a job (like before)
+   - On homing/first change of a nozzle tip after homing. Nozzle tips that are later unloaded 
+     and reloaded will not be recalibrated, saving time. This assumes that both the nozzle (i.e. 
+     the C axis) and the nozzle tip in the holder will retain a known rotation (i.e. the runout 
+     phase shift does not change).
+   - On manual calibration only. The compensation is stored in the machine.xml which is useful 
+     for machines that have a homed/spring-loaded rotation C axes so the runout phase shift 
+     remains the same on every power up.
+
+Fixes:
+* Removed unnecessary start/stop rotations in calibration
+* Changed the threshold property into a unit-aware Length
+* Fixed missing LengthUnit conversions in the  "Model" calibration system (it compensated in 
+  millimeters but based its model on camera units).
+* Fixed camera not updating its width/height when the frame size changes due to changed transformations 
+  such as rotation (like after the above-mentioned rotation calibration). VisionUtils performed
+  bad pixel to Location coordinate conversions until the next OpenPNP restart.
+
+Changes in models and utility functions:
+* Added a home() method to all HeadMountables to trigger recalibration when needed.
+* Added a Camera.getLocation(tool) method to get a camera position adjusted for a specific 
+  nozzle/nozzle tip. This helps with multi-nozzle machines that have the bottom camera
+  focal plane at a Z height that differs from the PCB surface. Therefore the different nozzles might
+  introduce a slight offset due to the Z axes not being perfectly perallel to each other. 
+* Added reverse transformation in VisionUtils (Location to pixel)
+* Added "center" property to vision stage MaskCircle to allow off-center nozzle tip recognition
+  for camera calibration.
+  
+For more information see https://github.com/openpnp/openpnp/pull/825
+  
+# 2019-06-01
+
+## OpenPnP 2.0 Ongoing Changes
+
+* Actuators are now added to the tools dropdown in jog controls so that you can select one and
+  move it. This is probably a temporary change as this dropdown will go away in the future, but
+  for the time being it helps with setting up drag feeders.
+  
+* Swapped positions of "capture" and "move" buttons wherever those buttons are grouped together,
+  and added a separator between the two groups of buttons. This is intended to make it a little
+  less easy to accidentally click the capture buttons, which many people have recognized as being
+  a UX problem.
+
+* Moved the "Feed" button on the Feeders panel to the front of the list as this is the most
+  common action.
+
+* Split the reference nozzle and reference nozzle tip configuration wizards into separate panels.
+  This is will make it easier to refactor for global nozzles.
+  
+* Added basic Z Probing by setting actuator name on head.
+
+* Added canned cycle for getting a Z Probe at a location.
+
+* Z Probe is now automatically performed, if enabled, when capturing a camera location. This
+  results in a fully formed location capture including Z. If no Z Probe is available Z is left
+  unchanged. 
+
+# 2019-05-27
+
+## OpenPnP 2.0
+
+This update includes a large number of major changes to how OpenPnP works, along with several
+breaking changes. Because of the severity of the changes I am calling this OpenPnP 2.0.
+
+Please read the release notes carefully before using it, and please back up your configuration
+directory, job, and board files. Some of the changes will modify your files and you will not be
+able to go back to the older version without restoring your backups.
+
+* JobProcessor Rewrite: The JobProcessor has been rewritten from the ground up to solve a number
+  of long standing bugs and issues. The new version allows for finer granularity in steps, better
+  error handling - including context sensitive errors, better retry options for pick and feed
+  failures, improved vacuum checking, and increased flexibility.
+  
+  * The FSM implementation that caused the "No defined state from..." type errors has been removed
+    completely. Fixes #695.
+    
+  * Each step is now in it's own class, and maintains it's own state. This lets each step determine
+    what level of granularity it wants to expose.
+     
+  * Steps now direct the job processor to the next step when they finish, making it very easy to
+    add customized steps and to retry when things fail.
+    
+  * The JobProcessor interface now returns a custom exception type that includes a source. In
+    general these sources will be instances of model or SPI objects such as Nozzle, Feeder, Part, 
+    Placement, etc. This makes it possible to help the user find the source of the error in the UI.
+    
+    A future update will include a new "Production" panel that will let you quickly jump to
+    the source of an error.
+    
+  * Granularity has been greatly improved in several long running steps. Fiducials, and pick, 
+    primarily. Now clicking stop during a fiducial check will not continue checking every board
+    before stopping.  
+    
+  * Vacuum checking is now performed in the job processor, instead of in the nozzle. With this
+    change additional vacuum checks have been added as well. Vacuum is now checked after pick,
+    after bottom vision, before place, and after place. In addition, the after pick check is
+    now performed after lifting the nozzle for better accuracy and the after place check is
+    performed with vacuum turned on.
+    
+  * Feed retry and pick retry are now separate steps.
+  
+    Feed retry allows retry of a feeder that has an error while feeding, such as a vision failure
+    on the strip feeder, or a hardware error on an auto feeder.
+    
+    Pick retry handles retry of the entire pick sequence. This is primarily a factor when using
+    vacuum sensing. After a part is picked, if the vacuum sensing system does not detect the part
+    on the nozzle a discard cycle is performed and the entire feed / pick cycle is restarted.
+    
+  * These changes fix #280.
+    
+* BREAKING CHANGE: Changed the vacuum sensing levels from the trio of logic inverted, 
+  part on level, and part off level to a dual range for on low/high and off low/high.
+
+* BREAKING CHANGE: Removed job auto save and config auto safe from the job processor.
+  This feature caused a serious performance hit and cluttered up the job processor.
+  This feature will be added back at a later date with a new implementation that does not harm
+  performance.
+  
+* BREAKING CHANGE: Removed "Check Fids?" from the placements panel, and it's functionality from the
+  job processor. This feature was originally meant to be a way to check local fids around
+  important placements but it was not implemented correctly and was not generally useful.
+  PRs welcome to add true local fid checking.
+
+  This change should not break any jobs or configurations, but I've labeled it a breaking change
+  to get the attention of anyone who was using the feature for further discussion.
+
+* BREAKING CHANGE: The park when complete option has been removed and park when complete is now
+  always performed. **You must set a park location before running a job on this version.** 
+  This is a preperatory change for more automation in machine movements in general.
+  It will become much more important that the machine knows where it can safely park.
+
+* BREAKING CHANGE: Removed the isPartOn and isPartOff variables from the GcodeDriver. This is
+  better handled by the main vacuum system. It would be possible to add the new vacuum variables
+  to GcodeDriver, so if someone is depending on this functionality please speak up.
+
+* BREAKING CHANGE: Placement Type "Ignore" has been moved to Placement Enabled. The Type field
+  will be used only for specifying Placement or Fiducial, and a new Enabled field has been added.
+  This makes it easier to disable placements for a job without losing whether that placement is a
+  fiducial or a placement.
+	
+  Additionally, Type Place has been renamed to Placement.
+  
+  This change is backwards compatible but not forwards compatible. If you open and save a job using
+  this version you will not be able to open it with an older version.
+    
+* BREAKING CHANGE: The Paste Dispense feature has been removed entirely. This feature is used by
+  by very few people, does not work well, and is not well maintained. Removing the feature
+  allows OpenPnP to focus on the pick and place user experience without having to maintain
+  backwards compatibility with paste dispense.
+    
+  A version of OpenPnP with Paste Dispense will be saved and will be made available for users to
+  download if they need that functionality for an existing setup. That version will receive no
+  future updates.
+  
+* Added a new error handling system that allows users to specify on a placement by placement basis
+  how errors should be handled. The options are Alert and Suppress. 
+  
+  Alert will raise the error immediately and pause the job. The user must fix the problem before
+  continuing. 
+  
+  Suppress will mark the placement errored and continue on without alerting the user. When the
+  job finishes the list of errored placements is printed. The user can then fix errors and re-run
+  the job to fix unplaced placements.
+  
+  In the very near future there will be a GUI added that shows the errored placements at the end
+  of the job so that you can see what needs to be fixed to finish the job.
+  
+* Removed Skip, Ignore and Continue, and Try Again from the Job error dialog. Now the error is
+  shown and the job is paused. The user can make adjustments to the job and start it again to
+  recovery from the error.
+
+* Refactored vacuum sensing to Nozzle.isPartOn() and Nozzle.isPartOff(). Fixes #753, and #102.
+
+* Removed the post pre-flight nozzle tip calibration from job processor. I can't see why this would
+  be useful since the planner may immediately change out the nozzle tips. Calibration is now
+  performed after tip changes for any tips that are not already calibrated. If this change is
+  detrimental to your setup please speak up.    
+
+* Added missing signaler signals for job running and stopped.  
+
+* Increased the speed of the demo driver to make the demo a little more fun to watch.  
+  
+* Fix tooltips and button names on footprint pads.  
+
+* Renamed Feeder.retryCount to Feeder.feedRetryCount.
+
+* Added Feeder.pickRetryCount.
+
+* Changed hardcoded pick retry in job processor to use Feeder.pickRetryCount.
+
+* Coming Soon: There are a number of other features that are based on this work, which are coming
+  very soon.
+  
+  * Production Tab: Job controls will be moved from the Job tab to a new Production tab. The
+    Production tab will include status about the running job in total, and status for each
+    placement being processed by the job.
+    
+    The Production tab will also include a list of placements that have errored during processing
+    and will allow the user to quickly jump to the source of the error.
+    
+    The Placement Status and Placed? columns will also move to this tab. After this change the Job
+    panel will be mostly used for Job editing before starting a job, and will be mostly read only
+    during a job run.
+    
 # 2019-05-10
 
 ## Bottom Vision Pre-Rotate Updates and Bug Fixes 

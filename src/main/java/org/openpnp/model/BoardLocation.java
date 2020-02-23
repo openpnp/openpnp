@@ -96,6 +96,11 @@ public class BoardLocation extends AbstractModelObject {
         Location oldValue = this.location;
         this.location = location;
         firePropertyChange("location", oldValue, location);
+        // If the location is changing it is not possible the placement transform is
+        // still valid, so clear it.
+        if (!this.location.equals(oldValue)) {
+            setPlacementTransform(null);
+        }
     }
     
     public Side getSide() {
@@ -107,14 +112,11 @@ public class BoardLocation extends AbstractModelObject {
     		return 0;
     	}
     	int counter = 0;
-    	for(Placement placements : board.getPlacements()) {
-    		// is the component on the correct boards side
-    		if (placements.getSide() == getSide()) {
-    			
-    			//is the component set to be placed?
-    			if (placements.getType() == Type.Place) {		
+    	for(Placement placement : board.getPlacements()) {
+    		if (placement.getSide() == getSide()
+    		        && placement.getType() == Type.Placement
+    		        && placement.isEnabled()) {
     				counter++;
-    			}
         	}
     	}
     	return counter;
@@ -125,20 +127,14 @@ public class BoardLocation extends AbstractModelObject {
     		return 0;
     	}
     	int counter = 0;
-    	for(Placement placements : board.getPlacements()) {
-    		// is the component on the correct boards side
-    		if (placements.getSide() == getSide()) {
-    			
-    			//is the component set to be placed?
-    			if (placements.getType() == Type.Place) {		
-    			
-    				// has the component been placed already?
-    				if (!getPlaced(placements.getId())) {
-    					counter++;
-    				}
-    			}
-        	}
-    	}
+	    for(Placement placement : board.getPlacements()) {
+            if (placement.getSide() == getSide()
+                    && placement.getType() == Type.Placement
+                    && placement.isEnabled()
+                    && !getPlaced(placement.getId())) {
+                    counter++;
+            }
+        }
     	return counter;
     }
 

@@ -9,14 +9,12 @@ import javax.swing.Icon;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceDriver;
-import org.openpnp.machine.reference.ReferencePasteDispenser;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.DataBits;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.FlowControl;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.Parity;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.StopBits;
 import org.openpnp.machine.reference.driver.wizards.AbstractReferenceDriverConfigurationWizard;
 import org.openpnp.model.AbstractModelObject;
-import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -103,10 +101,6 @@ public abstract class AbstractReferenceDriver extends AbstractModelObject implem
     
     public abstract void disconnect() throws Exception;
     
-    public void dispense(ReferencePasteDispenser dispenser, Location startLocation, Location endLocation, long dispenseTimeMilliseconds) throws Exception {
-
-    }
-
     public String getCommunicationsType() {
         return communicationsType;
     }
@@ -257,5 +251,55 @@ public abstract class AbstractReferenceDriver extends AbstractModelObject implem
     public Wizard getConfigurationWizard() {
         return new AbstractReferenceDriverConfigurationWizard(this);
     }
+
+    
+    // Replaces each backslash escaped sequence within a string with its actual unicode character
+    public static String unescape(String s) {
+        int i = 0;
+        char c;
+        int len = s.length();
+        StringBuffer sb = new StringBuffer(len);
+        while (i<len) {
+             c = s.charAt(i++);
+             if (c == '\\') {
+                  if (i<len) {
+                       c = s.charAt(i++);
+                       if ((c == 'u') || (c == 'U')) {
+                          try {
+                               c = (char) Integer.parseInt(s.substring(i,i+4),16);
+                               i += 4;
+                          }
+                          catch (Exception e) {
+                              //the escaped unicode character doesn't have the correct form (four hexidecimal digits) so just pass it along
+                              //as a string
+                              sb.append('\\');
+                          }
+                       }
+                       else if ((c == 't') || (c == 'T')) {
+                           c = 0x0009; //unicode tab
+                       }
+                       else if ((c == 'b') || (c == 'B')) {
+                           c = 0x0008; //unicode backspace
+                       }
+                       else if ((c == 'n') || (c == 'N')) {
+                           c = 0x000A; //unicode line feed
+                       }
+                       else if ((c == 'r') || (c == 'R')) {
+                           c = 0x000D; //unicode carriage return
+                       }
+                       else if ((c == 'f') || (c == 'F')) {
+                           c = 0x000C; //unicode form feed
+                       }
+                       else {
+                           //in all other cases just pass the backslash along
+                           sb.append('\\');
+                       }
+                  }
+             }
+        sb.append(c);
+        }
+        return sb.toString();
+    }
+
 
 }

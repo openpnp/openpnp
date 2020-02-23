@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -60,6 +61,7 @@ import org.openpnp.gui.JobPanel.SetEnabledAction;
 import org.openpnp.gui.JobPanel.SetSideAction;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ClassSelectionDialog;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
@@ -100,7 +102,11 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     private ActionGroup multiSelectActionGroup;
 
     private Preferences prefs = Preferences.userNodeForPackage(FeedersPanel.class);
-
+    
+    private JTabbedPane configurationPanel;
+    private int priorRowIndex = -1;
+    private String priorFeederId;
+    
     public FeedersPanel(Configuration configuration, MainFrame mainFrame) {
         this.configuration = configuration;
         this.mainFrame = mainFrame;
@@ -125,10 +131,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         toolBar.add(btnDeleteFeeder);
 
         toolBar.addSeparator();
+        toolBar.add(pickFeederAction);
         toolBar.add(feedFeederAction);
         toolBar.add(moveCameraToPickLocation);
         toolBar.add(moveToolToPickLocation);
-        toolBar.add(pickFeederAction);
 
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);
@@ -159,6 +165,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         
         table = new AutoSelectTextTable(tableModel);
         tableSorter = new TableRowSorter<>(tableModel);
+        table.getColumnModel().moveColumn(1,  2);
 
         final JSplitPane splitPane = new JSplitPane();
         splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
@@ -177,7 +184,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         table.setRowSorter(tableSorter);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
-        JTabbedPane configurationPanel = new JTabbedPane(JTabbedPane.TOP);
+        configurationPanel = new JTabbedPane(JTabbedPane.TOP);
         splitPane.setRightComponent(configurationPanel);
 
         singleSelectActionGroup = new ActionGroup(deleteFeederAction, feedFeederAction,
@@ -209,20 +216,31 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                     multiSelectActionGroup.setEnabled(true);
                 }
 
-                Feeder feeder = getSelection();
-                
-                configurationPanel.removeAll();
-                if (feeder != null) {
-                    PropertySheet[] propertySheets = feeder.getPropertySheets();
-                    for (PropertySheet ps : propertySheets) {
-                        configurationPanel.addTab(ps.getPropertySheetTitle(), ps.getPropertySheetPanel());
+                if (table.getSelectedRow() != priorRowIndex) {
+                    if (keepUnAppliedFeederConfigurationChanges()) {
+                        table.setRowSelectionInterval(priorRowIndex, priorRowIndex);
+                        return;
                     }
+                    priorRowIndex = table.getSelectedRow();
+                    
+                    Feeder feeder = getSelection();
+                    
+                    configurationPanel.removeAll();
+                    if (feeder != null) {
+                        priorFeederId = feeder.getId();
+                        PropertySheet[] propertySheets = feeder.getPropertySheets();
+                        for (PropertySheet ps : propertySheets) {
+                            AbstractConfigurationWizard wizard = (AbstractConfigurationWizard) ps.getPropertySheetPanel();
+                            wizard.setWizardContainer(FeedersPanel.this);
+                            configurationPanel.addTab(ps.getPropertySheetTitle(), wizard);
+                        }
+                    }
+                    
+                    revalidate();
+                    repaint();
+                    
+                    Configuration.get().getBus().post(new FeederSelectedEvent(feeder, FeedersPanel.this));
                 }
-                
-                revalidate();
-                repaint();
-                
-                Configuration.get().getBus().post(new FeederSelectedEvent(feeder, FeedersPanel.this));
             }
         });
 
@@ -236,6 +254,30 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         popupMenu.add(setEnabledMenu);
 
         table.setComponentPopupMenu(popupMenu);
+    }
+    
+    private boolean keepUnAppliedFeederConfigurationChanges() {
+        Feeder priorFeeder = configuration.getMachine().getFeeder(priorFeederId);
+        boolean feederConfigurationIsDirty = false;
+        int i = 0;
+        while (!feederConfigurationIsDirty && (i<configurationPanel.getComponentCount())) {
+            feederConfigurationIsDirty = ((AbstractConfigurationWizard) configurationPanel.getComponent(i)).isDirty();
+            i++;
+        }
+        if (feederConfigurationIsDirty && (priorFeeder != null)) {
+            int selection = JOptionPane.showOptionDialog(null,
+                    "Configuration changes to '" + priorFeeder.getName() + "' will be lost.  Do you want to proceed?",
+                    "Warning!",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE,
+                    null,
+                    new String[]{"Yes", "No"},
+                    "No");
+            return (selection != JOptionPane.YES_OPTION);
+        } else {
+            return false;
+        }
+        
     }
     
     @Subscribe
@@ -340,6 +382,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public void wizardCancelled(Wizard wizard) {}
 
     private void newFeeder(Part part) {
+        if (keepUnAppliedFeederConfigurationChanges()) {
+            return;
+        }
+        
         if (Configuration.get().getParts().size() == 0) {
             MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
                     "There are currently no parts defined in the system. Please create at least one part before creating a feeder.");
@@ -363,6 +409,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             return;
         }
         try {
+            priorFeederId = null;
+            
             Feeder feeder = feederClass.newInstance();
 
             feeder.setPart(part == null ? Configuration.get().getParts().get(0) : part);
@@ -536,6 +584,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             for (Feeder f : getSelections()) {
                 f.setEnabled(value);
             }
+            table.repaint();
         }
     };
 }

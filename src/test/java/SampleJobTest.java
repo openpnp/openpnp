@@ -12,7 +12,6 @@ import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.JobProcessor;
 
 import com.google.common.io.Files;
 
@@ -49,8 +48,6 @@ public class SampleJobTest {
         // camera.startContinuousCapture(encoder, 25);
 
         ReferencePnpJobProcessor jobProcessor = (ReferencePnpJobProcessor) machine.getPnpJobProcessor();
-        jobProcessor.setAutoSaveJob(false);
-        jobProcessor.setAutoSaveConfiguration(false);
         jobProcessor.addTextStatusListener((text) -> {
             System.out.println(text);
         });

@@ -89,8 +89,7 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
             if (snapshotURI == null) {
                 return null;
             }
-            BufferedImage img = ImageIO.read(snapshotURI);
-            return transformImage(resizeImage(img));
+            return resizeImage(ImageIO.read(snapshotURI));
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -135,7 +134,7 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
             try {
                 BufferedImage image = internalCapture();
                 if (image != null) {
-                    broadcastCapture(image);
+                    broadcastCapture(captureForPreview());
                 }
             }
             catch (Exception e) {

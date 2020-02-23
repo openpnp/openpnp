@@ -19,11 +19,19 @@
 
 package org.openpnp.model;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.openpnp.spi.NozzleTip;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Version;
 
-public class Package implements Identifiable {
+public class Package extends AbstractModelObject implements Identifiable {
     @Version(revision=1.1)
     private double version;    
     
@@ -35,6 +43,11 @@ public class Package implements Identifiable {
 
     @Element(required = false)
     private Footprint footprint;
+    
+    @ElementList(required = false)
+    protected List<String> compatibleNozzleTipIds = new ArrayList<>();
+
+    protected Set<NozzleTip> compatibleNozzleTips; 
 
     private Package() {
         this(null);
@@ -57,7 +70,9 @@ public class Package implements Identifiable {
      * @param id
      */
     public void setId(String id) {
+        Object oldValue = this.id;
         this.id = id;
+        firePropertyChange("id", oldValue, id);
     }
 
     public String getDescription() {
@@ -65,7 +80,9 @@ public class Package implements Identifiable {
     }
 
     public void setDescription(String description) {
+        Object oldValue = this.description;
         this.description = description;
+        firePropertyChange("description", oldValue, description);
     }
 
     public Footprint getFootprint() {
@@ -73,11 +90,49 @@ public class Package implements Identifiable {
     }
 
     public void setFootprint(Footprint footprint) {
+        Object oldValue = this.footprint;
         this.footprint = footprint;
+        firePropertyChange("footprint", oldValue, footprint);
     }
 
     @Override
     public String toString() {
         return String.format("id %s", id);
+    }
+    
+    protected void syncCompatibleNozzleTipIds() {
+        compatibleNozzleTipIds.clear();
+        for (NozzleTip nt : compatibleNozzleTips) {
+            compatibleNozzleTipIds.add(nt.getId());
+        }
+    }
+    
+    public Set<NozzleTip> getCompatibleNozzleTips() {
+        if (compatibleNozzleTips == null) {
+            compatibleNozzleTips = new HashSet<>();
+            for (String nozzleTipId : compatibleNozzleTipIds) {
+                NozzleTip nt = Configuration.get().getMachine().getNozzleTip(nozzleTipId);
+                if (nt != null) {
+                    compatibleNozzleTips.add(nt);
+                }
+            }
+        }
+        return Collections.unmodifiableSet(compatibleNozzleTips);
+    }
+
+    public void addCompatibleNozzleTip(NozzleTip nt) {
+        // Makes sure the structure has been initialized.
+        getCompatibleNozzleTips();
+        compatibleNozzleTips.add(nt);
+        syncCompatibleNozzleTipIds();
+        firePropertyChange("compatibleNozzleTips", null, getCompatibleNozzleTips());
+    }
+
+    public void removeCompatibleNozzleTip(NozzleTip nt) {
+        // Makes sure the structure has been initialized.
+        getCompatibleNozzleTips();
+        compatibleNozzleTips.remove(nt);
+        syncCompatibleNozzleTipIds();
+        firePropertyChange("compatibleNozzleTips", null, getCompatibleNozzleTips());
     }
 }

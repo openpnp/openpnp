@@ -12,7 +12,7 @@
 			name="1" enabled="true" conversion="Bgr2HsvFull" />
 		<cv-stage class="org.openpnp.vision.pipeline.stages.MaskHsv"
 			name="2" enabled="true" hue-min="60" hue-max="130" saturation-min="0"
-			saturation-max="255" value-min="0" value-max="255" />
+			saturation-max="255" value-min="0" value-max="255" invert="false" />
 		<cv-stage class="org.openpnp.vision.pipeline.stages.ConvertColor"
 			name="3" enabled="true" conversion="Hsv2BgrFull" />
 		<cv-stage class="org.openpnp.vision.pipeline.stages.ConvertColor"

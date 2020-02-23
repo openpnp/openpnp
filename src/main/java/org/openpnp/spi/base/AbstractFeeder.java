@@ -25,8 +25,15 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     @Attribute
     protected String partId;
     
+    /**
+     * Note: This is feedRetryCount in reality. It was left as retryCount for backwards
+     * compatibility when pickRetryCount was added. 
+     */
     @Attribute(required=false)
     protected int retryCount = 3;
+    
+    @Attribute(required = false)
+    protected int pickRetryCount = 3;
 
     protected Part part;
 
@@ -84,12 +91,20 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
         return Icons.feeder;
     }
 
-    public int getRetryCount() {
+    public int getFeedRetryCount() {
         return retryCount;
     }
 
-    public void setRetryCount(int retryCount) {
+    public void setFeedRetryCount(int retryCount) {
         this.retryCount = retryCount;
+    }
+    
+    public int getPickRetryCount() {
+        return pickRetryCount;
+    }
+
+    public void setPickRetryCount(int pickRetryCount) {
+        this.pickRetryCount = pickRetryCount;
     }
 
     @Override

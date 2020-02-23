@@ -27,11 +27,13 @@ import javax.swing.border.TitledBorder;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
@@ -50,13 +52,11 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 
 @SuppressWarnings("serial")
 public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceHead head;
-    private JTextField parkX;
-    private JTextField parkY;
-
 
     public ReferenceHeadConfigurationWizard(ReferenceHead head) {
         this.head = head;
@@ -164,6 +164,45 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
 
         softLimitsEnabled = new JCheckBox("Enabled?");
         panel_1.add(softLimitsEnabled, "2, 8, 7, 1");
+        
+        JPanel panel_2 = new JPanel();
+        panel_2.setBorder(new TitledBorder(null, "Z Probe", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panel_2);
+        panel_2.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(100dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        JLabel lblNewLabel_4 = new JLabel("Z Probe Actuator");
+        panel_2.add(lblNewLabel_4, "2, 2, right, default");
+        
+        comboBoxZProbeActuator = new JComboBox();
+        comboBoxZProbeActuator.setModel(new ActuatorsComboBoxModel(head));
+        panel_2.add(comboBoxZProbeActuator, "4, 2");
+        
+        JPanel panel_3 = new JPanel();
+        panel_3.setBorder(new TitledBorder(null, "Pump", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panel_3);
+        panel_3.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(100dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        JLabel lblVacuumPumpActuator = new JLabel("Vacuum Pump Actuator");
+        panel_3.add(lblVacuumPumpActuator, "2, 2, 2, 1, right, default");
+        
+        comboBoxPumpActuator = new JComboBox();
+        comboBoxPumpActuator.setModel(new ActuatorsComboBoxModel(head));
+        panel_3.add(comboBoxPumpActuator, "4, 2, fill, default");
+        
     }
 
     @Override
@@ -187,12 +226,16 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
 
         addWrappedBinding(head, "softLimitsEnabled", softLimitsEnabled, "selected");
 
+        addWrappedBinding(head, "zProbeActuatorName", comboBoxZProbeActuator, "selectedItem");
+        addWrappedBinding(head, "pumpActuatorName", comboBoxPumpActuator, "selectedItem");
+
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(parkX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(parkY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(minX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(minY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxY);
+        
     }
 
     private static Location getParsedLocation(JTextField textFieldX, JTextField textFieldY) {
@@ -317,5 +360,9 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
     private JTextField minY;
     private JTextField maxX;
     private JTextField maxY;
+    private JTextField parkX;
+    private JTextField parkY;
     private JCheckBox softLimitsEnabled;
+    private JComboBox comboBoxZProbeActuator;
+    private JComboBox comboBoxPumpActuator;
 }

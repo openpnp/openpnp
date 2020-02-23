@@ -8,10 +8,10 @@ To import the OpenPnP files:
 4. Add a new language by selecting Edit -> Add Locale. See
    https://www.oracle.com/technetwork/java/javase/java8locales-2095355.html for a list of
    language codes.
+
+Note: There is an issue where a parent of a nested key is not editable in the tool
    
 OpenPnP will detect your language automatically and use the correct language file. If you want
-to override the language, add something like `Locale.setDefault(new Locale("ru"));` to `Main.java`
-at the beginning of the `main()` method. In the future there will be a menu setting to choose
-the language.
+to change the language you can select "View->Language" from the top menu.
 
 TODO: Decide on Menu.File or Menu.File.Title. Menu.File is not editable in i18n editor.

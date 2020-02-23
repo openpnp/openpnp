@@ -44,7 +44,6 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PasteDispenser;
 import org.simpleframework.xml.Serializer;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -82,9 +81,6 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         comboBoxHm.addItem(new HeadMountableItem(null));
         for (Head head : Configuration.get().getMachine().getHeads()) {
             for (Nozzle hm : head.getNozzles()) {
-                comboBoxHm.addItem(new HeadMountableItem(hm));
-            }
-            for (PasteDispenser hm : head.getPasteDispensers()) {
                 comboBoxHm.addItem(new HeadMountableItem(hm));
             }
             for (Camera hm : head.getCameras()) {
@@ -387,9 +383,6 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
             String type = null;
             if (hm instanceof Nozzle) {
                 type = "Nozzle";
-            }
-            else if (hm instanceof PasteDispenser) {
-                type = "Paste Dispenser";
             }
             else if (hm instanceof Camera) {
                 type = "Camera";

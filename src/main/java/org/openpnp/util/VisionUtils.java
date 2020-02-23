@@ -12,9 +12,12 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
+import org.openpnp.spi.PartAlignment.PartAlignmentOffset;
 import org.pmw.tinylog.Logger;
 
 import com.google.zxing.BinaryBitmap;
@@ -77,6 +80,19 @@ public class VisionUtils {
     }
 
     /**
+     * Same as getPixelLocation() but including the tool specific calibration offset.
+     *  
+     * @param camera
+     * @param tool
+     * @param x
+     * @param y
+     * @return
+     */
+    public static Location getPixelLocation(Camera camera, HeadMountable tool, double x, double y) {
+        return camera.getLocation(tool).add(getPixelCenterOffsets(camera, x, y));
+    }
+
+    /**
      * Get an angle in the OpenPNP coordinate system from an angle in the camera pixel  
      * coordinate system. 
      * The angle needs to be sign reversed to reflect the fact that the Z and Y axis are sign reversed.
@@ -128,6 +144,37 @@ public class VisionUtils {
     }
     
     /**
+     * Get a location in camera pixels. This is the reverse transformation of getPixelLocation().
+     *  
+     * @param location
+     * @param camera
+     * @return
+     */
+    public static Point getLocationPixels(Camera camera, Location location) {
+        return getLocationPixels(camera, null, location);
+    }
+    
+    /**
+     * Get a location in camera pixels. This is the reverse transformation of getPixelLocation(tool).
+     * This overload includes the tool specific calibration offset. 
+     * 
+     * @param camera
+     * @param tool
+     * @param location
+     * @return
+     */
+    public static Point getLocationPixels(Camera camera, HeadMountable tool, Location location) {
+        // get the units per pixel scale 
+        Location unitsPerPixel = camera.getUnitsPerPixel();
+        // convert inputs to the same units, center on camera and scale
+        location = location.convertToUnits(unitsPerPixel.getUnits())
+                .subtract(camera.getLocation(tool))
+                .multiply(1./unitsPerPixel.getX(), -1./unitsPerPixel.getY(), 0., 0.);
+        // relative to upper left corner of camera in pixels
+        return new Point(location.getX()+camera.getWidth()/2, location.getY()+camera.getHeight()/2);
+    }
+    
+    /**
      * Using the given camera, try to find a QR code and return it's text. This is just a wrapper
      * for the generic scanBarcode(Camera) function. This one was added before the other and I don't
      * want to remove it in case people are using it, but it does the same thing. 
@@ -166,14 +213,17 @@ public class VisionUtils {
         catch (Exception e) {
             Logger.warn(e);
         }
+        PartAlignmentOffset offsets = null;
         try {
-            return p.findOffsets(part, boardLocation, placementLocation, nozzle);
+            offsets = p.findOffsets(part, boardLocation, placementLocation, nozzle);
+            return offsets;
         }
         finally {
             try {
                 Map<String, Object> globals = new HashMap<>();
                 globals.put("part", part);
                 globals.put("nozzle", nozzle);
+                globals.put("offsets", offsets);
                 Configuration.get().getScripting().on("Vision.PartAlignment.After", globals);
             }
             catch (Exception e) {

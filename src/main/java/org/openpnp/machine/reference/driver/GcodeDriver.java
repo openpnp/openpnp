@@ -27,9 +27,6 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
-import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.machine.reference.ReferenceNozzleTip;
-import org.openpnp.machine.reference.ReferencePasteDispenser;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConsole;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverGcodes;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverSettings;
@@ -65,19 +62,22 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         POST_VISION_HOME_COMMAND,
         HOME_COMMAND("Id", "Name"),
         HOME_COMPLETE_REGEX(true),
+        @Deprecated
         PUMP_ON_COMMAND,
+        @Deprecated
         PUMP_OFF_COMMAND,
         MOVE_TO_COMMAND(true, "Id", "Name", "FeedRate", "X", "Y", "Z", "Rotation"),
+        MOVE_TO_COMPLETE_COMMAND(true),
         MOVE_TO_COMPLETE_REGEX(true),
+        @Deprecated
         PICK_COMMAND(true, "Id", "Name", "VacuumLevelPartOn", "VacuumLevelPartOff"),
+        @Deprecated
         PLACE_COMMAND(true, "Id", "Name"),
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
         ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index"),
-        ACTUATOR_READ_REGEX(true),
-        PRE_DISPENSE_COMMAND(false, "DispenseTime"),
-        DISPENSE_COMMAND(false, "DispenseTime"),
-        POST_DISPENSE_COMMAND(false, "DispenseTime");
+        ACTUATOR_READ_WITH_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
+        ACTUATOR_READ_REGEX(true);
 
         final boolean headMountable;
         final String[] variableNames;
@@ -166,6 +166,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     @Attribute(required = false)
     protected boolean visualHomingEnabled = true;
 
+    @Attribute(required = false)
+    protected boolean backslashEscapedCharactersEnabled = false;
+
     @Element(required = false)
     protected Location homingFiducialLocation = new Location(LengthUnit.Millimeters);
 
@@ -185,7 +188,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     private boolean disconnectRequested;
     private boolean connected;
     private LinkedBlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
-    private Set<Nozzle> pickedNozzles = new HashSet<>();
     private GcodeDriver parent = null;
     
     @Commit
@@ -221,7 +223,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         commands.add(new Command(null, CommandType.COMMAND_CONFIRM_REGEX, "^ok.*"));
         commands.add(new Command(null, CommandType.CONNECT_COMMAND, "G21 ; Set millimeters mode\nG90 ; Set absolute positioning mode\nM82 ; Set absolute mode for extruder"));
         commands.add(new Command(null, CommandType.HOME_COMMAND, "G28 ; Home all axes"));
-        commands.add(new Command(null, CommandType.MOVE_TO_COMMAND, "G0 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:E%.4f} F{FeedRate:%.0f} ; Send standard Gcode move\nM400 ; Wait for moves to complete before returning"));
+        commands.add(new Command(null, CommandType.MOVE_TO_COMMAND, "G0 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:E%.4f} F{FeedRate:%.0f} ; Send standard Gcode move"));
+        commands.add(new Command(null, CommandType.MOVE_TO_COMPLETE_COMMAND, "M400 ; Wait for moves to complete before returning"));
     }
 
     public synchronized void connect() throws Exception {
@@ -276,29 +279,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             	disconnect();
         	}
         }
-    }
-
-    @Override
-    public void dispense(ReferencePasteDispenser dispenser,Location startLocation,Location endLocation,long dispenseTimeMilliseconds) throws Exception {
-        Logger.debug("dispense({}, {}, {}, {})", new Object[] {dispenser, startLocation, endLocation, dispenseTimeMilliseconds});
-
-        String command = getCommand(null, CommandType.PRE_DISPENSE_COMMAND);
-        command = substituteVariable(command, "DispenseTime", dispenseTimeMilliseconds);
-
-        sendGcode(command);
-
-        for (ReferenceDriver driver: subDrivers )
-        {
-            driver.dispense(dispenser,startLocation,endLocation,dispenseTimeMilliseconds);
-        }
-
-        command = getCommand(null, CommandType.DISPENSE_COMMAND);
-        command = substituteVariable(command, "DispenseTime", dispenseTimeMilliseconds);
-        sendGcode(command);
-
-        command = getCommand(null, CommandType.POST_DISPENSE_COMMAND);
-        command = substituteVariable(command, "DispenseTime", dispenseTimeMilliseconds);
-        sendGcode(command);
     }
 
     @Override
@@ -592,6 +572,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             rotation = rotationAxis.getTransform().toRaw(rotationAxis, hm, rotation);
         }
 
+        // remember if moved
+        boolean hasMoved = false;
+        
         // Only do something if there at least one axis included in the move
         if (xAxis != null || yAxis != null || zAxis != null || rotationAxis != null) {
 
@@ -743,6 +726,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 if (rotationAxis != null) {
                     rotationAxis.setCoordinate(rotation);
                 }
+                
+                hasMoved = true;
 
             } // there is a move
 
@@ -751,6 +736,17 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         // regardless of any action above the subdriver needs its actions based on original input
         for (ReferenceDriver driver : subDrivers) {
             driver.moveTo(hm, locationOriginal, speed);
+        }
+
+        // if there was a move
+        if (hasMoved) {
+            /*
+             * If moveToCompleteCommand is specified, send it
+             */
+            command = getCommand(hm, CommandType.MOVE_TO_COMPLETE_COMMAND);
+            if (command != null) {
+                    sendGcode(command);
+            }
         }
 
     }
@@ -763,52 +759,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         }
         return false;
     }
-
-    @Override
-    public void pick(ReferenceNozzle nozzle) throws Exception {
-        pickedNozzles.add(nozzle);
-        if (pickedNozzles.size() > 0) {
-            sendGcode(getCommand(nozzle, CommandType.PUMP_ON_COMMAND));
-        }
-
-        String command = getCommand(nozzle, CommandType.PICK_COMMAND);
-        command = substituteVariable(command, "Id", nozzle.getId());
-        command = substituteVariable(command, "Name", nozzle.getName());
-
-        ReferenceNozzleTip nt = nozzle.getNozzleTip();
-        command = substituteVariable(command, "VacuumLevelPartOn", nt.getVacuumLevelPartOn());
-        command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
-
-        sendGcode(command);
-
-        for (ReferenceDriver driver : subDrivers) {
-            driver.pick(nozzle);
-        }
-    }
-
-    @Override
-    public void place(ReferenceNozzle nozzle) throws Exception {
-
-        ReferenceNozzleTip nt = nozzle.getNozzleTip();
-
-        String command = getCommand(nozzle, CommandType.PLACE_COMMAND);
-        command = substituteVariable(command, "Id", nozzle.getId());
-        command = substituteVariable(command, "Name", nozzle.getName());
-
-        command = substituteVariable(command, "VacuumLevelPartOn", nt.getVacuumLevelPartOn());
-        command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
-        sendGcode(command);
-
-        pickedNozzles.remove(nozzle);
-        if (pickedNozzles.size() < 1) {
-            sendGcode(getCommand(nozzle, CommandType.PUMP_OFF_COMMAND));
-        }
-
-        for (ReferenceDriver driver : subDrivers) {
-            driver.place(nozzle);
-        }
-    }
-
 
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
@@ -868,6 +818,51 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         for (String line : responses) {
             if (line.matches(regex)) {
                 Logger.trace("actuatorRead response: {}", line);
+                Matcher matcher = Pattern.compile(regex).matcher(line);
+                matcher.matches();
+
+                try {
+                    String s = matcher.group("Value");
+                    return s;
+                }
+                catch (Exception e) {
+                    throw new Exception("Failed to read Actuator " + actuator.getName(), e);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public String actuatorRead(ReferenceActuator actuator, double parameter) throws Exception {
+        String command = getCommand(actuator, CommandType.ACTUATOR_READ_WITH_DOUBLE_COMMAND);
+        String regex = getCommand(actuator, CommandType.ACTUATOR_READ_REGEX);
+        if (command == null || regex == null) {
+            // If the command or regex is null we'll query the subdrivers. The first
+            // to respond with a non-null value wins.
+            for (ReferenceDriver driver : subDrivers) {
+                String val = driver.actuatorRead(actuator, parameter);
+                if (val != null) {
+                    return val;
+                }
+            }
+            // If none of the subdrivers returned a value there's nothing left to
+            // do, so return null.
+            return null;
+        }
+
+        command = substituteVariable(command, "Id", actuator.getId());
+        command = substituteVariable(command, "Name", actuator.getName());
+        command = substituteVariable(command, "Index", actuator.getIndex());
+        command = substituteVariable(command, "DoubleValue", parameter);
+        command = substituteVariable(command, "IntegerValue", (int) parameter);
+
+        List<String> responses = sendGcode(command);
+
+        for (String line : responses) {
+            if (line.matches(regex)) {
+                Logger.trace("actuatorReadWithDouble response: {}", line);
                 Matcher matcher = Pattern.compile(regex).matcher(line);
                 matcher.matches();
 
@@ -949,6 +944,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
 
         // Send the command, if one was specified
         if (command != null) {
+            if (backslashEscapedCharactersEnabled) {
+                command = unescape(command);
+            }
             Logger.trace("[{}] >> {}", getCommunications().getConnectionName(), command);
             getCommunications().writeLine(command);
         }
@@ -1019,9 +1017,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             }
             line = line.trim();
             Logger.trace("[{}] << {}", getCommunications().getConnectionName(), line);
-            if (!processPositionReport(line)) {
-                responseQueue.offer(line);
-            }
+            // extract a position report, if present
+            processPositionReport(line);
+            // add to the responseQueue (even if it happens to be a position report, it might still also contain the "ok"
+            // acknowledgment e.g. on Smoothieware)
+            responseQueue.offer(line);
         }
     }
 
@@ -1255,6 +1255,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         this.visualHomingEnabled = visualHomingEnabled;
     }
 
+    public boolean isBackslashEscapedCharactersEnabled() {
+        return backslashEscapedCharactersEnabled;
+    }
+
+    public void setBackslashEscapedCharactersEnabled(boolean backslashEscapedCharactersEnabled) {
+        this.backslashEscapedCharactersEnabled = backslashEscapedCharactersEnabled;
+    }
+
     public static class Axis {
         public enum Type {
             X,
@@ -1471,4 +1479,5 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             return transformedCoordinate;
         }
     }
+    
 }

@@ -89,8 +89,8 @@ public class ReferenceBottomVision implements PartAlignment {
         }
     }
     
-    public Location getCameraLocationAtPartHeight(Part part, Camera camera, double angle) {
-        return camera.getLocation()
+    public Location getCameraLocationAtPartHeight(Part part, Camera camera, Nozzle nozzle, double angle) {
+        return camera.getLocation(nozzle)
                 .add(new Location(part.getHeight()
                         .getUnits(),
                         0.0, 0.0, part.getHeight()
@@ -109,7 +109,7 @@ public class ReferenceBottomVision implements PartAlignment {
         }
         wantedAngle = angleNorm(wantedAngle, 180.);
         // Wanted location.
-        Location wantedLocation = getCameraLocationAtPartHeight(part, camera, wantedAngle);
+        Location wantedLocation = getCameraLocationAtPartHeight(part, camera, nozzle, wantedAngle);
                 
         Location nozzleLocation = wantedLocation;
         MovableUtils.moveToLocationAtSafeZ(nozzle, nozzleLocation);
@@ -189,7 +189,7 @@ public class ReferenceBottomVision implements PartAlignment {
                     throws Exception {
         // Create a location that is the Camera's X, Y, it's Z + part height
         // and a rotation of 0, unless preRotate is enabled
-        Location wantedLocation = getCameraLocationAtPartHeight(part, camera, 0.);
+        Location wantedLocation = getCameraLocationAtPartHeight(part, camera, nozzle, 0.);
         
         MovableUtils.moveToLocationAtSafeZ(nozzle, wantedLocation);
 

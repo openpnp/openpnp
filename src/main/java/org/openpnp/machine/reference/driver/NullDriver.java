@@ -33,7 +33,6 @@ import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.machine.reference.ReferencePasteDispenser;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -222,24 +221,6 @@ public class NullDriver implements ReferenceDriver {
     }
 
     @Override
-    public void pick(ReferenceNozzle nozzle) throws Exception {
-        Logger.debug("pick({})", nozzle);
-        checkEnabled();
-        if (feedRateMmPerMinute > 0) {
-            Thread.sleep(500);
-        }
-    }
-
-    @Override
-    public void place(ReferenceNozzle nozzle) throws Exception {
-        Logger.debug("place({})", nozzle);
-        checkEnabled();
-        if (feedRateMmPerMinute > 0) {
-            Thread.sleep(500);
-        }
-    }
-
-    @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
         Logger.debug("actuate({}, {})", actuator, value);
         checkEnabled();
@@ -260,15 +241,6 @@ public class NullDriver implements ReferenceDriver {
     @Override
     public String actuatorRead(ReferenceActuator actuator) throws Exception {
         return Math.random() + "";
-    }
-
-    @Override
-    public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
-            Location endLocation, long dispenseTimeMilliseconds) throws Exception {
-        Logger.debug("dispense({}, {}, {}, {})",
-                new Object[] {dispenser, startLocation, endLocation, dispenseTimeMilliseconds});
-        checkEnabled();
-        Thread.sleep(dispenseTimeMilliseconds);
     }
 
     @Override

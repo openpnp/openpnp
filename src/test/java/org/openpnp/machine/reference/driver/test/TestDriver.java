@@ -11,11 +11,9 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.machine.reference.ReferencePasteDispenser;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
-import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
 public class TestDriver implements ReferenceDriver {
@@ -67,16 +65,6 @@ public class TestDriver implements ReferenceDriver {
     }
     
     @Override
-    public void pick(ReferenceNozzle nozzle) throws Exception {
-        delegate.pick(nozzle);
-    }
-
-    @Override
-    public void place(ReferenceNozzle nozzle) throws Exception {
-        delegate.place(nozzle);
-    }
-
-    @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
         delegate.actuate(actuator, on);
     }
@@ -85,10 +73,6 @@ public class TestDriver implements ReferenceDriver {
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
         delegate.actuate(actuator, value);
     }
-
-    @Override
-    public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
-            Location endLocation, long dispenseTimeMilliseconds) throws Exception {}
 
     @Override
     public void setEnabled(boolean enabled) throws Exception {
@@ -118,28 +102,12 @@ public class TestDriver implements ReferenceDriver {
         }
 
         @Override
-        public void pick(ReferenceNozzle nozzle) throws Exception {
-
-        }
-
-        @Override
-        public void place(ReferenceNozzle nozzle) throws Exception {
-
-        }
-
-        @Override
         public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
 
         }
 
         @Override
         public void actuate(ReferenceActuator actuator, double value) throws Exception {
-
-        }
-
-        @Override
-        public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
-                Location endLocation, long dispenseTimeMilliseconds) throws Exception {
 
         }
 

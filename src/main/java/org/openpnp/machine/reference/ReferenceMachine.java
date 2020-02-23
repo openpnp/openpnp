@@ -35,11 +35,14 @@ import org.openpnp.machine.reference.camera.OnvifIPCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
+import org.openpnp.machine.reference.camera.SwitcherCamera;
 import org.openpnp.machine.reference.camera.Webcams;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.feeder.AdvancedLoosePartFeeder;
+import org.openpnp.machine.reference.feeder.BlindsFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceDragFeeder;
+import org.openpnp.machine.reference.feeder.ReferenceLeverFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceLoosePartFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceRotatedTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceSlotAutoFeeder;
@@ -48,6 +51,7 @@ import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.machine.reference.psh.ActuatorsPropertySheetHolder;
 import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
+import org.openpnp.machine.reference.psh.NozzleTipsPropertySheetHolder;
 import org.openpnp.machine.reference.psh.SignalersPropertySheetHolder;
 import org.openpnp.machine.reference.signaler.ActuatorSignaler;
 import org.openpnp.machine.reference.signaler.SoundSignaler;
@@ -62,7 +66,6 @@ import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
-import org.openpnp.spi.PasteDispenseJobProcessor;
 import org.openpnp.spi.PnpJobProcessor;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.Signaler;
@@ -78,13 +81,6 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Element(required = false)
     protected PnpJobProcessor pnpJobProcessor = new ReferencePnpJobProcessor();
-
-    @Element(required = false)
-    protected PasteDispenseJobProcessor pasteDispenseJobProcessor;
-
-    @Deprecated
-    @Element(required = false)
-    protected PartAlignment partAlignment = null;
 
     @Element(required = false)
     protected FiducialLocator fiducialLocator = new ReferenceFiducialLocator();
@@ -122,11 +118,6 @@ public class ReferenceMachine extends AbstractMachine {
                          @Override
                          public void configurationLoaded(Configuration configuration)
                                  throws Exception {
-                             // move any single partAlignments into our list
-                             if (partAlignment != null) {
-                                 partAlignments.add(partAlignment);
-                                 partAlignment = null;
-                             }
                              if (partAlignments.isEmpty()) {
                                  partAlignments.add(new ReferenceBottomVision());
                              }
@@ -185,12 +176,13 @@ public class ReferenceMachine extends AbstractMachine {
         children.add(new SignalersPropertySheetHolder(this, "Signalers", getSignalers(), null));
         children.add(new SimplePropertySheetHolder("Feeders", getFeeders()));
         children.add(new SimplePropertySheetHolder("Heads", getHeads()));
+        children.add(new NozzleTipsPropertySheetHolder("Nozzle Tips", getNozzleTips(), null));
         children.add(new CamerasPropertySheetHolder(null, "Cameras", getCameras(), null));
         children.add(new ActuatorsPropertySheetHolder(null, "Actuators", getActuators(), null));
         children.add(
                 new SimplePropertySheetHolder("Driver", Collections.singletonList(getDriver())));
         children.add(new SimplePropertySheetHolder("Job Processors",
-                Arrays.asList(getPnpJobProcessor()/* , getPasteDispenseJobProcessor() */)));
+                Arrays.asList(getPnpJobProcessor())));
 
         List<PropertySheetHolder> vision = new ArrayList<>();
         for (PartAlignment alignment : getPartAlignments()) {
@@ -222,11 +214,13 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(ReferenceTrayFeeder.class);
         l.add(ReferenceRotatedTrayFeeder.class);
         l.add(ReferenceDragFeeder.class);
+        l.add(ReferenceLeverFeeder.class);
         l.add(ReferenceTubeFeeder.class);
         l.add(ReferenceAutoFeeder.class);
         l.add(ReferenceSlotAutoFeeder.class);
         l.add(ReferenceLoosePartFeeder.class);
         l.add(AdvancedLoosePartFeeder.class);
+        l.add(BlindsFeeder.class);
         l.addAll(registeredFeederClasses);
         return l;
     }
@@ -239,6 +233,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(Webcams.class);
         l.add(OnvifIPCamera.class);
         l.add(ImageCamera.class);
+        l.add(SwitcherCamera.class);
         l.add(SimulatedUpCamera.class);
         return l;
     }
@@ -247,6 +242,7 @@ public class ReferenceMachine extends AbstractMachine {
     public List<Class<? extends Nozzle>> getCompatibleNozzleClasses() {
         List<Class<? extends Nozzle>> l = new ArrayList<>();
         l.add(ReferenceNozzle.class);
+        l.add(ContactProbeNozzle.class);
         return l;
     }
 
@@ -277,6 +273,13 @@ public class ReferenceMachine extends AbstractMachine {
         this.setHomed(false);
         
         super.home();
+
+        try {
+            Configuration.get().getScripting().on("Machine.AfterHoming", null);
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+        }
 
         // if homing went well, set machine homed-flag true
         this.setHomed(true);     
@@ -318,11 +321,6 @@ public class ReferenceMachine extends AbstractMachine {
     @Override
     public PnpJobProcessor getPnpJobProcessor() {
         return pnpJobProcessor;
-    }
-
-    @Override
-    public PasteDispenseJobProcessor getPasteDispenseJobProcessor() {
-        return pasteDispenseJobProcessor;
     }
 
     public boolean getHomeAfterEnabled() {

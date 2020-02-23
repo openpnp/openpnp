@@ -19,6 +19,8 @@
 
 package org.openpnp.spi;
 
+import java.util.List;
+
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 import org.openpnp.model.Named;
@@ -63,6 +65,19 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
     public Location getPickLocation() throws Exception;
 
     /**
+     * Prepares a Feeder for usage in a Job. This is done for all the feeders that are enabled and 
+     * contain Parts that are used in pending placements. Preparation is done when the Job is started, 
+     * so it can perform one-time initialization that should not be postponed until the Nozzle.feed() 
+     * 
+     * @param feedersToPrepare Lists all the feeders to be prepared, so bulk preparation is possible. 
+     * Bulk preparation, should only be triggered once for each concern, regardless of subsequent calls 
+     * to this method. Therefore feeders must record whether preparation was already done.
+     *   
+     * @throws Exception
+     */
+    public void prepareForJob(List<Feeder> feedersToPrepare) throws Exception;
+    
+    /**
      * Commands the Feeder to do anything it needs to do to prepare the part to be picked by the
      * specified Nozzle. If the Feeder requires Head interaction to feed it will perform those
      * operations during this call.
@@ -77,5 +92,7 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
 
     public void postPick(Nozzle nozzle) throws Exception;
     
-    public int getRetryCount();
+    public int getFeedRetryCount();
+    
+    public int getPickRetryCount();
 }

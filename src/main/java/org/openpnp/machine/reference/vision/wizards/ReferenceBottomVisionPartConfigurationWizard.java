@@ -154,7 +154,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
 
         // position the part over camera center
         Location cameraLocation = bottomVision.getCameraLocationAtPartHeight(part, 
-                VisionUtils.getBottomVisionCamera(), 0.);
+                VisionUtils.getBottomVisionCamera(), nozzle, 0.);
 
         if (alignmentOffset.getPreRotated()) {
             // See https://github.com/openpnp/openpnp/pull/590 for explanations of the magic

@@ -159,10 +159,9 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         ensureOpen();
         try {
             while (!stream.hasNewFrame()) {
-                
+                Thread.yield();
             }
             BufferedImage img = stream.capture();
-            img = transformImage(img);
             /**
              * We don't ever want to "waste" an image. So even if the thread is running at a low
              * frame rate, if we've been forced to capture an image we broadcast it.
@@ -176,16 +175,19 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
              * And further, note that the *reason* the thread doesn't call internalCapture() on
              * this implementation is due to the hasNewFrame() busy loop up there. We don't want
              * the thread busy looping and eating tons of CPU.
+             * 
+             * Also note that we have to transform here, since we're broadcasting the image
+             * directly. Most of the other implementations just call captureForPreview() which
+             * handles the transform, but because of the above we can't do that.
              */
-            broadcastCapture(img);
+            broadcastCapture(transformImage(img));
             return img;
         }
         catch (Exception e) {
-            e.printStackTrace();
             return null;
         }
     }
-
+    
     @Override
     public synchronized void startContinuousCapture(CameraListener listener) {
         ensureOpen();
