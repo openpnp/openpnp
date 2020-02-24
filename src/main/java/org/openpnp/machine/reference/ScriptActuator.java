@@ -11,7 +11,7 @@ import org.simpleframework.xml.Element;
 
 public class ScriptActuator extends ReferenceActuator {
     @Element
-    String scriptName;
+    protected String scriptName = "";
     
     private void execute(Map<String, Object> globals) throws Exception {
         // Using https://docs.oracle.com/javase/7/docs/technotes/guides/scripting/programmer_guide/ 
@@ -43,4 +43,14 @@ public class ScriptActuator extends ReferenceActuator {
     public Wizard getConfigurationWizard() {
         return new ScriptActuatorConfigurationWizard(this);
     }
+
+    public String getScriptName() {
+        return this.scriptName;
+    }
+
+    public void setScriptName(String scriptName) {
+        this.scriptName = scriptName;
+        firePropertyChange("scriptName", null, this.scriptName);
+    }
+
 }

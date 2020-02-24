@@ -59,6 +59,9 @@ public class ScriptActuatorConfigurationWizard extends AbstractConfigurationWiza
     private JPanel panelProperties;
     private JLabel lblName;
     private JTextField nameTf;
+    private JLabel lblScriptName;
+    private JTextField scriptNameTf;
+
 
     public ScriptActuatorConfigurationWizard(ScriptActuator actuator) {
         this.actuator = actuator;
@@ -73,6 +76,8 @@ public class ScriptActuatorConfigurationWizard extends AbstractConfigurationWiza
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblName = new JLabel("Name");
@@ -81,6 +86,13 @@ public class ScriptActuatorConfigurationWizard extends AbstractConfigurationWiza
         nameTf = new JTextField();
         panelProperties.add(nameTf, "4, 2, fill, default");
         nameTf.setColumns(20);
+
+        lblScriptName = new JLabel("Script Name");
+        panelProperties.add(lblScriptName, "2, 4, right, default");
+
+        scriptNameTf = new JTextField();
+        panelProperties.add(scriptNameTf, "4, 4, fill, default");
+        scriptNameTf.setColumns(40);
 
         headMountablePanel = new JPanel();
         headMountablePanel.setLayout(new BoxLayout(headMountablePanel, BoxLayout.Y_AXIS));
@@ -164,6 +176,7 @@ public class ScriptActuatorConfigurationWizard extends AbstractConfigurationWiza
         IntegerConverter intConverter = new IntegerConverter();
 
         addWrappedBinding(actuator, "name", nameTf, "text");
+        addWrappedBinding(actuator, "scriptName", scriptNameTf, "text");
         MutableLocationProxy headOffsets = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, actuator, "headOffsets", headOffsets, "location");
         addWrappedBinding(headOffsets, "lengthX", locationX, "text", lengthConverter);
@@ -173,6 +186,7 @@ public class ScriptActuatorConfigurationWizard extends AbstractConfigurationWiza
         addWrappedBinding(actuator, "index", indexTextField, "text", intConverter);
 
         ComponentDecorators.decorateWithAutoSelect(nameTf);
+        ComponentDecorators.decorateWithAutoSelect(scriptNameTf);
         ComponentDecorators.decorateWithAutoSelect(indexTextField);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationY);
