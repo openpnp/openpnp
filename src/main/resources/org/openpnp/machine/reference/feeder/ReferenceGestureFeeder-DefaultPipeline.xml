@@ -1,0 +1,17 @@
+<cv-pipeline>
+   <stages>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageRead" name="00" enabled="false" file="test.png"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="0" enabled="true" settle-first="true" count="1"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.BlurGaussian" name="1" enabled="true" kernel-size="3"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.MaskCircle" name="9" enabled="true" diameter="400"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ConvertColor" name="2" enabled="true" conversion="Bgr2Hsv"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.Normalize" name="3" enabled="false"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.MaskHsv" name="4" enabled="true" auto="false" fraction-to-mask="0.0" hue-min="45" hue-max="85" saturation-min="50" saturation-max="255" value-min="20" value-max="255" invert="false" binary-mask="true"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.BlurMedian" name="5" enabled="true" kernel-size="13"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.FindContours" name="7" enabled="true" retrieval-mode="List" approximation-method="Simple"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.FilterContours" name="8" enabled="true" contours-stage-name="7" min-area="1000.0" max-area="100000.0"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.FitEllipseContours" name="results" enabled="true" contours-stage-name="8"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageRecall" name="10" enabled="true" image-stage-name="0"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.DrawEllipses" name="6" enabled="false" ellipses-stage-name="results" thickness="2"/>
+   </stages>
+</cv-pipeline>

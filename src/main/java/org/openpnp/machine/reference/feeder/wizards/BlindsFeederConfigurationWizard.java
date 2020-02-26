@@ -949,13 +949,5 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     }
     protected void initDataBindings() {
     }
-    private class SwingAction extends AbstractAction {
-        public SwingAction() {
-            putValue(NAME, "SwingAction");
-            putValue(SHORT_DESCRIPTION, "Some short description");
-        }
-        public void actionPerformed(ActionEvent e) {
-        }
-    }
 }
 
