@@ -1,4 +1,6 @@
 /*
+ * Copyright (C) 2020 <mark@makr.zone>
+ * based on the ReferenceLeverFeeder 
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
  * 
  * This file is part of OpenPnP.
@@ -45,6 +47,7 @@ import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.BufferedImageIconConverter;
 import org.openpnp.gui.support.DoubleConverter;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.LongConverter;
@@ -99,9 +102,7 @@ extends AbstractReferenceFeederConfigurationWizard {
     private JPanel panelTape;
     private JPanel panelVision;
     private JPanel panelLocations;
-    private JCheckBox chckbxVisionEnabled;
     private JPanel panelVisionEnabled;
-    private JSeparator separator;
     private LocationButtonsPanel locationButtonsPanelFirstPick;
     private LocationButtonsPanel locationButtonsPanelHole1;
     private LocationButtonsPanel locationButtonsPanelHole2;
@@ -141,11 +142,11 @@ extends AbstractReferenceFeederConfigurationWizard {
     private JLabel lblRotation;
     private JLabel lblY_1;
     private JLabel lblX_1;
-    private JLabel lblFirstPickLocation;
-    private JTextField textFieldFirstPickLocationX;
-    private JTextField textFieldFirstPickLocationY;
-    private JTextField textFieldFirstPickLocationZ;
-    private JTextField textFieldFirstPickLocationRotation;
+    private JLabel lblPickLocation;
+    private JTextField textFieldPickLocationX;
+    private JTextField textFieldPickLocationY;
+    private JTextField textFieldPickLocationZ;
+    private JTextField textFieldPickLocationRotation;
     private JLabel lblHole1Location;
     private JTextField textFieldHole1LocationX;
     private JTextField textFieldHole1LocationY;
@@ -160,6 +161,8 @@ extends AbstractReferenceFeederConfigurationWizard {
     private JTextField textFieldFeedMultiplier;
     private JLabel lblMultiplier;
     private JLabel lblHole2Location;
+    private JButton btnShowVisionFeatures;
+    private JButton btnAutoSetup;
 
     public ReferenceGestureFeederConfigurationWizard(ReferenceGestureFeeder feeder) {
         super(feeder, false);
@@ -186,132 +189,139 @@ extends AbstractReferenceFeederConfigurationWizard {
                 ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+        
+                btnShowVisionFeatures = new JButton(showVisionFeaturesAction);
+                btnShowVisionFeatures.setToolTipText("Preview the features recognized by Computer Vision.");
+                btnShowVisionFeatures.setText("Preview Vision Features");
+                panelTape.add(btnShowVisionFeatures, "2, 2, 3, 1, default, fill");
+
+        btnAutoSetup = new JButton(autoSetupAction);
+        panelTape.add(btnAutoSetup, "6, 2, 7, 1");
 
         lblX_1 = new JLabel("X");
-        panelTape.add(lblX_1, "4, 2");
+        panelTape.add(lblX_1, "4, 4");
 
         lblY_1 = new JLabel("Y");
-        panelTape.add(lblY_1, "6, 2");
+        panelTape.add(lblY_1, "6, 4");
 
         lblZ_1 = new JLabel("Z");
-        panelTape.add(lblZ_1, "8, 2");
+        panelTape.add(lblZ_1, "8, 4");
 
         lblRotation = new JLabel("Rotation");
-        panelTape.add(lblRotation, "10, 2");
+        panelTape.add(lblRotation, "10, 4");
 
-        lblFirstPickLocation = new JLabel("First Pick Location");
-        lblFirstPickLocation.setToolTipText("<html>Pick Location of the part. If multiple are produced by a feed operation<br/>\r\nthis must be the first part i.e. the one furthest away from the tape reel.</html>");
-        panelTape.add(lblFirstPickLocation, "2, 4, right, default");
+        lblPickLocation = new JLabel("Pick Location");
+        lblPickLocation.setToolTipText("<html>Pick Location of the part. If multiple are produced by a feed operation<br/>\r\nthis must be the last one picked i.e. the one closest to the the tape reel.</html>");
+        panelTape.add(lblPickLocation, "2, 6, right, default");
 
-        textFieldFirstPickLocationX = new JTextField();
-        panelTape.add(textFieldFirstPickLocationX, "4, 4");
-        textFieldFirstPickLocationX.setColumns(10);
+        textFieldPickLocationX = new JTextField();
+        panelTape.add(textFieldPickLocationX, "4, 6");
+        textFieldPickLocationX.setColumns(10);
 
-        textFieldFirstPickLocationY = new JTextField();
-        panelTape.add(textFieldFirstPickLocationY, "6, 4");
-        textFieldFirstPickLocationY.setColumns(10);
+        textFieldPickLocationY = new JTextField();
+        panelTape.add(textFieldPickLocationY, "6, 6");
+        textFieldPickLocationY.setColumns(10);
 
-        textFieldFirstPickLocationZ = new JTextField();
-        panelTape.add(textFieldFirstPickLocationZ, "8, 4");
-        textFieldFirstPickLocationZ.setColumns(10);
+        textFieldPickLocationZ = new JTextField();
+        panelTape.add(textFieldPickLocationZ, "8, 6");
+        textFieldPickLocationZ.setColumns(10);
 
-        textFieldFirstPickLocationRotation = new JTextField();
-        panelTape.add(textFieldFirstPickLocationRotation, "10, 4");
-        textFieldFirstPickLocationRotation.setColumns(10);
+        textFieldPickLocationRotation = new JTextField();
+        panelTape.add(textFieldPickLocationRotation, "10, 6");
+        textFieldPickLocationRotation.setColumns(10);
 
-        locationButtonsPanelFirstPick = new LocationButtonsPanel(textFieldFirstPickLocationX, textFieldFirstPickLocationY, textFieldFirstPickLocationZ, 
-                textFieldFirstPickLocationRotation);
-        panelTape.add(locationButtonsPanelFirstPick, "12, 4");
+        locationButtonsPanelFirstPick = new LocationButtonsPanel(textFieldPickLocationX, textFieldPickLocationY, textFieldPickLocationZ, 
+                textFieldPickLocationRotation);
+        panelTape.add(locationButtonsPanelFirstPick, "12, 6");
 
         lblHole1Location = new JLabel("Hole 1 Location");
         lblHole1Location.setToolTipText("<html>Choose Hole 1 closer to the tape reel.<br/>\r\nIf possible choose two holes that bracket the part(s) to be picked.\r\n</html>");
-        panelTape.add(lblHole1Location, "2, 6, right, default");
+        panelTape.add(lblHole1Location, "2, 8, right, default");
 
         textFieldHole1LocationX = new JTextField();
-        panelTape.add(textFieldHole1LocationX, "4, 6");
+        panelTape.add(textFieldHole1LocationX, "4, 8");
         textFieldHole1LocationX.setColumns(10);
 
         textFieldHole1LocationY = new JTextField();
-        panelTape.add(textFieldHole1LocationY, "6, 6");
+        panelTape.add(textFieldHole1LocationY, "6, 8");
         textFieldHole1LocationY.setColumns(10);
 
         locationButtonsPanelHole1 = new LocationButtonsPanel(textFieldHole1LocationX, textFieldHole1LocationY, (JTextField) null, (JTextField) null);
-        panelTape.add(locationButtonsPanelHole1, "12, 6");
-                
-                lblHole2Location = new JLabel("Hole 2 Location");
-                lblHole2Location.setToolTipText("<html>Choose Hole 2 further away from the tape reel.<br/>\r\nIf possible choose two holes that bracket the part(s) to be picked.\r\n</html>");
-                panelTape.add(lblHole2Location, "2, 8, right, default");
-                
-                textFieldHole2LocationX = new JTextField();
-                panelTape.add(textFieldHole2LocationX, "4, 8");
-                textFieldHole2LocationX.setColumns(10);
-                
-                textFieldHole2LocationY = new JTextField();
-                panelTape.add(textFieldHole2LocationY, "6, 8");
-                textFieldHole2LocationY.setColumns(10);
-                
-                locationButtonsPanelHole2 = new LocationButtonsPanel(textFieldHole2LocationX, textFieldHole2LocationY, (JTextField) null, (JTextField) null);
-                panelTape.add(locationButtonsPanelHole2, "12, 8");
-        
-                lblPartPitch = new JLabel("Part Pitch");
-                lblPartPitch.setToolTipText("Pitch of the parts in the tape (2mm, 4mm, 8mm, 12mm, etc.)");
-                panelTape.add(lblPartPitch, "2, 12, right, default");
-        
-                textFieldPartPitch = new JTextField();
-                textFieldPartPitch.setToolTipText("Pitch of the parts in the tape (2mm, 4mm, 8mm, 12mm, etc.)");
-                panelTape.add(textFieldPartPitch, "4, 12");
-                textFieldPartPitch.setColumns(5);
-        
-                lblFeedPitch = new JLabel("Feed Pitch");
-                lblFeedPitch.setToolTipText("How much the tape will be advanced by one feed operation (usually multiples of 4mm)");
-                panelTape.add(lblFeedPitch, "6, 12, right, default");
-        
-                textFieldFeedPitch = new JTextField();
-                textFieldFeedPitch.setToolTipText("How much the tape will be advanced by one feed operation (usually multiples of 4mm)");
-                panelTape.add(textFieldFeedPitch, "8, 12");
-                textFieldFeedPitch.setColumns(10);
-        
-        btnShowVisionFeatures = new JButton(showVisionFeaturesAction);
-        panelTape.add(btnShowVisionFeatures, "12, 12");
-        
+        panelTape.add(locationButtonsPanelHole1, "12, 8");
+
+        lblHole2Location = new JLabel("Hole 2 Location");
+        lblHole2Location.setToolTipText("<html>Choose Hole 2 further away from the tape reel.<br/>\r\nIf possible choose two holes that bracket the part(s) to be picked.\r\n</html>");
+        panelTape.add(lblHole2Location, "2, 10, right, default");
+
+        textFieldHole2LocationX = new JTextField();
+        panelTape.add(textFieldHole2LocationX, "4, 10");
+        textFieldHole2LocationX.setColumns(10);
+
+        textFieldHole2LocationY = new JTextField();
+        panelTape.add(textFieldHole2LocationY, "6, 10");
+        textFieldHole2LocationY.setColumns(10);
+
+        locationButtonsPanelHole2 = new LocationButtonsPanel(textFieldHole2LocationX, textFieldHole2LocationY, (JTextField) null, (JTextField) null);
+        panelTape.add(locationButtonsPanelHole2, "12, 10");
+
+        lblPartPitch = new JLabel("Part Pitch");
+        lblPartPitch.setToolTipText("Pitch of the parts in the tape (2mm, 4mm, 8mm, 12mm, etc.)");
+        panelTape.add(lblPartPitch, "2, 14, right, default");
+
+        textFieldPartPitch = new JTextField();
+        textFieldPartPitch.setToolTipText("Pitch of the parts in the tape (2mm, 4mm, 8mm, 12mm, etc.)");
+        panelTape.add(textFieldPartPitch, "4, 14");
+        textFieldPartPitch.setColumns(5);
+
+        lblFeedPitch = new JLabel("Feed Pitch");
+        lblFeedPitch.setToolTipText("How much the tape will be advanced by one feed operation (usually multiples of 4mm)");
+        panelTape.add(lblFeedPitch, "6, 14, right, default");
+
+        textFieldFeedPitch = new JTextField();
+        textFieldFeedPitch.setToolTipText("How much the tape will be advanced by one feed operation (usually multiples of 4mm)");
+        panelTape.add(textFieldFeedPitch, "8, 14");
+        textFieldFeedPitch.setColumns(10);
+
         lblMultiplier = new JLabel("Multiplier");
         lblMultiplier.setToolTipText("To improve efficiency you can actuate the feeder multiple times to feed more parts. ");
-        panelTape.add(lblMultiplier, "2, 14, right, default");
-        
+        panelTape.add(lblMultiplier, "2, 16, right, default");
+
         textFieldFeedMultiplier = new JTextField();
         textFieldFeedMultiplier.setToolTipText("To improve efficiency you can actuate the feeder multiple times to feed more parts. ");
-        panelTape.add(textFieldFeedMultiplier, "4, 14");
+        panelTape.add(textFieldFeedMultiplier, "4, 16");
         textFieldFeedMultiplier.setColumns(10);
-        
+
         lblFeedCount = new JLabel("Feed Count");
         lblFeedCount.setToolTipText("Total feed count of the feeder.");
-        panelTape.add(lblFeedCount, "6, 14, right, default");
-        
+        panelTape.add(lblFeedCount, "6, 16, right, default");
+
         textFieldFeedCount = new JTextField();
         textFieldFeedCount.setToolTipText("Total feed count of the feeder.");
-        panelTape.add(textFieldFeedCount, "8, 14");
+        panelTape.add(textFieldFeedCount, "8, 16");
         textFieldFeedCount.setColumns(10);
-        
+
         btnDiscardParts = new JButton(discardPartsAction);
-        panelTape.add(btnDiscardParts, "10, 14");
-        
+        panelTape.add(btnDiscardParts, "10, 16");
+
         btnReset = new JButton(resetFeedCountAction);
-        panelTape.add(btnReset, "12, 14");
+        panelTape.add(btnReset, "12, 16");
 
         panelLocations = new JPanel();
         panelFields.add(panelLocations);
@@ -371,18 +381,18 @@ extends AbstractReferenceFeederConfigurationWizard {
         catch (Exception e) {
             Logger.error(e, "Cannot determine default head of machine.");
         }
-        
+
         comboBoxFeedActuator = new JComboBox();
         panelLocations.add(comboBoxFeedActuator, "4, 2");
         comboBoxFeedActuator.setModel(new ActuatorsComboBoxModel(head));
-        
+
         lblPeelOffActuatorId = new JLabel("Peel Off Actuator");
         panelLocations.add(lblPeelOffActuatorId, "8, 2");
 
         comboBoxPeelOffActuator = new JComboBox();
         panelLocations.add(comboBoxPeelOffActuator, "10, 2, 7, 1");
         comboBoxPeelOffActuator.setModel(new ActuatorsComboBoxModel(head));
-        
+
         JLabel lblX = new JLabel("X");
         panelLocations.add(lblX, "4, 6");
 
@@ -627,8 +637,11 @@ extends AbstractReferenceFeederConfigurationWizard {
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        chckbxVisionEnabled = new JCheckBox("Vision Enabled?");
-        panelVisionEnabled.add(chckbxVisionEnabled, "2, 2, fill, default");
+        lblCalibrationTrigger = new JLabel("Calibration Trigger");
+        panelVisionEnabled.add(lblCalibrationTrigger, "2, 2, right, default");
+
+        comboBoxCalibrationTrigger = new JComboBox(ReferenceGestureFeeder.CalibrationTrigger.values());
+        panelVisionEnabled.add(comboBoxCalibrationTrigger, "4, 2");
 
         btnEditPipeline = new JButton(editPipelineAction);
         panelVisionEnabled.add(btnEditPipeline, "2, 4");
@@ -644,22 +657,20 @@ extends AbstractReferenceFeederConfigurationWizard {
     public void createBindings() {
         super.createBindings();
         LengthConverter lengthConverter = new LengthConverter();
-        IntegerConverter intConverter = new IntegerConverter();
         LongConverter longConverter = new LongConverter();
         DoubleConverter doubleConverter =
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
-        BufferedImageIconConverter imageConverter = new BufferedImageIconConverter();
         PercentConverter percentConverter = new PercentConverter();
 
         MutableLocationProxy firstPickLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "location", firstPickLocation, "location");
-        addWrappedBinding(firstPickLocation, "lengthX", textFieldFirstPickLocationX, "text",
+        addWrappedBinding(firstPickLocation, "lengthX", textFieldPickLocationX, "text",
                 lengthConverter);
-        addWrappedBinding(firstPickLocation, "lengthY", textFieldFirstPickLocationY, "text",
+        addWrappedBinding(firstPickLocation, "lengthY", textFieldPickLocationY, "text",
                 lengthConverter);
-        addWrappedBinding(firstPickLocation, "lengthZ", textFieldFirstPickLocationZ, "text",
+        addWrappedBinding(firstPickLocation, "lengthZ", textFieldPickLocationZ, "text",
                 lengthConverter);
-        addWrappedBinding(firstPickLocation, "rotation", textFieldFirstPickLocationRotation, "text",
+        addWrappedBinding(firstPickLocation, "rotation", textFieldPickLocationRotation, "text",
                 doubleConverter);
 
         MutableLocationProxy hole1Location = new MutableLocationProxy();
@@ -668,7 +679,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                 lengthConverter);
         addWrappedBinding(hole1Location, "lengthY", textFieldHole1LocationY, "text",
                 lengthConverter);
-        
+
         MutableLocationProxy hole2Location = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "hole2Location", hole2Location, "location");
         addWrappedBinding(hole2Location, "lengthX", textFieldHole2LocationX, "text",
@@ -751,12 +762,12 @@ extends AbstractReferenceFeederConfigurationWizard {
         addWrappedBinding(feedEndLocation, "lengthY", textFieldFeedEndY, "text", lengthConverter);
         addWrappedBinding(feedEndLocation, "lengthZ", textFieldFeedEndZ, "text", lengthConverter);
 
-        addWrappedBinding(feeder, "visionEnabled", chckbxVisionEnabled, "selected");
+        addWrappedBinding(feeder, "calibrationTrigger", comboBoxCalibrationTrigger, "selectedItem");
 
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFirstPickLocationX);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFirstPickLocationY);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFirstPickLocationZ);
-        ComponentDecorators.decorateWithAutoSelect(textFieldFirstPickLocationRotation);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPickLocationX);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPickLocationY);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPickLocationZ);
+        ComponentDecorators.decorateWithAutoSelect(textFieldPickLocationRotation);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHole1LocationX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHole1LocationY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPartPitch);
@@ -847,7 +858,7 @@ extends AbstractReferenceFeederConfigurationWizard {
             new AbstractAction("Discard Parts") {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Discard parts that have been produced by the last feed operation.");
+                    "Discard parts that have been produced by the last tape transport.");
         }
 
         @Override
@@ -861,26 +872,40 @@ extends AbstractReferenceFeederConfigurationWizard {
         }
     };
     private Action showVisionFeaturesAction =
-            new AbstractAction("Show Vision Features") {
+            new AbstractAction("Preview Vision Features") {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Show the Features recognized by Computer Vision.");
+                    "Preview the features recognized by Computer Vision.");
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> {
-                // round the feed count up to the next multiple of the parts per feed operation
+            UiUtils.submitUiMachineTask(() -> {
                 feeder.showFeatures();
             });
         }
     };
-    private JButton btnShowVisionFeatures;
+    private Action autoSetupAction =
+            new AbstractAction("Center the camera on the pick location and press this button to Auto-Setup", Icons.captureCamera) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "<html>Center the camera on the pick location and press this button to Auto-Setup <br/>(if there are multiple picks per tape transport, choose the one closest to the tape reel.</html>");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.submitUiMachineTask(() -> {
+                feeder.autoSetup();
+            });
+        }
+    };
+    private JLabel lblCalibrationTrigger;
+    private JComboBox comboBoxCalibrationTrigger;
 
     public HeadMountable getTool() throws Exception {
         return MainFrame.get().getMachineControls().getSelectedNozzle();
     }
-    
+
     private void editPipeline() throws Exception {
         Camera camera = feeder.getCamera();
         CvPipeline pipeline = feeder.getCvPipeline(camera, false);

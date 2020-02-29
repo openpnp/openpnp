@@ -55,15 +55,12 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.util.HslColor;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
-import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.Ransac;
 import org.openpnp.vision.Ransac.Line;
-import org.openpnp.vision.SimpleHistogram;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result;
@@ -165,6 +162,11 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
     @Attribute(required = false)
     private double sprocketHoleToleranceMm = 0.3;
 
+    @Attribute(required = false)
+    private int calibrateMaxPasses; 
+    @Attribute(required = false)
+    private double calibrateToleranceMm;
+
     /*
      * visionOffset contains the difference between where the part was expected to be and where it
      * is. Subtracting these offsets from the pickLocation produces the correct pick location.
@@ -184,28 +186,36 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
                 .getDefaultCamera();
     }
 
-    public void assertCalibrated() throws Exception {
-        if (visionOffset == null || visionOffset.equals(nullLocation)) {
+
+    public enum CalibrationTrigger {
+        None,
+        FirstUse,
+        EachTapeFeed
+    }
+
+    @Attribute(required = false)
+    protected CalibrationTrigger calibrationTrigger = CalibrationTrigger.EachTapeFeed;
+
+    public void assertCalibrated(boolean tapeFeed) throws Exception {
+        if ((visionOffset == null && calibrationTrigger != CalibrationTrigger.None)
+                || (tapeFeed && calibrationTrigger == CalibrationTrigger.EachTapeFeed)) {
             // not yet calibrated
-            if (isVisionEnabled()) {
-                MovableUtils.moveToLocationAtSafeZ(getCamera(), getUncalibratedPickLocation(1-getFeedCount()));
-                visionOffset = getCalibratedVisionOffset();
-                if (visionOffset == null) {
-                    // no lock obtained
-                    throw new Exception(String.format("Vision failed on feeder %s.", getName()));
-                }
-            }
-            else{
-                visionOffset = null;
+            obtainCalibratedVisionOffset();
+            if (visionOffset == null) {
+                // no lock obtained
+                throw new Exception(String.format("Vision failed on feeder %s.", getName()));
             }
         }
     }
 
+    public boolean isVisionEnabled() {
+        return calibrationTrigger != CalibrationTrigger.None;
+    }
+
     @Override
     public Location getPickLocation() throws Exception {
-        assertCalibrated();
-        return getUncalibratedPickLocation(0)
-                .subtractWithRotation(getVisionOffset());
+        assertCalibrated(false);
+        return getPickLocation(0, visionOffset);
     }
 
     @Override
@@ -230,7 +240,7 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
             // Modulo of feed count is zero - no more parts there to pick, must feed 
 
             // Make sure we're calibrated
-            assertCalibrated();
+            assertCalibrated(false);
 
             // Create the effective feed locations, keeping the Rotation intact and applying the vision offset.
             Location feedStartLocation = getFeedStartLocation()
@@ -306,26 +316,22 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
             }
 
             head.moveToSafeZ();
+
+            // Make sure we're calibrated after type feed
+            assertCalibrated(true);
         } 
         else {
-            Logger.debug("Multi parts feed: skipping feed " + feedCount);
+            Logger.debug("Multi parts feed: skipping tape feed at feed count " + feedCount);
         }
 
         // increment feed count 
         setFeedCount(getFeedCount()+1);
     }
 
-    private Location getCalibratedVisionOffset() throws Exception {
-        Camera camera = Configuration.get()
-                .getMachine()
-                .getDefaultHead()
-                .getDefaultCamera();
+    private void obtainCalibratedVisionOffset() throws Exception {
+        Camera camera = getCamera();
         try (CvPipeline pipeline = getCvPipeline(camera, true)) {
-
-            // Process vision and show feature without applying anything
-            pipeline.process();
-            FindFeatures features = new FindFeatures(camera, pipeline, 2000).invoke();
-            return features.getCalibratedVisionOffset();
+            calibrateSprocketHoles(camera, pipeline, false, false, true);
         }
     }
 
@@ -627,6 +633,18 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
         this.feedMultiplier = feedMultiplier;
     }
 
+    public CalibrationTrigger getCalibrationTrigger() {
+        return calibrationTrigger;
+    }
+
+    public void setCalibrationTrigger(CalibrationTrigger calibrationTrigger) {
+        this.calibrationTrigger = calibrationTrigger;
+    }
+
+    public void setVisionOffset(Location visionOffset) {
+        this.visionOffset = visionOffset;
+    }
+
     public Length getPartsToSprocketHoleDistance() {
         return new Length(getLocation().getLinearDistanceToLineSegment(getHole1Location(), getHole2Location()), 
                 getLocation().getUnits());
@@ -637,36 +655,63 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
         return Math.round(getFeedMultiplier()*Math.ceil(feedsPerPart*getFeedPitch().divide(getPartPitch())));
     }
 
-    Location transformMachineToFeederLocation(Location location) {
-        Location feedUnit = getHole1Location().unitVectorTo(getHole2Location());
-        double angle = Math.atan2(feedUnit.getY(), feedUnit.getX());
-        // translate back 
-        location = location.subtractWithRotation(getLocation());
-        // rotate back
-        return new Location(location.getUnits(), 
-                location.getX()*feedUnit.getX() + location.getY()*feedUnit.getY(),
-                location.getX()*feedUnit.getY() - location.getY()*feedUnit.getX(),
-                location.getZ(), location.getRotation()-angle);
+
+    protected Location getLocalFeederTransform(Location visionOffset) {
+        // the two holes define our coordinate system
+        Location feederUnitVector = getHole1Location().unitVectorTo(getHole2Location());
+        // also calculate the angle
+        feederUnitVector = feederUnitVector
+                .derive(null, null, null, Math.atan2(feederUnitVector.getY(), feederUnitVector.getX()));
+        if (visionOffset != null) {
+            // if we have a vision offset, rotate with angle 
+            feederUnitVector
+                .rotateXy(visionOffset.getRotation())
+                .derive(null,  null,  null,  feederUnitVector.getRotation()+visionOffset.getRotation());
+        }
+        return feederUnitVector;
     }
 
-    Location transformFeederToMachineLocation(Location location) {
-        Location feedUnit = getHole1Location().unitVectorTo(getHole2Location());
-        double angle = Math.atan2(feedUnit.getY(), feedUnit.getX());
-        // rotate
+    protected Location transformMachineToFeederLocation(Location location, Location visionOffset) {
+        Location feederUnitVector = getLocalFeederTransform(visionOffset);
+        // apply the transformation
+        // first translate back
+        location = location
+            .subtractWithRotation(getLocation());
+        if (visionOffset != null) {
+            location = location
+                    .subtract(visionOffset);
+        }
+        // then rotate back
         location = new Location(location.getUnits(), 
-                location.getX()*feedUnit.getX() - location.getY()*feedUnit.getY(),
-                location.getX()*feedUnit.getY() + location.getY()*feedUnit.getX(),
-                location.getZ(), location.getRotation()+angle);
-        // translate
-        return location
-                .addWithRotation(getLocation());
+                location.getX()*feederUnitVector.getX() + location.getY()*feederUnitVector.getY(),
+                location.getX()*feederUnitVector.getY() - location.getY()*feederUnitVector.getX(),
+                location.getZ(), location.getRotation()-feederUnitVector.getRotation());
+        return location;
     }
 
-    public Location getUncalibratedPickLocation(long partNumber)  {
+    protected Location transformFeederToMachineLocation(Location location, Location visionOffset) {
+        Location feederUnitVector = getLocalFeederTransform(visionOffset);
+        // apply the transformation
+        // first rotate
+        location = new Location(location.getUnits(), 
+                location.getX()*feederUnitVector.getX() - location.getY()*feederUnitVector.getY(),
+                location.getX()*feederUnitVector.getY() + location.getY()*feederUnitVector.getX(),
+                location.getZ(), location.getRotation()+feederUnitVector.getRotation());
+        // then translate
+        if (visionOffset != null) {
+            location = location
+                    .add(visionOffset);
+        }
+        location = location
+                .addWithRotation(getLocation());
+        return location;
+    }
+
+    public Location getPickLocation(long partNumber, Location visionOffset)  {
         // Calculate the pick location in local feeder coordinates.
-        long partInFeed = (getFeedCount()-1+partNumber) % getPartsPerFeedOperation();
+        long partInFeed = (partNumber - getFeedCount()) % getPartsPerFeedOperation();
         Location feederLocation = new Location(partPitch.getUnits(), partPitch.multiply((double)partInFeed).getValue(), 0, 0, 0);
-        Location machineLocation = transformFeederToMachineLocation(feederLocation);
+        Location machineLocation = transformFeederToMachineLocation(feederLocation, visionOffset);
         return machineLocation;
     } 
 
@@ -677,14 +722,6 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
 
     public void setPipeline(CvPipeline pipeline) {
         this.pipeline = pipeline;
-    }
-
-    public boolean isVisionEnabled() {
-        return visionEnabled;
-    }
-
-    public void setVisionEnabled(boolean visionEnabled) {
-        this.visionEnabled = visionEnabled;
     }
 
     public Location getVisionOffset() {
@@ -727,13 +764,21 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
         }
     }
 
+    public enum AutoSetupMode {
+        FromPickLocationGetHoles,
+        CalibrateHoles
+    }
+
     public class FindFeatures {
         private Camera camera;
         private CvPipeline pipeline;
         private long showResultMilliseconds;
+        private AutoSetupMode autoSetupMode;
         private Location calibratedVisionOffset;
         private Location calibratedHole1Location;
         private Location calibratedHole2Location;
+        private Location calibratedPickLocation;
+
 
         public Location getCalibratedVisionOffset() {
             return calibratedVisionOffset;
@@ -742,10 +787,11 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
         private List<Result.Circle> holes;
         private List<Line> lines;
 
-        public FindFeatures(Camera camera, CvPipeline pipeline, final long showResultMilliseconds) {
+        public FindFeatures(Camera camera, CvPipeline pipeline, final long showResultMilliseconds, AutoSetupMode autoSetupMode) {
             this.camera = camera;
             this.pipeline = pipeline;
             this.showResultMilliseconds = showResultMilliseconds;
+            this.autoSetupMode = autoSetupMode;
         }
 
         public List<Result.Circle> getHoles() {
@@ -759,11 +805,10 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
             if (features == null || features.isEmpty()) {
                 return;
             }
-            Color centerColor = new HslColor(color).getComplementary();
             for (Result.Circle circle : features) {
                 org.opencv.core.Point c =  new org.opencv.core.Point(circle.x, circle.y);
                 Imgproc.circle(mat, c, (int) (circle.diameter+0.5)/2, FluentCv.colorToScalar(color), 2);
-                Imgproc.circle(mat, c, 2, FluentCv.colorToScalar(centerColor), 3);
+                Imgproc.circle(mat, c, 2, FluentCv.colorToScalar(color), 3);
             }
         }
 
@@ -815,17 +860,18 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
                 // something must be wrong - feeder probably not set up correctly (yet)
                 return;
             }
-            // go through all the pockets, step-wise 
+            // go through all the parts, step-wise 
             for (int i = step; i <= getPartsPerFeedOperation(); i += step) {
                 String text = String.valueOf(i);
                 Size textSize = Imgproc.getTextSize(text, Core.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
 
-                Location partLocation = getUncalibratedPickLocation(i - getFeedCount())
+                Location partLocation = getPickLocation(i - getFeedCount(), calibratedVisionOffset)
                         .convertToUnits(LengthUnit.Millimeters);
-                // go below the pocket
-                Location textLocation = transformMachineToFeederLocation(partLocation);
+                // TODO: go besides part
+                Location textLocation = transformMachineToFeederLocation(partLocation, calibratedVisionOffset);
                 textLocation = textLocation.add(new Location(LengthUnit.Millimeters, 0., -textSizeMm.getY()*0.25, 0., 0.));
-                textLocation = transformFeederToMachineLocation(textLocation).convertToUnits(LengthUnit.Millimeters);
+                textLocation = transformFeederToMachineLocation(textLocation, calibratedVisionOffset)
+                        .convertToUnits(LengthUnit.Millimeters);
                 org.openpnp.model.Point p = VisionUtils.getLocationPixels(camera, textLocation);
                 if (p.x > 0 && p.x < camera.getWidth() && p.y > 0 && p.y < camera.getHeight()) {
                     // roughly in the visible range - draw it
@@ -873,17 +919,20 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
         public FindFeatures invoke() throws Exception {
             List resultsList = null; 
             try {
-                // in accordance with EIA-481 etc. we use millimeters.
+                // in accordance with EIA-481 etc. we use all millimeters.
                 Location mmScale = camera.getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters);
                 final double sprocketHoleDiameterMm = 1.5;
                 final double sprocketHolePitchMm = 4;
+                final double partPitchMinMm = 2;
+                final double sprocketHoleToPartMinMm = 3.5; // sprocket hole to part @ 8mm
+                final double sprocketHoleToPartGridMm = 2;  // +multiples of 2mm for wider tapes 
                 final double sprocketHoleDiameterPx = sprocketHoleDiameterMm/mmScale.getX();
                 final double sprocketHolePitchPx = sprocketHolePitchMm/mmScale.getX();
                 final double sprocketHoleTolerancePx = sprocketHoleToleranceMm/mmScale.getX(); 
                 // Grab the results
                 resultsList = (List) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
 
-                // Convert into circles
+                // Convert eligible results into circles
                 List<CvStage.Result.Circle> results = new ArrayList<>();;
                 for (Object result : resultsList) {
                     if ((result) instanceof Result.Circle) {
@@ -921,6 +970,7 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
                 Ransac.Line bestLine = null;
                 Location bestOrigin = null;
                 Location bestUnitVector = null;
+                double bestDistanceMm = Double.MAX_VALUE;
                 for (Ransac.Line line : ransacLines) {
                     Point a = line.a;
                     Point b = line.b;
@@ -930,16 +980,23 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
 
                     // Checks the distance to the line.
                     double distanceMm = camera.getLocation().convertToUnits(LengthUnit.Millimeters).getLinearDistanceToLineSegment(aLocation, bLocation);
-                    if (distanceMm < calibrationToleranceMm) {
+                    if (distanceMm < (autoSetupMode == AutoSetupMode.FromPickLocationGetHoles ? bestDistanceMm : calibrationToleranceMm)) {
                         // Take the first line that is close enough, as the lines are ordered by length (descending).
+                        // In autoSetupMode take the closest line.
                         bestLine = line;
                         bestOrigin = aLocation.add(bLocation).multiply(0.5, 0.5, 0, 0);
                         bestUnitVector = aLocation.unitVectorTo(bLocation);
+                        bestDistanceMm = distanceMm;
                         lines.add(bestLine);
                         break;
                     }
                 }
 
+                if (autoSetupMode != null) {
+                    if (bestLine == null) {
+                        throw new Exception("No line of sprocket holes can be recognized"); 
+                    }
+                }
                 if (bestLine != null) {
                     // Filter the circles by distance from the resulting line
                     for (Result.Circle circle : results) {
@@ -949,60 +1006,107 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
                         }
                     }
 
-                    // Try to determine the tape position along the best line.
-                    SimpleHistogram histogramDistance = new SimpleHistogram(0.05);
-                    for (Result.Circle circle : holes) {
-                        Location location = VisionUtils.getPixelLocation(camera, circle.x, circle.y)
-                                .convertToUnits(LengthUnit.Millimeters)
-                                .subtract(bestOrigin);
-                        // the distance along the best line is the dot product (perpendicular projection)
-                        double distanceMm = location.dotProduct(bestUnitVector).getValue();
-                        // calculate the nearest positive modulo distance
-                        double position = distanceMm % sprocketHolePitchMm;
-                        if (position < 0.) {
-                            position += sprocketHolePitchMm;
+                    // Sort holes by distance from camera center.
+                    Collections.sort(holes, new Comparator<Result.Circle>() {
+                        @Override
+                        public int compare(Result.Circle o1, Result.Circle o2) {
+                            double d1 = VisionUtils.getPixelLocation(camera, o1.x, o1.y).getLinearDistanceTo(camera.getLocation());
+                            double d2 = VisionUtils.getPixelLocation(camera, o2.x, o2.y).getLinearDistanceTo(camera.getLocation());
+                            return Double.compare(d1, d2);
                         }
-                        // Simply record the position in three pitch-modulo bins to support wrap-around with kernel.  
-                        histogramDistance.add(position-sprocketHolePitchMm, 1.0);
-                        histogramDistance.add(position, 1.0);
-                        histogramDistance.add(position+sprocketHolePitchMm, 1.0);
-                    }
-                    // Deepest notch
-                    double holeOriginDistanceMm = histogramDistance.getMaximumKey();
-                    // Move the calibrated origin to the notch
-                    Location calibratedOrigin = bestOrigin
-                            .add(bestUnitVector.multiply(holeOriginDistanceMm, holeOriginDistanceMm, 0, 0));
-                    // Calculate the distance to the hole 1, 2 location using the dot product (perpendicular projection)
-                    // Round to the nearest sprocket pitch multiple.
-                    double calibratedHole1DistanceMm = Math.round(getHole1Location().convertToUnits(LengthUnit.Millimeters)
-                            .subtract(calibratedOrigin)
-                            .dotProduct(bestUnitVector).getValue()/sprocketHolePitchMm)*sprocketHolePitchMm;
-                    double calibratedHole2DistanceMm = Math.round(getHole2Location().convertToUnits(LengthUnit.Millimeters)
-                            .subtract(calibratedOrigin)
-                            .dotProduct(bestUnitVector).getValue()/sprocketHolePitchMm)*sprocketHolePitchMm;
-                    // Using the distance, create new calibrated hole 1, 2 locations. 
-                    calibratedHole1Location = calibratedOrigin
-                            .add(bestUnitVector.multiply(calibratedHole1DistanceMm, calibratedHole1DistanceMm, 0, 0));
-                    calibratedHole2Location = calibratedOrigin
-                            .add(bestUnitVector.multiply(calibratedHole2DistanceMm, calibratedHole2DistanceMm, 0, 0));
-                    // Calculate the angle offset too.
-                    // Note, as Ransac may deliver the line either way, we norm this to +/-90°  
-                    Location uncalibratedUnitVector = getHole1Location().unitVectorTo(getHole2Location());
-                    double angleOffset = angleNorm(Math.atan2(uncalibratedUnitVector.getY(), uncalibratedUnitVector.getX())
-                            - Math.atan2(bestUnitVector.getY(), bestUnitVector.getX()));
-                    // Fuse the two to get the calibrated vision offset
-                    calibratedVisionOffset = getHole1Location()
-                            .subtract(calibratedHole1Location)
-                            .derive(null, null, null, angleOffset);
+                    });
 
-                    // Add tick marks for show
-                    Location tick = new Location(LengthUnit.Millimeters, -bestUnitVector.getY(), bestUnitVector.getX(), 0, 0);
-                    org.openpnp.model.Point hole1A = VisionUtils.getLocationPixels(camera, calibratedHole1Location.subtract(tick));
-                    org.openpnp.model.Point hole1B = VisionUtils.getLocationPixels(camera, calibratedHole1Location.add(tick));
-                    lines.add(new Ransac.Line(new Point(hole1A.x, hole1A.y), new Point(hole1B.x, hole1B.y)));
-                    org.openpnp.model.Point hole2A = VisionUtils.getLocationPixels(camera, calibratedHole2Location.subtract(tick));
-                    org.openpnp.model.Point hole2B = VisionUtils.getLocationPixels(camera, calibratedHole2Location.add(tick));
-                    lines.add(new Ransac.Line(new Point(hole2A.x, hole2A.y), new Point(hole2B.x, hole2B.y)));
+                    if (autoSetupMode  == AutoSetupMode.FromPickLocationGetHoles) {
+                        // because we sorted the holes by distance, the first two are our holes 1 and 2
+                        if (holes.size() < 2) {
+                            throw new Exception("At least two sprocket holes need to be recognized"); 
+                        }
+                        calibratedHole1Location = VisionUtils.getPixelLocation(camera, holes.get(0).x, holes.get(0).y)
+                                .convertToUnits(LengthUnit.Millimeters);
+                        calibratedHole2Location = VisionUtils.getPixelLocation(camera, holes.get(1).x, holes.get(1).y)
+                                .convertToUnits(LengthUnit.Millimeters);
+                        Location partLocation = camera.getLocation().convertToUnits(LengthUnit.Millimeters);
+                        double angle1 = Math.atan2(calibratedHole1Location.getY()-partLocation.getY(), calibratedHole1Location.getX()-partLocation.getX());
+                        double angle2 = Math.atan2(calibratedHole2Location.getY()-partLocation.getY(), calibratedHole2Location.getX()-partLocation.getX());
+                        double angleDiff = angleNorm180(angle2-angle1);
+                        if (angleDiff > 0) {
+                            // The holes 1 and 2 must appear counter-clockwise from the part location, swap them! 
+                            Location swap = calibratedHole2Location;
+                            calibratedHole2Location = calibratedHole1Location;
+                            calibratedHole1Location = swap;
+                        }
+                    }
+                    else {
+                        // find the two holes matching 
+                        for (Result.Circle hole : holes) {
+                            Location l = VisionUtils.getPixelLocation(camera, hole.x, hole.y).convertToUnits(LengthUnit.Millimeters)
+                                    .convertToUnits(LengthUnit.Millimeters);
+                            double dist1Mm = l.getLinearDistanceTo(getHole1Location()); 
+                            double dist2Mm = l.getLinearDistanceTo(getHole2Location()); 
+                            if (dist1Mm < calibrationToleranceMm && dist1Mm < dist2Mm) {
+                                calibratedHole1Location = l;
+                            }
+                            else if (dist2Mm < calibrationToleranceMm && dist2Mm < dist1Mm) {
+                                calibratedHole2Location = l;
+                            }
+                        }
+                        if (calibratedHole1Location == null || calibratedHole2Location == null) {
+                            if (autoSetupMode  == AutoSetupMode.CalibrateHoles) {
+                                throw new Exception("The two reference sprocket holes cannot be recognized"); 
+                            }
+                        }
+                        else {
+                            // determine the correct transformation
+                            double angleTape = Math.atan2(bestUnitVector.getY(), bestUnitVector.getX());
+                            // the new calibration target is really the mid-point
+                            Location midPoint = calibratedHole1Location.add(calibratedHole2Location).multiply(0.5, 0.5, 0, 0);
+                            // but let's project that back to the real hole positions with nominal pitch (undistorted by the camera lens and Z parallax)
+                            double distanceHolesMm = Math.round(calibratedHole1Location.getLinearDistanceTo(calibratedHole2Location)/sprocketHolePitchMm)*sprocketHolePitchMm;
+                            calibratedHole1Location = midPoint.subtract(bestUnitVector.multiply(distanceHolesMm*0.5, distanceHolesMm*0.5, 0, 0));
+                            calibratedHole2Location = midPoint.add(bestUnitVector.multiply(distanceHolesMm*0.5, distanceHolesMm*0.5, 0, 0));
+                            if (autoSetupMode  == AutoSetupMode.CalibrateHoles) {
+                                // get the current local pick location
+                                Location pickLocation = getLocation().convertToUnits(LengthUnit.Millimeters);
+                                Location localPickLocation = pickLocation
+                                        .subtract(getHole1Location())
+                                        .rotateXy(-angleTape)
+                                        .derive(null, null, null, pickLocation.getRotation()-angleTape);
+                                // normalize the nominal position of the pick location according to EIA 481
+                                localPickLocation = new Location(LengthUnit.Millimeters,
+                                        Math.round(localPickLocation.getX()/partPitchMinMm)*partPitchMinMm,
+                                        sprocketHoleToPartMinMm+Math.round((localPickLocation.getY()-sprocketHoleToPartMinMm)/sprocketHoleToPartGridMm)*sprocketHoleToPartGridMm,
+                                        0, Math.round(localPickLocation.getRotation()/90.0)*90.0);
+                                calibratedPickLocation = calibratedHole1Location.add(localPickLocation.rotateXy(angleTape))
+                                        .derive(null, null, pickLocation.getZ(), localPickLocation.getRotation()+angleTape);
+                            }
+                        }
+                    }
+
+                    if (calibratedHole1Location != null) {
+                        // we have our calibrated hole(s)
+                        Location uncalibratedUnitVector = getHole1Location().unitVectorTo(getHole2Location());
+                        // Calculate the angle offset too.
+                        double angleOffset = angleNorm(Math.atan2(uncalibratedUnitVector.getY(), uncalibratedUnitVector.getX())
+                                - Math.atan2(bestUnitVector.getY(), bestUnitVector.getX()));
+                        // Fuse the two to get the calibrated vision offset (with Z always 0)
+                        calibratedVisionOffset = getHole1Location()
+                                .subtract(calibratedHole1Location)
+                                .derive(null, null, 0.0, angleOffset);
+                        Logger.debug("[ReferenceGestureFeeder] calibrated vision offset is: " + calibratedVisionOffset);
+
+                        // Add tick marks for show
+                        if (calibratedPickLocation != null) {
+                            org.openpnp.model.Point a;
+                            org.openpnp.model.Point b;
+                            Location tick = new Location(LengthUnit.Millimeters, -bestUnitVector.getY(), bestUnitVector.getX(), 0, 0);
+                            a = VisionUtils.getLocationPixels(camera, calibratedPickLocation.subtract(tick));
+                            b = VisionUtils.getLocationPixels(camera, calibratedPickLocation.add(tick));
+                            lines.add(new Ransac.Line(new Point(a.x, a.y), new Point(b.x, b.y)));
+                            a = VisionUtils.getLocationPixels(camera, calibratedPickLocation.subtract(bestUnitVector));
+                            b = VisionUtils.getLocationPixels(camera, calibratedPickLocation.add(bestUnitVector));
+                            lines.add(new Ransac.Line(new Point(a.x, a.y), new Point(b.x, b.y)));
+                        }
+                    }
                 }
 
                 if (showResultMilliseconds > 0) {
@@ -1034,21 +1138,84 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
             }
             return angle;
         }
+        private double angleNorm180(double angle) {
+            while (angle > 180) {
+                angle -= 360;
+            }
+            while (angle < -180) {
+                angle += 360;
+            }
+            return angle;
+        }
     }
 
     public void showFeatures() throws Exception {
-        Camera camera = Configuration.get()
-                .getMachine()
-                .getDefaultHead()
-                .getDefaultCamera();
+        Camera camera = getCamera();
         try (CvPipeline pipeline = getCvPipeline(camera, true)) {
 
             // Process vision and show feature without applying anything
             pipeline.process();
-            new FindFeatures(camera, pipeline, 2000).invoke();
+            if (getHole1Location().equals(nullLocation)) {
+                new FindFeatures(camera, pipeline, 2000, AutoSetupMode.FromPickLocationGetHoles).invoke();
+            }
+            else {
+                new FindFeatures(camera, pipeline, 2000, AutoSetupMode.CalibrateHoles).invoke();
+            }
         }
     }
 
+    public void autoSetup() throws Exception {
+        Camera camera = getCamera();
+        try (CvPipeline pipeline = getCvPipeline(camera, true)) {
+            // Process vision and get some features 
+            pipeline.process();
+            FindFeatures feature = new FindFeatures(camera, pipeline, 2000, AutoSetupMode.FromPickLocationGetHoles).invoke();
+            // Start with the camera position - but keep any Z value already set
+            setLocation(camera.getLocation()
+                    .derive(getLocation(), false, false, true, false));
+            // Store the initial vision based sprocket hole finds
+            setHole1Location(feature.calibratedHole1Location);
+            setHole1Location(feature.calibratedHole1Location);
+            // now run a hole calibration
+            calibrateSprocketHoles(camera, pipeline, true, true, false);
+        }
+    }
+
+    protected void calibrateSprocketHoles(Camera camera, CvPipeline pipeline, 
+            boolean storeHoles, boolean storePickLocation, boolean storeVisionOffset) throws Exception {
+        Location runningHole1Location = getHole1Location();
+        Location runningHole2Location = getHole2Location();
+        Location runningVisionOffset = nullLocation;
+        // Calibrate the exact hole locations by obtaining a mid-point lock on them,
+        // assuming that any camera lens and Z parallax distortion is symmetric.
+        for (int i = 0; i < calibrateMaxPasses; i++) {
+            // move the camera to the mid-point 
+            Location midPoint = getHole1Location().add(getHole2Location()).multiply(0.5, 0.5, 0, 0)
+                    .derive(camera.getLocation(), false, false, true, false)
+                    .derive(getLocation(), false, false, false, true);
+            MovableUtils.moveToLocationAtSafeZ(camera, midPoint);
+            // take a new shot
+            pipeline.process();
+            FindFeatures feature = new FindFeatures(camera, pipeline, 2000, AutoSetupMode.CalibrateHoles).invoke();
+            runningHole1Location = feature.calibratedHole1Location;
+            runningHole2Location = feature.calibratedHole2Location;
+            if (storeHoles) {
+                setHole1Location(runningHole1Location);
+                setHole2Location(runningHole2Location);
+            }
+            if (storePickLocation) {
+                setLocation(feature.calibratedPickLocation);
+            }
+            if (storeVisionOffset) {
+                visionOffset = feature.calibratedVisionOffset;
+            }
+            // is it good enough? Compare with running offset.
+            if (feature.calibratedVisionOffset.getLinearDistanceTo(runningVisionOffset) < calibrateToleranceMm) {
+                break;
+            }
+            runningVisionOffset = feature.calibratedVisionOffset;
+        }
+    }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
         propertyChangeSupport.addPropertyChangeListener(listener);
