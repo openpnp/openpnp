@@ -656,54 +656,56 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
     }
 
 
-    protected Location getLocalFeederTransform(Location visionOffset) {
-        // the two holes define our coordinate system
+    protected Location getLocalFeederTransform() {
+        // There are three coordinate system in play
+        // 1. The feeder local coordinate system is defined by the pick location (origin) and the tape advancing to the right (+X)
+        // 2. Vision is based on the two sprocket holes, hole1 defining the origin the angle to hole2 the tape advancing angle 
+        // 3. The machine coordinate system is global. 
+        // We must therefore transform between the three coordinate systems as needed.
+
+        // translation from pick location to hole 1 location
+        Location pickTransform = getHole1Location().subtract(getLocation());
+        // calculate and set the tape angle
         Location feederUnitVector = getHole1Location().unitVectorTo(getHole2Location());
-        // also calculate the angle
-        feederUnitVector = feederUnitVector
+        pickTransform = pickTransform
                 .derive(null, null, null, Math.atan2(feederUnitVector.getY(), feederUnitVector.getX()));
-        if (visionOffset != null) {
-            // if we have a vision offset, rotate with angle 
-            feederUnitVector
-                .rotateXy(visionOffset.getRotation())
-                .derive(null,  null,  null,  feederUnitVector.getRotation()+visionOffset.getRotation());
-        }
-        return feederUnitVector;
+        return pickTransform;
     }
 
     protected Location transformMachineToFeederLocation(Location location, Location visionOffset) {
-        Location feederUnitVector = getLocalFeederTransform(visionOffset);
-        // apply the transformation
-        // first translate back
+        // apply the transformation backward
+        // first translate back to hole 1 relative
         location = location
-            .subtractWithRotation(getLocation());
+            .subtract(getHole1Location());
+        // undo vision offset if any
         if (visionOffset != null) {
             location = location
-                    .subtract(visionOffset);
+                    .addWithRotation(visionOffset)
+                    .rotateXy(visionOffset.getRotation());
         }
-        // then rotate back
-        location = new Location(location.getUnits(), 
-                location.getX()*feederUnitVector.getX() + location.getY()*feederUnitVector.getY(),
-                location.getX()*feederUnitVector.getY() - location.getY()*feederUnitVector.getX(),
-                location.getZ(), location.getRotation()-feederUnitVector.getRotation());
+        // then rotate back to local 
+        Location feederTransform = getLocalFeederTransform();
+        location = location.rotateXy(-feederTransform.getRotation());
+        // then translate from hole 1 to pick location relative
+        location.subtractWithRotation(feederTransform);
         return location;
     }
 
     protected Location transformFeederToMachineLocation(Location location, Location visionOffset) {
-        Location feederUnitVector = getLocalFeederTransform(visionOffset);
         // apply the transformation
-        // first rotate
-        location = new Location(location.getUnits(), 
-                location.getX()*feederUnitVector.getX() - location.getY()*feederUnitVector.getY(),
-                location.getX()*feederUnitVector.getY() + location.getY()*feederUnitVector.getX(),
-                location.getZ(), location.getRotation()+feederUnitVector.getRotation());
-        // then translate
+        // first translate to hole 1 relative 
+        Location feederTransform = getLocalFeederTransform();
+        location.addWithRotation(feederTransform);
+        // then rotate
+        location = location.rotateXy(feederTransform.getRotation());
+        // also apply vision offset if any
         if (visionOffset != null) {
-            location = location
-                    .add(visionOffset);
+            location = location.rotateXy(-visionOffset.getRotation())
+                            .subtractWithRotation(visionOffset);
         }
+        // now apply hole 1 translation to global
         location = location
-                .addWithRotation(getLocation());
+                .add(getHole1Location());
         return location;
     }
 
