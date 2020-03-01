@@ -45,7 +45,7 @@ import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
-import org.openpnp.machine.reference.feeder.wizards.ReferenceGestureFeederConfigurationWizard;
+import org.openpnp.machine.reference.feeder.wizards.ReferencePushPullFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -69,7 +69,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
-public class ReferenceGestureFeeder extends ReferenceFeeder {
+public class ReferencePushPullFeeder extends ReferenceFeeder {
 
 
     private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
@@ -97,30 +97,30 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
     private long feedMultiplier= 1;
 
     @Element(required = false)
-    protected double feedSpeedForward1 = 1.0; 
+    protected double feedSpeedPush1 = 1.0; 
     @Attribute(required = false)
-    protected double feedSpeedForward2 = 1.0; 
+    protected double feedSpeedPush2 = 1.0; 
     @Attribute(required = false)
-    protected double feedSpeedForward3 = 1.0; 
+    protected double feedSpeedPush3 = 1.0; 
     @Attribute(required = false)
-    protected double feedSpeedForwardEnd = 1.0;
+    protected double feedSpeedPushEnd = 1.0;
     @Attribute(required = false)
-    protected double feedSpeedBackward3 = 1.0;
+    protected double feedSpeedPull3 = 1.0;
     @Attribute(required = false)
-    protected double feedSpeedBackward2 = 1.0;
+    protected double feedSpeedPull2 = 1.0;
     @Attribute(required = false)
-    protected double feedSpeedBackward1 = 1.0;
+    protected double feedSpeedPull1 = 1.0;
     @Attribute(required = false)
-    protected double feedSpeedBackward0 = 1.0;
+    protected double feedSpeedPull0 = 1.0;
 
     @Attribute(required = false)
-    protected boolean includedForward1 = false; 
+    protected boolean includedPush1 = false; 
     @Attribute(required = false)
-    protected boolean includedForward2 = false; 
+    protected boolean includedPush2 = false; 
     @Attribute(required = false)
-    protected boolean includedForward3 = false; 
+    protected boolean includedPush3 = false; 
     @Attribute(required = false)
-    protected boolean includedForwardEnd = true; 
+    protected boolean includedPushEnd = true; 
 
     @Attribute(required = false)
     protected boolean includedMulti0 = true; 
@@ -134,13 +134,13 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
     protected boolean includedMultiEnd = true; 
 
     @Attribute(required = false)
-    protected boolean includedBackward0 = true; 
+    protected boolean includedPull0 = true; 
     @Attribute(required = false)
-    protected boolean includedBackward1 = false; 
+    protected boolean includedPull1 = false; 
     @Attribute(required = false)
-    protected boolean includedBackward2 = false; 
+    protected boolean includedPull2 = false; 
     @Attribute(required = false)
-    protected boolean includedBackward3 = false; 
+    protected boolean includedPull3 = false; 
 
     @Attribute(required = false)
     protected String actuatorName;
@@ -274,17 +274,17 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
                 actuator.actuate(true);
 
                 // Push the lever by following the path of locations
-                if (includedForward1 && (isFirst || includedMulti1)) {
-                    actuator.moveTo(feedMid1Location, feedSpeedForward1*baseSpeed);
+                if (includedPush1 && (isFirst || includedMulti1)) {
+                    actuator.moveTo(feedMid1Location, feedSpeedPush1*baseSpeed);
                 }
-                if (includedForward2 && (isFirst || includedMulti2)) {
-                    actuator.moveTo(feedMid2Location, feedSpeedForward2*baseSpeed);
+                if (includedPush2 && (isFirst || includedMulti2)) {
+                    actuator.moveTo(feedMid2Location, feedSpeedPush2*baseSpeed);
                 }
-                if (includedForward3 && (isFirst || includedMulti3)) {
-                    actuator.moveTo(feedMid3Location, feedSpeedForward3*baseSpeed);
+                if (includedPush3 && (isFirst || includedMulti3)) {
+                    actuator.moveTo(feedMid3Location, feedSpeedPush3*baseSpeed);
                 }
-                if (includedForwardEnd && (isFirst || includedMultiEnd)) {
-                    actuator.moveTo(feedEndLocation, feedSpeedForwardEnd*baseSpeed);
+                if (includedPushEnd && (isFirst || includedMultiEnd)) {
+                    actuator.moveTo(feedEndLocation, feedSpeedPushEnd*baseSpeed);
                 }
 
                 // Start the take up actuator
@@ -293,17 +293,17 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
                 }
 
                 // Now move back to the start location to move the tape.
-                if (includedBackward3 && (isLast || includedMulti3)) {
-                    actuator.moveTo(feedMid3Location, feedSpeedBackward3 * baseSpeed);
+                if (includedPull3 && (isLast || includedMulti3)) {
+                    actuator.moveTo(feedMid3Location, feedSpeedPull3 * baseSpeed);
                 }
-                if (includedBackward2 && (isLast || includedMulti2)) {
-                    actuator.moveTo(feedMid2Location, feedSpeedBackward2 * baseSpeed);
+                if (includedPull2 && (isLast || includedMulti2)) {
+                    actuator.moveTo(feedMid2Location, feedSpeedPull2 * baseSpeed);
                 }
-                if (includedBackward1 && (isLast || includedMulti1)) {
-                    actuator.moveTo(feedMid1Location, feedSpeedBackward1*baseSpeed);
+                if (includedPull1 && (isLast || includedMulti1)) {
+                    actuator.moveTo(feedMid1Location, feedSpeedPull1*baseSpeed);
                 }
-                if (includedBackward0 && (isLast || includedMulti0)) {
-                    actuator.moveTo(feedStartLocation, feedSpeedBackward0*baseSpeed);
+                if (includedPull0 && (isLast || includedMulti0)) {
+                    actuator.moveTo(feedStartLocation, feedSpeedPull0*baseSpeed);
                 }
 
                 // Stop the take up actuator
@@ -337,7 +337,7 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
 
     @Override
     public String toString() {
-        return String.format("ReferenceGestureFeeder id %s", id);
+        return String.format("%s id %s", getClass().getName(), id);
     }
 
     public Location getHole1Location() {
@@ -413,114 +413,114 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
         this.feedPitch = feedPitch;
     }
 
-    public double getFeedSpeedForward1() {
-        return feedSpeedForward1;
+    public double getFeedSpeedPush1() {
+        return feedSpeedPush1;
     }
 
-    public void setFeedSpeedForward1(double feedSpeedForward1) {
-        this.feedSpeedForward1 = feedSpeedForward1;
+    public void setFeedSpeedPush1(double feedSpeedPush1) {
+        this.feedSpeedPush1 = feedSpeedPush1;
     }
 
-    public double getFeedSpeedForward2() {
-        return feedSpeedForward2;
-    }
-
-
-    public void setFeedSpeedForward2(double feedSpeedForward2) {
-        this.feedSpeedForward2 = feedSpeedForward2;
+    public double getFeedSpeedPush2() {
+        return feedSpeedPush2;
     }
 
 
-    public double getFeedSpeedForward3() {
-        return feedSpeedForward3;
+    public void setFeedSpeedPush2(double feedSpeedPush2) {
+        this.feedSpeedPush2 = feedSpeedPush2;
     }
 
 
-    public void setFeedSpeedForward3(double feedSpeedForward3) {
-        this.feedSpeedForward3 = feedSpeedForward3;
+    public double getFeedSpeedPush3() {
+        return feedSpeedPush3;
     }
 
 
-    public double getFeedSpeedForwardEnd() {
-        return feedSpeedForwardEnd;
+    public void setFeedSpeedPush3(double feedSpeedPush3) {
+        this.feedSpeedPush3 = feedSpeedPush3;
     }
 
 
-    public void setFeedSpeedForwardEnd(double feedSpeedForwardEnd) {
-        this.feedSpeedForwardEnd = feedSpeedForwardEnd;
+    public double getFeedSpeedPushEnd() {
+        return feedSpeedPushEnd;
     }
 
 
-    public double getFeedSpeedBackward3() {
-        return feedSpeedBackward3;
+    public void setFeedSpeedPushEnd(double feedSpeedPushEnd) {
+        this.feedSpeedPushEnd = feedSpeedPushEnd;
     }
 
 
-    public void setFeedSpeedBackward3(double feedSpeedBackward3) {
-        this.feedSpeedBackward3 = feedSpeedBackward3;
+    public double getFeedSpeedPull3() {
+        return feedSpeedPull3;
     }
 
 
-    public double getFeedSpeedBackward2() {
-        return feedSpeedBackward2;
+    public void setFeedSpeedPull3(double feedSpeedPull3) {
+        this.feedSpeedPull3 = feedSpeedPull3;
     }
 
 
-    public void setFeedSpeedBackward2(double feedSpeedBackward2) {
-        this.feedSpeedBackward2 = feedSpeedBackward2;
+    public double getFeedSpeedPull2() {
+        return feedSpeedPull2;
     }
 
 
-    public double getFeedSpeedBackward1() {
-        return feedSpeedBackward1;
+    public void setFeedSpeedPull2(double feedSpeedPull2) {
+        this.feedSpeedPull2 = feedSpeedPull2;
     }
 
 
-    public void setFeedSpeedBackward1(double feedSpeedBackward1) {
-        this.feedSpeedBackward1 = feedSpeedBackward1;
+    public double getFeedSpeedPull1() {
+        return feedSpeedPull1;
     }
 
 
-    public double getFeedSpeedBackward0() {
-        return feedSpeedBackward0;
+    public void setFeedSpeedPull1(double feedSpeedPull1) {
+        this.feedSpeedPull1 = feedSpeedPull1;
     }
 
 
-    public void setFeedSpeedBackward0(double feedSpeedBackward0) {
-        this.feedSpeedBackward0 = feedSpeedBackward0;
+    public double getFeedSpeedPull0() {
+        return feedSpeedPull0;
     }
 
 
-    public boolean isIncludedForward1() {
-        return includedForward1;
+    public void setFeedSpeedPull0(double feedSpeedPull0) {
+        this.feedSpeedPull0 = feedSpeedPull0;
     }
 
-    public void setIncludedForward1(boolean includedForward1) {
-        this.includedForward1 = includedForward1;
+
+    public boolean isIncludedPush1() {
+        return includedPush1;
     }
 
-    public boolean isIncludedForward2() {
-        return includedForward2;
+    public void setIncludedPush1(boolean includedPush1) {
+        this.includedPush1 = includedPush1;
     }
 
-    public void setIncludedForward2(boolean includedForward2) {
-        this.includedForward2 = includedForward2;
+    public boolean isIncludedPush2() {
+        return includedPush2;
     }
 
-    public boolean isIncludedForward3() {
-        return includedForward3;
+    public void setIncludedPush2(boolean includedPush2) {
+        this.includedPush2 = includedPush2;
     }
 
-    public void setIncludedForward3(boolean includedForward3) {
-        this.includedForward3 = includedForward3;
+    public boolean isIncludedPush3() {
+        return includedPush3;
     }
 
-    public boolean isIncludedForwardEnd() {
-        return includedForwardEnd;
+    public void setIncludedPush3(boolean includedPush3) {
+        this.includedPush3 = includedPush3;
     }
 
-    public void setIncludedForwardEnd(boolean includedForwardEnd) {
-        this.includedForwardEnd = includedForwardEnd;
+    public boolean isIncludedPushEnd() {
+        return includedPushEnd;
+    }
+
+    public void setIncludedPushEnd(boolean includedPushEnd) {
+        this.includedPushEnd = includedPushEnd;
     }
 
     public boolean isIncludedMulti0() {
@@ -563,36 +563,36 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
         this.includedMultiEnd = includedMultiEnd;
     }
 
-    public boolean isIncludedBackward0() {
-        return includedBackward0;
+    public boolean isIncludedPull0() {
+        return includedPull0;
     }
 
-    public void setIncludedBackward0(boolean includedBackward0) {
-        this.includedBackward0 = includedBackward0;
+    public void setIncludedPull0(boolean includedPull0) {
+        this.includedPull0 = includedPull0;
     }
 
-    public boolean isIncludedBackward1() {
-        return includedBackward1;
+    public boolean isIncludedPull1() {
+        return includedPull1;
     }
 
-    public void setIncludedBackward1(boolean includedBackward1) {
-        this.includedBackward1 = includedBackward1;
+    public void setIncludedPull1(boolean includedPull1) {
+        this.includedPull1 = includedPull1;
     }
 
-    public boolean isIncludedBackward2() {
-        return includedBackward2;
+    public boolean isIncludedPull2() {
+        return includedPull2;
     }
 
-    public void setIncludedBackward2(boolean includedBackward2) {
-        this.includedBackward2 = includedBackward2;
+    public void setIncludedPull2(boolean includedPull2) {
+        this.includedPull2 = includedPull2;
     }
 
-    public boolean isIncludedBackward3() {
-        return includedBackward3;
+    public boolean isIncludedPull3() {
+        return includedPull3;
     }
 
-    public void setIncludedBackward3(boolean includedBackward3) {
-        this.includedBackward3 = includedBackward3;
+    public void setIncludedPull3(boolean includedPull3) {
+        this.includedPull3 = includedPull3;
     }
 
     public String getActuatorName() {
@@ -676,7 +676,7 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
         // apply the transformation backward
         // first translate back to hole 1 relative
         location = location
-            .subtract(getHole1Location());
+                .subtract(getHole1Location());
         // undo vision offset if any
         if (visionOffset != null) {
             location = location
@@ -701,7 +701,7 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
         // also apply vision offset if any
         if (visionOffset != null) {
             location = location.rotateXy(-visionOffset.getRotation())
-                            .subtractWithRotation(visionOffset);
+                    .subtractWithRotation(visionOffset);
         }
         // now apply hole 1 translation to global
         location = location
@@ -758,7 +758,7 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
     private static CvPipeline createDefaultPipeline() {
         try {
             String xml = IOUtils.toString(BlindsFeeder.class
-                    .getResource("ReferenceGestureFeeder-DefaultPipeline.xml"));
+                    .getResource("ReferencePushPullFeeder-DefaultPipeline.xml"));
             return new CvPipeline(xml);
         }
         catch (Exception e) {
@@ -1094,7 +1094,7 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
                         calibratedVisionOffset = getHole1Location()
                                 .subtract(calibratedHole1Location)
                                 .derive(null, null, 0.0, angleOffset);
-                        Logger.debug("[ReferenceGestureFeeder] calibrated vision offset is: " + calibratedVisionOffset);
+                        Logger.debug("["+getClass().getName()+"] calibrated vision offset is: " + calibratedVisionOffset);
 
                         // Add tick marks for show
                         if (calibratedPickLocation != null) {
@@ -1117,7 +1117,7 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
                     drawHoles(resultMat, getHoles(), Color.green);
                     drawLines(resultMat, getLines(), new Color(0, 0, 128));
                     drawPartNumbers(resultMat, Color.orange);
-                    File file = Configuration.get().createResourceFile(getClass(), "reference-gesture-feeder", ".png");
+                    File file = Configuration.get().createResourceFile(getClass(), "push-pull-feeder", ".png");
                     Imgcodecs.imwrite(file.getAbsolutePath(), resultMat);
                     BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
                     resultMat.release();
@@ -1237,7 +1237,7 @@ public class ReferenceGestureFeeder extends ReferenceFeeder {
 
     @Override
     public Wizard getConfigurationWizard() {
-        return new ReferenceGestureFeederConfigurationWizard(this);
+        return new ReferencePushPullFeederConfigurationWizard(this);
     }
 
     @Override

@@ -42,7 +42,7 @@ import org.openpnp.machine.reference.feeder.AdvancedLoosePartFeeder;
 import org.openpnp.machine.reference.feeder.BlindsFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceDragFeeder;
-import org.openpnp.machine.reference.feeder.ReferenceGestureFeeder;
+import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceLeverFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceLoosePartFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceRotatedTrayFeeder;
@@ -216,7 +216,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(ReferenceRotatedTrayFeeder.class);
         l.add(ReferenceDragFeeder.class);
         l.add(ReferenceLeverFeeder.class);
-        l.add(ReferenceGestureFeeder.class);
+        l.add(ReferencePushPullFeeder.class);
         l.add(ReferenceTubeFeeder.class);
         l.add(ReferenceAutoFeeder.class);
         l.add(ReferenceSlotAutoFeeder.class);

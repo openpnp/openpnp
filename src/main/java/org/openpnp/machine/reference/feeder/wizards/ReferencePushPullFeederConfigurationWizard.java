@@ -35,7 +35,6 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
@@ -45,15 +44,13 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.ActuatorsComboBoxModel;
-import org.openpnp.gui.support.BufferedImageIconConverter;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
-import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.LongConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PercentConverter;
-import org.openpnp.machine.reference.feeder.ReferenceGestureFeeder;
+import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
@@ -69,16 +66,16 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class ReferenceGestureFeederConfigurationWizard
+public class ReferencePushPullFeederConfigurationWizard
 extends AbstractReferenceFeederConfigurationWizard {
-    private final ReferenceGestureFeeder feeder;
+    private final ReferencePushPullFeeder feeder;
     private JTextField textFieldFeedStartX;
     private JTextField textFieldFeedStartY;
     private JTextField textFieldFeedStartZ;
     private JTextField textFieldFeedEndX;
     private JTextField textFieldFeedEndY;
     private JTextField textFieldFeedEndZ;
-    private JTextField textFieldFeedForward1;
+    private JTextField textFieldFeedPush1;
     private JLabel lblFeedMid1Location;
     private JTextField textFieldFeedMid1X;
     private JTextField textFieldFeedMid1Y;
@@ -111,33 +108,33 @@ extends AbstractReferenceFeederConfigurationWizard {
     private LocationButtonsPanel locationButtonsPanelFeedMid2;
     private LocationButtonsPanel locationButtonsPanelFeedMid3;
     private LocationButtonsPanel locationButtonsPanelFeedEnd;
-    private JLabel lblForward;
+    private JLabel lblPush;
     private JLabel lblMulti;
-    private JLabel lblBackward;
+    private JLabel lblPull;
     private JLabel lblFeedSpeed0_1;
     private JLabel lblFeedSpeed1_2;
     private JLabel lblFeedSpeed2_3;
     private JLabel lblFeedSpeed3_4;
-    private JTextField textFieldFeedForward2;
-    private JTextField textFieldFeedForward3;
-    private JTextField textFieldFeedForward4;
-    private JTextField textFieldFeedBackward3;
-    private JTextField textFieldFeedBackward2;
-    private JTextField textFieldFeedBackward1;
-    private JTextField textFieldFeedBackward0;
-    private JCheckBox chckbxForward1;
-    private JCheckBox chckbxForward2;
-    private JCheckBox chckbxForward3;
-    private JCheckBox chckbxForwardEnd;
+    private JTextField textFieldFeedPush2;
+    private JTextField textFieldFeedPush3;
+    private JTextField textFieldFeedPush4;
+    private JTextField textFieldFeedPull3;
+    private JTextField textFieldFeedPull2;
+    private JTextField textFieldFeedPull1;
+    private JTextField textFieldFeedPull0;
+    private JCheckBox chckbxPush1;
+    private JCheckBox chckbxPush2;
+    private JCheckBox chckbxPush3;
+    private JCheckBox chckbxPushEnd;
     private JCheckBox chckbxMulti0;
     private JCheckBox chckbxMulti1;
     private JCheckBox chckbxMulti2;
     private JCheckBox chckbxMulti3;
     private JCheckBox chckbxMultiEnd;
-    private JCheckBox chckbxBackward0;
-    private JCheckBox chckbxBackward1;
-    private JCheckBox chckbxBackward2;
-    private JCheckBox chckbxBackward3;
+    private JCheckBox chckbxPull0;
+    private JCheckBox chckbxPull1;
+    private JCheckBox chckbxPull2;
+    private JCheckBox chckbxPull3;
     private JLabel lblZ_1;
     private JLabel lblRotation;
     private JLabel lblY_1;
@@ -164,7 +161,7 @@ extends AbstractReferenceFeederConfigurationWizard {
     private JButton btnShowVisionFeatures;
     private JButton btnAutoSetup;
 
-    public ReferenceGestureFeederConfigurationWizard(ReferenceGestureFeeder feeder) {
+    public ReferencePushPullFeederConfigurationWizard(ReferencePushPullFeeder feeder) {
         super(feeder, false);
         this.feeder = feeder;
 
@@ -206,11 +203,11 @@ extends AbstractReferenceFeederConfigurationWizard {
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
-        
-                btnShowVisionFeatures = new JButton(showVisionFeaturesAction);
-                btnShowVisionFeatures.setToolTipText("Preview the features recognized by Computer Vision.");
-                btnShowVisionFeatures.setText("Preview Vision Features");
-                panelTape.add(btnShowVisionFeatures, "2, 2, 3, 1, default, fill");
+
+        btnShowVisionFeatures = new JButton(showVisionFeaturesAction);
+        btnShowVisionFeatures.setToolTipText("Preview the features recognized by Computer Vision.");
+        btnShowVisionFeatures.setText("Preview Vision Features");
+        panelTape.add(btnShowVisionFeatures, "2, 2, 3, 1, default, fill");
 
         btnAutoSetup = new JButton(autoSetupAction);
         panelTape.add(btnAutoSetup, "6, 2, 7, 1");
@@ -325,7 +322,7 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         panelLocations = new JPanel();
         panelFields.add(panelLocations);
-        panelLocations.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Gesture Settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        panelLocations.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Push-Pull Settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         panelLocations.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),
@@ -372,7 +369,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblActuatorId = new JLabel("Actuator");
-        panelLocations.add(lblActuatorId, "2, 2");
+        panelLocations.add(lblActuatorId, "2, 2, right, default");
 
         Head head = null;
         try {
@@ -402,19 +399,19 @@ extends AbstractReferenceFeederConfigurationWizard {
         JLabel lblZ = new JLabel("Z");
         panelLocations.add(lblZ, "8, 6");
 
-        lblForward = new JLabel("↓");
-        lblForward.setToolTipText("Locations are included when moving forward.");
-        panelLocations.add(lblForward, "10, 6, center, default");
+        lblPush = new JLabel("↓");
+        lblPush.setToolTipText("Locations that are included when pushing.");
+        panelLocations.add(lblPush, "10, 6, center, default");
 
         lblMulti = new JLabel("↑↓");
-        lblMulti.setToolTipText("<html>Locations are included, when feeding multiple times.<br/>\r\nThe combination with the forward ↓ and backward ↑ switch is taken.</html>");
+        lblMulti.setToolTipText("<html>Locations that are included, when actuating multiple times.<br/>\r\nThe combination with the push ↓ and pull ↑ switch is taken.</html>");
         panelLocations.add(lblMulti, "12, 6, 3, 1, center, default");
 
-        lblBackward = new JLabel("↑");
-        lblBackward.setToolTipText("Locations are included when moving backward.");
-        panelLocations.add(lblBackward, "16, 6, center, default");
+        lblPull = new JLabel("↑");
+        lblPull.setToolTipText("Locations that are included when pulling.");
+        panelLocations.add(lblPull, "16, 6, center, default");
 
-        JLabel lblFeedStartLocation = new JLabel("Feed Start Location");
+        JLabel lblFeedStartLocation = new JLabel("Start Location");
         panelLocations.add(lblFeedStartLocation, "2, 8, right, default");
 
         textFieldFeedStartX = new JTextField();
@@ -430,31 +427,31 @@ extends AbstractReferenceFeederConfigurationWizard {
         textFieldFeedStartZ.setColumns(8);
 
         chckbxMulti0 = new JCheckBox("");
-        chckbxMulti0.setToolTipText("Include the Feed Start Location in multi-feed motion (if the backward switch is also set).");
+        chckbxMulti0.setToolTipText("Include the Start Location in multi-actuating motion (if the pull switch is also set).");
         chckbxMulti0.setSelected(true);
         panelLocations.add(chckbxMulti0, "12, 8, 3, 1, center, default");
 
-        chckbxBackward0 = new JCheckBox("");
-        chckbxBackward0.setToolTipText("Go to the Feed Start Location when moving the lever backward.");
-        chckbxBackward0.setSelected(true);
-        panelLocations.add(chckbxBackward0, "16, 8, center, default");
+        chckbxPull0 = new JCheckBox("");
+        chckbxPull0.setToolTipText("Go to the Start Location when pulling.");
+        chckbxPull0.setSelected(true);
+        panelLocations.add(chckbxPull0, "16, 8, center, default");
 
         locationButtonsPanelFeedStart = new LocationButtonsPanel(textFieldFeedStartX,
                 textFieldFeedStartY, textFieldFeedStartZ, null);
         panelLocations.add(locationButtonsPanelFeedStart, "18, 8");
 
-        lblFeedSpeed0_1 = new JLabel("Feed Speed ↕");
+        lblFeedSpeed0_1 = new JLabel("Speed ↕");
         panelLocations.add(lblFeedSpeed0_1, "8, 10, right, default");
 
-        textFieldFeedForward1 = new JTextField();
-        panelLocations.add(textFieldFeedForward1, "10, 10, 3, 1");
-        textFieldFeedForward1.setColumns(5);
+        textFieldFeedPush1 = new JTextField();
+        panelLocations.add(textFieldFeedPush1, "10, 10, 3, 1");
+        textFieldFeedPush1.setColumns(5);
 
-        textFieldFeedBackward0 = new JTextField();
-        panelLocations.add(textFieldFeedBackward0, "14, 10, 3, 1");
-        textFieldFeedBackward0.setColumns(10);
+        textFieldFeedPull0 = new JTextField();
+        panelLocations.add(textFieldFeedPull0, "14, 10, 3, 1");
+        textFieldFeedPull0.setColumns(10);
 
-        lblFeedMid1Location = new JLabel("Feed Mid 1 Location");
+        lblFeedMid1Location = new JLabel("Mid 1 Location");
         panelLocations.add(lblFeedMid1Location, "2, 12, right, default");
 
         textFieldFeedMid1X = new JTextField();
@@ -469,36 +466,36 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelLocations.add(textFieldFeedMid1Z, "8, 12");
         textFieldFeedMid1Z.setColumns(10);
 
-        chckbxForward1 = new JCheckBox("");
-        chckbxForward1.setToolTipText("Go to the Feed Mid 1 Location when moving the lever forward.");
-        chckbxForward1.setSelected(true);
-        panelLocations.add(chckbxForward1, "10, 12, center, default");
+        chckbxPush1 = new JCheckBox("");
+        chckbxPush1.setToolTipText("Go to the Mid 1 Location when pushing.");
+        chckbxPush1.setSelected(true);
+        panelLocations.add(chckbxPush1, "10, 12, center, default");
 
         chckbxMulti1 = new JCheckBox("");
-        chckbxMulti1.setToolTipText("Include the Feed Mid 1 Location in multi-feed motion (if the forward/backward switch is also set).");
+        chckbxMulti1.setToolTipText("Include the Mid 1 Location in multi-actuation motion (if the push/pull switch is also set).");
         chckbxMulti1.setSelected(true);
         panelLocations.add(chckbxMulti1, "12, 12, 3, 1, center, default");
 
-        chckbxBackward1 = new JCheckBox("");
-        chckbxBackward1.setToolTipText("Go to the Feed Mid 1 Location when moving the lever backward.");
-        chckbxBackward1.setSelected(true);
-        panelLocations.add(chckbxBackward1, "16, 12, center, default");
+        chckbxPull1 = new JCheckBox("");
+        chckbxPull1.setToolTipText("Go to the Mid 1 Location when pulling.");
+        chckbxPull1.setSelected(true);
+        panelLocations.add(chckbxPull1, "16, 12, center, default");
 
         locationButtonsPanelFeedMid1 = new LocationButtonsPanel(textFieldFeedMid1X, textFieldFeedMid1Y, textFieldFeedMid1Z, (JTextField) null);
         panelLocations.add(locationButtonsPanelFeedMid1, "18, 12");
 
-        lblFeedSpeed1_2 = new JLabel("Feed Speed ↕");
+        lblFeedSpeed1_2 = new JLabel("Speed ↕");
         panelLocations.add(lblFeedSpeed1_2, "8, 14, right, default");
 
-        textFieldFeedForward2 = new JTextField();
-        panelLocations.add(textFieldFeedForward2, "10, 14, 3, 1");
-        textFieldFeedForward2.setColumns(10);
+        textFieldFeedPush2 = new JTextField();
+        panelLocations.add(textFieldFeedPush2, "10, 14, 3, 1");
+        textFieldFeedPush2.setColumns(10);
 
-        textFieldFeedBackward1 = new JTextField();
-        textFieldFeedBackward1.setColumns(10);
-        panelLocations.add(textFieldFeedBackward1, "14, 14, 3, 1");
+        textFieldFeedPull1 = new JTextField();
+        textFieldFeedPull1.setColumns(10);
+        panelLocations.add(textFieldFeedPull1, "14, 14, 3, 1");
 
-        lblFeedMid2Location = new JLabel("Feed Mid 2 Location");
+        lblFeedMid2Location = new JLabel("Mid 2 Location");
         panelLocations.add(lblFeedMid2Location, "2, 16, right, default");
 
         textFieldFeedMid2X = new JTextField();
@@ -513,36 +510,36 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelLocations.add(textFieldFeedMid2Z, "8, 16");
         textFieldFeedMid2Z.setColumns(10);
 
-        chckbxForward2 = new JCheckBox("");
-        chckbxForward2.setToolTipText("Go to the Feed Mid 2 Location when moving forward.");
-        chckbxForward2.setSelected(true);
-        panelLocations.add(chckbxForward2, "10, 16, center, default");
+        chckbxPush2 = new JCheckBox("");
+        chckbxPush2.setToolTipText("Go to the Mid 2 Location when pushing.");
+        chckbxPush2.setSelected(true);
+        panelLocations.add(chckbxPush2, "10, 16, center, default");
 
         chckbxMulti2 = new JCheckBox("");
-        chckbxMulti2.setToolTipText("Include the Feed Mid 2 Location in multi-feed motion (if the forward/backward switch is also set).");
+        chckbxMulti2.setToolTipText("Include the Mid 2 Location in multi-actuation motion (if the push/pull switch is also set).");
         chckbxMulti2.setSelected(true);
         panelLocations.add(chckbxMulti2, "12, 16, 3, 1, center, default");
 
-        chckbxBackward2 = new JCheckBox("");
-        chckbxBackward2.setToolTipText("Go to the Feed Mid 2 Location when moving backward.");
-        chckbxBackward2.setSelected(true);
-        panelLocations.add(chckbxBackward2, "16, 16, center, default");
+        chckbxPull2 = new JCheckBox("");
+        chckbxPull2.setToolTipText("Go to the Mid 2 Location when pulling.");
+        chckbxPull2.setSelected(true);
+        panelLocations.add(chckbxPull2, "16, 16, center, default");
 
         locationButtonsPanelFeedMid2 = new LocationButtonsPanel(textFieldFeedMid2X, textFieldFeedMid2Y, textFieldFeedMid2Z, (JTextField) null);
         panelLocations.add(locationButtonsPanelFeedMid2, "18, 16");
 
-        lblFeedSpeed2_3 = new JLabel("Feed Speed ↕");
+        lblFeedSpeed2_3 = new JLabel("Speed ↕");
         panelLocations.add(lblFeedSpeed2_3, "8, 18, right, default");
 
-        textFieldFeedForward3 = new JTextField();
-        panelLocations.add(textFieldFeedForward3, "10, 18, 3, 1");
-        textFieldFeedForward3.setColumns(10);
+        textFieldFeedPush3 = new JTextField();
+        panelLocations.add(textFieldFeedPush3, "10, 18, 3, 1");
+        textFieldFeedPush3.setColumns(10);
 
-        textFieldFeedBackward2 = new JTextField();
-        textFieldFeedBackward2.setColumns(10);
-        panelLocations.add(textFieldFeedBackward2, "14, 18, 3, 1");
+        textFieldFeedPull2 = new JTextField();
+        textFieldFeedPull2.setColumns(10);
+        panelLocations.add(textFieldFeedPull2, "14, 18, 3, 1");
 
-        lblFeedMid3Location = new JLabel("Feed Mid 3 Location");
+        lblFeedMid3Location = new JLabel("Mid 3 Location");
         panelLocations.add(lblFeedMid3Location, "2, 20, right, default");
 
         textFieldFeedMid3X = new JTextField();
@@ -557,36 +554,36 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelLocations.add(textFieldFeedMid3Z, "8, 20, fill, default");
         textFieldFeedMid3Z.setColumns(10);
 
-        chckbxForward3 = new JCheckBox("");
-        chckbxForward3.setToolTipText("Go to the Feed Mid 3 Location when moving forward.");
-        chckbxForward3.setSelected(true);
-        panelLocations.add(chckbxForward3, "10, 20, center, default");
+        chckbxPush3 = new JCheckBox("");
+        chckbxPush3.setToolTipText("Go to the Mid 3 Location when pushing.");
+        chckbxPush3.setSelected(true);
+        panelLocations.add(chckbxPush3, "10, 20, center, default");
 
         chckbxMulti3 = new JCheckBox("");
-        chckbxMulti3.setToolTipText("Include the Feed Mid 3 Location in multi-feed motion (if the forward/backward switch is also set).");
+        chckbxMulti3.setToolTipText("Include the Mid 3 Location in multi-actuation motion (if the push/pull switch is also set).");
         chckbxMulti3.setSelected(true);
         panelLocations.add(chckbxMulti3, "12, 20, 3, 1, center, default");
 
-        chckbxBackward3 = new JCheckBox("");
-        chckbxBackward3.setToolTipText("Go to the Feed Mid 3 Location when moving backward.");
-        chckbxBackward3.setSelected(true);
-        panelLocations.add(chckbxBackward3, "16, 20, center, default");
+        chckbxPull3 = new JCheckBox("");
+        chckbxPull3.setToolTipText("Go to the Mid 3 Location when pulling.");
+        chckbxPull3.setSelected(true);
+        panelLocations.add(chckbxPull3, "16, 20, center, default");
 
         locationButtonsPanelFeedMid3 = new LocationButtonsPanel(textFieldFeedMid3X, textFieldFeedMid3Y, textFieldFeedMid3Z, (JTextField) null);
         panelLocations.add(locationButtonsPanelFeedMid3, "18, 20");
 
-        lblFeedSpeed3_4 = new JLabel("Feed Speed ↕");
+        lblFeedSpeed3_4 = new JLabel("Speed ↕");
         panelLocations.add(lblFeedSpeed3_4, "8, 22, right, default");
 
-        textFieldFeedForward4 = new JTextField();
-        panelLocations.add(textFieldFeedForward4, "10, 22, 3, 1");
-        textFieldFeedForward4.setColumns(10);
+        textFieldFeedPush4 = new JTextField();
+        panelLocations.add(textFieldFeedPush4, "10, 22, 3, 1");
+        textFieldFeedPush4.setColumns(10);
 
-        textFieldFeedBackward3 = new JTextField();
-        textFieldFeedBackward3.setColumns(10);
-        panelLocations.add(textFieldFeedBackward3, "14, 22, 3, 1");
+        textFieldFeedPull3 = new JTextField();
+        textFieldFeedPull3.setColumns(10);
+        panelLocations.add(textFieldFeedPull3, "14, 22, 3, 1");
 
-        JLabel lblFeedEndLocation = new JLabel("Feed End Location");
+        JLabel lblFeedEndLocation = new JLabel("End Location");
         panelLocations.add(lblFeedEndLocation, "2, 24, right, default");
 
         textFieldFeedEndX = new JTextField();
@@ -601,13 +598,13 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelLocations.add(textFieldFeedEndZ, "8, 24");
         textFieldFeedEndZ.setColumns(8);
 
-        chckbxForwardEnd = new JCheckBox("");
-        chckbxForwardEnd.setToolTipText("Go to the Feed Mid End Location when moving forward.");
-        chckbxForwardEnd.setSelected(true);
-        panelLocations.add(chckbxForwardEnd, "10, 24, center, default");
+        chckbxPushEnd = new JCheckBox("");
+        chckbxPushEnd.setToolTipText("Go to the End Location when pushing.");
+        chckbxPushEnd.setSelected(true);
+        panelLocations.add(chckbxPushEnd, "10, 24, center, default");
 
         chckbxMultiEnd = new JCheckBox("");
-        chckbxMultiEnd.setToolTipText("Include the Feed Mid 1 Location in multi-feed motion (if the forward switch is also set).");
+        chckbxMultiEnd.setToolTipText("Include the End Location in multi-actuation motion (if the push switch is also set).");
         chckbxMultiEnd.setSelected(true);
         panelLocations.add(chckbxMultiEnd, "12, 24, 3, 1, center, default");
 
@@ -640,7 +637,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         lblCalibrationTrigger = new JLabel("Calibration Trigger");
         panelVisionEnabled.add(lblCalibrationTrigger, "2, 2, right, default");
 
-        comboBoxCalibrationTrigger = new JComboBox(ReferenceGestureFeeder.CalibrationTrigger.values());
+        comboBoxCalibrationTrigger = new JComboBox(ReferencePushPullFeeder.CalibrationTrigger.values());
         panelVisionEnabled.add(comboBoxCalibrationTrigger, "4, 2");
 
         btnEditPipeline = new JButton(editPipelineAction);
@@ -695,19 +692,19 @@ extends AbstractReferenceFeederConfigurationWizard {
         addWrappedBinding(feeder, "actuatorName", comboBoxFeedActuator, "selectedItem");
         addWrappedBinding(feeder, "peelOffActuatorName", comboBoxPeelOffActuator, "selectedItem");
 
-        addWrappedBinding(feeder, "feedSpeedForward1", textFieldFeedForward1, "text", percentConverter);
-        addWrappedBinding(feeder, "feedSpeedForward2", textFieldFeedForward2, "text", percentConverter);
-        addWrappedBinding(feeder, "feedSpeedForward3", textFieldFeedForward3, "text", percentConverter);
-        addWrappedBinding(feeder, "feedSpeedForwardEnd", textFieldFeedForward4, "text", percentConverter);
-        addWrappedBinding(feeder, "feedSpeedBackward3", textFieldFeedBackward3, "text", percentConverter);
-        addWrappedBinding(feeder, "feedSpeedBackward2", textFieldFeedBackward2, "text", percentConverter);
-        addWrappedBinding(feeder, "feedSpeedBackward1", textFieldFeedBackward1, "text", percentConverter);
-        addWrappedBinding(feeder, "feedSpeedBackward0", textFieldFeedBackward0, "text", percentConverter);
+        addWrappedBinding(feeder, "feedSpeedPush1", textFieldFeedPush1, "text", percentConverter);
+        addWrappedBinding(feeder, "feedSpeedPush2", textFieldFeedPush2, "text", percentConverter);
+        addWrappedBinding(feeder, "feedSpeedPush3", textFieldFeedPush3, "text", percentConverter);
+        addWrappedBinding(feeder, "feedSpeedPushEnd", textFieldFeedPush4, "text", percentConverter);
+        addWrappedBinding(feeder, "feedSpeedPull3", textFieldFeedPull3, "text", percentConverter);
+        addWrappedBinding(feeder, "feedSpeedPull2", textFieldFeedPull2, "text", percentConverter);
+        addWrappedBinding(feeder, "feedSpeedPull1", textFieldFeedPull1, "text", percentConverter);
+        addWrappedBinding(feeder, "feedSpeedPull0", textFieldFeedPull0, "text", percentConverter);
 
-        addWrappedBinding(feeder, "includedForward1", chckbxForward1, "selected");
-        addWrappedBinding(feeder, "includedForward2", chckbxForward2, "selected");
-        addWrappedBinding(feeder, "includedForward3", chckbxForward3, "selected");
-        addWrappedBinding(feeder, "includedForwardEnd", chckbxForwardEnd, "selected");
+        addWrappedBinding(feeder, "includedPush1", chckbxPush1, "selected");
+        addWrappedBinding(feeder, "includedPush2", chckbxPush2, "selected");
+        addWrappedBinding(feeder, "includedPush3", chckbxPush3, "selected");
+        addWrappedBinding(feeder, "includedPushEnd", chckbxPushEnd, "selected");
 
         addWrappedBinding(feeder, "includedMulti0", chckbxMulti0, "selected");
         addWrappedBinding(feeder, "includedMulti1", chckbxMulti1, "selected");
@@ -715,10 +712,10 @@ extends AbstractReferenceFeederConfigurationWizard {
         addWrappedBinding(feeder, "includedMulti3", chckbxMulti3, "selected");
         addWrappedBinding(feeder, "includedMultiEnd", chckbxMultiEnd, "selected");
 
-        addWrappedBinding(feeder, "includedBackward0", chckbxBackward0, "selected");
-        addWrappedBinding(feeder, "includedBackward1", chckbxBackward1, "selected");
-        addWrappedBinding(feeder, "includedBackward2", chckbxBackward2, "selected");
-        addWrappedBinding(feeder, "includedBackward3", chckbxBackward3, "selected");
+        addWrappedBinding(feeder, "includedPull0", chckbxPull0, "selected");
+        addWrappedBinding(feeder, "includedPull1", chckbxPull1, "selected");
+        addWrappedBinding(feeder, "includedPull2", chckbxPull2, "selected");
+        addWrappedBinding(feeder, "includedPull3", chckbxPull3, "selected");
 
         MutableLocationProxy feedStartLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "feedStartLocation", feedStartLocation, "location");
@@ -772,14 +769,14 @@ extends AbstractReferenceFeederConfigurationWizard {
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHole1LocationY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPartPitch);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedPitch);
-        ComponentDecorators.decorateWithAutoSelect(textFieldFeedForward1);
-        ComponentDecorators.decorateWithAutoSelect(textFieldFeedForward2);
-        ComponentDecorators.decorateWithAutoSelect(textFieldFeedForward3);
-        ComponentDecorators.decorateWithAutoSelect(textFieldFeedForward4);
-        ComponentDecorators.decorateWithAutoSelect(textFieldFeedBackward3);
-        ComponentDecorators.decorateWithAutoSelect(textFieldFeedBackward2);
-        ComponentDecorators.decorateWithAutoSelect(textFieldFeedBackward1);
-        ComponentDecorators.decorateWithAutoSelect(textFieldFeedBackward0);
+        ComponentDecorators.decorateWithAutoSelect(textFieldFeedPush1);
+        ComponentDecorators.decorateWithAutoSelect(textFieldFeedPush2);
+        ComponentDecorators.decorateWithAutoSelect(textFieldFeedPush3);
+        ComponentDecorators.decorateWithAutoSelect(textFieldFeedPush4);
+        ComponentDecorators.decorateWithAutoSelect(textFieldFeedPull3);
+        ComponentDecorators.decorateWithAutoSelect(textFieldFeedPull2);
+        ComponentDecorators.decorateWithAutoSelect(textFieldFeedPull1);
+        ComponentDecorators.decorateWithAutoSelect(textFieldFeedPull0);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartZ);
