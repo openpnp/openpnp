@@ -153,8 +153,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     @Element(required = false)
     private CvPipeline pipeline = createDefaultPipeline();
 
-    @Attribute(required = false)
-    private boolean visionEnabled = true;
+    @Element(required = false)
+    private Length precisionWanted = new Length(0.1, LengthUnit.Millimeters);
+
+    private int calibrationCount = 0;
+    private Length sumOfErrors = new Length(0, LengthUnit.Millimeters);
 
     // These are not on the GUI but can be tweaked in the machine.xml
     @Attribute(required = false)
@@ -166,7 +169,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     private int calibrateMaxPasses; 
     @Attribute(required = false)
     private double calibrateToleranceMm;
-
+    @Attribute(required = false)
+    private int calibrateMinStatistic = 3; 
+    
     /*
      * visionOffset contains the difference between where the part was expected to be and where it
      * is. Subtracting these offsets from the pickLocation produces the correct pick location.
@@ -190,6 +195,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     public enum CalibrationTrigger {
         None,
         FirstUse,
+        Automatic,
         EachTapeFeed
     }
 
@@ -198,14 +204,25 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     public void assertCalibrated(boolean tapeFeed) throws Exception {
         if ((visionOffset == null && calibrationTrigger != CalibrationTrigger.None)
+                || (tapeFeed && calibrationTrigger == CalibrationTrigger.Automatic && !isPrecisionSufficient())
                 || (tapeFeed && calibrationTrigger == CalibrationTrigger.EachTapeFeed)) {
-            // not yet calibrated
+            // not yet calibrated (enough)
             obtainCalibratedVisionOffset();
             if (visionOffset == null) {
                 // no lock obtained
                 throw new Exception(String.format("Vision failed on feeder %s.", getName()));
             }
         }
+    }
+        
+    public boolean isPrecisionSufficient() {
+        if (calibrationCount < calibrateMinStatistic) {
+            return false;
+        }
+        else if (getPrecisionAverage().divide(getPrecisionWanted()) > 1.0) {
+            return false;
+        }
+        return true;
     }
 
     public boolean isVisionEnabled() {
@@ -645,6 +662,43 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         this.visionOffset = visionOffset;
     }
 
+    public Length getPrecisionWanted() {
+        return precisionWanted;
+    }
+
+    public void setPrecisionWanted(Length precisionWanted) {
+        this.precisionWanted = precisionWanted;
+    }
+
+    public int getCalibrationCount() {
+        return calibrationCount;
+    }
+
+    public void setCalibrationCount(int calibrationCount) {
+        int oldValue = this.calibrationCount;
+        Length oldPrecision = getPrecisionAverage();
+        this.calibrationCount = calibrationCount;
+        propertyChangeSupport.firePropertyChange("calibrationCount", oldValue, calibrationCount);
+        // this also implicitely changes the average
+        propertyChangeSupport.firePropertyChange("precisionAverage", oldPrecision, getPrecisionAverage());
+    }
+
+    public Length getSumOfErrors() {
+        return sumOfErrors;
+    }
+
+    public void setSumOfErrors(Length sumOfErrors) {
+        Length oldValue = this.sumOfErrors;
+        this.sumOfErrors = sumOfErrors;
+        propertyChangeSupport.firePropertyChange("sumOfErrors", oldValue, sumOfErrors);
+    }
+
+    public Length getPrecisionAverage() {
+        return calibrationCount > 0 ? 
+                sumOfErrors.multiply(1.0/calibrationCount) 
+                : new Length(0, LengthUnit.Millimeters);
+    }
+
     public Length getPartsToSprocketHoleDistance() {
         return new Length(getLocation().getLinearDistanceToLineSegment(getHole1Location(), getHole2Location()), 
                 getLocation().getUnits());
@@ -655,7 +709,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         return Math.round(getFeedMultiplier()*Math.ceil(feedsPerPart*getFeedPitch().divide(getPartPitch())));
     }
 
-
+    public void resetCalibrationStatistics() {
+        setSumOfErrors(new Length(0, LengthUnit.Millimeters));
+        setCalibrationCount(0);
+    }
+    
     protected Location getLocalFeederTransform() {
         // There are three coordinate system in play
         // 1. The feeder local coordinate system is defined by the pick location (origin) and the tape advancing to the right (+X)
@@ -1187,7 +1245,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             boolean storeHoles, boolean storePickLocation, boolean storeVisionOffset) throws Exception {
         Location runningHole1Location = getHole1Location();
         Location runningHole2Location = getHole2Location();
-        Location runningVisionOffset = nullLocation;
+        Location runningVisionOffset = getVisionOffset();
         // Calibrate the exact hole locations by obtaining a mid-point lock on them,
         // assuming that any camera lens and Z parallax distortion is symmetric.
         for (int i = 0; i < calibrateMaxPasses; i++) {
@@ -1201,6 +1259,12 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             FindFeatures feature = new FindFeatures(camera, pipeline, 2000, AutoSetupMode.CalibrateHoles).invoke();
             runningHole1Location = feature.calibratedHole1Location;
             runningHole2Location = feature.calibratedHole2Location;
+            // calculate the worst pick location delta this gives.
+            Location uncalibratedPickLocation = getPickLocation(1-getFeedCount(), runningVisionOffset);
+            Location calibratedPickLocation = getPickLocation(1-getFeedCount(), feature.calibratedVisionOffset);
+            Length error = calibratedPickLocation.getLinearLengthTo(uncalibratedPickLocation);
+            Logger.trace("["+getClass().getName()+"] new vision offset "+feature.calibratedVisionOffset+" vs. previous vision offset "+runningVisionOffset+" results in error "+error+" at the pick location");
+            // store data if requested
             if (storeHoles) {
                 setHole1Location(runningHole1Location);
                 setHole2Location(runningHole2Location);
@@ -1209,7 +1273,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 setLocation(feature.calibratedPickLocation);
             }
             if (storeVisionOffset) {
-                visionOffset = feature.calibratedVisionOffset;
+                setVisionOffset(feature.calibratedVisionOffset);
+                // update the stats
+                setSumOfErrors(getSumOfErrors().add(error));
+                setCalibrationCount(getCalibrationCount()+1); // will also fire average prop change
             }
             // is it good enough? Compare with running offset.
             if (feature.calibratedVisionOffset.getLinearDistanceTo(runningVisionOffset) < calibrateToleranceMm) {

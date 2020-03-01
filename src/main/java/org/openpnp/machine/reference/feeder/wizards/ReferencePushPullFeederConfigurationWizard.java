@@ -46,6 +46,7 @@ import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.LongConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
@@ -623,28 +624,68 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelVision.add(panelVisionEnabled);
         panelVisionEnabled.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.LABEL_COMPONENT_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {
-                        FormSpecs.LINE_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+            new RowSpec[] {
+                FormSpecs.LINE_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblCalibrationTrigger = new JLabel("Calibration Trigger");
         panelVisionEnabled.add(lblCalibrationTrigger, "2, 2, right, default");
 
         comboBoxCalibrationTrigger = new JComboBox(ReferencePushPullFeeder.CalibrationTrigger.values());
         panelVisionEnabled.add(comboBoxCalibrationTrigger, "4, 2");
+        
+        lblPrecisionWanted = new JLabel("Precision wanted");
+        lblPrecisionWanted.setToolTipText("Precision wanted i.e. the tolerable pick location offset");
+        panelVisionEnabled.add(lblPrecisionWanted, "8, 2, right, default");
+        
+        textFieldPrecisionWanted = new JTextField();
+        textFieldPrecisionWanted.setToolTipText("Precision wanted i.e. the tolerable pick location offset");
+        panelVisionEnabled.add(textFieldPrecisionWanted, "10, 2");
+        textFieldPrecisionWanted.setColumns(10);
+        
+        lblPrecisionAverage = new JLabel("Precision Average");
+        lblPrecisionAverage.setToolTipText("Obtained precision average i.e. offset of the pick location, as detected by the calibration");
+        panelVisionEnabled.add(lblPrecisionAverage, "14, 2, right, default");
+        
+        textFieldPrecisionAverage = new JTextField();
+        textFieldPrecisionAverage.setToolTipText("Obtained precision average i.e. offset of the pick location, as detected by the calibration");
+        textFieldPrecisionAverage.setEditable(false);
+        panelVisionEnabled.add(textFieldPrecisionAverage, "16, 2");
+        textFieldPrecisionAverage.setColumns(10);
 
         btnEditPipeline = new JButton(editPipelineAction);
         panelVisionEnabled.add(btnEditPipeline, "2, 4");
 
         btnResetPipeline = new JButton(resetPipelineAction);
         panelVisionEnabled.add(btnResetPipeline, "4, 4");
+        
+        lblCalibrationCount = new JLabel("Calibration Count");
+        panelVisionEnabled.add(lblCalibrationCount, "8, 4, right, default");
+        
+        textFieldCalibrationCount = new JTextField();
+        textFieldCalibrationCount.setEditable(false);
+        panelVisionEnabled.add(textFieldCalibrationCount, "10, 4");
+        textFieldCalibrationCount.setColumns(10);
+        
+        btnResetStatistics = new JButton("Reset Statistics");
+        panelVisionEnabled.add(btnResetStatistics, "14, 4, 3, 1");
 
         contentPanel.add(panelFields);
         initDataBindings();
@@ -654,6 +695,7 @@ extends AbstractReferenceFeederConfigurationWizard {
     public void createBindings() {
         super.createBindings();
         LengthConverter lengthConverter = new LengthConverter();
+        IntegerConverter intConverter = new IntegerConverter();
         LongConverter longConverter = new LongConverter();
         DoubleConverter doubleConverter =
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
@@ -761,6 +803,10 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         addWrappedBinding(feeder, "calibrationTrigger", comboBoxCalibrationTrigger, "selectedItem");
 
+        addWrappedBinding(feeder, "calibrationCount", textFieldCalibrationCount, "text", intConverter);
+        addWrappedBinding(feeder, "precisionWanted", textFieldPrecisionWanted, "text", lengthConverter);
+        addWrappedBinding(feeder, "precisionAverage", textFieldPrecisionAverage, "text", lengthConverter);
+
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPickLocationX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPickLocationY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPickLocationZ);
@@ -829,6 +875,22 @@ extends AbstractReferenceFeederConfigurationWizard {
             });
         }
     };
+
+    private Action resetStatisticsAction =
+            new AbstractAction("Reset Statistics") {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Reset the average obtained precision statistics.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.messageBoxOnException(() -> {
+                feeder.resetCalibrationStatistics();
+            });
+        }
+    };
+
     private Action resetFeedCountAction =
             new AbstractAction("Reset Feed Count") {
         {
@@ -898,6 +960,13 @@ extends AbstractReferenceFeederConfigurationWizard {
     };
     private JLabel lblCalibrationTrigger;
     private JComboBox comboBoxCalibrationTrigger;
+    private JLabel lblCalibrationCount;
+    private JTextField textFieldCalibrationCount;
+    private JLabel lblPrecisionAverage;
+    private JTextField textFieldPrecisionAverage;
+    private JLabel lblPrecisionWanted;
+    private JTextField textFieldPrecisionWanted;
+    private JButton btnResetStatistics;
 
     public HeadMountable getTool() throws Exception {
         return MainFrame.get().getMachineControls().getSelectedNozzle();
