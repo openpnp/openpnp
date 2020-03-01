@@ -59,7 +59,7 @@ public class LocationButtonsPanel extends JPanel {
     private JTextField textFieldX, textFieldY, textFieldZ, textFieldC;
     private String actuatorName;
 
-    JButton buttonCenterCamera;
+    private JButton buttonCenterCamera;
     private JButton buttonCenterTool;
     private JButton buttonCaptureCamera;
     private JButton buttonCaptureTool;
@@ -262,7 +262,7 @@ public class LocationButtonsPanel extends JPanel {
 
                 @Override
                 public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.messageBoxOnException(() -> {
+                    UiUtils.submitUiMachineTask(() -> {
                         Location l = getTool().getLocation();
                         if (baseLocation != null) {
                             l = l.subtractWithRotation(baseLocation);
@@ -286,7 +286,7 @@ public class LocationButtonsPanel extends JPanel {
 
                 @Override
                 public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.messageBoxOnException(() -> {
+                    UiUtils.submitUiMachineTask(() -> {
                         Actuator actuator = getActuator();
                         if (actuator == null) {
                             return;
