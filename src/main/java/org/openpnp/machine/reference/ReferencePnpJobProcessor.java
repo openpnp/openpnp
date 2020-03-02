@@ -73,6 +73,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     @Attribute(required = false)
     protected JobOrderHint jobOrder = JobOrderHint.PartHeight;
 
+    @Attribute(required = false)
+    protected int maxVisionRetries = 3;
+
     @Element(required = false)
     public PnpJobPlanner planner = new SimplePnpJobPlanner();
 
@@ -680,8 +683,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             final Part part = placement.getPart();
 
             Exception lastException = null;
-            // TODO make retry count configurable.
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < ReferencePnpJobProcessor.this.getMaxVisionRetries(); i++) {
                 fireTextStatus("Aligning %s for %s.", part.getId(), placement.getId());
                 try {
                     plannedPlacement.alignmentOffsets = VisionUtils.findPartAlignmentOffsets(
@@ -1033,6 +1035,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     public void setJobOrder(JobOrderHint newJobOrder) {
         this.jobOrder = newJobOrder;
     }    
+
+    public int getMaxVisionRetries() {
+        return maxVisionRetries;
+    }
+
+    public void setMaxVisionRetries(int maxVisionRetries) {
+        this.maxVisionRetries = maxVisionRetries;
+    }
 
     protected abstract class PlannedPlacementStep implements Step {
         protected final List<PlannedPlacement> plannedPlacements;
