@@ -2,7 +2,7 @@
 
 The stock firmware on the CHMT36VA turned out to be a dead end. There does not appear to be any command that can be used to rotate the nozzle. The best way forward seems to be to use [Matt Baker's Smoothie port](https://github.com/mattthebaker/Smoothieware-CHMT) which can be flashed on the stock main board.
 
-Using the Smoothie firmware is an irreversible operation. Once you flash it, there does not appear to be a way to go back to the stock firmware, so consider carefully if you want to do that.
+Using the Smoothie firmware is an irreversible operation. Once you flash it, there does not appear to be a way to go back to the stock firmware, so consider carefully if you want to do that. If you'd prefer to buy a second controller board to use for OpenPnP instead of using your stock one, contact Kimi. I was quoted $280 including shipping to the US.
 
 Using Smoothie, OpenPnP can use all functions of the CHMT36VA. It does not reach the same level of performance as the original software, but there are many new features and functions in OpenPnP that are not available in the OEM software.
 
