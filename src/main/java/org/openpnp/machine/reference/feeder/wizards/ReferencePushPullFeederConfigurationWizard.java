@@ -161,6 +161,15 @@ extends AbstractReferenceFeederConfigurationWizard {
     private JLabel lblHole2Location;
     private JButton btnShowVisionFeatures;
     private JButton btnAutoSetup;
+    private JLabel lblCalibrationTrigger;
+    private JComboBox comboBoxCalibrationTrigger;
+    private JLabel lblCalibrationCount;
+    private JTextField textFieldCalibrationCount;
+    private JLabel lblPrecisionAverage;
+    private JTextField textFieldPrecisionAverage;
+    private JLabel lblPrecisionWanted;
+    private JTextField textFieldPrecisionWanted;
+    private JButton btnResetStatistics;
 
     public ReferencePushPullFeederConfigurationWizard(ReferencePushPullFeeder feeder) {
         super(feeder, false);
@@ -639,53 +648,64 @@ extends AbstractReferenceFeederConfigurationWizard {
                 ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-            new RowSpec[] {
-                FormSpecs.LINE_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+                        FormSpecs.LINE_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblCalibrationTrigger = new JLabel("Calibration Trigger");
         panelVisionEnabled.add(lblCalibrationTrigger, "2, 2, right, default");
 
         comboBoxCalibrationTrigger = new JComboBox(ReferencePushPullFeeder.CalibrationTrigger.values());
         panelVisionEnabled.add(comboBoxCalibrationTrigger, "4, 2");
-        
+
         lblPrecisionWanted = new JLabel("Precision wanted");
         lblPrecisionWanted.setToolTipText("Precision wanted i.e. the tolerable pick location offset");
         panelVisionEnabled.add(lblPrecisionWanted, "8, 2, right, default");
-        
+
         textFieldPrecisionWanted = new JTextField();
         textFieldPrecisionWanted.setToolTipText("Precision wanted i.e. the tolerable pick location offset");
         panelVisionEnabled.add(textFieldPrecisionWanted, "10, 2");
         textFieldPrecisionWanted.setColumns(10);
-        
-        lblPrecisionAverage = new JLabel("Precision Average");
-        lblPrecisionAverage.setToolTipText("Obtained precision average i.e. offset of the pick location, as detected by the calibration");
-        panelVisionEnabled.add(lblPrecisionAverage, "14, 2, right, default");
-        
-        textFieldPrecisionAverage = new JTextField();
-        textFieldPrecisionAverage.setToolTipText("Obtained precision average i.e. offset of the pick location, as detected by the calibration");
-        textFieldPrecisionAverage.setEditable(false);
-        panelVisionEnabled.add(textFieldPrecisionAverage, "16, 2");
-        textFieldPrecisionAverage.setColumns(10);
 
         btnEditPipeline = new JButton(editPipelineAction);
         panelVisionEnabled.add(btnEditPipeline, "2, 4");
 
         btnResetPipeline = new JButton(resetPipelineAction);
         panelVisionEnabled.add(btnResetPipeline, "4, 4");
-        
+
+        lblPrecisionAverage = new JLabel("Precision Average");
+        lblPrecisionAverage.setToolTipText("Obtained precision average i.e. offset of the pick location, as detected by the calibration");
+        panelVisionEnabled.add(lblPrecisionAverage, "8, 4, right, default");
+
+        textFieldPrecisionAverage = new JTextField();
+        textFieldPrecisionAverage.setToolTipText("Obtained precision average i.e. offset of the pick location, as detected by the calibration");
+        textFieldPrecisionAverage.setEditable(false);
+        panelVisionEnabled.add(textFieldPrecisionAverage, "10, 4");
+        textFieldPrecisionAverage.setColumns(10);
+
         lblCalibrationCount = new JLabel("Calibration Count");
-        panelVisionEnabled.add(lblCalibrationCount, "8, 4, right, default");
-        
+        panelVisionEnabled.add(lblCalibrationCount, "14, 4, right, default");
+
         textFieldCalibrationCount = new JTextField();
         textFieldCalibrationCount.setEditable(false);
-        panelVisionEnabled.add(textFieldCalibrationCount, "10, 4");
+        panelVisionEnabled.add(textFieldCalibrationCount, "16, 4");
         textFieldCalibrationCount.setColumns(10);
-        
-        btnResetStatistics = new JButton("Reset Statistics");
-        panelVisionEnabled.add(btnResetStatistics, "14, 4, 3, 1");
+
+        lblPrecisionConfidenceLimit = new JLabel("Precision Confidence Limit");
+        lblPrecisionConfidenceLimit.setToolTipText("Precision obtained with 95% confidence (assuming normal distribution)");
+        panelVisionEnabled.add(lblPrecisionConfidenceLimit, "8, 6, right, default");
+
+        textFieldPrecisionConfidenceLimit = new JTextField();
+        textFieldPrecisionConfidenceLimit.setEditable(false);
+        panelVisionEnabled.add(textFieldPrecisionConfidenceLimit, "10, 6");
+        textFieldPrecisionConfidenceLimit.setColumns(10);
+
+        btnResetStatistics = new JButton(resetStatisticsAction);
+        panelVisionEnabled.add(btnResetStatistics, "14, 6, 3, 1");
 
         contentPanel.add(panelFields);
         initDataBindings();
@@ -803,9 +823,10 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         addWrappedBinding(feeder, "calibrationTrigger", comboBoxCalibrationTrigger, "selectedItem");
 
-        addWrappedBinding(feeder, "calibrationCount", textFieldCalibrationCount, "text", intConverter);
         addWrappedBinding(feeder, "precisionWanted", textFieldPrecisionWanted, "text", lengthConverter);
-        addWrappedBinding(feeder, "precisionAverage", textFieldPrecisionAverage, "text", lengthConverter);
+        bind(UpdateStrategy.READ, feeder, "calibrationCount", textFieldCalibrationCount, "text", intConverter);
+        bind(UpdateStrategy.READ, feeder, "precisionAverage", textFieldPrecisionAverage, "text", lengthConverter);
+        bind(UpdateStrategy.READ, feeder,   "precisionConfidenceLimit", textFieldPrecisionConfidenceLimit, "text", lengthConverter);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPickLocationX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPickLocationY);
@@ -813,6 +834,8 @@ extends AbstractReferenceFeederConfigurationWizard {
         ComponentDecorators.decorateWithAutoSelect(textFieldPickLocationRotation);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHole1LocationX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHole1LocationY);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHole2LocationX);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHole2LocationY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPartPitch);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedPitch);
         ComponentDecorators.decorateWithAutoSelect(textFieldFeedPush1);
@@ -926,7 +949,8 @@ extends AbstractReferenceFeederConfigurationWizard {
                 // we apply this because it is OpenPNP custom to do so 
                 applyAction.actionPerformed(e);
                 // round the feed count up to the next multiple of the parts per feed operation
-                feeder.setFeedCount((feeder.getFeedCount()/feeder.getPartsPerFeedOperation()+1)*feeder.getPartsPerFeedOperation());
+                feeder.setFeedCount(((feeder.getFeedCount()-1)/feeder.getPartsPerFeedOperation()+1)*feeder.getPartsPerFeedOperation());
+                feeder.resetCalibration();
             });
         }
     };
@@ -958,15 +982,8 @@ extends AbstractReferenceFeederConfigurationWizard {
             });
         }
     };
-    private JLabel lblCalibrationTrigger;
-    private JComboBox comboBoxCalibrationTrigger;
-    private JLabel lblCalibrationCount;
-    private JTextField textFieldCalibrationCount;
-    private JLabel lblPrecisionAverage;
-    private JTextField textFieldPrecisionAverage;
-    private JLabel lblPrecisionWanted;
-    private JTextField textFieldPrecisionWanted;
-    private JButton btnResetStatistics;
+    private JLabel lblPrecisionConfidenceLimit;
+    private JTextField textFieldPrecisionConfidenceLimit;
 
     public HeadMountable getTool() throws Exception {
         return MainFrame.get().getMachineControls().getSelectedNozzle();

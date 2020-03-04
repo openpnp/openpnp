@@ -23,8 +23,6 @@ package org.openpnp.machine.reference.feeder;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,6 +40,7 @@ import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
@@ -53,6 +52,8 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
@@ -70,9 +71,6 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
 public class ReferencePushPullFeeder extends ReferenceFeeder {
-
-
-    private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
     @Element(required = false)
     protected Location hole1Location = new Location(LengthUnit.Millimeters);
@@ -156,22 +154,26 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     @Element(required = false)
     private Length precisionWanted = new Length(0.1, LengthUnit.Millimeters);
 
+    @Attribute(required = false)
     private int calibrationCount = 0;
+    @Element(required = false)
     private Length sumOfErrors = new Length(0, LengthUnit.Millimeters);
+    @Element(required = false)
+    private Length sumOfErrorSquares = new Length(0, LengthUnit.Millimeters);
 
     // These are not on the GUI but can be tweaked in the machine.xml
     @Attribute(required = false)
-    private double calibrationToleranceMm = 4;
+    private double calibrationToleranceMm = 1.95;
     @Attribute(required = false)
     private double sprocketHoleToleranceMm = 0.3;
 
     @Attribute(required = false)
-    private int calibrateMaxPasses; 
+    private int calibrateMaxPasses = 3; 
     @Attribute(required = false)
-    private double calibrateToleranceMm;
+    private double calibrateToleranceMm = 0.3; // how close the camera has to be to the end result
     @Attribute(required = false)
     private int calibrateMinStatistic = 3; 
-    
+
     /*
      * visionOffset contains the difference between where the part was expected to be and where it
      * is. Subtracting these offsets from the pickLocation produces the correct pick location.
@@ -179,6 +181,35 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     protected Location visionOffset;
 
     static final Location nullLocation = new Location(LengthUnit.Millimeters);
+
+    private void checkHomedState(Machine machine) {
+        if (!machine.isHomed()) {
+            this.resetCalibration();
+        }
+    }
+
+    public ReferencePushPullFeeder() {
+        // Listen to the machine become unhomed to invalidate feeder calibration. 
+        // Note that home()  first switches the machine isHomed() state off, then on again, 
+        // so we also catch re-homing. 
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationComplete(Configuration configuration) throws Exception {
+                Configuration.get().getMachine().addListener(new MachineListener.Adapter() {
+
+                    @Override
+                    public void machineHeadActivity(Machine machine, Head head) {
+                        checkHomedState(machine);
+                    }
+
+                    @Override
+                    public void machineEnabled(Machine machine) {
+                        checkHomedState(machine);
+                    }
+                });
+            }
+        });
+    }
 
     @Commit
     public void commit() {
@@ -194,18 +225,18 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     public enum CalibrationTrigger {
         None,
-        FirstUse,
-        Automatic,
-        EachTapeFeed
+        OnFirstUse,
+        UntilConfident,
+        OnEachTapeFeed
     }
 
     @Attribute(required = false)
-    protected CalibrationTrigger calibrationTrigger = CalibrationTrigger.EachTapeFeed;
+    protected CalibrationTrigger calibrationTrigger = CalibrationTrigger.OnEachTapeFeed;
 
     public void assertCalibrated(boolean tapeFeed) throws Exception {
         if ((visionOffset == null && calibrationTrigger != CalibrationTrigger.None)
-                || (tapeFeed && calibrationTrigger == CalibrationTrigger.Automatic && !isPrecisionSufficient())
-                || (tapeFeed && calibrationTrigger == CalibrationTrigger.EachTapeFeed)) {
+                || (tapeFeed && calibrationTrigger == CalibrationTrigger.UntilConfident && !isPrecisionSufficient())
+                || (tapeFeed && calibrationTrigger == CalibrationTrigger.OnEachTapeFeed)) {
             // not yet calibrated (enough)
             obtainCalibratedVisionOffset();
             if (visionOffset == null) {
@@ -214,12 +245,12 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             }
         }
     }
-        
+
     public boolean isPrecisionSufficient() {
         if (calibrationCount < calibrateMinStatistic) {
             return false;
         }
-        else if (getPrecisionAverage().divide(getPrecisionWanted()) > 1.0) {
+        else if (getPrecisionConfidenceLimit().divide(getPrecisionWanted()) > 1.0) {
             return false;
         }
         return true;
@@ -357,12 +388,21 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         return String.format("%s id %s", getClass().getName(), id);
     }
 
+    @Override
+    public void setLocation(Location location) {
+        super.setLocation(location);
+        resetCalibration();
+    }
+
     public Location getHole1Location() {
         return hole1Location;
     }
 
     public void setHole1Location(Location hole1Location) {
+        Object oldValue = this.hole1Location;
         this.hole1Location = hole1Location;
+        firePropertyChange("hole1Location", oldValue, hole1Location);
+        resetCalibration();
     }
 
     public Location getHole2Location() {
@@ -370,7 +410,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     }
 
     public void setHole2Location(Location hole2Location) {
+        Object oldValue = this.hole2Location;
         this.hole2Location = hole2Location;
+        firePropertyChange("hole2Location", oldValue, hole2Location);
+        resetCalibration();
     }
 
     public Location getFeedStartLocation() {
@@ -619,7 +662,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     public void setActuatorName(String actuatorName) {
         String oldValue = this.actuatorName;
         this.actuatorName = actuatorName;
-        propertyChangeSupport.firePropertyChange("actuatorName", oldValue, actuatorName);
+        firePropertyChange("actuatorName", oldValue, actuatorName);
     }
 
     public String getPeelOffActuatorName() {
@@ -629,7 +672,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     public void setPeelOffActuatorName(String actuatorName) {
         String oldValue = this.peelOffActuatorName;
         this.peelOffActuatorName = actuatorName;
-        propertyChangeSupport.firePropertyChange("actuatorName", oldValue, actuatorName);
+        firePropertyChange("actuatorName", oldValue, actuatorName);
     }
 
     public long getFeedCount() {
@@ -639,7 +682,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     public void setFeedCount(long feedCount) {
         long oldValue = this.feedCount;
         this.feedCount = feedCount;
-        propertyChangeSupport.firePropertyChange("feedCount", oldValue, feedCount);
+        firePropertyChange("feedCount", oldValue, feedCount);
     }
 
     public long getFeedMultiplier() {
@@ -658,10 +701,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         this.calibrationTrigger = calibrationTrigger;
     }
 
-    public void setVisionOffset(Location visionOffset) {
-        this.visionOffset = visionOffset;
-    }
-
     public Length getPrecisionWanted() {
         return precisionWanted;
     }
@@ -677,26 +716,46 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     public void setCalibrationCount(int calibrationCount) {
         int oldValue = this.calibrationCount;
         Length oldPrecision = getPrecisionAverage();
+        Length oldConfidence = getPrecisionConfidenceLimit();
         this.calibrationCount = calibrationCount;
-        propertyChangeSupport.firePropertyChange("calibrationCount", oldValue, calibrationCount);
-        // this also implicitely changes the average
-        propertyChangeSupport.firePropertyChange("precisionAverage", oldPrecision, getPrecisionAverage());
+        firePropertyChange("calibrationCount", oldValue, calibrationCount);
+        if (oldValue !=  calibrationCount) {
+            // this also implicitly changes the stats
+            firePropertyChange("precisionAverage", oldPrecision, getPrecisionAverage());
+            firePropertyChange("precisionConfidenceLimit", oldConfidence, getPrecisionConfidenceLimit());
+        }
     }
 
     public Length getSumOfErrors() {
         return sumOfErrors;
     }
 
-    public void setSumOfErrors(Length sumOfErrors) {
-        Length oldValue = this.sumOfErrors;
-        this.sumOfErrors = sumOfErrors;
-        propertyChangeSupport.firePropertyChange("sumOfErrors", oldValue, sumOfErrors);
+    public void addCalibrationError(Length error) {
+        sumOfErrors = sumOfErrors.add(error);
+        // this is a bit dodgy as the true unit is actually the length unit squared, but we'll use the square root of that later, so it will be fine.
+        error = error.convertToUnits(sumOfErrorSquares.getUnits());
+        sumOfErrorSquares = sumOfErrorSquares.add(error.multiply(error.getValue()));
+        setCalibrationCount(getCalibrationCount()+1); // will also fire average and confidence prop change
     }
 
     public Length getPrecisionAverage() {
         return calibrationCount > 0 ? 
                 sumOfErrors.multiply(1.0/calibrationCount) 
                 : new Length(0, LengthUnit.Millimeters);
+    }
+
+    public Length getPrecisionConfidenceLimit() {
+        if (calibrationCount >= 2) {
+            // Note, we don't take the average of the error, because the error is already a distance that is distributed 
+            // around the true sprocket holes center location i.e. distributed around zero i.e. zero is the mean 
+            // (this is limited math knowledge speaking).   
+            Length variance = sumOfErrorSquares.multiply(1.0/(calibrationCount-1));
+            Length scatter = new Length(Math.sqrt(variance.getValue()/Math.sqrt(calibrationCount)), variance.getUnits()); 
+            return scatter.multiply(1.64); // 95% confidence interval, normal distribution.
+        }
+        else {
+            return new Length(0, LengthUnit.Millimeters);
+        }
     }
 
     public Length getPartsToSprocketHoleDistance() {
@@ -710,10 +769,12 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     }
 
     public void resetCalibrationStatistics() {
-        setSumOfErrors(new Length(0, LengthUnit.Millimeters));
+        sumOfErrors = new Length(0, LengthUnit.Millimeters);
+        sumOfErrorSquares = new Length(0, LengthUnit.Millimeters);
         setCalibrationCount(0);
+        resetCalibration();
     }
-    
+
     protected Location getLocalFeederTransform() {
         // There are three coordinate system in play
         // 1. The feeder local coordinate system is defined by the pick location (origin) and the tape advancing to the right (+X)
@@ -722,16 +783,40 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         // We must therefore transform between the three coordinate systems as needed.
 
         // translation from pick location to hole 1 location
-        Location pickTransform = getHole1Location().subtract(getLocation());
+        Location pickTransform = getLocation().subtract(getHole1Location());
         // calculate and set the tape angle
         Location feederUnitVector = getHole1Location().unitVectorTo(getHole2Location());
+        double angle =  Math.atan2(feederUnitVector.getY(), feederUnitVector.getX())*180/Math.PI;
+        pickTransform = pickTransform.rotateXy(-angle);
         pickTransform = pickTransform
-                .derive(null, null, null, Math.atan2(feederUnitVector.getY(), feederUnitVector.getX()));
+                .derive(null, null, null, angle);
         return pickTransform;
     }
 
-    protected Location transformMachineToFeederLocation(Location location, Location visionOffset) {
+    protected Location transformFeederToMachineLocation(Location feederLocation, Location visionOffset) {
+        // apply the transformation
+        Location location = feederLocation;
+        // first translate to hole 1 relative 
+        Location feederTransform = getLocalFeederTransform();
+        location = location.addWithRotation(feederTransform);
+        // then rotate
+        location = location.rotateXy(feederTransform.getRotation());
+        // also apply vision offset if any
+        if (visionOffset != null) {
+            location = location.rotateXy(-visionOffset.getRotation())
+                    .subtractWithRotation(visionOffset);
+        }
+        // now apply hole 1 translation to global
+        location = location
+                .add(getHole1Location());
+        // make sure we kept Z
+        //location = location.derive(feederLocation, false, false, true, false);
+        return location;
+    }
+
+    protected Location transformMachineToFeederLocation(Location machineLocation, Location visionOffset) {
         // apply the transformation backward
+        Location location = machineLocation;
         // first translate back to hole 1 relative
         location = location
                 .subtract(getHole1Location());
@@ -745,31 +830,18 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Location feederTransform = getLocalFeederTransform();
         location = location.rotateXy(-feederTransform.getRotation());
         // then translate from hole 1 to pick location relative
-        location.subtractWithRotation(feederTransform);
-        return location;
-    }
-
-    protected Location transformFeederToMachineLocation(Location location, Location visionOffset) {
-        // apply the transformation
-        // first translate to hole 1 relative 
-        Location feederTransform = getLocalFeederTransform();
-        location.addWithRotation(feederTransform);
-        // then rotate
-        location = location.rotateXy(feederTransform.getRotation());
-        // also apply vision offset if any
-        if (visionOffset != null) {
-            location = location.rotateXy(-visionOffset.getRotation())
-                    .subtractWithRotation(visionOffset);
-        }
-        // now apply hole 1 translation to global
-        location = location
-                .add(getHole1Location());
+        location = location.subtractWithRotation(feederTransform);
+        // make sure we kept Z
+        //location = location.derive(machineLocation, false, false, true, false);
         return location;
     }
 
     public Location getPickLocation(long partNumber, Location visionOffset)  {
         // Calculate the pick location in local feeder coordinates.
         long partInFeed = (partNumber - getFeedCount()) % getPartsPerFeedOperation();
+        if (partInFeed < 0) {
+            partInFeed += getPartsPerFeedOperation();
+        }
         Location feederLocation = new Location(partPitch.getUnits(), partPitch.multiply((double)partInFeed).getValue(), 0, 0, 0);
         Location machineLocation = transformFeederToMachineLocation(feederLocation, visionOffset);
         return machineLocation;
@@ -791,6 +863,15 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         else {
             return nullLocation;
         }
+    }
+
+    public void setVisionOffset(Location visionOffset) {
+        this.visionOffset = visionOffset;
+    }
+
+
+    public void resetCalibration() {
+        setVisionOffset(null);
     }
 
     public void resetPipeline() {
@@ -925,7 +1006,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 String text = String.valueOf(i);
                 Size textSize = Imgproc.getTextSize(text, Core.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
 
-                Location partLocation = getPickLocation(i - getFeedCount(), calibratedVisionOffset)
+                Location partLocation = getPickLocation(i - getFeedCount() - 1, calibratedVisionOffset)
                         .convertToUnits(LengthUnit.Millimeters);
                 // TODO: go besides part
                 Location textLocation = transformMachineToFeederLocation(partLocation, calibratedVisionOffset);
@@ -1040,7 +1121,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
                     // Checks the distance to the line.
                     double distanceMm = camera.getLocation().convertToUnits(LengthUnit.Millimeters).getLinearDistanceToLineSegment(aLocation, bLocation);
-                    if (distanceMm < (autoSetupMode == AutoSetupMode.FromPickLocationGetHoles ? bestDistanceMm : calibrationToleranceMm)) {
+                    if (distanceMm < (autoSetupMode == AutoSetupMode.CalibrateHoles ? calibrationToleranceMm : bestDistanceMm)) {
                         // Take the first line that is close enough, as the lines are ordered by length (descending).
                         // In autoSetupMode take the closest line.
                         bestLine = line;
@@ -1088,18 +1169,19 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                         Location partLocation = camera.getLocation().convertToUnits(LengthUnit.Millimeters);
                         double angle1 = Math.atan2(calibratedHole1Location.getY()-partLocation.getY(), calibratedHole1Location.getX()-partLocation.getX());
                         double angle2 = Math.atan2(calibratedHole2Location.getY()-partLocation.getY(), calibratedHole2Location.getX()-partLocation.getX());
-                        double angleDiff = angleNorm180(angle2-angle1);
-                        if (angleDiff > 0) {
+                        double angleDiff = (angle2-angle1);
+                        if (angleDiff < 0) {
                             // The holes 1 and 2 must appear counter-clockwise from the part location, swap them! 
                             Location swap = calibratedHole2Location;
                             calibratedHole2Location = calibratedHole1Location;
                             calibratedHole1Location = swap;
+                            bestUnitVector = bestUnitVector.multiply(-1.0, -1.0, 0, 0);
                         }
                     }
                     else {
                         // find the two holes matching 
                         for (Result.Circle hole : holes) {
-                            Location l = VisionUtils.getPixelLocation(camera, hole.x, hole.y).convertToUnits(LengthUnit.Millimeters)
+                            Location l = VisionUtils.getPixelLocation(camera, hole.x, hole.y)
                                     .convertToUnits(LengthUnit.Millimeters);
                             double dist1Mm = l.getLinearDistanceTo(getHole1Location()); 
                             double dist2Mm = l.getLinearDistanceTo(getHole2Location()); 
@@ -1117,24 +1199,26 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                         }
                         else {
                             // determine the correct transformation
-                            double angleTape = Math.atan2(bestUnitVector.getY(), bestUnitVector.getX());
+                            double angleTape = Math.atan2(bestUnitVector.getY(), bestUnitVector.getX())*180.0/Math.PI;
                             // the new calibration target is really the mid-point
                             Location midPoint = calibratedHole1Location.add(calibratedHole2Location).multiply(0.5, 0.5, 0, 0);
                             // but let's project that back to the real hole positions with nominal pitch (undistorted by the camera lens and Z parallax)
-                            double distanceHolesMm = Math.round(calibratedHole1Location.getLinearDistanceTo(calibratedHole2Location)/sprocketHolePitchMm)*sprocketHolePitchMm;
+                            double distanceHolesMm = Math.round(calibratedHole1Location.getLinearDistanceTo(calibratedHole2Location)
+                                    /sprocketHolePitchMm)*sprocketHolePitchMm;
                             calibratedHole1Location = midPoint.subtract(bestUnitVector.multiply(distanceHolesMm*0.5, distanceHolesMm*0.5, 0, 0));
                             calibratedHole2Location = midPoint.add(bestUnitVector.multiply(distanceHolesMm*0.5, distanceHolesMm*0.5, 0, 0));
+                            Logger.trace("["+getClass().getName()+"] calibrated hole locations are: " + calibratedHole1Location + ", " +calibratedHole2Location);
                             if (autoSetupMode  == AutoSetupMode.CalibrateHoles) {
                                 // get the current local pick location
                                 Location pickLocation = getLocation().convertToUnits(LengthUnit.Millimeters);
                                 Location localPickLocation = pickLocation
-                                        .subtract(getHole1Location())
-                                        .rotateXy(-angleTape)
+                                        .subtract(getHole1Location());
+                                localPickLocation =  localPickLocation.rotateXy(-angleTape)
                                         .derive(null, null, null, pickLocation.getRotation()-angleTape);
                                 // normalize the nominal position of the pick location according to EIA 481
                                 localPickLocation = new Location(LengthUnit.Millimeters,
                                         Math.round(localPickLocation.getX()/partPitchMinMm)*partPitchMinMm,
-                                        sprocketHoleToPartMinMm+Math.round((localPickLocation.getY()-sprocketHoleToPartMinMm)/sprocketHoleToPartGridMm)*sprocketHoleToPartGridMm,
+                                        -sprocketHoleToPartMinMm+Math.round((localPickLocation.getY()+sprocketHoleToPartMinMm)/sprocketHoleToPartGridMm)*sprocketHoleToPartGridMm,
                                         0, Math.round(localPickLocation.getRotation()/90.0)*90.0);
                                 calibratedPickLocation = calibratedHole1Location.add(localPickLocation.rotateXy(angleTape))
                                         .derive(null, null, pickLocation.getZ(), localPickLocation.getRotation()+angleTape);
@@ -1165,6 +1249,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                             a = VisionUtils.getLocationPixels(camera, calibratedPickLocation.subtract(bestUnitVector));
                             b = VisionUtils.getLocationPixels(camera, calibratedPickLocation.add(bestUnitVector));
                             lines.add(new Ransac.Line(new Point(a.x, a.y), new Point(b.x, b.y)));
+                            Logger.debug("["+getClass().getName()+"] calibrated pick location is: " + calibratedPickLocation);
                         }
                     }
                 }
@@ -1173,7 +1258,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     // Draw the result onto the pipeline image.
                     Mat resultMat = pipeline.getWorkingImage().clone();
                     drawHoles(resultMat, getHoles(), Color.green);
-                    drawLines(resultMat, getLines(), new Color(0, 0, 128));
+                    drawLines(resultMat, getLines(), new Color(0, 0, 255));
                     drawPartNumbers(resultMat, Color.orange);
                     File file = Configuration.get().createResourceFile(getClass(), "push-pull-feeder", ".png");
                     Imgcodecs.imwrite(file.getAbsolutePath(), resultMat);
@@ -1215,12 +1300,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
             // Process vision and show feature without applying anything
             pipeline.process();
-            if (getHole1Location().equals(nullLocation)) {
-                new FindFeatures(camera, pipeline, 2000, AutoSetupMode.FromPickLocationGetHoles).invoke();
-            }
-            else {
-                new FindFeatures(camera, pipeline, 2000, AutoSetupMode.CalibrateHoles).invoke();
-            }
+            new FindFeatures(camera, pipeline, 2000, null).invoke();
         }
     }
 
@@ -1233,9 +1313,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             // Start with the camera position - but keep any Z value already set
             setLocation(camera.getLocation()
                     .derive(getLocation(), false, false, true, false));
+            // as we changed this -> reset any stats
+            resetCalibrationStatistics();
             // Store the initial vision based sprocket hole finds
             setHole1Location(feature.calibratedHole1Location);
-            setHole1Location(feature.calibratedHole1Location);
+            setHole2Location(feature.calibratedHole2Location);
             // now run a hole calibration
             calibrateSprocketHoles(camera, pipeline, true, true, false);
         }
@@ -1250,9 +1332,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         // assuming that any camera lens and Z parallax distortion is symmetric.
         for (int i = 0; i < calibrateMaxPasses; i++) {
             // move the camera to the mid-point 
-            Location midPoint = getHole1Location().add(getHole2Location()).multiply(0.5, 0.5, 0, 0)
+            Location midPoint = runningHole1Location.add(runningHole2Location).multiply(0.5, 0.5, 0, 0)
                     .derive(camera.getLocation(), false, false, true, false)
                     .derive(getLocation(), false, false, false, true);
+            Logger.debug("["+getClass().getName()+"] calibrating sprocket holes pass "+ i+ " midPoint is "+midPoint);
             MovableUtils.moveToLocationAtSafeZ(camera, midPoint);
             // take a new shot
             pipeline.process();
@@ -1273,33 +1356,19 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 setLocation(feature.calibratedPickLocation);
             }
             if (storeVisionOffset) {
-                setVisionOffset(feature.calibratedVisionOffset);
                 // update the stats
-                setSumOfErrors(getSumOfErrors().add(error));
-                setCalibrationCount(getCalibrationCount()+1); // will also fire average prop change
+                if (visionOffset != null) {
+                    // only when a previous vision offset has been store, should be store the error
+                    addCalibrationError(error);
+                }
+                setVisionOffset(feature.calibratedVisionOffset);
             }
             // is it good enough? Compare with running offset.
-            if (feature.calibratedVisionOffset.getLinearDistanceTo(runningVisionOffset) < calibrateToleranceMm) {
+            if (error.convertToUnits(LengthUnit.Millimeters).getValue() < calibrateToleranceMm) {
                 break;
             }
             runningVisionOffset = feature.calibratedVisionOffset;
         }
-    }
-
-    public void addPropertyChangeListener(PropertyChangeListener listener) {
-        propertyChangeSupport.addPropertyChangeListener(listener);
-    }
-
-    public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
-        propertyChangeSupport.addPropertyChangeListener(propertyName, listener);
-    }
-
-    public void removePropertyChangeListener(PropertyChangeListener listener) {
-        propertyChangeSupport.removePropertyChangeListener(listener);
-    }
-
-    public void removePropertyChangeListener(String propertyName, PropertyChangeListener listener) {
-        propertyChangeSupport.removePropertyChangeListener(propertyName, listener);
     }
 
     @Override
