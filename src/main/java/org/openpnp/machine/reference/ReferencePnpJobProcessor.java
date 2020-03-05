@@ -409,7 +409,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             else {
                 // Get the list of unfinished placements and sort them by part height.
                     jobPlacements = getPendingJobPlacements().stream()
-                            .sorted(Comparator.comparing(JobPlacement::getPartHeight))
+                            .sorted(Comparator
+                                .comparing(JobPlacement::getPartHeight)
+                                .thenComparing(JobPlacement::getPartId))
                             .collect(Collectors.toList());
             }
 
