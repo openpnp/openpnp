@@ -65,6 +65,9 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import org.jdesktop.beansbinding.BeanProperty;
+import org.jdesktop.beansbinding.AutoBinding;
+import org.jdesktop.beansbinding.Bindings;
 
 @SuppressWarnings("serial")
 public class ReferencePushPullFeederConfigurationWizard
@@ -176,6 +179,8 @@ extends AbstractReferenceFeederConfigurationWizard {
     private JLabel lblNormalizePickLocation;
     private JCheckBox checkBoxNormalizePickLocation;
     private JButton btnSmartClone;
+    private JLabel lblPreferredAsTemplate;
+    private JCheckBox checkBoxPreferredAsTemplate;
 
 
     public ReferencePushPullFeederConfigurationWizard(ReferencePushPullFeeder feeder) {
@@ -391,8 +396,12 @@ extends AbstractReferenceFeederConfigurationWizard {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("left:default:grow"),},
+                ColumnSpec.decode("left:default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("left:max(50dlu;default):grow"),},
                 new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
@@ -418,8 +427,11 @@ extends AbstractReferenceFeederConfigurationWizard {
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
+        btnSmartClone = new JButton(smartCloneAction);
+        panelPushPull.add(btnSmartClone, "18, 2, 3, 1, fill, default");
+
         lblActuatorId = new JLabel("Actuator");
-        panelPushPull.add(lblActuatorId, "2, 2, right, default");
+        panelPushPull.add(lblActuatorId, "2, 4, right, default");
 
         Head head = null;
         try {
@@ -430,240 +442,244 @@ extends AbstractReferenceFeederConfigurationWizard {
         }
 
         comboBoxFeedActuator = new JComboBox();
-        panelPushPull.add(comboBoxFeedActuator, "4, 2");
+        panelPushPull.add(comboBoxFeedActuator, "4, 4");
         comboBoxFeedActuator.setModel(new ActuatorsComboBoxModel(head));
 
         lblPeelOffActuatorId = new JLabel("Peel Off Actuator");
-        panelPushPull.add(lblPeelOffActuatorId, "6, 2");
+        panelPushPull.add(lblPeelOffActuatorId, "6, 4, right, default");
 
         comboBoxPeelOffActuator = new JComboBox();
-        panelPushPull.add(comboBoxPeelOffActuator, "8, 2");
+        panelPushPull.add(comboBoxPeelOffActuator, "8, 4");
         comboBoxPeelOffActuator.setModel(new ActuatorsComboBoxModel(head));
 
-        btnSmartClone = new JButton(smartCloneAction);
-        panelPushPull.add(btnSmartClone, "18, 2, fill, default");
+        lblPreferredAsTemplate = new JLabel("Preferred as Template?");
+        lblPreferredAsTemplate.setToolTipText("<html>Prefer this feeder as a template for cloning settings to new feeders. <br/>\r\nMultiple templates can be defined and Smart Feeder Clone will select the<br/>\r\none with the greatest similarities (feed pitch, tape width, etc.). \r\n</html>");
+        panelPushPull.add(lblPreferredAsTemplate, "18, 4, right, default");
+
+        checkBoxPreferredAsTemplate = new JCheckBox("");
+        panelPushPull.add(checkBoxPreferredAsTemplate, "20, 4");
 
         JLabel lblX = new JLabel("X");
-        panelPushPull.add(lblX, "4, 6");
+        panelPushPull.add(lblX, "4, 8");
 
         JLabel lblY = new JLabel("Y");
-        panelPushPull.add(lblY, "6, 6");
+        panelPushPull.add(lblY, "6, 8");
 
         JLabel lblZ = new JLabel("Z");
-        panelPushPull.add(lblZ, "8, 6");
+        panelPushPull.add(lblZ, "8, 8");
 
         lblPush = new JLabel("↓");
         lblPush.setToolTipText("Locations that are included when pushing.");
-        panelPushPull.add(lblPush, "10, 6, center, default");
+        panelPushPull.add(lblPush, "10, 8, center, default");
 
         lblMulti = new JLabel("↑↓");
         lblMulti.setToolTipText("<html>Locations that are included, when actuating multiple times.<br/>\r\nThe combination with the push ↓ and pull ↑ switch is taken.</html>");
-        panelPushPull.add(lblMulti, "12, 6, 3, 1, center, default");
+        panelPushPull.add(lblMulti, "12, 8, 3, 1, center, default");
 
         lblPull = new JLabel("↑");
         lblPull.setToolTipText("Locations that are included when pulling.");
-        panelPushPull.add(lblPull, "16, 6, center, default");
+        panelPushPull.add(lblPull, "16, 8, center, default");
 
         JLabel lblFeedStartLocation = new JLabel("Start Location");
-        panelPushPull.add(lblFeedStartLocation, "2, 8, right, default");
+        panelPushPull.add(lblFeedStartLocation, "2, 10, right, default");
 
         textFieldFeedStartX = new JTextField();
-        panelPushPull.add(textFieldFeedStartX, "4, 8");
+        panelPushPull.add(textFieldFeedStartX, "4, 10");
         textFieldFeedStartX.setColumns(8);
 
         textFieldFeedStartY = new JTextField();
-        panelPushPull.add(textFieldFeedStartY, "6, 8");
+        panelPushPull.add(textFieldFeedStartY, "6, 10");
         textFieldFeedStartY.setColumns(8);
 
         textFieldFeedStartZ = new JTextField();
-        panelPushPull.add(textFieldFeedStartZ, "8, 8");
+        panelPushPull.add(textFieldFeedStartZ, "8, 10");
         textFieldFeedStartZ.setColumns(8);
 
         chckbxMulti0 = new JCheckBox("");
         chckbxMulti0.setToolTipText("Include the Start Location in multi-actuating motion (if the pull switch is also set).");
         chckbxMulti0.setSelected(true);
-        panelPushPull.add(chckbxMulti0, "12, 8, 3, 1, center, default");
+        panelPushPull.add(chckbxMulti0, "12, 10, 3, 1, center, default");
 
         chckbxPull0 = new JCheckBox("");
         chckbxPull0.setToolTipText("Go to the Start Location when pulling.");
         chckbxPull0.setSelected(true);
-        panelPushPull.add(chckbxPull0, "16, 8, center, default");
+        panelPushPull.add(chckbxPull0, "16, 10, center, default");
 
         locationButtonsPanelFeedStart = new LocationButtonsPanel(textFieldFeedStartX,
                 textFieldFeedStartY, textFieldFeedStartZ, null);
-        panelPushPull.add(locationButtonsPanelFeedStart, "18, 8");
+        panelPushPull.add(locationButtonsPanelFeedStart, "18, 10, 3, 1");
 
         lblFeedSpeed0_1 = new JLabel("Speed ↕");
-        panelPushPull.add(lblFeedSpeed0_1, "8, 10, right, default");
+        panelPushPull.add(lblFeedSpeed0_1, "8, 12, right, default");
 
         textFieldFeedPush1 = new JTextField();
-        panelPushPull.add(textFieldFeedPush1, "10, 10, 3, 1");
+        panelPushPull.add(textFieldFeedPush1, "10, 12, 3, 1");
         textFieldFeedPush1.setColumns(5);
 
         textFieldFeedPull0 = new JTextField();
-        panelPushPull.add(textFieldFeedPull0, "14, 10, 3, 1");
+        panelPushPull.add(textFieldFeedPull0, "14, 12, 3, 1");
         textFieldFeedPull0.setColumns(10);
 
         lblFeedMid1Location = new JLabel("Mid 1 Location");
-        panelPushPull.add(lblFeedMid1Location, "2, 12, right, default");
+        panelPushPull.add(lblFeedMid1Location, "2, 14, right, default");
 
         textFieldFeedMid1X = new JTextField();
-        panelPushPull.add(textFieldFeedMid1X, "4, 12");
+        panelPushPull.add(textFieldFeedMid1X, "4, 14");
         textFieldFeedMid1X.setColumns(10);
 
         textFieldFeedMid1Y = new JTextField();
-        panelPushPull.add(textFieldFeedMid1Y, "6, 12");
+        panelPushPull.add(textFieldFeedMid1Y, "6, 14");
         textFieldFeedMid1Y.setColumns(10);
 
         textFieldFeedMid1Z = new JTextField();
-        panelPushPull.add(textFieldFeedMid1Z, "8, 12");
+        panelPushPull.add(textFieldFeedMid1Z, "8, 14");
         textFieldFeedMid1Z.setColumns(10);
 
         chckbxPush1 = new JCheckBox("");
         chckbxPush1.setToolTipText("Go to the Mid 1 Location when pushing.");
         chckbxPush1.setSelected(true);
-        panelPushPull.add(chckbxPush1, "10, 12, center, default");
+        panelPushPull.add(chckbxPush1, "10, 14, center, default");
 
         chckbxMulti1 = new JCheckBox("");
         chckbxMulti1.setToolTipText("Include the Mid 1 Location in multi-actuation motion (if the push/pull switch is also set).");
         chckbxMulti1.setSelected(true);
-        panelPushPull.add(chckbxMulti1, "12, 12, 3, 1, center, default");
+        panelPushPull.add(chckbxMulti1, "12, 14, 3, 1, center, default");
 
         chckbxPull1 = new JCheckBox("");
         chckbxPull1.setToolTipText("Go to the Mid 1 Location when pulling.");
         chckbxPull1.setSelected(true);
-        panelPushPull.add(chckbxPull1, "16, 12, center, default");
+        panelPushPull.add(chckbxPull1, "16, 14, center, default");
 
         locationButtonsPanelFeedMid1 = new LocationButtonsPanel(textFieldFeedMid1X, textFieldFeedMid1Y, textFieldFeedMid1Z, (JTextField) null);
-        panelPushPull.add(locationButtonsPanelFeedMid1, "18, 12");
+        panelPushPull.add(locationButtonsPanelFeedMid1, "18, 14, 3, 1");
 
         lblFeedSpeed1_2 = new JLabel("Speed ↕");
-        panelPushPull.add(lblFeedSpeed1_2, "8, 14, right, default");
+        panelPushPull.add(lblFeedSpeed1_2, "8, 16, right, default");
 
         textFieldFeedPush2 = new JTextField();
-        panelPushPull.add(textFieldFeedPush2, "10, 14, 3, 1");
+        panelPushPull.add(textFieldFeedPush2, "10, 16, 3, 1");
         textFieldFeedPush2.setColumns(10);
 
         textFieldFeedPull1 = new JTextField();
         textFieldFeedPull1.setColumns(10);
-        panelPushPull.add(textFieldFeedPull1, "14, 14, 3, 1");
+        panelPushPull.add(textFieldFeedPull1, "14, 16, 3, 1");
 
         lblFeedMid2Location = new JLabel("Mid 2 Location");
-        panelPushPull.add(lblFeedMid2Location, "2, 16, right, default");
+        panelPushPull.add(lblFeedMid2Location, "2, 18, right, default");
 
         textFieldFeedMid2X = new JTextField();
-        panelPushPull.add(textFieldFeedMid2X, "4, 16");
+        panelPushPull.add(textFieldFeedMid2X, "4, 18");
         textFieldFeedMid2X.setColumns(10);
 
         textFieldFeedMid2Y = new JTextField();
-        panelPushPull.add(textFieldFeedMid2Y, "6, 16");
+        panelPushPull.add(textFieldFeedMid2Y, "6, 18");
         textFieldFeedMid2Y.setColumns(10);
 
         textFieldFeedMid2Z = new JTextField();
-        panelPushPull.add(textFieldFeedMid2Z, "8, 16");
+        panelPushPull.add(textFieldFeedMid2Z, "8, 18");
         textFieldFeedMid2Z.setColumns(10);
 
         chckbxPush2 = new JCheckBox("");
         chckbxPush2.setToolTipText("Go to the Mid 2 Location when pushing.");
         chckbxPush2.setSelected(true);
-        panelPushPull.add(chckbxPush2, "10, 16, center, default");
+        panelPushPull.add(chckbxPush2, "10, 18, center, default");
 
         chckbxMulti2 = new JCheckBox("");
         chckbxMulti2.setToolTipText("Include the Mid 2 Location in multi-actuation motion (if the push/pull switch is also set).");
         chckbxMulti2.setSelected(true);
-        panelPushPull.add(chckbxMulti2, "12, 16, 3, 1, center, default");
+        panelPushPull.add(chckbxMulti2, "12, 18, 3, 1, center, default");
 
         chckbxPull2 = new JCheckBox("");
         chckbxPull2.setToolTipText("Go to the Mid 2 Location when pulling.");
         chckbxPull2.setSelected(true);
-        panelPushPull.add(chckbxPull2, "16, 16, center, default");
+        panelPushPull.add(chckbxPull2, "16, 18, center, default");
 
         locationButtonsPanelFeedMid2 = new LocationButtonsPanel(textFieldFeedMid2X, textFieldFeedMid2Y, textFieldFeedMid2Z, (JTextField) null);
-        panelPushPull.add(locationButtonsPanelFeedMid2, "18, 16");
+        panelPushPull.add(locationButtonsPanelFeedMid2, "18, 18, 3, 1");
 
         lblFeedSpeed2_3 = new JLabel("Speed ↕");
-        panelPushPull.add(lblFeedSpeed2_3, "8, 18, right, default");
+        panelPushPull.add(lblFeedSpeed2_3, "8, 20, right, default");
 
         textFieldFeedPush3 = new JTextField();
-        panelPushPull.add(textFieldFeedPush3, "10, 18, 3, 1");
+        panelPushPull.add(textFieldFeedPush3, "10, 20, 3, 1");
         textFieldFeedPush3.setColumns(10);
 
         textFieldFeedPull2 = new JTextField();
         textFieldFeedPull2.setColumns(10);
-        panelPushPull.add(textFieldFeedPull2, "14, 18, 3, 1");
+        panelPushPull.add(textFieldFeedPull2, "14, 20, 3, 1");
 
         lblFeedMid3Location = new JLabel("Mid 3 Location");
-        panelPushPull.add(lblFeedMid3Location, "2, 20, right, default");
+        panelPushPull.add(lblFeedMid3Location, "2, 22, right, default");
 
         textFieldFeedMid3X = new JTextField();
-        panelPushPull.add(textFieldFeedMid3X, "4, 20");
+        panelPushPull.add(textFieldFeedMid3X, "4, 22");
         textFieldFeedMid3X.setColumns(10);
 
         textFieldFeedMid3Y = new JTextField();
-        panelPushPull.add(textFieldFeedMid3Y, "6, 20");
+        panelPushPull.add(textFieldFeedMid3Y, "6, 22");
         textFieldFeedMid3Y.setColumns(10);
 
         textFieldFeedMid3Z = new JTextField();
-        panelPushPull.add(textFieldFeedMid3Z, "8, 20, fill, default");
+        panelPushPull.add(textFieldFeedMid3Z, "8, 22, fill, default");
         textFieldFeedMid3Z.setColumns(10);
 
         chckbxPush3 = new JCheckBox("");
         chckbxPush3.setToolTipText("Go to the Mid 3 Location when pushing.");
         chckbxPush3.setSelected(true);
-        panelPushPull.add(chckbxPush3, "10, 20, center, default");
+        panelPushPull.add(chckbxPush3, "10, 22, center, default");
 
         chckbxMulti3 = new JCheckBox("");
         chckbxMulti3.setToolTipText("Include the Mid 3 Location in multi-actuation motion (if the push/pull switch is also set).");
         chckbxMulti3.setSelected(true);
-        panelPushPull.add(chckbxMulti3, "12, 20, 3, 1, center, default");
+        panelPushPull.add(chckbxMulti3, "12, 22, 3, 1, center, default");
 
         chckbxPull3 = new JCheckBox("");
         chckbxPull3.setToolTipText("Go to the Mid 3 Location when pulling.");
         chckbxPull3.setSelected(true);
-        panelPushPull.add(chckbxPull3, "16, 20, center, default");
+        panelPushPull.add(chckbxPull3, "16, 22, center, default");
 
         locationButtonsPanelFeedMid3 = new LocationButtonsPanel(textFieldFeedMid3X, textFieldFeedMid3Y, textFieldFeedMid3Z, (JTextField) null);
-        panelPushPull.add(locationButtonsPanelFeedMid3, "18, 20");
+        panelPushPull.add(locationButtonsPanelFeedMid3, "18, 22, 3, 1");
 
         lblFeedSpeed3_4 = new JLabel("Speed ↕");
-        panelPushPull.add(lblFeedSpeed3_4, "8, 22, right, default");
+        panelPushPull.add(lblFeedSpeed3_4, "8, 24, right, default");
 
         textFieldFeedPush4 = new JTextField();
-        panelPushPull.add(textFieldFeedPush4, "10, 22, 3, 1");
+        panelPushPull.add(textFieldFeedPush4, "10, 24, 3, 1");
         textFieldFeedPush4.setColumns(10);
 
         textFieldFeedPull3 = new JTextField();
         textFieldFeedPull3.setColumns(10);
-        panelPushPull.add(textFieldFeedPull3, "14, 22, 3, 1");
+        panelPushPull.add(textFieldFeedPull3, "14, 24, 3, 1");
 
         JLabel lblFeedEndLocation = new JLabel("End Location");
-        panelPushPull.add(lblFeedEndLocation, "2, 24, right, default");
+        panelPushPull.add(lblFeedEndLocation, "2, 26, right, default");
 
         textFieldFeedEndX = new JTextField();
-        panelPushPull.add(textFieldFeedEndX, "4, 24");
+        panelPushPull.add(textFieldFeedEndX, "4, 26");
         textFieldFeedEndX.setColumns(8);
 
         textFieldFeedEndY = new JTextField();
-        panelPushPull.add(textFieldFeedEndY, "6, 24");
+        panelPushPull.add(textFieldFeedEndY, "6, 26");
         textFieldFeedEndY.setColumns(8);
 
         textFieldFeedEndZ = new JTextField();
-        panelPushPull.add(textFieldFeedEndZ, "8, 24");
+        panelPushPull.add(textFieldFeedEndZ, "8, 26");
         textFieldFeedEndZ.setColumns(8);
 
         chckbxPushEnd = new JCheckBox("");
         chckbxPushEnd.setToolTipText("Go to the End Location when pushing.");
         chckbxPushEnd.setSelected(true);
-        panelPushPull.add(chckbxPushEnd, "10, 24, center, default");
+        panelPushPull.add(chckbxPushEnd, "10, 26, center, default");
 
         chckbxMultiEnd = new JCheckBox("");
         chckbxMultiEnd.setToolTipText("Include the End Location in multi-actuation motion (if the push switch is also set).");
         chckbxMultiEnd.setSelected(true);
-        panelPushPull.add(chckbxMultiEnd, "12, 24, 3, 1, center, default");
+        panelPushPull.add(chckbxMultiEnd, "12, 26, 3, 1, center, default");
 
         locationButtonsPanelFeedEnd = new LocationButtonsPanel(textFieldFeedEndX, textFieldFeedEndY,
                 textFieldFeedEndZ, null);
-        panelPushPull.add(locationButtonsPanelFeedEnd, "18, 24");
+        panelPushPull.add(locationButtonsPanelFeedEnd, "18, 26, 3, 1");
 
         //
         panelVision = new JPanel();
@@ -796,6 +812,8 @@ extends AbstractReferenceFeederConfigurationWizard {
         addWrappedBinding(feeder, "feedPitch", textFieldFeedPitch, "text", lengthConverter);
         addWrappedBinding(feeder, "feedMultiplier", textFieldFeedMultiplier, "text", longConverter);
         addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", longConverter);
+
+        addWrappedBinding(feeder, "preferredAsTemplate", checkBoxPreferredAsTemplate, "selected");
 
         addWrappedBinding(feeder, "actuatorName", comboBoxFeedActuator, "selectedItem");
         addWrappedBinding(feeder, "peelOffActuatorName", comboBoxPeelOffActuator, "selectedItem");
@@ -1025,6 +1043,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         @Override
         public void actionPerformed(ActionEvent e) {
             UiUtils.submitUiMachineTask(() -> {
+                applyAction.actionPerformed(e);
                 feeder.autoSetup();
             });
         }
@@ -1036,6 +1055,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                     "<html>Clone the settings from a similar feeder and transform them<br/>"
                             +"to this feeder's location and orientation.<br/><br/>"
                             +"Feeders are favored by similarity, ranking as follows:<br/><ol>"
+                            +"<li><strong>Is preferred as template</strong></li>"
                             +"<li>Same feed pitch</li>"
                             +"<li>Same tape width (by deduction)</li>"
                             +"<li>Same part pitch</li>"
@@ -1048,7 +1068,16 @@ extends AbstractReferenceFeederConfigurationWizard {
         @Override
         public void actionPerformed(ActionEvent e) {
             UiUtils.messageBoxOnException(() -> {
-                feeder.smartClone();
+                if (checkBoxPreferredAsTemplate.isSelected()) {
+                    throw new Exception("The feeder is a preferred template and should not be overwritten.");
+                }
+                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "This will overwrite all your current Push-Pull and Vision Settings. Are you sure?",
+                        null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (result == JOptionPane.YES_OPTION) {
+                    applyAction.actionPerformed(e);
+                    feeder.smartClone();
+                }
             });
         }
     };
@@ -1070,7 +1099,6 @@ extends AbstractReferenceFeederConfigurationWizard {
     private void resetPipeline() {
         feeder.resetPipeline();
     }
-
     protected void initDataBindings() {
     }
 }

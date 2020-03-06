@@ -89,6 +89,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     @Element(required = false)
     protected Location hole2Location = new Location(LengthUnit.Millimeters);
 
+    @Attribute(required = false)
+    protected boolean preferredAsTemplate = false; 
+
     @Element
     protected Location feedStartLocation = new Location(LengthUnit.Millimeters);
     @Element(required = false)
@@ -456,6 +459,14 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         this.hole2Location = hole2Location;
         firePropertyChange("hole2Location", oldValue, hole2Location);
         resetCalibration();
+    }
+
+    public boolean isPreferredAsTemplate() {
+        return preferredAsTemplate;
+    }
+
+    public void setPreferredAsTemplate(boolean preferredAsTemplate) {
+        this.preferredAsTemplate = preferredAsTemplate;
     }
 
     public Location getFeedStartLocation() {
