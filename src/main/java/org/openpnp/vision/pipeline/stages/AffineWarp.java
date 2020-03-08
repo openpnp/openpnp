@@ -31,32 +31,41 @@ import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
 import org.openpnp.vision.pipeline.Stage;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
-@Stage(description="Extracts a rectangular/trapezoidal area from the image that can have any size, rotation, shear and scale (Affine Transformation warp).")
+@Stage(description="Extracts a rectangular/trapezoidal area of interest from the image that can have any size, rotation, scale, "
+        + "<i>shear</i> or even be mirrored (Affine Transformation warp).<br/>"
+        + "The coordinates are given in real length units rather than pixels and are relative to the camera center, Y pointing up. "
+        + "This allows the pipeline to be independent of camera model and resolution, lens, focus distance etc. "
+        + "Pin the previous stage and read off coordinates from the mouse position. ")
 public class AffineWarp extends CvStage {
+    @Attribute(required = false)
+    @Property(description = "Length unit used in this stage.")
+    private LengthUnit lengthUnit = LengthUnit.Millimeters;
+
     @Attribute
-    @Property(description = "What will be the left upper corner of the extracted area. X offset from camera location [mm].")
+    @Property(description = "What will become the left upper corner of the extracted area. X offset from camera location.")
     private double x0 = 0;
 
     @Attribute
-    @Property(description = "What will be the left upper corner of the extracted area. Y offset from camera location [mm].")
+    @Property(description = "What will become the left upper corner of the extracted area. Y offset from camera location.")
     private double y0 = 0;
 
     @Attribute
-    @Property(description = "What will be the right upper corner of the extracted area. X offset from camera location [mm].")
+    @Property(description = "What will become the right upper corner of the extracted area. X offset from camera location.")
     private double x1 = 0;
 
     @Attribute
-    @Property(description = "What will be the right upper corner of the extracted area. Y offset from camera location [mm].")
+    @Property(description = "What will become the right upper corner of the extracted area. Y offset from camera location.")
     private double y1 = 0;
 
     @Attribute
-    @Property(description = "What will be the left lower corner of the extracted area. X offset from camera location [mm].")
+    @Property(description = "What will become the left lower corner of the extracted area. X offset from camera location.")
     private double x2 = 0;
 
     @Attribute
-    @Property(description = "What will be the left lower corner of the extracted area. Y offset from camera location [mm].")
+    @Property(description = "What will become the left lower corner of the extracted area. Y offset from camera location.")
     private double y2 = 0;
 
     @Attribute(required=false)
@@ -67,6 +76,16 @@ public class AffineWarp extends CvStage {
     @Property(description = "Rectify the transformation to be rectangular. The point [x2, y2] is not interpreted "
             + "as a corner but as a height indicator.")
     private boolean rectify = true;
+
+    @Override
+    public LengthUnit getLengthUnit() {
+        return lengthUnit;
+    }
+
+    public void setLengthUnit(LengthUnit lengthUnit) {
+        this.lengthUnit = lengthUnit;
+    }
+
 
     public double getX0() {
         return x0;
@@ -140,12 +159,10 @@ public class AffineWarp extends CvStage {
         }
 
         Location unitsPerPixel = camera.getUnitsPerPixel()
-                .convertToUnits(LengthUnit.Millimeters);
+                .convertToUnits(lengthUnit);
 
         // get the working image
         Mat mat = pipeline.getWorkingImage();
-
-
 
         double w = Math.sqrt(Math.pow(x1-x0, 2.0) + Math.pow(y1-y0, 2.0));
         double h = Math.sqrt(Math.pow(x2-x0, 2.0) + Math.pow(y2-y0, 2.0));
@@ -178,6 +195,13 @@ public class AffineWarp extends CvStage {
 
         double wPx = scale*w/unitsPerPixel.getX();
         double hPx = scale*Math.abs(h)/unitsPerPixel.getY();
+
+        double diagonal = Math.sqrt(Math.pow(mat.cols(), 2.0)+Math.pow(mat.rows(), 2.0));
+        if (wPx > diagonal+2 || hPx > diagonal+2) {
+            // while setting up the affine transform coordinates one by one, huge images might result - prevent that 
+            Logger.error("["+getClass().getName()+"] affineWarp must not generate an image that is larger than the original");
+            return new Result(mat, "ERROR: affineWarp must not generate an image that is larger than the original");
+        }
 
         org.opencv.core.Point p0 = new org.opencv.core.Point(x0Px, y0Px); // upper left 
         org.opencv.core.Point p1 = new org.opencv.core.Point(x1Px, y1Px); // upper right 

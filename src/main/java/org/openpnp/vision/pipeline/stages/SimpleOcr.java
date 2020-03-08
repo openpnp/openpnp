@@ -55,27 +55,28 @@ import org.openpnp.vision.pipeline.Stage;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
-@Stage(description="A very simple OCR stage that returns a text string. For acceptable speed use AffineWarp to extract the "
-        + "smallest-possible region of text first.")
+@Stage(description="A very simple OCR stage that returns a (multi-line) text string. <br/>"
+        + "Use an AffineWarp stage to extract the region of interest first (for cropping, rotation and acceptable speed).<br/>"
+        + "It is also recommended to convert the image to grayscale first. Do not apply a threshold stage.")
 public class SimpleOcr extends CvStage {
     @Attribute
-    @Property(description = "Alphabet of all the caracters that can be recognized. The smaller the alphabet, the faster and the "
-            + "more likely to be accurate.")
-    private String alphabet = "0123456789.-+RCLIUVAFH%TGMKkmuµnp";
+    @Property(description = "Alphabet of all the characters that can be recognized. The smaller the alphabet, the faster and the "
+            + "more reliable the OCR works.")
+    private String alphabet = "0123456789.-+_RCLDQYXJIVAFH%GMKkmuµnp";
 
     @Attribute
-    @Property(description = "Name of the font to be recognized. Monospace fonts work much better and with lower resolution. "
-            + "Use a font where all the used characters are easily distinguishable. Fonts with clear separataion between caharacters "
-            + "are preferred. ")
+    @Property(description = "Name of the font to be recognized. Monospace fonts work much better and allow lower resolution. "
+            + "Use a font where all the used characters are easily distinguishable. Fonts with clear separation between characters "
+            + "are preferred.")
     private String fontName = "Liberation Mono";
 
     @Attribute
-    @Property(description = "Size of the font in points.")
+    @Property(description = "Size of the font in typographic points (1 pt = 1/72 in).")
     private double pointSize = 7.0;
 
     @Attribute(required = false)
-    @Property(description = "If the font size is larger in pixels than this value, the stage resizes the image to a smaller resolution first, "
-            + "for acceptable OCR speed. Alternatively, use a AffineWarp stage with scale.")
+    @Property(description = "If the font size is larger in pixels than this value, the OCR stage will resizes the image to a smaller resolution first "
+            + "(to achieve acceptable OCR speed). Alternatively, you can use an AffineWarp stage with scale < 1.0, but then you need to scale your pointSize too.")
     private int fontMaxPixelSize = 20;
 
     @Attribute(required = false)
@@ -87,17 +88,12 @@ public class SimpleOcr extends CvStage {
     private boolean autoDetectSize = false;
 
     @Attribute(required = false)
-    @Property(description = "Template matching minimum match threshold (CCOEFF_NORMED method). Default is 0.7.")
-    private double threshold = 0.7;
+    @Property(description = "Template matching minimum match threshold (CCOEFF_NORMED method). Default is 0.75.")
+    private double threshold = 0.75;
 
     @Attribute(required = false)
-    @Property(description = "If more than one match is found, the others must be above this ratio to the maximum. Default is 0.85.")
-    private double corr = 0.85;
-
-    @Attribute(required = false)
-    @Property(description = "Debug write images. Will slow down operation.")
+    @Property(description = "Debug write images and messages. Will slow down operation.")
     private boolean debug;
-
 
     public String getAlphabet() {
         return alphabet;
@@ -129,14 +125,6 @@ public class SimpleOcr extends CvStage {
 
     public void setThreshold(double threshold) {
         this.threshold = threshold;
-    }
-
-    public double getCorr() {
-        return corr;
-    }
-
-    public void setCorr(double corr) {
-        this.corr = corr;
     }
 
     public int getFontMaxPixelSize() {
@@ -205,6 +193,12 @@ public class SimpleOcr extends CvStage {
         public char getCh() {
             return ch;
         }
+
+        @Override
+        public String toString() {
+            return "CharacterMatch [ch=\"" + ch + "\", x=" + x + ", y=" + y + ", width=" + width + ", height="
+                    + height + ", score=" + score + "]";
+        }
     }
 
     @Override
@@ -221,16 +215,17 @@ public class SimpleOcr extends CvStage {
             throw new Exception("Property \"camera\" is required.");
         }
 
+        // Note, the following is an ugly hack, to get this functionality within the constraints of the pipeline processing
         if (autoDetectSize) {
             autoDetectSize = false;
             // very crude brute force and no refinement
-            double pointSizeOrg = pointSize;
+            double pointSizeOrg = getPointSize();
             OcrResult bestRes = null;
             double bestSize = Double.NaN;
-            pointSize = pointSizeOrg*0.5;
+            double pointSize = pointSizeOrg*0.5;
             while (pointSize < pointSizeOrg*2.0) {
                 Logger.debug("["+getClass().getName()+"] auto-detecting at point size = "+pointSize);
-                OcrResult res = (OcrResult)performOcr(pipeline, camera).model;
+                OcrResult res = (OcrResult)performOcr(pipeline, camera, pointSize).model;
                 if (res.overallScore > 0.0) {
                     if (bestRes == null ||  bestRes.overallScore < res.overallScore) {
                         bestRes = res;
@@ -241,13 +236,14 @@ public class SimpleOcr extends CvStage {
                 pointSize *= 1.05;
             }
             if (bestRes != null) {
-                pointSize = bestSize; 
+                setPointSize(bestSize); 
             }
             else {
                 pointSize = pointSizeOrg;
             }
         }
-        return performOcr(pipeline, camera);
+
+        return performOcr(pipeline, camera, pointSize);
     }
 
     public static class OcrResult {
@@ -271,7 +267,7 @@ public class SimpleOcr extends CvStage {
         }
     }
 
-    protected Result performOcr(CvPipeline pipeline, Camera camera) throws Error, IOException {
+    protected Result performOcr(CvPipeline pipeline, Camera camera, double pointSize) throws Error, IOException {
         Location unitsPerPixel = camera.getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters);
 
         // Determine the scaling factor to go from mm/point units to
@@ -283,10 +279,13 @@ public class SimpleOcr extends CvStage {
         // get the working image
         Mat textImage = pipeline.getWorkingImage();
 
-        // automatic rescale
+        // automatic rescale (don't do it if we're already close i.e. only if at least a 0.5 rescale can be achieved)
         double rescale = 1.0;
-        if (fontMaxPixelSize > 5.0 && fontMaxPixelSize < rescale*ptScale*pointSize) {
+        if (fontMaxPixelSize >= 8 && fontMaxPixelSize < 0.5*rescale*ptScale*pointSize) {
             rescale = fontMaxPixelSize  / (rescale*ptScale*pointSize);
+            if (debug) {
+                Logger.debug("["+getClass().getName()+"] rescale of input = "+rescale);
+            }
         }
         if (rescale != 1.0) {
             Mat dst = new Mat();
@@ -364,7 +363,7 @@ public class SimpleOcr extends CvStage {
             MinMaxLocResult mmr = Core.minMaxLoc(matchMap);
             double maxVal = mmr.maxVal;
 
-            double rangeMin = Math.max(threshold, corr * maxVal);
+            double rangeMin = threshold;
             double rangeMax = maxVal;
 
             for (Point point : OpenCvUtils.matMaxima(matchMap, rangeMin, rangeMax)) {
@@ -377,10 +376,6 @@ public class SimpleOcr extends CvStage {
             }
             matchMap.release();
             template.release();
-        }
-
-        if (debug) {
-            Logger.debug("["+getClass().getName()+"] matches = "+matches);
         }
 
         StringBuilder text = new StringBuilder();
@@ -434,6 +429,10 @@ public class SimpleOcr extends CvStage {
                     return ((Double) o1.x).compareTo(o2.x);
                 }
             });
+
+            if (debug) {
+                Logger.debug("["+getClass().getName()+"] matches = "+matches);
+            }
 
             // finally compose the text
             do {
