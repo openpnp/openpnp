@@ -34,11 +34,11 @@ import org.openpnp.vision.pipeline.Stage;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
-@Stage(description="Extracts a rectangular/trapezoidal area of interest from the image that can have any size, rotation, scale, "
-        + "<i>shear</i> or even be mirrored (Affine Transformation warp).<br/>"
+@Stage(description="Extracts a rectangular/<em>trapezoidal</em> area of interest from the image that can have any size, rotation, scale, "
+        + "<em>shear</em> or even be mirrored (Affine Transformation warp).<br/>"
         + "The coordinates are given in real length units rather than pixels and are relative to the camera center, Y pointing up. "
-        + "This allows the pipeline to be independent of camera model and resolution, lens, focus distance etc. "
-        + "Pin the previous stage and read off coordinates from the mouse position. ")
+        + "This allows the pipeline to be independent of camera model and resolution, lens, focus distance etc. <br/>"
+        + "To setup, pin the previous stage and read off coordinates from the mouse position.")
 public class AffineWarp extends CvStage {
     @Attribute(required = false)
     @Property(description = "Length unit used in this stage.")
@@ -77,6 +77,19 @@ public class AffineWarp extends CvStage {
             + "as a corner but as a height indicator.")
     private boolean rectify = true;
 
+    @Attribute(required=false)
+    @Property(description = "The caller of the pipeline can apply an additional rotateTranslate property under this name.")
+    private String rotateTranslateProperty = "rotateTranslate";
+
+    @Attribute(required=false)
+    @Property(description = "The caller of the pipeline can apply an additional rotateTranslate property, so the same pipeline can "
+            + "be used for any orientation (and small offset) of the subject. The baseRotation indicates at which rotation the stage was setup.<br/>"
+            + "A typical setup scenario would be a \"shouth\" feeder for which the baseRotation would be 90° given by how the tape advances. "
+            + "If the pipeline is later used for an identical \"west\" feeder i.e. with tape rotation 0°, it can still be used unchanged. ")
+    private double baseRotation = 0.0;
+
+    
+
     @Override
     public LengthUnit getLengthUnit() {
         return lengthUnit;
@@ -85,7 +98,6 @@ public class AffineWarp extends CvStage {
     public void setLengthUnit(LengthUnit lengthUnit) {
         this.lengthUnit = lengthUnit;
     }
-
 
     public double getX0() {
         return x0;
@@ -151,16 +163,60 @@ public class AffineWarp extends CvStage {
         this.rectify = rectify;
     }
 
+    public String getRotateTranslateProperty() {
+        return rotateTranslateProperty;
+    }
+
+    public void setRotateTranslateProperty(String rotateTranslateProperty) {
+        this.rotateTranslateProperty = rotateTranslateProperty;
+    }
+
+    public double getBaseRotation() {
+        return baseRotation;
+    }
+
+    public void setBaseRotation(double baseRotation) {
+        this.baseRotation = baseRotation;
+    }
+
+    protected Location applyRotateTranslate(double x, double y, Location rotateTranslate) {
+        Location l;
+        l = new Location(lengthUnit, x, y, 0, 0);
+        l = l.rotateXy(rotateTranslate.getRotation() + baseRotation);
+        l = l.add(rotateTranslate);
+        return l;
+    }
+
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         Camera camera = (Camera) pipeline.getProperty("camera");
         if (camera == null) {
             throw new Exception("Property \"camera\" is required.");
         }
-
         Location unitsPerPixel = camera.getUnitsPerPixel()
                 .convertToUnits(lengthUnit);
 
+        double x0 = this.x0;
+        double y0 = this.y0;
+        double x1 = this.x1;
+        double y1 = this.y1;
+        double x2 = this.x2;
+        double y2 = this.y2;
+        
+        if (getRotateTranslateProperty() != null && ! getRotateTranslateProperty().isEmpty()) {
+            Location rotateTranslate = (Location) pipeline.getProperty(getRotateTranslateProperty());
+            if (rotateTranslate != null) {
+                // We've got an additional transformation
+                Location l;
+                l = applyRotateTranslate(x0, y0, rotateTranslate);
+                x0 = l.getX(); y0 = l.getY();
+                l = applyRotateTranslate(x1, y1, rotateTranslate);
+                x1 = l.getX(); y1 = l.getY();
+                l = applyRotateTranslate(x2, y2, rotateTranslate);
+                x2 = l.getX(); y2 = l.getY();
+            }
+        }
+        
         // get the working image
         Mat mat = pipeline.getWorkingImage();
 
@@ -175,13 +231,17 @@ public class AffineWarp extends CvStage {
         if (rectify) {
             // unit vector
             double ux = (x1-x0)/w;
-            double uy = (y1-y0)/w; // yes this is w
-            double dx = (x2-x0);
-            double dy = (y2-y0);
-            // dot product with the unit vector transposed 90° gives the new height
-            h = dx*-uy + dy*ux;
-            x2eff = x0 + h*-uy;
-            y2eff = y0 + h*ux;
+            double uy = (y1-y0)/w; // yes, w is the length to norm with
+            // normal vector
+            double nx = -uy;
+            double ny = ux;
+            // height vector
+            double hx = (x2-x0);
+            double hy = (y2-y0);
+            // dot product with the normal vector gives the new height
+            h = hx*nx + hy*ny;
+            x2eff = x0 + h*nx;
+            y2eff = y0 + h*ny;
         }
 
         // conversion to pixels
@@ -198,7 +258,7 @@ public class AffineWarp extends CvStage {
 
         double diagonal = Math.sqrt(Math.pow(mat.cols(), 2.0)+Math.pow(mat.rows(), 2.0));
         if (wPx > diagonal+2 || hPx > diagonal+2) {
-            // while setting up the affine transform coordinates one by one, huge images might result - prevent that 
+            // while setting up the affine transform coordinates one by one, huge images can result -> prevent that 
             Logger.error("["+getClass().getName()+"] affineWarp must not generate an image that is larger than the original");
             return new Result(mat, "ERROR: affineWarp must not generate an image that is larger than the original");
         }

@@ -53,6 +53,8 @@ import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PercentConverter;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
@@ -71,7 +73,7 @@ import org.jdesktop.beansbinding.Bindings;
 
 @SuppressWarnings("serial")
 public class ReferencePushPullFeederConfigurationWizard
-extends AbstractReferenceFeederConfigurationWizard {
+    extends AbstractReferenceFeederConfigurationWizard {
     private final ReferencePushPullFeeder feeder;
     private JTextField textFieldFeedStartX;
     private JTextField textFieldFeedStartY;
@@ -1081,13 +1083,10 @@ extends AbstractReferenceFeederConfigurationWizard {
             });
         }
     };
-    public HeadMountable getTool() throws Exception {
-        return MainFrame.get().getMachineControls().getSelectedNozzle();
-    }
 
     private void editPipeline() throws Exception {
         Camera camera = feeder.getCamera();
-        CvPipeline pipeline = feeder.getCvPipeline(camera, false);
+        CvPipeline pipeline = feeder.getCvPipeline(camera, false, true);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), feeder.getName() + " Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
