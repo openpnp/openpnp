@@ -26,6 +26,7 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Camera;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
@@ -34,7 +35,7 @@ import org.openpnp.vision.pipeline.Stage;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
-@Stage(description="Extracts a rectangular/<em>trapezoidal</em> area of interest from the image that can have any size, rotation, scale, "
+@Stage(description="Extracts a rectangular/<em>trapezoidal</em> region of interest from the image that can have any size, rotation, scale, "
         + "<em>shear</em> or even be mirrored (Affine Transformation warp).<br/>"
         + "The coordinates are given in real length units rather than pixels and are relative to the camera center, Y pointing up. "
         + "This allows the pipeline to be independent of camera model and resolution, lens, focus distance etc. <br/>"
@@ -78,17 +79,8 @@ public class AffineWarp extends CvStage {
     private boolean rectify = true;
 
     @Attribute(required=false)
-    @Property(description = "The caller of the pipeline can apply an additional rotateTranslate property under this name.")
-    private String rotateTranslateProperty = "rotateTranslate";
-
-    @Attribute(required=false)
-    @Property(description = "The caller of the pipeline can apply an additional rotateTranslate property, so the same pipeline can "
-            + "be used for any orientation (and small offset) of the subject. The baseRotation indicates at which rotation the stage was setup.<br/>"
-            + "A typical setup scenario would be a \"shouth\" feeder for which the baseRotation would be 90° given by how the tape advances. "
-            + "If the pipeline is later used for an identical \"west\" feeder i.e. with tape rotation 0°, it can still be used unchanged. ")
-    private double baseRotation = 0.0;
-
-    
+    @Property(description = "The caller of the pipeline can override the region of interest under this name.")
+    private String regionOfInterestProperty = "regionOfInterest";
 
     @Override
     public LengthUnit getLengthUnit() {
@@ -163,28 +155,12 @@ public class AffineWarp extends CvStage {
         this.rectify = rectify;
     }
 
-    public String getRotateTranslateProperty() {
-        return rotateTranslateProperty;
+    public String getRegionOfInterestProperty() {
+        return regionOfInterestProperty;
     }
 
-    public void setRotateTranslateProperty(String rotateTranslateProperty) {
-        this.rotateTranslateProperty = rotateTranslateProperty;
-    }
-
-    public double getBaseRotation() {
-        return baseRotation;
-    }
-
-    public void setBaseRotation(double baseRotation) {
-        this.baseRotation = baseRotation;
-    }
-
-    protected Location applyRotateTranslate(double x, double y, Location rotateTranslate) {
-        Location l;
-        l = new Location(lengthUnit, x, y, 0, 0);
-        l = l.rotateXy(rotateTranslate.getRotation() + baseRotation);
-        l = l.add(rotateTranslate);
-        return l;
+    public void setRegionOfInterestProperty(String regionOfInterestProperty) {
+        this.regionOfInterestProperty = regionOfInterestProperty;
     }
 
     @Override
@@ -202,18 +178,19 @@ public class AffineWarp extends CvStage {
         double y1 = this.y1;
         double x2 = this.x2;
         double y2 = this.y2;
+        boolean rectify = this.rectify;
         
-        if (getRotateTranslateProperty() != null && ! getRotateTranslateProperty().isEmpty()) {
-            Location rotateTranslate = (Location) pipeline.getProperty(getRotateTranslateProperty());
-            if (rotateTranslate != null) {
-                // We've got an additional transformation
-                Location l;
-                l = applyRotateTranslate(x0, y0, rotateTranslate);
-                x0 = l.getX(); y0 = l.getY();
-                l = applyRotateTranslate(x1, y1, rotateTranslate);
-                x1 = l.getX(); y1 = l.getY();
-                l = applyRotateTranslate(x2, y2, rotateTranslate);
-                x2 = l.getX(); y2 = l.getY();
+        if (getRegionOfInterestProperty() != null && ! getRegionOfInterestProperty().isEmpty()) {
+            RegionOfInterest roi = (RegionOfInterest) pipeline.getProperty(getRegionOfInterestProperty());
+            if (roi != null) {
+                // the region of interest is overridden by the pipeline caller
+                x0 = roi.getUpperLeftCorner().getX(); 
+                y0 = roi.getUpperLeftCorner().getY();
+                x1 = roi.getUpperRightCorner().getX(); 
+                y1 = roi.getUpperRightCorner().getY();
+                x2 = roi.getLowerLeftCorner().getX(); 
+                y2 = roi.getLowerLeftCorner().getY();
+                rectify = roi.isRectify();
             }
         }
         

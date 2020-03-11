@@ -52,6 +52,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
@@ -169,6 +170,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     @Element(required = false)
     private CvPipeline pipeline = createDefaultPipeline();
+
+    @Element(required = false)
+    protected RegionOfInterest ocrRegion = null; 
 
     @Element(required = false)
     private Length precisionWanted = new Length(0.1, LengthUnit.Millimeters);
@@ -818,6 +822,16 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         firePropertyChange("calibrationTrigger", oldValue, calibrationTrigger);
     }
 
+    public RegionOfInterest getOcrRegion() {
+        return ocrRegion;
+    }
+
+    public void setOcrRegion(RegionOfInterest ocrRegion) {
+        Object oldValue = this.ocrRegion;
+        this.ocrRegion = ocrRegion;
+        firePropertyChange("ocrRegion", oldValue, ocrRegion);
+    }
+
     public Length getPrecisionWanted() {
         return precisionWanted;
     }
@@ -966,7 +980,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         this.visionOffset = visionOffset;
     }
 
-
     public void resetCalibration() {
         setVisionOffset(null);
     }
@@ -975,13 +988,13 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         pipeline = createDefaultPipeline();
     }
 
+    public Location getNominalVisionLocation() {
+        return getHole1Location().add(getHole2Location()).multiply(0.5, 0.5, 0.0, 0.0);
+    }
+
     protected void setupOcr(Camera camera, CvPipeline pipeline, Location hole1, Location hole2, Location pickLocation) {
-        // Supply a rotate-translate transformation for the OCR region of interest.
-        Location ocrRotateTranslate = hole1.add(hole2).multiply(0.5, 0.5, 0.0, 0.0)
-                .subtract(camera.getLocation())
-                .derive(null,  null,  null,  -pickLocation.getRotation());
-        pipeline.setProperty("rotateTranslate", ocrRotateTranslate);
         pipeline.setProperty("alphabet", getConsolidatedOcrAlphabet());
+        pipeline.setProperty("regionOfInterest", getOcrRegion());
     }
 
     protected void setupOcr(Camera camera, CvPipeline pipeline) {
@@ -990,7 +1003,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     protected void disableOcr(Camera camera, CvPipeline pipeline) {
         pipeline.setProperty("alphabet", ""); // empty alphabet switches OCR off
-        pipeline.setProperty("rotateTranslate", null);
+        pipeline.setProperty("regionOfInterest", null);
     }
 
     public CvPipeline getCvPipeline(Camera camera, boolean clone, boolean performOcr) {
@@ -1097,6 +1110,20 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             }
         }
 
+        private void drawOcrText(Mat mat, Color color) {
+            if (detectedOcrText != null) {
+                Imgproc.putText(mat, detectedOcrText, 
+                        new org.opencv.core.Point(20, mat.rows()-20), 
+                        Core.FONT_HERSHEY_PLAIN, 
+                        3, 
+                        FluentCv.colorToScalar(Color.black), 6, 0, false);
+                Imgproc.putText(mat, detectedOcrText, 
+                        new org.opencv.core.Point(20, mat.rows()-20), 
+                        Core.FONT_HERSHEY_PLAIN, 
+                        3, 
+                        FluentCv.colorToScalar(color), 2, 0, false);
+            }
+        }
         // number the parts in the pockets
         private void drawPartNumbers(Mat mat, Color color) {
             // make sure the numbers are not too dense
@@ -1417,6 +1444,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     drawHoles(resultMat, getHoles(), Color.green);
                     drawLines(resultMat, getLines(), new Color(0, 0, 255));
                     drawPartNumbers(resultMat, Color.orange);
+                    drawOcrText(resultMat, Color.orange);
+
                     File file = Configuration.get().createResourceFile(getClass(), "push-pull-feeder", ".png");
                     Imgcodecs.imwrite(file.getAbsolutePath(), resultMat);
                     BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
@@ -1488,7 +1517,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
     }
 
-    protected List<ReferencePushPullFeeder> getFeedersOnSameRow() {
+    protected List<ReferencePushPullFeeder> getAllPushPullFeeders() {
         // Get all the feeders connected by location.
         List<ReferencePushPullFeeder> list = new ArrayList<>();
         for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
@@ -1497,11 +1526,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 list.add(pushPullFeeder);
             }
         }
-
         return list;
     }
-
-
 
     public Length getTapeWidth() {
         Location hole1Location = transformMachineToFeederLocation(getHole1Location(), null)
@@ -1530,10 +1556,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         return false;
     }
 
-
-
     protected ReferencePushPullFeeder getTemplateFeeder() {
-        List<ReferencePushPullFeeder> list = getFeedersOnSameRow();
+        List<ReferencePushPullFeeder> list = getAllPushPullFeeders();
 
         // Rank the feeders by similarity.
         Collections.sort(list, new Comparator<ReferencePushPullFeeder>() {
@@ -1631,6 +1655,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         setIncludedMultiEnd(feederTemplate.isIncludedMultiEnd());
         // clone the pipeline
         setPipeline(feederTemplate.getPipeline().clone());
+        // the OCR region, rotated to our feeder's orientation
+        if (feederTemplate.getOcrRegion()!= null) {
+            setOcrRegion(feederTemplate.getOcrRegion()
+                    .rotateXy(getLocation().getRotation()-feederTemplate.getLocation().getRotation()));
+        }
         // other settings
         setPrecisionWanted(feederTemplate.getPrecisionWanted());
         setCalibrationTrigger(feederTemplate.getCalibrationTrigger());

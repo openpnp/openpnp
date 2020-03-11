@@ -91,8 +91,18 @@ public class SimpleOcr extends CvStage {
     @Property(description = "Template matching minimum match threshold (CCOEFF_NORMED method). Default is 0.75.")
     private double threshold = 0.75;
 
+    public enum DrawStyle {
+        None,
+        OverScaledImage, 
+        OverOriginalImage
+    };
+
     @Attribute(required = false)
-    @Property(description = "Debug write images and messages. Will slow down operation.")
+    @Property(description = "Draw the OCR match onto the image. ")
+    private DrawStyle drawStyle = DrawStyle.OverOriginalImage;
+
+    @Attribute(required = false)
+    @Property(description = "Write debug images and messages. Will slow down operation.")
     private boolean debug;
 
     public String getAlphabet() {
@@ -143,6 +153,14 @@ public class SimpleOcr extends CvStage {
         this.autoDetectSize = autoDetectSize;
     }
 
+    public DrawStyle getDrawStyle() {
+        return drawStyle;
+    }
+
+    public void setDrawStyle(DrawStyle drawStyle) {
+        this.drawStyle = drawStyle;
+    }
+
     public boolean isDebug() {
         return debug;
     }
@@ -161,6 +179,7 @@ public class SimpleOcr extends CvStage {
         private int bonus = 0;
         private int malus = 0;
         private boolean excluded = false; 
+        private boolean done = false; 
 
         protected double getOverallScore() {
             return (score + 0.05*bonus - 0.05* malus); // this is scaled to the width, so narrow characters count as less good matches
@@ -196,6 +215,13 @@ public class SimpleOcr extends CvStage {
         protected boolean isExcluded() {
             return excluded;
         }
+        protected void setDone() {
+            done = true;
+            excluded = true;
+        }
+        protected boolean isDone() {
+            return done;
+        }
         public char getCh() {
             return ch;
         }
@@ -214,13 +240,9 @@ public class SimpleOcr extends CvStage {
             throw new Exception("Property \"camera\" is required.");
         }
 
-        Object alphabetProp = pipeline.getProperty("alphabet");
-        String alphabet;
-        if (alphabetProp == null) {
+        String alphabet = (String)pipeline.getProperty("alphabet");
+        if (alphabet == null) {
             alphabet = getAlphabet();
-        }
-        else {
-            alphabet = (String)alphabetProp;
         }
         if (alphabet == null || alphabet.isEmpty()) {
             return null;
@@ -239,7 +261,7 @@ public class SimpleOcr extends CvStage {
                     pointSize < getFontSizePt()*2.0;
                     pointSize *= 1.05) {  // 5% steps
                 Logger.debug("["+getClass().getName()+"] auto-detecting at font size = "+pointSize+"pt");
-                OcrModel res = (OcrModel)performOcr(pipeline, camera, pointSize).model;
+                OcrModel res = (OcrModel)performOcr(pipeline, camera, pointSize, alphabet).model;
                 if (res.overallScore > 0.0) {
                     if (bestRes == null ||  bestRes.overallScore < res.overallScore) {
                         bestRes = res;
@@ -249,18 +271,18 @@ public class SimpleOcr extends CvStage {
                 }
             }
             if (bestRes != null) {
-                setFontSizePt(bestSize); 
+                setFontSizePt(Math.round(bestSize*100.0)/100.0); 
             }
         }
 
-        return performOcr(pipeline, camera, getFontSizePt());
+        return performOcr(pipeline, camera, getFontSizePt(), alphabet);
     }
 
     public static class OcrModel {
         private String text;
         private int numChars;
         private double overallScore;
-        
+
         public OcrModel(String text, int numChars, double overallScore) {
             super();
             this.text = text;
@@ -283,8 +305,8 @@ public class SimpleOcr extends CvStage {
         }
     }
 
-    protected Result performOcr(CvPipeline pipeline, Camera camera, double fontSizePt) throws Error, IOException {
-        
+    protected Result performOcr(CvPipeline pipeline, Camera camera, double fontSizePt, String alphabet) throws Error, IOException {
+
         // Determine the scaling factor to go from given LengthUnit/pt units to
         // Camera units and pixels.
         Location unitsPerPixel = camera.getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters);
@@ -338,10 +360,14 @@ public class SimpleOcr extends CvStage {
         // Create a pseudo graphics context to get font metrics 
         Graphics2D gfm = new BufferedImage(1, 1, type).createGraphics();
         FontMetrics fm = gfm.getFontMetrics(font);
-        final int maxAscent = fm.getMaxAscent();
-        final int fontHeight = fm.getHeight();
+        final int maxAscent = fm.getAscent();// fm.getMaxAscent();
+        final int fontHeight = maxAscent+fm.getDescent();//fm.getHeight();
         final int margin = 0; // tests have shown that no margin is best
         final int height = fontHeight+2*margin;
+        if (fontHeight < 5 || fontHeight >= textImage.rows()) {
+            // dud
+            return new Result(textImage, new OcrModel("", 0, 0.0));
+        }
 
         // try find each character of the alphabet in the text image 
         List<CharacterMatch> matches = new ArrayList<>();
@@ -397,7 +423,7 @@ public class SimpleOcr extends CvStage {
                         matchMap.get(y, x)[0]);
                 matches.add(match);
             }
-            
+
             // cleanup
             matchMap.release();
             template.release();
@@ -407,7 +433,7 @@ public class SimpleOcr extends CvStage {
         StringBuilder text = new StringBuilder();
         double overallScore = 0.0;
         int numChars = 0;
-        
+
         if (matches.size() > 0) {
             // go through all the matches and bonus/malus each other by overlaps (bad) 
             // and continuity on a line (good). Some special treatment is needed for first/last character in a word
@@ -483,15 +509,22 @@ public class SimpleOcr extends CvStage {
             }
 
             // finally compose the lines of the text
+            double prevLineY = -1;
             do {
                 // find the next line Y by finding the top-most character
                 int charsLeft = 0;
                 double nextLineY = Double.MAX_VALUE;
                 for (CharacterMatch match : matches) {
                     if (!match.isExcluded()) {
-                        charsLeft++;
-                        if (match.y < nextLineY) {
-                            nextLineY = match.y;
+                        if (match.y < prevLineY) {
+                            // character off the line grid
+                            match.setExcluded();
+                        }
+                        else {
+                            charsLeft++;
+                            if (match.y < nextLineY) {
+                                nextLineY = match.y;
+                            }
                         }
                     }
                 }
@@ -503,7 +536,7 @@ public class SimpleOcr extends CvStage {
                     text.append('\n');
                 }
                 // anything roughly on the same Y will be composed into the line
-                final double lineTolerance = height / 2;
+                final double lineTolerance = height / 4;
                 CharacterMatch prevChar = null;
                 for (CharacterMatch match : matches) {
                     if (!match.isExcluded()) {
@@ -519,16 +552,53 @@ public class SimpleOcr extends CvStage {
                             numChars++;
                             overallScore += match.getOverallScore();
                             // we're done with that one
-                            match.setExcluded();
+                            match.setDone();
                             // remember for space detection
                             prevChar = match;
+
+                            prevLineY = Math.max(prevLineY, match.y+match.height-lineTolerance);
                         }
                     }
                 }
             }
             while (true);
         }
-        
+
+        if (drawStyle != DrawStyle.None) {
+            double matchScale = 1.0;
+            if (drawStyle == DrawStyle.OverOriginalImage && rescale != 1.0) {
+                textImage.release();
+                textImage = pipeline.getWorkingImage();
+                scalePt /= rescale;
+                unitsPerPixel = unitsPerPixel.multiply(rescale, rescale, 0, 0);
+                matchScale = 1.0/rescale;
+            }
+            // get the image and convret to RGB
+            BufferedImage image = OpenCvUtils.toBufferedImage(textImage);
+            BufferedImage colorImage = new BufferedImage(textImage.cols(), textImage.rows(), BufferedImage.TYPE_INT_RGB);
+            Graphics2D g2d = (Graphics2D) colorImage.createGraphics();
+            g2d.drawImage(image, 0, 0, null);
+            // scale the font and get metrics
+            Font drawFont = new Font(fontName, Font.PLAIN, (int)Math.round(scalePt*fontSizePt));
+            FontMetrics dfm = g2d.getFontMetrics(drawFont);
+            final int dmaxAscent = dfm.getAscent();// fm.getMaxAscent();
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.setFont(drawFont);
+            // overlay the characters
+            for (CharacterMatch match : matches) {
+                if (match.isDone()) {
+                    // use green-red color mapping to visualize the score
+                    float score = (float)Math.min(1.0, Math.max(0.0, (match.score-threshold)/(1.0f-(float)threshold)));
+                    float neg_score = 1.0f-score;
+                    g2d.setColor(new Color(neg_score, score,  0.0f,  0.4f));
+                    g2d.drawString(String.valueOf(match.getCh()), 
+                            (int)Math.round(match.getX()*matchScale), (int)Math.round(match.getY()*matchScale+dmaxAscent));
+                }
+            }
+            g2d.dispose();
+            textImage = OpenCvUtils.toMat(colorImage);
+        }
+
         // deliver the goods 
         return new Result(textImage, new OcrModel(text.toString(), numChars, overallScore));
     }

@@ -36,13 +36,17 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.gui.JobPanel;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
+import org.openpnp.gui.processes.RegionOfInterestProcess;
+import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
@@ -55,9 +59,11 @@ import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
@@ -73,7 +79,7 @@ import org.jdesktop.beansbinding.Bindings;
 
 @SuppressWarnings("serial")
 public class ReferencePushPullFeederConfigurationWizard
-    extends AbstractReferenceFeederConfigurationWizard {
+extends AbstractReferenceFeederConfigurationWizard {
     private final ReferencePushPullFeeder feeder;
     private JTextField textFieldFeedStartX;
     private JTextField textFieldFeedStartY;
@@ -227,10 +233,13 @@ public class ReferencePushPullFeederConfigurationWizard
         btnShowVisionFeatures = new JButton(showVisionFeaturesAction);
         btnShowVisionFeatures.setToolTipText("Preview the features recognized by Computer Vision.");
         btnShowVisionFeatures.setText("Preview Vision Features");
-        panelLocations.add(btnShowVisionFeatures, "2, 2, 3, 1, default, fill");
+        panelLocations.add(btnShowVisionFeatures, "2, 2, default, fill");
 
         btnAutoSetup = new JButton(autoSetupAction);
-        panelLocations.add(btnAutoSetup, "6, 2, 5, 1");
+        panelLocations.add(btnAutoSetup, "4, 2, 5, 1");
+
+        btnSetupocrregion = new JButton(setupOcrRegionAction);
+        panelLocations.add(btnSetupocrregion, "10, 2");
 
         lblX_1 = new JLabel("X");
         panelLocations.add(lblX_1, "4, 4");
@@ -944,8 +953,13 @@ public class ReferencePushPullFeederConfigurationWizard
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> {
-                editPipeline();
+            UiUtils.submitUiMachineTask(() -> {
+                MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
+                SwingUtilities.invokeAndWait(() -> {
+                    UiUtils.messageBoxOnException(() -> {
+                        editPipeline();
+                    });
+                });
             });
         }
     };
@@ -1035,7 +1049,7 @@ public class ReferencePushPullFeederConfigurationWizard
         }
     };
     private Action autoSetupAction =
-            new AbstractAction("Center the camera on the pick location and press this button to Auto-Setup", Icons.captureCamera) {
+            new AbstractAction("Pick Location Auto-Setup", Icons.captureCamera) {
         {
             putValue(Action.SHORT_DESCRIPTION,
                     "<html>Center the camera on the pick location and press this button to Auto-Setup <br/>"
@@ -1044,9 +1058,34 @@ public class ReferencePushPullFeederConfigurationWizard
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
-                applyAction.actionPerformed(e);
                 feeder.autoSetup();
+            });
+        }
+    };
+    private Action setupOcrRegionAction =
+            new AbstractAction("Setup OCR Region", Icons.centerCameraMoveNext) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "<html>Moves the camera to the vision location and let's you select the OCR region of interest.</html>");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
+            UiUtils.submitUiMachineTask(() -> {
+                MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
+                SwingUtilities.invokeAndWait(() -> {
+                    UiUtils.messageBoxOnException(() -> {
+                        new RegionOfInterestProcess(MainFrame.get(), "Setup OCR Region") {
+                            @Override 
+                            public void setResult(RegionOfInterest roi) {
+                                feeder.setOcrRegion(roi);
+                            }
+                        };
+                    });
+                });
             });
         }
     };
@@ -1083,6 +1122,7 @@ public class ReferencePushPullFeederConfigurationWizard
             });
         }
     };
+    private JButton btnSetupocrregion;
 
     private void editPipeline() throws Exception {
         Camera camera = feeder.getCamera();
