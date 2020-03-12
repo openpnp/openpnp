@@ -64,6 +64,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     
     @Element(required = false)
     protected String vacuumActuatorName;
+
+    @Element(required = false)
+    protected String blowActuatorName;
     
     /**
      * If limitRotation is enabled the nozzle will reverse directions when commanded to rotate past
@@ -143,6 +146,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         this.vacuumActuatorName = vacuumActuatorName;
     }
 
+    public String getBlowActuatorName() {
+        return blowActuatorName;
+    }
+
+    public void setBlowActuatorName(String blowActuatorName) {
+        this.blowActuatorName = blowActuatorName;
+    }
+
     @Override
     public ReferenceNozzleTip getNozzleTip() {
         return nozzleTip;
@@ -169,7 +180,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
         
         this.part = part;
-        actuateVacuumValve(true);
+        double pickVacuumThreshold = part.getPackage().getPickVacuumLevel();
+        if (Double.compare(pickVacuumThreshold, Double.valueOf(0.0)) != 0) {
+            actuateVacuumValve(pickVacuumThreshold);
+        } else {
+            actuateVacuumValve(true);
+        }
 
         getMachine().fireMachineHeadActivity(head);
         
@@ -203,7 +219,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             Logger.warn(e);
         }
 
-        actuateVacuumValve(false);
+        double placeBlowLevel = part.getPackage().getPlaceBlowLevel();
+        if (Double.compare(placeBlowLevel, Double.valueOf(0.0)) != 0) {
+            actuateBlowValve(placeBlowLevel);
+        } else {
+            actuateVacuumValve(false);
+        }
 
         this.part = null;
         getMachine().fireMachineHeadActivity(head);
@@ -641,6 +662,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         return actuator;
     }
     
+    protected Actuator getBlowActuator() throws Exception {
+        Actuator actuator = getHead().getActuatorByName(blowActuatorName);
+        if (actuator == null) {
+            throw new Exception(String.format("Can't find blow actuator %s", blowActuatorName));
+        }
+        return actuator;
+    }
+
     protected boolean hasPartOnAnyOtherNozzle() {
         for (Nozzle nozzle : getHead().getNozzles()) {
             if (nozzle != this ) {
@@ -651,22 +680,36 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
         return false;
     }
+
+    protected void actuatePump(boolean on) throws Exception {
+        Actuator pump = getHead().getPump();
+        if (pump != null && !hasPartOnAnyOtherNozzle()) {
+            pump.actuate(on);
+        }
+    }
     
     protected void actuateVacuumValve(boolean on) throws Exception {
-        Actuator pump = getHead().getPump();
-        if (pump != null && on) {
-            if (! hasPartOnAnyOtherNozzle()) {
-                pump.actuate(true);
-            }
-        }
+        actuatePump(true);
 
         getVacuumActuator().actuate(on);
 
-        if (pump != null && !on) {
-            if (! hasPartOnAnyOtherNozzle()) {
-                pump.actuate(false); 
-            }
-        }
+        actuatePump(false);
+    }
+
+    protected void actuateVacuumValve(double value) throws Exception {
+        actuatePump(true);
+
+        getVacuumActuator().actuate(value);
+
+        actuatePump(false);
+    }
+
+    protected void actuateBlowValve(double value) throws Exception {
+        actuatePump(true);
+
+        getBlowActuator().actuate(value);
+
+        actuatePump(false);
     }
 
     protected double readVacuumLevel() throws Exception {

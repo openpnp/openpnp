@@ -42,7 +42,8 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
     private final ReferenceNozzle nozzle;
     private JLabel label;
     private JPanel panel;
-    private JComboBox comboBoxActuator;
+    private JComboBox vacuumComboBoxActuator;
+    private JComboBox blowComboBoxActuator;
 
     public ReferenceNozzleVacuumWizard(ReferenceNozzle nozzle) {
         this.nozzle = nozzle;
@@ -59,15 +60,21 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
                 FormSpecs.DEFAULT_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
             new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                RowSpec.decode("26px"),}));
+                FormSpecs.RELATED_GAP_ROWSPEC, 
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
         
         label = new JLabel("Vacuum Actuator");
         panel.add(label, "1, 2, right, center");
+        label = new JLabel("Blow Actuator");
+        panel.add(label, "1, 3, right, center");
         
-        comboBoxActuator = new JComboBox();
-        comboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
-        panel.add(comboBoxActuator, "2, 2");
+        vacuumComboBoxActuator = new JComboBox();
+        vacuumComboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
+        panel.add(vacuumComboBoxActuator, "2, 2");
+        blowComboBoxActuator = new JComboBox();
+        blowComboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
+        panel.add(blowComboBoxActuator, "2, 3");
     }
 
     @Override
@@ -75,6 +82,7 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
         LengthConverter lengthConverter = new LengthConverter();
         IntegerConverter intConverter = new IntegerConverter();
 
-        addWrappedBinding(nozzle, "vacuumActuatorName", comboBoxActuator, "selectedItem");
+        addWrappedBinding(nozzle, "vacuumActuatorName", vacuumComboBoxActuator, "selectedItem");
+        addWrappedBinding(nozzle, "blowActuatorName", blowComboBoxActuator, "selectedItem");
     }
 }
