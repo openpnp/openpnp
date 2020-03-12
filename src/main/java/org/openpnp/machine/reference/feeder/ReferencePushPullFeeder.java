@@ -171,6 +171,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     @Element(required = false)
     private CvPipeline pipeline = createDefaultPipeline();
 
+    @Attribute(required = false)
+    protected String ocrFontName = "Liberation Mono";
+    @Attribute(required = false)
+    protected double ocrFontSizePt = 7.0;
     @Element(required = false)
     protected RegionOfInterest ocrRegion = null; 
 
@@ -822,6 +826,26 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         firePropertyChange("calibrationTrigger", oldValue, calibrationTrigger);
     }
 
+    public String getOcrFontName() {
+        return ocrFontName;
+    }
+
+    public void setOcrFontName(String ocrFontName) {
+        Object oldValue = this.ocrFontName;
+        this.ocrFontName = ocrFontName;
+        firePropertyChange("ocrFontName", oldValue, ocrFontName);
+    }
+
+    public double getOcrFontSizePt() {
+        return ocrFontSizePt;
+    }
+
+    public void setOcrFontSizePt(double ocrFontSizePt) {
+        Object oldValue = this.ocrFontSizePt;
+        this.ocrFontSizePt = ocrFontSizePt;
+        firePropertyChange("ocrFontSizePt", oldValue, ocrFontSizePt);
+    }
+
     public RegionOfInterest getOcrRegion() {
         return ocrRegion;
     }
@@ -988,13 +1012,21 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         pipeline = createDefaultPipeline();
     }
 
-    public Location getNominalVisionLocation() {
-        return getHole1Location().add(getHole2Location()).multiply(0.5, 0.5, 0.0, 0.0);
+    public Location getNominalVisionLocation() throws Exception {
+        if (hole1Location.equals(nullLocation) || hole2Location.equals(nullLocation)) {
+            // not yet initialized, just return the current camera location
+            return getCamera().getLocation();
+        }
+        else {
+            return getHole1Location().add(getHole2Location()).multiply(0.5, 0.5, 0.0, 0.0);
+        }
     }
 
     protected void setupOcr(Camera camera, CvPipeline pipeline, Location hole1, Location hole2, Location pickLocation) {
-        pipeline.setProperty("alphabet", getConsolidatedOcrAlphabet());
         pipeline.setProperty("regionOfInterest", getOcrRegion());
+        pipeline.setProperty("fontName", getOcrFontName());
+        pipeline.setProperty("fontSizePt", getOcrFontSizePt());
+        pipeline.setProperty("alphabet", getConsolidatedOcrAlphabet());
     }
 
     protected void setupOcr(Camera camera, CvPipeline pipeline) {
@@ -1002,8 +1034,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     }
 
     protected void disableOcr(Camera camera, CvPipeline pipeline) {
-        pipeline.setProperty("alphabet", ""); // empty alphabet switches OCR off
         pipeline.setProperty("regionOfInterest", null);
+        pipeline.setProperty("fontName", null);
+        pipeline.setProperty("fontSizePt", null);
+        pipeline.setProperty("alphabet", ""); // empty alphabet switches OCR off
     }
 
     public CvPipeline getCvPipeline(Camera camera, boolean clone, boolean performOcr) {

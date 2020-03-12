@@ -179,7 +179,7 @@ public class SimpleOcr extends CvStage {
         private int bonus = 0;
         private int malus = 0;
         private boolean excluded = false; 
-        private boolean done = false; 
+        private int charNum = 0; 
 
         protected double getOverallScore() {
             return (score + 0.05*bonus - 0.05* malus); // this is scaled to the width, so narrow characters count as less good matches
@@ -215,12 +215,12 @@ public class SimpleOcr extends CvStage {
         protected boolean isExcluded() {
             return excluded;
         }
-        protected void setDone() {
-            done = true;
+        protected void setCharNum(int charNum) {
+            this.charNum = charNum;
             excluded = true;
         }
-        protected boolean isDone() {
-            return done;
+        protected int getCharNum() {
+            return charNum;
         }
         public char getCh() {
             return ch;
@@ -228,8 +228,8 @@ public class SimpleOcr extends CvStage {
 
         @Override
         public String toString() {
-            return "CharacterMatch [ch=\"" + ch + "\", x=" + x + ", y=" + y + ", width=" + width + ", height="
-                    + height + ", score=" + score + "]";
+            return "CharacterMatch [x=" + x + ", y=" + y + ", width=" + width + ", height="
+                    + height + ", ch=\"" + ch + "\", score=" + score + ", charNum="+charNum+"]";
         }
     }
 
@@ -247,7 +247,18 @@ public class SimpleOcr extends CvStage {
         if (alphabet == null || alphabet.isEmpty()) {
             return null;
         }
+        String fontName = (String)pipeline.getProperty("fontName");
+        if (fontName == null) {
+            fontName = getFontName();
+        }
         if (fontName == null || fontName.isEmpty()) {
+            return null;
+        }
+        Double fontSizePt = (Double)pipeline.getProperty("fontSizePt");
+        if (fontSizePt == null) {
+            fontSizePt = getFontSizePt();
+        }
+        if (fontSizePt == null || fontSizePt == 0.0) {
             return null;
         }
 
@@ -257,25 +268,26 @@ public class SimpleOcr extends CvStage {
             // very crude and brute force 
             OcrModel bestRes = null;
             double bestSize = Double.NaN;
-            for (double pointSize = getFontSizePt()*0.5;
-                    pointSize < getFontSizePt()*2.0;
-                    pointSize *= 1.05) {  // 5% steps
-                Logger.debug("["+getClass().getName()+"] auto-detecting at font size = "+pointSize+"pt");
-                OcrModel res = (OcrModel)performOcr(pipeline, camera, pointSize, alphabet).model;
+            for (double testSize = getFontSizePt()*0.5;
+                    testSize < getFontSizePt()*2.0;
+                    testSize *= 1.05) {  // 5% steps
+                Logger.debug("["+getClass().getName()+"] auto-detecting at font size = "+testSize+"pt");
+                OcrModel res = (OcrModel)performOcr(pipeline, camera, fontName, testSize, alphabet).model;
                 if (res.overallScore > 0.0) {
                     if (bestRes == null ||  bestRes.overallScore < res.overallScore) {
                         bestRes = res;
-                        bestSize = pointSize;
-                        Logger.debug("["+getClass().getName()+"] new best font size = "+pointSize+"pt, overallScore = "+bestRes.overallScore+", text = "+bestRes.text);
+                        bestSize = testSize;
+                        Logger.debug("["+getClass().getName()+"] new best font size = "+testSize+"pt, overallScore = "+bestRes.overallScore+", text = "+bestRes.text);
                     }
                 }
             }
             if (bestRes != null) {
                 setFontSizePt(Math.round(bestSize*100.0)/100.0); 
+                fontSizePt = bestSize;
             }
         }
 
-        return performOcr(pipeline, camera, getFontSizePt(), alphabet);
+        return performOcr(pipeline, camera, fontName, fontSizePt, alphabet);
     }
 
     public static class OcrModel {
@@ -305,7 +317,7 @@ public class SimpleOcr extends CvStage {
         }
     }
 
-    protected Result performOcr(CvPipeline pipeline, Camera camera, double fontSizePt, String alphabet) throws Error, IOException {
+    protected Result performOcr(CvPipeline pipeline, Camera camera, String fontName, double fontSizePt, String alphabet) throws Error, IOException {
 
         // Determine the scaling factor to go from given LengthUnit/pt units to
         // Camera units and pixels.
@@ -504,10 +516,6 @@ public class SimpleOcr extends CvStage {
                 }
             });
 
-            if (debug) {
-                Logger.debug("["+getClass().getName()+"] matches = "+matches);
-            }
-
             // finally compose the lines of the text
             double prevLineY = -1;
             do {
@@ -550,9 +558,9 @@ public class SimpleOcr extends CvStage {
                             // finally harvest the character
                             text.append(match.getCh());
                             numChars++;
-                            overallScore += match.getOverallScore();
                             // we're done with that one
-                            match.setDone();
+                            match.setCharNum(numChars);
+                            overallScore += match.getOverallScore();
                             // remember for space detection
                             prevChar = match;
 
@@ -564,6 +572,28 @@ public class SimpleOcr extends CvStage {
             while (true);
         }
 
+        if (debug) {
+            // just for debugging: sort taken characters first, then others by x  
+            Collections.sort(matches, new Comparator<CharacterMatch>() {
+                @Override
+                public int compare(CharacterMatch o1, CharacterMatch o2) {
+                    if (o1.charNum > 0 && o2.charNum == 0) {
+                        return -1;
+                    }
+                    if (o1.charNum == 0 && o2.charNum > 0) {
+                        return 1;
+                    }
+                    int takenCmp = ((Integer) o1.charNum).compareTo(o2.charNum);
+                    if (takenCmp != 0) {
+                        return takenCmp;
+                    }
+                    
+                    return ((Double) o1.x).compareTo(o2.x);
+                }
+            });
+            Logger.debug("["+getClass().getName()+"] matches = "+matches);
+        }
+
         if (drawStyle != DrawStyle.None) {
             double matchScale = 1.0;
             if (drawStyle == DrawStyle.OverOriginalImage && rescale != 1.0) {
@@ -573,7 +603,7 @@ public class SimpleOcr extends CvStage {
                 unitsPerPixel = unitsPerPixel.multiply(rescale, rescale, 0, 0);
                 matchScale = 1.0/rescale;
             }
-            // get the image and convret to RGB
+            // get the image and convert to RGB
             BufferedImage image = OpenCvUtils.toBufferedImage(textImage);
             BufferedImage colorImage = new BufferedImage(textImage.cols(), textImage.rows(), BufferedImage.TYPE_INT_RGB);
             Graphics2D g2d = (Graphics2D) colorImage.createGraphics();
@@ -586,7 +616,7 @@ public class SimpleOcr extends CvStage {
             g2d.setFont(drawFont);
             // overlay the characters
             for (CharacterMatch match : matches) {
-                if (match.isDone()) {
+                if (match.getCharNum() > 0) {
                     // use green-red color mapping to visualize the score
                     float score = (float)Math.min(1.0, Math.max(0.0, (match.score-threshold)/(1.0f-(float)threshold)));
                     float neg_score = 1.0f-score;
