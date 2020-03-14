@@ -63,6 +63,7 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
+import org.openpnp.util.TravellingSalesman;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.Ransac;
@@ -177,6 +178,18 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     protected double ocrFontSizePt = 7.0;
     @Element(required = false)
     protected RegionOfInterest ocrRegion = null; 
+
+    public enum OcrWrongPartAction {
+        None,
+        Stop,
+        ChangePartAndStop,
+        ChangePartAndContinue
+    }
+
+    @Attribute(required = false)
+    protected OcrWrongPartAction ocrWrongPartAction = OcrWrongPartAction.Stop;
+    @Attribute(required = false)
+    protected boolean ocrDiscoverOnJobStart = false;
 
     @Element(required = false)
     private Length precisionWanted = new Length(0.1, LengthUnit.Millimeters);
@@ -417,7 +430,12 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     private void obtainCalibratedVisionOffset() throws Exception {
         Camera camera = getCamera();
         try (CvPipeline pipeline = getCvPipeline(camera, true, false)) {
-            calibrateSprocketHoles(camera, pipeline, false, false, true, false);
+            OcrWrongPartAction ocrAction = OcrWrongPartAction.None;
+            if (visionOffset == null) {
+                // this is the very first calibration -> also detect OCR
+                ocrAction = getOcrWrongPartAction();
+            }
+            calibrateSprocketHoles(camera, pipeline, false, false, true, ocrAction);
         }
     }
 
@@ -856,6 +874,26 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         firePropertyChange("ocrRegion", oldValue, ocrRegion);
     }
 
+    public OcrWrongPartAction getOcrWrongPartAction() {
+        return ocrWrongPartAction;
+    }
+
+    public void setOcrWrongPartAction(OcrWrongPartAction ocrWrongPartAction) {
+        Object oldValue = this.ocrWrongPartAction;
+        this.ocrWrongPartAction = ocrWrongPartAction;
+        firePropertyChange("ocrWrongPartAction", oldValue, ocrWrongPartAction);
+    }
+
+    public boolean isOcrDiscoverOnJobStart() {
+        return ocrDiscoverOnJobStart;
+    }
+
+    public void setOcrDiscoverOnJobStart(boolean ocrDiscoverOnJobStart) {
+        Object oldValue = this.ocrDiscoverOnJobStart;
+        this.ocrDiscoverOnJobStart = ocrDiscoverOnJobStart;
+        firePropertyChange("ocrDiscoverOnJobStart", oldValue, ocrDiscoverOnJobStart);
+    }
+
     public Length getPrecisionWanted() {
         return precisionWanted;
     }
@@ -1104,7 +1142,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         private Location calibratedHole1Location;
         private Location calibratedHole2Location;
         private Location calibratedPickLocation;
-        private String detectedOcrText;
+        private SimpleOcr.OcrModel detectedOcrModel;
 
         // recognized stuff
         private List<Result.Circle> holes;
@@ -1145,13 +1183,13 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
 
         private void drawOcrText(Mat mat, Color color) {
-            if (detectedOcrText != null) {
-                Imgproc.putText(mat, detectedOcrText, 
+            if (detectedOcrModel != null) {
+                Imgproc.putText(mat, detectedOcrModel.getText(), 
                         new org.opencv.core.Point(20, mat.rows()-20), 
                         Core.FONT_HERSHEY_PLAIN, 
                         3, 
                         FluentCv.colorToScalar(Color.black), 6, 0, false);
-                Imgproc.putText(mat, detectedOcrText, 
+                Imgproc.putText(mat, detectedOcrModel.getText(), 
                         new org.opencv.core.Point(20, mat.rows()-20), 
                         Core.FONT_HERSHEY_PLAIN, 
                         3, 
@@ -1466,10 +1504,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
                 Result ocrStageResult = pipeline.getResult("OCR"); 
                 if (ocrStageResult != null) {
-                    SimpleOcr.OcrModel ocrResult = (SimpleOcr.OcrModel) ocrStageResult.model;
-                    if (ocrResult != null) {
-                        detectedOcrText = ocrResult.getText();
-                    }
+                    detectedOcrModel = (SimpleOcr.OcrModel) ocrStageResult.model;
                 }
 
                 if (showResultMilliseconds > 0) {
@@ -1494,15 +1529,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             return this;
         }
 
-        private double angleNorm(double angle) {
-            while (angle > 90) {
-                angle -= 180;
-            }
-            while (angle < -90) {
-                angle += 180;
-            }
-            return angle;
-        }
         private double angleNorm180(double angle) {
             while (angle > 180) {
                 angle -= 360;
@@ -1539,28 +1565,26 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             setHole1Location(feature.calibratedHole1Location);
             setHole2Location(feature.calibratedHole2Location);
             // now run a hole calibration
-            calibrateSprocketHoles(camera, pipeline, true, true, false, true);
+            calibrateSprocketHoles(camera, pipeline, true, true, false, OcrWrongPartAction.ChangePartAndContinue);
             // move the camera over the pick location
             MovableUtils.moveToLocationAtSafeZ(camera, getLocation());
-            // get the ocr
-            /*
-              if (! feature.detectedOcrText.equals(getPart().getId())) {
-
-
-            }*/
         }
     }
 
-    protected List<ReferencePushPullFeeder> getAllPushPullFeeders() {
-        // Get all the feeders connected by location.
+    public List<ReferencePushPullFeeder> getPushPullFeedersFromPool(List<Feeder> pool) {
+        // Get all the feeders with the right type.
         List<ReferencePushPullFeeder> list = new ArrayList<>();
-        for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+        for (Feeder feeder : pool) {
             if (feeder instanceof ReferencePushPullFeeder) {
                 ReferencePushPullFeeder pushPullFeeder = (ReferencePushPullFeeder) feeder;
                 list.add(pushPullFeeder);
             }
         }
         return list;
+    }
+
+    public List<ReferencePushPullFeeder> getAllPushPullFeeders() {
+        return getPushPullFeedersFromPool(Configuration.get().getMachine().getFeeders());
     }
 
     public Length getTapeWidth() {
@@ -1687,13 +1711,15 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         setIncludedMulti2(feederTemplate.isIncludedMulti2());
         setIncludedMulti3(feederTemplate.isIncludedMulti3());
         setIncludedMultiEnd(feederTemplate.isIncludedMultiEnd());
-        // clone the pipeline
-        setPipeline(feederTemplate.getPipeline().clone());
-        // the OCR region, rotated to our feeder's orientation
+        // the OCR region, rotated to our feeder's orientation, and font and size
         if (feederTemplate.getOcrRegion()!= null) {
             setOcrRegion(feederTemplate.getOcrRegion()
                     .rotateXy(getLocation().getRotation()-feederTemplate.getLocation().getRotation()));
         }
+        setOcrFontName(feederTemplate.getOcrFontName());
+        setOcrFontSizePt(feederTemplate.getOcrFontSizePt());
+        setOcrWrongPartAction(feederTemplate.getOcrWrongPartAction());
+        setOcrDiscoverOnJobStart(feederTemplate.isOcrDiscoverOnJobStart());
         // other settings
         setPrecisionWanted(feederTemplate.getPrecisionWanted());
         setCalibrationTrigger(feederTemplate.getCalibrationTrigger());
@@ -1701,10 +1727,112 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         resetCalibration();
         resetCalibrationStatistics();
         setFeedCount(0);
+        // clone the pipeline
+        setPipeline(feederTemplate.getPipeline().clone());
+    }
+
+    protected void interpretOcrModel(SimpleOcr.OcrModel ocrModel, OcrWrongPartAction ocrAction) throws Exception {
+        if (ocrAction == OcrWrongPartAction.None) {
+            return; 
+        }
+
+        // get first part of OCR Text
+        String ocrText = ocrModel.getText();
+        String partId = ocrText;
+        int pos = partId.indexOf('\n');
+        if (pos >= 0) {
+            partId = partId.substring(0, pos);
+        }                
+        pos = partId.indexOf(' ');
+        if (pos >= 0) {
+            partId = partId.substring(0, pos);
+        }
+        Configuration cfg = Configuration.get();
+        Part ocrPart = cfg.getPart(partId);
+        if (ocrPart == null) {
+            throw new Exception("["+getClass().getName()+"] OCR could not identify/find part id in feeder "+getId()
+            +", OCR detected part id "+partId+" (avg. score="+ocrModel.getAvgScore()+")");
+        }
+        Part currentPart = getPart();
+        if (ocrPart != null && currentPart == null) {
+            // No part set yet
+            Logger.trace("["+getClass().getName()+"] OCR detected part in feeder "+getId()+", OCR part "+ocrPart.getId());
+            setPart(ocrPart);
+        }
+        else if (ocrPart != null && ocrPart != currentPart) {
+            // Wrong part selected in feeder
+            Logger.trace("["+getClass().getName()+"] OCR detected wrong part in feeder "+getId()
+            +", current part "+currentPart.getId()+" != OCR part "+ocrPart.getId());
+            if (ocrAction == OcrWrongPartAction.ChangePartAndStop || ocrAction == OcrWrongPartAction.ChangePartAndContinue) {
+                setPart(ocrPart);
+            }
+            if (ocrAction == OcrWrongPartAction.Stop ||ocrAction == OcrWrongPartAction.ChangePartAndStop) {
+                throw new Exception("["+getClass().getName()+"] OCR detected wrong part in feeder "+getId()
+                +", current part "+currentPart.getId()+" != OCR part "+ocrPart.getId());
+            }
+        }
+    }
+
+    @Override
+    public void prepareForJob(List<Feeder> feedersToPrepare) throws Exception {
+        super.prepareForJob(feedersToPrepare);
+        if (isOcrDiscoverOnJobStart() 
+                && visionOffset == null) {
+            // Note, we will not only detect our own OCR, but all the PushPullFeeders' in bulk
+            // to allow for the TravellingSalesman optimization.
+            // prepareForJob() will be called for subsequent PushPullFeeders, but because the  
+            // feeders are already registered as calibrated (visionOffset != null), there will be no further action. 
+            List<ReferencePushPullFeeder> feederList = getPushPullFeedersFromPool(feedersToPrepare);
+            // Now bulk-OCR. 
+            performOcrOnFeederList(feederList, false, OcrWrongPartAction.Stop);
+        }
+    }
+
+    public void performOcrOnFeederList(List<ReferencePushPullFeeder> feederList, 
+            boolean includeCalibrated,
+            OcrWrongPartAction ocrAction) throws Exception {
+        // Filter the feeders needing OCR
+        List<ReferencePushPullFeeder> ocrFeederList = new ArrayList<>(); 
+        for (ReferencePushPullFeeder feeder : feederList) {
+            if (feeder.isOcrDiscoverOnJobStart() 
+                    && (visionOffset == null || includeCalibrated)) {
+                ocrFeederList.add(feeder);
+            }
+        }
+
+        // Use a Travelling Salesman algorithm to optimize the path to actuate all the feeder covers.
+        TravellingSalesman<ReferencePushPullFeeder> tsm = new TravellingSalesman<>(
+                ocrFeederList, 
+                new TravellingSalesman.Locator<ReferencePushPullFeeder>() { 
+                    @Override
+                    public Location getLocation(ReferencePushPullFeeder locatable) {
+                        return locatable.getPickLocation(0, null);
+                    }
+                }, 
+                // start from current location
+                getCamera().getLocation(), 
+                // no particular end location
+                null);
+
+        // Solve it using the default heuristics.
+        tsm.solve();
+
+        // Finally perform the feeders OCR along the travel path.
+        for (ReferencePushPullFeeder ocrFeeder : tsm.getTravel()) {
+            ocrFeeder.performOcr(ocrAction);
+        }
+    }
+
+    public void performOcr(OcrWrongPartAction ocrAction) throws Exception {
+        Camera camera = getCamera();
+        try (CvPipeline pipeline = getCvPipeline(camera, true, true)) {
+            // run a sprocket hole calibration, including OCR
+            calibrateSprocketHoles(camera, pipeline, false, false, true, ocrAction); 
+        }
     }
 
     protected void calibrateSprocketHoles(Camera camera, CvPipeline pipeline, 
-            boolean storeHoles, boolean storePickLocation, boolean storeVisionOffset, boolean storeOcrResult) throws Exception {
+            boolean storeHoles, boolean storePickLocation, boolean storeVisionOffset, OcrWrongPartAction ocrAction) throws Exception {
         Location runningHole1Location = getHole1Location();
         Location runningHole2Location = getHole2Location();
         Location runningPickLocation = getLocation();
@@ -1719,7 +1847,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             Logger.debug("["+getClass().getName()+"] calibrating sprocket holes pass "+ i+ " midPoint is "+midPoint);
             MovableUtils.moveToLocationAtSafeZ(camera, midPoint);
             // setup OCR if wanted
-            if (i == 0 && storeOcrResult) { 
+            boolean ocrPass = (i == 0 && ocrAction != OcrWrongPartAction.None);
+            if (ocrPass) { 
                 setupOcr(camera, pipeline, runningHole1Location, runningHole2Location, runningPickLocation);
             }
             else {
@@ -1749,10 +1878,16 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             if (storeVisionOffset) {
                 // update the stats
                 if (visionOffset != null) {
-                    // only when a previous vision offset has been stored, should we store the error
+                    // Only when a previous vision offset has been stored, should we store the error
+                    // because the feeder might have been moved physically. The user's actions are 
+                    // not part of the calibration error. :-)
                     addCalibrationError(error);
                 }
                 setVisionOffset(feature.calibratedVisionOffset);
+            }
+            if (ocrPass) {
+                Logger.trace("["+getClass().getName()+"] got OCR text "+feature.detectedOcrModel.getText());
+                interpretOcrModel(feature.detectedOcrModel, ocrAction);
             }
             // is it good enough? Compare with running offset.
             if (error.convertToUnits(LengthUnit.Millimeters).getValue() < calibrateToleranceMm) {

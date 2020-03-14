@@ -310,6 +310,9 @@ public class SimpleOcr extends CvStage {
         public double getOverallScore() {
             return overallScore;
         } 
+        public double getAvgScore() {
+            return overallScore/Math.max(1,  numChars);
+        } 
 
         @Override
         public String toString() {

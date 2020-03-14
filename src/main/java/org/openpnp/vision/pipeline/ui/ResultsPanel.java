@@ -141,13 +141,13 @@ public class ResultsPanel extends JPanel {
                         }
                     }
                     
-                    matStatusLabel.setText(String.format("RGB: %03d, %03d, %03d HSB: %03d, %03d, %03d XY: %d, %d %s",
+                    matStatusLabel.setText(String.format("RGB: %03d, %03d, %03d HSV: %03d, %03d, %03d XY: %d, %d %s",
                             color.getRed(),
                             color.getGreen(),
                             color.getBlue(),
-                            (int) (255.0 * hsb[0]),
-                            (int) (255.0 * hsb[1]),
-                            (int) (255.0 * hsb[2]),
+                            (int) (179.999 * hsb[0]),
+                            (int) (255.999 * hsb[1]),
+                            (int) (255.999 * hsb[2]),
                             p.x, 
                             p.y,
                             auxCoords));

@@ -1688,7 +1688,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             pipeline.setProperty("camera", camera);
             pipeline.setProperty("feeder", this);
 
-            /* this won't work, properties must be hardwired in the stages
+            /* TODO: read the override property in the FilterContours stage
              * 
              * // Provide pixel min/max area to pipeline.
             // We restrict this to 24mm tape carrier having a 20.1mm max pocket size.

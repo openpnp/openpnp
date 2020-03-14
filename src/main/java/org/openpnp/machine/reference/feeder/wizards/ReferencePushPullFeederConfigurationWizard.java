@@ -60,6 +60,7 @@ import org.openpnp.gui.support.LongConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PercentConverter;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
+import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.OcrWrongPartAction;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -80,6 +81,7 @@ import com.jgoodies.forms.layout.RowSpec;
 import org.jdesktop.beansbinding.BeanProperty;
 import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.Bindings;
+import java.awt.event.ActionListener;
 
 @SuppressWarnings("serial")
 public class ReferencePushPullFeederConfigurationWizard
@@ -193,7 +195,15 @@ extends AbstractReferenceFeederConfigurationWizard {
     private JButton btnSmartClone;
     private JLabel lblPreferredAsTemplate;
     private JCheckBox checkBoxPreferredAsTemplate;
-
+    private JButton btnSetupocrregion;
+    private JLabel lblOcrFontName;
+    private JComboBox comboBoxFontName;
+    private JLabel lblFontSizept;
+    private JTextField textFieldFontSizePt;
+    private JLabel lblOcrWrongPart;
+    private JComboBox comboBoxWrongPartAction;
+    private JLabel lblDiscoverOnJobStart;
+    private JCheckBox checkBoxDiscoverOnJobStart;
 
     public ReferencePushPullFeederConfigurationWizard(ReferencePushPullFeeder feeder) {
         super(feeder, false);
@@ -218,19 +228,19 @@ extends AbstractReferenceFeederConfigurationWizard {
                 ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         btnShowVisionFeatures = new JButton(showVisionFeaturesAction);
         btnShowVisionFeatures.setToolTipText("Preview the features recognized by Computer Vision.");
@@ -323,13 +333,13 @@ extends AbstractReferenceFeederConfigurationWizard {
                 ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblPartPitch = new JLabel("Part Pitch");
         panelTape.add(lblPartPitch, "2, 2, right, default");
@@ -715,93 +725,120 @@ extends AbstractReferenceFeederConfigurationWizard {
                 ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-            new RowSpec[] {
-                FormSpecs.LINE_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+                        FormSpecs.LINE_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblCalibrationTrigger = new JLabel("Calibration Trigger");
         panelVisionEnabled.add(lblCalibrationTrigger, "2, 2, right, default");
 
         comboBoxCalibrationTrigger = new JComboBox(ReferencePushPullFeeder.CalibrationTrigger.values());
         panelVisionEnabled.add(comboBoxCalibrationTrigger, "4, 2");
-                
-                        lblPrecisionAverage = new JLabel("Precision Average");
-                        lblPrecisionAverage.setToolTipText("Obtained precision average i.e. offset of the pick location, as detected by the calibration");
-                        panelVisionEnabled.add(lblPrecisionAverage, "8, 2, right, default");
-                
-                        textFieldPrecisionAverage = new JTextField();
-                        textFieldPrecisionAverage.setToolTipText("Obtained precision average i.e. offset of the pick location, as detected by the calibration");
-                        textFieldPrecisionAverage.setEditable(false);
-                        panelVisionEnabled.add(textFieldPrecisionAverage, "10, 2");
-                        textFieldPrecisionAverage.setColumns(10);
+
+        lblPrecisionAverage = new JLabel("Precision Average");
+        lblPrecisionAverage.setToolTipText("Obtained precision average i.e. offset of the pick location, as detected by the calibration");
+        panelVisionEnabled.add(lblPrecisionAverage, "8, 2, right, default");
+
+        textFieldPrecisionAverage = new JTextField();
+        textFieldPrecisionAverage.setToolTipText("Obtained precision average i.e. offset of the pick location, as detected by the calibration");
+        textFieldPrecisionAverage.setEditable(false);
+        panelVisionEnabled.add(textFieldPrecisionAverage, "10, 2");
+        textFieldPrecisionAverage.setColumns(10);
+
+        lblCalibrationCount = new JLabel("Calibration Count");
+        panelVisionEnabled.add(lblCalibrationCount, "14, 2, right, default");
+
+        textFieldCalibrationCount = new JTextField();
+        textFieldCalibrationCount.setEditable(false);
+        panelVisionEnabled.add(textFieldCalibrationCount, "16, 2");
+        textFieldCalibrationCount.setColumns(10);
+
+        lblPrecisionWanted = new JLabel("Precision wanted");
+        lblPrecisionWanted.setToolTipText("Precision wanted i.e. the tolerable pick location offset");
+        panelVisionEnabled.add(lblPrecisionWanted, "2, 4, right, default");
+
+        textFieldPrecisionWanted = new JTextField();
+        textFieldPrecisionWanted.setToolTipText("Precision wanted i.e. the tolerable pick location offset");
+        panelVisionEnabled.add(textFieldPrecisionWanted, "4, 4");
+        textFieldPrecisionWanted.setColumns(10);
+
+        lblPrecisionConfidenceLimit = new JLabel("Precision Confidence Limit");
+        lblPrecisionConfidenceLimit.setToolTipText("Precision obtained with 95% confidence (assuming normal distribution)");
+        panelVisionEnabled.add(lblPrecisionConfidenceLimit, "8, 4, right, default");
+
+        textFieldPrecisionConfidenceLimit = new JTextField();
+        textFieldPrecisionConfidenceLimit.setEditable(false);
+        panelVisionEnabled.add(textFieldPrecisionConfidenceLimit, "10, 4");
+        textFieldPrecisionConfidenceLimit.setColumns(10);
+
+        btnResetStatistics = new JButton(resetStatisticsAction);
+        panelVisionEnabled.add(btnResetStatistics, "14, 4, 3, 1");
+
+        lblOcrWrongPart = new JLabel("OCR Wrong Part Action");
+        lblOcrWrongPart.setToolTipText("<html>Determines what action should be taken when OCR detects the wrong Part ID in the feeder.<br/> \r\n<ul>\r\n<li><strong>None</strong>: no OCR is performed.</li>\r\n<li><strong>Stop</strong>: the error is indicated, the current process stopped.</li>\r\n<li><strong>Change Part & Stop</strong>: the part in the feeder is exchanged, error and stop.</li>\r\n<li><strong>Change Part & Continue</strong>: the part in the feeder is exchanged silently.</li>\r\n</ul>\r\n</html>\r\n");
+        panelVisionEnabled.add(lblOcrWrongPart, "2, 8, right, default");
+
+        comboBoxWrongPartAction = new JComboBox(ReferencePushPullFeeder.OcrWrongPartAction.values());
+        panelVisionEnabled.add(comboBoxWrongPartAction, "4, 8");
+
+        // Compose a font list of the system, the one currently selected, even if the system does not know it (yet), and the empty selection 
+        List<String> systemFontList = Arrays.asList(GraphicsEnvironment.getLocalGraphicsEnvironment()
+                .getAvailableFontFamilyNames()); 
+        List<String> fontList = new ArrayList<>();
+        if (!systemFontList.contains(feeder.getOcrFontName())) {
+            fontList.add(feeder.getOcrFontName());
+        }
+        fontList.add("");
+        fontList.addAll(systemFontList);
+
+        lblOcrFontName = new JLabel("OCR Font Name");
+        lblOcrFontName.setToolTipText("<html>Name of the OCR font to be recognized.<br/>\r\nMonospace fonts work much better, allow lower resolution and therefore faster <br/>\r\noperation. Use a font where all the used characters are easily distinguishable.<br/>\r\nFonts with clear separation between glyphs are much preferred.</html>");
+        panelVisionEnabled.add(lblOcrFontName, "8, 8, right, default");
+        comboBoxFontName = new JComboBox(fontList.toArray());
+        panelVisionEnabled.add(comboBoxFontName, "10, 8");
         
-                lblCalibrationCount = new JLabel("Calibration Count");
-                panelVisionEnabled.add(lblCalibrationCount, "14, 2, right, default");
+                btnSetupocrregion = new JButton(setupOcrRegionAction);
+                panelVisionEnabled.add(btnSetupocrregion, "14, 8, 3, 1");
+
+        lblDiscoverOnJobStart = new JLabel("Check on Job Start?");
+        lblDiscoverOnJobStart.setToolTipText("<html>On Job Start, check that the correct parts are selected in OCR-enabled feeders at their locations. <br/>\r\nOtherwise the Job is stopped.<br/>\r\nThis will also vision-calibrate the feeders' locations.</html>");
+        panelVisionEnabled.add(lblDiscoverOnJobStart, "2, 10, right, default");
+
+        checkBoxDiscoverOnJobStart = new JCheckBox("");
+        panelVisionEnabled.add(checkBoxDiscoverOnJobStart, "4, 10");
+
+        lblFontSizept = new JLabel("OCR Font Size [pt]");
+        lblFontSizept.setToolTipText("The OCR font size in typographic points (1 pt = 1/72 in).");
+        panelVisionEnabled.add(lblFontSizept, "8, 10, right, default");
+
+        textFieldFontSizePt = new JTextField();
+        panelVisionEnabled.add(textFieldFontSizePt, "10, 10");
+        textFieldFontSizePt.setColumns(10);
+
+        btnEditPipeline = new JButton(editPipelineAction);
+        btnEditPipeline.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            }
+        });
         
-                textFieldCalibrationCount = new JTextField();
-                textFieldCalibrationCount.setEditable(false);
-                panelVisionEnabled.add(textFieldCalibrationCount, "16, 2");
-                textFieldCalibrationCount.setColumns(10);
-        
-                lblPrecisionWanted = new JLabel("Precision wanted");
-                lblPrecisionWanted.setToolTipText("Precision wanted i.e. the tolerable pick location offset");
-                panelVisionEnabled.add(lblPrecisionWanted, "2, 4, right, default");
-        
-                textFieldPrecisionWanted = new JTextField();
-                textFieldPrecisionWanted.setToolTipText("Precision wanted i.e. the tolerable pick location offset");
-                panelVisionEnabled.add(textFieldPrecisionWanted, "4, 4");
-                textFieldPrecisionWanted.setColumns(10);
-        
-                lblPrecisionConfidenceLimit = new JLabel("Precision Confidence Limit");
-                lblPrecisionConfidenceLimit.setToolTipText("Precision obtained with 95% confidence (assuming normal distribution)");
-                panelVisionEnabled.add(lblPrecisionConfidenceLimit, "8, 4, right, default");
-        
-                textFieldPrecisionConfidenceLimit = new JTextField();
-                textFieldPrecisionConfidenceLimit.setEditable(false);
-                panelVisionEnabled.add(textFieldPrecisionConfidenceLimit, "10, 4");
-                textFieldPrecisionConfidenceLimit.setColumns(10);
-                
-                        btnResetStatistics = new JButton(resetStatisticsAction);
-                        panelVisionEnabled.add(btnResetStatistics, "14, 4, 3, 1");
-                        
-                        List<String> fontList = new ArrayList<>();
-                        fontList.addAll(Arrays.asList(GraphicsEnvironment.getLocalGraphicsEnvironment()
-                            .getAvailableFontFamilyNames()));
-                        if (!fontList.contains(feeder.getOcrFontName())) {
-                            fontList.add(feeder.getOcrFontName());
-                        }
-                        fontList.add("");
-                        
-                        lblOcrFontName = new JLabel("OCR Font Name");
-                        lblOcrFontName.setToolTipText("<html>Name of the OCR font to be recognized.<br/>\r\nMonospace fonts work much better, allow lower resolution and therefore faster <br/>\r\noperation. Use a font where all the used characters are easily distinguishable.<br/>\r\nFonts with clear separation between glyphs are much preferred.</html>");
-                        panelVisionEnabled.add(lblOcrFontName, "2, 8, right, default");
-                        comboBoxFontName = new JComboBox(fontList.toArray());
-                        panelVisionEnabled.add(comboBoxFontName, "4, 8");
-                        
-                        lblFontSizept = new JLabel("OCR Font Size [pt]");
-                        lblFontSizept.setToolTipText("The OCR font size in typographic points (1 pt = 1/72 in).");
-                        panelVisionEnabled.add(lblFontSizept, "8, 8, right, default");
-                                
-                                textFieldFontSizePt = new JTextField();
-                                panelVisionEnabled.add(textFieldFontSizePt, "10, 8");
-                                textFieldFontSizePt.setColumns(10);
-                                
-                                        btnSetupocrregion = new JButton(setupOcrRegionAction);
-                                        panelVisionEnabled.add(btnSetupocrregion, "14, 8, 3, 1");
-                                                        
-                                                                btnEditPipeline = new JButton(editPipelineAction);
-                                                                panelVisionEnabled.add(btnEditPipeline, "14, 10");
-                                                        
-                                                                btnResetPipeline = new JButton(resetPipelineAction);
-                                                                panelVisionEnabled.add(btnResetPipeline, "16, 10");
+        btnOcrAllFeeders = new JButton(allFeederOcrAction);
+        panelVisionEnabled.add(btnOcrAllFeeders, "14, 10, 3, 1");
+        panelVisionEnabled.add(btnEditPipeline, "2, 14");
+
+        btnResetPipeline = new JButton(resetPipelineAction);
+        panelVisionEnabled.add(btnResetPipeline, "4, 14");
 
         contentPanel.add(panelFields);
         initDataBindings();
@@ -929,6 +966,8 @@ extends AbstractReferenceFeederConfigurationWizard {
         bind(UpdateStrategy.READ, feeder, "precisionAverage", textFieldPrecisionAverage, "text", lengthConverter);
         bind(UpdateStrategy.READ, feeder,   "precisionConfidenceLimit", textFieldPrecisionConfidenceLimit, "text", lengthConverter);
 
+        addWrappedBinding(feeder, "ocrWrongPartAction", comboBoxWrongPartAction, "selectedItem");
+        addWrappedBinding(feeder, "ocrDiscoverOnJobStart", checkBoxDiscoverOnJobStart, "selected");
         addWrappedBinding(feeder, "ocrFontName", comboBoxFontName, "selectedItem");
         addWrappedBinding(feeder, "ocrFontSizePt", textFieldFontSizePt, "text", doubleConverter);
 
@@ -966,7 +1005,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndZ);
         ComponentDecorators.decorateWithAutoSelect(textFieldFontSizePt);
-        
+
         bind(UpdateStrategy.READ, feeder, "actuatorName", locationButtonsPanelFeedStart, "actuatorName");
         bind(UpdateStrategy.READ, feeder, "actuatorName", locationButtonsPanelFeedMid1, "actuatorName");
         bind(UpdateStrategy.READ, feeder, "actuatorName", locationButtonsPanelFeedMid2, "actuatorName");
@@ -983,14 +1022,27 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            UiUtils.submitUiMachineTask(() -> {
-                MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
-                SwingUtilities.invokeAndWait(() -> {
-                    UiUtils.messageBoxOnException(() -> {
-                        editPipeline();
+            if (Configuration.get().getMachine().isEnabled()) {
+                UiUtils.submitUiMachineTask(() -> {
+                    MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
+                    SwingUtilities.invokeAndWait(() -> {
+                        UiUtils.messageBoxOnException(() -> {
+                            editPipeline();
+                        });
                     });
                 });
-            });
+            }
+            else {
+                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "Machine not enabled, unable to move the camera to the right location to edit the pipeline.\n"
+                                +"Do you want to proceed anyway?",
+                                null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (result == JOptionPane.YES_OPTION) {
+                    UiUtils.messageBoxOnException(() -> {
+                        editPipeline();
+                    });                    
+                }
+            }
         }
     };
 
@@ -1094,6 +1146,22 @@ extends AbstractReferenceFeederConfigurationWizard {
             });
         }
     };
+    private Action allFeederOcrAction =
+            new AbstractAction("All Feeder OCR") {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "<html>Go to all the feeders with OCR and rediscover the parts loaded in them. </html>");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
+            UiUtils.submitUiMachineTask(() -> {
+                feeder.performOcrOnFeederList(feeder.getAllPushPullFeeders(), 
+                        true, OcrWrongPartAction.ChangePartAndContinue);
+            });
+        }
+    };
     private Action setupOcrRegionAction =
             new AbstractAction("Setup OCR Region") {
         {
@@ -1140,7 +1208,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         public void actionPerformed(ActionEvent e) {
             UiUtils.messageBoxOnException(() -> {
                 if (checkBoxPreferredAsTemplate.isSelected()) {
-                    throw new Exception("The feeder is a preferred template and should not be overwritten.");
+                    throw new Exception("This feeder is marked as a template and cannot be overwritten.");
                 }
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                         "This will overwrite all your current Push-Pull and Vision Settings. Are you sure?",
@@ -1152,12 +1220,8 @@ extends AbstractReferenceFeederConfigurationWizard {
             });
         }
     };
-    private JButton btnSetupocrregion;
-    private JLabel lblOcrFontName;
-    private JComboBox comboBoxFontName;
-    private JLabel lblFontSizept;
-    private JTextField textFieldFontSizePt;
-
+    private JButton btnOcrAllFeeders;
+    
     private void editPipeline() throws Exception {
         Camera camera = feeder.getCamera();
         CvPipeline pipeline = feeder.getCvPipeline(camera, false, true);
