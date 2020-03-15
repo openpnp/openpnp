@@ -300,3 +300,8 @@ c7 -> 03
 
 `XX` is the checksum for the message.<br>
 This is repeated at a regular interval when running a job, or when being in the "Manual test" UI in the original application from Neoden. Currently unknown why and what it does.
+
+# Feeder Teardown
+
+https://imgur.com/a/osEGC
+
