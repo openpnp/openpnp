@@ -9,7 +9,7 @@ import org.openpnp.vision.pipeline.Stage;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
-@Stage(description="Adds two images together.")
+@Stage(description="Adds two images together, scale either, or subtract second.")
 public class Add extends CvStage {
     @Element(required = false)
 
@@ -70,7 +70,7 @@ public class Add extends CvStage {
         Mat second = pipeline.getResult(secondStageName).image;
 
 				if(this.firstScalar < 0){
-					throw new Exception("firstScalar >= 0!");
+					throw new Exception("firstScalar < 0!");
 				}
 
         Mat f = first.clone();
