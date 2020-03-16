@@ -16,7 +16,7 @@
 10. Eclipse will now download the OpenPnP source code. This may take a few minutes.
 11. When it finishes, on the same screen select the "Import as general project" option and click Next.
 12. On the Import Projects screen accept the default project name of "openpnp" and click Finish.
-13. The openpnp project will now appear in the Package Explorer. Right click on the project "openpnp" and in the menu select Configure -> Convert to Maven Project. Eclipse will download any resources that it needs and build the project. this can take some time and you need to wait for it to complete before proceeding to the next step. 
+13. The openpnp project will now appear in the Package Explorer. Right click on the project "openpnp" and in the menu select Configure -> Convert to Maven Project. Eclipse will download any resources that it needs and build the project. This can take some time and you need to wait for it to complete before proceeding to the next step. 
 14. Expand the openpnp project and look for the `src/main/java folder`. Under this folder expand the `org.openpnp` folder and look for `Main.java`.
 15. Right click `Main.java` and from the menu select Run As -> Java Application.
 16. After a few seconds OpenPnP will start.
