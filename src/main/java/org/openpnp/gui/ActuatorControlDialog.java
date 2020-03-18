@@ -43,6 +43,8 @@ public class ActuatorControlDialog extends JDialog {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         JLabel lblBoolean = new JLabel("Set Boolean Value");
@@ -107,6 +109,17 @@ public class ActuatorControlDialog extends JDialog {
             }
         });
         getContentPane().add(readBtn, "6, 6");
+
+        JButton readWithDoubleBtn = new JButton("Read With Double");
+        readWithDoubleBtn.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                UiUtils.submitUiMachineTask(() -> {
+                    String s = actuator.read(Double.parseDouble(doubleTf.getText()));
+                    readTf.setText(s == null ? "" : s);
+                });
+            }
+        });
+        getContentPane().add(readWithDoubleBtn, "6, 10");
         
         JButton closeBtn = new JButton("Close");
         closeBtn.addActionListener(new ActionListener() {
@@ -114,6 +127,6 @@ public class ActuatorControlDialog extends JDialog {
                 setVisible(false);
             }
         });
-        getContentPane().add(closeBtn, "6, 10");
+        getContentPane().add(closeBtn, "6, 12");
     }
 }

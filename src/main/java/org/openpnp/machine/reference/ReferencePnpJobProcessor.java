@@ -73,6 +73,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     @Attribute(required = false)
     protected JobOrderHint jobOrder = JobOrderHint.PartHeight;
 
+    @Attribute(required = false)
+    protected int maxVisionRetries = 3;
+
     @Element(required = false)
     public PnpJobPlanner planner = new SimplePnpJobPlanner();
 
@@ -163,6 +166,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             checkSetupErrors();
             
             prepMachine();
+            
+            prepFeeders();
             
             scriptJobStarting();
 
@@ -291,7 +296,33 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // Discard any currently picked parts
             discardAll(head);
         }
-        
+
+        private void prepFeeders() throws JobProcessorException {
+            // Everything still looks good, so prepare the feeders.
+            fireTextStatus("Preparing feeders.");
+            Machine machine = Configuration.get().getMachine();
+            List<Feeder> feederList = new ArrayList<>();
+            // Get all the feeders that are used in the pending placements.
+            for (Feeder feeder : machine.getFeeders()) {
+                if (feeder.isEnabled() && feeder.getPart() != null) {
+                    for (JobPlacement placement : getPendingJobPlacements()) {
+                        if (placement.getPartId() == feeder.getPart().getId()) {
+                            feederList.add(feeder);
+                        }
+                    }
+                }
+            }
+            for (Feeder feeder : feederList) {
+                try {
+                    // feeder is used in this job, prep it.
+                    feeder.prepareForJob(feederList);
+                }
+                catch (Exception e) {
+                    throw new JobProcessorException(feeder, e);
+                }
+            }
+        }
+
         private void checkDuplicateRefs(BoardLocation boardLocation) throws JobProcessorException {
             // Check for ID duplicates - throw error if any are found
             HashSet<String> idlist = new HashSet<String>();
@@ -378,7 +409,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             else {
                 // Get the list of unfinished placements and sort them by part height.
                     jobPlacements = getPendingJobPlacements().stream()
-                            .sorted(Comparator.comparing(JobPlacement::getPartHeight))
+                            .sorted(Comparator
+                                .comparing(JobPlacement::getPartHeight)
+                                .thenComparing(JobPlacement::getPartId))
                             .collect(Collectors.toList());
             }
 
@@ -652,8 +685,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             final Part part = placement.getPart();
 
             Exception lastException = null;
-            // TODO make retry count configurable.
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < ReferencePnpJobProcessor.this.getMaxVisionRetries(); i++) {
                 fireTextStatus("Aligning %s for %s.", part.getId(), placement.getId());
                 try {
                     plannedPlacement.alignmentOffsets = VisionUtils.findPartAlignmentOffsets(
@@ -1005,6 +1037,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     public void setJobOrder(JobOrderHint newJobOrder) {
         this.jobOrder = newJobOrder;
     }    
+
+    public int getMaxVisionRetries() {
+        return maxVisionRetries;
+    }
+
+    public void setMaxVisionRetries(int maxVisionRetries) {
+        this.maxVisionRetries = maxVisionRetries;
+    }
 
     protected abstract class PlannedPlacementStep implements Step {
         protected final List<PlannedPlacement> plannedPlacements;

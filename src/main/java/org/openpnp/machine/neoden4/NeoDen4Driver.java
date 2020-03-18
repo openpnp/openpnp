@@ -100,77 +100,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     public void createMachineObjects() throws Exception {
         // Make sure required objects exist
         ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
-        
-//        ReferenceActuator a = (ReferenceActuator) machine.getActuatorByName("CameraUpLamp");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("CameraUpLamp");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("CameraDownLamp");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("CameraDownLamp");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("CameraSelectUp");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("CameraSelectUp");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("DragPin");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("DragPin");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("FilmPull");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("FilmPull");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("Pump");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("Pump");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("Nozzle1Vacuum");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("Nozzle1Vacuum");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("Nozzle2Vacuum");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("Nozzle2Vacuum");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("Nozzle1Down");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("Nozzle1Down");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("Nozzle2Down");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("Nozzle2Down");
-//            machine.addActuator(a);
-//        }
-        
+
         ReferenceNozzle n;
         n = (ReferenceNozzle) machine.getDefaultHead().getNozzle("N1");
         if (n == null) {
@@ -200,7 +130,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
             machine.getDefaultHead().addNozzle(n);
         }
         
-
         ReferenceActuator a;
         a = (ReferenceActuator) machine.getActuatorByName("N1-Air");
         if (a == null) {
@@ -245,6 +174,12 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
             machine.addActuator(a);
         }
         
+        a = (ReferenceActuator) machine.getActuatorByName("Rails");
+        if (a == null) {
+            a = new ReferenceActuator();
+            a.setName("Rails");
+            machine.addActuator(a);
+        }
     }
     
     public synchronized void connect() throws Exception {
@@ -381,6 +316,13 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     
     @Override
     public void home(ReferenceHead head) throws Exception {
+        /* Make sure *all* nozzles are up before moving */ 
+        moveZ(1, 0);
+        moveZ(2, 0);
+        moveZ(3, 0);
+        moveZ(4, 0);
+
+        /* Now, send home command */
         write(0x47);
         expect(0x0b);
         
@@ -394,8 +336,12 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         
         pollFor(0x07, 0x43);
         
+        if (! waitForStatusReady(100, 30000)) {
+            throw new Exception("home timeout while waiting for status==ready");
+        }
+
         this.x = -437.;
-        this.y = 437.;
+        this.y = 437.;  /* Maybe this needs to be 400. - needs more testing  */
         ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
         machine.fireMachineHeadActivity(head);
     }
@@ -416,24 +362,64 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
     
     private void moveXy(double x, double y) throws Exception {
-      write(0x48);
-      expect(0x05);
-      
-      write(0xc8);
-      expect(0x0d);
+        /* This should be moved to settings part of driver */
+        double scaleX, scaleY;
 
-      byte[] b = new byte[8];
-      putInt32((int) (x * 100), b, 0);
-      putInt32((int) (y * 100), b, 4);
-      writeWithChecksum(b);
+        scaleX = 1.0501;   // slightly bigger, might be between +.0001 and +.0009
+        scaleY = 1.04947526;
+        write(0x48);
+        expect(0x05);
       
-      pollFor(0x08, 0x4d);
+        write(0xc8);
+        expect(0x0d);
+
+        byte[] b = new byte[8];
+        putInt32((int) (x*scaleX * 100), b, 0);
+        putInt32((int) (y*scaleY * 100), b, 4);
+        writeWithChecksum(b);
+      
+        pollFor(0x08, 0x4d);
+
+        if (! waitForStatusReady(100, 30000)) {
+            throw new Exception("moveXy timeout while waiting for status==ready");
+        }
     }
-    
+
+    private Boolean isStatusReady() throws Exception {
+        pollFor(0x45, 0x09);
+        pollFor(0x05, 0x14);
+
+        write(0x85);
+        expect(0x1c);
+        byte[] b = readWithChecksum(8);
+
+        int readyStatus = b[0];
+
+        if (readyStatus == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private Boolean waitForStatusReady(int sleepMilliS, int maxMilliS) throws Exception {
+        int totalWaitMilliS = 0;
+        do {
+            Thread.sleep(sleepMilliS);
+            totalWaitMilliS += sleepMilliS;
+
+            if (totalWaitMilliS >= maxMilliS) {
+                return false;
+            }
+        } while (! isStatusReady());
+        return true;
+    }
+
     private void moveZ(int nozzle, double z) throws Exception {
-        // In our world, 0 is max up and -12 is max down. So 0 = 0 and -12 = e02e (which is 12000)
+        // Neoden thinks 13.0 is max retracted into the head, 0 is max out.
+        // In our world, 0 is max up and -13 is max down.
       
-        z = -z;
+        z = Math.abs(z) * 1000.;
         
         write(0x42);
         expect(0x0e);
@@ -442,8 +428,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         expect(0x06);
 
         byte[] b = new byte[8];
-        putInt16((int) (z * 1000.), b, 0);
-        b[2] = 0x32;
+        putInt16((int) (z), b, 0);
+        b[2] = 0x64;
         b[3] = (byte) nozzle;
         writeWithChecksum(b);
         
@@ -466,6 +452,23 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         pollFor(0x01, 0x45);
     }
 
+    private void setMoveSpeed(double speed) throws Exception {
+        write(0x46);
+        expect(0x0a);
+        
+        write(0xc6);
+        expect(0x02);
+
+        byte[] b = new byte[8];
+        // Speed is percentage of max speed.  Speed is really 10-130
+        putInt16((int) ((120. * speed)+10), b, 0);
+        b[2] = 0x09;
+        b[4] = (byte) 0xc8;
+        writeWithChecksum(b);
+        
+        pollFor(0x06, 0x42);
+    }
+
     @Override
     public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
             throws Exception {
@@ -482,17 +485,22 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         x = Double.isNaN(x) ? this.x : x;
         y = Double.isNaN(y) ? this.y : y;
         if (x != this.x || y != this.y) {
+            setMoveSpeed(speed);
             moveXy(x, y);
             
             this.x = x;
             this.y = y;
         }
 
+        double minZ = 0.;
+        double maxZ = -13.;
+
+
         switch (hm.getId()) {
             case "N1":
                 z = Double.isNaN(z) ? this.z1 : z;
-                z = Math.min(z, 0.);
-                z = Math.max(z, -12.);
+                z = Math.min(z, minZ);
+                z = Math.max(z, maxZ);
                 if (z != this.z1) {
                     moveZ(1, z);
                     this.z1 = z;
@@ -508,8 +516,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
                 break;
             case "N2":
                 z = Double.isNaN(z) ? this.z2 : z;
-                z = Math.min(z, 0.);
-                z = Math.max(z, -12.);
+                z = Math.min(z, minZ);
+                z = Math.max(z, maxZ);
                 if (z != this.z2) {
                     moveZ(2, z);
                     this.z2 = z;
@@ -525,8 +533,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
                 break;
             case "N3":
                 z = Double.isNaN(z) ? this.z3 : z;
-                z = Math.min(z, 0.);
-                z = Math.max(z, -12.);
+                z = Math.min(z, minZ);
+                z = Math.max(z, maxZ);
                 if (z != this.z3) {
                     moveZ(3, z);
                     this.z3 = z;
@@ -542,8 +550,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
                 break;
             case "N4":
                 z = Double.isNaN(z) ? this.z4 : z;
-                z = Math.min(z, 0.);
-                z = Math.max(z, -12.);
+                z = Math.min(z, minZ);
+                z = Math.max(z, maxZ);
                 if (z != this.z4) {
                     moveZ(4, z);
                     this.z4 = z;
@@ -562,7 +570,121 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
 
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
-        // TODO STOPSHIP actuate
+        switch (actuator.getName()) {
+            case "N1-Air":
+            case "N2-Air":
+            case "N3-Air":
+            case "N4-Air": {
+                if (on) {
+                    actuate(actuator, -128.0);
+                } else {
+                    actuate(actuator, 0.0);
+                }
+                break;
+            }
+            case "Lights-Down": {
+                if (on) {
+                    actuate(actuator, 3.0);
+                } else {
+                    actuate(actuator, 0.0);
+                }
+              break;
+            }
+            case "Lights-Up": {
+                if (on) {
+                    actuate(actuator, 2.0);
+                } else {
+                    actuate(actuator, 0.0);
+                }
+                break;
+            }
+        }
+    }
+
+    private void stopRail() throws Exception {
+        byte[] b = new byte[8];
+        write(0x47);
+        expect(0x0b);
+        write(0xc7);
+        expect(0x03);
+
+        b[0] = (byte)0x00;
+        b[1] = (byte)0x02;
+        b[2] = (byte)0x00;
+        b[3] = (byte)0x00;
+        b[4] = (byte)0x00;
+        b[5] = (byte)0x00;
+        b[6] = (byte)0x00;
+        b[7] = (byte)0x00;
+
+        writeWithChecksum(b);
+        pollFor(0x07,  0x43);
+    }
+
+    private void forwardRail() throws Exception {
+        byte[] b = new byte[8];
+        write(0x49);
+        expect(0x04);
+        write(0xc9);
+        expect(0x0c);
+
+        b[0] = (byte)0x00;
+        b[1] = (byte)0x00;
+        b[2] = (byte)0x00;
+        b[3] = (byte)0x00;
+        b[4] = (byte)0xc9;
+        b[5] = (byte)0x03;
+        b[6] = (byte)0x0c;
+        b[7] = (byte)0x00;
+        writeWithChecksum(b);
+        pollFor(0x04,  0x40);
+
+    }
+
+    private void reverseRail()  throws Exception {
+        byte[] b = new byte[8];
+        write(0x49);
+        expect(0x04);
+        write(0xc9);
+        expect(0x0c);
+
+        b[0] = (byte)0x00;
+        b[1] = (byte)0x00;
+        b[2] = (byte)0x00;
+        b[3] = (byte)0x00;
+        b[4] = (byte)0x37;
+        b[5] = (byte)0xfc;
+        b[6] = (byte)0xf3;
+        b[7] = (byte)0xff;
+        writeWithChecksum(b);
+        pollFor(0x09,  0x4c);
+    }
+
+    private void setRailSpeed(byte speed)  throws Exception {
+        speed = (byte)Math.abs(speed);
+        if (speed < 20) {
+            speed = (byte)20;
+        }
+        else if (speed > 200) {
+            speed = (byte)200;
+        }
+
+        byte[] b = new byte[8];
+        write(0x46);
+        expect(0x0a);
+        write(0xc6);
+        expect(0x02);
+
+        b[0] = (byte)0x32;
+        b[1] = (byte)0x09;
+        b[2] = (byte)0x00;
+        b[3] = speed;
+        b[4] = (byte)0x00;
+        b[5] = (byte)0x00;
+        b[6] = (byte)0x00;
+        b[7] = (byte)0x00;
+        writeWithChecksum(b);
+        pollFor(0x06,  0x42);
     }
 
     @Override
@@ -655,6 +777,22 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
                 
                 pollFor(0x07,  0x43);
                 break;
+            }
+            case "Rails": {
+                if ((int)value == 0) {
+                  stopRail();
+                } else if (value > 0) {
+                    stopRail();
+                    setRailSpeed((byte)value);
+                    forwardRail();
+                }
+                else {
+                    stopRail();
+                    setRailSpeed((byte)value);
+                    reverseRail();
+                }
+                
+              break;
             }
         }
     }

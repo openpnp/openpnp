@@ -30,6 +30,7 @@ import javax.swing.Action;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.neoden4.Neoden4Camera;
 import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.machine.reference.camera.OnvifIPCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
@@ -39,6 +40,7 @@ import org.openpnp.machine.reference.camera.SwitcherCamera;
 import org.openpnp.machine.reference.camera.Webcams;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.feeder.AdvancedLoosePartFeeder;
+import org.openpnp.machine.reference.feeder.BlindsFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceDragFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceLeverFeeder;
@@ -219,6 +221,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(ReferenceSlotAutoFeeder.class);
         l.add(ReferenceLoosePartFeeder.class);
         l.add(AdvancedLoosePartFeeder.class);
+        l.add(BlindsFeeder.class);
         l.addAll(registeredFeederClasses);
         return l;
     }
@@ -228,6 +231,7 @@ public class ReferenceMachine extends AbstractMachine {
         List<Class<? extends Camera>> l = new ArrayList<>();
         l.add(OpenPnpCaptureCamera.class);
         l.add(OpenCvCamera.class);
+        l.add(Neoden4Camera.class);
         l.add(Webcams.class);
         l.add(OnvifIPCamera.class);
         l.add(ImageCamera.class);
@@ -249,6 +253,7 @@ public class ReferenceMachine extends AbstractMachine {
         List<Class<? extends Actuator>> l = new ArrayList<>();
         l.add(ReferenceActuator.class);
         l.add(HttpActuator.class);
+        l.add(ScriptActuator.class);
         return l;
     }
 

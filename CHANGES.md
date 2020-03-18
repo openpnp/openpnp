@@ -1,6 +1,13 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2020-01-22
+
+## Camera Jogging Update
+
+A new camera jogging system has been implemented which allows for rotation and better precision
+for XY. See https://www.youtube.com/watch?v=0TvqQBkTGP8 for details.
+
 # 2019-12-03
 	
 ## New feeder: ReferenceLeverFeeder
