@@ -30,6 +30,7 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.util.MovableUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Commit;
@@ -57,6 +58,9 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
     
     @Attribute(required=false)
     protected double postPickActuatorValue;
+    
+    @Attribute(required=false)
+    protected boolean moveBeforeFeed;
 
     @Override
     public Location getPickLocation() throws Exception {
@@ -75,6 +79,9 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
         }
         if (actuator == null) {
             throw new Exception("Feed failed. Unable to find an actuator named " + actuatorName);
+        }
+        if (isMoveBeforeFeed()) {
+            MovableUtils.moveToLocationAtSafeZ(nozzle, getPickLocation().derive(null, null, Double.NaN, null));
         }
         if (actuatorType == ActuatorType.Boolean) {
             actuator.actuate(actuatorValue != 0);
@@ -152,7 +159,15 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
         this.postPickActuatorValue = postPickActuatorValue;
     }
 
-    @Override
+    public boolean isMoveBeforeFeed() {
+		return moveBeforeFeed;
+	}
+
+	public void setMoveBeforeFeed(boolean moveBeforeFeed) {
+		this.moveBeforeFeed = moveBeforeFeed;
+	}
+
+	@Override
     public Wizard getConfigurationWizard() {
         return new ReferenceAutoFeederConfigurationWizard(this);
     }

@@ -100,77 +100,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     public void createMachineObjects() throws Exception {
         // Make sure required objects exist
         ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
-        
-//        ReferenceActuator a = (ReferenceActuator) machine.getActuatorByName("CameraUpLamp");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("CameraUpLamp");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("CameraDownLamp");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("CameraDownLamp");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("CameraSelectUp");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("CameraSelectUp");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("DragPin");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("DragPin");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("FilmPull");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("FilmPull");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("Pump");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("Pump");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("Nozzle1Vacuum");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("Nozzle1Vacuum");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("Nozzle2Vacuum");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("Nozzle2Vacuum");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("Nozzle1Down");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("Nozzle1Down");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("Nozzle2Down");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("Nozzle2Down");
-//            machine.addActuator(a);
-//        }
-        
+
         ReferenceNozzle n;
         n = (ReferenceNozzle) machine.getDefaultHead().getNozzle("N1");
         if (n == null) {
@@ -200,7 +130,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
             machine.getDefaultHead().addNozzle(n);
         }
         
-
         ReferenceActuator a;
         a = (ReferenceActuator) machine.getActuatorByName("N1-Air");
         if (a == null) {
