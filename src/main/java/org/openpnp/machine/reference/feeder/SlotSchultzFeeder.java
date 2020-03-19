@@ -63,9 +63,14 @@ public class SlotSchultzFeeder extends SchultzFeeder {
     }
 
     @Override
+    public boolean isParentIdChangable() {
+        return false;
+    }
+    
+    @Override
     public Location getPickLocation() throws Exception {
         if (getFeeder() == null) {
-            return location;
+            return getLocation();
         }
         
         // Start with the slot's location.

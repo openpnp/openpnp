@@ -95,8 +95,13 @@ public class SchultzFeeder extends ReferenceFeeder {
     protected String fiducialPart;
     
     @Override
+    public boolean isParentIdChangable() {
+        return false;
+    }
+    
+    @Override
     public Location getPickLocation() throws Exception {
-        return location;
+        return getLocation();
     }
 
     @Override
