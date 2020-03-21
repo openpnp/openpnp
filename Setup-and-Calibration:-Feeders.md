@@ -38,6 +38,10 @@ Here is a short description of the feeder types supported by OpenPnP:
 
   See [[ReferenceSlotAutoFeeder]]'s page for more information and help.
 
+* **SchultzFeeder and SlotSchultzFeeder**: A feeder slot system similar to ReferenceSlotAutoFeeder for commercial Siemens Siplace Schultz electric feeders.
+
+  See [[SchultzFeeder-and-SlotSchultzFeeder]]'s page for more information and help.
+
 ## Adding a Feeder
 Let's add a Strip Feeder to the machine so that we can test the feeder system.
 
