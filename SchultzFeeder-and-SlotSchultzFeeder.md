@@ -123,7 +123,9 @@ Add a Gcode sub-driver for each controller.  In the sub-driver, you define the G
 
 # Setup
 
-1. Add a SlotSchultzFeeder by using the New Feeder button in the Feeders panel. The feeder will have a default bank assigned. If you have only one bank there's no need to change it.
+![AddFeeder](https://user-images.githubusercontent.com/2394996/77239413-9d35bd80-6b97-11ea-9b1b-fa7b82e74a6a.png)
+
+1. Add a SlotSchultzFeeder by using the New Feeder button in the Feeders panel. The feeder will have a default bank assigned. If you want to change the name, click New and overwrite the automatically assigned name.
 2. Set the SlotSchultzFeeder's name by double clicking it in the table. Use whatever name you use to identify the slot on the machine.
 3. Physically mount the feeder you wish to use in this slot.
 4. Assign the Feeder Number from 0 to 40.
