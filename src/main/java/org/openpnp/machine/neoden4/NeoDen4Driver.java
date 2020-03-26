@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
+import org.openpnp.machine.neoden4.wizards.Neoden4DriverConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
@@ -88,10 +89,23 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     
     @Attribute(required = false)
     protected String name = "NeoDen4Driver";
+    
+    @Attribute(required = false)
+    protected double homeCoordinateX = -437.;
+    
+    @Attribute(required = false)
+    protected double homeCoordinateY = 437.; /* Maybe this needs to be 400. - needs more testing  */
+
+    @Attribute(required = false)
+    protected double scaleFactorX = 1.0501;   // slightly bigger, might be between +.0001 and +.0009
+    
+    @Attribute(required = false)
+    protected double scaleFactorY = 1.04947526;
 
     private boolean connected;
     private Set<Nozzle> pickedNozzles = new HashSet<>();
-    
+
+
     double x = 0, y = 0;
     double z1 = 0, z2 = 0, z3 = 0, z4 = 0;
     double c1 = 0, c2 = 0, c3 = 0, c4 = 0;
@@ -340,8 +354,10 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
             throw new Exception("home timeout while waiting for status==ready");
         }
 
-        this.x = -437.;
-        this.y = 437.;  /* Maybe this needs to be 400. - needs more testing  */
+        /* Initialize coordinates correctly after home is completed */
+        this.x = this.homeCoordinateX;
+        this.y = this.homeCoordinateY;
+
         ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
         machine.fireMachineHeadActivity(head);
     }
@@ -362,11 +378,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
     
     private void moveXy(double x, double y) throws Exception {
-        /* This should be moved to settings part of driver */
-        double scaleX, scaleY;
-
-        scaleX = 1.0501;   // slightly bigger, might be between +.0001 and +.0009
-        scaleY = 1.04947526;
         write(0x48);
         expect(0x05);
       
@@ -374,8 +385,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         expect(0x0d);
 
         byte[] b = new byte[8];
-        putInt32((int) (x*scaleX * 100), b, 0);
-        putInt32((int) (y*scaleY * 100), b, 4);
+        putInt32((int) (x*scaleFactorX * 100), b, 0);
+        putInt32((int) (y*scaleFactorY * 100), b, 4);
         writeWithChecksum(b);
       
         pollFor(0x08, 0x4d);
@@ -495,7 +506,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         double minZ = 0.;
         double maxZ = -13.;
 
-
         switch (hm.getId()) {
             case "N1":
                 z = Double.isNaN(z) ? this.z1 : z;
@@ -578,6 +588,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
                 if (on) {
                     actuate(actuator, -128.0);
                 } else {
+                    actuate(actuator, 20.0);
                     actuate(actuator, 0.0);
                 }
                 break;
@@ -593,6 +604,14 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
             case "Lights-Up": {
                 if (on) {
                     actuate(actuator, 2.0);
+                } else {
+                    actuate(actuator, 0.0);
+                }
+                break;
+            }
+            case "Rails": {
+                if (on) {
+                    actuate(actuator, 25.0);
                 } else {
                     actuate(actuator, 0.0);
                 }
@@ -637,8 +656,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         b[6] = (byte)0x0c;
         b[7] = (byte)0x00;
         writeWithChecksum(b);
-        pollFor(0x04,  0x40);
-
+        pollFor(0x09,  0x4c);
     }
 
     private void reverseRail()  throws Exception {
@@ -870,7 +888,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
-                new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Communications")
+            new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Communications"),
+            new PropertySheetWizardAdapter(new Neoden4DriverConfigurationWizard(this), "Machine")
         };
     }
     
@@ -905,5 +924,37 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
 
     public void setConnectWaitTimeMilliseconds(int connectWaitTimeMilliseconds) {
         this.connectWaitTimeMilliseconds = connectWaitTimeMilliseconds;
+    }
+
+    public double getHomeCoordinateX() {
+        return this.homeCoordinateX;
+    }
+
+    public void setHomeCoordinateX(double homeX) {
+        this.homeCoordinateX = homeX;
+    }
+
+    public double getHomeCoordinateY() {
+        return this.homeCoordinateY;
+    }
+
+    public void setHomeCoordinateY(double homeY) {
+        this.homeCoordinateY = homeY;
+    }
+
+    public double getScaleFactorX() {
+        return this.scaleFactorX;
+    }
+
+    public void setScaleFactorX(double scaleFactorX) {
+        this.scaleFactorX = scaleFactorX;
+    }
+
+    public double getScaleFactorY() {
+        return this.scaleFactorY;
+    }
+
+    public void setScaleFactorY(double scaleFactorY) {
+        this.scaleFactorY = scaleFactorY;
     }
 }
