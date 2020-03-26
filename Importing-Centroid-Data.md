@@ -19,18 +19,21 @@ Altium
 Others
 ------
 
-OpenPnP includes a Named CSV importer (File -> Import -> Named CSV) which can import many types of CSV files. Coordinate data must be in Millimeters. Format specifications need to be inside the first 10 lines from file,
-six valid field are required in order to successful import centeroid data.
+OpenPnP includes a Named CSV importer (File -> Import -> Named CSV) which can import many types of CSV files. Coordinate data must be in Millimeters. Field separator must be a comma. 
 
-The fields that the Named CSV importer will look for are: (case sensitive)
-* Refs: "Designator", "designator", "Part", "part", "Component", "component", "RefDes", "Ref"
-* Vals: "Value", "value", "Val", "val", "Comment", "comment"
-* Packs: "Footprint", "footprint", "Package", "package", "Pattern", "pattern"
-* Xs: "X", "x", "X (mm)", "x (mm)", "Ref X", "ref x", "PosX", "Ref-X(mm)", "Ref-X(mil)"
-* Ys: "Y", "y", "Y (mm)", "y (mm)", "Ref Y", "ref y", "PosY", "Ref-Y(mm)", "Ref-Y(mil)"
-* Rots: "Rotation", "rotation", "Rot", "rot", "Rotate"
-* TBs: "Layer", "layer", "Side", "side", "TB", "tb"
-* Heights: "Height", "height", "Height(mil)", "Height(mm)"
+Format specifications need to be inside the first 10 lines of file.
+
+The first six fields are required in order to successfully import centroid data.
+
+The fields that the Named CSV importer will look for are: (not case sensitive)
+* Refs: "Designator", "Part", "Component", "RefDes", "Ref"
+* Vals: "Value", "Val", "Comment", "Comp_Value"
+* Packs: "Footprint", "Package", "Pattern", "Comp_Package"
+* Xs: "X", "X (mm)", "Ref X", "PosX", "Ref-X(mm)", "Ref-X(mil)", "Sym_X"
+* Ys: "Y", "Y (mm)", "Ref Y", "PosY", "Ref-Y(mm)", "Ref-Y(mil)", "Sym_Y"
+* Rots: "Rotation", "Rot", "Rotate", "Sym_Rotate"
+* TBs: "Layer", "Side", "TB", "Sym_Mirror"
+* Heights: "Height", "Height(mil)", "Height(mm)"
 
 Example:
 
