@@ -578,6 +578,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
                 if (on) {
                     actuate(actuator, -128.0);
                 } else {
+                    actuate(actuator, 20.0);
                     actuate(actuator, 0.0);
                 }
                 break;
@@ -593,6 +594,14 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
             case "Lights-Up": {
                 if (on) {
                     actuate(actuator, 2.0);
+                } else {
+                    actuate(actuator, 0.0);
+                }
+                break;
+            }
+            case "Rails": {
+                if (on) {
+                    actuate(actuator, 25.0);
                 } else {
                     actuate(actuator, 0.0);
                 }
@@ -637,8 +646,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         b[6] = (byte)0x0c;
         b[7] = (byte)0x00;
         writeWithChecksum(b);
-        pollFor(0x04,  0x40);
-
+        pollFor(0x09,  0x4c);
     }
 
     private void reverseRail()  throws Exception {
