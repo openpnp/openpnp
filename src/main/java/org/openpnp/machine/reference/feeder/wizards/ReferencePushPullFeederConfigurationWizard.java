@@ -193,8 +193,8 @@ extends AbstractReferenceFeederConfigurationWizard {
     private JLabel lblNormalizePickLocation;
     private JCheckBox checkBoxNormalizePickLocation;
     private JButton btnSmartClone;
-    private JLabel lblPreferredAsTemplate;
-    private JCheckBox checkBoxPreferredAsTemplate;
+    private JLabel lblUsedAsTemplate;
+    private JCheckBox checkBoxUsedAsTemplate;
     private JButton btnSetupocrregion;
     private JLabel lblOcrFontName;
     private JComboBox comboBoxFontName;
@@ -414,36 +414,36 @@ extends AbstractReferenceFeederConfigurationWizard {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("left:default:grow"),
+                ColumnSpec.decode("max(100dlu;default):grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("left:max(50dlu;default):grow"),},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        RowSpec.decode("default:grow"),
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        RowSpec.decode("default:grow"),
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        RowSpec.decode("default:grow"),
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
+                ColumnSpec.decode("left:max(100dlu;default):grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         btnSmartClone = new JButton(smartCloneAction);
         panelPushPull.add(btnSmartClone, "2, 2, 19, 1, fill, default");
@@ -470,12 +470,12 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelPushPull.add(comboBoxPeelOffActuator, "8, 4");
         comboBoxPeelOffActuator.setModel(new ActuatorsComboBoxModel(head));
 
-        lblPreferredAsTemplate = new JLabel("Use this one as Template?");
-        lblPreferredAsTemplate.setToolTipText("<html>Prefer this feeder as a template for cloning settings to new feeders. <br/>\r\nMultiple templates can be defined and Smart Feeder Clone will select the<br/>\r\none with the greatest similarities (feed pitch, tape width, etc.). \r\n</html>");
-        panelPushPull.add(lblPreferredAsTemplate, "18, 4, right, default");
+        lblUsedAsTemplate = new JLabel("Use this one as Template?");
+        lblUsedAsTemplate.setToolTipText("<html>Prefer this feeder as a template for cloning settings to new feeders. <br/>\r\nMultiple templates can be defined and Smart Feeder Clone will select the<br/>\r\none with the greatest similarities (feed pitch, tape width, etc.). \r\n</html>");
+        panelPushPull.add(lblUsedAsTemplate, "18, 4, right, default");
 
-        checkBoxPreferredAsTemplate = new JCheckBox("");
-        panelPushPull.add(checkBoxPreferredAsTemplate, "20, 4");
+        checkBoxUsedAsTemplate = new JCheckBox("");
+        panelPushPull.add(checkBoxUsedAsTemplate, "20, 4");
 
         JLabel lblX = new JLabel("X");
         panelPushPull.add(lblX, "4, 8");
@@ -525,7 +525,8 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         locationButtonsPanelFeedStart = new LocationButtonsPanel(textFieldFeedStartX,
                 textFieldFeedStartY, textFieldFeedStartZ, null);
-        panelPushPull.add(locationButtonsPanelFeedStart, "18, 10, 3, 1");
+        locationButtonsPanelFeedStart.setShowPositionToolNoSafeZ(true);
+        panelPushPull.add(locationButtonsPanelFeedStart, "18, 10, 3, 1, fill, default");
 
         lblFeedSpeed0_1 = new JLabel("Speed ↕");
         panelPushPull.add(lblFeedSpeed0_1, "8, 12, right, default");
@@ -569,7 +570,8 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelPushPull.add(chckbxPull1, "16, 14, center, default");
 
         locationButtonsPanelFeedMid1 = new LocationButtonsPanel(textFieldFeedMid1X, textFieldFeedMid1Y, textFieldFeedMid1Z, (JTextField) null);
-        panelPushPull.add(locationButtonsPanelFeedMid1, "18, 14, 3, 1");
+        locationButtonsPanelFeedMid1.setShowPositionToolNoSafeZ(true);
+        panelPushPull.add(locationButtonsPanelFeedMid1, "18, 14, 3, 1, fill, default");
 
         lblFeedSpeed1_2 = new JLabel("Speed ↕");
         panelPushPull.add(lblFeedSpeed1_2, "8, 16, right, default");
@@ -613,7 +615,8 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelPushPull.add(chckbxPull2, "16, 18, center, default");
 
         locationButtonsPanelFeedMid2 = new LocationButtonsPanel(textFieldFeedMid2X, textFieldFeedMid2Y, textFieldFeedMid2Z, (JTextField) null);
-        panelPushPull.add(locationButtonsPanelFeedMid2, "18, 18, 3, 1");
+        locationButtonsPanelFeedMid2.setShowPositionToolNoSafeZ(true);
+        panelPushPull.add(locationButtonsPanelFeedMid2, "18, 18, 3, 1, fill, default");
 
         lblFeedSpeed2_3 = new JLabel("Speed ↕");
         panelPushPull.add(lblFeedSpeed2_3, "8, 20, right, default");
@@ -657,7 +660,8 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelPushPull.add(chckbxPull3, "16, 22, center, default");
 
         locationButtonsPanelFeedMid3 = new LocationButtonsPanel(textFieldFeedMid3X, textFieldFeedMid3Y, textFieldFeedMid3Z, (JTextField) null);
-        panelPushPull.add(locationButtonsPanelFeedMid3, "18, 22, 3, 1");
+        locationButtonsPanelFeedMid3.setShowPositionToolNoSafeZ(true);
+        panelPushPull.add(locationButtonsPanelFeedMid3, "18, 22, 3, 1, fill, default");
 
         lblFeedSpeed3_4 = new JLabel("Speed ↕");
         panelPushPull.add(lblFeedSpeed3_4, "8, 24, right, default");
@@ -697,7 +701,8 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         locationButtonsPanelFeedEnd = new LocationButtonsPanel(textFieldFeedEndX, textFieldFeedEndY,
                 textFieldFeedEndZ, null);
-        panelPushPull.add(locationButtonsPanelFeedEnd, "18, 26, 3, 1");
+        locationButtonsPanelFeedEnd.setShowPositionToolNoSafeZ(true);
+        panelPushPull.add(locationButtonsPanelFeedEnd, "18, 26, 3, 1, fill, default");
 
         //
         panelVision = new JPanel();
@@ -722,24 +727,24 @@ extends AbstractReferenceFeederConfigurationWizard {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
-                FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-                new RowSpec[] {
-                        FormSpecs.LINE_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
+            new RowSpec[] {
+                FormSpecs.LINE_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblCalibrationTrigger = new JLabel("Calibration Trigger");
         panelVisionEnabled.add(lblCalibrationTrigger, "2, 2, right, default");
@@ -758,11 +763,11 @@ extends AbstractReferenceFeederConfigurationWizard {
         textFieldPrecisionAverage.setColumns(10);
 
         lblCalibrationCount = new JLabel("Calibration Count");
-        panelVisionEnabled.add(lblCalibrationCount, "14, 2, right, default");
+        panelVisionEnabled.add(lblCalibrationCount, "12, 2, right, default");
 
         textFieldCalibrationCount = new JTextField();
         textFieldCalibrationCount.setEditable(false);
-        panelVisionEnabled.add(textFieldCalibrationCount, "16, 2");
+        panelVisionEnabled.add(textFieldCalibrationCount, "14, 2");
         textFieldCalibrationCount.setColumns(10);
 
         lblPrecisionWanted = new JLabel("Precision wanted");
@@ -784,7 +789,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         textFieldPrecisionConfidenceLimit.setColumns(10);
 
         btnResetStatistics = new JButton(resetStatisticsAction);
-        panelVisionEnabled.add(btnResetStatistics, "14, 4, 3, 1");
+        panelVisionEnabled.add(btnResetStatistics, "12, 4, 3, 1");
 
         lblOcrWrongPart = new JLabel("OCR Wrong Part Action");
         lblOcrWrongPart.setToolTipText("<html>Determines what action should be taken when OCR detects the wrong Part ID in the feeder.<br/> \r\n<ul>\r\n<li><strong>None</strong>: no OCR is performed.</li>\r\n<li><strong>Stop</strong>: the error is indicated, the current process stopped.</li>\r\n<li><strong>Change Part & Stop</strong>: the part in the feeder is exchanged, error and stop.</li>\r\n<li><strong>Change Part & Continue</strong>: the part in the feeder is exchanged silently.</li>\r\n</ul>\r\n</html>\r\n");
@@ -810,14 +815,13 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelVisionEnabled.add(comboBoxFontName, "10, 8");
         
                 btnSetupocrregion = new JButton(setupOcrRegionAction);
-                panelVisionEnabled.add(btnSetupocrregion, "14, 8, 3, 1");
-
-        lblDiscoverOnJobStart = new JLabel("Check on Job Start?");
-        lblDiscoverOnJobStart.setToolTipText("<html>On Job Start, check that the correct parts are selected in OCR-enabled feeders at their locations. <br/>\r\nOtherwise the Job is stopped.<br/>\r\nThis will also vision-calibrate the feeders' locations.</html>");
-        panelVisionEnabled.add(lblDiscoverOnJobStart, "2, 10, right, default");
-
-        checkBoxDiscoverOnJobStart = new JCheckBox("");
-        panelVisionEnabled.add(checkBoxDiscoverOnJobStart, "4, 10");
+                panelVisionEnabled.add(btnSetupocrregion, "12, 8, 3, 1");
+        
+        lblStopAfterWrong = new JLabel("Stop after wrong part?");
+        panelVisionEnabled.add(lblStopAfterWrong, "2, 10, right, default");
+        
+        checkBoxStopAfterWrongPart = new JCheckBox("");
+        panelVisionEnabled.add(checkBoxStopAfterWrongPart, "4, 10");
 
         lblFontSizept = new JLabel("OCR Font Size [pt]");
         lblFontSizept.setToolTipText("The OCR font size in typographic points (1 pt = 1/72 in).");
@@ -834,11 +838,18 @@ extends AbstractReferenceFeederConfigurationWizard {
         });
         
         btnOcrAllFeeders = new JButton(allFeederOcrAction);
-        panelVisionEnabled.add(btnOcrAllFeeders, "14, 10, 3, 1");
-        panelVisionEnabled.add(btnEditPipeline, "2, 14");
+        panelVisionEnabled.add(btnOcrAllFeeders, "12, 10, 3, 1");
+                
+                        lblDiscoverOnJobStart = new JLabel("Check on Job Start?");
+                        lblDiscoverOnJobStart.setToolTipText("<html>On Job Start, check that the correct parts are selected in OCR-enabled feeders at their locations. <br/>\r\nOtherwise the Job is stopped.<br/>\r\nThis will also vision-calibrate the feeders' locations.</html>");
+                        panelVisionEnabled.add(lblDiscoverOnJobStart, "2, 12, right, default");
+        
+                checkBoxDiscoverOnJobStart = new JCheckBox("");
+                panelVisionEnabled.add(checkBoxDiscoverOnJobStart, "4, 12");
+        panelVisionEnabled.add(btnEditPipeline, "2, 16");
 
         btnResetPipeline = new JButton(resetPipelineAction);
-        panelVisionEnabled.add(btnResetPipeline, "4, 14");
+        panelVisionEnabled.add(btnResetPipeline, "4, 16");
 
         contentPanel.add(panelFields);
         initDataBindings();
@@ -852,7 +863,6 @@ extends AbstractReferenceFeederConfigurationWizard {
         LongConverter longConverter = new LongConverter();
         DoubleConverter doubleConverter =
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
-        PercentConverter percentConverter = new PercentConverter();
 
         MutableLocationProxy firstPickLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "location", firstPickLocation, "location");
@@ -887,19 +897,19 @@ extends AbstractReferenceFeederConfigurationWizard {
         addWrappedBinding(feeder, "feedMultiplier", textFieldFeedMultiplier, "text", longConverter);
         addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", longConverter);
 
-        addWrappedBinding(feeder, "preferredAsTemplate", checkBoxPreferredAsTemplate, "selected");
+        addWrappedBinding(feeder, "usedAsTemplate", checkBoxUsedAsTemplate, "selected");
 
         addWrappedBinding(feeder, "actuatorName", comboBoxFeedActuator, "selectedItem");
         addWrappedBinding(feeder, "peelOffActuatorName", comboBoxPeelOffActuator, "selectedItem");
 
-        addWrappedBinding(feeder, "feedSpeedPush1", textFieldFeedPush1, "text", percentConverter);
-        addWrappedBinding(feeder, "feedSpeedPush2", textFieldFeedPush2, "text", percentConverter);
-        addWrappedBinding(feeder, "feedSpeedPush3", textFieldFeedPush3, "text", percentConverter);
-        addWrappedBinding(feeder, "feedSpeedPushEnd", textFieldFeedPush4, "text", percentConverter);
-        addWrappedBinding(feeder, "feedSpeedPull3", textFieldFeedPull3, "text", percentConverter);
-        addWrappedBinding(feeder, "feedSpeedPull2", textFieldFeedPull2, "text", percentConverter);
-        addWrappedBinding(feeder, "feedSpeedPull1", textFieldFeedPull1, "text", percentConverter);
-        addWrappedBinding(feeder, "feedSpeedPull0", textFieldFeedPull0, "text", percentConverter);
+        addWrappedBinding(feeder, "feedSpeedPush1", textFieldFeedPush1, "text", doubleConverter);
+        addWrappedBinding(feeder, "feedSpeedPush2", textFieldFeedPush2, "text", doubleConverter);
+        addWrappedBinding(feeder, "feedSpeedPush3", textFieldFeedPush3, "text", doubleConverter);
+        addWrappedBinding(feeder, "feedSpeedPushEnd", textFieldFeedPush4, "text", doubleConverter);
+        addWrappedBinding(feeder, "feedSpeedPull3", textFieldFeedPull3, "text", doubleConverter);
+        addWrappedBinding(feeder, "feedSpeedPull2", textFieldFeedPull2, "text", doubleConverter);
+        addWrappedBinding(feeder, "feedSpeedPull1", textFieldFeedPull1, "text", doubleConverter);
+        addWrappedBinding(feeder, "feedSpeedPull0", textFieldFeedPull0, "text", doubleConverter);
 
         addWrappedBinding(feeder, "includedPush1", chckbxPush1, "selected");
         addWrappedBinding(feeder, "includedPush2", chckbxPush2, "selected");
@@ -967,6 +977,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         bind(UpdateStrategy.READ, feeder,   "precisionConfidenceLimit", textFieldPrecisionConfidenceLimit, "text", lengthConverter);
 
         addWrappedBinding(feeder, "ocrWrongPartAction", comboBoxWrongPartAction, "selectedItem");
+        addWrappedBinding(feeder, "ocrStopAfterWrongPart", checkBoxStopAfterWrongPart, "selected");
         addWrappedBinding(feeder, "ocrDiscoverOnJobStart", checkBoxDiscoverOnJobStart, "selected");
         addWrappedBinding(feeder, "ocrFontName", comboBoxFontName, "selectedItem");
         addWrappedBinding(feeder, "ocrFontSizePt", textFieldFontSizePt, "text", doubleConverter);
@@ -1131,7 +1142,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         }
     };
     private Action autoSetupAction =
-            new AbstractAction("Pick Location Auto-Setup", Icons.captureCamera) {
+            new AbstractAction("Auto-Setup with Camera at Pick Location", Icons.captureCamera) {
         {
             putValue(Action.SHORT_DESCRIPTION,
                     "<html>Center the camera on the pick location and press this button to Auto-Setup <br/>"
@@ -1140,9 +1151,27 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            applyAction.actionPerformed(e);
-            UiUtils.submitUiMachineTask(() -> {
-                feeder.autoSetup();
+            UiUtils.messageBoxOnException(() -> {
+                if (checkBoxUsedAsTemplate.isSelected()) {
+                    throw new Exception("This feeder is used as a template and cannot be overwritten.");
+                }
+                int result;
+                if (feeder.getLocation().equals(ReferencePushPullFeeder.nullLocation)) {
+                    // if the feeder.location is completely null, we assume this is a freshly created feeder 
+                    result = JOptionPane.YES_OPTION; 
+                }
+                else {
+                    // ask the user
+                    result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "This may overwrite all your current settings. Are you sure?",
+                        null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                }
+                if (result == JOptionPane.YES_OPTION) {
+                    applyAction.actionPerformed(e);
+                    UiUtils.submitUiMachineTask(() -> {
+                        feeder.autoSetup();
+                    });
+                }
             });
         }
     };
@@ -1157,8 +1186,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         public void actionPerformed(ActionEvent e) {
             applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
-                feeder.performOcrOnFeederList(feeder.getAllPushPullFeeders(), 
-                        true, OcrWrongPartAction.ChangePartAndContinue);
+                feeder.performOcrOnAllFeeders(null, false);
             });
         }
     };
@@ -1194,7 +1222,8 @@ extends AbstractReferenceFeederConfigurationWizard {
                     "<html>Clone the settings from a similar feeder and transform them<br/>"
                             +"to this feeder's location and orientation.<br/><br/>"
                             +"Feeders are favored by similarity, ranking as follows:<br/><ol>"
-                            +"<li><strong>Is preferred as template</strong></li>"
+                            +"<li><strong>Is as template</strong></li>"
+                            +"<li>Same tape specification or package</li>"
                             +"<li>Same feed pitch</li>"
                             +"<li>Same tape width (by deduction)</li>"
                             +"<li>Same part pitch</li>"
@@ -1207,20 +1236,22 @@ extends AbstractReferenceFeederConfigurationWizard {
         @Override
         public void actionPerformed(ActionEvent e) {
             UiUtils.messageBoxOnException(() -> {
-                if (checkBoxPreferredAsTemplate.isSelected()) {
-                    throw new Exception("This feeder is marked as a template and cannot be overwritten.");
+                if (checkBoxUsedAsTemplate.isSelected()) {
+                    throw new Exception("This feeder is used as a template and cannot be overwritten.");
                 }
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                         "This will overwrite all your current Push-Pull and Vision Settings. Are you sure?",
                         null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
                     applyAction.actionPerformed(e);
-                    feeder.smartClone();
+                    feeder.smartClone(null, false, true, true);
                 }
             });
         }
     };
     private JButton btnOcrAllFeeders;
+    private JLabel lblStopAfterWrong;
+    private JCheckBox checkBoxStopAfterWrongPart;
     
     private void editPipeline() throws Exception {
         Camera camera = feeder.getCamera();

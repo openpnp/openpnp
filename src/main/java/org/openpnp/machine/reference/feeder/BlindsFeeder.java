@@ -1131,14 +1131,16 @@ public class BlindsFeeder extends ReferenceFeeder {
     public static class NozzleAndTipForPushing {
         private Nozzle nozzle;
         private NozzleTip nozzleTipLoadedBefore;
+        private boolean changed;
 
-        public NozzleAndTipForPushing(Nozzle nozzle, NozzleTip nozzleTipLoadedBefore) {
+        public NozzleAndTipForPushing(Nozzle nozzle, NozzleTip nozzleTipLoadedBefore, boolean changed) {
             super();
             this.nozzle = nozzle;
             this.nozzleTipLoadedBefore = nozzleTipLoadedBefore;
+            this.changed = changed;
         }
         void restoreNozzleTipLoadedBefore() throws Exception {
-            if (this.nozzle != null & this.nozzleTipLoadedBefore != null) {
+            if (this.nozzle != null & this.nozzleTipLoadedBefore != null && this.changed) {
                 if (this.nozzleTipLoadedBefore != this.nozzle.getNozzleTip()) {
                     this.nozzle.loadNozzleTip(this.nozzleTipLoadedBefore);
                 }
@@ -1156,6 +1158,9 @@ public class BlindsFeeder extends ReferenceFeeder {
         public NozzleTip getNozzleTipLoadedBefore() {
             return nozzleTipLoadedBefore;
         }
+        public boolean isChanged() {
+            return changed;
+        }
     }
     public static NozzleAndTipForPushing getNozzleAndTipForPushing(boolean loadNozzleTipIfNeeded) throws Exception {
         // first search for any NozzleTip already loaded that may be used for pushing 
@@ -1165,7 +1170,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 NozzleTip nozzleTip = nozzle.getNozzleTip();
                 if (nozzleTip.isPushAndDragAllowed()) {
                     // Return the nozzle and nozzle tip.
-                    return new NozzleAndTipForPushing(nozzle, nozzleTip);
+                    return new NozzleAndTipForPushing(nozzle, nozzleTip, false);
                 }
             }
         }
@@ -1180,7 +1185,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                             // Alas, found one for pushing, load it
                             nozzle.loadNozzleTip(pushNozzleTip);
                             // And return the nozzle and nozzle tip.
-                            return new NozzleAndTipForPushing(nozzle, nozzleTip);
+                            return new NozzleAndTipForPushing(nozzle, nozzleTip, true);
                         }
                     }
                 }
@@ -1189,27 +1194,46 @@ public class BlindsFeeder extends ReferenceFeeder {
             throw new Exception("BlindsFeeder: No Nozzle/NozzleTip found that allows pushing.");
         }
         // None compatible.
-        return new NozzleAndTipForPushing(null, null);
+        return new NozzleAndTipForPushing(null, null, false);
     }
 
     @Override
-    public void prepareForJob(List<Feeder> feedersToPrepare) throws Exception {
-        super.prepareForJob(feedersToPrepare);
+    public Location getJobPreparationLocation() {
         if (getCoverActuation() == CoverActuation.OpenOnJobStart
                 && ! isCoverOpen()) {
-            // Note, we will not only open our own cover, but all the BlindFeeders' covers in bulk
-            // to allow for the TravellingSalesman optimization.
-            // prepareForJob() will be called for subsequent BlindsFeeders, but because the covers 
-            // are already registered as open, there will be no further action. 
-            List<BlindsFeeder> feederList = getFeedersWithCoverToActuate(feedersToPrepare, 
-                    new CoverActuation[] { CoverActuation.OpenOnJobStart }, 
-                    true); 
-            // Now bulk-open the covers. 
-            // If needed, load a NozzleTip that allows pushing and then restore the previous NozzleTip.
-            // The restore may result in one unnecessary change but the alternative is unexpected behaviour
-            // as the planner will take the currently loaded nozzle tips into consideration and therefore 
-            // favor the pushing nozzle tip, which might be completely unwanted.
-            actuateListedFeederCovers(feederList, true, false);
+            return getUncalibratedPickLocation(0);
+        }
+        else {
+            return null;
+        }
+    }
+
+    // transient store for the job preparation nozzle tip change
+    private NozzleAndTipForPushing nozzleAndTipForPushing = null;
+
+    @Override
+    public void prepareForJob(boolean visit) throws Exception {
+        super.prepareForJob(visit);
+        if (visit && getCoverActuation() == CoverActuation.OpenOnJobStart
+                && ! isCoverOpen()) {
+            // Get the push nozzle for the current position. This will also throw if none is allowed.
+            // Note, we save this for pass two of the feeder prep to restore.
+            nozzleAndTipForPushing = BlindsFeeder.getNozzleAndTipForPushing(true);
+
+            // Actuate the cover.
+            actuateCover(true);
+            
+            if (!nozzleAndTipForPushing.isChanged()) {
+                // no need to rememeber
+                nozzleAndTipForPushing = null;
+            }
+        }
+        else if (! visit) {
+            // in the non-visit preparation step, let's restore the nozzle tip if changed before
+            if (nozzleAndTipForPushing != null) {
+                nozzleAndTipForPushing.restoreNozzleTipLoadedBefore();
+                nozzleAndTipForPushing = null;
+            }
         }
     }
 

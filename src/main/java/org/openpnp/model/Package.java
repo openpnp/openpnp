@@ -41,6 +41,9 @@ public class Package extends AbstractModelObject implements Identifiable {
     @Attribute(required = false)
     private String description;
 
+    @Attribute(required = false)
+    private String tapeSpecification;
+
     @Element(required = false)
     private Footprint footprint;
     
@@ -83,6 +86,16 @@ public class Package extends AbstractModelObject implements Identifiable {
         Object oldValue = this.description;
         this.description = description;
         firePropertyChange("description", oldValue, description);
+    }
+
+    public String getTapeSpecification() {
+        return tapeSpecification;
+    }
+
+    public void setTapeSpecification(String tapeSpecification) {
+        Object oldValue = this.tapeSpecification;
+        this.tapeSpecification = tapeSpecification;
+        firePropertyChange("tapeSpecification", oldValue, tapeSpecification);
     }
 
     public Footprint getFootprint() {

@@ -145,7 +145,7 @@ public class ResultsPanel extends JPanel {
                             color.getRed(),
                             color.getGreen(),
                             color.getBlue(),
-                            (int) (179.999 * hsb[0]),
+                            (int) (255.999 * hsb[0]),
                             (int) (255.999 * hsb[1]),
                             (int) (255.999 * hsb[2]),
                             p.x, 

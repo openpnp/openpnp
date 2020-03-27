@@ -28,11 +28,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.Action;
-
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.Core;
 import org.opencv.core.KeyPoint;
@@ -96,7 +97,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     protected Location hole2Location = new Location(LengthUnit.Millimeters);
 
     @Attribute(required = false)
-    protected boolean preferredAsTemplate = false; 
+    protected boolean usedAsTemplate = false; 
 
     @Element
     protected Location feedStartLocation = new Location(LengthUnit.Millimeters);
@@ -181,15 +182,17 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     public enum OcrWrongPartAction {
         None,
-        Stop,
-        ChangePartAndStop,
-        ChangePartAndContinue
+        SwapFeeders,
+        SwapOrCreate,
+        ChangePart
     }
 
     @Attribute(required = false)
-    protected OcrWrongPartAction ocrWrongPartAction = OcrWrongPartAction.Stop;
+    protected OcrWrongPartAction ocrWrongPartAction = OcrWrongPartAction.None;
     @Attribute(required = false)
     protected boolean ocrDiscoverOnJobStart = false;
+    @Attribute(required = false)
+    protected boolean ocrStopAfterWrongPart = true;
 
     @Element(required = false)
     private Length precisionWanted = new Length(0.1, LengthUnit.Millimeters);
@@ -204,19 +207,24 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     // These are not on the GUI but can be tweaked in the machine.xml /////////////////
 
+    // initial calibration tolerance, i.e. how much the feeder can be shifted physically 
     @Attribute(required = false)
     private double calibrationToleranceMm = 1.95;
+    // vision and comparison sprocket hole tolerance (in size, position)
     @Attribute(required = false)
     private double sprocketHoleToleranceMm = 0.3;
+    // for rows of feeders, the tolerance in X, Y
     @Attribute(required = false)
     private double rowLocationToleranceMm = 4.0; 
+    // for rows of feeders, the tolerance in Z
     @Attribute(required = false)
     private double rowZLocationToleranceMm = 1.0; 
 
     @Attribute(required = false)
     private int calibrateMaxPasses = 3; 
+    // how close the camera has to be to prevent one more pass
     @Attribute(required = false)
-    private double calibrateToleranceMm = 0.3; // how close the camera has to be to the end result
+    private double calibrateToleranceMm = 0.3; 
     @Attribute(required = false)
     private int calibrateMinStatistic = 2; 
 
@@ -226,7 +234,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
      */
     protected Location visionOffset;
 
-    static final Location nullLocation = new Location(LengthUnit.Millimeters);
+    public static final Location nullLocation = new Location(LengthUnit.Millimeters);
 
     private void checkHomedState(Machine machine) {
         if (!machine.isHomed()) {
@@ -431,11 +439,13 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Camera camera = getCamera();
         try (CvPipeline pipeline = getCvPipeline(camera, true, false)) {
             OcrWrongPartAction ocrAction = OcrWrongPartAction.None;
+            boolean ocrStop = false;
             if (visionOffset == null) {
                 // this is the very first calibration -> also detect OCR
                 ocrAction = getOcrWrongPartAction();
+                ocrStop = isOcrStopAfterWrongPart();
             }
-            calibrateSprocketHoles(camera, pipeline, false, false, true, ocrAction);
+            calibrateSprocketHoles(camera, pipeline, false, false, true, ocrAction, ocrStop);
         }
     }
 
@@ -458,7 +468,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     }
 
     public void setRotationInFeeder(Double rotationInFeeder) {
+        Object oldValue = this.rotationInFeeder;
         this.rotationInFeeder = rotationInFeeder;
+        firePropertyChange("rotationInFeeder", oldValue, rotationInFeeder);
     }
 
     public boolean isNormalizePickLocation() {
@@ -466,7 +478,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     }
 
     public void setNormalizePickLocation(boolean normalizePickLocation) {
+        Object oldValue = this.normalizePickLocation;
         this.normalizePickLocation = normalizePickLocation;
+        firePropertyChange("normalizePickLocation", oldValue, normalizePickLocation);
     }
 
     public Location getHole1Location() {
@@ -491,12 +505,14 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         resetCalibration();
     }
 
-    public boolean isPreferredAsTemplate() {
-        return preferredAsTemplate;
+    public boolean isUsedAsTemplate() {
+        return usedAsTemplate;
     }
 
-    public void setPreferredAsTemplate(boolean preferredAsTemplate) {
-        this.preferredAsTemplate = preferredAsTemplate;
+    public void setUsedAsTemplate(boolean usedAsTemplate) {
+        Object oldValue = this.usedAsTemplate;
+        this.usedAsTemplate = usedAsTemplate;
+        firePropertyChange("usedAsTemplate", oldValue, usedAsTemplate);
     }
 
     public Location getFeedStartLocation() {
@@ -563,7 +579,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         return feedPitch;
     }
 
-
     public void setFeedPitch(Length feedPitch) {
         Object oldValue = this.feedPitch;
         this.feedPitch = feedPitch;
@@ -584,18 +599,15 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         return feedSpeedPush2;
     }
 
-
     public void setFeedSpeedPush2(double feedSpeedPush2) {
         Object oldValue = this.feedSpeedPush2;
         this.feedSpeedPush2 = feedSpeedPush2;
         firePropertyChange("feedSpeedPush2", oldValue, feedSpeedPush2);
     }
 
-
     public double getFeedSpeedPush3() {
         return feedSpeedPush3;
     }
-
 
     public void setFeedSpeedPush3(double feedSpeedPush3) {
         Object oldValue = this.feedSpeedPush3;
@@ -603,11 +615,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         firePropertyChange("feedSpeedPush3", oldValue, feedSpeedPush3);
     }
 
-
     public double getFeedSpeedPushEnd() {
         return feedSpeedPushEnd;
     }
-
 
     public void setFeedSpeedPushEnd(double feedSpeedPushEnd) {
         Object oldValue = this.feedSpeedPushEnd;
@@ -615,11 +625,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         firePropertyChange("feedSpeedPushEnd", oldValue, feedSpeedPushEnd);
     }
 
-
     public double getFeedSpeedPull3() {
         return feedSpeedPull3;
     }
-
 
     public void setFeedSpeedPull3(double feedSpeedPull3) {
         Object oldValue = this.feedSpeedPull3;
@@ -627,11 +635,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         firePropertyChange("feedSpeedPull3", oldValue, feedSpeedPull3);
     }
 
-
     public double getFeedSpeedPull2() {
         return feedSpeedPull2;
     }
-
 
     public void setFeedSpeedPull2(double feedSpeedPull2) {
         Object oldValue = this.feedSpeedPull2;
@@ -639,11 +645,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         firePropertyChange("feedSpeedPull2", oldValue, feedSpeedPull2);
     }
 
-
     public double getFeedSpeedPull1() {
         return feedSpeedPull1;
     }
-
 
     public void setFeedSpeedPull1(double feedSpeedPull1) {
         Object oldValue = this.feedSpeedPull1;
@@ -651,18 +655,15 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         firePropertyChange("feedSpeedPull1", oldValue, feedSpeedPull1);
     }
 
-
     public double getFeedSpeedPull0() {
         return feedSpeedPull0;
     }
-
 
     public void setFeedSpeedPull0(double feedSpeedPull0) {
         Object oldValue = this.feedSpeedPull0;
         this.feedSpeedPull0 = feedSpeedPull0;
         firePropertyChange("feedSpeedPull0", oldValue, feedSpeedPull0);
     }
-
 
     public boolean isIncludedPush1() {
         return includedPush1;
@@ -894,6 +895,16 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         firePropertyChange("ocrDiscoverOnJobStart", oldValue, ocrDiscoverOnJobStart);
     }
 
+    public boolean isOcrStopAfterWrongPart() {
+        return ocrStopAfterWrongPart;
+    }
+
+    public void setOcrStopAfterWrongPart(boolean ocrStopAfterWrongPart) {
+        Object oldValue = this.ocrStopAfterWrongPart;
+        this.ocrStopAfterWrongPart = ocrStopAfterWrongPart;
+        firePropertyChange("ocrStopAfterWrongPart", oldValue, ocrStopAfterWrongPart);
+    }
+
     public Length getPrecisionWanted() {
         return precisionWanted;
     }
@@ -1064,7 +1075,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         pipeline.setProperty("regionOfInterest", getOcrRegion());
         pipeline.setProperty("fontName", getOcrFontName());
         pipeline.setProperty("fontSizePt", getOcrFontSizePt());
-        pipeline.setProperty("alphabet", getConsolidatedOcrAlphabet());
+        pipeline.setProperty("alphabet", getConsolidatedOcrAlphabet(null));
     }
 
     protected void setupOcr(Camera camera, CvPipeline pipeline) {
@@ -1116,16 +1127,18 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         CalibrateHoles
     }
 
-    protected String getConsolidatedOcrAlphabet() {
-        // from all the parts in the system, create the alphabet for OCR operation
-        Map<Character, Boolean> characterMap = new HashMap<>(); 
+    protected String getConsolidatedOcrAlphabet(Part compatiblePart) {
+        // from all the compatible parts in the system, create the alphabet for OCR operation
+        Set<Character> characterSet = new HashSet<>(); 
         for (Part part : Configuration.get().getParts()) {
-            for (char ch : part.getId().toCharArray()) {
-                characterMap.put(ch, true);
+            if (compatiblePart == null || compatiblePartPackages(part, compatiblePart)) {
+                for (char ch : part.getId().toCharArray()) {
+                    characterSet.add(ch);
+                }
             }
         }
         StringBuilder alphabet = new StringBuilder();
-        for (char ch : characterMap.keySet()) {
+        for (char ch : characterSet) {
             if (ch != ' ') {
                 alphabet.append(ch);
             }
@@ -1552,21 +1565,31 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     public void autoSetup() throws Exception {
         Camera camera = getCamera();
+        // First preliminary smart clone to get a pipeline. from a template.
+        if (getTemplateFeeder(null) != null) {
+            smartClone(null, false, false, true);
+        }
+
         try (CvPipeline pipeline = getCvPipeline(camera, true, true)) {
             // Process vision and get some features 
             pipeline.process();
             FindFeatures feature = new FindFeatures(camera, pipeline, 2000, FindFeaturesMode.FromPickLocationGetHoles)
                     .invoke();
-            // Start with the camera position - but keep any Z value already set
+            // Store the initial vision based results
             setLocation(feature.calibratedPickLocation);
-            // as we changed this -> reset any stats
-            resetCalibrationStatistics();
-            // Store the initial vision based sprocket hole finds
             setHole1Location(feature.calibratedHole1Location);
             setHole2Location(feature.calibratedHole2Location);
-            // now run a hole calibration
-            calibrateSprocketHoles(camera, pipeline, true, true, false, OcrWrongPartAction.ChangePartAndContinue);
-            // move the camera over the pick location
+            // Second preliminary smart clone to get pipeline, OCR region etc. from template, 
+            // this time with proper transformation. This will again be overwritten if
+            // OCR recognizes the proper part.
+            if (getTemplateFeeder(null) != null) {
+                smartClone(null, true, true, true);
+            }
+            // as we changed this -> reset any stats
+            resetCalibrationStatistics();
+            // now run a sprocket hole calibration
+            calibrateSprocketHoles(camera, pipeline, true, true, false, OcrWrongPartAction.ChangePart, false);
+            // move the camera back to the pick location
             MovableUtils.moveToLocationAtSafeZ(camera, getLocation());
         }
     }
@@ -1588,6 +1611,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     }
 
     public Length getTapeWidth() {
+        // infer the tape width 
         Location hole1Location = transformMachineToFeederLocation(getHole1Location(), null)
                 .convertToUnits(LengthUnit.Millimeters);
         final double partToSprocketHoleHalfTapeWidthDiffMm = 0.5; // deducted from EIA-481
@@ -1595,8 +1619,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         return new Length(tapeWidth, LengthUnit.Millimeters);
     }
 
-    protected boolean isSameTapeWidth(ReferencePushPullFeeder feederTemplate) {
-        return getTapeWidth().equals(feederTemplate.getTapeWidth());
+    protected org.openpnp.model.Package getPartPackage() {
+        if (getPart() != null) {
+            return getPart().getPackage();
+        }
+        return null;
     }
 
     protected boolean isOnSameRowLocation(ReferencePushPullFeeder feederTemplate) {
@@ -1614,21 +1641,80 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         return false;
     }
 
-    protected ReferencePushPullFeeder getTemplateFeeder() {
+    /*    protected boolean matchesTapeSettings(ReferencePushPullFeeder other) {
+        // the tape/feed geometry must match
+        if (!getFeedPitch().equals(other.getFeedPitch())) {
+            return false;
+        }
+        if (!getTapeWidth().equals(other.getTapeWidth())) {
+            return false;
+        }
+        if (!getPartPitch().equals(other.getPartPitch())) {
+            return false;
+        }
+        if (getFeedMultiplier() != other.getFeedMultiplier()) {
+            return false;
+        }
+        double hole1RelativeDistanceMm = transformMachineToFeederLocation(getHole1Location(), null).convertToUnits(LengthUnit.Millimeters)
+                .getLinearDistanceTo(other.transformMachineToFeederLocation(other.getHole1Location(), null));
+        if (hole1RelativeDistanceMm > sprocketHoleToleranceMm) {
+            return false;
+        }
+        return true;
+    }
+     */
+
+    static boolean compatiblePartPackages(Part part1, Part part2) {
+        if (part1 == null) {
+            return false;
+        }
+        if (part2 == null) {
+            return false;
+        }
+
+        org.openpnp.model.Package package1 = part1.getPackage();
+        org.openpnp.model.Package package2 = part2.getPackage();
+        if (package1 == package2) {
+            return true;
+        }
+        if ((package1.getTapeSpecification() != null && !package1.getTapeSpecification().isEmpty())
+                && package1.getTapeSpecification().equals(package2.getTapeSpecification())) {
+            return true;
+        }
+        return false;
+    }
+
+    protected ReferencePushPullFeeder getTemplateFeeder(Part compatiblePart) {
         List<ReferencePushPullFeeder> list = getAllPushPullFeeders();
 
+        Part comparePart = compatiblePart == null ? getPart() : compatiblePart;
         // Rank the feeders by similarity.
         Collections.sort(list, new Comparator<ReferencePushPullFeeder>() {
             @Override
             public int compare(ReferencePushPullFeeder feeder1, ReferencePushPullFeeder feeder2)  {
                 int diff; 
+                // compatible parts/packages favored
+                diff = (compatiblePartPackages(comparePart, feeder1.getPart())?0:1) - (compatiblePartPackages(comparePart, feeder2.getPart())?0:1);
+                if (diff != 0) {
+                    return diff;
+                }
+                // template is favored
+                diff = (feeder1.isUsedAsTemplate()?0:1) - (feeder2.isUsedAsTemplate()?0:1);
+                if (diff != 0) {
+                    return diff;
+                }
                 // same feed pitch is favored
-                diff = (getFeedPitch().equals(feeder1.getFeedPitch())?0:1) - (getFeedPitch().equals(getFeedPitch())?0:1);
+                diff = (getFeedPitch().equals(feeder1.getFeedPitch())?0:1) - (getFeedPitch().equals(feeder2.getFeedPitch())?0:1);
                 if (diff != 0) {
                     return diff;
                 }
                 // same tape width is favored
                 diff = (getTapeWidth().equals(feeder1.getTapeWidth())?0:1) - (getTapeWidth().equals(feeder2.getTapeWidth())?0:1);
+                if (diff != 0) {
+                    return diff;
+                }
+                // same part pitch is favored
+                diff = (getPartPitch().equals(feeder1.getPartPitch())?0:1) - (getPartPitch().equals(getPartPitch())?0:1);
                 if (diff != 0) {
                     return diff;
                 }
@@ -1642,11 +1728,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 if (diff != 0) {
                     return diff;
                 }
-                // doesn't matter much but if it is available, the same part pitch is favored
-                diff = (getPartPitch().equals(feeder1.getPartPitch())?0:1) - (getPartPitch().equals(getPartPitch())?0:1);
-                if (diff != 0) {
-                    return diff;
-                }
 
                 // between equally good feeders, take the closer one
                 return new Double(feeder1.getLocation().convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(getLocation()))
@@ -1654,10 +1735,12 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             }
         });
 
-        for (ReferencePushPullFeeder feederTemplate : list) {
-            if (feederTemplate != this) { 
-                // the first ranking does it  
-                return feederTemplate;
+        for (ReferencePushPullFeeder templateFeeder : list) {
+            if (templateFeeder != this) { 
+                if (compatiblePart == null || compatiblePartPackages(compatiblePart, templateFeeder.getPart())) {
+                    // the first ranking does it  
+                    return templateFeeder;
+                }
             }
         }
         return null;
@@ -1673,70 +1756,131 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
     }
 
-    public void smartClone() throws Exception {
-        // get us a juicy template feeder
-        ReferencePushPullFeeder feederTemplate = getTemplateFeeder();
-        if (feederTemplate == null) {
-            throw new Exception("No suitable template feeder found to clone."); 
+    public void smartClone(Part compatiblePart, 
+            boolean cloneTapeSettings, boolean clonePushPullSettings, boolean cloneVisionSettings) throws Exception {
+        // get us the best template feeder
+        ReferencePushPullFeeder templateFeeder = getTemplateFeeder(compatiblePart);
+        if (templateFeeder == null) {
+            if (compatiblePart == null) {
+                throw new Exception("Feeder "+getName()+": No suitable template feeder found to clone."); 
+            }
+            else {
+                throw new Exception("Feeder "+getName()+": No template feeder found to clone for part "+compatiblePart.getId()+" compatibility.");
+            }
         }
-        // clone the actuators
-        setActuatorName(feederTemplate.getActuatorName());
-        setPeelOffActuatorName(feederTemplate.getPeelOffActuatorName());
-        // translate all the locations
-        setFeedStartLocation(cloneIfDefined(feederTemplate, feederTemplate.getFeedStartLocation()));
-        setFeedMid1Location(cloneIfDefined(feederTemplate, feederTemplate.getFeedMid1Location())); 
-        setFeedMid2Location(cloneIfDefined(feederTemplate, feederTemplate.getFeedMid2Location())); 
-        setFeedMid3Location(cloneIfDefined(feederTemplate, feederTemplate.getFeedMid3Location())); 
-        setFeedEndLocation(cloneIfDefined(feederTemplate, feederTemplate.getFeedEndLocation())); 
-        // clone all the speeds
-        setFeedSpeedPush1(feederTemplate.getFeedSpeedPush1());
-        setFeedSpeedPush2(feederTemplate.getFeedSpeedPush2());
-        setFeedSpeedPush3(feederTemplate.getFeedSpeedPush3());
-        setFeedSpeedPushEnd(feederTemplate.getFeedSpeedPushEnd());
-        setFeedSpeedPull3(feederTemplate.getFeedSpeedPull3());
-        setFeedSpeedPull2(feederTemplate.getFeedSpeedPull2());
-        setFeedSpeedPull1(feederTemplate.getFeedSpeedPull1());
-        setFeedSpeedPull0(feederTemplate.getFeedSpeedPull0());
-        // clone the switches
-        setIncludedPush1(feederTemplate.isIncludedPush1());
-        setIncludedPush2(feederTemplate.isIncludedPush2());
-        setIncludedPush3(feederTemplate.isIncludedPush3());
-        setIncludedPushEnd(feederTemplate.isIncludedPushEnd());
-        setIncludedPull3(feederTemplate.isIncludedPull3());
-        setIncludedPull2(feederTemplate.isIncludedPull2());
-        setIncludedPull1(feederTemplate.isIncludedPull1());
-        setIncludedPull0(feederTemplate.isIncludedPull0());
-        setIncludedMulti0(feederTemplate.isIncludedMulti0());
-        setIncludedMulti1(feederTemplate.isIncludedMulti1());
-        setIncludedMulti2(feederTemplate.isIncludedMulti2());
-        setIncludedMulti3(feederTemplate.isIncludedMulti3());
-        setIncludedMultiEnd(feederTemplate.isIncludedMultiEnd());
-        // the OCR region, rotated to our feeder's orientation, and font and size
-        if (feederTemplate.getOcrRegion()!= null) {
-            setOcrRegion(feederTemplate.getOcrRegion()
-                    .rotateXy(getLocation().getRotation()-feederTemplate.getLocation().getRotation()));
-        }
-        setOcrFontName(feederTemplate.getOcrFontName());
-        setOcrFontSizePt(feederTemplate.getOcrFontSizePt());
-        setOcrWrongPartAction(feederTemplate.getOcrWrongPartAction());
-        setOcrDiscoverOnJobStart(feederTemplate.isOcrDiscoverOnJobStart());
-        // other settings
-        setPrecisionWanted(feederTemplate.getPrecisionWanted());
-        setCalibrationTrigger(feederTemplate.getCalibrationTrigger());
-        // reset
-        resetCalibration();
-        resetCalibrationStatistics();
-        setFeedCount(0);
-        // clone the pipeline
-        setPipeline(feederTemplate.getPipeline().clone());
+        cloneFeederSettings(cloneTapeSettings, clonePushPullSettings, cloneVisionSettings,
+                templateFeeder);
     }
 
-    protected void interpretOcrModel(SimpleOcr.OcrModel ocrModel, OcrWrongPartAction ocrAction) throws Exception {
-        if (ocrAction == OcrWrongPartAction.None) {
+    protected void cloneFeederSettings(boolean cloneTapeSettings, boolean clonePushPullSettings,
+            boolean cloneVisionSettings, ReferencePushPullFeeder templateFeeder)
+                    throws CloneNotSupportedException {
+        if (cloneTapeSettings) {
+            // the Z from the location
+            setLocation(getLocation().derive(templateFeeder.getLocation(), false, false, true, false));
+            // Tape and feed spec
+            setPartPitch(templateFeeder.getPartPitch());
+            setRotationInFeeder(templateFeeder.getRotationInFeeder());
+            setFeedPitch(templateFeeder.getFeedPitch());
+            setFeedMultiplier(templateFeeder.getFeedMultiplier());
+            // reset
+            setFeedCount(0);
+        }
+        if (clonePushPullSettings) {
+            // clone the actuators
+            setActuatorName(templateFeeder.getActuatorName());
+            setPeelOffActuatorName(templateFeeder.getPeelOffActuatorName());
+            // translate all the locations
+            setFeedStartLocation(cloneIfDefined(templateFeeder, templateFeeder.getFeedStartLocation()));
+            setFeedMid1Location(cloneIfDefined(templateFeeder, templateFeeder.getFeedMid1Location())); 
+            setFeedMid2Location(cloneIfDefined(templateFeeder, templateFeeder.getFeedMid2Location())); 
+            setFeedMid3Location(cloneIfDefined(templateFeeder, templateFeeder.getFeedMid3Location())); 
+            setFeedEndLocation(cloneIfDefined(templateFeeder, templateFeeder.getFeedEndLocation())); 
+            // clone all the speeds
+            setFeedSpeedPush1(templateFeeder.getFeedSpeedPush1());
+            setFeedSpeedPush2(templateFeeder.getFeedSpeedPush2());
+            setFeedSpeedPush3(templateFeeder.getFeedSpeedPush3());
+            setFeedSpeedPushEnd(templateFeeder.getFeedSpeedPushEnd());
+            setFeedSpeedPull3(templateFeeder.getFeedSpeedPull3());
+            setFeedSpeedPull2(templateFeeder.getFeedSpeedPull2());
+            setFeedSpeedPull1(templateFeeder.getFeedSpeedPull1());
+            setFeedSpeedPull0(templateFeeder.getFeedSpeedPull0());
+            // clone the switches
+            setIncludedPush1(templateFeeder.isIncludedPush1());
+            setIncludedPush2(templateFeeder.isIncludedPush2());
+            setIncludedPush3(templateFeeder.isIncludedPush3());
+            setIncludedPushEnd(templateFeeder.isIncludedPushEnd());
+            setIncludedPull3(templateFeeder.isIncludedPull3());
+            setIncludedPull2(templateFeeder.isIncludedPull2());
+            setIncludedPull1(templateFeeder.isIncludedPull1());
+            setIncludedPull0(templateFeeder.isIncludedPull0());
+            setIncludedMulti0(templateFeeder.isIncludedMulti0());
+            setIncludedMulti1(templateFeeder.isIncludedMulti1());
+            setIncludedMulti2(templateFeeder.isIncludedMulti2());
+            setIncludedMulti3(templateFeeder.isIncludedMulti3());
+            setIncludedMultiEnd(templateFeeder.isIncludedMultiEnd());
+        }
+        if (cloneVisionSettings) {
+            // other settings
+            setCalibrationTrigger(templateFeeder.getCalibrationTrigger());
+            setPrecisionWanted(templateFeeder.getPrecisionWanted());
+            // the OCR region, rotated to our feeder's orientation, and font and size
+            if (templateFeeder.getOcrRegion()!= null) {
+                setOcrRegion(templateFeeder.getOcrRegion()
+                        .rotateXy(getLocation().getRotation()-templateFeeder.getLocation().getRotation()));
+            }
+            setOcrFontName(templateFeeder.getOcrFontName());
+            setOcrFontSizePt(templateFeeder.getOcrFontSizePt());
+            setOcrWrongPartAction(templateFeeder.getOcrWrongPartAction());
+            setOcrDiscoverOnJobStart(templateFeeder.isOcrDiscoverOnJobStart());
+            setOcrStopAfterWrongPart(templateFeeder.isOcrStopAfterWrongPart());
+            // reset statistics
+            resetCalibration();
+            resetCalibrationStatistics();
+            setFeedCount(0);
+            // clone the pipeline
+            setPipeline(templateFeeder.getPipeline().clone());
+        }
+    }
+
+    protected Location relocatedLocation(Location location, Location oldTransform, Location newTransform) {
+        Location feederLocalLocation = backwardTransform(location, oldTransform);
+        location = forwardTransform(feederLocalLocation, newTransform);
+        return location;
+    }
+
+    protected void relocateFeeder(Location newTransform) {
+        // Relocate the feeder to match the given new transformation.
+        Location oldTransform = getTransform(null);
+        setHole1Location(relocatedLocation(getHole1Location(), oldTransform, newTransform));
+        setHole2Location(relocatedLocation(getHole2Location(), oldTransform, newTransform));
+        setFeedStartLocation(relocatedLocation(getFeedStartLocation(), oldTransform, newTransform));
+        setFeedMid1Location(relocatedLocation(getFeedMid1Location(), oldTransform, newTransform));
+        setFeedMid2Location(relocatedLocation(getFeedMid2Location(), oldTransform, newTransform));
+        setFeedMid3Location(relocatedLocation(getFeedMid3Location(), oldTransform, newTransform));
+        setFeedEndLocation(relocatedLocation(getFeedEndLocation(), oldTransform, newTransform));
+        if (getOcrRegion()!= null) {
+            setOcrRegion(getOcrRegion()
+                    .rotateXy(newTransform.getRotation()-oldTransform.getRotation()));
+        }
+        // finally and only now set the new pick location (in case some transformations happens in the getters/setters in the future)
+        setLocation(relocatedLocation(getLocation(), oldTransform, newTransform));
+    }
+
+    protected void swapOutFeeders(ReferencePushPullFeeder other) {
+        // Swap out two feeders' locations.
+        Location transform1 = this.getTransform(null); 
+        Location transform2 = other.getTransform(null);
+        this.relocateFeeder(transform2);
+        other.relocateFeeder(transform1);
+    }
+
+    protected void triggerOcrAction(SimpleOcr.OcrModel ocrModel, OcrWrongPartAction ocrAction, boolean ocrStop) throws Exception {
+        if (ocrAction == OcrWrongPartAction.None && ! ocrStop) {
             return; 
         }
 
-        // get first part of OCR Text
+        // get first part of OCR Text as the part id
         String ocrText = ocrModel.getText();
         String partId = ocrText;
         int pos = partId.indexOf('\n');
@@ -1750,56 +1894,106 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Configuration cfg = Configuration.get();
         Part ocrPart = cfg.getPart(partId);
         if (ocrPart == null) {
-            throw new Exception("["+getClass().getName()+"] OCR could not identify/find part id in feeder "+getId()
+            throw new Exception("OCR could not identify/find part id in feeder "+getName()
             +", OCR detected part id "+partId+" (avg. score="+ocrModel.getAvgScore()+")");
         }
         Part currentPart = getPart();
-        if (ocrPart != null && currentPart == null) {
+        if (currentPart == null) {
             // No part set yet
             Logger.trace("["+getClass().getName()+"] OCR detected part in feeder "+getId()+", OCR part "+ocrPart.getId());
-            setPart(ocrPart);
+            setOcrDetectedPart(ocrPart);
         }
         else if (ocrPart != null && ocrPart != currentPart) {
             // Wrong part selected in feeder
-            Logger.trace("["+getClass().getName()+"] OCR detected wrong part in feeder "+getId()
+            Logger.trace("["+getClass().getName()+"] OCR detected wrong part in slot of feeder "+getName()
             +", current part "+currentPart.getId()+" != OCR part "+ocrPart.getId());
-            if (ocrAction == OcrWrongPartAction.ChangePartAndStop || ocrAction == OcrWrongPartAction.ChangePartAndContinue) {
-                setPart(ocrPart);
+            ReferencePushPullFeeder otherFeeder = null;
+            for (ReferencePushPullFeeder feeder : getAllPushPullFeeders()) {
+                if (feeder.getPart() == ocrPart) {
+                    otherFeeder = feeder;
+                    Logger.trace("["+getClass().getName()+"] other feeder "+feeder.getName()
+                    +" has OCR detected part "+ocrPart.getId());
+                    break;
+                }
             }
-            if (ocrAction == OcrWrongPartAction.Stop ||ocrAction == OcrWrongPartAction.ChangePartAndStop) {
-                throw new Exception("["+getClass().getName()+"] OCR detected wrong part in feeder "+getId()
-                +", current part "+currentPart.getId()+" != OCR part "+ocrPart.getId());
+            if (ocrAction == OcrWrongPartAction.SwapFeeders) {
+                if (otherFeeder == null) {
+                    throw new Exception("OCR detected part "+ocrPart.getId()+" in slot of feeder "+getName()
+                    +" is not present in any other feeder. Cannot swap out feeders.");
+                }
+                swapOutFeeders(otherFeeder);
             }
+            if (ocrAction == OcrWrongPartAction.SwapOrCreate) {
+                if (otherFeeder == null) {
+                    // no other feeder has the OCR part -> create a new one
+                    otherFeeder = new ReferencePushPullFeeder();
+                    otherFeeder.setPart(ocrPart);
+                    otherFeeder.setLocation(getLocation());
+                    otherFeeder.setEnabled(isEnabled());
+                    // add to machine
+                    cfg.getMachine().addFeeder(otherFeeder);
+                    if (compatiblePartPackages(ocrPart, currentPart)) {
+                        // compatible parts, clone settings from this one
+                        otherFeeder.cloneFeederSettings(true, true, true, this);
+                    }
+                    else {
+                        // incompatible parts, do a smart clone
+                        otherFeeder.smartClone(ocrPart, true, true, true);
+                    }
+                    // disable this one
+                    setEnabled(false);
+                    // TODO: the two feeders now sit on top of each other - move this one away?
+                }
+                else {
+                    swapOutFeeders(otherFeeder);
+                }
+            }
+            if (ocrAction == OcrWrongPartAction.ChangePart) {
+                setOcrDetectedPart(ocrPart);
+            }
+            if (ocrStop) {
+                throw new Exception("OCR detected wrong part in feeder "+getName()
+                    +", current part "+currentPart.getId()+" != OCR part "+ocrPart.getId()+".\nAction performed: "+ocrAction.toString()+". Please review.");
+            }
+        }
+    }
+
+    protected void setOcrDetectedPart(Part ocrPart) throws Exception {
+        if (isUsedAsTemplate()) {
+            if (!compatiblePartPackages(ocrPart, getPart())) {
+                throw new Exception("Feeder "+getName()+" is used as a template and can only be OCR-assigned parts with same tape specification or package.");
+            }
+            setPart(ocrPart);
+        }
+        else {
+            setPart(ocrPart);
+            smartClone(ocrPart, true, true, true);
         }
     }
 
     @Override
-    public void prepareForJob(List<Feeder> feedersToPrepare) throws Exception {
-        super.prepareForJob(feedersToPrepare);
-        if (isOcrDiscoverOnJobStart() 
-                && visionOffset == null) {
-            // Note, we will not only detect our own OCR, but all the PushPullFeeders' in bulk
-            // to allow for the TravellingSalesman optimization.
-            // prepareForJob() will be called for subsequent PushPullFeeders, but because the  
-            // feeders are already registered as calibrated (visionOffset != null), there will be no further action. 
-            List<ReferencePushPullFeeder> feederList = getPushPullFeedersFromPool(feedersToPrepare);
-            // Now bulk-OCR. 
-            performOcrOnFeederList(feederList, false, OcrWrongPartAction.Stop);
+    public Location getJobPreparationLocation() {
+        if (isOcrDiscoverOnJobStart() && visionOffset == null) {
+            return getPickLocation(0, null);
+        }
+        else {
+            return null;
         }
     }
 
-    public void performOcrOnFeederList(List<ReferencePushPullFeeder> feederList, 
-            boolean includeCalibrated,
-            OcrWrongPartAction ocrAction) throws Exception {
-        // Filter the feeders needing OCR
-        List<ReferencePushPullFeeder> ocrFeederList = new ArrayList<>(); 
-        for (ReferencePushPullFeeder feeder : feederList) {
-            if (feeder.isOcrDiscoverOnJobStart() 
-                    && (visionOffset == null || includeCalibrated)) {
-                ocrFeederList.add(feeder);
-            }
+    @Override
+    public void prepareForJob(boolean visit) throws Exception {
+        super.prepareForJob(visit);
+        if (visit && isOcrDiscoverOnJobStart() && visionOffset == null) {
+            // Check the part in the feeder using OCR 
+            // Note, we cannot change the parts at this point, it is too late in the Job Process).
+            // This also calibrates the feeder.
+            performOcr(OcrWrongPartAction.None, true);
         }
+    }
 
+    public void performOcrOnFeederList(List<ReferencePushPullFeeder> ocrFeederList, 
+            OcrWrongPartAction ocrAction, boolean ocrStop) throws Exception {
         // Use a Travelling Salesman algorithm to optimize the path to actuate all the feeder covers.
         TravellingSalesman<ReferencePushPullFeeder> tsm = new TravellingSalesman<>(
                 ocrFeederList, 
@@ -1819,20 +2013,37 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
         // Finally perform the feeders OCR along the travel path.
         for (ReferencePushPullFeeder ocrFeeder : tsm.getTravel()) {
-            ocrFeeder.performOcr(ocrAction);
+            ocrFeeder.performOcr(ocrAction != null ? ocrAction : ocrFeeder.getOcrWrongPartAction(),
+                    ocrAction != null ? ocrStop : ocrFeeder.isOcrStopAfterWrongPart());
         }
     }
 
-    public void performOcr(OcrWrongPartAction ocrAction) throws Exception {
+    public void performOcrOnAllFeeders(OcrWrongPartAction ocrAction, boolean ocrStop) throws Exception { 
+        // Filter the feeders needing OCR
+        List<ReferencePushPullFeeder> ocrFeederList = new ArrayList<>(); 
+        for (ReferencePushPullFeeder feeder : getAllPushPullFeeders()) {
+            if (feeder.isEnabled() && (feeder.getOcrWrongPartAction() != OcrWrongPartAction.None || isOcrStopAfterWrongPart())) {
+                ocrFeederList.add(feeder);
+            }
+        }
+        if (ocrFeederList.size() == 0) {
+            throw new Exception("No enabled feeder with OCR found.");
+        }
+        // Now bulk-OCR. 
+        performOcrOnFeederList(ocrFeederList, ocrAction, ocrStop);
+    }
+
+
+    public void performOcr(OcrWrongPartAction ocrAction, boolean ocrStop) throws Exception {
         Camera camera = getCamera();
         try (CvPipeline pipeline = getCvPipeline(camera, true, true)) {
             // run a sprocket hole calibration, including OCR
-            calibrateSprocketHoles(camera, pipeline, false, false, true, ocrAction); 
+            calibrateSprocketHoles(camera, pipeline, false, false, true, ocrAction, ocrStop); 
         }
     }
 
     protected void calibrateSprocketHoles(Camera camera, CvPipeline pipeline, 
-            boolean storeHoles, boolean storePickLocation, boolean storeVisionOffset, OcrWrongPartAction ocrAction) throws Exception {
+            boolean storeHoles, boolean storePickLocation, boolean storeVisionOffset, OcrWrongPartAction ocrAction, boolean ocrStop) throws Exception {
         Location runningHole1Location = getHole1Location();
         Location runningHole2Location = getHole2Location();
         Location runningPickLocation = getLocation();
@@ -1887,7 +2098,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             }
             if (ocrPass) {
                 Logger.trace("["+getClass().getName()+"] got OCR text "+feature.detectedOcrModel.getText());
-                interpretOcrModel(feature.detectedOcrModel, ocrAction);
+                triggerOcrAction(feature.detectedOcrModel, ocrAction, ocrStop);
             }
             // is it good enough? Compare with running offset.
             if (error.convertToUnits(LengthUnit.Millimeters).getValue() < calibrateToleranceMm) {
