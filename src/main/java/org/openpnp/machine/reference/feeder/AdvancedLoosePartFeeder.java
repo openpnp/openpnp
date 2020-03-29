@@ -94,7 +94,7 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
             pipeline.process();
             // Grab the results
             List<RotatedRect> results = (List<RotatedRect>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
-            if (results.isEmpty()) {
+            if ((results == null) || results.isEmpty()) {
                 throw new Exception("Feeder " + getName() + ": No parts found.");
             }
             // Find the closest result
