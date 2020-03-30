@@ -76,6 +76,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     @Attribute(required = false)
     protected int maxVisionRetries = 3;
 
+    @Attribute(required = false)
+    protected boolean autoSaveJob = false;
+
     @Element(required = false)
     public PnpJobPlanner planner = new SimplePnpJobPlanner();
 
@@ -94,7 +97,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
     public ReferencePnpJobProcessor() {
     }
-    
+
+    public boolean isAutoSaveJob() {
+        return autoSaveJob;
+    }
+
+    public void setAutoSaveJob(boolean autoSaveJob) {
+        this.autoSaveJob = autoSaveJob;
+    }
+
     public synchronized void initialize(Job job) throws Exception {
         if (job == null) {
             throw new Exception("Can't initialize with a null Job.");
@@ -754,6 +765,16 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // Mark the placement as "placed"
             boardLocation.setPlaced(jobPlacement.getPlacement().getId(), true);
             
+            if (autoSaveJob) {
+                try {
+                    Configuration.get().saveJob(job, job.getFile());
+                }
+                catch (Exception e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+
             totalPartsPlaced++;
             
             scriptComplete(plannedPlacement, placementLocation);

@@ -25,6 +25,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
+import javax.swing.JCheckBox;
 
 import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
@@ -43,6 +44,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
     private final ReferencePnpJobProcessor jobProcessor;
     private JComboBox comboBoxJobOrder;
     private JTextField maxVisionRetriesTextField;
+    private JCheckBox autoSaveJobCheckBox;
 
     public ReferencePnpJobProcessorConfigurationWizard(ReferencePnpJobProcessor jobProcessor) {
         this.jobProcessor = jobProcessor;
@@ -60,6 +62,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblJobOrder = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.JobOrder"));
@@ -74,6 +77,12 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         maxVisionRetriesTextField = new JTextField();
         panelGeneral.add(maxVisionRetriesTextField, "4, 3");
         maxVisionRetriesTextField.setColumns(10);
+
+        JLabel lblisAutoSaveJob = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.isAutoSaveJob"));
+        panelGeneral.add(lblisAutoSaveJob, "2, 4, right, default");
+
+        autoSaveJobCheckBox = new JCheckBox();
+        panelGeneral.add(autoSaveJobCheckBox, "4, 4");
     }
 
     @Override
@@ -82,6 +91,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
 
         addWrappedBinding(jobProcessor, "jobOrder", comboBoxJobOrder, "selectedItem");
         addWrappedBinding(jobProcessor, "maxVisionRetries", maxVisionRetriesTextField, "text", intConverter);
+        addWrappedBinding(jobProcessor, "autoSaveJob", autoSaveJobCheckBox, "selected");
 
         ComponentDecorators.decorateWithAutoSelect(maxVisionRetriesTextField);
     }
