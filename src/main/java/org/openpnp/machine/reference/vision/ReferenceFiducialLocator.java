@@ -93,11 +93,6 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                     fiducials.size()));
         }
 
-        // Get the best two or three fiducials from the total list of fiducials. If we can find
-        // three good ones we can calculate translation, rotation, scale, and shear. If we only
-        // find two we can calculate translation and rotation only.
-        fiducials = getBestFiducials(fiducials);
-
         // Clear the current transform so it doesn't potentially send us to the wrong spot
         // to find the fiducials.
         boardLocation.setPlacementTransform(null);
@@ -128,59 +123,14 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         List<Location> sourceLocations = new ArrayList<>();
         List<Location> destLocations = new ArrayList<>();
         for (Placement placement : locations.keySet()) {
-            sourceLocations.add(placement.getLocation().convertToUnits(LengthUnit.Millimeters));
+            sourceLocations.add(placement.getLocation().convertToUnits(LengthUnit.Millimeters)
+                    .invert(boardSide==Side.Bottom, false, false, false));
             destLocations.add(locations.get(placement).convertToUnits(LengthUnit.Millimeters));
         }
         
         // Calculate the transform.
-        AffineTransform tx = null;
-        if (destLocations.size() == 2) {
-            Location source0 = sourceLocations.get(0);
-            Location source1 = sourceLocations.get(1);
-			if (boardLocation.getSide() == Side.Bottom) {
-			    /**
-			     * Here, and in the block below, if the side is bottom we need to invert the
-			     * source fiducial locations. This is because it was done by getFiducialLocation
-			     * when calling calculateBoardPlacementLocation. Further, they are inverted because
-			     * we calculate board bottom placements as if X is mirrored to account for the
-			     * board being flipped over.
-			     */
-				source0 = source0.invert(true,false,false,false);
-				source1 = source1.invert(true,false,false,false);
-			}
-            Location dest0 = destLocations.get(0);
-            Location dest1 = destLocations.get(1);
-            tx = Utils2D.deriveAffineTransform(
-                    source0.getX(), source0.getY(), 
-                    source1.getX(), source1.getY(), 
-                    dest0.getX(), dest0.getY(),
-                    dest1.getX(), dest1.getY());
-        }
-        else if (destLocations.size() == 3) {
-            Location source0 = sourceLocations.get(0);
-            Location source1 = sourceLocations.get(1);
-            Location source2 = sourceLocations.get(2);
-			if (boardLocation.getSide() == Side.Bottom) {
-				source0 = source0.invert(true,false,false,false);
-				source1 = source1.invert(true,false,false,false);
-				source2 = source2.invert(true,false,false,false);
-			}
-            Location dest0 = destLocations.get(0);
-            Location dest1 = destLocations.get(1);
-            Location dest2 = destLocations.get(2);
-            tx = Utils2D.deriveAffineTransform(
-                    source0.getX(), source0.getY(), 
-                    source1.getX(), source1.getY(), 
-                    source2.getX(), source2.getY(),
-                    dest0.getX(), dest0.getY(),
-                    dest1.getX(), dest1.getY(),
-                    dest2.getX(), dest2.getY());
-        }
-        else {
-            throw new Exception(String.format("Expected 2 or 3 fiducial results, not %d. This is a programmer error. Please tell a programmer.",
-                    destLocations.size()));
-        }
-        
+        AffineTransform tx = Utils2D.deriveAffineTransform(sourceLocations, destLocations);
+            
         // Set the transform.
         boardLocation.setPlacementTransform(tx);
         Logger.info("Fiducial results: scale ({}, {}), translate ({}, {}), shear ({}, {})",

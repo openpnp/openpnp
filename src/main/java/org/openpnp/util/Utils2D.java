@@ -29,6 +29,7 @@ import java.util.List;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Length;
@@ -117,17 +118,12 @@ public class Utils2D {
      * created the transform we captured the apparent angle and that is used to position
      * in X, Y, but we also need the actual value to add to the placement rotation so that
      * the nozzle is rotated to the correct angle as well.
-     * Note, there is probably a better way to do this. If you know how, please let me know!
+     * Note, there is probably a better way to do this. If you know how, please let me know!  TL - See below! 
      */
     private static double getTransformAngle(AffineTransform tx) {
-        Point2D.Double a = new Point2D.Double(0, 0);
-        Point2D.Double b = new Point2D.Double(1, 1);
-        Point2D.Double c = new Point2D.Double(0, 0);
-        Point2D.Double d = new Point2D.Double(1, 1);
-        c = (Point2D.Double) tx.transform(c, null);
-        d = (Point2D.Double) tx.transform(d, null);
-        double angle = Math.toDegrees(Math.atan2(d.y - c.y, d.x - c.x) - Math.atan2(b.y - a.y, b.x - a.x));
-        return angle;
+        double[] m = new double[4];
+        tx.getMatrix(m);
+        return Math.toDegrees(Math.atan2(m[1],m[0]));
     }
 
     public static Location calculateBoardPlacementLocation(BoardLocation bl,
@@ -401,6 +397,95 @@ public class Utils2D {
         return tx;
     }  
     
+    public static RealMatrix computeCentroid(RealMatrix A) {
+        int dim = A.getRowDimension();
+        int n = A.getColumnDimension();
+        RealMatrix ret = MatrixUtils.createRealMatrix(dim,1);
+        for (int j=0; j<n; j++) {
+            ret = ret.add(A.getColumnMatrix(j));
+        }
+        return ret.scalarMultiply(1.0/n);
+    }
+    
+    public static RealMatrix addToAllColumns(RealMatrix A, RealMatrix colMatrix ) {
+        int dim = A.getRowDimension();
+        int n = A.getColumnDimension();
+        RealMatrix ret = MatrixUtils.createRealMatrix(dim,n);
+        for (int j=0; j<n; j++) {
+            ret.setColumnMatrix(j, A.getColumnMatrix(j).add(colMatrix));
+        }
+        return ret;
+    }
+    
+    public static RealMatrix subtractFromAllColumns(RealMatrix A, RealMatrix colMatrix ) {
+        int dim = A.getRowDimension();
+        int n = A.getColumnDimension();
+        RealMatrix ret = MatrixUtils.createRealMatrix(dim,n);
+        for (int j=0; j<n; j++) {
+            ret.setColumnMatrix(j, A.getColumnMatrix(j).subtract(colMatrix));
+        }
+        return ret;
+    }
+    
+    //Calculates the least squared error affine transform, see the discussion at
+    //https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/openpnp/Wok_-OyVdnA/Z2YnhNoYAwAJ
+    public static AffineTransform deriveAffineTransform(List<Location> source, List<Location> destination) {
+        int n = Math.min(source.size(), destination.size());
+        
+        //Convert array lists to matrices
+        RealMatrix sMat = MatrixUtils.createRealMatrix(2,n);
+        RealMatrix dMat = MatrixUtils.createRealMatrix(2,n);
+        for (int j=0; j<n; j++) {
+            Location s = source.get(j).convertToUnits(LengthUnit.Millimeters);
+            sMat.setColumn(j, new double[] {s.getX(), s.getY()});
+            Location d = destination.get(j).convertToUnits(LengthUnit.Millimeters);
+            dMat.setColumn(j, new double[] {d.getX(), d.getY()});
+        }
+        
+        //Compute the centroid of the source and destination points
+        RealMatrix sCent = computeCentroid(sMat);
+        RealMatrix dCent = computeCentroid(dMat);
+        
+        //Translate both sets of points to the origin
+        RealMatrix sHat = subtractFromAllColumns(sMat, sCent);
+        RealMatrix dHat = subtractFromAllColumns(dMat, dCent);
+
+        RealMatrix linearTransform;
+        if (n>2) {
+            //Compute the linear transform part of the affine transform
+            RealMatrix pinv = new SingularValueDecomposition(sHat.multiply(sHat.transpose())).getSolver().getInverse();
+            linearTransform = dHat.multiply(sHat.transpose()).multiply(pinv);
+        } else {
+            //With only two points, only a unique rotation and single scale factor can be found
+
+            //Use the Kabsch algorithm to compute the best rotation
+            SingularValueDecomposition svd = new SingularValueDecomposition(dHat.multiply(sHat.transpose()));
+            RealMatrix rot = svd.getU().multiply(svd.getVT());
+            double det = new LUDecomposition(rot).getDeterminant();
+            if (det < 0) {
+                RealMatrix s = MatrixUtils.createRealIdentityMatrix(2);
+                s.setEntry(1, 1, -1.0);
+                rot = svd.getU().multiply(s).multiply(svd.getVT());
+            }
+            
+            //Compute the scale factor as the ratio of the point spacings
+            double scaleFactor = Math.hypot(dHat.getEntry(0, 0)-dHat.getEntry(0, 1), dHat.getEntry(1, 0)-dHat.getEntry(1, 1)) /
+                    Math.hypot(sHat.getEntry(0, 0)-sHat.getEntry(0, 1), sHat.getEntry(1, 0)-sHat.getEntry(1, 1));
+            RealMatrix scale = MatrixUtils.createRealIdentityMatrix(2).scalarMultiply(scaleFactor);
+            
+            //Combine the scaling and rotation to get the linear portion of the affine transform
+            linearTransform = scale.multiply(rot);
+        }
+
+        //Compute the translation part of the affine transform
+        RealMatrix translation = dCent.subtract(linearTransform.multiply(sCent));
+        
+        return new AffineTransform(
+                linearTransform.getEntry(0, 0), linearTransform.getEntry(1, 0),
+                linearTransform.getEntry(0, 1), linearTransform.getEntry(1, 1),
+                translation.getEntry(0, 0),     translation.getEntry(1, 0) );        
+    }
+
     /**
      * Calculate the area of a triangle. Returns 0 if the triangle is degenerate.
      * @param p1
