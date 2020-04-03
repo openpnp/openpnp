@@ -41,6 +41,12 @@ public class Package extends AbstractModelObject implements Identifiable {
     @Attribute(required = false)
     private String description;
 
+    @Attribute(required = false)
+    private double pickVacuumLevel;
+
+    @Attribute(required = false)
+    private double placeBlowOffLevel;
+
     @Element(required = false)
     private Footprint footprint;
     
@@ -83,6 +89,26 @@ public class Package extends AbstractModelObject implements Identifiable {
         Object oldValue = this.description;
         this.description = description;
         firePropertyChange("description", oldValue, description);
+    }
+
+    public void setPlaceBlowOffLevel(double level) {
+        Object oldValue = this.placeBlowOffLevel;
+        this.placeBlowOffLevel = level;
+        firePropertyChange("placeBlowOffLevel", oldValue, level);
+    }
+
+    public double getPlaceBlowOffLevel() {
+        return placeBlowOffLevel;
+    }
+
+    public void setPickVacuumLevel(double level) {
+        Object oldValue = this.pickVacuumLevel;
+        this.pickVacuumLevel = level;
+        firePropertyChange("pickVacuumLevel", oldValue, level);
+    }
+
+    public double getPickVacuumLevel() {
+        return pickVacuumLevel;
     }
 
     public Footprint getFootprint() {

@@ -78,6 +78,15 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
             (short) 0x4E55, (short) 0x5E74, (short) 0x2E93, (short) 0x3EB2, (short) 0x0ED1,
             (short) 0x1EF0};
 
+    public static final String ACT_N1_VACUUM = "N1-Vacuum";
+    public static final String ACT_N2_VACUUM = "N2-Vacuum";
+    public static final String ACT_N3_VACUUM = "N3-Vacuum";
+    public static final String ACT_N4_VACUUM = "N4-Vacuum";
+    public static final String ACT_N1_BLOW = "N1-Blow";
+    public static final String ACT_N2_BLOW = "N2-Blow";
+    public static final String ACT_N3_BLOW = "N3-Blow";
+    public static final String ACT_N4_BLOW = "N4-Blow";
+
     @Attribute(required = false)
     protected LengthUnit units = LengthUnit.Millimeters;
 
@@ -111,68 +120,66 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     double c1 = 0, c2 = 0, c3 = 0, c4 = 0;
     
 
+    private ReferenceActuator getOrCreateActuatorInHead(ReferenceHead head, String actuatorName) throws Exception {
+        ReferenceActuator a = (ReferenceActuator) head.getActuatorByName(actuatorName);
+        if (a == null) {
+            a = new ReferenceActuator();
+            a.setName(actuatorName);
+            head.addActuator(a);
+        }
+        return a;
+    }
+
     public void createMachineObjects() throws Exception {
         // Make sure required objects exist
         ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
 
         ReferenceNozzle n;
-        n = (ReferenceNozzle) machine.getDefaultHead().getNozzle("N1");
+        ReferenceActuator a;
+        ReferenceHead head = (ReferenceHead) machine.getDefaultHead();
+        n = (ReferenceNozzle) head.getNozzle("N1");
         if (n == null) {
             n = new ReferenceNozzle("N1");
             n.setName("N1");
-            machine.getDefaultHead().addNozzle(n);
+            head.addNozzle(n);
+            getOrCreateActuatorInHead(head, ACT_N1_VACUUM);
+            getOrCreateActuatorInHead(head, ACT_N1_BLOW);
+            n.setBlowOffActuatorName(ACT_N1_BLOW);
+            n.setVacuumActuatorName(ACT_N1_VACUUM);
         }
         
-        n = (ReferenceNozzle) machine.getDefaultHead().getNozzle("N2");
+        n = (ReferenceNozzle) head.getNozzle("N2");
         if (n == null) {
             n = new ReferenceNozzle("N2");
             n.setName("N2");
-            machine.getDefaultHead().addNozzle(n);
+            head.addNozzle(n);
+            getOrCreateActuatorInHead(head, ACT_N2_VACUUM);
+            getOrCreateActuatorInHead(head, ACT_N2_BLOW);
+            n.setBlowOffActuatorName(ACT_N2_BLOW);
+            n.setVacuumActuatorName(ACT_N2_VACUUM);
         }
         
-        n = (ReferenceNozzle) machine.getDefaultHead().getNozzle("N3");
+        n = (ReferenceNozzle) head.getNozzle("N3");
         if (n == null) {
             n = new ReferenceNozzle("N3");
             n.setName("N3");
-            machine.getDefaultHead().addNozzle(n);
-        }
+            head.addNozzle(n);
+            getOrCreateActuatorInHead(head, ACT_N3_VACUUM);
+            getOrCreateActuatorInHead(head, ACT_N3_BLOW);
+            n.setBlowOffActuatorName(ACT_N3_BLOW);
+            n.setVacuumActuatorName(ACT_N3_VACUUM);
+       }
         
-        n = (ReferenceNozzle) machine.getDefaultHead().getNozzle("N4");
+        n = (ReferenceNozzle) head.getNozzle("N4");
         if (n == null) {
             n = new ReferenceNozzle("N4");
             n.setName("N4");
-            machine.getDefaultHead().addNozzle(n);
+            head.addNozzle(n);
+            getOrCreateActuatorInHead(head, ACT_N4_VACUUM);
+            getOrCreateActuatorInHead(head, ACT_N4_BLOW);
+            n.setBlowOffActuatorName(ACT_N4_BLOW);
+            n.setVacuumActuatorName(ACT_N4_VACUUM);
         }
-        
-        ReferenceActuator a;
-        a = (ReferenceActuator) machine.getActuatorByName("N1-Air");
-        if (a == null) {
-            a = new ReferenceActuator();
-            a.setName("N1-Air");
-            machine.addActuator(a);
-        }
-        
-        a = (ReferenceActuator) machine.getActuatorByName("N2-Air");
-        if (a == null) {
-            a = new ReferenceActuator();
-            a.setName("N2-Air");
-            machine.addActuator(a);
-        }
-        
-        a = (ReferenceActuator) machine.getActuatorByName("N3-Air");
-        if (a == null) {
-            a = new ReferenceActuator();
-            a.setName("N3-Air");
-            machine.addActuator(a);
-        }
-        
-        a = (ReferenceActuator) machine.getActuatorByName("N4-Air");
-        if (a == null) {
-            a = new ReferenceActuator();
-            a.setName("N4-Air");
-            machine.addActuator(a);
-        }
-
         
         a = (ReferenceActuator) machine.getActuatorByName("Lights-Down");
         if (a == null) {
@@ -581,14 +588,25 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
         switch (actuator.getName()) {
-            case "N1-Air":
-            case "N2-Air":
-            case "N3-Air":
-            case "N4-Air": {
+            case ACT_N1_VACUUM:
+            case ACT_N2_VACUUM:
+            case ACT_N3_VACUUM:
+            case ACT_N4_VACUUM: {
                 if (on) {
                     actuate(actuator, -128.0);
                 } else {
                     actuate(actuator, 20.0);
+                    actuate(actuator, 0.0);
+                }
+                break;
+            }
+            case ACT_N1_BLOW:
+            case ACT_N2_BLOW:
+            case ACT_N3_BLOW:
+            case ACT_N4_BLOW: {
+                if (on) {
+                    actuate(actuator, 127.0);
+                } else {
                     actuate(actuator, 0.0);
                 }
                 break;
@@ -705,67 +723,42 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         pollFor(0x06,  0x42);
     }
 
+    private void setAirParameters(int nozzleNum, double value) throws Exception {
+        write(0x43);
+        expect(0x0f);
+
+        write(0xc3);
+        expect(0x07);
+
+        byte[] b = new byte[8];
+        b[0] = (byte) value;
+        b[1] = (byte) nozzleNum;
+        writeWithChecksum(b);
+
+        pollFor(0x03,  0x47);
+    }
+
     @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
         switch (actuator.getName()) {
-            case "N1-Air": {
-                write(0x43);
-                expect(0x0f);
-                
-                write(0xc3);
-                expect(0x07);
-                
-                byte[] b = new byte[8];
-                b[0] = (byte) value;
-                b[1] = 1;
-                writeWithChecksum(b);
-                
-                pollFor(0x03,  0x47);
+            case ACT_N1_BLOW:
+            case ACT_N1_VACUUM: {
+                setAirParameters(1, value);
                 break;
             }
-            case "N2-Air": {
-                write(0x43);
-                expect(0x0f);
-                
-                write(0xc3);
-                expect(0x07);
-                
-                byte[] b = new byte[8];
-                b[0] = (byte) value;
-                b[1] = 2;
-                writeWithChecksum(b);
-                
-                pollFor(0x03,  0x47);
+            case ACT_N2_BLOW:
+            case ACT_N2_VACUUM: {
+                setAirParameters(2, value);
                 break;
             }
-            case "N3-Air": {
-                write(0x43);
-                expect(0x0f);
-                
-                write(0xc3);
-                expect(0x07);
-                
-                byte[] b = new byte[8];
-                b[0] = (byte) value;
-                b[1] = 3;
-                writeWithChecksum(b);
-                
-                pollFor(0x03,  0x47);
+            case ACT_N3_BLOW:
+            case ACT_N3_VACUUM: {
+                setAirParameters(3, value);
                 break;
             }
-            case "N4-Air": {
-                write(0x43);
-                expect(0x0f);
-                
-                write(0xc3);
-                expect(0x07);
-                
-                byte[] b = new byte[8];
-                b[0] = (byte) value;
-                b[1] = 4;
-                writeWithChecksum(b);
-                
-                pollFor(0x03,  0x47);
+            case ACT_N4_BLOW:
+            case ACT_N4_VACUUM: {
+                setAirParameters(4, value);
                 break;
             }
             case "Lights-Down": {
@@ -815,60 +808,41 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         }
     }
     
+    private int getNozzleAirValue(int nozzleNum) throws Exception {
+        assert(nozzleNum >= 0);
+        assert(nozzleNum <= 3);
+
+        write(0x40);
+        expect(0x0c);
+
+        write(0x00);
+        expect(0x11);
+
+        write(0x80);
+        expect(0x19);
+
+        byte[] payload = readWithChecksum(8);
+        return payload[nozzleNum];
+    }
+
     @Override
     public String actuatorRead(ReferenceActuator actuator) throws Exception {
         switch (actuator.getName()) {
-            case "N1-Air": {
-                write(0x40);
-                expect(0x0c);
-                
-                write(0x00);
-                expect(0x11);
-                
-                write(0x80);
-                expect(0x19);
-                
-                byte[] payload = readWithChecksum(8);
-                return Integer.toString(payload[0]);
+            case ACT_N1_BLOW:
+            case ACT_N1_VACUUM: {
+                return Integer.toString(getNozzleAirValue(0));
             }
-            case "N2-Air": {
-                write(0x40);
-                expect(0x0c);
-                
-                write(0x00);
-                expect(0x11);
-                
-                write(0x80);
-                expect(0x19);
-                
-                byte[] payload = readWithChecksum(8);
-                return Integer.toString(payload[1]);
+            case ACT_N2_BLOW:
+            case ACT_N2_VACUUM:  {
+                return Integer.toString(getNozzleAirValue(1));
             }
-            case "N3-Air": {
-                write(0x40);
-                expect(0x0c);
-                
-                write(0x00);
-                expect(0x11);
-                
-                write(0x80);
-                expect(0x19);
-                
-                byte[] payload = readWithChecksum(8);
-                return Integer.toString(payload[2]);
+            case ACT_N3_BLOW:
+            case ACT_N3_VACUUM:  {
+                return Integer.toString(getNozzleAirValue(2));
             }
-            case "N4-Air": {
-                write(0x40);
-                expect(0x0c);
-                
-                write(0x00);
-                expect(0x11);
-                
-                write(0x80);
-                expect(0x19);
-                
-                byte[] payload = readWithChecksum(8);
-                return Integer.toString(payload[3]);
+            case ACT_N4_BLOW:
+            case ACT_N4_VACUUM:  {
+                return Integer.toString(getNozzleAirValue(3));
             }
         }
         return null;
