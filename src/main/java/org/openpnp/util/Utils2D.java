@@ -553,10 +553,10 @@ public class Utils2D {
         if (n>2) {
             //Compute the linear transform part of the affine transform
             RealMatrix dHatsHatT = dHat.multiply(sHat.transpose());
-            SingularValueDecomposition svd = new SingularValueDecomposition(dHatsHatT);
-            double det = new LUDecomposition(svd.getU().multiply(svd.getVT())).getDeterminant();
+            double det = new LUDecomposition(dHatsHatT).getDeterminant();
             if (det < 0) {
                 Logger.debug("Correcting for reflection...");
+                SingularValueDecomposition svd = new SingularValueDecomposition(dHatsHatT);
                 //Need to flip the direction of the eigenvector corresponding to the smallest singular value
                 RealMatrix flip = MatrixUtils.createRealIdentityMatrix(2);
                 flip.setEntry(1, 1, -1); //since the singular values are sorted largest to smallest, the sign of the lower right one is changed
