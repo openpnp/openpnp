@@ -102,6 +102,14 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         // to find the fiducials.
         boardLocation.setPlacementTransform(null);
 
+        //Define where the fiducial trip will begin
+        Location currentCameraLocation = new Location(LengthUnit.Millimeters);
+        try {
+            currentCameraLocation = MainFrame.get().getMachineControls().getSelectedTool().getHead().getDefaultCamera().getLocation();
+        } catch (Exception e) {
+            currentCameraLocation = boardLocation.getLocation();
+        }
+        
         // Use a traveling salesman algorithm to optimize the path to visit the fiducials
         TravellingSalesman<Placement> tsm = new TravellingSalesman<>(
                 fiducials, 
@@ -112,7 +120,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                     }
                 }, 
                 // start from current camera location
-                MainFrame.get().getMachineControls().getSelectedTool().getHead().getDefaultCamera().getLocation(),
+                currentCameraLocation,
                 // and end at the board origin
                 boardLocation.getLocation());
 
