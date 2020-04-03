@@ -204,7 +204,7 @@ public class MultiPlacementBoardLocationProcess {
 
             //Check for out-of-nominal conditions - these limits probably should be user definable values
             double scalingTolerance = 0.05; //unitless
-            double shearingTolerance = 0.10; //unitless
+            double shearingTolerance = 0.05; //unitless
             double boardLocationTolerance = 5.0; //mm
             
             Utils2D.AffineInfo ai = Utils2D.affineInfo(tx);
