@@ -35,12 +35,13 @@ import org.openpnp.model.Placement;
 import org.openpnp.model.Board.Side;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.TravellingSalesman;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 
 /**
- * Guides the user through the multi-point board location operation using step by step instructions.
+ * Guides the user through the multi-placement board location operation using step by step instructions.
  * 
  * TODO: Disable the BoardLocation table while active.
  */
@@ -51,14 +52,14 @@ public class MultiPlacementBoardLocationProcess {
 
     private int step = -1;
     private String[] instructions = new String[] {
-            "<html><body>Select two or more (four or more is better) easily identifiable placements from the placements table. They should be near the corners of the board. Click Next to continue and the camera will move near the first selected placement.</body></html>",
+            "<html><body>Select two or more (four or more is better) easily identifiable placements from the placements table. They should be near the corners of the board. Click Next to continue and the camera will move near one of the selected placements.</body></html>",
             "<html><body>Now, manually jog the camera's crosshairs over the center of %s. Try to be as precise as possible. Click Next to continue to the next placement.</body></html>",
             "<html><body>The board's location and rotation has been set. Click Finish to position the camera at the board's origin, or Cancel to quit.</body></html>",};
 
     private String placementId;
     private List<Placement> placements;
-    private List<Location> placementLocations;
-    private List<Location> actualLocations;
+    private List<Location> expectedLocations;
+    private List<Location> measuredLocations;
     private int nPlacements;
     private int idxPlacement = 0;
     private BoardLocation boardLocation;
@@ -74,8 +75,8 @@ public class MultiPlacementBoardLocationProcess {
                 MainFrame.get().getMachineControls().getSelectedTool().getHead().getDefaultCamera();
         
         placementId = "";
-        placementLocations = new ArrayList<Location>();
-        actualLocations = new ArrayList<Location>();
+        expectedLocations = new ArrayList<Location>();
+        measuredLocations = new ArrayList<Location>();
         
         boardLocation = jobPanel.getSelection();
         boardSide = boardLocation.getSide();
@@ -102,6 +103,7 @@ public class MultiPlacementBoardLocationProcess {
         else if (step == 2) {
             stepResult = step3();
         }
+
         if (!stepResult) {
             return;
         }
@@ -124,9 +126,28 @@ public class MultiPlacementBoardLocationProcess {
             return false;
         }
         
+        // Use a traveling salesman algorithm to optimize the path to visit the placements
+        TravellingSalesman<Placement> tsm = new TravellingSalesman<>(
+                placements, 
+                new TravellingSalesman.Locator<Placement>() { 
+                    @Override
+                    public Location getLocation(Placement locatable) {
+                        return Utils2D.calculateBoardPlacementLocation(boardLocation, locatable.getLocation());
+                    }
+                }, 
+                // start from current camera location
+                camera.getLocation(),
+                // and end at the board origin
+                boardLocation.getLocation());
+
+        // Solve it using the default heuristics.
+        tsm.solve();
+        
+        placements = tsm.getTravel();
+
         idxPlacement = 0;
         placementId = placements.get(idxPlacement).getId();
-        placementLocations.add(placements.get(idxPlacement).getLocation()
+        expectedLocations.add(placements.get(idxPlacement).getLocation()
                 .invert(boardSide==Side.Bottom, false, false, false));
         //Move the camera near the placement's location
         UiUtils.submitUiMachineTask(() -> {
@@ -138,18 +159,18 @@ public class MultiPlacementBoardLocationProcess {
     }
 
     private boolean step2() {
-        Location actualLocationA = camera.getLocation();
-        if (actualLocationA == null) {
+        Location measuredLocation = camera.getLocation();
+        if (measuredLocation == null) {
             MessageBoxes.errorBox(mainFrame, "Error", "Please position the camera.");
             return false;
         }
-        actualLocations.add(actualLocationA);
+        measuredLocations.add(measuredLocation);
         idxPlacement++;
         if (idxPlacement<nPlacements) {
             placementId = placements.get(idxPlacement).getId();
-            placementLocations.add(placements.get(idxPlacement).getLocation()
+            expectedLocations.add(placements.get(idxPlacement).getLocation()
                     .invert(boardSide==Side.Bottom, false, false, false));
-            //Move the camera near the placement's location
+            //Move the camera near the placement's expected location
             UiUtils.submitUiMachineTask(() -> {
                 Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
                         placements.get(idxPlacement).getLocation() );
@@ -157,34 +178,46 @@ public class MultiPlacementBoardLocationProcess {
             });
             step--;
         } else {
-            // Calculate the transform.
-            AffineTransform tx = Utils2D.deriveAffineTransform(placementLocations, actualLocations);
-            Logger.info("Placement results: scale ({}, {}), translate ({}, {}), shear ({}, {})",
-                    tx.getScaleX(), tx.getScaleY(),
-                    tx.getTranslateX(), tx.getTranslateY(),
-                    tx.getShearX(), tx.getShearY());
-                
-            // TODO STOPSHIP Check if the results make sense and throw an error if they don't.
-            // Probably need to let the user specify some limits.
+            //All the placements have been visited, so calculate the transform
+            AffineTransform tx = Utils2D.deriveAffineTransform(expectedLocations, measuredLocations);
             
-            // Set the transform.
+            //Set the transform
             boardLocation.setPlacementTransform(tx);
             
-            // Return the compensated board location
+            // Compute the compensated board location
             Location origin = new Location(LengthUnit.Millimeters);
             if (boardSide == Side.Bottom) {
                 origin = origin.add(boardLocation.getBoard().getDimensions().derive(null, 0., 0., 0.));
             }
-            Location result = Utils2D.calculateBoardPlacementLocation(boardLocation, origin);
-            result = result.convertToUnits(boardLocation.getLocation().getUnits());
-            result = result.derive(null, null, boardLocation.getLocation().getZ(), null);
+            Location newBoardLocation = Utils2D.calculateBoardPlacementLocation(boardLocation, origin);
+            newBoardLocation = newBoardLocation.convertToUnits(boardLocation.getLocation().getUnits());
+            newBoardLocation = newBoardLocation.derive(null, null, boardLocation.getLocation().getZ(), null);
 
-            boardLocation.setLocation(result);
+            boardLocation.setLocation(newBoardLocation);
 
-            //Need to set transform again because setting the location clears the transform
+            //Need to set transform again because setting the location clears the transform - shouldn't the 
+            //BoardLocation.setPlacementTransform method perform the above calculations and set the location
+            //itself since it already has all the needed information???
             boardLocation.setPlacementTransform(tx);
 
             jobPanel.refreshSelectedRow();           
+
+            //Check for out-of-nominal conditions - these limits probably should be user definable values
+            double scalingTolerance = 0.05; //unitless
+            double shearingTolerance = 0.10; //unitless
+            double boardLocationTolerance = 5.0; //mm
+            
+            Utils2D.AffineInfo ai = Utils2D.affineInfo(tx);
+            Logger.info("Placement results: " + ai);
+            double boardOffset = newBoardLocation.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(savedBoardLocation);
+            Logger.info("Board origin offset distance: " + boardOffset + " mm");
+            if ((Math.abs(ai.xScale-1) > scalingTolerance) || (Math.abs(ai.yScale-1) > scalingTolerance) ||
+                    (Math.abs(ai.xShear) > shearingTolerance) || (boardOffset > boardLocationTolerance)) {
+                MessageBoxes.errorBox(mainFrame, "Error", "Results were outside of nominal tolerance limits, please try again with a different set of placements.");
+                cancel();
+                return false;
+            }
+            
         }
         return true;
     }
