@@ -43,7 +43,7 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
     private JLabel label;
     private JPanel panel;
     private JComboBox vacuumComboBoxActuator;
-    private JComboBox blowComboBoxActuator;
+    private JComboBox blowOffComboBoxActuator;
 
     public ReferenceNozzleVacuumWizard(ReferenceNozzle nozzle) {
         this.nozzle = nozzle;
@@ -66,15 +66,15 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
         
         label = new JLabel("Vacuum Actuator");
         panel.add(label, "1, 2, right, center");
-        label = new JLabel("Blow Actuator");
+        label = new JLabel("Blow Off Actuator");
         panel.add(label, "1, 3, right, center");
         
         vacuumComboBoxActuator = new JComboBox();
         vacuumComboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
         panel.add(vacuumComboBoxActuator, "2, 2");
-        blowComboBoxActuator = new JComboBox();
-        blowComboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
-        panel.add(blowComboBoxActuator, "2, 3");
+        blowOffComboBoxActuator = new JComboBox();
+        blowOffComboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
+        panel.add(blowOffComboBoxActuator, "2, 3");
     }
 
     @Override
@@ -83,6 +83,6 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
         IntegerConverter intConverter = new IntegerConverter();
 
         addWrappedBinding(nozzle, "vacuumActuatorName", vacuumComboBoxActuator, "selectedItem");
-        addWrappedBinding(nozzle, "blowActuatorName", blowComboBoxActuator, "selectedItem");
+        addWrappedBinding(nozzle, "blowOffActuatorName", blowOffComboBoxActuator, "selectedItem");
     }
 }

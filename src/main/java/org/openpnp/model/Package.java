@@ -45,7 +45,7 @@ public class Package extends AbstractModelObject implements Identifiable {
     private double pickVacuumLevel;
 
     @Attribute(required = false)
-    private double placeBlowLevel;
+    private double placeBlowOffLevel;
 
     @Element(required = false)
     private Footprint footprint;
@@ -91,14 +91,14 @@ public class Package extends AbstractModelObject implements Identifiable {
         firePropertyChange("description", oldValue, description);
     }
 
-    public void setPlaceBlowLevel(double level) {
-        Object oldValue = this.placeBlowLevel;
-        this.placeBlowLevel = level;
-        firePropertyChange("placeBlowLevel", oldValue, level);
+    public void setPlaceBlowOffLevel(double level) {
+        Object oldValue = this.placeBlowOffLevel;
+        this.placeBlowOffLevel = level;
+        firePropertyChange("placeBlowOffLevel", oldValue, level);
     }
 
-    public double getPlaceBlowLevel() {
-        return placeBlowLevel;
+    public double getPlaceBlowOffLevel() {
+        return placeBlowOffLevel;
     }
 
     public void setPickVacuumLevel(double level) {

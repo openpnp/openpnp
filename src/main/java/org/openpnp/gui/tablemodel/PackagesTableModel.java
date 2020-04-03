@@ -34,8 +34,8 @@ import org.openpnp.model.Package;
 public class PackagesTableModel extends AbstractTableModel implements PropertyChangeListener {
     final private Configuration configuration;
 
-    private String[] columnNames = new String[] {"ID", "Description", "Vacuum Level", "Blow Level",};
-    private Class[] columnTypes = new Class[] {String.class, String.class, Double.class, Double.class,};
+    private String[] columnNames = new String[] {"ID", "Description"};
+    private Class[] columnTypes = new Class[] {String.class, String.class,};
     private List<Package> packages;
 
     public PackagesTableModel(Configuration configuration) {
@@ -65,7 +65,7 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return (columnIndex >= 1) && (columnIndex <= 3);
+        return columnIndex == 1;
     }
 
     public Package getPackage(int index) {
@@ -78,12 +78,6 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
             Package this_package = packages.get(rowIndex);
             if (columnIndex == 1) {
                 this_package.setDescription((String) aValue);
-            }
-            if (columnIndex == 2) {
-                this_package.setPickVacuumLevel((Double) aValue);
-            }
-            if (columnIndex == 3) {
-                this_package.setPlaceBlowLevel((Double) aValue);
             }
         }
         catch (Exception e) {
@@ -98,10 +92,6 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
                 return this_package.getId();
             case 1:
                 return this_package.getDescription();
-            case 2:
-                return this_package.getPickVacuumLevel();
-            case 3:
-                return this_package.getPlaceBlowLevel();
             default:
                 return null;
         }

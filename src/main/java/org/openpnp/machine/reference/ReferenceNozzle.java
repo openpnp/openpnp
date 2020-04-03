@@ -66,7 +66,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     protected String vacuumActuatorName;
 
     @Element(required = false)
-    protected String blowActuatorName;
+    protected String blowOffActuatorName;
     
     /**
      * If limitRotation is enabled the nozzle will reverse directions when commanded to rotate past
@@ -146,12 +146,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         this.vacuumActuatorName = vacuumActuatorName;
     }
 
-    public String getBlowActuatorName() {
-        return blowActuatorName;
+    public String getBlowOffActuatorName() {
+        return blowOffActuatorName;
     }
 
-    public void setBlowActuatorName(String blowActuatorName) {
-        this.blowActuatorName = blowActuatorName;
+    public void setBlowOffActuatorName(String blowActuatorName) {
+        this.blowOffActuatorName = blowActuatorName;
     }
 
     @Override
@@ -219,7 +219,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             Logger.warn(e);
         }
 
-        double placeBlowLevel = part.getPackage().getPlaceBlowLevel();
+        double placeBlowLevel = part.getPackage().getPlaceBlowOffLevel();
         if (Double.compare(placeBlowLevel, Double.valueOf(0.0)) != 0) {
             actuateBlowValve(placeBlowLevel);
         } else {
@@ -662,10 +662,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         return actuator;
     }
     
-    protected Actuator getBlowActuator() throws Exception {
-        Actuator actuator = getHead().getActuatorByName(blowActuatorName);
+    protected Actuator getBlowOffActuator() throws Exception {
+        Actuator actuator = getHead().getActuatorByName(blowOffActuatorName);
         if (actuator == null) {
-            throw new Exception(String.format("Can't find blow actuator %s", blowActuatorName));
+            throw new Exception(String.format("Can't find blow actuator %s", blowOffActuatorName));
         }
         return actuator;
     }
@@ -707,7 +707,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     protected void actuateBlowValve(double value) throws Exception {
         actuatePump(true);
 
-        getBlowActuator().actuate(value);
+        getBlowOffActuator().actuate(value);
 
         actuatePump(false);
     }

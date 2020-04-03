@@ -144,7 +144,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
             head.addNozzle(n);
             getOrCreateActuatorInHead(head, ACT_N1_VACUUM);
             getOrCreateActuatorInHead(head, ACT_N1_BLOW);
-            n.setBlowActuatorName(ACT_N1_BLOW);
+            n.setBlowOffActuatorName(ACT_N1_BLOW);
             n.setVacuumActuatorName(ACT_N1_VACUUM);
         }
         
@@ -155,7 +155,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
             head.addNozzle(n);
             getOrCreateActuatorInHead(head, ACT_N2_VACUUM);
             getOrCreateActuatorInHead(head, ACT_N2_BLOW);
-            n.setBlowActuatorName(ACT_N2_BLOW);
+            n.setBlowOffActuatorName(ACT_N2_BLOW);
             n.setVacuumActuatorName(ACT_N2_VACUUM);
         }
         
@@ -166,7 +166,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
             head.addNozzle(n);
             getOrCreateActuatorInHead(head, ACT_N3_VACUUM);
             getOrCreateActuatorInHead(head, ACT_N3_BLOW);
-            n.setBlowActuatorName(ACT_N3_BLOW);
+            n.setBlowOffActuatorName(ACT_N3_BLOW);
             n.setVacuumActuatorName(ACT_N3_VACUUM);
        }
         
@@ -177,7 +177,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
             head.addNozzle(n);
             getOrCreateActuatorInHead(head, ACT_N4_VACUUM);
             getOrCreateActuatorInHead(head, ACT_N4_BLOW);
-            n.setBlowActuatorName(ACT_N4_BLOW);
+            n.setBlowOffActuatorName(ACT_N4_BLOW);
             n.setVacuumActuatorName(ACT_N4_VACUUM);
         }
         
