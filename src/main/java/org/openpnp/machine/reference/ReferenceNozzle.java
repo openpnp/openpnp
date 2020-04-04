@@ -31,6 +31,7 @@ import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -319,14 +320,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             location = location.derive(null, null, null, currentLocation.getRotation());
         }
 
-        if (limitRotation && !Double.isNaN(location.getRotation())
-                && Math.abs(location.getRotation()) > 180) {
-            if (location.getRotation() < 0) {
-                location = location.derive(null, null, null, location.getRotation() + 360);
-            }
-            else {
-                location = location.derive(null, null, null, location.getRotation() - 360);
-            }
+        if (limitRotation) {
+            //Set the rotation to be within the +/-180 degree range
+            location = location.derive(null, null, null,
+                    Utils2D.normalizeAngle180(location.getRotation()));
+        } else {
+            //Set the rotation to be the shortest way around from the current rotation
+            location = location.derive(null, null, null, currentLocation.getRotation() +
+                    Utils2D.normalizeAngle180(location.getRotation() - currentLocation.getRotation()));
         }
 
         ReferenceNozzleTip calibrationNozzleTip = getCalibrationNozzleTip();
