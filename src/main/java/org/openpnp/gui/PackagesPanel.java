@@ -160,7 +160,7 @@ public class PackagesPanel extends JPanel {
                 if (e.getValueIsAdjusting()) {
                     return;
                 }
-
+                
                 List<Package> selections = getSelections();
 
                 if (selections.size() > 1) {
@@ -174,10 +174,15 @@ public class PackagesPanel extends JPanel {
 
                 Package pkg = getSelection();
 
+                int selectedTab = tabbedPane.getSelectedIndex();
                 tabbedPane.removeAll();
                 if (pkg != null) {
                     tabbedPane.add("Nozzle Tips", new PackageNozzleTipsPanel(pkg));
                     tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(pkg.getFootprint())));
+                    tabbedPane.add("Settings", new JScrollPane(new PackageSettingsPanel(pkg)));
+                    if (selectedTab != -1) {
+                        tabbedPane.setSelectedIndex(selectedTab);
+                    }
                 }
 
                 revalidate();

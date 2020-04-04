@@ -1,6 +1,18 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2020-04-02
+
+## Vacuum and Blow Off Levels
+
+You can now specify vacuum and blow off levels on packages. These values are used to trigger
+actuators when picking (vacuum level) and placing (blow off level).
+
+See https://github.com/openpnp/openpnp/pull/965 for more information.
+
+Thanks Thomas!
+
+
 # 2020-01-22
 
 ## Camera Jogging Update
