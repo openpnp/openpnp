@@ -767,8 +767,10 @@ public class BlindsFeeder extends ReferenceFeeder {
                     drawRotatedRects(resultMat, getFiducials(), Color.white);
                     drawLines(resultMat, getLines(), new Color(0, 0, 128));
                     drawPartNumbers(resultMat, Color.orange);
-                    File file = Configuration.get().createResourceFile(getClass(), "blinds-feeder", ".png");
-                    Imgcodecs.imwrite(file.getAbsolutePath(), resultMat);
+                    if (Logger.getLevel() == org.pmw.tinylog.Level.DEBUG || Logger.getLevel() == org.pmw.tinylog.Level.TRACE) {
+                        File file = Configuration.get().createResourceFile(getClass(), "blinds-feeder", ".png");
+                        Imgcodecs.imwrite(file.getAbsolutePath(), resultMat);
+                    }
                     BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
                     resultMat.release();
                     MainFrame.get().getCameraViews().getCameraView(camera)

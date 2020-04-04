@@ -25,6 +25,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -45,12 +46,10 @@ import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
-import org.openpnp.gui.JobPanel;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.processes.RegionOfInterestProcess;
-import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
@@ -58,16 +57,11 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.LongConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
-import org.openpnp.gui.support.PercentConverter;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
-import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.OcrWrongPartAction;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
 import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
-import org.openpnp.spi.HeadMountable;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -78,10 +72,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import org.jdesktop.beansbinding.BeanProperty;
-import org.jdesktop.beansbinding.AutoBinding;
-import org.jdesktop.beansbinding.Bindings;
-import java.awt.event.ActionListener;
 
 @SuppressWarnings("serial")
 public class ReferencePushPullFeederConfigurationWizard
@@ -417,33 +407,33 @@ extends AbstractReferenceFeederConfigurationWizard {
                 ColumnSpec.decode("max(100dlu;default):grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("left:max(100dlu;default):grow"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                RowSpec.decode("default:grow"),
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                RowSpec.decode("default:grow"),
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                RowSpec.decode("default:grow"),
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        RowSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        RowSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        RowSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         btnSmartClone = new JButton(smartCloneAction);
         panelPushPull.add(btnSmartClone, "2, 2, 19, 1, fill, default");
@@ -728,23 +718,23 @@ extends AbstractReferenceFeederConfigurationWizard {
                 ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-            new RowSpec[] {
-                FormSpecs.LINE_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+                        FormSpecs.LINE_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblCalibrationTrigger = new JLabel("Calibration Trigger");
         panelVisionEnabled.add(lblCalibrationTrigger, "2, 2, right, default");
@@ -813,13 +803,13 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelVisionEnabled.add(lblOcrFontName, "8, 8, right, default");
         comboBoxFontName = new JComboBox(fontList.toArray());
         panelVisionEnabled.add(comboBoxFontName, "10, 8");
-        
-                btnSetupocrregion = new JButton(setupOcrRegionAction);
-                panelVisionEnabled.add(btnSetupocrregion, "12, 8, 3, 1");
-        
+
+        btnSetupocrregion = new JButton(setupOcrRegionAction);
+        panelVisionEnabled.add(btnSetupocrregion, "12, 8, 3, 1");
+
         lblStopAfterWrong = new JLabel("Stop after wrong part?");
         panelVisionEnabled.add(lblStopAfterWrong, "2, 10, right, default");
-        
+
         checkBoxStopAfterWrongPart = new JCheckBox("");
         panelVisionEnabled.add(checkBoxStopAfterWrongPart, "4, 10");
 
@@ -836,16 +826,16 @@ extends AbstractReferenceFeederConfigurationWizard {
             public void actionPerformed(ActionEvent e) {
             }
         });
-        
+
         btnOcrAllFeeders = new JButton(allFeederOcrAction);
         panelVisionEnabled.add(btnOcrAllFeeders, "12, 10, 3, 1");
-                
-                        lblDiscoverOnJobStart = new JLabel("Check on Job Start?");
-                        lblDiscoverOnJobStart.setToolTipText("<html>On Job Start, check that the correct parts are selected in OCR-enabled feeders at their locations. <br/>\r\nOtherwise the Job is stopped.<br/>\r\nThis will also vision-calibrate the feeders' locations.</html>");
-                        panelVisionEnabled.add(lblDiscoverOnJobStart, "2, 12, right, default");
-        
-                checkBoxDiscoverOnJobStart = new JCheckBox("");
-                panelVisionEnabled.add(checkBoxDiscoverOnJobStart, "4, 12");
+
+        lblDiscoverOnJobStart = new JLabel("OCR-Check on Job Start?");
+        lblDiscoverOnJobStart.setToolTipText("<html>On Job Start, check that the correct parts are selected in OCR-enabled feeders at their locations. <br/>\r\nOtherwise the Job is stopped.<br/>\r\nThis will also vision-calibrate the feeders' locations, if calibration is enabled.</html>");
+        panelVisionEnabled.add(lblDiscoverOnJobStart, "2, 12, right, default");
+
+        checkBoxDiscoverOnJobStart = new JCheckBox("");
+        panelVisionEnabled.add(checkBoxDiscoverOnJobStart, "4, 12");
         panelVisionEnabled.add(btnEditPipeline, "2, 16");
 
         btnResetPipeline = new JButton(resetPipelineAction);
@@ -1163,8 +1153,8 @@ extends AbstractReferenceFeederConfigurationWizard {
                 else {
                     // ask the user
                     result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "This may overwrite all your current settings. Are you sure?",
-                        null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                            "This may overwrite all your current settings. Are you sure?",
+                            null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 }
                 if (result == JOptionPane.YES_OPTION) {
                     applyAction.actionPerformed(e);
@@ -1252,7 +1242,7 @@ extends AbstractReferenceFeederConfigurationWizard {
     private JButton btnOcrAllFeeders;
     private JLabel lblStopAfterWrong;
     private JCheckBox checkBoxStopAfterWrongPart;
-    
+
     private void editPipeline() throws Exception {
         Camera camera = feeder.getCamera();
         CvPipeline pipeline = feeder.getCvPipeline(camera, false, true);
