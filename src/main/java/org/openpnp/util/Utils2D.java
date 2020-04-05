@@ -29,6 +29,7 @@ import java.util.List;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Length;
@@ -36,6 +37,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
+import org.pmw.tinylog.Logger;
 
 public class Utils2D {
     public static Point rotateTranslateScalePoint(Point point, double c, double x, double y,
@@ -116,17 +118,85 @@ public class Utils2D {
      * created the transform we captured the apparent angle and that is used to position
      * in X, Y, but we also need the actual value to add to the placement rotation so that
      * the nozzle is rotated to the correct angle as well.
-     * Note, there is probably a better way to do this. If you know how, please let me know!
+     * Note, there is probably a better way to do this. If you know how, please let me know!  Yes! - See below 
      */
     private static double getTransformAngle(AffineTransform tx) {
-        Point2D.Double a = new Point2D.Double(0, 0);
-        Point2D.Double b = new Point2D.Double(1, 1);
-        Point2D.Double c = new Point2D.Double(0, 0);
-        Point2D.Double d = new Point2D.Double(1, 1);
-        c = (Point2D.Double) tx.transform(c, null);
-        d = (Point2D.Double) tx.transform(d, null);
-        double angle = Math.toDegrees(Math.atan2(d.y - c.y, d.x - c.x) - Math.atan2(b.y - a.y, b.x - a.x));
-        return angle;
+        return affineInfo(tx).rotationAngleDeg;
+    }
+    
+    /**
+     * A class to hold information about an affine transform
+     */
+    public static class AffineInfo {
+        public double xScale;
+        public double yScale;
+        public double xShear;
+        public double rotationAngleDeg;
+        public double xTranslation; //mm
+        public double yTranslation; //mm
+        
+        @Override
+        public String toString() {
+            return String.format("scale (%f, %f) shear (%f, 0.0) rotation (%f deg) translation (%f mm, %f mm)",
+                    xScale, yScale, xShear, rotationAngleDeg, xTranslation, yTranslation);
+        }
+    }
+    
+    /**
+     * Returns an AffineInfo object containing information about the affine transform tx.
+     * 
+     * Although there are many ways to decompose an affine transform, this implementation treats
+     * the transform as consisting of, in order, an xy scaling, an x shear, a rotation, and finally
+     * a translation, i.e., destinationPoint = translation * rotation * shear * scale * sourcePoint
+     * @param tx
+     * @return
+     */
+    public static AffineInfo affineInfo(AffineTransform tx) {
+        AffineInfo affineInfo = new AffineInfo();
+        
+        double[] m = new double[6];
+        tx.getMatrix(m); //m00 m10 m01 m11 m02 m12 
+        
+        double theta = Math.atan2(m[1],m[0]);
+        affineInfo.rotationAngleDeg = Math.toDegrees(theta);
+        
+        double sinTheta = Math.sin(theta);
+        double cosTheta = Math.cos(theta);
+        
+        affineInfo.xScale = Math.sqrt(m[0]*m[0] + m[1]*m[1]);
+        
+        double shsy = m[2]*cosTheta + m[3]*sinTheta;
+        
+        if (Math.abs(cosTheta) != 1.0) { //robust way to check for sin(theta) != 0
+            affineInfo.yScale = (shsy*cosTheta-m[2])/sinTheta;
+        } else {
+            affineInfo.yScale = (m[3]-shsy*sinTheta)/cosTheta;
+        }
+        
+        affineInfo.xShear = shsy / affineInfo.yScale;
+        
+        affineInfo.xTranslation = m[4];
+        affineInfo.yTranslation = m[5];
+        
+        return affineInfo;
+    }
+    
+    /**
+     * Returns an affine transform based on the affineInfo parameter
+     * 
+     * Although there are many ways to decompose an affine transform, this implementation treats
+     * the transform as consisting of, in order, an xy scaling, an x shear, a rotation, and finally
+     * a translation, i.e., destinationPoint = translation * rotation * shear * scale * sourcePoint
+     * @param ai
+     * @return
+     */
+    public static AffineTransform deriveAffineTransform(AffineInfo affineInfo) {
+        AffineTransform ret = new AffineTransform();
+        ret.translate(affineInfo.xTranslation, affineInfo.yTranslation);
+        ret.rotate(Math.toRadians(affineInfo.rotationAngleDeg));
+        ret.shear(affineInfo.xShear, 0.0);
+        ret.scale(affineInfo.xScale, affineInfo.yScale);
+        return ret;
     }
 
     public static Location calculateBoardPlacementLocation(BoardLocation bl,
@@ -405,6 +475,131 @@ public class Utils2D {
         return tx;
     }  
     
+    /**
+     * Returns a column matrix whose entries are the arithmetic average of each
+     * corresponding row of matrix A.
+     * @param A
+     * @return
+     */
+    public static RealMatrix computeCentroid(RealMatrix A) {
+        int dim = A.getRowDimension();
+        int n = A.getColumnDimension();
+        RealMatrix ret = MatrixUtils.createRealMatrix(dim,1);
+        for (int j=0; j<n; j++) {
+            ret = ret.add(A.getColumnMatrix(j));
+        }
+        return ret.scalarMultiply(1.0/n);
+    }
+    
+    /**
+     * Adds colMatrix to each column of matrix A and returns the result
+     * @param A
+     * @param colMatrix
+     * @return
+     */
+    public static RealMatrix addToAllColumns(RealMatrix A, RealMatrix colMatrix ) {
+        int dim = A.getRowDimension();
+        int n = A.getColumnDimension();
+        RealMatrix ret = MatrixUtils.createRealMatrix(dim,n);
+        for (int j=0; j<n; j++) {
+            ret.setColumnMatrix(j, A.getColumnMatrix(j).add(colMatrix));
+        }
+        return ret;
+    }
+    
+    /**
+     * Subtracts colMatrix from each column of matrix A and returns the result
+     * @param A
+     * @param colMatrix
+     * @return
+     */
+    public static RealMatrix subtractFromAllColumns(RealMatrix A, RealMatrix colMatrix ) {
+        int dim = A.getRowDimension();
+        int n = A.getColumnDimension();
+        RealMatrix ret = MatrixUtils.createRealMatrix(dim,n);
+        for (int j=0; j<n; j++) {
+            ret.setColumnMatrix(j, A.getColumnMatrix(j).subtract(colMatrix));
+        }
+        return ret;
+    }
+    
+    /**
+     * Returns the least squared error affine transform that transforms the list of source
+     * locations to the corresponding list of destination locations, see the discussion at
+     * https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/openpnp/Wok_-OyVdnA/Z2YnhNoYAwAJ
+     * *
+     * @param source
+     * @param destination
+     * @return
+     */
+    public static AffineTransform deriveAffineTransform(List<Location> source, List<Location> destination) {
+        int n = Math.min(source.size(), destination.size());
+        
+        //Convert lists to matrices making sure all units are in millimeters
+        RealMatrix sMat = MatrixUtils.createRealMatrix(2,n);
+        RealMatrix dMat = MatrixUtils.createRealMatrix(2,n);
+        for (int j=0; j<n; j++) {
+            Location s = source.get(j).convertToUnits(LengthUnit.Millimeters);
+            sMat.setColumn(j, new double[] {s.getX(), s.getY()});
+            Location d = destination.get(j).convertToUnits(LengthUnit.Millimeters);
+            dMat.setColumn(j, new double[] {d.getX(), d.getY()});
+        }
+        
+        //Compute the centroid of the source and destination locations
+        RealMatrix sCent = computeCentroid(sMat);
+        RealMatrix dCent = computeCentroid(dMat);
+        
+        //Translate both sets of locations so that their centroids are at the origin
+        RealMatrix sHat = subtractFromAllColumns(sMat, sCent);
+        RealMatrix dHat = subtractFromAllColumns(dMat, dCent);
+
+        RealMatrix linearTransform;
+        if (n>2) {
+            //Compute the linear transform part of the affine transform
+            RealMatrix dHatsHatT = dHat.multiply(sHat.transpose());
+            double det = new LUDecomposition(dHatsHatT).getDeterminant();
+            if (det < 0) {
+                Logger.debug("Correcting for reflection...");
+                SingularValueDecomposition svd = new SingularValueDecomposition(dHatsHatT);
+                //Need to flip the direction of the eigenvector corresponding to the smallest singular value
+                RealMatrix flip = MatrixUtils.createRealIdentityMatrix(2);
+                flip.setEntry(1, 1, -1); //since the singular values are sorted largest to smallest, the sign of the lower right one is changed
+                dHatsHatT = svd.getU().multiply(svd.getS()).multiply(flip).multiply(svd.getVT());
+            }
+            RealMatrix pinv = new SingularValueDecomposition(sHat.multiply(sHat.transpose())).getSolver().getInverse();
+            linearTransform = dHatsHatT.multiply(pinv);
+        } else {
+            //With only two points, only a unique rotation and single scale factor can be found so
+            //the Kabsch algorithm is to compute the best rotation matrix
+            SingularValueDecomposition svd = new SingularValueDecomposition(dHat.multiply(sHat.transpose()));
+            RealMatrix rot = svd.getU().multiply(svd.getVT());
+            
+            double det = new LUDecomposition(rot).getDeterminant();
+            if (det < 0) {
+                Logger.debug("Correcting for reflection...");
+                RealMatrix flip = MatrixUtils.createRealIdentityMatrix(2);
+                flip.setEntry(1, 1, -1); //since the singular values are sorted largest to smallest, the sign of the lower right one is changed
+                rot = svd.getU().multiply(flip).multiply(svd.getVT());
+            }
+            
+            //Compute the scale factor as the ratio of the location spacings
+            double scaleFactor = Math.hypot(dHat.getEntry(0, 0)-dHat.getEntry(0, 1), dHat.getEntry(1, 0)-dHat.getEntry(1, 1)) /
+                    Math.hypot(sHat.getEntry(0, 0)-sHat.getEntry(0, 1), sHat.getEntry(1, 0)-sHat.getEntry(1, 1));
+            RealMatrix scale = MatrixUtils.createRealIdentityMatrix(2).scalarMultiply(scaleFactor);
+            
+            //Combine the scaling and rotation to get the linear portion of the affine transform
+            linearTransform = scale.multiply(rot);
+        }
+        
+        //Compute the translation part of the affine transform
+        RealMatrix translation = dCent.subtract(linearTransform.multiply(sCent));
+        
+        return new AffineTransform(
+                linearTransform.getEntry(0, 0), linearTransform.getEntry(1, 0),
+                linearTransform.getEntry(0, 1), linearTransform.getEntry(1, 1),
+                translation.getEntry(0, 0),     translation.getEntry(1, 0) );        
+    }
+
     /**
      * Calculate the area of a triangle. Returns 0 if the triangle is degenerate.
      * @param p1
