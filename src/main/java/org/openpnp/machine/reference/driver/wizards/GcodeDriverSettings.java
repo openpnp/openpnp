@@ -123,6 +123,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         settingsPanel.add(lblBacklashOffsetZ, "2, 8, right, default");
         
         backlashOffsetZTf = new JTextField();
+        backlashOffsetZTf.setToolTipText("Amount of z-axis backlash compensation");
         settingsPanel.add(backlashOffsetZTf, "4, 8, fill, default");
         backlashOffsetZTf.setColumns(5);
         
@@ -130,6 +131,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         settingsPanel.add(lblBacklashOffsetR, "6, 8, right, default");
         
         backlashOffsetRTf = new JTextField();
+        backlashOffsetRTf.setToolTipText("Amount of rotation backlash compensation");
         settingsPanel.add(backlashOffsetRTf, "8, 8, fill, default");
         backlashOffsetRTf.setColumns(5);
         
