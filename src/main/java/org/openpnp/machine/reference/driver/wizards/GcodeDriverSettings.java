@@ -74,6 +74,8 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         JLabel lblUnits = new JLabel("Units");
@@ -117,44 +119,58 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         settingsPanel.add(backlashOffsetYTf, "8, 6, fill, default");
         backlashOffsetYTf.setColumns(5);
         
+        JLabel lblBacklashOffsetZ = new JLabel("Backlash Offset Z [Units]");
+        settingsPanel.add(lblBacklashOffsetZ, "2, 8, right, default");
+        
+        backlashOffsetZTf = new JTextField();
+        settingsPanel.add(backlashOffsetZTf, "4, 8, fill, default");
+        backlashOffsetZTf.setColumns(5);
+        
+        JLabel lblBacklashOffsetR = new JLabel("Backlash Offset R [Units]");
+        settingsPanel.add(lblBacklashOffsetR, "6, 8, right, default");
+        
+        backlashOffsetRTf = new JTextField();
+        settingsPanel.add(backlashOffsetRTf, "8, 8, fill, default");
+        backlashOffsetRTf.setColumns(5);
+        
         JLabel lblBacklashFeedSpeedFactor = new JLabel("Backlash Feed Rate Factor");
-        settingsPanel.add(lblBacklashFeedSpeedFactor, "2, 8, right, default");
+        settingsPanel.add(lblBacklashFeedSpeedFactor, "2, 10, right, default");
         
         backlashFeedRateFactorTf = new JTextField();
-        settingsPanel.add(backlashFeedRateFactorTf, "4, 8, fill, default");
+        settingsPanel.add(backlashFeedRateFactorTf, "4, 10, fill, default");
         backlashFeedRateFactorTf.setColumns(5);
         
         JLabel lblNewLabel = new JLabel("Driver Name");
-        settingsPanel.add(lblNewLabel, "6, 8, right, default");
+        settingsPanel.add(lblNewLabel, "6, 10, right, default");
         
         driverName = new JTextField();
         driverName.setColumns(5);
-        settingsPanel.add(driverName, "8, 8");
+        settingsPanel.add(driverName, "8, 10");
         
         JLabel lblNonSquarenessFactor = new JLabel("Non-Squareness Factor");
-        settingsPanel.add(lblNonSquarenessFactor, "2, 10, right, default");
+        settingsPanel.add(lblNonSquarenessFactor, "2, 12, right, default");
         
         nonSquarenessFactorTf = new JTextField();
-        settingsPanel.add(nonSquarenessFactorTf, "4, 10, fill, default");
+        settingsPanel.add(nonSquarenessFactorTf, "4, 12, fill, default");
         nonSquarenessFactorTf.setColumns(5);
         
         JLabel lblVisualHoming = new JLabel("Visual Homing");
-        settingsPanel.add(lblVisualHoming, "6, 10, right, default");
+        settingsPanel.add(lblVisualHoming, "6, 12, right, default");
         
         visualHoming = new JCheckBox("");
-        settingsPanel.add(visualHoming, "8, 10");
+        settingsPanel.add(visualHoming, "8, 12");
         
         JLabel lblBackslashEscapedCharacters = new JLabel("Backslash Escaped Characters");
         lblBackslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                 + "feed, \\r for carriage return, and \\f for form feed.");
-        settingsPanel.add(lblBackslashEscapedCharacters, "2, 12, right, default");
+        settingsPanel.add(lblBackslashEscapedCharacters, "2, 14, right, default");
         
         backslashEscapedCharacters = new JCheckBox("");
         backslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                 + "feed, \\r for carriage return, and \\f for form feed.");
-        settingsPanel.add(backslashEscapedCharacters, "4, 12");
+        settingsPanel.add(backslashEscapedCharacters, "4, 14");
     }
 
     @Override
@@ -168,6 +184,8 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         addWrappedBinding(driver, "maxFeedRate", maxFeedRateTf, "text", intConverter);
         addWrappedBinding(driver, "backlashOffsetX", backlashOffsetXTf, "text", doubleConverter);
         addWrappedBinding(driver, "backlashOffsetY", backlashOffsetYTf, "text", doubleConverter);
+        addWrappedBinding(driver, "backlashOffsetZ", backlashOffsetZTf, "text", doubleConverter);
+        addWrappedBinding(driver, "backlashOffsetR", backlashOffsetRTf, "text", doubleConverter);
         addWrappedBinding(driver, "nonSquarenessFactor", nonSquarenessFactorTf, "text", doubleConverterFine);
         addWrappedBinding(driver, "backlashFeedRateFactor", backlashFeedRateFactorTf, "text", doubleConverter);
         addWrappedBinding(driver, "timeoutMilliseconds", commandTimeoutTf, "text", intConverter);
@@ -180,6 +198,8 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         ComponentDecorators.decorateWithAutoSelect(backlashOffsetXTf);
         ComponentDecorators.decorateWithAutoSelect(nonSquarenessFactorTf);
         ComponentDecorators.decorateWithAutoSelect(backlashOffsetYTf);
+        ComponentDecorators.decorateWithAutoSelect(backlashOffsetZTf);
+        ComponentDecorators.decorateWithAutoSelect(backlashOffsetRTf);
         ComponentDecorators.decorateWithAutoSelect(backlashFeedRateFactorTf);
         ComponentDecorators.decorateWithAutoSelect(commandTimeoutTf);
         ComponentDecorators.decorateWithAutoSelect(connectWaitTimeTf);
@@ -315,6 +335,8 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
     private JTextField maxFeedRateTf;
     private JTextField backlashOffsetXTf;
     private JTextField backlashOffsetYTf;
+    private JTextField backlashOffsetZTf;
+    private JTextField backlashOffsetRTf;
     private JTextField backlashFeedRateFactorTf;
     private JTextField nonSquarenessFactorTf;
     private JTextField commandTimeoutTf;
