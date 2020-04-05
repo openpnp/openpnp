@@ -336,11 +336,31 @@ public class Utils2D {
     }
 
 
+    /**
+     * Normalizes the angle to be greater than or equal to 0 and less than or equal to +360 degrees
+     * @param angle
+     * @return
+     */
     public static double normalizeAngle(double angle) {
         while (angle > 360) {
             angle -= 360;
         }
         while (angle < 0) {
+            angle += 360;
+        }
+        return angle;
+    }
+    
+    /**
+     * Normalizes the angle to be greater than or equal to -180 and less than +180 degrees
+     * @param angle
+     * @return
+     */
+    public static double normalizeAngle180(double angle) {
+        while (angle >= 180) {
+            angle -= 360;
+        }
+        while (angle < -180) {
             angle += 360;
         }
         return angle;

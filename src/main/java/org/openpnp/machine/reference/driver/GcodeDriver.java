@@ -152,6 +152,12 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     protected double backlashOffsetY = -1;
     
     @Attribute(required = false)
+    protected double backlashOffsetZ = 0;
+    
+    @Attribute(required = false)
+    protected double backlashOffsetR = 0;
+    
+    @Attribute(required = false)
     protected double nonSquarenessFactor = 0;
     
     @Attribute(required = false)
@@ -653,6 +659,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             if (includeZ) {
             	command = substituteVariable(command, "Z", z);
             	command = substituteVariable(command, "ZF", z);
+                command = substituteVariable(command, "BacklashOffsetZ", z + backlashOffsetZ); // Backlash Compensation
                 command = substituteVariable(command, "ZDecreasing", z < zAxis.getCoordinate() ? true : null);
                 command = substituteVariable(command, "ZIncreasing", z > zAxis.getCoordinate() ? true : null);
                 if (zAxis.getPreMoveCommand() != null) {
@@ -664,6 +671,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             else {
                 command = substituteVariable(command, "Z", null);
                 command = substituteVariable(command, "ZF", null);
+                command = substituteVariable(command, "BacklashOffsetZ", null); // Backlash Compensation
                 command = substituteVariable(command, "ZDecreasing", null);
                 command = substituteVariable(command, "ZIncreasing", null);
             }
@@ -671,6 +679,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             if (includeRotation) {
             	command = substituteVariable(command, "Rotation", rotation);
             	command = substituteVariable(command, "RotationF", rotation);
+                command = substituteVariable(command, "BacklashOffsetRotation", rotation + backlashOffsetR); // Backlash Compensation
                 command = substituteVariable(command, "RotationDecreasing", rotation < rotationAxis.getCoordinate() ? true : null);
                 command = substituteVariable(command, "RotationIncreasing", rotation > rotationAxis.getCoordinate() ? true : null);
                 if (rotationAxis.getPreMoveCommand() != null) {
@@ -682,6 +691,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             else {
                 command = substituteVariable(command, "Rotation", null);
                 command = substituteVariable(command, "RotationF", null);
+                command = substituteVariable(command, "BacklashOffsetRotation", null); // Backlash Compensation
                 command = substituteVariable(command, "RotationDecreasing", null);
                 command = substituteVariable(command, "RotationIncreasing", null);
             }
@@ -1196,6 +1206,22 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     
     public void setBacklashOffsetY(double BacklashOffsetY) {
         this.backlashOffsetY = BacklashOffsetY;
+    }
+    
+    public double getBacklashOffsetZ() {
+        return backlashOffsetZ;
+    }
+    
+    public void setBacklashOffsetZ(double BacklashOffsetZ) {
+        this.backlashOffsetZ = BacklashOffsetZ;
+    }
+    
+    public double getBacklashOffsetR() {
+        return backlashOffsetR;
+    }
+    
+    public void setBacklashOffsetR(double BacklashOffsetR) {
+        this.backlashOffsetR = BacklashOffsetR;
     }
     
     public double getBacklashFeedRateFactor() {
