@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.swing.Action;
+
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.Core;
 import org.opencv.core.KeyPoint;
@@ -43,9 +44,11 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferencePushPullFeederConfigurationWizard;
+import org.openpnp.machine.reference.feeder.wizards.ReferencePushPullMotionConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -88,6 +91,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     @Attribute(required = false)
     protected boolean normalizePickLocation = true;
+
+    @Attribute(required = false)
+    protected boolean snapToAxis = true;
 
     @Element(required = false)
     protected Location hole1Location = new Location(LengthUnit.Millimeters);
@@ -481,6 +487,16 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         firePropertyChange("normalizePickLocation", oldValue, normalizePickLocation);
     }
 
+    public boolean isSnapToAxis() {
+        return snapToAxis;
+    }
+
+    public void setSnapToAxis(boolean snapToAxis) {
+        Object oldValue = this.normalizePickLocation;
+        this.snapToAxis = snapToAxis;
+        firePropertyChange("snapToAxis", oldValue, snapToAxis);
+    }
+
     public Location getHole1Location() {
         return hole1Location;
     }
@@ -511,6 +527,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Object oldValue = this.usedAsTemplate;
         this.usedAsTemplate = usedAsTemplate;
         firePropertyChange("usedAsTemplate", oldValue, usedAsTemplate);
+        // this also changes the status implicitly 
+        firePropertyChange("cloneTemplateStatus", "", getCloneTemplateStatus());
     }
 
     public Location getFeedStartLocation() {
@@ -979,11 +997,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         resetCalibration();
     }
 
-    public Location forwardTransform(Location location, Location transform) {
+    public static Location forwardTransform(Location location, Location transform) {
         return location.rotateXy(transform.getRotation()).addWithRotation(transform);
     }
 
-    public Location backwardTransform(Location location, Location transform) {
+    public static Location backwardTransform(Location location, Location transform) {
         return location.subtractWithRotation(transform).rotateXy(-transform.getRotation());
     }
 
@@ -1461,8 +1479,18 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                             else {
                                 if (calibratedHole1Location.unitVectorTo(calibratedHole2Location)
                                         .dotProduct(bestUnitVector).getValue() < 0.0) {
-                                    // turn the unite vector around
+                                    // turn the unit vector around
                                     bestUnitVector = bestUnitVector.multiply(-1.0, -1.0, 0, 0);
+                                }
+                                if (snapToAxis) {
+                                    if (Math.abs(bestUnitVector.getX()) > Math.abs(bestUnitVector.getY())*5) {
+                                        // close enough, snap to X
+                                        bestUnitVector = new Location(LengthUnit.Millimeters, Math.signum(bestUnitVector.getX()), 0, 0, 0);
+                                    }
+                                    else if (Math.abs(bestUnitVector.getY()) > Math.abs(bestUnitVector.getX())*5) {
+                                        // close enough, snap to Y
+                                        bestUnitVector = new Location(LengthUnit.Millimeters, 0, Math.signum(bestUnitVector.getY()), 0, 0);
+                                    }
                                 }
                                 // determine the correct transformation
                                 double angleTape = Math.atan2(bestUnitVector.getY(), bestUnitVector.getX())*180.0/Math.PI;
@@ -1575,7 +1603,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Camera camera = getCamera();
         // First preliminary smart clone to get a pipeline from the most suitable template.
         if (getTemplateFeeder(null) != null) {
-            smartClone(null, false, false, true);
+            smartClone(null, false, false, false, true);
         }
         if (calibrationTrigger == CalibrationTrigger.None) {
             // Just assume the user wants it now 
@@ -1592,16 +1620,16 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             setHole1Location(feature.calibratedHole1Location);
             setHole2Location(feature.calibratedHole2Location);
             // Second preliminary smart clone to get pipeline, OCR region etc. from a template, 
-            // this time with proper transformation. This will again be overwritten if
+            // this time with proper transformation. This may again be overwritten if
             // OCR recognizes the proper part.
             if (getTemplateFeeder(null) != null) {
-                smartClone(null, true, true, true);
+                smartClone(null, true, true, true, true);
             }
-            // as we changed this -> reset any stats
+            // As we've changed all this -> reset any stats
             resetCalibrationStatistics();
-            // now run a sprocket hole calibration
+            // Now run a sprocket hole calibration, make sure to change the part (not swap it)
             performVisionOperations(camera, pipeline, true, true, false, OcrWrongPartAction.ChangePart, false);
-            // move the camera back to the pick location
+            // Move the camera back to the pick location
             MovableUtils.moveToLocationAtSafeZ(camera, getLocation());
         }
     }
@@ -1696,7 +1724,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         return false;
     }
 
-    protected ReferencePushPullFeeder getTemplateFeeder(Part compatiblePart) {
+    public ReferencePushPullFeeder getTemplateFeeder(Part compatiblePart) {
         List<ReferencePushPullFeeder> list = getAllPushPullFeeders();
 
         Part comparePart = compatiblePart == null ? getPart() : compatiblePart;
@@ -1758,18 +1786,71 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         return null;
     }
 
-    private Location cloneIfDefined(ReferencePushPullFeeder feederTemplate, Location location) {
-        if (location.equals(nullLocation)) {
-            return nullLocation;
+    public List<ReferencePushPullFeeder> getCompatibleFeeders() {
+        List<ReferencePushPullFeeder> list = new ArrayList<>();
+        for (ReferencePushPullFeeder feeder : getAllPushPullFeeders()) {
+            if (feeder != this) { 
+                if (ReferencePushPullFeeder.compatiblePartPackages(getPart(), feeder.getPart())) {
+                    list.add(feeder);
+                }
+            }
+        }
+        return list;
+    }
+
+    public String getCloneTemplateStatus() {
+        Part part = getPart();
+        String status = "<span>";
+        if (isUsedAsTemplate()) {
+            status += "Clones to ";
+            int n = 0;
+            for (ReferencePushPullFeeder targetFeeder : getCompatibleFeeders()) {
+                if (n++ > 0) {
+                    status += ", ";
+                }
+                status += targetFeeder.getName()+" "+targetFeeder.getPart().getId();
+            }
+            status += n == 0 ? "none." : " (Count: "+n+")";
         }
         else {
-            Location feederLocation = feederTemplate.transformMachineToFeederLocation(location, null);
-            return transformFeederToMachineLocation(feederLocation, null);
+            ReferencePushPullFeeder templateFeeder = getTemplateFeeder(null);
+            if (templateFeeder != null) {
+                status += "<strong>"+templateFeeder.getName()+"</strong>";
+                if (templateFeeder.getPart() != null) {
+                    status += " with part <strong>"+templateFeeder.getPart().getId()+"</strong>";
+                }
+                if (part != null 
+                        && compatiblePartPackages(part, templateFeeder.getPart())) { 
+                    org.openpnp.model.Package package1 = part.getPackage();
+                    if (package1 != null) {
+                        if (package1.getTapeSpecification() != null && !package1.getTapeSpecification().isEmpty()) {
+                            status += " selected by common tape & reel specification <strong>"+package1.getTapeSpecification()+"</strong>";
+                        }
+                        else {
+                            status += " selected by common package <strong>"+package1.getId()+"</strong>";
+                        }
+                    }
+                }
+                else {
+                    status += " selected as partial match.<br/>"
+                            + "<strong style=\"color:red\">Tape & reel specifications/packages are incompatible, settings must be reviewed.</strong>";
+                }
+            }
+            else {
+                status += "<strong>None found</strong>";
+            }
         }
+        status += "</span>";
+        return status;
+    }
+
+    public void setCloneTemplateStatus(String cloneTemplateStatus) {
+        // does nothing
+        firePropertyChange("cloneTemplateStatus", cloneTemplateStatus, getCloneTemplateStatus());
     }
 
     public void smartClone(Part compatiblePart, 
-            boolean cloneTapeSettings, boolean clonePushPullSettings, boolean cloneVisionSettings) throws Exception {
+            boolean cloneLocationSettings, boolean cloneTapeSettings, boolean clonePushPullSettings, boolean cloneVisionSettings) throws Exception {
         // get us the best template feeder
         ReferencePushPullFeeder templateFeeder = getTemplateFeeder(compatiblePart);
         if (templateFeeder == null) {
@@ -1780,16 +1861,21 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 throw new Exception("Feeder "+getName()+": No template feeder found to clone for part "+compatiblePart.getId()+" compatibility.");
             }
         }
-        cloneFeederSettings(cloneTapeSettings, clonePushPullSettings, cloneVisionSettings,
+        cloneFeederSettings(cloneLocationSettings, cloneTapeSettings, clonePushPullSettings, cloneVisionSettings,
                 templateFeeder);
     }
 
-    protected void cloneFeederSettings(boolean cloneTapeSettings, boolean clonePushPullSettings,
+    public void cloneFeederSettings(boolean cloneLocationSettings, boolean cloneTapeSettings, boolean clonePushPullSettings,
             boolean cloneVisionSettings, ReferencePushPullFeeder templateFeeder)
                     throws CloneNotSupportedException {
-        if (cloneTapeSettings) {
-            // the Z from the location
+        if (cloneLocationSettings) {
+            // just the Z from the location
             setLocation(getLocation().derive(templateFeeder.getLocation(), false, false, true, false));
+            // options
+            setNormalizePickLocation(templateFeeder.isNormalizePickLocation());
+            setSnapToAxis(templateFeeder.isSnapToAxis());
+        }
+        if (cloneTapeSettings) {
             // Tape and feed spec
             setPartPitch(templateFeeder.getPartPitch());
             setRotationInFeeder(templateFeeder.getRotationInFeeder());
@@ -1802,12 +1888,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             // clone the actuators
             setActuatorName(templateFeeder.getActuatorName());
             setPeelOffActuatorName(templateFeeder.getPeelOffActuatorName());
-            // translate all the locations
-            setFeedStartLocation(cloneIfDefined(templateFeeder, templateFeeder.getFeedStartLocation()));
-            setFeedMid1Location(cloneIfDefined(templateFeeder, templateFeeder.getFeedMid1Location())); 
-            setFeedMid2Location(cloneIfDefined(templateFeeder, templateFeeder.getFeedMid2Location())); 
-            setFeedMid3Location(cloneIfDefined(templateFeeder, templateFeeder.getFeedMid3Location())); 
-            setFeedEndLocation(cloneIfDefined(templateFeeder, templateFeeder.getFeedEndLocation())); 
             // clone all the speeds
             setFeedSpeedPush1(templateFeeder.getFeedSpeedPush1());
             setFeedSpeedPush2(templateFeeder.getFeedSpeedPush2());
@@ -1836,11 +1916,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             // other settings
             setCalibrationTrigger(templateFeeder.getCalibrationTrigger());
             setPrecisionWanted(templateFeeder.getPrecisionWanted());
-            // the OCR region, rotated to our feeder's orientation, and font and size
-            if (templateFeeder.getOcrRegion()!= null) {
-                setOcrRegion(templateFeeder.getOcrRegion()
-                        .rotateXy(getLocation().getRotation()-templateFeeder.getLocation().getRotation()));
-            }
             setOcrFontName(templateFeeder.getOcrFontName());
             setOcrFontSizePt(templateFeeder.getOcrFontSizePt());
             setOcrWrongPartAction(templateFeeder.getOcrWrongPartAction());
@@ -1853,32 +1928,61 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             // clone the pipeline
             setPipeline(templateFeeder.getPipeline().clone());
         }
+        // now transform over all the locations
+        setFeederLocation(getTransform(null), false, true, true, templateFeeder);
     }
 
-    protected Location relocatedLocation(Location location, Location oldTransform, Location newTransform) {
-        Location feederLocalLocation = backwardTransform(location, oldTransform);
-        location = forwardTransform(feederLocalLocation, newTransform);
-        return location;
-    }
-
-    protected void relocateFeeder(Location newTransform) {
-        // Relocate the feeder to match the given new transformation.
-        Location oldTransform = getTransform(null);
-        setHole1Location(relocatedLocation(getHole1Location(), oldTransform, newTransform));
-        setHole2Location(relocatedLocation(getHole2Location(), oldTransform, newTransform));
-        setFeedStartLocation(relocatedLocation(getFeedStartLocation(), oldTransform, newTransform));
-        setFeedMid1Location(relocatedLocation(getFeedMid1Location(), oldTransform, newTransform));
-        setFeedMid2Location(relocatedLocation(getFeedMid2Location(), oldTransform, newTransform));
-        setFeedMid3Location(relocatedLocation(getFeedMid3Location(), oldTransform, newTransform));
-        setFeedEndLocation(relocatedLocation(getFeedEndLocation(), oldTransform, newTransform));
-        if (getOcrRegion()!= null) {
-            setOcrRegion(getOcrRegion()
-                    .rotateXy(newTransform.getRotation()-oldTransform.getRotation()));
+    protected static Location relocatedLocation(Location location, Location oldTransform, Location newTransform) {
+        if (location.equals(nullLocation)) {
+            // a location with all zeroes is assumed as uninitialized 
+            return location;
         }
-        // finally and only now set the new pick location (in case some transformations happens in the getters/setters in the future)
-        setLocation(relocatedLocation(getLocation(), oldTransform, newTransform));
+        else {
+            Location feederLocalLocation = backwardTransform(location, oldTransform);
+            location = forwardTransform(feederLocalLocation, newTransform);
+            return location;
+        }
+    }
+    protected static Location relocatedXyLocation(Location location, Location oldTransform, Location newTransform) {
+        // disregard Z and Rotation
+        return relocatedLocation(location.multiply(1.0, 1.0, 0.0, 0.0), oldTransform, newTransform);
+    }
+    protected static Location relocatedXyzLocation(Location location, Location oldTransform, Location newTransform) {
+        // disregard Rotation
+        return relocatedLocation(location.multiply(1.0, 1.0, 1.0, 0.0), oldTransform, newTransform);
     }
 
+    protected void setFeederLocation(Location newTransform, 
+            boolean primary, boolean pushPull, boolean vision, 
+            ReferencePushPullFeeder templateFeeder) {
+        // Relocate the feeder to match the given new transformation.
+        Location oldTransform = templateFeeder.getTransform(null);
+        if (primary) {
+            setHole1Location(relocatedXyLocation(templateFeeder.getHole1Location(), oldTransform, newTransform));
+            setHole2Location(relocatedXyLocation(templateFeeder.getHole2Location(), oldTransform, newTransform));
+        }
+        if (pushPull) {
+            setFeedStartLocation(relocatedXyzLocation(templateFeeder.getFeedStartLocation(), oldTransform, newTransform));
+            setFeedMid1Location(relocatedXyzLocation(templateFeeder.getFeedMid1Location(), oldTransform, newTransform));
+            setFeedMid2Location(relocatedXyzLocation(templateFeeder.getFeedMid2Location(), oldTransform, newTransform));
+            setFeedMid3Location(relocatedXyzLocation(templateFeeder.getFeedMid3Location(), oldTransform, newTransform));
+            setFeedEndLocation(relocatedXyzLocation(templateFeeder.getFeedEndLocation(), oldTransform, newTransform));
+        }
+        if (vision) {
+            if (templateFeeder.getOcrRegion()!= null) {
+                setOcrRegion(templateFeeder.getOcrRegion()
+                        .rotateXy(newTransform.getRotation()-oldTransform.getRotation()));
+            }
+        }
+        if (primary) {
+            // finally and only now set the new pick location (in case some transformations happens in the getters/setters in the future)
+            setLocation(relocatedLocation(templateFeeder.getLocation(), oldTransform, newTransform));
+        }
+    }
+    protected void relocateFeeder(Location newTransform) {
+        // relocate from itself
+        setFeederLocation(newTransform, true, true, true, this);
+    }
     protected void swapOutFeeders(ReferencePushPullFeeder other) {
         // Swap out two feeders' locations.
         Location transform1 = this.getTransform(null); 
@@ -1938,19 +2042,15 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             if (ocrAction == OcrWrongPartAction.SwapOrCreate) {
                 if (otherFeeder == null) {
                     // no other feeder has the OCR part -> create a new one
-                    otherFeeder = new ReferencePushPullFeeder();
-                    otherFeeder.setPart(ocrPart);
-                    otherFeeder.setLocation(getLocation());
-                    otherFeeder.setEnabled(isEnabled());
-                    // add to machine
-                    cfg.getMachine().addFeeder(otherFeeder);
+                    Location newLocation =  getLocation();
+                    otherFeeder = createNewAtLocation(newLocation, ocrPart, this);
                     if (compatiblePartPackages(ocrPart, currentPart)) {
                         // compatible parts, clone settings from this one
-                        otherFeeder.cloneFeederSettings(true, true, true, this);
+                        otherFeeder.cloneFeederSettings(true, true, true, true, this);
                     }
                     else {
                         // incompatible parts, do a smart clone
-                        otherFeeder.smartClone(ocrPart, true, true, true);
+                        otherFeeder.smartClone(ocrPart, true, true, true, true);
                     }
                     // disable this one
                     setEnabled(false);
@@ -1970,6 +2070,57 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
     }
 
+    public ReferencePushPullFeeder createNewAtLocation(Location newLocation, Part part, ReferencePushPullFeeder templateFeeder)
+            throws Exception {
+        ReferencePushPullFeeder feeder;
+        feeder = new ReferencePushPullFeeder();
+        feeder.setPart(part != null ? part : Configuration.get().getParts().get(0));
+        feeder.setFeederLocation(newLocation, true, true, true, templateFeeder);
+        feeder.setEnabled(isEnabled());
+        // add to machine
+        Configuration.get().getMachine().addFeeder(feeder);
+        return feeder;
+    }
+
+    public ReferencePushPullFeeder createNewInRow()
+            throws Exception {
+        double bestDistanceMm = Double.MAX_VALUE;
+        ReferencePushPullFeeder closestFeeder = null;
+        for (ReferencePushPullFeeder feeder : getAllPushPullFeeders()) {
+            if (feeder != this && feeder.getPart() != null) {
+                double distanceMm = feeder.getLocation().convertToUnits(LengthUnit.Millimeters)
+                        .getLinearDistanceTo(this.getLocation());
+                if (closestFeeder == null 
+                        || distanceMm < bestDistanceMm) {
+                    bestDistanceMm = distanceMm;
+                    closestFeeder = feeder;
+                }
+            }
+        }
+        if (closestFeeder == null) {
+            throw new Exception("No other feeder found to form a row");
+        }
+        Location rowUnit = getLocation().subtract(closestFeeder.getLocation()).convertToUnits(LengthUnit.Millimeters);
+        if (isSnapToAxis()) {
+            if (Math.abs(rowUnit.getX()) > rowLocationToleranceMm && Math.abs(rowUnit.getY()) <= rowLocationToleranceMm) {
+                // row along X axis -> snap to it
+                rowUnit = rowUnit.multiply(1.0, 0.0, 0.0, 0.0);
+            }
+            else if (Math.abs(rowUnit.getY()) > rowLocationToleranceMm && Math.abs(rowUnit.getX()) <= rowLocationToleranceMm) {
+                // row along Y axis -> snap to it
+                rowUnit = rowUnit.multiply(0.0, 1.0, 0.0, 0.0);
+            }
+            else {
+                throw new Exception("Closest feeder "+closestFeeder.getName()+" "+closestFeeder.getPart().getId()+" does not form a row in X and Y");
+            }
+        }
+        Location newLocation = getLocation().add(rowUnit);
+        ReferencePushPullFeeder newFeeder = createNewAtLocation(newLocation, null, closestFeeder);
+        newFeeder.smartClone(null, true, true, true, true);
+        return newFeeder;
+    }
+
+
     protected void setOcrDetectedPart(Part ocrPart) throws Exception {
         if (isUsedAsTemplate()) {
             if (!compatiblePartPackages(ocrPart, getPart())) {
@@ -1979,7 +2130,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
         else {
             setPart(ocrPart);
-            smartClone(ocrPart, true, true, true);
+            smartClone(ocrPart, true, true, true, true);
         }
     }
 
@@ -2143,6 +2294,14 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     @Override
     public String getPropertySheetHolderTitle() {
         return getClass().getSimpleName() + " " + getName();
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration"),
+                new PropertySheetWizardAdapter(new ReferencePushPullMotionConfigurationWizard(this), "Push-Pull Motion"),
+        };
     }
 
     @Override

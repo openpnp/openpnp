@@ -78,6 +78,7 @@ public class RegionOfInterestProcess {
                 .getCameraView(camera);
         this.cameraView.addMouseListener(locationClickedListener);
         this.cameraView.addMouseMotionListener(locationClickedListener);
+        this.cameraView.flash();
 
         this.cameraView.setReticle(PROCESS_RETICLE_KEY, new Reticle() {
 
@@ -85,10 +86,6 @@ public class RegionOfInterestProcess {
             public void draw(Graphics2D g2d, LengthUnit cameraUnitsPerPixelUnits,
                     double cameraUnitsPerPixelX, double cameraUnitsPerPixelY, double viewPortCenterX,
                     double viewPortCenterY, int viewPortWidth, int viewPortHeight, double rotation) {
-                /*@Override
-            public BufferedImage filterCameraImage(Camera camera, BufferedImage image) {
-                Graphics2D g2d = image.createGraphics();
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);*/
                 if (mouseLastPos != null) {
                     g2d.setColor(Color.orange);
                     g2d.setStroke(new BasicStroke(1.0f));

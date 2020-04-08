@@ -51,6 +51,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JDialog;
+import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -507,7 +508,10 @@ public class MainFrame extends JFrame {
         panel_1.setLayout(new BorderLayout(0, 0));
 
         lblInstructions = new JTextPane();
-        lblInstructions.setFont(new Font("Lucida Grande", Font.PLAIN, 14)); //$NON-NLS-1$
+        // does not seem to work with html
+        //lblInstructions.setFont(new Font("Lucida Grande", Font.PLAIN, 14)); //$NON-NLS-1$
+        // instead use the HONOR_DISPLAY_PROPERTIES to set the proper system dialog font and size 
+        lblInstructions.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, true);
         lblInstructions.setBackground(UIManager.getColor("Panel.background")); //$NON-NLS-1$
         lblInstructions.setContentType("text/html"); //$NON-NLS-1$
         lblInstructions.setEditable(false);

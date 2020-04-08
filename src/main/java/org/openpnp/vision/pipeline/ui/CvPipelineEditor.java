@@ -16,6 +16,7 @@ import org.openpnp.vision.pipeline.stages.BlurGaussian;
 import org.openpnp.vision.pipeline.stages.BlurMedian;
 import org.openpnp.vision.pipeline.stages.ClosestModel;
 import org.openpnp.vision.pipeline.stages.Add;
+import org.openpnp.vision.pipeline.stages.AffineUnwarp;
 import org.openpnp.vision.pipeline.stages.AffineWarp;
 import org.openpnp.vision.pipeline.stages.ComposeResult;
 import org.openpnp.vision.pipeline.stages.ConvertColor;
@@ -149,6 +150,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(WritePartTemplateImage.class);
         registerStageClass(ActuatorWrite.class);
         registerStageClass(AffineWarp.class);
+        registerStageClass(AffineUnwarp.class);
         registerStageClass(SimpleOcr.class);
         
     }

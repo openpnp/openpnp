@@ -20,6 +20,10 @@
 
 package org.openpnp.vision.pipeline.stages;
 
+import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
+
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Size;
@@ -253,6 +257,9 @@ public class AffineWarp extends CvStage {
 
         // Create the transformation matrix
         Mat transformMatrix = Imgproc.getAffineTransform(ma1, ma2);
+        
+        // Recreate the same in Java
+        AffineTransform affineTransform = getAffineTransform(p0, p1, p2, p0T, p1T, p2T);
 
         // Create the size
         Size size = new Size(wPx, hPx);
@@ -260,7 +267,31 @@ public class AffineWarp extends CvStage {
         // Perform the warpAffine
         Mat transformed = new Mat();
         Imgproc.warpAffine(mat, transformed, transformMatrix, size);
+        
 
-        return new Result(transformed, transformMatrix);
+        return new Result(transformed, affineTransform);
+    }
+    
+     protected AffineTransform getAffineTransform(
+            org.opencv.core.Point p0,
+            org.opencv.core.Point p1,
+            org.opencv.core.Point p2,
+            org.opencv.core.Point p0T,
+            org.opencv.core.Point p1T,
+            org.opencv.core.Point p2T) {   
+        AffineTransform unit = new AffineTransform(p1.x - p0.x, p1.y - p0.y, p2.x - p0.x, p2.y - p0.y, p0.x, p0.y);
+        AffineTransform unitT = new AffineTransform(p1T.x -p0T.x, p1T.y - p0T.y, p2T.x - p0T.x, p2T.y - p0T.y, p0T.x, p0T.y);
+        AffineTransform unitInv = null;
+        try {
+            unitInv = unit.createInverse();
+        }
+        catch (NoninvertibleTransformException e) {
+            Logger.error("["+getClass().getName()+"] getAffineTransform() cannot invert transformation");
+            return new AffineTransform();
+        }
+        AffineTransform at = new AffineTransform();
+        at.concatenate(unitT);
+        at.concatenate(unitInv);
+        return at;
     }
 }
