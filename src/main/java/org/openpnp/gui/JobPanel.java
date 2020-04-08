@@ -74,7 +74,7 @@ import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.panelization.DlgAutoPanelize;
 import org.openpnp.gui.panelization.DlgPanelXOut;
-import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
+import org.openpnp.gui.processes.MultiPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
@@ -1329,7 +1329,7 @@ public class JobPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                new TwoPlacementBoardLocationProcess(frame, JobPanel.this);
+                new MultiPlacementBoardLocationProcess(frame, JobPanel.this);
             });
         }
     };
