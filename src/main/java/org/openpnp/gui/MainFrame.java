@@ -523,7 +523,7 @@ public class MainFrame extends JFrame {
         panel_1.add(lblInstructions);
 
         labelIcon = new JLabel(); 
-        labelIcon.setIcon(Icons.capturePin);
+        labelIcon.setIcon(Icons.processActivity1Icon);
         panelInstructions.add(labelIcon, BorderLayout.WEST);
 
         machineControlsPanel = new MachineControlsPanel(configuration, jobPanel);
@@ -812,7 +812,7 @@ public class MainFrame extends JFrame {
         scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
         scheduledExecutor.scheduleAtFixedRate(new Runnable() {
             public void run() {
-                labelIcon.setIcon(labelIcon.getIcon() == Icons.centerPin ? Icons.capturePin : Icons.centerPin);
+                labelIcon.setIcon(labelIcon.getIcon() == Icons.processActivity1Icon ? Icons.processActivity2Icon : Icons.processActivity1Icon);
             }
         }, 0, 1000, TimeUnit.MILLISECONDS);
     }

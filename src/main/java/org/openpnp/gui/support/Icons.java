@@ -84,6 +84,8 @@ public class Icons {
     public static Icon lockQuestion = getIcon("/icons/lock-question.svg");
 
     public static Icon openSCadIcon = getIcon("/icons/openscad-icon.svg");
+    public static Icon processActivity1Icon = getIcon("/icons/process_activity_1.svg");
+    public static Icon processActivity2Icon = getIcon("/icons/process_activity_2.svg");
 
     public static Icon getIcon(String resourceName, int width, int height) {
         if (resourceName.endsWith(".svg")) {
