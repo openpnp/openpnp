@@ -26,6 +26,8 @@ import java.awt.Color;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -45,18 +47,15 @@ import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.events.FeederSelectedEvent;
-import org.openpnp.gui.FeedersPanel;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.processes.RegionOfInterestProcess;
 import org.openpnp.gui.support.DoubleConverter;
-import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
@@ -77,8 +76,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeEvent;
+import java.awt.Dimension;
 
 @SuppressWarnings("serial")
 public class ReferencePushPullFeederConfigurationWizard
@@ -568,12 +566,13 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelCloning.add(lblTemplate, "2, 4, right, default");
 
         textPaneCloneTemplateStatus = new JTextPane();
+        textPaneCloneTemplateStatus.setMaximumSize(new Dimension(400, 2147483647));
         textPaneCloneTemplateStatus.setText("&nbsp;");
         textPaneCloneTemplateStatus.setBackground(UIManager.getColor("control"));
         textPaneCloneTemplateStatus.setContentType("text/html");
         textPaneCloneTemplateStatus.setEditable(false);
         textPaneCloneTemplateStatus.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, true);
-        panelCloning.add(textPaneCloneTemplateStatus, "4, 4, 1, 5, fill, top");
+        panelCloning.add(textPaneCloneTemplateStatus, "4, 4, 1, 5, default, top");
 
         lblCloneTapeSetting = new JLabel("Clone Tape Setting?");
         lblCloneTapeSetting.setToolTipText("Clone the Tape Settings, including the Pick Location Z. ");
@@ -858,7 +857,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                 MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
                 SwingUtilities.invokeAndWait(() -> {
                     UiUtils.messageBoxOnException(() -> {
-                        new RegionOfInterestProcess(MainFrame.get(), "Setup OCR Region") {
+                        new RegionOfInterestProcess(MainFrame.get(), feeder.getCamera(), "Setup OCR Region") {
                             @Override 
                             public void setResult(RegionOfInterest roi) {
                                 feeder.setOcrRegion(roi);
@@ -941,7 +940,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                                 checkBoxCloneTapeSettings.isSelected(), 
                                 checkBoxClonePushPullSettings.isSelected(),
                                 checkBoxCloneVisionSettings.isSelected(),
-                                targetFeeder);
+                                feeder);
                     }
                 }
             });

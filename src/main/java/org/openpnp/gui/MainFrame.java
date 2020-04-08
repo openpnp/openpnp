@@ -43,6 +43,9 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
@@ -82,6 +85,7 @@ import org.openpnp.gui.importer.KicadPosImporter;
 import org.openpnp.gui.importer.LabcenterProteusImporter; //
 import org.openpnp.gui.importer.NamedCSVImporter;
 import org.openpnp.gui.support.HeadCellValue;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
@@ -197,6 +201,7 @@ public class MainFrame extends JFrame {
     private JButton btnInstructionsCancel;
     private JTextPane lblInstructions;
     private JPanel panel_2;
+    private ScheduledExecutorService scheduledExecutor;
     private JMenuBar menuBar;
     private JMenu mnImport;
     private JMenu mnScripts;
@@ -517,6 +522,10 @@ public class MainFrame extends JFrame {
         lblInstructions.setEditable(false);
         panel_1.add(lblInstructions);
 
+        labelIcon = new JLabel(); 
+        labelIcon.setIcon(Icons.capturePin);
+        panelInstructions.add(labelIcon, BorderLayout.WEST);
+
         machineControlsPanel = new MachineControlsPanel(configuration, jobPanel);
         panelMachine.add(machineControlsPanel, BorderLayout.SOUTH);
 
@@ -683,7 +692,7 @@ public class MainFrame extends JFrame {
             frameCamera = new JDialog(this, "OpenPnp - Camera", false); //$NON-NLS-1$
             // as of today no smart way found to get an adjusted size
             // ... so main window size is used for the camera window
-            frameCamera.add(panelCameraAndInstructions);
+            frameCamera.getContentPane().add(panelCameraAndInstructions);
             frameCamera.setVisible(true);
             frameCamera.addComponentListener(cameraWindowListener);
 
@@ -704,7 +713,7 @@ public class MainFrame extends JFrame {
             frameMachineControls = new JDialog(this, "OpenPnp - Machine Controls", false); //$NON-NLS-1$
             // as of today no smart way found to get an adjusted size
             // ... so hardcoded values used (usually not a good idea)
-            frameMachineControls.add(machineControlsPanel);
+            frameMachineControls.getContentPane().add(machineControlsPanel);
             frameMachineControls.setVisible(true);
             frameMachineControls.pack();
             frameMachineControls.addComponentListener(machineControlsWindowListener);
@@ -800,9 +809,17 @@ public class MainFrame extends JFrame {
         panelInstructions.setVisible(true);
         doLayout();
         panelInstructions.repaint();
+        scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutor.scheduleAtFixedRate(new Runnable() {
+            public void run() {
+                labelIcon.setIcon(labelIcon.getIcon() == Icons.centerPin ? Icons.capturePin : Icons.centerPin);
+            }
+        }, 0, 1000, TimeUnit.MILLISECONDS);
     }
 
     public void hideInstructions() {
+        scheduledExecutor.shutdown();
+        scheduledExecutor = null;
         panelInstructions.setVisible(false);
         doLayout();
     }
@@ -1210,4 +1227,5 @@ public class MainFrame extends JFrame {
     private JLabel lblStatus;
     private JLabel lblPlacements;
     private JProgressBar prgbrPlacements;
+    private JLabel labelIcon;
 }

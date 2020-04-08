@@ -32,6 +32,8 @@ import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.SwingUtilities;
+
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.reticle.Reticle;
@@ -66,13 +68,15 @@ public class RegionOfInterestProcess {
 
     RegionOfInterest regionOfInterest = null;
 
-    public RegionOfInterestProcess(MainFrame mainFrame, String processTitle)
+    public RegionOfInterestProcess(MainFrame mainFrame, Camera camera, String processTitle)
             throws Exception {
         this.mainFrame = mainFrame;
         this.processTitle = processTitle;
         // setup the process
-        this.camera =
-                MainFrame.get().getMachineControls().getSelectedTool().getHead().getDefaultCamera();
+        this.camera = camera;
+        SwingUtilities.invokeLater(() -> {
+            MainFrame.get().getCameraViews().ensureCameraVisible(camera);
+        });
         this.cameraView = MainFrame.get()
                 .getCameraViews()
                 .getCameraView(camera);
@@ -132,8 +136,6 @@ public class RegionOfInterestProcess {
                 for (Point p : regionStakeout.values()) {
                     g2d.drawOval(p.x-3, p.y-3, 6, 6);
                 }
-                /*g2d.dispose();
-                return image;*/
             }
 
             protected void drawRegion(Graphics2D g2d) {
@@ -208,24 +210,6 @@ public class RegionOfInterestProcess {
     private void advance() {
         boolean stepResult = true;
         mouseClickCount = 0;
-        if (step == 0) {
-            stepResult = step1();
-        }
-        else if (step == 1) {
-            stepResult = step2();
-        }
-        else if (step == 2) {
-            stepResult = step3();
-        }
-        else if (step == 3) {
-            stepResult = step4();
-        }
-        else if (step == 4) {
-            stepResult = step5();
-        }
-        if (!stepResult) {
-            return;
-        }
         step++;
         if (step == 5) {
             cleanup();
@@ -235,22 +219,6 @@ public class RegionOfInterestProcess {
             mainFrame.showInstructions(title, instructions[step], true, true,
                     step == 4 ? "Finish" : "Next", cancelActionListener, proceedActionListener);
         }
-    }
-
-    private boolean step1() {
-        return true;
-    }
-
-    private boolean step2() {
-        return true;
-    }
-
-    private boolean step3() {
-        return true;
-    }
-
-    private boolean step4() {
-        return true;
     }
 
     private boolean step5() {

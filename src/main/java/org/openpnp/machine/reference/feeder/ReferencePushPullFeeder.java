@@ -1806,7 +1806,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             int n = 0;
             for (ReferencePushPullFeeder targetFeeder : getCompatibleFeeders()) {
                 if (n++ > 0) {
-                    status += ", ";
+                    status += ",<br/>";
                 }
                 status += targetFeeder.getName()+" "+targetFeeder.getPart().getId();
             }
@@ -2097,26 +2097,33 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 }
             }
         }
-        if (closestFeeder == null) {
-            throw new Exception("No other feeder found to form a row");
-        }
-        Location rowUnit = getLocation().subtract(closestFeeder.getLocation()).convertToUnits(LengthUnit.Millimeters);
-        if (isSnapToAxis()) {
-            if (Math.abs(rowUnit.getX()) > rowLocationToleranceMm && Math.abs(rowUnit.getY()) <= rowLocationToleranceMm) {
-                // row along X axis -> snap to it
-                rowUnit = rowUnit.multiply(1.0, 0.0, 0.0, 0.0);
-            }
-            else if (Math.abs(rowUnit.getY()) > rowLocationToleranceMm && Math.abs(rowUnit.getX()) <= rowLocationToleranceMm) {
-                // row along Y axis -> snap to it
-                rowUnit = rowUnit.multiply(0.0, 1.0, 0.0, 0.0);
-            }
-            else {
-                throw new Exception("Closest feeder "+closestFeeder.getName()+" "+closestFeeder.getPart().getId()+" does not form a row in X and Y");
+        // the default row unit assumption is the 3D printed feeder that was developed together with this feeder class 
+        // adding +8mm to the tape width.  A clockwise around the table arrangement is assumed.
+        Location rowUnit = transformFeederToMachineLocation(new Location(LengthUnit.Millimeters, 
+                0, 
+                -getTapeWidth().convertToUnits(LengthUnit.Millimeters).getValue() - 8.0, // it is "down" in tape orientation
+                0, 0), null)
+                .subtract(getLocation());
+        // but if we have another feeder, the row unit is properly calculated
+        if (closestFeeder != null) {
+             rowUnit = getLocation().subtract(closestFeeder.getLocation()).convertToUnits(LengthUnit.Millimeters);
+            if (isSnapToAxis()) {
+                if (Math.abs(rowUnit.getX()) > rowLocationToleranceMm && Math.abs(rowUnit.getY()) <= rowLocationToleranceMm) {
+                    // row along X axis -> snap to it
+                    rowUnit = rowUnit.multiply(1.0, 0.0, 0.0, 0.0);
+                }
+                else if (Math.abs(rowUnit.getY()) > rowLocationToleranceMm && Math.abs(rowUnit.getX()) <= rowLocationToleranceMm) {
+                    // row along Y axis -> snap to it
+                    rowUnit = rowUnit.multiply(0.0, 1.0, 0.0, 0.0);
+                }
+                else {
+                    throw new Exception("Closest feeder "+closestFeeder.getName()+" "+closestFeeder.getPart().getId()+" does not form a row in X and Y");
+                }
             }
         }
         Location newLocation = getLocation().add(rowUnit);
-        ReferencePushPullFeeder newFeeder = createNewAtLocation(newLocation, null, closestFeeder);
-        newFeeder.smartClone(null, true, true, true, true);
+        ReferencePushPullFeeder newFeeder = createNewAtLocation(newLocation, null, this);
+        newFeeder.cloneFeederSettings(true, true, true, true, this);
         return newFeeder;
     }
 
