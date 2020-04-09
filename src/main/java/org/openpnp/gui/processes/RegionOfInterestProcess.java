@@ -79,7 +79,7 @@ public class RegionOfInterestProcess {
         });
         this.cameraView = MainFrame.get()
                 .getCameraViews()
-                .getCameraView(camera);
+                .getCameraView(this.camera);
         this.cameraView.addMouseListener(locationClickedListener);
         this.cameraView.addMouseMotionListener(locationClickedListener);
         this.cameraView.flash();
@@ -212,6 +212,7 @@ public class RegionOfInterestProcess {
         mouseClickCount = 0;
         step++;
         if (step == 5) {
+            saveResults();
             cleanup();
         }
         else {
@@ -221,7 +222,7 @@ public class RegionOfInterestProcess {
         }
     }
 
-    private boolean step5() {
+    private boolean saveResults() {
         // calculate the Locations from pixels
         regionOfInterest = new RegionOfInterest(
                 cameraView.getCameraViewCenterOffsetsFromXy(regionStakeout.get(0).x, regionStakeout.get(0).y),

@@ -809,12 +809,14 @@ public class MainFrame extends JFrame {
         panelInstructions.setVisible(true);
         doLayout();
         panelInstructions.repaint();
-        scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
-        scheduledExecutor.scheduleAtFixedRate(new Runnable() {
-            public void run() {
-                labelIcon.setIcon(labelIcon.getIcon() == Icons.processActivity1Icon ? Icons.processActivity2Icon : Icons.processActivity1Icon);
-            }
-        }, 0, 1000, TimeUnit.MILLISECONDS);
+        if (scheduledExecutor == null) {
+            scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+            scheduledExecutor.scheduleAtFixedRate(new Runnable() {
+                public void run() {
+                    labelIcon.setIcon(labelIcon.getIcon() == Icons.processActivity1Icon ? Icons.processActivity2Icon : Icons.processActivity1Icon);
+                }
+            }, 0, 1000, TimeUnit.MILLISECONDS);
+        }
     }
 
     public void hideInstructions() {

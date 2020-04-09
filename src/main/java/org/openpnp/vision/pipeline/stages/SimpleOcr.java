@@ -34,6 +34,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import javax.imageio.ImageIO;
+
 import org.opencv.core.Core;
 import org.opencv.core.Core.MinMaxLocResult;
 import org.opencv.core.CvType;
@@ -332,8 +334,8 @@ public class SimpleOcr extends CvStage {
         // get the working image
         Mat textImage = pipeline.getWorkingImage();
 
-        // automatic rescale, but don't do it if we're already too close i.e. not if a 0.5 x rescale cannot be achieved,
-        // otherwise the image quality suffers too much
+        // Automatic rescale, but don't do it if we're already too close i.e. at least a 0.5 x rescale must be achieved,
+        // otherwise the image quality suffers too much.
         double rescale = 1.0;
         if (fontMaxPixelSize >= 7 && fontMaxPixelSize < 0.5*rescale*scalePt*fontSizePt) {
             rescale = fontMaxPixelSize  / (rescale*scalePt*fontSizePt);
@@ -345,7 +347,7 @@ public class SimpleOcr extends CvStage {
             Mat dst = new Mat();
             Size size = new Size(textImage.cols()*rescale, textImage.rows()*rescale);
             Imgproc.resize(textImage, dst, size);
-            // we must not do a textImage.release(); It is the property of the previous stage.
+            // we must NOT do a textImage.release(); It is the property of the previous stage.
             textImage = dst;
             scalePt *= rescale;
             unitsPerPixel = unitsPerPixel.multiply(1.0/rescale, 1.0/rescale, 0, 0);
@@ -416,13 +418,6 @@ public class SimpleOcr extends CvStage {
             Mat matchMap = new Mat();
             Imgproc.matchTemplate(textImage, template, matchMap, Imgproc.TM_CCOEFF_NORMED);
 
-            /*Does not work, it seems
-             if (debug) {
-
-                File file = Configuration.get().createResourceFile(getClass(), "match-map-"+characterTag, ".png");
-                Imgcodecs.imwrite(file.getAbsolutePath(), matchMap);
-            }*/
-
             // determine the range
             MinMaxLocResult mmr = Core.minMaxLoc(matchMap);
             double maxVal = mmr.maxVal;
@@ -437,6 +432,13 @@ public class SimpleOcr extends CvStage {
                         x, y, template.cols(), template.rows(),
                         matchMap.get(y, x)[0]);
                 matches.add(match);
+            }
+
+            if (debug) {
+                File file = Configuration.get().createResourceFile(getClass(), "match-map-"+characterTag, ".png");
+                // this is a 3x32bit image, cannot save this as .png, need to convert to known image format first
+                BufferedImage img = OpenCvUtils.toBufferedImage(matchMap);
+                ImageIO.write(img, "png", file);
             }
 
             // cleanup
@@ -454,9 +456,9 @@ public class SimpleOcr extends CvStage {
             // and continuity on a line (good). Some special treatment is needed for first/last character in a word
             // because there is no continuity to judge the quality. Instead we must determine which character expands 
             // farthest to the edge. Otherwise in some proportional fonts, because an "r" is a partial match of an "n" (which 
-            // btw. is a partial match of an "m") can have a high template match score and the same continuity as the larger 
+            // is a partial match of an "m" etc.) can have a high template match score and the same continuity as the larger 
             // character and win. With the first/last character test, this seems to be eliminated.
-            // Still, there is still the chance that "rn" is seen as "m", and therefore monospaced fonts are still recommended. 
+            // However, there is still the chance that "rn" is seen as "m", and therefore monospaced fonts are still recommended. 
             for (CharacterMatch match : matches) {
                 // in a proportional font, the widest character should win at the end of a word/line
                 boolean firstInWord = true;
@@ -590,7 +592,7 @@ public class SimpleOcr extends CvStage {
                     if (takenCmp != 0) {
                         return takenCmp;
                     }
-                    
+
                     return ((Double) o1.x).compareTo(o2.x);
                 }
             });

@@ -22,7 +22,6 @@ package org.openpnp.vision.pipeline.stages;
 
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
-import java.awt.geom.Point2D;
 
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint2f;
@@ -39,11 +38,11 @@ import org.openpnp.vision.pipeline.Stage;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
-@Stage(description="Extracts a rectangular/<em>trapezoidal</em> region of interest from the image that can have any size, rotation, scale, "
-        + "<em>shear</em> or even be mirrored (Affine Transformation warp).<br/>"
+@Stage(description="Extracts a rectangular (parallelogrammatic) region of interest from the image that can have any position, size, "
+        + "rotation, scale, <em>shear</em> or even be mirrored. A so-called Affine Transformation Warp.<br/>"
         + "The coordinates are given in real length units rather than pixels and are relative to the camera center, Y pointing up. "
         + "This allows the pipeline to be independent of camera model and resolution, lens, focus distance etc. <br/>"
-        + "To setup, pin the previous stage and read off coordinates from the mouse position.")
+        + "To setup, pin the previous stage and read off length unit coordinates from the mouse position.")
 public class AffineWarp extends CvStage {
     @Attribute(required = false)
     @Property(description = "Length unit used in this stage.")
@@ -183,7 +182,7 @@ public class AffineWarp extends CvStage {
         double x2 = this.x2;
         double y2 = this.y2;
         boolean rectify = this.rectify;
-        
+
         if (getRegionOfInterestProperty() != null && ! getRegionOfInterestProperty().isEmpty()) {
             RegionOfInterest roi = (RegionOfInterest) pipeline.getProperty(getRegionOfInterestProperty());
             if (roi != null) {
@@ -197,7 +196,7 @@ public class AffineWarp extends CvStage {
                 rectify = roi.isRectify();
             }
         }
-        
+
         // get the working image
         Mat mat = pipeline.getWorkingImage();
 
@@ -257,7 +256,7 @@ public class AffineWarp extends CvStage {
 
         // Create the transformation matrix
         Mat transformMatrix = Imgproc.getAffineTransform(ma1, ma2);
-        
+
         // Recreate the same in Java
         AffineTransform affineTransform = getAffineTransform(p0, p1, p2, p0T, p1T, p2T);
 
@@ -267,12 +266,12 @@ public class AffineWarp extends CvStage {
         // Perform the warpAffine
         Mat transformed = new Mat();
         Imgproc.warpAffine(mat, transformed, transformMatrix, size);
-        
+
 
         return new Result(transformed, affineTransform);
     }
-    
-     protected AffineTransform getAffineTransform(
+
+    protected AffineTransform getAffineTransform(
             org.opencv.core.Point p0,
             org.opencv.core.Point p1,
             org.opencv.core.Point p2,

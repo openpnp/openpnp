@@ -188,15 +188,16 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         None,
         SwapFeeders,
         SwapOrCreate,
-        ChangePart
+        ChangePart,
+        ChangePartAndClone
     }
 
     @Attribute(required = false)
-    protected OcrWrongPartAction ocrWrongPartAction = OcrWrongPartAction.None;
+    protected OcrWrongPartAction ocrWrongPartAction = OcrWrongPartAction.SwapOrCreate;
     @Attribute(required = false)
-    protected boolean ocrDiscoverOnJobStart = false;
+    protected boolean ocrDiscoverOnJobStart = true;
     @Attribute(required = false)
-    protected boolean ocrStopAfterWrongPart = true;
+    protected boolean ocrStopAfterWrongPart = false;
 
     @Element(required = false)
     private Length precisionWanted = new Length(0.1, LengthUnit.Millimeters);
@@ -818,7 +819,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     public void setActuatorName(String actuatorName) {
         String oldValue = this.actuatorName;
         this.actuatorName = actuatorName;
-        firePropertyChange("actuatorName", oldValue, actuatorName);
+        // Unfortunately, java.beans.PropertyChangeSupport.firePropertyChange(String, Object, Object)
+        // will always treat null property changes as "dirty" signal. So let's handle those as empty Strings. 
+        firePropertyChange("actuatorName", 
+                oldValue == null ? "" : oldValue, 
+                        actuatorName == null ? "" : actuatorName);
     }
 
     public String getPeelOffActuatorName() {
@@ -828,7 +833,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     public void setPeelOffActuatorName(String actuatorName) {
         String oldValue = this.peelOffActuatorName;
         this.peelOffActuatorName = actuatorName;
-        firePropertyChange("peelOffActuatorName", oldValue, actuatorName);
+        // Unfortunately, java.beans.PropertyChangeSupport.firePropertyChange(String, Object, Object)
+        // will always treat null property changes as "dirty" signal. So let's handle those as empty Strings. 
+        firePropertyChange("peelOffActuatorName", 
+                oldValue == null ? "" : oldValue, 
+                        actuatorName == null ? "" : actuatorName);
     }
 
     public long getFeedCount() {
@@ -966,6 +975,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 : new Length(0, LengthUnit.Millimeters);
     }
 
+    public void setPrecisionAverage(Length precisionAverage) {
+        // swallow this
+    }
+
     public Length getPrecisionConfidenceLimit() {
         if (calibrationCount >= 2) {
             // Note, we don't take the average of the error, because the error is already a distance that is distributed 
@@ -978,6 +991,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         else {
             return new Length(0, LengthUnit.Millimeters);
         }
+    }
+
+    public void setPrecisionConfidenceLimit(Length precisionConfidenceLimit) {
+        // swallow this
     }
 
     public Length getPartsToSprocketHoleDistance() {
@@ -1113,7 +1130,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             }
             pipeline.setProperty("camera", camera);
             pipeline.setProperty("feeder", this);
-            if (performOcr) {
+            if (performOcr && getOcrRegion() != null) {
                 setupOcr(camera, pipeline);
             }
             else {
@@ -2015,9 +2032,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
         Part currentPart = getPart();
         if (currentPart == null) {
-            // No part set yet
+            // No part set yet 
             Logger.trace("[ReferencePushPullFeeder] OCR detected part in feeder "+getId()+", OCR part "+ocrPart.getId());
-            setOcrDetectedPart(ocrPart);
+            setOcrDetectedPart(ocrPart, true);
         }
         else if (ocrPart != null && ocrPart != currentPart) {
             // Wrong part selected in feeder
@@ -2061,11 +2078,14 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 }
             }
             if (ocrAction == OcrWrongPartAction.ChangePart) {
-                setOcrDetectedPart(ocrPart);
+                setOcrDetectedPart(ocrPart, false);
+            }
+            else if (ocrAction == OcrWrongPartAction.ChangePartAndClone) {
+                setOcrDetectedPart(ocrPart, true);
             }
             if (ocrStop) {
-                throw new Exception("OCR detected wrong part in feeder "+getName()
-                +", current part "+currentPart.getId()+" != OCR part "+ocrPart.getId()+".\nAction performed: "+ocrAction.toString()+". Please review.");
+                throw new Exception("OCR detected different part in feeder "+getName()
+                +", current part "+currentPart.getId()+" != OCR part "+ocrPart.getId()+". Action performed: "+ocrAction.toString()+". Please review.");
             }
         }
     }
@@ -2106,7 +2126,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 .subtract(getLocation());
         // but if we have another feeder, the row unit is properly calculated
         if (closestFeeder != null) {
-             rowUnit = getLocation().subtract(closestFeeder.getLocation()).convertToUnits(LengthUnit.Millimeters);
+            rowUnit = getLocation().subtract(closestFeeder.getLocation()).convertToUnits(LengthUnit.Millimeters);
             if (isSnapToAxis()) {
                 if (Math.abs(rowUnit.getX()) > rowLocationToleranceMm && Math.abs(rowUnit.getY()) <= rowLocationToleranceMm) {
                     // row along X axis -> snap to it
@@ -2128,7 +2148,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     }
 
 
-    protected void setOcrDetectedPart(Part ocrPart) throws Exception {
+    protected void setOcrDetectedPart(Part ocrPart, boolean clone) throws Exception {
         if (isUsedAsTemplate()) {
             if (!compatiblePartPackages(ocrPart, getPart())) {
                 throw new Exception("Feeder "+getName()+" is used as a template and can only be OCR-assigned parts with same tape specification or package.");
@@ -2137,7 +2157,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
         else {
             setPart(ocrPart);
-            smartClone(ocrPart, true, true, true, true);
+            if (clone) {
+                smartClone(ocrPart, true, true, true, true);
+            }
         }
     }
 
@@ -2220,6 +2242,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
 
     public void performOcr(OcrWrongPartAction ocrAction, boolean ocrStop) throws Exception {
+        if (getOcrRegion() == null) {
+            throw new Exception("Feeder "+getName()+" has no OCR region defined.");
+        }
         Camera camera = getCamera();
         try (CvPipeline pipeline = getCvPipeline(camera, true, true)) {
             // run a sprocket hole calibration, including OCR
@@ -2243,7 +2268,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             Logger.debug("[ReferencePushPullFeeder] calibrating sprocket holes pass "+ i+ " midPoint is "+midPoint);
             MovableUtils.moveToLocationAtSafeZ(camera, midPoint);
             // setup OCR if wanted
-            boolean ocrPass = (i == 0 && ocrAction != OcrWrongPartAction.None);
+            boolean ocrPass = (i == 0 && ocrAction != OcrWrongPartAction.None && getOcrRegion() != null);
             if (ocrPass) { 
                 setupOcr(camera, pipeline, runningHole1Location, runningHole2Location, runningPickLocation);
             }

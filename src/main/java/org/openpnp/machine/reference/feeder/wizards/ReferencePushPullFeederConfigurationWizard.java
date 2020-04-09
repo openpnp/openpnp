@@ -62,6 +62,7 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.LongConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
+import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.OcrWrongPartAction;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Camera;
@@ -82,67 +83,6 @@ import java.awt.Dimension;
 public class ReferencePushPullFeederConfigurationWizard
 extends AbstractReferenceFeederConfigurationWizard {
     private final ReferencePushPullFeeder feeder;
-    private JLabel lblPartPitch;
-    private JTextField textFieldPartPitch;
-    private JTextField textFieldFeedPitch;
-    private JLabel lblFeedPitch;
-    private JPanel panelLocations;
-    private JPanel panelTape;
-    private JPanel panelVision;
-    private JPanel panelVisionEnabled;
-    private LocationButtonsPanel locationButtonsPanelFirstPick;
-    private LocationButtonsPanel locationButtonsPanelHole1;
-    private LocationButtonsPanel locationButtonsPanelHole2;
-    private JLabel lblZ_1;
-    private JLabel lblRotation;
-    private JLabel lblY_1;
-    private JLabel lblX_1;
-    private JLabel lblPickLocation;
-    private JTextField textFieldPickLocationX;
-    private JTextField textFieldPickLocationY;
-    private JTextField textFieldPickLocationZ;
-    private JTextField textFieldRotationInTape;
-    private JLabel lblHole1Location;
-    private JTextField textFieldHole1LocationX;
-    private JTextField textFieldHole1LocationY;
-    private JTextField textFieldHole2LocationX;
-    private JTextField textFieldHole2LocationY;
-    private JButton btnEditPipeline;
-    private JButton btnResetPipeline;
-    private JLabel lblFeedCount;
-    private JTextField textFieldFeedCount;
-    private JButton btnReset;
-    private JButton btnDiscardParts;
-    private JTextField textFieldFeedMultiplier;
-    private JLabel lblMultiplier;
-    private JLabel lblHole2Location;
-    private JButton btnShowVisionFeatures;
-    private JButton btnAutoSetup;
-    private JLabel lblCalibrationTrigger;
-    private JComboBox comboBoxCalibrationTrigger;
-    private JLabel lblCalibrationCount;
-    private JTextField textFieldCalibrationCount;
-    private JLabel lblPrecisionAverage;
-    private JTextField textFieldPrecisionAverage;
-    private JLabel lblPrecisionWanted;
-    private JTextField textFieldPrecisionWanted;
-    private JButton btnResetStatistics;
-    private JLabel lblPrecisionConfidenceLimit;
-    private JTextField textFieldPrecisionConfidenceLimit;
-    private JLabel lblNormalizePickLocation;
-    private JCheckBox checkBoxNormalizePickLocation;
-    private JButton btnSmartClone;
-    private JLabel lblUsedAsTemplate;
-    private JCheckBox checkBoxUsedAsTemplate;
-    private JButton btnSetupocrregion;
-    private JLabel lblOcrFontName;
-    private JComboBox comboBoxFontName;
-    private JLabel lblFontSizept;
-    private JTextField textFieldFontSizePt;
-    private JLabel lblOcrWrongPart;
-    private JComboBox comboBoxWrongPartAction;
-    private JLabel lblDiscoverOnJobStart;
-    private JCheckBox checkBoxDiscoverOnJobStart;
 
     public ReferencePushPullFeederConfigurationWizard(ReferencePushPullFeeder feeder) {
         super(feeder, false);
@@ -488,8 +428,8 @@ extends AbstractReferenceFeederConfigurationWizard {
             }
         });
 
-        btnOcrAllFeeders = new JButton(allFeederOcrAction);
-        panelVisionEnabled.add(btnOcrAllFeeders, "12, 10, 3, 1");
+        btnSetPartByOcr = new JButton(performOcrAction);
+        panelVisionEnabled.add(btnSetPartByOcr, "12, 10, 3, 1");
 
         lblDiscoverOnJobStart = new JLabel("Check on Job Start?");
         lblDiscoverOnJobStart.setToolTipText("<html>On Job Start, check that the correct parts are selected in OCR-enabled feeders at their locations. <br/>\r\nOtherwise the Job is stopped.<br/>\r\nThis will also vision-calibrate the feeders' locations, if calibration is enabled.</html>");
@@ -497,6 +437,9 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         checkBoxDiscoverOnJobStart = new JCheckBox("");
         panelVisionEnabled.add(checkBoxDiscoverOnJobStart, "4, 12");
+
+        btnOcrAllFeeders = new JButton(allFeederOcrAction);
+        panelVisionEnabled.add(btnOcrAllFeeders, "12, 12, 3, 1");
         panelVisionEnabled.add(btnEditPipeline, "2, 16");
 
         btnResetPipeline = new JButton(resetPipelineAction);
@@ -575,12 +518,12 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelCloning.add(textPaneCloneTemplateStatus, "4, 4, 1, 5, default, top");
 
         lblCloneTapeSetting = new JLabel("Clone Tape Setting?");
-        lblCloneTapeSetting.setToolTipText("Clone the Tape Settings, including the Pick Location Z. ");
+        lblCloneTapeSetting.setToolTipText("Clone the Tape Settings. ");
         panelCloning.add(lblCloneTapeSetting, "8, 4, right, default");
 
         checkBoxCloneTapeSettings = new JCheckBox("");
         checkBoxCloneTapeSettings.setSelected(true);
-        checkBoxCloneTapeSettings.setToolTipText("Clone the Tape Settings, including the Pick Location Z. ");
+        checkBoxCloneTapeSettings.setToolTipText("Clone the Tape Settings. ");
         panelCloning.add(checkBoxCloneTapeSettings, "10, 4");
 
         lblCloneVisionSettings = new JLabel("Clone Vision Settings?");
@@ -652,9 +595,9 @@ extends AbstractReferenceFeederConfigurationWizard {
         addWrappedBinding(feeder, "calibrationTrigger", comboBoxCalibrationTrigger, "selectedItem");
 
         addWrappedBinding(feeder, "precisionWanted", textFieldPrecisionWanted, "text", lengthConverter);
-        bind(UpdateStrategy.READ, feeder, "calibrationCount", textFieldCalibrationCount, "text", intConverter);
-        bind(UpdateStrategy.READ, feeder, "precisionAverage", textFieldPrecisionAverage, "text", lengthConverter);
-        bind(UpdateStrategy.READ, feeder,   "precisionConfidenceLimit", textFieldPrecisionConfidenceLimit, "text", lengthConverter);
+        addWrappedBinding(feeder, "calibrationCount", textFieldCalibrationCount, "text", intConverter);
+        addWrappedBinding(feeder, "precisionAverage", textFieldPrecisionAverage, "text", lengthConverter);
+        addWrappedBinding(feeder, "precisionConfidenceLimit", textFieldPrecisionConfidenceLimit, "text", lengthConverter);
 
         addWrappedBinding(feeder, "ocrWrongPartAction", comboBoxWrongPartAction, "selectedItem");
         addWrappedBinding(feeder, "ocrStopAfterWrongPart", checkBoxStopAfterWrongPart, "selected");
@@ -843,11 +786,12 @@ extends AbstractReferenceFeederConfigurationWizard {
             });
         }
     };
+
     private Action setupOcrRegionAction =
             new AbstractAction("Setup OCR Region") {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Moves the camera to the vision location and let's you select the OCR region of interest.</html>");
+                    "<html>Moves the camera to the vision location and lets you select the OCR region of interest.</html>");
         }
 
         @Override
@@ -868,6 +812,24 @@ extends AbstractReferenceFeederConfigurationWizard {
             });
         }
     };
+
+    private Action performOcrAction =
+            new AbstractAction("Part by OCR") {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "<html>Perform OCR and assign the recognized part.</html>");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
+            UiUtils.submitUiMachineTask(() -> {
+                MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
+                feeder.performOcr(OcrWrongPartAction.ChangePart, true);
+            });
+        }
+    };
+
     private Action feederCloneFromTemplate =
             new AbstractAction("Clone from Template", Icons.importt) {
         {
@@ -959,18 +921,79 @@ extends AbstractReferenceFeederConfigurationWizard {
             UiUtils.messageBoxOnException(() -> {
                 applyAction.actionPerformed(e);
                 ReferencePushPullFeeder newFeeder = feeder.createNewInRow();
-                Configuration.get().getBus().post(new FeederSelectedEvent(newFeeder, this));
-
                 UiUtils.submitUiMachineTask(() -> {
                     Camera camera = feeder.getCamera(); 
                     MovableUtils.moveToLocationAtSafeZ(camera, newFeeder.getPickLocation(0, null));
                     newFeeder.autoSetup();
+                    SwingUtilities.invokeLater(() -> {
+                        Configuration.get().getBus().post(new FeederSelectedEvent(newFeeder, this));
+                    });
                 });
             });
         }
     };
 
-    private JButton btnOcrAllFeeders;
+    private JLabel lblPartPitch;
+    private JTextField textFieldPartPitch;
+    private JTextField textFieldFeedPitch;
+    private JLabel lblFeedPitch;
+    private JPanel panelLocations;
+    private JPanel panelTape;
+    private JPanel panelVision;
+    private JPanel panelVisionEnabled;
+    private LocationButtonsPanel locationButtonsPanelFirstPick;
+    private LocationButtonsPanel locationButtonsPanelHole1;
+    private LocationButtonsPanel locationButtonsPanelHole2;
+    private JLabel lblZ_1;
+    private JLabel lblRotation;
+    private JLabel lblY_1;
+    private JLabel lblX_1;
+    private JLabel lblPickLocation;
+    private JTextField textFieldPickLocationX;
+    private JTextField textFieldPickLocationY;
+    private JTextField textFieldPickLocationZ;
+    private JTextField textFieldRotationInTape;
+    private JLabel lblHole1Location;
+    private JTextField textFieldHole1LocationX;
+    private JTextField textFieldHole1LocationY;
+    private JTextField textFieldHole2LocationX;
+    private JTextField textFieldHole2LocationY;
+    private JButton btnEditPipeline;
+    private JButton btnResetPipeline;
+    private JLabel lblFeedCount;
+    private JTextField textFieldFeedCount;
+    private JButton btnReset;
+    private JButton btnDiscardParts;
+    private JTextField textFieldFeedMultiplier;
+    private JLabel lblMultiplier;
+    private JLabel lblHole2Location;
+    private JButton btnShowVisionFeatures;
+    private JButton btnAutoSetup;
+    private JLabel lblCalibrationTrigger;
+    private JComboBox comboBoxCalibrationTrigger;
+    private JLabel lblCalibrationCount;
+    private JTextField textFieldCalibrationCount;
+    private JLabel lblPrecisionAverage;
+    private JTextField textFieldPrecisionAverage;
+    private JLabel lblPrecisionWanted;
+    private JTextField textFieldPrecisionWanted;
+    private JButton btnResetStatistics;
+    private JLabel lblPrecisionConfidenceLimit;
+    private JTextField textFieldPrecisionConfidenceLimit;
+    private JLabel lblNormalizePickLocation;
+    private JCheckBox checkBoxNormalizePickLocation;
+    private JButton btnSmartClone;
+    private JLabel lblUsedAsTemplate;
+    private JCheckBox checkBoxUsedAsTemplate;
+    private JButton btnSetupocrregion;
+    private JLabel lblOcrFontName;
+    private JComboBox comboBoxFontName;
+    private JLabel lblFontSizept;
+    private JTextField textFieldFontSizePt;
+    private JLabel lblOcrWrongPart;
+    private JComboBox comboBoxWrongPartAction;
+    private JLabel lblDiscoverOnJobStart;
+    private JCheckBox checkBoxDiscoverOnJobStart;    private JButton btnOcrAllFeeders;
     private JLabel lblStopAfterWrong;
     private JCheckBox checkBoxStopAfterWrongPart;
     private JLabel lblSnapToAxis;
@@ -987,6 +1010,7 @@ extends AbstractReferenceFeederConfigurationWizard {
     private JButton button;
     private JLabel lblCloneLocationSettings;
     private JCheckBox checkBoxCloneLocationSettings;
+    private JButton btnSetPartByOcr;
 
     private void editPipeline() throws Exception {
         Camera camera = feeder.getCamera();
