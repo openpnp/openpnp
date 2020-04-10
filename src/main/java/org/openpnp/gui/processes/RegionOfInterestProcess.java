@@ -56,7 +56,7 @@ public class RegionOfInterestProcess {
             "<html><body>Click on what will become the upper left corner of your region of interest. Click again to reset and retry. Click Next to continue.</body></html>",
             "<html><body>Now, click on what will become the upper right corner of your region of interest. Click again to reset and retry. Click Next to continue.</body></html>",
             "<html><body>Next, click on what will become the lower left corner of your region of interest. Click again to reset and retry. Click Next to continue.</body></html>",
-            "<html><body>Finally, click to toggle beween a rectangular and the trapezoidal region. Click Next to continue.</body></html>",
+            "<html><body>Finally, click to toggle beween a rectangular and parallelogrammatic region. Click Next to continue.</body></html>",
             "<html><body>The region of interest has been defined. Click Finish to accept it, or Cancel to quit.</body></html>",};
 
     private Map<Integer, Point> regionStakeout = new HashMap<>();

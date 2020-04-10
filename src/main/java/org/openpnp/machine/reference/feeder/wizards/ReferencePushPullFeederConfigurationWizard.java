@@ -782,7 +782,14 @@ extends AbstractReferenceFeederConfigurationWizard {
         public void actionPerformed(ActionEvent e) {
             applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
-                feeder.performOcrOnAllFeeders(null, false);
+                StringBuilder report = new StringBuilder();
+                feeder.performOcrOnAllFeeders(null, false, report);
+                SwingUtilities.invokeLater(() -> {
+                    if (report.length() == 0) {
+                        report.append("No action taken.");
+                    }
+                    JOptionPane.showMessageDialog(getTopLevelAncestor(), "<html>"+report+"</html>", "OCR Report", JOptionPane.INFORMATION_MESSAGE);
+                });
             });
         }
     };
@@ -825,7 +832,12 @@ extends AbstractReferenceFeederConfigurationWizard {
             applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
                 MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
-                feeder.performOcr(OcrWrongPartAction.ChangePart, true);
+                StringBuilder report = new StringBuilder();
+                feeder.performOcr(OcrWrongPartAction.ChangePart, false, report);
+                if (report.length() == 0) {
+                    report.append("No action taken.");
+                }
+                JOptionPane.showMessageDialog(getTopLevelAncestor(), "<html>"+report+"</html>", "OCR Report", JOptionPane.INFORMATION_MESSAGE);
             });
         }
     };
@@ -993,7 +1005,8 @@ extends AbstractReferenceFeederConfigurationWizard {
     private JLabel lblOcrWrongPart;
     private JComboBox comboBoxWrongPartAction;
     private JLabel lblDiscoverOnJobStart;
-    private JCheckBox checkBoxDiscoverOnJobStart;    private JButton btnOcrAllFeeders;
+    private JCheckBox checkBoxDiscoverOnJobStart;
+    private JButton btnOcrAllFeeders;
     private JLabel lblStopAfterWrong;
     private JCheckBox checkBoxStopAfterWrongPart;
     private JLabel lblSnapToAxis;
