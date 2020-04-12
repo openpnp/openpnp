@@ -3,8 +3,6 @@ sudo: false
 dist: bionic
 
 jdk:
-- oraclejdk8
-- oraclejdk9
 - openjdk8
 - openjdk9
 - openjdk10
@@ -43,7 +41,7 @@ deploy:
   region: us-west-2
   local_dir: installers
   on:
-    jdk: oraclejdk8
+    jdk: openjdk8
     branch:
     - develop
     - master
