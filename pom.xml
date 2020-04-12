@@ -67,7 +67,7 @@
 		<dependency>
 			<groupId>org.openpnp</groupId>
 			<artifactId>opencv</artifactId>
-			<version>3.4.2-1</version>
+			<version>4.3.0-0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
@@ -408,10 +408,6 @@
 		<repository>
 			<id>openpnp</id>
 			<url>https://github.com/openpnp/openpnp-maven-repo/raw/develop</url>
-		</repository>
-		<repository>
-			<id>javacv</id>
-			<url>https://maven2.javacv.googlecode.com/git</url>
 		</repository>
 	</repositories>
 </project>
