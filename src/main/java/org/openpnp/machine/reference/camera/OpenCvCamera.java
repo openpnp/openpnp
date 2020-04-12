@@ -139,13 +139,13 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
              */
             if (preferredWidth != 0) {
                 Logger.debug("Setting camera {} width to {}", this, preferredWidth);
-                fg.set(Videoio.CAP_PROP_FRAME_WIDTH, preferredWidth);
-                Logger.debug("Camera {} reports width {}", this, fg.get(Videoio.CAP_PROP_FRAME_WIDTH));
+                fg.set(Videoio.CV_CAP_PROP_FRAME_WIDTH, preferredWidth);
+                Logger.debug("Camera {} reports width {}", this, fg.get(Videoio.CV_CAP_PROP_FRAME_WIDTH));
             }
             if (preferredHeight != 0) {
                 Logger.debug("Setting camera {} height to {}", this, preferredHeight);
-                fg.set(Videoio.CAP_PROP_FRAME_HEIGHT, preferredHeight);
-                Logger.debug("Camera {} reports height {}", this, fg.get(Videoio.CAP_PROP_FRAME_HEIGHT));
+                fg.set(Videoio.CV_CAP_PROP_FRAME_HEIGHT, preferredHeight);
+                Logger.debug("Camera {} reports height {}", this, fg.get(Videoio.CV_CAP_PROP_FRAME_HEIGHT));
             }
             
             fg.open(deviceIndex);
@@ -167,13 +167,13 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
              */
             if (preferredWidth != 0) {
                 Logger.debug("Setting camera {} width to {}", this, preferredWidth);
-                fg.set(Videoio.CAP_PROP_FRAME_WIDTH, preferredWidth);
-                Logger.debug("Camera {} reports width {}", this, fg.get(Videoio.CAP_PROP_FRAME_WIDTH));
+                fg.set(Videoio.CV_CAP_PROP_FRAME_WIDTH, preferredWidth);
+                Logger.debug("Camera {} reports width {}", this, fg.get(Videoio.CV_CAP_PROP_FRAME_WIDTH));
             }
             if (preferredHeight != 0) {
                 Logger.debug("Setting camera {} height to {}", this, preferredHeight);
-                fg.set(Videoio.CAP_PROP_FRAME_HEIGHT, preferredHeight);
-                Logger.debug("Camera {} reports height {}", this, fg.get(Videoio.CAP_PROP_FRAME_HEIGHT));
+                fg.set(Videoio.CV_CAP_PROP_FRAME_HEIGHT, preferredHeight);
+                Logger.debug("Camera {} reports height {}", this, fg.get(Videoio.CV_CAP_PROP_FRAME_HEIGHT));
             }
         }
         catch (Exception e) {

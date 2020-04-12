@@ -122,7 +122,7 @@ public class OpenCvVisionProvider implements VisionProvider {
                         new Scalar(255));
                 Imgproc.putText(debugMat, "" + match.score,
                         new org.opencv.core.Point(x + templateMat.cols(), y + templateMat.rows()),
-                        Imgproc.FONT_HERSHEY_PLAIN, 1.0, new Scalar(255));
+                        Core.FONT_HERSHEY_PLAIN, 1.0, new Scalar(255));
             }
 
             match.location = VisionUtils.getPixelLocation(camera, x + (templateMat.cols() / 2),

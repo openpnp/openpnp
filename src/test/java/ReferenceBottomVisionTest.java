@@ -28,7 +28,7 @@ public class ReferenceBottomVisionTest {
     }
     
     public static void testError(Location error) throws Exception {
-        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
+        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.01);
 
         File workingDirectory = Files.createTempDir();
         workingDirectory = new File(workingDirectory, ".openpnp");

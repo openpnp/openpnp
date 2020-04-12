@@ -31,7 +31,7 @@ import java.util.List;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
-import org.opencv.features2d.Feature2D;
+import org.opencv.features2d.FeatureDetector;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
@@ -241,8 +241,7 @@ public class SimpleBlobDetector extends CvStage {
 
     public Result process(CvPipeline pipeline) throws Exception {
         Mat mat = pipeline.getWorkingImage();
-        
-        Feature2D blobDetector = org.opencv.features2d.SimpleBlobDetector.create();
+        FeatureDetector blobDetector = FeatureDetector.create(FeatureDetector.SIMPLEBLOB);
         File outputFile = File.createTempFile("SimpleBlobDetector", ".YAML");
         writeToFile(outputFile,
                 "%YAML:1.0" // java

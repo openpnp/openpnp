@@ -31,7 +31,6 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
-import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -52,6 +51,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.base.AbstractCamera;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.LensCalibration;
@@ -486,7 +486,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             undistortionMap1 = new Mat();
             undistortionMap2 = new Mat();
             Mat rectification = Mat.eye(3, 3, CvType.CV_32F);
-            Calib3d.initUndistortRectifyMap(calibration.getCameraMatrixMat(),
+            Imgproc.initUndistortRectifyMap(calibration.getCameraMatrixMat(),
                     calibration.getDistortionCoefficientsMat(), rectification,
                     calibration.getCameraMatrixMat(), mat.size(), CvType.CV_32FC1, undistortionMap1,
                     undistortionMap2);

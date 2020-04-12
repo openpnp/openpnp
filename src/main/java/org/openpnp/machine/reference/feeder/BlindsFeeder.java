@@ -38,6 +38,7 @@ import java.util.Map;
 import javax.swing.Action;
 
 import org.apache.commons.io.IOUtils;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
@@ -423,7 +424,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
             // calculate the diagonal text size
             double fontScale = 1.0;
-            Size size = Imgproc.getTextSize(String.valueOf(getPocketCount()), Imgproc.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
+            Size size = Imgproc.getTextSize(String.valueOf(getPocketCount()), Core.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
             Location textSizeMm = camera.getUnitsPerPixel().multiply(size.width, size.height, 0., 0.)
                     .convertToUnits(LengthUnit.Millimeters);
             if (textSizeMm.getY() < 0.0) {
@@ -452,7 +453,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             // go through all the pockets, step-wise 
             for (int i = step; i <= getPocketCount(); i += step) {
                 String text = String.valueOf(i);
-                Size textSize = Imgproc.getTextSize(text, Imgproc.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
+                Size textSize = Imgproc.getTextSize(text, Core.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
 
                 Location partLocation = getUncalibratedPickLocation(i).convertToUnits(LengthUnit.Millimeters);
                 // go below the pocket
@@ -495,7 +496,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                     }
                     Imgproc.putText(mat, text, 
                             new org.opencv.core.Point(p.x + alignX, p.y + alignY), 
-                            Imgproc.FONT_HERSHEY_PLAIN, 
+                            Core.FONT_HERSHEY_PLAIN, 
                             fontScale, 
                             FluentCv.colorToScalar(color), 2, 0, false);
                 }
