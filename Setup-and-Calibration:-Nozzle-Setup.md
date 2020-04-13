@@ -17,7 +17,7 @@ OpenPnP's default configuration includes one nozzle. If you have more than one n
 1. Open the Machine Setup Tab.
 2. Find the head you want to add a nozzle to and look for the Nozzles item below it. Select it.
 3. Add the nozzle by pressing the add nozzle button ![](https://rawgit.com/openpnp/openpnp/6b20cb121e36ec8b0eecdf6190aee5f448c51c41/src/main/resources/icons/nozzle-add.svg).  
-4. Select a nozzle type from the dialog. ReferenceNozzle is good for most setups. If you have a Liteplacer, consider selecting the [ContactProbeNozzle].
+4. Select a nozzle type from the dialog. ReferenceNozzle is good for most setups. If you have a Liteplacer, consider selecting the ContactProbeNozzle.
 5. Press Accept and the new nozzle will appear in the list. Select it to open it's properties.
 
 ## Adding Nozzle Tips
