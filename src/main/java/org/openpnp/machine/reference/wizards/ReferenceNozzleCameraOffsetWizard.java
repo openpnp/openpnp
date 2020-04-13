@@ -5,6 +5,7 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import org.jdesktop.beansbinding.AutoBinding;
+import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.CameraItem;
 import org.openpnp.gui.support.LengthConverter;
@@ -328,6 +329,7 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
 
+        nozzleMarkLocation.setLocation(new Location(nozzle.getHeadOffsets().getUnits()));
         addWrappedBinding(nozzleMarkLocation, "lengthX", nozzleMarkLocationX, "text", lengthConverter);
         addWrappedBinding(nozzleMarkLocation, "lengthY", nozzleMarkLocationY, "text", lengthConverter);
         addWrappedBinding(nozzleMarkLocation, "lengthZ", nozzleMarkLocationZ, "text", lengthConverter);
@@ -338,6 +340,13 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
         addWrappedBinding(nozzleOffsetLocation, "lengthZ", nozzleOffsetLocationZ, "text", lengthConverter);
 
         addWrappedBinding(nozzle, "safeZ", textFieldSafeZ, "text", lengthConverter);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(nozzleMarkLocationX);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(nozzleMarkLocationY);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(nozzleMarkLocationZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(nozzleOffsetLocationX);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(nozzleOffsetLocationY);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(nozzleOffsetLocationZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
     }
     protected void initDataBindings() {
         BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty = BeanProperty.create("selected");

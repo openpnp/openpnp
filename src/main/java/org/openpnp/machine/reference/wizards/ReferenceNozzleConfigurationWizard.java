@@ -107,15 +107,15 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
 
         locationX = new JTextField();
         panelOffsets.add(locationX, "2, 4");
-        locationX.setColumns(5);
+        locationX.setColumns(10);
 
         locationY = new JTextField();
         panelOffsets.add(locationY, "4, 4");
-        locationY.setColumns(5);
+        locationY.setColumns(10);
 
         locationZ = new JTextField();
         panelOffsets.add(locationZ, "6, 4");
-        locationZ.setColumns(5);
+        locationZ.setColumns(10);
 
         contentPanel.add(panelOffsets);
 
