@@ -48,12 +48,14 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.feeder.wizards.BlindsFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
@@ -1143,7 +1145,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         }
 
         // Get the push nozzle for the current position. This will also throw if none is allowed.
-        NozzleAndTipForPushing nozzleAndTipForPushing = BlindsFeeder.getNozzleAndTipForPushing(true);
+        NozzleAndTipForPushing nozzleAndTipForPushing = BlindsFeeder.getNozzleAndTipForPushing(null, true);
 
         // Use a Travelling Salesman algorithm to optimize the path to actuate all the feeder covers.
         TravellingSalesman<BlindsFeeder> tsm = new TravellingSalesman<>(
@@ -1228,15 +1230,36 @@ public class BlindsFeeder extends ReferenceFeeder {
             return nozzleTipLoadedBefore;
         }
     }
-    public static NozzleAndTipForPushing getNozzleAndTipForPushing(boolean loadNozzleTipIfNeeded) throws Exception {
+    public static NozzleAndTipForPushing getNozzleAndTipForPushing(Part favoredCompatiblePart, boolean loadNozzleTipIfNeeded) throws Exception {
         // first search for any NozzleTip already loaded that may be used for pushing 
         Machine machine = Configuration.get().getMachine();
         for (Head head : machine.getHeads()) {
+            // first search for a favored nozzle tip
+            if (favoredCompatiblePart != null 
+                    && favoredCompatiblePart.getPackage() != null) {
+                for (Nozzle nozzle :  head.getNozzles()) {
+                    if (nozzle.getPart() == null) { 
+                        // Nozzle is free
+                        NozzleTip nozzleTip = nozzle.getNozzleTip();
+                        if (nozzleTip.isPushAndDragAllowed()) {
+                            if (favoredCompatiblePart.getPackage()
+                                    .getCompatibleNozzleTips().contains(nozzleTip)) {
+                                // Return the nozzle and nozzle tip.
+                                return new NozzleAndTipForPushing(nozzle, nozzleTip);
+                            }
+                        }
+                    }
+                }
+            }
+            // then just take any
             for (Nozzle nozzle :  head.getNozzles()) {
-                NozzleTip nozzleTip = nozzle.getNozzleTip();
-                if (nozzleTip.isPushAndDragAllowed()) {
-                    // Return the nozzle and nozzle tip.
-                    return new NozzleAndTipForPushing(nozzle, nozzleTip);
+                if (nozzle.getPart() == null) { 
+                    // Nozzle is free
+                    NozzleTip nozzleTip = nozzle.getNozzleTip();
+                    if (nozzleTip.isPushAndDragAllowed()) {
+                        // Return the nozzle and nozzle tip.
+                        return new NozzleAndTipForPushing(nozzle, nozzleTip);
+                    }
                 }
             }
         }
@@ -1245,19 +1268,22 @@ public class BlindsFeeder extends ReferenceFeeder {
         if (loadNozzleTipIfNeeded) {
             for (Head head : machine.getHeads()) {
                 for (Nozzle nozzle :  head.getNozzles()) {
-                    for (NozzleTip pushNozzleTip : nozzle.getCompatibleNozzleTips()) {
-                        if (pushNozzleTip.isPushAndDragAllowed()) {
-                            NozzleTip nozzleTip = nozzle.getNozzleTip();
-                            // Alas, found one for pushing, load it
-                            nozzle.loadNozzleTip(pushNozzleTip);
-                            // And return the nozzle and nozzle tip.
-                            return new NozzleAndTipForPushing(nozzle, nozzleTip);
+                    if (nozzle.getPart() == null) { 
+                        // Nozzle is free
+                        for (NozzleTip pushNozzleTip : nozzle.getCompatibleNozzleTips()) {
+                            if (pushNozzleTip.isPushAndDragAllowed()) {
+                                NozzleTip nozzleTip = nozzle.getNozzleTip();
+                                // Alas, found one for pushing, load it
+                                nozzle.loadNozzleTip(pushNozzleTip);
+                                // And return the nozzle and nozzle tip.
+                                return new NozzleAndTipForPushing(nozzle, nozzleTip);
+                            }
                         }
                     }
                 }
             }
             // None could be loaded.
-            throw new Exception("BlindsFeeder: No Nozzle/NozzleTip found that allows pushing.");
+            throw new Exception("BlindsFeeder: No empty Nozzle/NozzleTip found that allows pushing.");
         }
         // None compatible.
         return new NozzleAndTipForPushing(null, null);
@@ -1299,7 +1325,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             }
 
             // Get the nozzle for pushing
-            NozzleAndTipForPushing nozzleAndTipForPushing = BlindsFeeder.getNozzleAndTipForPushing(loadNozzleTipIfNeeded);
+            NozzleAndTipForPushing nozzleAndTipForPushing = BlindsFeeder.getNozzleAndTipForPushing(getPart(), loadNozzleTipIfNeeded);
             Nozzle nozzle = nozzleAndTipForPushing.getNozzle();
             NozzleTip nozzleTip = nozzleAndTipForPushing.getNozzleTip();
             if (nozzleTip == null) {
