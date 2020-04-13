@@ -17,7 +17,7 @@ OpenPnP's default configuration includes one nozzle. If you have more than one n
 1. Open the Machine Setup Tab.
 2. Find the head you want to add a nozzle to and look for the Nozzles item below it. Select it.
 3. Add the nozzle by pressing the add nozzle button ![](https://rawgit.com/openpnp/openpnp/6b20cb121e36ec8b0eecdf6190aee5f448c51c41/src/main/resources/icons/nozzle-add.svg).  
-4. Select a nozzle type from the dialog. ReferenceNozzle is good for most setups. If you have a Liteplacer, consider selecting the [ContactProbeNozzle](https://github.com/openpnp/openpnp/wiki/The-Contact-Probing-Nozzle).
+4. Select a nozzle type from the dialog. ReferenceNozzle is good for most setups. If you have a Liteplacer, consider selecting the [ContactProbeNozzle](https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle).
 5. Press Accept and the new nozzle will appear in the list. Select it to open it's properties.
 
 ## Adding Nozzle Tips
@@ -66,9 +66,6 @@ If you have multiple nozzles on your machine, you can select the one you want to
 ## Advanced
 On more advanced setups, especially those with multiple nozzles and nozzle tips, you may need to setup package compatibility and the nozzle tip changer.
 
-### Contact Probing Nozzle
-Some machines (e.g. the Liteplacer) have a nozzle that can sense when the nozzle tip touches down. The idea is to automatically stop Z down motion without having to know exactly how high a part, a feeder and/or a PCB is. To use this feature in OpenPNP, you can use the [ContactProbeNozzle documented on its own page](https://github.com/openpnp/openpnp/wiki/The-Contact-Probing-Nozzle).
-
 ### Package Compatibility
 Package Compatibility lets OpenPnP know which Nozzle Tips you want to use for each package that you'll place. If you want to use a Nozzle Tip for every type of package you can just select "Allow Incompatible Packages?" and OpenPnP will consider that nozzle tip to be available for all parts. If you want to limit the parts that a particular nozzle tip works with, just uncheck the "Allow Incompatible Packages?" checkbox and check the packages you want to enable in the table below. Don't forget to hit Apply.
 
@@ -93,6 +90,9 @@ Now that your nozzle is configured, let's move it around and make sure it's work
 4. The nozzle should move to where the camera was previously looking. You can click the position camera button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-camera.svg)  below to move the Camera back.
 
 The Position Tool and Position Camera buttons can be used to switch back and forth between what the camera is pointing at and what the nozzle is pointing at.
+
+### Contact Probing Nozzle
+Some machines (e.g. the Liteplacer) have a nozzle that can sense when the nozzle tip touches down. The idea is to automatically stop Z down motion without having to know exactly how high a part, a feeder and/or a PCB is. To use this feature in OpenPNP, you can use the [ContactProbeNozzle documented on its own page](https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle).
 
 ***
 
