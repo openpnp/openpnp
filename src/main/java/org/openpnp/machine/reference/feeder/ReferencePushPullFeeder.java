@@ -1233,12 +1233,12 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             if (detectedOcrModel != null) {
                 Imgproc.putText(mat, detectedOcrModel.getText(), 
                         new org.opencv.core.Point(20, mat.rows()-20), 
-                        Core.FONT_HERSHEY_PLAIN, 
+                        Imgproc.FONT_HERSHEY_PLAIN, 
                         3, 
                         FluentCv.colorToScalar(Color.black), 6, 0, false);
                 Imgproc.putText(mat, detectedOcrModel.getText(), 
                         new org.opencv.core.Point(20, mat.rows()-20), 
-                        Core.FONT_HERSHEY_PLAIN, 
+                        Imgproc.FONT_HERSHEY_PLAIN, 
                         3, 
                         FluentCv.colorToScalar(color), 2, 0, false);
             }
@@ -1256,7 +1256,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             // calculate the diagonal text size
             double fontScale = 1.0;
             Size size = Imgproc.getTextSize(String.valueOf(getPartsPerFeedCycle()), 
-                    Core.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
+                    Imgproc.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
             Location textSizeMm = camera.getUnitsPerPixel().multiply(size.width, size.height, 0., 0.)
                     .convertToUnits(LengthUnit.Millimeters);
             if (textSizeMm.getY() < 0.0) {
@@ -1285,7 +1285,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             // go through all the parts, step-wise 
             for (int i = step; i <= getPartsPerFeedCycle(); i += step) {
                 String text = String.valueOf(i);
-                Size textSize = Imgproc.getTextSize(text, Core.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
+                Size textSize = Imgproc.getTextSize(text, Imgproc.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
 
                 Location partLocation = getPickLocation(i, calibratedVisionOffset)
                         .convertToUnits(LengthUnit.Millimeters);
@@ -1330,7 +1330,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     }
                     Imgproc.putText(mat, text, 
                             new org.opencv.core.Point(p.x + alignX, p.y + alignY), 
-                            Core.FONT_HERSHEY_PLAIN, 
+                            Imgproc.FONT_HERSHEY_PLAIN, 
                             fontScale, 
                             FluentCv.colorToScalar(color), 2, 0, false);
                 }
