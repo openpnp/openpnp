@@ -27,8 +27,6 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
-import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConsole;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverGcodes;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverSettings;
@@ -78,6 +76,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
         ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index"),
+        ACTUATOR_READ_WITH_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
         ACTUATOR_READ_REGEX(true);
 
         final boolean headMountable;
@@ -151,6 +150,12 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     
     @Attribute(required = false)
     protected double backlashOffsetY = -1;
+    
+    @Attribute(required = false)
+    protected double backlashOffsetZ = 0;
+    
+    @Attribute(required = false)
+    protected double backlashOffsetR = 0;
     
     @Attribute(required = false)
     protected double nonSquarenessFactor = 0;
@@ -654,6 +659,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             if (includeZ) {
             	command = substituteVariable(command, "Z", z);
             	command = substituteVariable(command, "ZF", z);
+                command = substituteVariable(command, "BacklashOffsetZ", z + backlashOffsetZ); // Backlash Compensation
                 command = substituteVariable(command, "ZDecreasing", z < zAxis.getCoordinate() ? true : null);
                 command = substituteVariable(command, "ZIncreasing", z > zAxis.getCoordinate() ? true : null);
                 if (zAxis.getPreMoveCommand() != null) {
@@ -665,6 +671,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             else {
                 command = substituteVariable(command, "Z", null);
                 command = substituteVariable(command, "ZF", null);
+                command = substituteVariable(command, "BacklashOffsetZ", null); // Backlash Compensation
                 command = substituteVariable(command, "ZDecreasing", null);
                 command = substituteVariable(command, "ZIncreasing", null);
             }
@@ -672,6 +679,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             if (includeRotation) {
             	command = substituteVariable(command, "Rotation", rotation);
             	command = substituteVariable(command, "RotationF", rotation);
+                command = substituteVariable(command, "BacklashOffsetRotation", rotation + backlashOffsetR); // Backlash Compensation
                 command = substituteVariable(command, "RotationDecreasing", rotation < rotationAxis.getCoordinate() ? true : null);
                 command = substituteVariable(command, "RotationIncreasing", rotation > rotationAxis.getCoordinate() ? true : null);
                 if (rotationAxis.getPreMoveCommand() != null) {
@@ -683,6 +691,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             else {
                 command = substituteVariable(command, "Rotation", null);
                 command = substituteVariable(command, "RotationF", null);
+                command = substituteVariable(command, "BacklashOffsetRotation", null); // Backlash Compensation
                 command = substituteVariable(command, "RotationDecreasing", null);
                 command = substituteVariable(command, "RotationIncreasing", null);
             }
@@ -819,6 +828,51 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         for (String line : responses) {
             if (line.matches(regex)) {
                 Logger.trace("actuatorRead response: {}", line);
+                Matcher matcher = Pattern.compile(regex).matcher(line);
+                matcher.matches();
+
+                try {
+                    String s = matcher.group("Value");
+                    return s;
+                }
+                catch (Exception e) {
+                    throw new Exception("Failed to read Actuator " + actuator.getName(), e);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public String actuatorRead(ReferenceActuator actuator, double parameter) throws Exception {
+        String command = getCommand(actuator, CommandType.ACTUATOR_READ_WITH_DOUBLE_COMMAND);
+        String regex = getCommand(actuator, CommandType.ACTUATOR_READ_REGEX);
+        if (command == null || regex == null) {
+            // If the command or regex is null we'll query the subdrivers. The first
+            // to respond with a non-null value wins.
+            for (ReferenceDriver driver : subDrivers) {
+                String val = driver.actuatorRead(actuator, parameter);
+                if (val != null) {
+                    return val;
+                }
+            }
+            // If none of the subdrivers returned a value there's nothing left to
+            // do, so return null.
+            return null;
+        }
+
+        command = substituteVariable(command, "Id", actuator.getId());
+        command = substituteVariable(command, "Name", actuator.getName());
+        command = substituteVariable(command, "Index", actuator.getIndex());
+        command = substituteVariable(command, "DoubleValue", parameter);
+        command = substituteVariable(command, "IntegerValue", (int) parameter);
+
+        List<String> responses = sendGcode(command);
+
+        for (String line : responses) {
+            if (line.matches(regex)) {
+                Logger.trace("actuatorReadWithDouble response: {}", line);
                 Matcher matcher = Pattern.compile(regex).matcher(line);
                 matcher.matches();
 
@@ -1152,6 +1206,22 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     
     public void setBacklashOffsetY(double BacklashOffsetY) {
         this.backlashOffsetY = BacklashOffsetY;
+    }
+    
+    public double getBacklashOffsetZ() {
+        return backlashOffsetZ;
+    }
+    
+    public void setBacklashOffsetZ(double BacklashOffsetZ) {
+        this.backlashOffsetZ = BacklashOffsetZ;
+    }
+    
+    public double getBacklashOffsetR() {
+        return backlashOffsetR;
+    }
+    
+    public void setBacklashOffsetR(double BacklashOffsetR) {
+        this.backlashOffsetR = BacklashOffsetR;
     }
     
     public double getBacklashFeedRateFactor() {
