@@ -17,6 +17,7 @@ import org.apache.commons.io.IOUtils;
 import org.opencv.core.KeyPoint;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
+import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceFiducialLocatorConfigurationWizard;
@@ -376,8 +377,11 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                 if (frame != null) {
                     CameraView cameraView = frame.getCameraViews().getCameraView(camera);
                     if (cameraView != null) {    
+                        LengthConverter lengthConverter = new LengthConverter();
                         cameraView.showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 
-                                location.getX()+", "+location.getY()+" "+location.getUnits().getShortName(),
+                                lengthConverter.convertForward(location.getLengthX())+", "
+                                        +lengthConverter.convertForward(location.getLengthY())+" "
+                                        +location.getUnits().getShortName(),
                                 1500);
                     }
                 }
