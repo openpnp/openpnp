@@ -87,12 +87,6 @@ public abstract class CvStage {
         }
     }
 
-    // a stage may optionally define a length unit which is handled in the pipeline editor's 
-    // ResultsPanel.matView
-    public LengthUnit getLengthUnit() {
-        return null;
-    }
-
     public BeanInfo getBeanInfo() {
         return new CvStageBeanInfo();
     }

@@ -85,7 +85,9 @@ public class AffineWarp extends CvStage {
     @Property(description = "The caller of the pipeline can override the region of interest under this name.")
     private String regionOfInterestProperty = "regionOfInterest";
 
-    @Override
+    /* broken out in https://github.com/openpnp/openpnp/pull/980
+     * uncomment the @Override as soon as PR #980 is merged
+    @Override*/
     public LengthUnit getLengthUnit() {
         return lengthUnit;
     }
