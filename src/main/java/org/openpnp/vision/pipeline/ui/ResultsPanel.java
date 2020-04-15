@@ -9,6 +9,7 @@ import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -26,6 +27,9 @@ import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
+import org.openpnp.spi.Camera;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result;
 import org.openpnp.vision.pipeline.CvStage.Result.Circle;
@@ -120,15 +124,33 @@ public class ResultsPanel extends JPanel {
                     matStatusLabel.setText(model.toString());
                 }
                 else {
-                    matStatusLabel.setText(String.format("RGB: %03d, %03d, %03d HSB: %03d, %03d, %03d XY: %d, %d",
+                    LengthUnit lengthUnit = selectedStage != null ? selectedStage.getLengthUnit() : null;
+                    String auxCoords = "";
+                    if (lengthUnit != null) {
+                        // the stage defines its proper LengthUnit 
+                        BufferedImage image = matView.getImage();
+                        if (image != null) {
+                            Camera camera = (Camera) editor.getPipeline().getProperty("camera");
+                            if (camera != null) {
+                                // convert camera (pixels) to stage units 
+                                Location unitsPerPixel = camera.getUnitsPerPixel()
+                                        .convertToUnits(lengthUnit);
+                                Location mouseLocation = unitsPerPixel.multiply(p.x-image.getWidth()/2, -p.y+image.getHeight()/2, 0, 0);
+                                auxCoords = String.format(" (%f, %f %s)", mouseLocation.getX(), mouseLocation.getY(), lengthUnit.getShortName()); 
+                            }
+                        }
+                    }
+                    
+                    matStatusLabel.setText(String.format("RGB: %03d, %03d, %03d HSV(full): %03d, %03d, %03d XY: %d, %d %s",
                             color.getRed(),
                             color.getGreen(),
                             color.getBlue(),
-                            (int) (255.0 * hsb[0]),
-                            (int) (255.0 * hsb[1]),
-                            (int) (255.0 * hsb[2]),
-                            p.x,
-                            p.y));
+                            (int) (255.999 * hsb[0]),
+                            (int) (255.999 * hsb[1]),
+                            (int) (255.999 * hsb[2]),
+                            p.x, 
+                            p.y,
+                            auxCoords));
                 }
             }
         });
