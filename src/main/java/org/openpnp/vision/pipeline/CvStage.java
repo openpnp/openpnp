@@ -9,7 +9,6 @@ import java.beans.MethodDescriptor;
 import java.beans.PropertyDescriptor;
 
 import org.opencv.core.Mat;
-import org.openpnp.model.LengthUnit;
 import org.simpleframework.xml.Attribute;
 
 /**
