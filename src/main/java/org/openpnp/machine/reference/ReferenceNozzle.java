@@ -690,24 +690,24 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
     
     protected void actuateVacuumValve(boolean on) throws Exception {
-        actuatePump(true);
+        if (on) {
+            actuatePump(true);
+        }
 
         getVacuumActuator().actuate(on);
 
-        actuatePump(false);
+        if (! on) {
+            actuatePump(false);
+        }
     }
 
     protected void actuateVacuumValve(double value) throws Exception {
         actuatePump(true);
 
         getVacuumActuator().actuate(value);
-
-        actuatePump(false);
     }
 
     protected void actuateBlowValve(double value) throws Exception {
-        actuatePump(true);
-
         getBlowOffActuator().actuate(value);
 
         actuatePump(false);
