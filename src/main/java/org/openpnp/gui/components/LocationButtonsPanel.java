@@ -123,12 +123,10 @@ public class LocationButtonsPanel extends JPanel {
         if (actuatorName == null || actuatorName.trim().length() == 0) {
             buttonCaptureTool.setAction(captureToolCoordinatesAction);
             buttonCenterTool.setAction(positionToolAction);
-            buttonCenterToolNoSafeZ.setAction(positionToolNoSafeZAction);
         }
         else {
             buttonCaptureTool.setAction(captureActuatorCoordinatesAction);
             buttonCenterTool.setAction(positionActuatorAction);
-            buttonCenterToolNoSafeZ.setAction(positionActuatorNoSafeZAction);
         }
     }
 
@@ -353,26 +351,6 @@ public class LocationButtonsPanel extends JPanel {
                             location = location.addWithRotation(baseLocation);
                         }
                         MovableUtils.moveToLocationAtSafeZ(actuator, location);
-                    });
-                }
-            };
-    private Action positionActuatorNoSafeZAction =
-            new AbstractAction("Position Actuator (Without Safe Z)", Icons.centerPinNoSafeZ) {
-                {
-                    putValue(Action.SHORT_DESCRIPTION,
-                            "Position the actuator over the center of the location without first moving to Safe Z.");
-                }
-
-                @Override
-                public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.submitUiMachineTask(() -> {
-                        Actuator actuator = getActuator();
-                        Location location = getParsedLocation();
-                        if (baseLocation != null) {
-                            location = location.rotateXy(baseLocation.getRotation());
-                            location = location.addWithRotation(baseLocation);
-                        }
-                        actuator.moveTo(location);
                     });
                 }
             };
