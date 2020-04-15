@@ -134,7 +134,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public void setHeadOffsets(Location headOffsets) {
+        Object oldValue = this.headOffsets;
         this.headOffsets = headOffsets;
+        firePropertyChange("headOffsets", oldValue, headOffsets);
         // Changing a head offset invalidates the nozzle tip calibration.
         ReferenceNozzleTipCalibration.resetAllNozzleTips();
     }
@@ -618,7 +620,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     public void setSafeZ(Length safeZ) {
+        Object oldValue = this.safeZ;
         this.safeZ = safeZ;
+        firePropertyChange("safeZ", oldValue, safeZ);
     }
 
     @Override
@@ -690,24 +694,24 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
     
     protected void actuateVacuumValve(boolean on) throws Exception {
-        actuatePump(true);
+        if (on) {
+            actuatePump(true);
+        }
 
         getVacuumActuator().actuate(on);
 
-        actuatePump(false);
+        if (! on) {
+            actuatePump(false);
+        }
     }
 
     protected void actuateVacuumValve(double value) throws Exception {
         actuatePump(true);
 
         getVacuumActuator().actuate(value);
-
-        actuatePump(false);
     }
 
     protected void actuateBlowValve(double value) throws Exception {
-        actuatePump(true);
-
         getBlowOffActuator().actuate(value);
 
         actuatePump(false);
