@@ -163,7 +163,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblLimitRota = new JLabel("Limit Rotation to 180º");
+        lblLimitRota = new JLabel("Limit Rotation to +-180º");
         panelChanger.add(lblLimitRota, "2, 2, right, default");
 
         chckbxLimitRotationTo = new JCheckBox("");
