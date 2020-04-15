@@ -43,9 +43,6 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
@@ -54,7 +51,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JDialog;
-import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -85,7 +81,6 @@ import org.openpnp.gui.importer.KicadPosImporter;
 import org.openpnp.gui.importer.LabcenterProteusImporter; //
 import org.openpnp.gui.importer.NamedCSVImporter;
 import org.openpnp.gui.support.HeadCellValue;
-import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
@@ -201,7 +196,6 @@ public class MainFrame extends JFrame {
     private JButton btnInstructionsCancel;
     private JTextPane lblInstructions;
     private JPanel panel_2;
-    private ScheduledExecutorService scheduledExecutor;
     private JMenuBar menuBar;
     private JMenu mnImport;
     private JMenu mnScripts;
@@ -513,18 +507,11 @@ public class MainFrame extends JFrame {
         panel_1.setLayout(new BorderLayout(0, 0));
 
         lblInstructions = new JTextPane();
-        // does not seem to work with html
-        //lblInstructions.setFont(new Font("Lucida Grande", Font.PLAIN, 14)); //$NON-NLS-1$
-        // instead use the HONOR_DISPLAY_PROPERTIES to set the proper system dialog font and size 
-        lblInstructions.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, true);
+        lblInstructions.setFont(new Font("Lucida Grande", Font.PLAIN, 14)); //$NON-NLS-1$
         lblInstructions.setBackground(UIManager.getColor("Panel.background")); //$NON-NLS-1$
         lblInstructions.setContentType("text/html"); //$NON-NLS-1$
         lblInstructions.setEditable(false);
         panel_1.add(lblInstructions);
-
-        labelIcon = new JLabel(); 
-        labelIcon.setIcon(Icons.processActivity1Icon);
-        panelInstructions.add(labelIcon, BorderLayout.WEST);
 
         machineControlsPanel = new MachineControlsPanel(configuration, jobPanel);
         panelMachine.add(machineControlsPanel, BorderLayout.SOUTH);
@@ -692,7 +679,7 @@ public class MainFrame extends JFrame {
             frameCamera = new JDialog(this, "OpenPnp - Camera", false); //$NON-NLS-1$
             // as of today no smart way found to get an adjusted size
             // ... so main window size is used for the camera window
-            frameCamera.getContentPane().add(panelCameraAndInstructions);
+            frameCamera.add(panelCameraAndInstructions);
             frameCamera.setVisible(true);
             frameCamera.addComponentListener(cameraWindowListener);
 
@@ -713,7 +700,7 @@ public class MainFrame extends JFrame {
             frameMachineControls = new JDialog(this, "OpenPnp - Machine Controls", false); //$NON-NLS-1$
             // as of today no smart way found to get an adjusted size
             // ... so hardcoded values used (usually not a good idea)
-            frameMachineControls.getContentPane().add(machineControlsPanel);
+            frameMachineControls.add(machineControlsPanel);
             frameMachineControls.setVisible(true);
             frameMachineControls.pack();
             frameMachineControls.addComponentListener(machineControlsWindowListener);
@@ -809,19 +796,9 @@ public class MainFrame extends JFrame {
         panelInstructions.setVisible(true);
         doLayout();
         panelInstructions.repaint();
-        if (scheduledExecutor == null) {
-            scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
-            scheduledExecutor.scheduleAtFixedRate(new Runnable() {
-                public void run() {
-                    labelIcon.setIcon(labelIcon.getIcon() == Icons.processActivity1Icon ? Icons.processActivity2Icon : Icons.processActivity1Icon);
-                }
-            }, 0, 1000, TimeUnit.MILLISECONDS);
-        }
     }
 
     public void hideInstructions() {
-        scheduledExecutor.shutdown();
-        scheduledExecutor = null;
         panelInstructions.setVisible(false);
         doLayout();
     }
@@ -1229,5 +1206,4 @@ public class MainFrame extends JFrame {
     private JLabel lblStatus;
     private JLabel lblPlacements;
     private JProgressBar prgbrPlacements;
-    private JLabel labelIcon;
 }
