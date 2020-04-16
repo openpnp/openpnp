@@ -77,6 +77,7 @@ import org.pmw.tinylog.Logger;
 public class CameraView extends JComponent implements CameraListener {
     private static final String PREF_RETICLE = "CamerView.reticle";
     private static final String PREF_ZOOM_INCREMENT = "CamerView.zoomIncrement";
+    private static final double DEFAULT_ZOOM_INCREMENT = 0.01;
 
     private static final String DEFAULT_RETICLE_KEY = "DEFAULT_RETICLE_KEY";
 
@@ -190,7 +191,7 @@ public class CameraView extends JComponent implements CameraListener {
     private boolean showName = false;
     
     private double zoom = 1d;
-    private double zoomIncPerMouseWheelTick = 0.01;
+    private double zoomIncPerMouseWheelTick = DEFAULT_ZOOM_INCREMENT;
     
     private boolean dragJogging = false;
     
@@ -203,7 +204,6 @@ public class CameraView extends JComponent implements CameraListener {
     long lastFrameReceivedTime = 0;
     MovingAverage fpsAverage = new MovingAverage(24);
     double fps = 0;
-    
     
     public CameraView() {
         setBackground(Color.black);
@@ -280,7 +280,7 @@ public class CameraView extends JComponent implements CameraListener {
         }
 
         // load the zoom increment pref, if any
-        zoomIncPerMouseWheelTick = prefs.getDouble(getZoomIncrementPrefKey(), 0.01);
+        zoomIncPerMouseWheelTick = prefs.getDouble(getZoomIncrementPrefKey(), DEFAULT_ZOOM_INCREMENT);
 
     }
 
