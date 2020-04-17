@@ -1280,10 +1280,7 @@ public class CameraView extends JComponent implements CameraListener {
         }
     }
 
-    private void moveToClick(MouseEvent e) {
-        int x = e.getX();
-        int y = e.getY();
-
+    public Location getCameraViewCenterOffsetsFromXy(int x, int y) {
         // Find the difference in X and Y from the center of the image
         // to the mouse click.
         double offsetX = (scaledWidth / 2.0D) - (x - imageX);
@@ -1297,12 +1294,17 @@ public class CameraView extends JComponent implements CameraListener {
         offsetX *= scaledUnitsPerPixelX;
         offsetY *= scaledUnitsPerPixelY;
 
-        // The offsets now represent the distance to move the camera
-        // in the Camera's units per pixel's units.
+        // The offsets now represent the distance in the Camera's units per pixel's units.
 
         // Create a location in the Camera's units per pixel's units
         // and with the values of the offsets.
         Location offsets = camera.getUnitsPerPixel().derive(offsetX, offsetY, 0.0, 0.0);
+        return offsets;
+    }
+
+    private void moveToClick(MouseEvent e) {
+        // Get the offset from the Camera view center in Camera's units.
+        Location offsets = getCameraViewCenterOffsetsFromXy(e.getX(), e.getY());
         // And move there.
         UiUtils.submitUiMachineTask(() -> {
             if (camera.getHead() == null) {
