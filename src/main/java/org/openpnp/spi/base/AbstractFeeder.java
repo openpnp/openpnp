@@ -67,7 +67,9 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
     @Override
     public void setPart(Part part) {
+        Object oldValue = this.part;
         this.part = part;
+        firePropertyChange("part", oldValue, part);
         this.partId = part.getId();
     }
 

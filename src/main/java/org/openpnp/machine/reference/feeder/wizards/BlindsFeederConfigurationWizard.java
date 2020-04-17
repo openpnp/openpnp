@@ -25,13 +25,11 @@ package org.openpnp.machine.reference.feeder.wizards;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.PrintWriter;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -149,13 +147,13 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                 ColumnSpec.decode("right:default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
         try {
         }
         catch (Throwable t) {
@@ -918,7 +916,6 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     private JTextField textFieldEdgeClosingDistance;
     private JButton btnCalibrateEdges;
     private JButton btnShowInfo;
-    private JButton btnOpenAllButton;
     private JTextField textFieldFirstPocket;
     private JLabel lblFirstPocket;
     private JButton btnExtractOpenscadModel;
@@ -948,14 +945,6 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         feeder.setPipelineToAllFeeders();
     }
     protected void initDataBindings() {
-    }
-    private class SwingAction extends AbstractAction {
-        public SwingAction() {
-            putValue(NAME, "SwingAction");
-            putValue(SHORT_DESCRIPTION, "Some short description");
-        }
-        public void actionPerformed(ActionEvent e) {
-        }
     }
 }
 

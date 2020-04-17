@@ -65,17 +65,26 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
     public Location getPickLocation() throws Exception;
 
     /**
+     * Some feeders need preparation for a Job that is best done up front and in bulk, such as vision 
+     * calibration, actuating covers, checking OCR labels etc. Some prep requires the head moving to the 
+     * feeder. For efficiency the JobProcessor uses a Travelling Salesman algorithm to visit
+     * all these feeders. The locations for these visits are gathered using getJobPreparationLocation().
+     *  
+     * @return The location for the feeder Job preparation visit or null if none.
+     */
+    public Location getJobPreparationLocation();
+    
+    /**
      * Prepares a Feeder for usage in a Job. This is done for all the feeders that are enabled and 
      * contain Parts that are used in pending placements. Preparation is done when the Job is started, 
-     * so it can perform one-time initialization that should not be postponed until the Nozzle.feed() 
+     * so it can perform bulk initialization that should not be postponed until the Nozzle.feed() 
      * 
-     * @param feedersToPrepare Lists all the feeders to be prepared, so bulk preparation is possible. 
-     * Bulk preparation, should only be triggered once for each concern, regardless of subsequent calls 
-     * to this method. Therefore feeders must record whether preparation was already done.
-     *   
+     * @param visit true for visits along the getJobPreparationLocation() travel path, false for 
+     * general preparation (second pass for visited feeders).
+     *  
      * @throws Exception
      */
-    public void prepareForJob(List<Feeder> feedersToPrepare) throws Exception;
+    public void prepareForJob(boolean visit) throws Exception;
     
     /**
      * Commands the Feeder to do anything it needs to do to prepare the part to be picked by the
