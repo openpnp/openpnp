@@ -16,13 +16,14 @@ import javax.swing.Icon;
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.KeyPoint;
 import org.openpnp.gui.MainFrame;
-import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.components.CameraView;
+import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.feeder.BlindsFeeder;
 import org.openpnp.machine.reference.vision.wizards.ReferenceFiducialLocatorConfigurationWizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceFiducialLocatorPartConfigurationWizard;
 import org.openpnp.model.Board;
+import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
@@ -33,12 +34,12 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.model.Point;
-import org.openpnp.model.Board.Side;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.QuickHull;
 import org.openpnp.util.TravellingSalesman;
 import org.openpnp.util.Utils2D;
@@ -371,7 +372,20 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                 
                 // And use the closest result
                 location = locations.get(0);
-                
+
+                MainFrame frame = MainFrame.get(); 
+                if (frame != null) {
+                    CameraView cameraView = frame.getCameraViews().getCameraView(camera);
+                    if (cameraView != null) {    
+                        LengthConverter lengthConverter = new LengthConverter();
+                        cameraView.showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 
+                                lengthConverter.convertForward(location.getLengthX())+", "
+                                        +lengthConverter.convertForward(location.getLengthY())+" "
+                                        +location.getUnits().getShortName(),
+                                1500);
+                    }
+                }
+
                 Logger.debug("{} located at {}", part.getId(), location);
                 // Move to where we actually found the fid
                 camera.moveTo(location);
