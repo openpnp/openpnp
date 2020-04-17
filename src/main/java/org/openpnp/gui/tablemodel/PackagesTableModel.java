@@ -34,8 +34,8 @@ import org.openpnp.model.Package;
 public class PackagesTableModel extends AbstractTableModel implements PropertyChangeListener {
     final private Configuration configuration;
 
-    private String[] columnNames = new String[] {"ID", "Description", "Tape Specification"};
-    private Class[] columnTypes = new Class[] {String.class, String.class, String.class};
+    private String[] columnNames = new String[] {"ID", "Description"};
+    private Class[] columnTypes = new Class[] {String.class, String.class,};
     private List<Package> packages;
 
     public PackagesTableModel(Configuration configuration) {
@@ -65,7 +65,7 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex == 1 || columnIndex == 2;
+        return columnIndex == 1;
     }
 
     public Package getPackage(int index) {
@@ -78,9 +78,6 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
             Package this_package = packages.get(rowIndex);
             if (columnIndex == 1) {
                 this_package.setDescription((String) aValue);
-            }
-            else if (columnIndex == 2) {
-                this_package.setTapeSpecification((String) aValue);
             }
         }
         catch (Exception e) {
@@ -95,8 +92,6 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
                 return this_package.getId();
             case 1:
                 return this_package.getDescription();
-            case 2:
-                return this_package.getTapeSpecification();
             default:
                 return null;
         }

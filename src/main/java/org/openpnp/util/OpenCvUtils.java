@@ -48,16 +48,6 @@ public class OpenCvUtils {
             // the caller releases the original Mat there is no memory leak.
             tmp.copyTo(m);
             tmp.release();
-        } 
-        else if (m.type() == CvType.CV_32FC3) {
-            // TemplateMatch creates a CV_32FC3 
-            type = BufferedImage.TYPE_3BYTE_BGR;
-            Mat tmp = new Mat();
-            m.convertTo(tmp, CvType.CV_8UC3, 255);
-            // Copy the results into the original Mat and release our temp copy so that when
-            // the caller releases the original Mat there is no memory leak.
-            tmp.copyTo(m);
-            tmp.release();
         }
         if (type == null) {
             throw new Error(String.format("Unsupported Mat: type %d, channels %d, depth %d",

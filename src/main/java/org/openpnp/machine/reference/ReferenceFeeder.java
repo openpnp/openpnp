@@ -23,13 +23,7 @@ public abstract class ReferenceFeeder extends AbstractFeeder {
     }
 
     @Override
-    public Location getJobPreparationLocation()  {
-        // the default RefrenceFeeder has no prep. location
-        return null;
-    }
-    
-    @Override
-    public void prepareForJob(boolean visit) throws Exception {
+    public void prepareForJob(List<Feeder> feedersToPrepare) throws Exception {
         // the default RefrenceFeeder needs no prep.
     }
 }
