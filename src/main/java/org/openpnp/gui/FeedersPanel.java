@@ -77,6 +77,8 @@ import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.NozzleTip;
+import org.openpnp.spi.JobProcessor.JobProcessorException;
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
@@ -506,15 +508,59 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Feeder feeder = getSelection();
-                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
 
+                // Simulate a "one feeder" job, prepare the feeder.
+                List<Feeder> feedersToPrepare = new ArrayList<>();
+                feedersToPrepare.add(feeder);
+                feeder.prepareForJob(feedersToPrepare);
+
+                // Check the nozzle tip package compatibility.
+                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                org.openpnp.model.Package packag = feeder.getPart().getPackage();
+                if (nozzle.getNozzleTip() == null || 
+                        !packag.getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
+                    // Wrong nozzle tip, try find one that works.
+                    boolean resolved = false;
+                    if (nozzle.isNozzleTipChangedOnManualFeed()) {
+                        for (NozzleTip nozzleTip : packag.getCompatibleNozzleTips()) {
+                            if (nozzle.getCompatibleNozzleTips().contains(nozzleTip)) {
+                                // Found a compatible one.
+                                nozzle.loadNozzleTip(nozzleTip);
+                                resolved = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (nozzle.getNozzleTip() == null) {
+                        throw new Exception("Can't pick, no nozzle tip loaded on nozzle "+nozzle.getName()+". "
+                                +"You may want to enable automatic nozzle tip change on manual feed on the Nozzle / Tool Changer.");
+                    }
+                    else if (! resolved) {
+                        throw new Exception("Can't pick, loaded nozzle tip "+
+                                nozzle.getNozzleTip().getName()+" is not compatible with package "+packag.getId()+". "
+                                +"You may want to enable automatic nozzle tip change on manual feed on the Nozzle / Tool Changer.");
+                    }
+                }
+
+                // Perform the feed.
                 nozzle.moveToSafeZ();
                 feeder.feed(nozzle);
+
+                // Go to the pick location and pick.
                 Location pickLocation = feeder.getPickLocation();
                 MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
                 nozzle.pick(feeder.getPart());
                 nozzle.moveToSafeZ();
+
+                // After the pick. 
                 feeder.postPick(nozzle);
+
+                // Perform the vacuum check, if enabled.
+                if (nozzle.isPartOnEnabled()) {
+                    if(!nozzle.isPartOn()) {
+                        throw new JobProcessorException(nozzle, "No part detected.");
+                    }
+                }
             });
         }
     };
