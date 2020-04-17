@@ -25,6 +25,7 @@ import org.openpnp.spi.base.AbstractNozzleTip;
 import org.openpnp.util.UiUtils;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceNozzleTip extends AbstractNozzleTip {
     @Attribute(required = false)
@@ -57,12 +58,47 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     
     @Element(required = false)
     private ReferenceNozzleTipCalibration calibration = new ReferenceNozzleTipCalibration();
-    
+
+    public enum VacuumMeasurementMethod {
+        None, 
+        Absolute,
+        RelativeTrend,
+        RelativeTrendFromPump;
+        
+        public boolean isTrendMethod() {
+            return this == RelativeTrend || this == RelativeTrendFromPump;
+        }
+    }
+
+    @Element(required = false)
+    VacuumMeasurementMethod methodPartOn = VacuumMeasurementMethod.Absolute;
+
+    @Attribute(required = false)
+    private int partOnDwellMilliseconds;
+
     @Element(required = false)
     private double vacuumLevelPartOnLow;
 
     @Element(required = false)
     private double vacuumLevelPartOnHigh;
+
+    @Attribute(required = false)
+    private int partOnTrendMilliseconds;
+
+    @Element(required = false)
+    private double vacuumTrendPartOnLow;
+
+    @Element(required = false)
+    private double vacuumTrendPartOnHigh;
+
+    @Element(required = false)
+    VacuumMeasurementMethod methodPartOff = VacuumMeasurementMethod.Absolute;
+
+    @Attribute(required = false)
+    private int partOffDwellMilliseconds = -1;
+
+    @Attribute(required = false)
+    private boolean valveEnabledForPartOff = true;
 
     @Element(required = false)
     private double vacuumLevelPartOffLow;
@@ -70,13 +106,54 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     @Element(required = false)
     private double vacuumLevelPartOffHigh;
 
+    @Attribute(required = false)
+    private int partOffTrendMilliseconds;
+
+    @Element(required = false)
+    private double vacuumTrendPartOffLow;
+
+    @Element(required = false)
+    private double vacuumTrendPartOffHigh;
+
     @Element(required = false)
     private Length diameterLow = new Length(0, LengthUnit.Millimeters);
 
     @Attribute(required = false)
     private boolean isPushAndDragAllowed = false;
 
+    // last vacuum readings 
+    private Double vacuumLevelPartOnReading = null;
+    private Double vacuumTrendPartOnReading = null;
+    private Double vacuumLevelPartOffReading = null;
+    private Double vacuumTrendPartOffReading = null;
+    
     public ReferenceNozzleTip() {
+    }
+
+    @Commit
+    public void commit() {
+        /**
+         * Backwards compatibility.
+         */
+        if (partOffDwellMilliseconds == -1) {
+            // the pick time was previously used for this
+            partOffDwellMilliseconds = pickDwellMilliseconds;
+            // also initialize part on/off test enabling
+            if (vacuumLevelPartOnLow < vacuumLevelPartOnHigh) {
+                // was enabled
+                methodPartOn = VacuumMeasurementMethod.Absolute;
+            }
+            else {
+                methodPartOn = VacuumMeasurementMethod.None;
+            }
+            if (vacuumLevelPartOffLow < vacuumLevelPartOffHigh) {
+                // was enabled
+                methodPartOff = VacuumMeasurementMethod.Absolute;
+            }
+            else {
+                methodPartOff = VacuumMeasurementMethod.None;
+            }
+        }
     }
 
     @Override
@@ -202,6 +279,22 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         return null;
     }
 
+    public VacuumMeasurementMethod getMethodPartOn() {
+        return methodPartOn;
+    }
+
+    public void setMethodPartOn(VacuumMeasurementMethod methodPartOn) {
+        this.methodPartOn = methodPartOn;
+    }
+
+    public int getPartOnDwellMilliseconds() {
+        return partOnDwellMilliseconds;
+    }
+
+    public void setPartOnDwellMilliseconds(int partOnDwellMilliseconds) {
+        this.partOnDwellMilliseconds = partOnDwellMilliseconds;
+    }
+
     public double getVacuumLevelPartOnLow() {
         return vacuumLevelPartOnLow;
     }
@@ -218,6 +311,54 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         this.vacuumLevelPartOnHigh = vacuumLevelPartOnHigh;
     }
 
+    public int getPartOnTrendMilliseconds() {
+        return partOnTrendMilliseconds;
+    }
+
+    public void setPartOnTrendMilliseconds(int partOnTrendMilliseconds) {
+        this.partOnTrendMilliseconds = partOnTrendMilliseconds;
+    }
+
+    public double getVacuumTrendPartOnLow() {
+        return vacuumTrendPartOnLow;
+    }
+
+    public void setVacuumTrendPartOnLow(double vacuumTrendPartOnLow) {
+        this.vacuumTrendPartOnLow = vacuumTrendPartOnLow;
+    }
+
+    public double getVacuumTrendPartOnHigh() {
+        return vacuumTrendPartOnHigh;
+    }
+
+    public void setVacuumTrendPartOnHigh(double vacuumTrendPartOnHigh) {
+        this.vacuumTrendPartOnHigh = vacuumTrendPartOnHigh;
+    }
+
+    public VacuumMeasurementMethod getMethodPartOff() {
+        return methodPartOff;
+    }
+
+    public void setMethodPartOff(VacuumMeasurementMethod methodPartOff) {
+        this.methodPartOff = methodPartOff;
+    }
+
+    public boolean isValveEnabledForPartOff() {
+        return valveEnabledForPartOff;
+    }
+
+    public void setValveEnabledForPartOff(boolean valveEnabledForPartOff) {
+        this.valveEnabledForPartOff = valveEnabledForPartOff;
+    }
+
+    public int getPartOffDwellMilliseconds() {
+        return partOffDwellMilliseconds;
+    }
+
+    public void setPartOffDwellMilliseconds(int partOffDwellMilliseconds) {
+        this.partOffDwellMilliseconds = partOffDwellMilliseconds;
+    }
+
     public double getVacuumLevelPartOffLow() {
         return vacuumLevelPartOffLow;
     }
@@ -232,6 +373,78 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     public void setVacuumLevelPartOffHigh(double vacuumLevelPartOffHigh) {
         this.vacuumLevelPartOffHigh = vacuumLevelPartOffHigh;
+    }
+
+    public int getPartOffTrendMilliseconds() {
+        return partOffTrendMilliseconds;
+    }
+
+    public void setPartOffTrendMilliseconds(int partOffTrendMilliseconds) {
+        this.partOffTrendMilliseconds = partOffTrendMilliseconds;
+    }
+
+    public double getVacuumTrendPartOffLow() {
+        return vacuumTrendPartOffLow;
+    }
+
+    public void setVacuumTrendPartOffLow(double vacuumTrendPartOffLow) {
+        this.vacuumTrendPartOffLow = vacuumTrendPartOffLow;
+    }
+
+    public double getVacuumTrendPartOffHigh() {
+        return vacuumTrendPartOffHigh;
+    }
+
+    public void setVacuumTrendPartOffHigh(double vacuumTrendPartOffHigh) {
+        this.vacuumTrendPartOffHigh = vacuumTrendPartOffHigh;
+    }
+
+    public Double getVacuumLevelPartOnReading() {
+        return vacuumLevelPartOnReading;
+    }
+
+    public void setVacuumLevelPartOnReading(Double vacuumLevelPartOnReading) {
+        Object oldValue = vacuumLevelPartOnReading;
+        this.vacuumLevelPartOnReading = vacuumLevelPartOnReading;
+        if (!(oldValue == null && vacuumLevelPartOnReading == null)) { // only fire when values are set
+            firePropertyChange("vacuumLevelPartOnReading", oldValue, vacuumLevelPartOnReading);
+        }
+    }
+
+    public Double getVacuumTrendPartOnReading() {
+        return vacuumTrendPartOnReading;
+    }
+
+    public void setVacuumTrendPartOnReading(Double vacuumTrendPartOnReading) {
+        Object oldValue = vacuumLevelPartOnReading;
+        this.vacuumTrendPartOnReading = vacuumTrendPartOnReading;
+        if (!(oldValue == null && vacuumTrendPartOnReading == null)) { // only fire when values are set
+            firePropertyChange("vacuumTrendPartOnReading", oldValue, vacuumTrendPartOnReading);
+        }
+    }
+
+    public Double getVacuumLevelPartOffReading() {
+        return vacuumLevelPartOffReading;
+    }
+
+    public void setVacuumLevelPartOffReading(Double vacuumLevelPartOffReading) {
+        Object oldValue = vacuumLevelPartOnReading;
+        this.vacuumLevelPartOffReading = vacuumLevelPartOffReading;
+        if (!(oldValue == null && vacuumLevelPartOffReading == null)) { // only fire when values are set
+            firePropertyChange("vacuumLevelPartOffReading", oldValue, vacuumLevelPartOffReading);
+        }
+    }
+
+    public Double getVacuumTrendPartOffReading() {
+        return vacuumTrendPartOffReading;
+    }
+
+    public void setVacuumTrendPartOffReading(Double vacuumTrendPartOffReading) {
+        Object oldValue = vacuumLevelPartOnReading;
+        this.vacuumTrendPartOffReading = vacuumTrendPartOffReading;
+        if (!(oldValue == null && vacuumTrendPartOffReading == null)) { // only fire when values are set
+            firePropertyChange("vacuumTrendPartOffReading", oldValue, vacuumTrendPartOffReading);
+        }
     }
 
     @Override
