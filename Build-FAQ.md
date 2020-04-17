@@ -26,7 +26,9 @@ This is a hard to answer question since it's specific to the machine, the camera
 * Top Camera: 8mm lens, 100mm distance from board.
 * Bottom Camera: 3.2mm or 3.6mm lens, 30-40mm distance from nozzle tip.
 
-M12 lenses are cheap, so I recommend picking up a couple sizes to experiment with. 
+M12 lenses are cheap, so we recommend picking up a couple sizes to experiment with. 
+
+The [Vision Doctor optics basics page](https://www.vision-doctor.com/en/optical-basics.html) and [lens calculators](https://www.vision-doctor.com/en/optical-calculations.html) can help with this decision.
 
 ## Mounting Vacuum Hose to NEMA-8 Motors
 
