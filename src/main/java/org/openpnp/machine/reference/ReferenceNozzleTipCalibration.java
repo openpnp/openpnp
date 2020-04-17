@@ -1,5 +1,6 @@
 package org.openpnp.machine.reference;
 
+import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -23,6 +24,7 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
+import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage.Result;
@@ -159,6 +161,39 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                     this.calcPhaseShift(nozzleTipMeasuredLocations);
         }
 
+        public ModelBasedRunoutCompensation(List<Location> nozzleTipMeasuredLocations, List<Location> nozzleTipExpectedLocations) {
+            //store data for possible later usage
+            this.nozzleTipMeasuredLocations = nozzleTipMeasuredLocations;
+            // save the units as the model is persisted without the locations 
+            this.units = nozzleTipMeasuredLocations.size() > 0 ? 
+                    nozzleTipMeasuredLocations.get(0).getUnits() : LengthUnit.Millimeters;
+
+            List<Location> detrendedMeasuredLocations = detrend(nozzleTipMeasuredLocations);
+            for (int i=0; i<detrendedMeasuredLocations.size(); i++) {
+                Logger.trace("orig: " + nozzleTipMeasuredLocations.get(i) + "  detrended: " + detrendedMeasuredLocations.get(i));
+            }
+            
+            //Compute the best fit affine transform that takes the expected locations to the measured locations
+            AffineTransform at = Utils2D.deriveAffineTransform(nozzleTipExpectedLocations, detrendedMeasuredLocations);
+            Utils2D.AffineInfo ai = Utils2D.affineInfo(at);
+            Logger.trace("[nozzleTipCalibration]affineTransform = " + ai);
+            
+            //The expected locations were generated with a deliberate 1 mm runout so the affine scale is a direct 
+            //measure of the true runout in millimeters.  However, since the affine transform gives both an x and y
+            //scaling, their geometric mean is used to compute the radius.
+            this.radius = Math.sqrt(ai.xScale * ai.yScale);
+            
+            //The phase shift is just the rotation of the affine transform (negated because of the subtraction in getRunout)
+            this.phaseShift = -ai.rotationAngleDeg;
+            
+            //The center is just the translation part of the affine transform
+            this.centerX = ai.xTranslation;
+            this.centerY = ai.yTranslation;
+            
+            Logger.debug("[nozzleTipCalibration]calculated nozzleEccentricity: {}", this.toString());
+            Logger.debug("[nozzleTipCalibration]calculated phaseShift: {}", this.phaseShift);
+        }
+
         /* function to calc the model based runout in cartesian coordinates */
         public Location getRunout(double angle) {
             //add phase shift
@@ -187,6 +222,63 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             return new Location(this.units);
         }
 
+        /**
+         * Removes trends from the measurements that are linear with respect to the measurement angle
+         * @param measurements
+         * @return
+         */
+        protected List<Location> detrend(List<Location> measurements) {
+            LengthUnit unit = measurements.get(0).getUnits();
+            int n = measurements.size();
+            int last = n-1;
+            
+            double sumDeltaXdeltaAngle = 0;
+            double sumDeltaYdeltaAngle = 0;
+            double sumDeltaAngle2 = 0;
+            
+            for (int i=0; i<last; i++) {
+                Location mi = measurements.get(i).convertToUnits(unit);
+                for (int j=i+1; j<n; j++) {
+                    Location mj = measurements.get(j).convertToUnits(unit);
+                    double deltaAngle = mj.getRotation() - mi.getRotation();
+                    //Only use measurements that are multiples of 360 degrees apart
+                    if (Math.abs(Utils2D.normalizeAngle180(deltaAngle)) < 0.1) {
+                        if (i==0) {
+                            last = j;
+                        }
+                        double deltaX = mj.getX() - mi.getX();
+                        double deltaY = mj.getY() - mi.getY();
+                        
+                        sumDeltaXdeltaAngle = sumDeltaXdeltaAngle + deltaX * deltaAngle;
+                        sumDeltaYdeltaAngle = sumDeltaYdeltaAngle + deltaY * deltaAngle;
+                        sumDeltaAngle2 = sumDeltaAngle2 + deltaAngle * deltaAngle;
+                    }
+                }
+            }
+            
+            if (sumDeltaAngle2 == 0) {
+                //No complete circle was found so just return the original measurements
+                return measurements;
+            }
+            
+            double mx = sumDeltaXdeltaAngle / sumDeltaAngle2;
+            double my = sumDeltaYdeltaAngle / sumDeltaAngle2;
+            
+            double startAngle = 0;
+            for(Location measurement : measurements) {
+                startAngle = startAngle + measurement.getRotation();
+            }
+            startAngle = startAngle / n;
+            
+            ArrayList<Location> ret = new ArrayList<>();
+            for(Location measurement : measurements) {
+                double deltaAngle = measurement.getRotation() - startAngle;
+                Location delta = new Location(unit, mx*deltaAngle, my*deltaAngle, 0, 0);
+                ret.add(measurement.subtract(delta));
+            }
+            return ret;
+        }
+        
         protected void calcCircleFitKasa(List<Location> nozzleTipMeasuredLocations) {
             /* 
              * this function fits a circle my means of the Kasa Method to the given List<Location>.
@@ -277,6 +369,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
             double angle=0;
             double measuredAngle=0;
+            double priorDifferenceAngle = 0;
             double differenceAngleMean=0;
 
             Iterator<Location> nozzleTipMeasuredLocationsIterator = nozzleTipMeasuredLocations.iterator();
@@ -295,24 +388,23 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 // the difference is the phaseShift
                 double differenceAngle = angle-measuredAngle;
 
-                // atan2 outputs angles from -PI to +PI. 
-                // since calculating the difference angle in some circumstances the angle can be smaller than -PI -> add +2PI
-                if(differenceAngle < -180) {
-                    differenceAngle += 360;
+                //Correct for a possible phase wrap past +/-180 degrees
+                while ((priorDifferenceAngle-differenceAngle) > 180) {
+                        differenceAngle += 360;
                 }
-                if(differenceAngle > 180) {
-                    // since calculating the difference angle in some circumstances the angle can be bigger than PI -> subtract -2PI
-                    differenceAngle -= 360;
+                while ((priorDifferenceAngle-differenceAngle) < -180) {
+                        differenceAngle -= 360;
                 }
-
+                priorDifferenceAngle = differenceAngle;
+                
                 Logger.trace("[nozzleTipCalibration]differenceAngle: {}", differenceAngle);
 
                 // sum up all differenceAngles to build the average later
                 differenceAngleMean += differenceAngle;
             }
 
-            // calc the average
-            phaseShift = differenceAngleMean / nozzleTipMeasuredLocations.size();
+            // calc the average and normalize it to +/-180 degrees
+            phaseShift = Utils2D.normalizeAngle180(differenceAngleMean / nozzleTipMeasuredLocations.size());
 
             this.phaseShift = phaseShift;
 
@@ -343,6 +435,9 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         public ModelBasedRunoutNoOffsetCompensation(List<Location> nozzleTipMeasuredLocations) {
             super(nozzleTipMeasuredLocations);
         }
+        public ModelBasedRunoutNoOffsetCompensation(List<Location> nozzleTipMeasuredLocations, List<Location> nozzleTipExpectedLocations) {
+            super(nozzleTipMeasuredLocations, nozzleTipExpectedLocations);
+        }
 
         @Override
         public String toString() {
@@ -362,6 +457,9 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         }
         public ModelBasedRunoutCameraOffsetCompensation(List<Location> nozzleTipMeasuredLocations) {
             super(nozzleTipMeasuredLocations);
+        }
+        public ModelBasedRunoutCameraOffsetCompensation(List<Location> nozzleTipMeasuredLocations, List<Location> nozzleTipExpectedLocations) {
+            super(nozzleTipMeasuredLocations, nozzleTipExpectedLocations);
         }
 
         @Override
@@ -391,7 +489,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     private double angleStop = 180;
     // The excenter radius as a ratio of the camera minimum dimension.  
     @Attribute(required = false)
-    private double excenterRatio = 0.25;
+    private double excenterRatio = 0.45;
 
     @Attribute(required = false)
     private boolean enabled;
@@ -514,14 +612,18 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             int angleSubdivisions = this.angleSubdivisions;
             if(Math.abs(angleStart + 360 - angleStop) < 0.1) {
                 // we're measuring a full circle, the last measurement can be omitted
-                angleSubdivisions--;
+//                angleSubdivisions--;
             }
 
+            angleSubdivisions *= 8; //REMOVE THIS!!!!!!!
+            
             Logger.debug("[nozzleTipCalibration]starting measurement; angleStart: {}, angleStop: {}, angleIncrement: {}, angleSubdivisions: {}", 
                     angleStart, angleStop, angleIncrement, angleSubdivisions);
 
             // Capture nozzle tip positions and add them to a list. For these calcs the camera location is considered to be 0/0
             List<Location> nozzleTipMeasuredLocations = new ArrayList<>();
+            List<Location> nozzleTipExpectedLocations = new ArrayList<>();
+            int misdetects = 0;
             for (int i = 0; i <= angleSubdivisions; i++) {
                 // calc the current measurement-angle
                 double measureAngle = angleStart + (i * angleIncrement); 
@@ -533,6 +635,16 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                         .derive(null, null, null, measureAngle)
                         .add(excenter.rotateXy(measureAngle));
                 nozzle.moveTo(measureLocation);
+                
+                Location expectedLocation;
+                if (!calibrateCamera) {
+                    //For nozzle tip calibration, we artificially create an expected run-out of 1 mm and
+                    //compare the actuals to these to compute the true run-out
+                    expectedLocation = new Location(LengthUnit.Millimeters, 1.0, 0, 0, measureAngle).rotateXy(measureAngle);
+                } else {
+                    //For camera calibration, the expected location is just the nozzle location
+                    expectedLocation = measureLocation;
+                }
 
                 // detect the nozzle tip
                 Location offset = findCircle(measureLocation);
@@ -542,8 +654,14 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
                     // add offset to array
                     nozzleTipMeasuredLocations.add(offset);
+                    nozzleTipExpectedLocations.add(expectedLocation);
 
                     Logger.trace("[nozzleTipCalibration]measured offset: {}", offset);
+                } else {
+                    misdetects++;
+                    if (misdetects > this.allowMisdetections) {
+                        throw new Exception("Too many vision misdetects. Check pipeline and threshold.");
+                    }
                 }
             }
 
@@ -560,6 +678,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                     this.setRunoutCompensation(nozzle, new ModelBasedRunoutNoOffsetCompensation(nozzleTipMeasuredLocations));
                 } else if (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelCameraOffset) {
                     this.setRunoutCompensation(nozzle, new ModelBasedRunoutCameraOffsetCompensation(nozzleTipMeasuredLocations));
+                    this.setRunoutCompensation(nozzle, new ModelBasedRunoutCameraOffsetCompensation(nozzleTipMeasuredLocations, nozzleTipExpectedLocations));
                 } else {
                     this.setRunoutCompensation(nozzle, new TableBasedRunoutCompensation(nozzleTipMeasuredLocations));
                 }
