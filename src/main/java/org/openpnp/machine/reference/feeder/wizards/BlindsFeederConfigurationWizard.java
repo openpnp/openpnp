@@ -25,13 +25,11 @@ package org.openpnp.machine.reference.feeder.wizards;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.PrintWriter;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -839,7 +837,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         public void actionPerformed(ActionEvent e) {
             applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
-                feeder.actuateCover(true);
+                feeder.actuateCover(MainFrame.get().getMachineControls().getSelectedNozzle(), true);
             });
         }
     };
@@ -853,7 +851,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         public void actionPerformed(ActionEvent e) {
             applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
-                feeder.actuateCover(false);
+                feeder.actuateCover(MainFrame.get().getMachineControls().getSelectedNozzle(), false);
             });
         }
     };
