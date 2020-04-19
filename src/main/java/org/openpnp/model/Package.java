@@ -42,6 +42,9 @@ public class Package extends AbstractModelObject implements Identifiable {
     private String description;
 
     @Attribute(required = false)
+    private String tapeSpecification;
+
+    @Attribute(required = false)
     private double pickVacuumLevel;
 
     @Attribute(required = false)
@@ -89,6 +92,16 @@ public class Package extends AbstractModelObject implements Identifiable {
         Object oldValue = this.description;
         this.description = description;
         firePropertyChange("description", oldValue, description);
+    }
+
+    public String getTapeSpecification() {
+        return tapeSpecification;
+    }
+
+    public void setTapeSpecification(String tapeSpecification) {
+        Object oldValue = this.tapeSpecification;
+        this.tapeSpecification = tapeSpecification;
+        firePropertyChange("tapeSpecification", oldValue, tapeSpecification);
     }
 
     public void setPlaceBlowOffLevel(double level) {
