@@ -53,6 +53,11 @@ Then press the Extract 3D-Printing Files button. OpenPNP will ask you where to s
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73119779-1386bc80-3f67-11ea-8eeb-6df80b2cdd79.png)
 
+You can also get the newest ones from GitHub (i.e. regardless of the version of OpenPNP you have).
+
+* https://raw.githubusercontent.com/openpnp/openpnp/develop/src/main/resources/org/openpnp/machine/reference/feeder/BlindsFeeder-Library.scad
+* https://raw.githubusercontent.com/openpnp/openpnp/develop/src/main/resources/org/openpnp/machine/reference/feeder/BlindsFeeder-3DPrinting.scad
+
 There are two files, the `BlindsFeeder-3DPrinting.scad` and the `BlindsFeeder-Library.scad`. Go to the first one, which is used to customize the actual feeder 3D-print. Just press the Preview button to see the standard example:
 
 
