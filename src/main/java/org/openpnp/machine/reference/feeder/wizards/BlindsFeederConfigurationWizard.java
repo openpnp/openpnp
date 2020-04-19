@@ -67,6 +67,7 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
+import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -659,6 +660,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                 j.setMultiSelectionEnabled(false);
                 if (j.showOpenDialog(getTopLevelAncestor()) == JFileChooser.APPROVE_OPTION) {
                     File directory = j.getSelectedFile();
+                    boolean opended = true;
                     for (String fileName : new String[] { "BlindsFeeder-Library.scad", "BlindsFeeder-3DPrinting.scad" }) {
                         String fileContent = IOUtils.toString(BlindsFeeder.class
                                 .getResource(fileName));
@@ -669,7 +671,16 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                         try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
                             out.print(fileContent);
                         }
-                        java.awt.Desktop.getDesktop().edit(file);
+                        try {
+                            java.awt.Desktop.getDesktop().edit(file);
+                        }
+                        catch (Exception e1) {
+                            Logger.error(e1);
+                            opended = false;
+                        }
+                    }
+                    if (! opended) {
+                        JOptionPane.showMessageDialog(getTopLevelAncestor(), "<html><p>Files extracted to:</p><p>"+directory.getAbsolutePath()+"</p><p>Cannot open with OpenSCAD automatically (Desktop command failed)</p>");
                     }
                 }
             });
