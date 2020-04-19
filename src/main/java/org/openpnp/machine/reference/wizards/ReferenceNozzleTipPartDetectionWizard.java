@@ -94,8 +94,6 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblPartOnMeasurement = new JLabel("Measurement Method");
@@ -109,23 +107,21 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         });
         panelPartOnVacuumSensing.add(methodPartOn, "4, 2, 3, 1");
         
+        lblEstablishPartOnLevel = new JLabel("Establish Level");
+        lblEstablishPartOnLevel.setToolTipText("While the nozzle is pressed down on the part in the pick operation, the vacuum level is repeatedly measured until it reaches the Vacuum Range. ");
+        panelPartOnVacuumSensing.add(lblEstablishPartOnLevel, "2, 4, right, default");
+        
+        establishPartOnLevel = new JCheckBox("");
+        panelPartOnVacuumSensing.add(establishPartOnLevel, "4, 4");
+        
         lblPartOnLowValue = new JLabel("Low Value");
-        panelPartOnVacuumSensing.add(lblPartOnLowValue, "4, 4");
+        panelPartOnVacuumSensing.add(lblPartOnLowValue, "4, 6");
         
         lblPartOnHighValue = new JLabel("High Value");
-        panelPartOnVacuumSensing.add(lblPartOnHighValue, "6, 4");
+        panelPartOnVacuumSensing.add(lblPartOnHighValue, "6, 6");
         
         lblPartOnLastReading = new JLabel("Last Reading");
-        panelPartOnVacuumSensing.add(lblPartOnLastReading, "10, 4");
-        
-        lblPartOnDwell = new JLabel("Dwell Time (ms)");
-        lblPartOnDwell.setToolTipText("<html>\r\n<p>For the absolute measurement method, this is an extra dwell time after picking <br />\r\nand raising the nozzle to Safe Z.</p>\r\n<p>\r\nFor relative trend measurements methods, this is a dwell time after opening the valve<br />\r\nbefore taking the reference reading for the trend. This happens before any pick\r\ndwell times. </p>\r\n</html>\r\n");
-        panelPartOnVacuumSensing.add(lblPartOnDwell, "2, 6, right, default");
-        
-        partOnDwellMilliseconds = new JTextField();
-        partOnDwellMilliseconds.setToolTipText("<html>\r\n<p>For the absolute measurement method, this is an extra dwell time after picking <br />\r\nand raising the nozzle to Safe Z.</p>\r\n<p>\r\nFor relative trend measurements methods, this is a dwell time after opening the valve<br />\r\nbefore taking the reference reading for the trend. This happens before any pick\r\ndwell times. </p>\r\n</html>\r\n");
-        panelPartOnVacuumSensing.add(partOnDwellMilliseconds, "4, 6, fill, default");
-        partOnDwellMilliseconds.setColumns(10);
+        panelPartOnVacuumSensing.add(lblPartOnLastReading, "10, 6");
         
         lblPartOnNozzle = new JLabel("Vacuum Range");
         panelPartOnVacuumSensing.add(lblPartOnNozzle, "2, 8, right, default");
@@ -143,33 +139,27 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOnVacuumSensing.add(vacuumLevelPartOnReading, "10, 8, right, top");
         vacuumLevelPartOnReading.setColumns(10);
         
-        lblTrendTimePartOn = new JLabel("Trend time (ms)");
-        panelPartOnVacuumSensing.add(lblTrendTimePartOn, "2, 10, right, default");
+        lblPartOnRelativeRange = new JLabel("Relative Range");
+        panelPartOnVacuumSensing.add(lblPartOnRelativeRange, "2, 10, right, default");
         
-        partOnTrendMilliseconds = new JTextField();
-        panelPartOnVacuumSensing.add(partOnTrendMilliseconds, "4, 10, fill, default");
-        partOnTrendMilliseconds.setColumns(10);
+        vacuumRelativePartOnLow = new JTextField();
+        vacuumRelativePartOnLow.setColumns(10);
+        panelPartOnVacuumSensing.add(vacuumRelativePartOnLow, "4, 10, fill, default");
         
-        lblPartOnTrendRange = new JLabel("Trend Range");
-        panelPartOnVacuumSensing.add(lblPartOnTrendRange, "2, 12, right, default");
+        vacuumRelativePartOnHigh = new JTextField();
+        panelPartOnVacuumSensing.add(vacuumRelativePartOnHigh, "6, 10, fill, default");
+        vacuumRelativePartOnHigh.setColumns(10);
         
-        vacuumTrendPartOnLow = new JTextField();
-        vacuumTrendPartOnLow.setColumns(10);
-        panelPartOnVacuumSensing.add(vacuumTrendPartOnLow, "4, 12, fill, default");
-        
-        vacuumTrendPartOnHigh = new JTextField();
-        panelPartOnVacuumSensing.add(vacuumTrendPartOnHigh, "6, 12, fill, default");
-        vacuumTrendPartOnHigh.setColumns(10);
-        
-        vacuumTrendPartOnReading = new JTextField();
-        vacuumTrendPartOnReading.setEditable(false);
-        panelPartOnVacuumSensing.add(vacuumTrendPartOnReading, "10, 12, fill, default");
-        vacuumTrendPartOnReading.setColumns(10);
+        vacuumRelativePartOnReading = new JTextField();
+        vacuumRelativePartOnReading.setEditable(false);
+        panelPartOnVacuumSensing.add(vacuumRelativePartOnReading, "10, 10, fill, default");
+        vacuumRelativePartOnReading.setColumns(10);
         
         vacuumPartOnGraph = new SimpleGraphView(nozzleTip);
-        panelPartOnVacuumSensing.add(vacuumPartOnGraph, "4, 16, 7, 1");
+        panelPartOnVacuumSensing.add(vacuumPartOnGraph, "4, 14, 7, 1");
         
         panelPartOffVacuumSensing = new JPanel();
+        panelPartOffVacuumSensing.setToolTipText("During the Place operation, the level is repeatedly measured until it reaches the Vacuum Range.");
         panelPartOffVacuumSensing.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Part Off Vacuum Sensing", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelPartOffVacuumSensing);
         panelPartOffVacuumSensing.setLayout(new FormLayout(new ColumnSpec[] {
@@ -199,8 +189,6 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblPartOffMeasurement = new JLabel("Measurement Method");
@@ -214,12 +202,12 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         });
         panelPartOffVacuumSensing.add(methodPartOff, "4, 2, 3, 1");
         
-        lblValveEnabled = new JLabel("Enable Valve for Test?");
-        panelPartOffVacuumSensing.add(lblValveEnabled, "2, 4");
-        lblValveEnabled.setToolTipText("");
+        lblEstablishPartOffLevel = new JLabel("Establish Level");
+        lblEstablishPartOffLevel.setToolTipText("While the nozzle is pressed down on the part in the pick operation, the vacuum level is repeatedly measured until it reaches the Vacuum Range or the timeout is reached.");
+        panelPartOffVacuumSensing.add(lblEstablishPartOffLevel, "2, 4, right, default");
         
-        valveEnabledForPartOff = new JCheckBox("");
-        panelPartOffVacuumSensing.add(valveEnabledForPartOff, "4, 4");
+        establishPartOffLevel = new JCheckBox("");
+        panelPartOffVacuumSensing.add(establishPartOffLevel, "4, 4");
         
         lblPartOffLowValue = new JLabel("Low Value");
         panelPartOffVacuumSensing.add(lblPartOffLowValue, "4, 6");
@@ -230,56 +218,47 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         lblPartOffLastReading = new JLabel("Last Reading");
         panelPartOffVacuumSensing.add(lblPartOffLastReading, "10, 6");
         
-        lblPartOffDwell = new JLabel("Dwell Time (ms)");
-        lblPartOffDwell.setToolTipText("<html>\r\n<p>For the absolute measurement method, this is an extra dwell time after placing, <br />\r\nraising the nozzle to Safe Z and optionally opening the valve.</p>\r\n<p>\r\nFor relative trend measurements methods, this is a dwell time after closing the valve<br />\r\nbefore taking the reference reading for the trend. This happens before any place \r\ndwell times. </p>\r\n</html>\r\n");
-        panelPartOffVacuumSensing.add(lblPartOffDwell, "2, 8, right, default");
-        
-        partOffDwellMilliseconds = new JTextField();
-        partOffDwellMilliseconds.setToolTipText("<html>\r\n<p>For the absolute measurement method, this is an extra dwell time after placing, <br />\r\nraising the nozzle to Safe Z and optionally opening the valve.</p>\r\n<p>\r\nFor relative trend measurements methods, this is a dwell time after closing the valve<br />\r\nbefore taking the reference reading for the trend. This happens before any place \r\ndwell times. </p>\r\n</html>\r\n");
-        panelPartOffVacuumSensing.add(partOffDwellMilliseconds, "4, 8");
-        partOffDwellMilliseconds.setColumns(10);
-        
         lblPartOffNozzle = new JLabel("Vacuum Range");
-        panelPartOffVacuumSensing.add(lblPartOffNozzle, "2, 10, right, default");
+        panelPartOffVacuumSensing.add(lblPartOffNozzle, "2, 8, right, default");
         
         vacuumLevelPartOffLow = new JTextField();
-        panelPartOffVacuumSensing.add(vacuumLevelPartOffLow, "4, 10");
+        panelPartOffVacuumSensing.add(vacuumLevelPartOffLow, "4, 8");
         vacuumLevelPartOffLow.setColumns(10);
         
         vacuumLevelPartOffHigh = new JTextField();
-        panelPartOffVacuumSensing.add(vacuumLevelPartOffHigh, "6, 10");
+        panelPartOffVacuumSensing.add(vacuumLevelPartOffHigh, "6, 8");
         vacuumLevelPartOffHigh.setColumns(10);
         
         vacuumLevelPartOffReading = new JTextField();
         vacuumLevelPartOffReading.setEditable(false);
-        panelPartOffVacuumSensing.add(vacuumLevelPartOffReading, "10, 10, fill, default");
+        panelPartOffVacuumSensing.add(vacuumLevelPartOffReading, "10, 8, fill, default");
         vacuumLevelPartOffReading.setColumns(10);
         
-        lblTrendTimePartOff = new JLabel("Trend time (ms)");
-        panelPartOffVacuumSensing.add(lblTrendTimePartOff, "2, 12, right, default");
+        lblProbingTimePartOff = new JLabel("Probing time (ms)");
+        panelPartOffVacuumSensing.add(lblProbingTimePartOff, "2, 10, right, default");
         
-        partOffTrendMilliseconds = new JTextField();
-        panelPartOffVacuumSensing.add(partOffTrendMilliseconds, "4, 12, default, center");
-        partOffTrendMilliseconds.setColumns(10);
+        partOffProbingMilliseconds = new JTextField();
+        panelPartOffVacuumSensing.add(partOffProbingMilliseconds, "4, 10, default, center");
+        partOffProbingMilliseconds.setColumns(10);
         
-        lblPartOffTrendRange = new JLabel("Trend Range");
-        panelPartOffVacuumSensing.add(lblPartOffTrendRange, "2, 14, right, default");
+        lblPartOffRelativeRange = new JLabel("Relative Range");
+        panelPartOffVacuumSensing.add(lblPartOffRelativeRange, "2, 12, right, default");
         
-        vacuumTrendPartOffLow = new JTextField();
-        panelPartOffVacuumSensing.add(vacuumTrendPartOffLow, "4, 14, fill, default");
-        vacuumTrendPartOffLow.setColumns(10);
+        vacuumRelativePartOffLow = new JTextField();
+        panelPartOffVacuumSensing.add(vacuumRelativePartOffLow, "4, 12, fill, default");
+        vacuumRelativePartOffLow.setColumns(10);
         
-        vacuumTrendPartOffHigh = new JTextField();
-        panelPartOffVacuumSensing.add(vacuumTrendPartOffHigh, "6, 14, fill, default");
-        vacuumTrendPartOffHigh.setColumns(10);
+        vacuumRelativePartOffHigh = new JTextField();
+        panelPartOffVacuumSensing.add(vacuumRelativePartOffHigh, "6, 12, fill, default");
+        vacuumRelativePartOffHigh.setColumns(10);
         
-        vacuumTrendPartOffReading = new JTextField();
-        vacuumTrendPartOffReading.setEditable(false);
-        panelPartOffVacuumSensing.add(vacuumTrendPartOffReading, "10, 14, fill, default");
-        vacuumTrendPartOffReading.setColumns(10);
+        vacuumRelativePartOffReading = new JTextField();
+        vacuumRelativePartOffReading.setEditable(false);
+        panelPartOffVacuumSensing.add(vacuumRelativePartOffReading, "10, 12, fill, default");
+        vacuumRelativePartOffReading.setColumns(10);
         
         vacuumPartOffGraph = new SimpleGraphView(nozzleTip);
-        panelPartOffVacuumSensing.add(vacuumPartOffGraph, "4, 18, 7, 1");
+        panelPartOffVacuumSensing.add(vacuumPartOffGraph, "4, 16, 7, 1");
     }
     
     private JLabel lblPartOnLowValue;
@@ -294,95 +273,88 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
     private JComboBox methodPartOn;
     private JLabel lblPartOffMeasurement;
     private JComboBox methodPartOff;
-    private JLabel lblPartOffDwell;
-    private JTextField partOffDwellMilliseconds;
-    private JCheckBox valveEnabledForPartOff;
-    private JLabel lblValveEnabled;
     private JPanel panelPartOffVacuumSensing;
-    private JLabel lblTrendTimePartOff;
-    private JTextField partOffTrendMilliseconds;
-    private JLabel lblPartOffTrendRange;
-    private JTextField vacuumTrendPartOffLow;
-    private JTextField vacuumTrendPartOffHigh;
-    private JLabel lblPartOnDwell;
-    private JTextField partOnDwellMilliseconds;
-    private JLabel lblTrendTimePartOn;
-    private JTextField partOnTrendMilliseconds;
-    private JLabel lblPartOnTrendRange;
-    private JTextField vacuumTrendPartOnLow;
-    private JTextField vacuumTrendPartOnHigh;
+    private JLabel lblProbingTimePartOff;
+    private JTextField partOffProbingMilliseconds;
+    private JLabel lblPartOffRelativeRange;
+    private JTextField vacuumRelativePartOffLow;
+    private JTextField vacuumRelativePartOffHigh;
+    private JLabel lblPartOnRelativeRange;
+    private JTextField vacuumRelativePartOnLow;
+    private JTextField vacuumRelativePartOnHigh;
     private JLabel lblPartOffLowValue;
     private JLabel lblPartOffHighValue;
     private JLabel lblPartOnLastReading;
     private JLabel lblPartOffLastReading;
     private JTextField vacuumLevelPartOnReading;
-    private JTextField vacuumTrendPartOnReading;
+    private JTextField vacuumRelativePartOnReading;
     private JTextField vacuumLevelPartOffReading;
-    private JTextField vacuumTrendPartOffReading;
+    private JTextField vacuumRelativePartOffReading;
     private SimpleGraphView vacuumPartOnGraph;
     private SimpleGraphView vacuumPartOffGraph;
+    private JCheckBox establishPartOnLevel;
+    private JLabel lblEstablishPartOnLevel;
+    private JLabel lblEstablishPartOffLevel;
+    private JCheckBox establishPartOffLevel;
     
     private void adaptDialog() {
         VacuumMeasurementMethod methodOn = (VacuumMeasurementMethod)methodPartOn.getSelectedItem();
         boolean partOn = true;
-        boolean partOnTrend = true;
+        boolean partOnRelative = true;
         if (methodOn == VacuumMeasurementMethod.None) {
             // hide all 
             partOn = false;
-            partOnTrend = false;
+            partOnRelative = false;
         }
-        else if (!methodOn.isTrendMethod()) {
-            partOnTrend = false;
+        else if (!methodOn.isRelativeMethod()) {
+            partOnRelative = false;
         }
          
+        lblEstablishPartOnLevel.setVisible(partOn);
+        establishPartOnLevel.setVisible(partOn);
         lblPartOnLowValue.setVisible(partOn);
         lblPartOnHighValue.setVisible(partOn);
         lblPartOnLastReading.setVisible(partOn);
-        lblPartOnDwell.setVisible(partOn);
-        partOnDwellMilliseconds.setVisible(partOn);
         lblPartOnNozzle.setVisible(partOn);
         vacuumLevelPartOnLow.setVisible(partOn);
         vacuumLevelPartOnHigh.setVisible(partOn);
         vacuumLevelPartOnReading.setVisible(partOn);
         
-        lblTrendTimePartOn.setVisible(partOnTrend);
-        partOnTrendMilliseconds.setVisible(partOnTrend);
-        lblPartOnTrendRange.setVisible(partOnTrend);
-        vacuumTrendPartOnLow.setVisible(partOnTrend);
-        vacuumTrendPartOnHigh.setVisible(partOnTrend);
-        vacuumTrendPartOnReading.setVisible(partOnTrend);
+        lblPartOnRelativeRange.setVisible(partOnRelative);
+        vacuumRelativePartOnLow.setVisible(partOnRelative);
+        vacuumRelativePartOnHigh.setVisible(partOnRelative);
+        vacuumRelativePartOnReading.setVisible(partOnRelative);
+        vacuumPartOnGraph.setVisible(partOn);
         
         VacuumMeasurementMethod methodOff = (VacuumMeasurementMethod)methodPartOff.getSelectedItem();
         boolean partOff = true;
-        boolean partOffTrend = true;
+        boolean partOffRelative = true;
         if (methodOff == VacuumMeasurementMethod.None) {
             // hide all 
             partOff = false;
-            partOffTrend = false;
+            partOffRelative = false;
         }
-        else if (!methodOff.isTrendMethod()) {
-            partOffTrend = false;
+        else if (!methodOff.isRelativeMethod()) {
+            partOffRelative = false;
         }
          
-        lblValveEnabled.setVisible(partOff && ! partOffTrend);
-        valveEnabledForPartOff.setVisible(partOff && ! partOffTrend);
+        lblEstablishPartOffLevel.setVisible(partOn);
+        establishPartOffLevel.setVisible(partOn);
         lblPartOffLowValue.setVisible(partOff);
         lblPartOffHighValue.setVisible(partOff);
         lblPartOffLastReading.setVisible(partOff);
-        lblPartOffDwell.setVisible(partOff);
-        partOffDwellMilliseconds.setVisible(partOff);
         lblPartOffNozzle.setVisible(partOff);
         vacuumLevelPartOffLow.setVisible(partOff);
         vacuumLevelPartOffHigh.setVisible(partOff);
         vacuumLevelPartOffReading.setVisible(partOff);
         
-        lblTrendTimePartOff.setVisible(partOffTrend);
-        partOffTrendMilliseconds.setVisible(partOffTrend);
-        lblPartOffTrendRange.setVisible(partOffTrend);
-        vacuumTrendPartOffLow.setVisible(partOffTrend);
-        vacuumTrendPartOffHigh.setVisible(partOffTrend);
-        vacuumTrendPartOffReading.setVisible(partOffTrend);
-        
+        lblProbingTimePartOff.setVisible(partOffRelative);
+        partOffProbingMilliseconds.setVisible(partOffRelative);
+        lblPartOffRelativeRange.setVisible(partOffRelative);
+        vacuumRelativePartOffLow.setVisible(partOffRelative);
+        vacuumRelativePartOffHigh.setVisible(partOffRelative);
+        vacuumRelativePartOffReading.setVisible(partOffRelative);
+        vacuumPartOffGraph.setVisible(partOff);
     }
 
     @Override
@@ -391,41 +363,36 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         IntegerConverter integerConverter = new IntegerConverter();
 
         addWrappedBinding(nozzleTip, "methodPartOn", methodPartOn, "selectedItem");
-        addWrappedBinding(nozzleTip, "partOnDwellMilliseconds", partOnDwellMilliseconds, "text", integerConverter);
+        addWrappedBinding(nozzleTip, "establishPartOnLevel", establishPartOnLevel, "selected");
         addWrappedBinding(nozzleTip, "vacuumLevelPartOnLow", vacuumLevelPartOnLow, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumLevelPartOnHigh", vacuumLevelPartOnHigh, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumLevelPartOnReading", vacuumLevelPartOnReading, "text", doubleConverter);
-        addWrappedBinding(nozzleTip, "partOnTrendMilliseconds", partOnTrendMilliseconds, "text", integerConverter);
-        addWrappedBinding(nozzleTip, "vacuumTrendPartOnLow", vacuumTrendPartOnLow, "text", doubleConverter);
-        addWrappedBinding(nozzleTip, "vacuumTrendPartOnHigh", vacuumTrendPartOnHigh, "text", doubleConverter);
-        addWrappedBinding(nozzleTip, "vacuumTrendPartOnReading", vacuumTrendPartOnReading, "text", doubleConverter);
+        addWrappedBinding(nozzleTip, "vacuumRelativePartOnLow", vacuumRelativePartOnLow, "text", doubleConverter);
+        addWrappedBinding(nozzleTip, "vacuumRelativePartOnHigh", vacuumRelativePartOnHigh, "text", doubleConverter);
+        addWrappedBinding(nozzleTip, "vacuumRelativePartOnReading", vacuumRelativePartOnReading, "text", doubleConverter);
 
         addWrappedBinding(nozzleTip, "methodPartOff", methodPartOff, "selectedItem");
-        addWrappedBinding(nozzleTip, "valveEnabledForPartOff", valveEnabledForPartOff, "selected");
-        addWrappedBinding(nozzleTip, "partOffDwellMilliseconds", partOffDwellMilliseconds, "text", integerConverter);
+        addWrappedBinding(nozzleTip, "establishPartOffLevel", establishPartOffLevel, "selected");
         addWrappedBinding(nozzleTip, "vacuumLevelPartOffLow", vacuumLevelPartOffLow, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumLevelPartOffHigh", vacuumLevelPartOffHigh, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumLevelPartOffReading", vacuumLevelPartOffReading, "text", doubleConverter);
-        addWrappedBinding(nozzleTip, "partOffTrendMilliseconds", partOffTrendMilliseconds, "text", integerConverter);
-        addWrappedBinding(nozzleTip, "vacuumTrendPartOffLow", vacuumTrendPartOffLow, "text", doubleConverter);
-        addWrappedBinding(nozzleTip, "vacuumTrendPartOffHigh", vacuumTrendPartOffHigh, "text", doubleConverter);
-        addWrappedBinding(nozzleTip, "vacuumTrendPartOffReading", vacuumTrendPartOffReading, "text", doubleConverter);
+        addWrappedBinding(nozzleTip, "partOffProbingMilliseconds", partOffProbingMilliseconds, "text", integerConverter);
+        addWrappedBinding(nozzleTip, "vacuumRelativePartOffLow", vacuumRelativePartOffLow, "text", doubleConverter);
+        addWrappedBinding(nozzleTip, "vacuumRelativePartOffHigh", vacuumRelativePartOffHigh, "text", doubleConverter);
+        addWrappedBinding(nozzleTip, "vacuumRelativePartOffReading", vacuumRelativePartOffReading, "text", doubleConverter);
         
         addWrappedBinding(nozzleTip, "vacuumPartOnGraph", vacuumPartOnGraph, "graph");
         addWrappedBinding(nozzleTip, "vacuumPartOffGraph", vacuumPartOffGraph, "graph");
 
-        ComponentDecorators.decorateWithAutoSelect(partOnDwellMilliseconds);
-        ComponentDecorators.decorateWithAutoSelect(partOnTrendMilliseconds);
-        ComponentDecorators.decorateWithAutoSelect(partOffDwellMilliseconds);
-        ComponentDecorators.decorateWithAutoSelect(partOffTrendMilliseconds);
+        ComponentDecorators.decorateWithAutoSelect(partOffProbingMilliseconds);
         
         ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOnLow);
         ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOnHigh);
-        ComponentDecorators.decorateWithAutoSelect(vacuumTrendPartOnLow);
-        ComponentDecorators.decorateWithAutoSelect(vacuumTrendPartOnHigh);
+        ComponentDecorators.decorateWithAutoSelect(vacuumRelativePartOnLow);
+        ComponentDecorators.decorateWithAutoSelect(vacuumRelativePartOnHigh);
         ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOffLow);
         ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOffHigh);
-        ComponentDecorators.decorateWithAutoSelect(vacuumTrendPartOffLow);
-        ComponentDecorators.decorateWithAutoSelect(vacuumTrendPartOffHigh);
+        ComponentDecorators.decorateWithAutoSelect(vacuumRelativePartOffLow);
+        ComponentDecorators.decorateWithAutoSelect(vacuumRelativePartOffHigh);
     }
 }
