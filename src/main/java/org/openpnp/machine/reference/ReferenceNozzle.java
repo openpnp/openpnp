@@ -743,7 +743,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     protected Double readReferenceVacuumLevel(VacuumMeasurementMethod method, int referenceDwell) throws Exception {
         Actuator referenceVacuumActuator = null;
-        if (method == VacuumMeasurementMethod.RelativeTrendFromPump) {
+        if (method == VacuumMeasurementMethod.RelativeToPump) {
             referenceVacuumActuator = getHead().getPump();
         }
         else if (method == VacuumMeasurementMethod.RelativeTrend) {
@@ -778,13 +778,13 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             nt.setVacuumTrendPartOnReading(vacuumTrend);
             // check the reference range 
             if (vacuumReferenceLevel < nt.getVacuumLevelPartOnLow() || vacuumReferenceLevel > nt.getVacuumLevelPartOnHigh()) {
-                Logger.debug("Nozzle tip {} reference vacuum level {} outside Part On range {} .. {}", 
+                Logger.debug("Nozzle tip {} reference vacuum level {} outside PartOn range {} .. {}", 
                         nt.getName(), vacuumReferenceLevel, nt.getVacuumLevelPartOnLow(), nt.getVacuumLevelPartOnHigh());
                 return false;
             }
             // so far so good, check trend
             if (vacuumTrend < nt.getVacuumTrendPartOnLow() || vacuumTrend > nt.getVacuumTrendPartOnHigh()) {
-                Logger.debug("Nozzle tip {} relative vacuum trend {} outside Part On range {} .. {}", 
+                Logger.debug("Nozzle tip {} relative vacuum trend {} outside PartOn range {} .. {}", 
                         nt.getName(), vacuumTrend, nt.getVacuumTrendPartOnLow(), nt.getVacuumTrendPartOnHigh());
                 return false;
             }
@@ -796,7 +796,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             nt.setVacuumTrendPartOnReading(null);
             // check the range
             if (vacuumLevel < nt.getVacuumLevelPartOnLow() || vacuumLevel <= nt.getVacuumLevelPartOnHigh()) {
-                Logger.debug("Nozzle tip {} absolute vacuum level {} outside Part On range {} .. {}", 
+                Logger.debug("Nozzle tip {} absolute vacuum level {} outside PartOn range {} .. {}", 
                         nt.getName(), vacuumLevel, nt.getVacuumLevelPartOnLow(), nt.getVacuumLevelPartOnHigh());
                 return false;
             }
@@ -824,13 +824,13 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 nt.setVacuumTrendPartOffReading(vacuumTrend);
                 // check the reference range 
                 if (vacuumReferenceLevel < nt.getVacuumLevelPartOffLow() || vacuumReferenceLevel > nt.getVacuumLevelPartOffHigh()) {
-                    Logger.debug("Nozzle tip {} reference vacuum level {} outside Part Off range {} .. {}", 
+                    Logger.debug("Nozzle tip {} reference vacuum level {} outside PartOff range {} .. {}", 
                             nt.getName(), vacuumReferenceLevel, nt.getVacuumLevelPartOffLow(), nt.getVacuumLevelPartOffHigh());
                     return false;
                 }
                 // so far so good, check trend
                 if (vacuumTrend < nt.getVacuumTrendPartOffLow() || vacuumTrend > nt.getVacuumTrendPartOffHigh()) {
-                    Logger.debug("Nozzle tip {} relative vacuum trend {} outside Part Off range {} .. {}", 
+                    Logger.debug("Nozzle tip {} relative vacuum trend {} outside PartOff range {} .. {}", 
                             nt.getName(), vacuumTrend, nt.getVacuumTrendPartOffLow(), nt.getVacuumTrendPartOffHigh());
                     return false;
                 }
@@ -842,7 +842,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 nt.setVacuumTrendPartOffReading(null);
                 // check the range
                 if (vacuumLevel < nt.getVacuumLevelPartOffLow() || vacuumLevel <= nt.getVacuumLevelPartOffHigh()) {
-                    Logger.debug("Nozzle tip {} absolute vacuum level {} outside Part Off range {} .. {}", 
+                    Logger.debug("Nozzle tip {} absolute vacuum level {} outside PartOff range {} .. {}", 
                             nt.getName(), vacuumLevel, nt.getVacuumLevelPartOffLow(), nt.getVacuumLevelPartOffHigh());
                     return false;
                 }

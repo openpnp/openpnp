@@ -1,6 +1,8 @@
 package org.openpnp.machine.reference;
 
 import java.awt.event.ActionEvent;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -63,10 +65,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         None, 
         Absolute,
         RelativeTrend,
-        RelativeTrendFromPump;
+        RelativeToPump;
         
         public boolean isTrendMethod() {
-            return this == RelativeTrend || this == RelativeTrendFromPump;
+            return this == RelativeTrend || this == RelativeToPump;
         }
     }
 
@@ -126,6 +128,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     private Double vacuumTrendPartOnReading = null;
     private Double vacuumLevelPartOffReading = null;
     private Double vacuumTrendPartOffReading = null;
+    private Map<Double, Double> vacuumPartOnGraph = null;
+    private Map<Double, Double> vacuumPartOffGraph = null;
     
     public ReferenceNozzleTip() {
     }
@@ -444,6 +448,30 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         this.vacuumTrendPartOffReading = vacuumTrendPartOffReading;
         if (!(oldValue == null && vacuumTrendPartOffReading == null)) { // only fire when values are set
             firePropertyChange("vacuumTrendPartOffReading", oldValue, vacuumTrendPartOffReading);
+        }
+    }
+
+    public Map<Double, Double> getVacuumPartOnGraph() {
+        return vacuumPartOnGraph;
+    }
+
+    public void setVacuumPartOnGraph(Map<Double, Double> vacuumPartOnGraph) {
+        Object oldValue = vacuumPartOnGraph;
+        this.vacuumPartOnGraph = vacuumPartOnGraph;
+        if (!(oldValue == null && vacuumPartOnGraph == null)) { // only fire when values are set
+            firePropertyChange("vacuumPartOnGraph", oldValue, vacuumPartOnGraph);
+        }
+    }
+
+    public Map<Double, Double> getVacuumPartOffGraph() {
+        return vacuumPartOffGraph;
+    }
+
+    public void setVacuumPartOffGraph(Map<Double, Double> vacuumPartOffGraph) {
+        Object oldValue = vacuumPartOffGraph;
+        this.vacuumPartOffGraph = vacuumPartOffGraph;
+        if (!(oldValue == null && vacuumPartOffGraph == null)) { // only fire when values are set
+            firePropertyChange("vacuumPartOffGraph", oldValue, vacuumPartOffGraph);
         }
     }
 
