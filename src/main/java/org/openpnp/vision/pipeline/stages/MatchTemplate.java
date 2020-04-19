@@ -39,7 +39,7 @@ public class MatchTemplate extends CvStage {
      */
     @Attribute
     @Property(description = "If maximum value is below this value, then no matches will be reported. Default is 0.7.")
-    private double threshold = 0.7f;
+    private double threshold = 0.7;
 
     /**
      * Normalized recognition threshold in the interval [0,1]. Used to determine best match of
@@ -49,7 +49,7 @@ public class MatchTemplate extends CvStage {
      */
     @Attribute
     @Property(description = "Normalized minimum recognition threshold for the CCOEFF_NORMED method, in the interval [0,1]. Default is 0.85.")
-    private double corr = 0.85f;
+    private double corr = 0.85;
 
     @Attribute(required = false)
     @Property(description = "Normalize results to maximum value.")

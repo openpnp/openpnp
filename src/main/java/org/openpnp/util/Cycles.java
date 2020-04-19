@@ -31,7 +31,15 @@ public class Cycles {
         Location lOld = zProbe.getLocation();
         Location lz = zProbe.getLocation();
         MovableUtils.moveToLocationAtSafeZ(zProbe, l);
-        double z = Double.parseDouble(zProbe.read());
+        double z;
+        String reading = zProbe.read();
+        try {
+            z = Double.parseDouble(reading);
+        }
+        catch (Exception e) {
+            throw new Exception("Head "+Configuration.get().getMachine().getDefaultHead().getName()+" Z Probe "+zProbe.getName()
+            +" conversion failed ("+reading+")", e);
+        }
         lz = lz.add(new Location(LengthUnit.Millimeters, 0, 0, z, 0));
         MovableUtils.moveToLocationAtSafeZ(zProbe, lOld);
         l = l.derive(null, 

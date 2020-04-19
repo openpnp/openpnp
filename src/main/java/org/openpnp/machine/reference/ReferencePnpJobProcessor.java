@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -52,6 +53,7 @@ import org.openpnp.spi.PnpJobProcessor.JobPlacement.Status;
 import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.TravellingSalesman;
 import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.pmw.tinylog.Logger;
@@ -301,21 +303,62 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // Everything still looks good, so prepare the feeders.
             fireTextStatus("Preparing feeders.");
             Machine machine = Configuration.get().getMachine();
-            List<Feeder> feederList = new ArrayList<>();
+            List<Feeder> feederVisitList = new ArrayList<>();
+            List<Feeder> feederNoVisitList = new ArrayList<>();
             // Get all the feeders that are used in the pending placements.
             for (Feeder feeder : machine.getFeeders()) {
                 if (feeder.isEnabled() && feeder.getPart() != null) {
                     for (JobPlacement placement : getPendingJobPlacements()) {
-                        if (placement.getPartId() == feeder.getPart().getId()) {
-                            feederList.add(feeder);
+                        if (placement.getPartId().equals(feeder.getPart().getId())) {
+                            if (feeder.getJobPreparationLocation() != null) {
+                                // only feeders with location added to the visit list
+                                feederVisitList.add(feeder);
+                            }
+                            // always also add them to the general (second pass) prep list
+                            feederNoVisitList.add(feeder);
                         }
                     }
                 }
             }
-            for (Feeder feeder : feederList) {
+            
+            Location startLocation = null;
+            try {
+                startLocation = head.getDefaultCamera().getLocation();
+            }
+            catch (Exception e) {
+                Logger.error(e);
+            }                
+
+            // Use a Travelling Salesman algorithm to optimize the path to actuate all the feeder covers.
+            TravellingSalesman<Feeder> tsm = new TravellingSalesman<>(
+                    feederVisitList, 
+                    new TravellingSalesman.Locator<Feeder>() { 
+                        @Override
+                        public Location getLocation(Feeder locatable) {
+                            return locatable.getJobPreparationLocation();
+                        }
+                    }, 
+                    // start from current location
+                    startLocation, 
+                    // no particular end location
+                    null);
+
+            // Solve it using the default heuristics.
+            tsm.solve();
+
+            // Prepare feeders along the visit travel path.
+            for (Feeder feeder : tsm.getTravel()) {
                 try {
-                    // feeder is used in this job, prep it.
-                    feeder.prepareForJob(feederList);
+                    feeder.prepareForJob(true);
+                }
+                catch (Exception e) {
+                    throw new JobProcessorException(feeder, e);
+                }
+            }
+            // Prepare feeders in general (second pass for visited feeders).
+            for (Feeder feeder : feederNoVisitList) {
+                try {
+                    feeder.prepareForJob(false);
                 }
                 catch (Exception e) {
                     throw new JobProcessorException(feeder, e);
