@@ -336,12 +336,12 @@ public class BlindsFeeder extends ReferenceFeeder {
                 if (!isCoverOpen()) {
                     // Note, with CoverActuation.OpenOnJobStart, this should only happen with a manual or exceptional feed.
                     // Also restore the previously loaded NozzleTip afterwards. 
-                    actuateCover(true, true, true);
+                    actuateCover(nozzle, true, true, true);
                 }
             }
         }
         else if (coverType == CoverType.PushCover) {
-            actuateCover(true);
+            actuateCover(nozzle, true);
         }
         // increase the feed count 
         setFeedCount(getFeedCount() + 1);
@@ -1165,28 +1165,23 @@ public class BlindsFeeder extends ReferenceFeeder {
             return changed;
         }
     }
-    public static NozzleAndTipForPushing getNozzleAndTipForPushing(Part favoredCompatiblePart, boolean loadNozzleTipIfNeeded) throws Exception {
-        // first search for any NozzleTip already loaded that may be used for pushing 
-        Machine machine = Configuration.get().getMachine();
-        for (Head head : machine.getHeads()) {
-            // first search for a favored nozzle tip
-            if (favoredCompatiblePart != null 
-                    && favoredCompatiblePart.getPackage() != null) {
-                for (Nozzle nozzle :  head.getNozzles()) {
-                    if (nozzle.getPart() == null) { 
-                        // Nozzle is free
-                        NozzleTip nozzleTip = nozzle.getNozzleTip();
-                        if (nozzleTip.isPushAndDragAllowed()) {
-                            if (favoredCompatiblePart.getPackage()
-                                    .getCompatibleNozzleTips().contains(nozzleTip)) {
-                                // Return the nozzle and nozzle tip.
-                                return new NozzleAndTipForPushing(nozzle, nozzleTip, false);
-                            }
-                        } 
-                    }
+    public static NozzleAndTipForPushing getNozzleAndTipForPushing(Nozzle preferredNozzle, boolean loadNozzleTipIfNeeded) throws Exception {
+        // Search for any nozzle and nozzle tip that may be used for cover pushing. 
+        // First, try the preferredNozzle.
+        if (preferredNozzle != null ) {
+            if (preferredNozzle.getPart() == null) { 
+                // Nozzle is free
+                NozzleTip nozzleTip = preferredNozzle.getNozzleTip();
+                if (nozzleTip.isPushAndDragAllowed()) {
+                    // Return the nozzle and nozzle tip.
+                    return new NozzleAndTipForPushing(preferredNozzle, nozzleTip);
                 }
             }
-            // then just take any
+        }
+
+        // Second, try any free nozzle with loaded nozzle tip. 
+        Machine machine = Configuration.get().getMachine();
+        for (Head head : machine.getHeads()) {
             for (Nozzle nozzle :  head.getNozzles()) {
                 if (nozzle.getPart() == null) { 
                     // Nozzle is free
@@ -1199,8 +1194,9 @@ public class BlindsFeeder extends ReferenceFeeder {
             }
         }
 
-        // We arrived here, so none was found.
+        // Third, try load a nozzle tip for pushing.
         if (loadNozzleTipIfNeeded) {
+            // We're allowed to load the nozzle tip, go find a free nozzle.
             for (Head head : machine.getHeads()) {
                 for (Nozzle nozzle :  head.getNozzles()) {
                     if (nozzle.getPart() == null) { 
@@ -1267,10 +1263,14 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     public void actuateCover(boolean openState) throws Exception {
         // If needed, load a NozzleTip that allows pushing but do not restore the previously loaded NozzleTip. 
-        actuateCover(openState, true, false);
+        actuateCover(preferredNozzle, openState, true, false);
     }
 
-    public void actuateCover(boolean openState, boolean loadNozzleTipIfNeeded, boolean restoreNozzleTip) throws Exception {
+    public void actuateCover(boolean openState) throws Exception {
+        actuateCover(null, openState);
+    }
+
+    public void actuateCover(Nozzle preferredNozzle, boolean openState, boolean loadNozzleTipIfNeeded, boolean restoreNozzleTip) throws Exception {
         if (coverType == CoverType.NoCover) {
             throw new Exception("Feeder " + getName() + ": has no cover to actuate.");
         }
@@ -1280,7 +1280,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             }
 
             // Get the nozzle for pushing
-            NozzleAndTipForPushing nozzleAndTipForPushing = BlindsFeeder.getNozzleAndTipForPushing(getPart(), loadNozzleTipIfNeeded);
+            NozzleAndTipForPushing nozzleAndTipForPushing = BlindsFeeder.getNozzleAndTipForPushing(preferredNozzle, loadNozzleTipIfNeeded);
             Nozzle nozzle = nozzleAndTipForPushing.getNozzle();
             NozzleTip nozzleTip = nozzleAndTipForPushing.getNozzleTip();
             if (nozzleTip == null) {
