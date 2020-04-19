@@ -866,7 +866,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         public void actionPerformed(ActionEvent e) {
             applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
-                BlindsFeeder.actuateAllFeederCovers(true);
+                BlindsFeeder.actuateAllFeederCovers(MainFrame.get().getMachineControls().getSelectedNozzle(), true);
             });
         }
     };
@@ -881,7 +881,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         public void actionPerformed(ActionEvent e) {
             applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
-                BlindsFeeder.actuateAllFeederCovers(false);
+                BlindsFeeder.actuateAllFeederCovers(MainFrame.get().getMachineControls().getSelectedNozzle(), false);
             });
         }
     };

@@ -1058,24 +1058,24 @@ public class BlindsFeeder extends ReferenceFeeder {
         return feederList;
     }
 
-    public static void actuateAllFeederCovers(boolean openState) throws Exception  {
+    public static void actuateAllFeederCovers(Nozzle preferredNozzle, boolean openState) throws Exception  {
         List<BlindsFeeder> feederList = getFeedersWithCoverToActuate(Configuration.get().getMachine().getFeeders(), 
                 new CoverActuation [] { CoverActuation.Manual, CoverActuation.CheckOpen, CoverActuation.OpenOnFirstUse, CoverActuation.OpenOnJobStart }, 
                 openState); 
         if (feederList.size() == 0) {
             throw new Exception("[BlindsFeeder] No feeders found to "+(openState ? "open." : "close."));
         }
-        actuateListedFeederCovers(feederList, openState, false);
+        actuateListedFeederCovers(preferredNozzle, feederList, openState, false);
     }
 
-    public static void actuateListedFeederCovers(List<BlindsFeeder> feederList, boolean openState, boolean restoreNozzleTip) throws Exception  {
+    public static void actuateListedFeederCovers(Nozzle preferredNozzle, List<BlindsFeeder> feederList, boolean openState, boolean restoreNozzleTip) throws Exception  {
         if (feederList.size() == 0) {
             // nothing to do, avoid changing the nozzle tip for nothing.
             return;
         }
 
         // Get the push nozzle for the current position. This will also throw if none is allowed.
-        NozzleAndTipForPushing nozzleAndTipForPushing = BlindsFeeder.getNozzleAndTipForPushing(null, true);
+        NozzleAndTipForPushing nozzleAndTipForPushing = BlindsFeeder.getNozzleAndTipForPushing(preferredNozzle, true);
 
         // Use a Travelling Salesman algorithm to optimize the path to actuate all the feeder covers.
         TravellingSalesman<BlindsFeeder> tsm = new TravellingSalesman<>(
