@@ -54,6 +54,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     @Attribute(required = false)
     private boolean changerEnabled = false;
 
+    @Attribute(required = false)
+    private boolean nozzleTipChangedOnManualFeed = false;
+
     @Element(required = false)
     protected Length safeZ = new Length(0, LengthUnit.Millimeters);
 
@@ -161,6 +164,15 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     @Override
     public ReferenceNozzleTip getNozzleTip() {
         return nozzleTip;
+    }
+
+    @Override
+    public boolean isNozzleTipChangedOnManualFeed() {
+        return nozzleTipChangedOnManualFeed;
+    }
+
+    public void setNozzleTipChangedOnManualFeed(boolean nozzleTipChangedOnManualFeed) {
+        this.nozzleTipChangedOnManualFeed = nozzleTipChangedOnManualFeed;
     }
 
     @Override
