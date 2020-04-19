@@ -1174,7 +1174,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 NozzleTip nozzleTip = preferredNozzle.getNozzleTip();
                 if (nozzleTip.isPushAndDragAllowed()) {
                     // Return the nozzle and nozzle tip.
-                    return new NozzleAndTipForPushing(preferredNozzle, nozzleTip);
+                    return new NozzleAndTipForPushing(preferredNozzle, nozzleTip, false);
                 }
             }
         }
@@ -1261,7 +1261,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         }
     }
 
-    public void actuateCover(boolean openState) throws Exception {
+    public void actuateCover(Nozzle preferredNozzle, boolean openState) throws Exception {
         // If needed, load a NozzleTip that allows pushing but do not restore the previously loaded NozzleTip. 
         actuateCover(preferredNozzle, openState, true, false);
     }
