@@ -24,6 +24,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzleTip;
+import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.UiUtils;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -121,8 +122,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     private Double vacuumRelativePartOnReading = null;
     private Double vacuumLevelPartOffReading = null;
     private Double vacuumRelativePartOffReading = null;
-    private Map<Double, Double> vacuumPartOnGraph = null;
-    private Map<Double, Double> vacuumPartOffGraph = null;
+    private SimpleGraph vacuumPartOnGraph = null;
+    private SimpleGraph vacuumPartOffGraph = null;
     
     public ReferenceNozzleTip() {
     }
@@ -427,11 +428,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
     }
 
-    public Map<Double, Double> getVacuumPartOnGraph() {
+    public SimpleGraph getVacuumPartOnGraph() {
         return vacuumPartOnGraph;
     }
 
-    public void setVacuumPartOnGraph(Map<Double, Double> vacuumPartOnGraph) {
+    public void setVacuumPartOnGraph(SimpleGraph vacuumPartOnGraph) {
         Object oldValue = vacuumPartOnGraph;
         this.vacuumPartOnGraph = vacuumPartOnGraph;
         if (!(oldValue == null && vacuumPartOnGraph == null)) { // only fire when values are set
@@ -439,11 +440,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
     }
 
-    public Map<Double, Double> getVacuumPartOffGraph() {
+    public SimpleGraph getVacuumPartOffGraph() {
         return vacuumPartOffGraph;
     }
 
-    public void setVacuumPartOffGraph(Map<Double, Double> vacuumPartOffGraph) {
+    public void setVacuumPartOffGraph(SimpleGraph vacuumPartOffGraph) {
         Object oldValue = vacuumPartOffGraph;
         this.vacuumPartOffGraph = vacuumPartOffGraph;
         if (!(oldValue == null && vacuumPartOffGraph == null)) { // only fire when values are set

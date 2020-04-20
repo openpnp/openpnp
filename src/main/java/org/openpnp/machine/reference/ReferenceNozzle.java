@@ -1,5 +1,6 @@
 package org.openpnp.machine.reference;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +33,7 @@ import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -741,12 +743,39 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         return Double.parseDouble(getVacuumActuator().read());
     }
 
+    protected SimpleGraph startNewVacuumGraph(double vacuumLevel, boolean valveSwitchingOn) {
+        // start a new graph 
+        SimpleGraph vacuumGraph = new SimpleGraph();
+        vacuumGraph.setOffsetMode(true);
+        vacuumGraph.setRelativePaddingLeft(0.1);
+        long t = System.currentTimeMillis();
+        // init pressure scale
+        SimpleGraph.DataScale vacuumScale =  vacuumGraph.getScale("P");
+        vacuumScale.setRelativePaddingBottom(0.25);
+        vacuumScale.setColor(new Color(0, 0, 0, 64));
+        // init valve scale
+        SimpleGraph.DataScale valveScale =  vacuumGraph.getScale("B");
+        valveScale.setRelativePaddingTop(0.8);
+        valveScale.setRelativePaddingBottom(0.1);
+        // record the current pressure
+        SimpleGraph.DataRow vacuumData = vacuumGraph.getRow("P", "V");
+        vacuumData.setColor(new Color(255, 0, 0));
+        vacuumData.recordDataPoint(t-1, vacuumLevel);
+        // record the valve switching off
+        SimpleGraph.DataRow valveData = vacuumGraph.getRow("B", "S");
+        valveData.setColor(new Color(00, 0x5B, 0xD9)); // the OpenPNP color
+        valveData.recordDataPoint(t-1, valveSwitchingOn ? 0 : 1);
+        valveData.recordDataPoint(t, valveSwitchingOn ? 1 : 0);
+        return vacuumGraph;
+    }
+    
     protected void storeBeforePickVacuumLevel() throws Exception {
         ReferenceNozzleTip nt = getNozzleTip();
         double vacuumLevel = readVacuumLevel();
         if (nt.getMethodPartOn().isRelativeMethod() || nt.isEstablishPartOnLevel()) {
-            Map<Double, Double> vacuumGraph = new HashMap<>();
-            vacuumGraph.put((double)System.currentTimeMillis(), vacuumLevel);
+            // start a new graph 
+            SimpleGraph vacuumGraph = startNewVacuumGraph(vacuumLevel, true);
+            // store on the nozzle tip ... to be continued
             nt.setVacuumPartOnGraph(vacuumGraph);
         }
         else {
@@ -758,11 +787,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         ReferenceNozzleTip nt = getNozzleTip();
         if (nt.getMethodPartOn().isRelativeMethod() || nt.isEstablishPartOnLevel()) {
             long timeout = System.currentTimeMillis() + milliseconds;
-            Map<Double, Double> vacuumGraph = new HashMap<>(nt.getVacuumPartOnGraph());
+            SimpleGraph vacuumGraph = nt.getVacuumPartOnGraph();
+            SimpleGraph.DataRow vacuumData = vacuumGraph.getRow("P", "V");
             double vacuumLevel;
             do {
                 vacuumLevel = readVacuumLevel();
-                vacuumGraph.put((double)System.currentTimeMillis(), vacuumLevel);
+                vacuumData.recordDataPoint(System.currentTimeMillis(), vacuumLevel);
                 if (nt.isEstablishPartOnLevel() && vacuumLevel >= nt.getVacuumLevelPartOnLow() && vacuumLevel <= nt.getVacuumLevelPartOnHigh()) {
                     // within range, we're done
                     break;
@@ -783,8 +813,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         ReferenceNozzleTip nt = getNozzleTip();
         double vacuumLevel = readVacuumLevel();
         if (nt.getMethodPartOff().isRelativeMethod() || nt.isEstablishPartOffLevel()) {
-            Map<Double, Double> vacuumGraph = new HashMap<>();
-            vacuumGraph.put((double)System.currentTimeMillis(), vacuumLevel);
+            // start a new graph 
+            SimpleGraph vacuumGraph = startNewVacuumGraph(vacuumLevel, false);
+            // store on the nozzle tip ... to be continued
             nt.setVacuumPartOffGraph(vacuumGraph);
         }
         else {
@@ -792,15 +823,17 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
     }
 
+
     protected void establishPlaceVacuumLevel(int milliseconds) throws Exception {
         ReferenceNozzleTip nt = getNozzleTip();
         if (nt.getMethodPartOff().isRelativeMethod() || nt.isEstablishPartOffLevel()) {
             long timeout = System.currentTimeMillis() + milliseconds;
-            Map<Double, Double> vacuumGraph = new HashMap<>(nt.getVacuumPartOffGraph());
+            SimpleGraph vacuumGraph = nt.getVacuumPartOnGraph();
+            SimpleGraph.DataRow vacuumData = vacuumGraph.getRow("P", "V");
             double vacuumLevel;
             do {
                 vacuumLevel = readVacuumLevel();
-                vacuumGraph.put((double)System.currentTimeMillis(), vacuumLevel);
+                vacuumData.recordDataPoint(System.currentTimeMillis(), vacuumLevel);
                 if (nt.isEstablishPartOffLevel() && vacuumLevel >= nt.getVacuumLevelPartOffLow() && vacuumLevel <= nt.getVacuumLevelPartOffHigh()) {
                     // within range, we're done
                     break;
@@ -821,13 +854,20 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         ReferenceNozzleTip nt = getNozzleTip();
         if (nt.getMethodPartOff().isRelativeMethod()) {
             long timeout = System.currentTimeMillis() + milliseconds;
-            Map<Double, Double> vacuumGraph = new HashMap<>(nt.getVacuumPartOffGraph());
+            SimpleGraph vacuumGraph = nt.getVacuumPartOnGraph();
+            SimpleGraph.DataRow valveData = vacuumGraph.getRow("B", "S");
+            valveData.recordDataPoint(System.currentTimeMillis()-1, 0);
+            valveData.recordDataPoint(System.currentTimeMillis(), 1);
+            SimpleGraph.DataRow vacuumData = vacuumGraph.getRow("P", "V");
             double vacuumLevel;
             do {
                 vacuumLevel = readVacuumLevel();
-                vacuumGraph.put((double)System.currentTimeMillis(), vacuumLevel);
+                vacuumData.recordDataPoint(System.currentTimeMillis(), vacuumLevel);
             }
             while (System.currentTimeMillis() < timeout);
+            // valve will switch back off
+            valveData.recordDataPoint(System.currentTimeMillis(), 1);
+            valveData.recordDataPoint(System.currentTimeMillis()+1, 0);
             nt.setVacuumPartOffGraph(vacuumGraph);
             return vacuumLevel;
         }
@@ -842,11 +882,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         ReferenceNozzleTip nt = getNozzleTip();
         double vacuumLevel = readVacuumLevel();
         // store in graph, if present
-        Map<Double, Double> vacuumGraph = nt.getVacuumPartOnGraph();
+        SimpleGraph vacuumGraph = nt.getVacuumPartOnGraph();
         if (vacuumGraph != null) {
-            vacuumGraph = new HashMap<>(vacuumGraph);
-            vacuumGraph.put((double)System.currentTimeMillis(), vacuumLevel);
-            nt.setVacuumPartOnGraph(vacuumGraph);
+            vacuumGraph.getRow("P", "V")
+                .recordDataPoint(System.currentTimeMillis(), vacuumLevel);
         }
         if (nt.getMethodPartOn().isRelativeMethod()) {
             // relative method

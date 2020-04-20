@@ -37,6 +37,7 @@ import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.ReferenceNozzleTip.VacuumMeasurementMethod;
 import org.openpnp.machine.reference.feeder.BlindsFeeder;
 import org.openpnp.model.Configuration;
+import org.openpnp.util.SimpleGraph;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -55,6 +56,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
+import java.awt.Font;
 
 public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfigurationWizard {
     private final ReferenceNozzleTip nozzleTip;
@@ -79,6 +81,10 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -94,7 +100,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                RowSpec.decode("default:grow"),}));
         
         lblPartOnMeasurement = new JLabel("Measurement Method");
         panelPartOnVacuumSensing.add(lblPartOnMeasurement, "2, 2, right, default");
@@ -112,6 +118,11 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOnVacuumSensing.add(lblEstablishPartOnLevel, "2, 4, right, default");
         
         establishPartOnLevel = new JCheckBox("");
+        establishPartOnLevel.addPropertyChangeListener(new PropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent evt) {
+                adaptDialog();
+            }
+        });
         panelPartOnVacuumSensing.add(establishPartOnLevel, "4, 4");
         
         lblPartOnLowValue = new JLabel("Low Value");
@@ -155,11 +166,14 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOnVacuumSensing.add(vacuumRelativePartOnReading, "10, 10, fill, default");
         vacuumRelativePartOnReading.setColumns(10);
         
-        vacuumPartOnGraph = new SimpleGraphView(nozzleTip);
-        panelPartOnVacuumSensing.add(vacuumPartOnGraph, "4, 14, 7, 1");
+        lblLegendPartOn = new JLabel("<html>\r\n<p style=\"text-align:right\">Vacuum <span style=\"color:#FF0000\">&mdash;&mdash;</span></p>\r\n<p/>\r\n<p style=\"text-align:right\">Valve <span style=\"color:#005BD9\">&mdash;&mdash;</span></p>\r\n</html>");
+        panelPartOnVacuumSensing.add(lblLegendPartOn, "2, 14, right, default");
+        
+        vacuumPartOnGraph = new SimpleGraphView();
+        vacuumPartOnGraph.setFont(new Font("SansSerif", Font.PLAIN, 9));
+        panelPartOnVacuumSensing.add(vacuumPartOnGraph, "4, 14, 9, 1, default, fill");
         
         panelPartOffVacuumSensing = new JPanel();
-        panelPartOffVacuumSensing.setToolTipText("During the Place operation, the level is repeatedly measured until it reaches the Vacuum Range.");
         panelPartOffVacuumSensing.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Part Off Vacuum Sensing", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelPartOffVacuumSensing);
         panelPartOffVacuumSensing.setLayout(new FormLayout(new ColumnSpec[] {
@@ -171,6 +185,10 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
                 ColumnSpec.decode("max(50dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
@@ -189,7 +207,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                RowSpec.decode("default:grow"),}));
         
         lblPartOffMeasurement = new JLabel("Measurement Method");
         panelPartOffVacuumSensing.add(lblPartOffMeasurement, "2, 2");
@@ -207,6 +225,11 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOffVacuumSensing.add(lblEstablishPartOffLevel, "2, 4, right, default");
         
         establishPartOffLevel = new JCheckBox("");
+        establishPartOffLevel.addPropertyChangeListener(new PropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent evt) {
+                adaptDialog();
+            }
+        });
         panelPartOffVacuumSensing.add(establishPartOffLevel, "4, 4");
         
         lblPartOffLowValue = new JLabel("Low Value");
@@ -257,8 +280,12 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOffVacuumSensing.add(vacuumRelativePartOffReading, "10, 12, fill, default");
         vacuumRelativePartOffReading.setColumns(10);
         
-        vacuumPartOffGraph = new SimpleGraphView(nozzleTip);
-        panelPartOffVacuumSensing.add(vacuumPartOffGraph, "4, 16, 7, 1");
+        lblLegendPartOff = new JLabel("<html>\r\n<p style=\"text-align:right\">Vacuum <span style=\"color:#FF0000\">&mdash;&mdash;</span></p>\r\n<p/>\r\n<p style=\"text-align:right\">Valve <span style=\"color:#005BD9\">&mdash;&mdash;</span></p>\r\n</html>");
+        panelPartOffVacuumSensing.add(lblLegendPartOff, "2, 16, right, default");
+        
+        vacuumPartOffGraph = new SimpleGraphView();
+        vacuumPartOffGraph.setFont(new Font("SansSerif", Font.PLAIN, 9));
+        panelPartOffVacuumSensing.add(vacuumPartOffGraph, "4, 16, 9, 1, default, fill");
     }
     
     private JLabel lblPartOnLowValue;
@@ -296,15 +323,20 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
     private JLabel lblEstablishPartOnLevel;
     private JLabel lblEstablishPartOffLevel;
     private JCheckBox establishPartOffLevel;
+    private JLabel lblLegendPartOn;
+    private JLabel lblLegendPartOff;
     
     private void adaptDialog() {
         VacuumMeasurementMethod methodOn = (VacuumMeasurementMethod)methodPartOn.getSelectedItem();
+        boolean establishOn = establishPartOnLevel.isSelected();
         boolean partOn = true;
         boolean partOnRelative = true;
+        boolean graphOn = establishOn || methodOn.isRelativeMethod();
         if (methodOn == VacuumMeasurementMethod.None) {
             // hide all 
             partOn = false;
             partOnRelative = false;
+            graphOn = false;
         }
         else if (!methodOn.isRelativeMethod()) {
             partOnRelative = false;
@@ -324,22 +356,26 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         vacuumRelativePartOnLow.setVisible(partOnRelative);
         vacuumRelativePartOnHigh.setVisible(partOnRelative);
         vacuumRelativePartOnReading.setVisible(partOnRelative);
-        vacuumPartOnGraph.setVisible(partOn);
+        lblLegendPartOn.setVisible(graphOn);
+        vacuumPartOnGraph.setVisible(graphOn);
         
         VacuumMeasurementMethod methodOff = (VacuumMeasurementMethod)methodPartOff.getSelectedItem();
+        boolean establishOff = establishPartOffLevel.isSelected();
         boolean partOff = true;
         boolean partOffRelative = true;
+        boolean graphOff = establishOff || methodOff.isRelativeMethod();
         if (methodOff == VacuumMeasurementMethod.None) {
             // hide all 
             partOff = false;
             partOffRelative = false;
+            graphOff = false;
         }
         else if (!methodOff.isRelativeMethod()) {
             partOffRelative = false;
         }
          
-        lblEstablishPartOffLevel.setVisible(partOn);
-        establishPartOffLevel.setVisible(partOn);
+        lblEstablishPartOffLevel.setVisible(partOff);
+        establishPartOffLevel.setVisible(partOff);
         lblPartOffLowValue.setVisible(partOff);
         lblPartOffHighValue.setVisible(partOff);
         lblPartOffLastReading.setVisible(partOff);
@@ -354,7 +390,8 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         vacuumRelativePartOffLow.setVisible(partOffRelative);
         vacuumRelativePartOffHigh.setVisible(partOffRelative);
         vacuumRelativePartOffReading.setVisible(partOffRelative);
-        vacuumPartOffGraph.setVisible(partOff);
+        lblLegendPartOff.setVisible(graphOff);
+        vacuumPartOffGraph.setVisible(graphOff);
     }
 
     @Override
@@ -382,7 +419,42 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         addWrappedBinding(nozzleTip, "vacuumRelativePartOffReading", vacuumRelativePartOffReading, "text", doubleConverter);
         
         addWrappedBinding(nozzleTip, "vacuumPartOnGraph", vacuumPartOnGraph, "graph");
-        addWrappedBinding(nozzleTip, "vacuumPartOffGraph", vacuumPartOffGraph, "graph");
+        
+        final boolean testMode = false;
+        if (!testMode) {
+            addWrappedBinding(nozzleTip, "vacuumPartOffGraph", vacuumPartOffGraph, "graph");
+        }
+        else {
+            SimpleGraph vacuumGraph = new SimpleGraph();
+            vacuumGraph.setOffsetMode(true);
+            vacuumGraph.setRelativePaddingLeft(0.1);
+            long t = System.currentTimeMillis();
+            double scale = Math.exp(Math.random()*7.0-3.0);
+            double offset = (Math.random()-0.3)*scale*2.0;
+            long duration = (long)(Math.random()*1000.0);
+            // init pressure scale
+            SimpleGraph.DataScale vacuumScale =  vacuumGraph.getScale("P");
+            vacuumScale.setRelativePaddingBottom(0.25);
+            vacuumScale.setColor(new Color(0, 0, 0, 64));
+            // init valve scale
+            SimpleGraph.DataScale valveScale =  vacuumGraph.getScale("B");
+            valveScale.setRelativePaddingTop(0.8);
+            valveScale.setRelativePaddingBottom(0.1);
+            // record the current pressure
+            SimpleGraph.DataRow vacuumData = vacuumGraph.getRow("P", "V");
+            vacuumData.setColor(new Color(255, 0, 0));
+            // record the valve switching off
+            SimpleGraph.DataRow valveData = vacuumGraph.getRow("B", "S");
+            valveData.setColor(new Color(00, 0x5B, 0xD9));
+            valveData.recordDataPoint(t-1, 0);
+            valveData.recordDataPoint(t, 1);
+            for (long td = t; td < t+duration; td++) {
+                vacuumData.recordDataPoint(td, Math.sin(td*3.0/duration)*scale+offset+Math.random()*scale*0.05);
+            }
+            valveData.recordDataPoint(t+duration-1, 1);
+            valveData.recordDataPoint(t+duration, 0);
+            vacuumPartOffGraph.setGraph(vacuumGraph);
+        }
 
         ComponentDecorators.decorateWithAutoSelect(partOffProbingMilliseconds);
         
