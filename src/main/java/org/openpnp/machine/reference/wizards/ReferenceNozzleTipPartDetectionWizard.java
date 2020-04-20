@@ -150,21 +150,21 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOnVacuumSensing.add(vacuumLevelPartOnReading, "10, 8, right, top");
         vacuumLevelPartOnReading.setColumns(10);
         
-        lblPartOnRelativeRange = new JLabel("Relative Range");
-        panelPartOnVacuumSensing.add(lblPartOnRelativeRange, "2, 10, right, default");
+        lblPartOnDifferenceRange = new JLabel("Difference Range");
+        panelPartOnVacuumSensing.add(lblPartOnDifferenceRange, "2, 10, right, default");
         
-        vacuumRelativePartOnLow = new JTextField();
-        vacuumRelativePartOnLow.setColumns(10);
-        panelPartOnVacuumSensing.add(vacuumRelativePartOnLow, "4, 10, fill, default");
+        vacuumDifferencePartOnLow = new JTextField();
+        vacuumDifferencePartOnLow.setColumns(10);
+        panelPartOnVacuumSensing.add(vacuumDifferencePartOnLow, "4, 10, fill, default");
         
-        vacuumRelativePartOnHigh = new JTextField();
-        panelPartOnVacuumSensing.add(vacuumRelativePartOnHigh, "6, 10, fill, default");
-        vacuumRelativePartOnHigh.setColumns(10);
+        vacuumDifferencePartOnHigh = new JTextField();
+        panelPartOnVacuumSensing.add(vacuumDifferencePartOnHigh, "6, 10, fill, default");
+        vacuumDifferencePartOnHigh.setColumns(10);
         
-        vacuumRelativePartOnReading = new JTextField();
-        vacuumRelativePartOnReading.setEditable(false);
-        panelPartOnVacuumSensing.add(vacuumRelativePartOnReading, "10, 10, fill, default");
-        vacuumRelativePartOnReading.setColumns(10);
+        vacuumDifferencePartOnReading = new JTextField();
+        vacuumDifferencePartOnReading.setEditable(false);
+        panelPartOnVacuumSensing.add(vacuumDifferencePartOnReading, "10, 10, fill, default");
+        vacuumDifferencePartOnReading.setColumns(10);
         
         lblLegendPartOn = new JLabel("<html>\r\n<p style=\"text-align:right\">Vacuum <span style=\"color:#FF0000\">&mdash;&mdash;</span></p>\r\n<p/>\r\n<p style=\"text-align:right\">Valve <span style=\"color:#005BD9\">&mdash;&mdash;</span></p>\r\n</html>");
         panelPartOnVacuumSensing.add(lblLegendPartOn, "2, 14, right, default");
@@ -264,21 +264,21 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOffVacuumSensing.add(partOffProbingMilliseconds, "4, 10, default, center");
         partOffProbingMilliseconds.setColumns(10);
         
-        lblPartOffRelativeRange = new JLabel("Relative Range");
-        panelPartOffVacuumSensing.add(lblPartOffRelativeRange, "2, 12, right, default");
+        lblPartOffDifferenceRange = new JLabel("Difference Range");
+        panelPartOffVacuumSensing.add(lblPartOffDifferenceRange, "2, 12, right, default");
         
-        vacuumRelativePartOffLow = new JTextField();
-        panelPartOffVacuumSensing.add(vacuumRelativePartOffLow, "4, 12, fill, default");
-        vacuumRelativePartOffLow.setColumns(10);
+        vacuumDifferencePartOffLow = new JTextField();
+        panelPartOffVacuumSensing.add(vacuumDifferencePartOffLow, "4, 12, fill, default");
+        vacuumDifferencePartOffLow.setColumns(10);
         
-        vacuumRelativePartOffHigh = new JTextField();
-        panelPartOffVacuumSensing.add(vacuumRelativePartOffHigh, "6, 12, fill, default");
-        vacuumRelativePartOffHigh.setColumns(10);
+        vacuumDifferencePartOffHigh = new JTextField();
+        panelPartOffVacuumSensing.add(vacuumDifferencePartOffHigh, "6, 12, fill, default");
+        vacuumDifferencePartOffHigh.setColumns(10);
         
-        vacuumRelativePartOffReading = new JTextField();
-        vacuumRelativePartOffReading.setEditable(false);
-        panelPartOffVacuumSensing.add(vacuumRelativePartOffReading, "10, 12, fill, default");
-        vacuumRelativePartOffReading.setColumns(10);
+        vacuumDifferencePartOffReading = new JTextField();
+        vacuumDifferencePartOffReading.setEditable(false);
+        panelPartOffVacuumSensing.add(vacuumDifferencePartOffReading, "10, 12, fill, default");
+        vacuumDifferencePartOffReading.setColumns(10);
         
         lblLegendPartOff = new JLabel("<html>\r\n<p style=\"text-align:right\">Vacuum <span style=\"color:#FF0000\">&mdash;&mdash;</span></p>\r\n<p/>\r\n<p style=\"text-align:right\">Valve <span style=\"color:#005BD9\">&mdash;&mdash;</span></p>\r\n</html>");
         panelPartOffVacuumSensing.add(lblLegendPartOff, "2, 16, right, default");
@@ -303,20 +303,20 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
     private JPanel panelPartOffVacuumSensing;
     private JLabel lblProbingTimePartOff;
     private JTextField partOffProbingMilliseconds;
-    private JLabel lblPartOffRelativeRange;
-    private JTextField vacuumRelativePartOffLow;
-    private JTextField vacuumRelativePartOffHigh;
-    private JLabel lblPartOnRelativeRange;
-    private JTextField vacuumRelativePartOnLow;
-    private JTextField vacuumRelativePartOnHigh;
+    private JLabel lblPartOffDifferenceRange;
+    private JTextField vacuumDifferencePartOffLow;
+    private JTextField vacuumDifferencePartOffHigh;
+    private JLabel lblPartOnDifferenceRange;
+    private JTextField vacuumDifferencePartOnLow;
+    private JTextField vacuumDifferencePartOnHigh;
     private JLabel lblPartOffLowValue;
     private JLabel lblPartOffHighValue;
     private JLabel lblPartOnLastReading;
     private JLabel lblPartOffLastReading;
     private JTextField vacuumLevelPartOnReading;
-    private JTextField vacuumRelativePartOnReading;
+    private JTextField vacuumDifferencePartOnReading;
     private JTextField vacuumLevelPartOffReading;
-    private JTextField vacuumRelativePartOffReading;
+    private JTextField vacuumDifferencePartOffReading;
     private SimpleGraphView vacuumPartOnGraph;
     private SimpleGraphView vacuumPartOffGraph;
     private JCheckBox establishPartOnLevel;
@@ -330,16 +330,16 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         VacuumMeasurementMethod methodOn = (VacuumMeasurementMethod)methodPartOn.getSelectedItem();
         boolean establishOn = establishPartOnLevel.isSelected();
         boolean partOn = true;
-        boolean partOnRelative = true;
-        boolean graphOn = establishOn || methodOn.isRelativeMethod();
+        boolean partOnDifference = true;
+        boolean graphOn = establishOn || methodOn.isDifferenceMethod();
         if (methodOn == VacuumMeasurementMethod.None) {
             // hide all 
             partOn = false;
-            partOnRelative = false;
+            partOnDifference = false;
             graphOn = false;
         }
-        else if (!methodOn.isRelativeMethod()) {
-            partOnRelative = false;
+        else if (!methodOn.isDifferenceMethod()) {
+            partOnDifference = false;
         }
          
         lblEstablishPartOnLevel.setVisible(partOn);
@@ -352,26 +352,26 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         vacuumLevelPartOnHigh.setVisible(partOn);
         vacuumLevelPartOnReading.setVisible(partOn);
         
-        lblPartOnRelativeRange.setVisible(partOnRelative);
-        vacuumRelativePartOnLow.setVisible(partOnRelative);
-        vacuumRelativePartOnHigh.setVisible(partOnRelative);
-        vacuumRelativePartOnReading.setVisible(partOnRelative);
+        lblPartOnDifferenceRange.setVisible(partOnDifference);
+        vacuumDifferencePartOnLow.setVisible(partOnDifference);
+        vacuumDifferencePartOnHigh.setVisible(partOnDifference);
+        vacuumDifferencePartOnReading.setVisible(partOnDifference);
         lblLegendPartOn.setVisible(graphOn);
         vacuumPartOnGraph.setVisible(graphOn);
         
         VacuumMeasurementMethod methodOff = (VacuumMeasurementMethod)methodPartOff.getSelectedItem();
         boolean establishOff = establishPartOffLevel.isSelected();
         boolean partOff = true;
-        boolean partOffRelative = true;
-        boolean graphOff = establishOff || methodOff.isRelativeMethod();
+        boolean partOffDifference = true;
+        boolean graphOff = establishOff || methodOff.isDifferenceMethod();
         if (methodOff == VacuumMeasurementMethod.None) {
             // hide all 
             partOff = false;
-            partOffRelative = false;
+            partOffDifference = false;
             graphOff = false;
         }
-        else if (!methodOff.isRelativeMethod()) {
-            partOffRelative = false;
+        else if (!methodOff.isDifferenceMethod()) {
+            partOffDifference = false;
         }
          
         lblEstablishPartOffLevel.setVisible(partOff);
@@ -384,12 +384,12 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         vacuumLevelPartOffHigh.setVisible(partOff);
         vacuumLevelPartOffReading.setVisible(partOff);
         
-        lblProbingTimePartOff.setVisible(partOffRelative);
-        partOffProbingMilliseconds.setVisible(partOffRelative);
-        lblPartOffRelativeRange.setVisible(partOffRelative);
-        vacuumRelativePartOffLow.setVisible(partOffRelative);
-        vacuumRelativePartOffHigh.setVisible(partOffRelative);
-        vacuumRelativePartOffReading.setVisible(partOffRelative);
+        lblProbingTimePartOff.setVisible(partOffDifference);
+        partOffProbingMilliseconds.setVisible(partOffDifference);
+        lblPartOffDifferenceRange.setVisible(partOffDifference);
+        vacuumDifferencePartOffLow.setVisible(partOffDifference);
+        vacuumDifferencePartOffHigh.setVisible(partOffDifference);
+        vacuumDifferencePartOffReading.setVisible(partOffDifference);
         lblLegendPartOff.setVisible(graphOff);
         vacuumPartOffGraph.setVisible(graphOff);
     }
@@ -404,9 +404,9 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         addWrappedBinding(nozzleTip, "vacuumLevelPartOnLow", vacuumLevelPartOnLow, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumLevelPartOnHigh", vacuumLevelPartOnHigh, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumLevelPartOnReading", vacuumLevelPartOnReading, "text", doubleConverter);
-        addWrappedBinding(nozzleTip, "vacuumRelativePartOnLow", vacuumRelativePartOnLow, "text", doubleConverter);
-        addWrappedBinding(nozzleTip, "vacuumRelativePartOnHigh", vacuumRelativePartOnHigh, "text", doubleConverter);
-        addWrappedBinding(nozzleTip, "vacuumRelativePartOnReading", vacuumRelativePartOnReading, "text", doubleConverter);
+        addWrappedBinding(nozzleTip, "vacuumDifferencePartOnLow", vacuumDifferencePartOnLow, "text", doubleConverter);
+        addWrappedBinding(nozzleTip, "vacuumDifferencePartOnHigh", vacuumDifferencePartOnHigh, "text", doubleConverter);
+        addWrappedBinding(nozzleTip, "vacuumDifferencePartOnReading", vacuumDifferencePartOnReading, "text", doubleConverter);
 
         addWrappedBinding(nozzleTip, "methodPartOff", methodPartOff, "selectedItem");
         addWrappedBinding(nozzleTip, "establishPartOffLevel", establishPartOffLevel, "selected");
@@ -414,9 +414,9 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         addWrappedBinding(nozzleTip, "vacuumLevelPartOffHigh", vacuumLevelPartOffHigh, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumLevelPartOffReading", vacuumLevelPartOffReading, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "partOffProbingMilliseconds", partOffProbingMilliseconds, "text", integerConverter);
-        addWrappedBinding(nozzleTip, "vacuumRelativePartOffLow", vacuumRelativePartOffLow, "text", doubleConverter);
-        addWrappedBinding(nozzleTip, "vacuumRelativePartOffHigh", vacuumRelativePartOffHigh, "text", doubleConverter);
-        addWrappedBinding(nozzleTip, "vacuumRelativePartOffReading", vacuumRelativePartOffReading, "text", doubleConverter);
+        addWrappedBinding(nozzleTip, "vacuumDifferencePartOffLow", vacuumDifferencePartOffLow, "text", doubleConverter);
+        addWrappedBinding(nozzleTip, "vacuumDifferencePartOffHigh", vacuumDifferencePartOffHigh, "text", doubleConverter);
+        addWrappedBinding(nozzleTip, "vacuumDifferencePartOffReading", vacuumDifferencePartOffReading, "text", doubleConverter);
         
         addWrappedBinding(nozzleTip, "vacuumPartOnGraph", vacuumPartOnGraph, "graph");
         
@@ -460,11 +460,11 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         
         ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOnLow);
         ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOnHigh);
-        ComponentDecorators.decorateWithAutoSelect(vacuumRelativePartOnLow);
-        ComponentDecorators.decorateWithAutoSelect(vacuumRelativePartOnHigh);
+        ComponentDecorators.decorateWithAutoSelect(vacuumDifferencePartOnLow);
+        ComponentDecorators.decorateWithAutoSelect(vacuumDifferencePartOnHigh);
         ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOffLow);
         ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOffHigh);
-        ComponentDecorators.decorateWithAutoSelect(vacuumRelativePartOffLow);
-        ComponentDecorators.decorateWithAutoSelect(vacuumRelativePartOffHigh);
+        ComponentDecorators.decorateWithAutoSelect(vacuumDifferencePartOffLow);
+        ComponentDecorators.decorateWithAutoSelect(vacuumDifferencePartOffHigh);
     }
 }

@@ -45,7 +45,7 @@ import org.openpnp.util.SimpleGraph.DataScale;
 public class SimpleGraphView extends JComponent {  
 
     private SimpleGraph graph;
-    private final Dimension PREF_SIZE = new Dimension(100, 100);
+    private final Dimension preferredSize = new Dimension(100, 80);
 
     public SimpleGraphView() {
     }
@@ -190,8 +190,8 @@ public class SimpleGraphView extends JComponent {
     @Override
     public Dimension getPreferredSize() {
         Dimension superDim = super.getPreferredSize();
-        int width = (int)Math.max(superDim.getWidth(), PREF_SIZE.getWidth());
-        int height = (int)Math.max(superDim.getHeight(), PREF_SIZE.getHeight()); 
+        int width = (int)Math.max(superDim.getWidth(), preferredSize.getWidth());
+        int height = (int)Math.max(superDim.getHeight(), preferredSize.getHeight()); 
         return new Dimension(width, height);
     }
 }
