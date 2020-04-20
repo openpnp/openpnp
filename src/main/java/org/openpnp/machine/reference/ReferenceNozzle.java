@@ -208,7 +208,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             actuateVacuumValve(true);
         }
 
-        // wait for the Dwell Time and/or make sure the vacuum level builds up to the desired value (with timeout)
+        // wait for the Dwell Time and/or make sure the vacuum level builds up to the desired range (with timeout)
         establishPickVacuumLevel(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
 
         getMachine().fireMachineHeadActivity(head);
@@ -250,7 +250,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             actuateVacuumValve(false);
         }
 
-        // wait for the Dwell Time or make sure the vacuum level decays to the desired value (with timeout)
+        // wait for the Dwell Time and/or make sure the vacuum level decays to the desired range (with timeout)
         establishPlaceVacuumLevel(this.getPlaceDwellMilliseconds() + nozzleTip.getPlaceDwellMilliseconds());
 
         this.part = null;
@@ -951,7 +951,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
             // switch vacuum on for the test
             actuateVacuumValve(true);
-            // wait for the Dwell Time and/or and follow the vacuum level 
+            // wait for the Dwell Time and/or follow the vacuum level 
             double vacuumLevel = readPartOffVacuumLevel(nt.getPartOffProbingMilliseconds());
 
             if (nt.getMethodPartOff().isDifferenceMethod()) {
