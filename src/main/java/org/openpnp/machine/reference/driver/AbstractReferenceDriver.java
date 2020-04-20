@@ -126,7 +126,7 @@ public abstract class AbstractReferenceDriver extends AbstractModelObject implem
     	this.connectionKeepAlive = connectionKeepAlive;
     }
     
-    protected ReferenceDriverCommunications getCommunications() {
+    public ReferenceDriverCommunications getCommunications() {
         switch (communicationsType) {
             case "serial": {
                 return serial;
