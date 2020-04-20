@@ -801,8 +801,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         }
     }
     
-    @Override
-    public String actuatorRead(ReferenceActuator actuator) throws Exception {
+    private String actuatorRead(ReferenceActuator actuator, Double parameter) throws Exception {
         /**
          * The logic here is a little complicated. This is the only driver method that is
          * not fire and forget when it comes to sub-drivers. In this case, we need to know
@@ -818,7 +817,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
          * 3. If the top level driver cannot either service the command or have a sub-driver
          *    service the command it should throw. 
          */
-        String command = getCommand(actuator, CommandType.ACTUATOR_READ_COMMAND);
+        String command;
+        if (parameter == null) {
+            command = getCommand(actuator, CommandType.ACTUATOR_READ_COMMAND);
+        }
+        else {
+            command = getCommand(actuator, CommandType.ACTUATOR_READ_WITH_DOUBLE_COMMAND);
+        }
         String regex = getCommand(actuator, CommandType.ACTUATOR_READ_REGEX);
         if (command != null && regex != null) {
             /**
@@ -827,6 +832,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             command = substituteVariable(command, "Id", actuator.getId());
             command = substituteVariable(command, "Name", actuator.getName());
             command = substituteVariable(command, "Index", actuator.getIndex());
+            if (parameter != null) {
+                command = substituteVariable(command, "DoubleValue", parameter);
+                command = substituteVariable(command, "IntegerValue", (int) parameter.doubleValue());
+            }
 
             List<String> responses = sendGcode(command);
 
@@ -875,50 +884,15 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             }
         }
     }
+    
+    @Override
+    public String actuatorRead(ReferenceActuator actuator) throws Exception {
+        return actuatorRead(actuator, null); 
+    }
 
     @Override
     public String actuatorRead(ReferenceActuator actuator, double parameter) throws Exception {
-        String command = getCommand(actuator, CommandType.ACTUATOR_READ_WITH_DOUBLE_COMMAND);
-        String regex = getCommand(actuator, CommandType.ACTUATOR_READ_REGEX);
-        if (command == null || regex == null) {
-            // If the command or regex is null we'll query the subdrivers. The first
-            // to respond with a non-null value wins.
-            for (ReferenceDriver driver : subDrivers) {
-                String val = driver.actuatorRead(actuator, parameter);
-                if (val != null) {
-                    return val;
-                }
-            }
-            // If none of the subdrivers returned a value there's nothing left to
-            // do, so return null.
-            return null;
-        }
-
-        command = substituteVariable(command, "Id", actuator.getId());
-        command = substituteVariable(command, "Name", actuator.getName());
-        command = substituteVariable(command, "Index", actuator.getIndex());
-        command = substituteVariable(command, "DoubleValue", parameter);
-        command = substituteVariable(command, "IntegerValue", (int) parameter);
-
-        List<String> responses = sendGcode(command);
-
-        for (String line : responses) {
-            if (line.matches(regex)) {
-                Logger.trace("actuatorReadWithDouble response: {}", line);
-                Matcher matcher = Pattern.compile(regex).matcher(line);
-                matcher.matches();
-
-                try {
-                    String s = matcher.group("Value");
-                    return s;
-                }
-                catch (Exception e) {
-                    throw new Exception("Failed to read Actuator " + actuator.getName(), e);
-                }
-            }
-        }
-
-        return null;
+        return actuatorRead(actuator, (Double) parameter);
     }
 
     public synchronized void disconnect() {
