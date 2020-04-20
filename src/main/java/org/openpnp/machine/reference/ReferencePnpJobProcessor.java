@@ -642,6 +642,23 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             throw new JobProcessorException(feeder, lastException);
         }
         
+        private void checkPartOff(Nozzle nozzle, Part part) throws JobProcessorException {
+            if (!nozzle.isPartOffEnabled(Nozzle.PartOffStep.BeforePick)) {
+                return;
+            }
+            try {
+                if (!nozzle.isPartOff()) {
+                    throw new JobProcessorException(nozzle, "Part detected on nozzle before pick.");
+                }
+            }
+            catch (JobProcessorException e) {
+                throw e;
+            }
+            catch (Exception e) {
+                throw new JobProcessorException(nozzle, e);
+            }
+        }
+        
         private void pick(Nozzle nozzle, Feeder feeder, Placement placement, Part part) throws JobProcessorException {
             try {
                 fireTextStatus("Pick %s from %s for %s.", part.getId(), feeder.getName(),
@@ -650,6 +667,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 // Move to pick location.
                 MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
 
+                // Last chance to check if any previously picked part is off
+                checkPartOff(nozzle, part);
 
                 // Pick
                 nozzle.pick(part);
@@ -672,7 +691,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         private void checkPartOn(Nozzle nozzle) throws JobProcessorException {
-            if (!nozzle.isPartOnEnabled()) {
+            if (!nozzle.isPartOnEnabled(Nozzle.PartOnStep.AfterPick)) {
                 return;
             }
             try {
@@ -747,7 +766,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         private void checkPartOn(Nozzle nozzle) throws JobProcessorException {
-            if (!nozzle.isPartOnEnabled()) {
+            if (!nozzle.isPartOnEnabled(Nozzle.PartOnStep.Align)) {
                 return;
             }
             try {
@@ -823,7 +842,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         private void checkPartOn(Nozzle nozzle) throws JobProcessorException {
-            if (!nozzle.isPartOnEnabled()) {
+            if (!nozzle.isPartOnEnabled(Nozzle.PartOnStep.BeforePlace)) {
                 return;
             }
             try {
@@ -840,7 +859,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         private void checkPartOff(Nozzle nozzle, Part part) throws JobProcessorException {
-            if (!nozzle.isPartOffEnabled()) {
+            if (!nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace)) {
                 return;
             }
             try {
