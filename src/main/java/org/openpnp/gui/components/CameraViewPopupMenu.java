@@ -44,11 +44,16 @@ import org.openpnp.model.LengthUnit;
 @SuppressWarnings("serial")
 public class CameraViewPopupMenu extends JPopupMenu {
     private CameraView cameraView;
+    private JMenu zoomIncMenu;
     private JMenu reticleMenu;
     private JMenu reticleOptionsMenu;
 
     public CameraViewPopupMenu(CameraView cameraView) {
         this.cameraView = cameraView;
+
+        zoomIncMenu = createZoomIncMenu();
+
+        add(zoomIncMenu);
 
         reticleMenu = createReticleMenu();
 
@@ -75,6 +80,73 @@ public class CameraViewPopupMenu extends JPopupMenu {
         }
     }
 
+    private JMenu createZoomIncMenu() {
+        JMenu subMenu = new JMenu("Zoom Increment Per Mouse Wheel Tick");
+        ButtonGroup buttonGroup = new ButtonGroup();
+        JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem("10.0");
+        buttonGroup.add(menuItem);
+        if (cameraView.getZoomIncPerMouseWheelTick() == 10.0) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cameraView.setZoomIncPerMouseWheelTick(10.0);
+            }
+        });
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("1.0");
+        buttonGroup.add(menuItem);
+        if (cameraView.getZoomIncPerMouseWheelTick() == 1.0) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cameraView.setZoomIncPerMouseWheelTick(1.0);
+            }
+        });
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("0.1");
+        buttonGroup.add(menuItem);
+        if (cameraView.getZoomIncPerMouseWheelTick() == 0.1) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cameraView.setZoomIncPerMouseWheelTick(0.1);
+            }
+        });
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("0.01");
+        buttonGroup.add(menuItem);
+        if (cameraView.getZoomIncPerMouseWheelTick() == 0.01) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cameraView.setZoomIncPerMouseWheelTick(0.01);
+            }
+        });
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("0.001");
+        buttonGroup.add(menuItem);
+        if (cameraView.getZoomIncPerMouseWheelTick() == 0.001) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cameraView.setZoomIncPerMouseWheelTick(0.001);
+            }
+        });
+        subMenu.add(menuItem);
+        
+        return subMenu;
+    }
+    
     private JMenu createReticleMenu() {
         JMenu menu = new JMenu("Reticle");
 

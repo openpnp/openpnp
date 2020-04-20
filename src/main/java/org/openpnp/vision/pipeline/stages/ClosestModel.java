@@ -171,12 +171,11 @@ public class ClosestModel extends CvStage {
             }
         }
         if (model instanceof RotatedRect) {
-
             multi.add(model);
 
 
         }
-        else if (model instanceof List<?> && ((List<?>) model).get(0) instanceof RotatedRect) {
+        else if (model instanceof List<?> && !((List) model).isEmpty() && ((List<?>) model).get(0) instanceof RotatedRect) {
 
             multi = (ArrayList) model;
 

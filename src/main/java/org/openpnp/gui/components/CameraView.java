@@ -76,6 +76,8 @@ import org.pmw.tinylog.Logger;
 @SuppressWarnings("serial")
 public class CameraView extends JComponent implements CameraListener {
     private static final String PREF_RETICLE = "CamerView.reticle";
+    private static final String PREF_ZOOM_INCREMENT = "CamerView.zoomIncrement";
+    private static final double DEFAULT_ZOOM_INCREMENT = 0.01;
 
     private static final String DEFAULT_RETICLE_KEY = "DEFAULT_RETICLE_KEY";
 
@@ -189,6 +191,7 @@ public class CameraView extends JComponent implements CameraListener {
     private boolean showName = false;
     
     private double zoom = 1d;
+    private double zoomIncPerMouseWheelTick = DEFAULT_ZOOM_INCREMENT;
     
     private boolean dragJogging = false;
     
@@ -234,6 +237,10 @@ public class CameraView extends JComponent implements CameraListener {
         return PREF_RETICLE + "." + camera.getId();
     }
 
+    private String getZoomIncrementPrefKey() {
+        return PREF_ZOOM_INCREMENT + "." + camera.getId();
+    }
+
     public void addActionListener(CameraViewActionListener listener) {
         if (!actionListeners.contains(listener)) {
             actionListeners.add(listener);
@@ -271,6 +278,9 @@ public class CameraView extends JComponent implements CameraListener {
                 Logger.debug("No reticle preference found.");
             }
         }
+
+        // load the zoom increment pref, if any
+        zoomIncPerMouseWheelTick = prefs.getDouble(getZoomIncrementPrefKey(), DEFAULT_ZOOM_INCREMENT);
 
     }
 
@@ -335,6 +345,15 @@ public class CameraView extends JComponent implements CameraListener {
         this.text = text;
     }
 
+    public double getZoomIncPerMouseWheelTick() {
+        return zoomIncPerMouseWheelTick;
+    }
+
+    public void setZoomIncPerMouseWheelTick(double zoomIncPerMouseWheelTick) {
+        prefs.putDouble(getZoomIncrementPrefKey(), zoomIncPerMouseWheelTick);
+        this.zoomIncPerMouseWheelTick = zoomIncPerMouseWheelTick;
+    }
+    
     /**
      * Causes a short flash in the CameraView to get the user's attention.
      */
@@ -1261,10 +1280,7 @@ public class CameraView extends JComponent implements CameraListener {
         }
     }
 
-    private void moveToClick(MouseEvent e) {
-        int x = e.getX();
-        int y = e.getY();
-
+    public Location getCameraViewCenterOffsetsFromXy(int x, int y) {
         // Find the difference in X and Y from the center of the image
         // to the mouse click.
         double offsetX = (scaledWidth / 2.0D) - (x - imageX);
@@ -1278,12 +1294,17 @@ public class CameraView extends JComponent implements CameraListener {
         offsetX *= scaledUnitsPerPixelX;
         offsetY *= scaledUnitsPerPixelY;
 
-        // The offsets now represent the distance to move the camera
-        // in the Camera's units per pixel's units.
+        // The offsets now represent the distance in the Camera's units per pixel's units.
 
         // Create a location in the Camera's units per pixel's units
         // and with the values of the offsets.
         Location offsets = camera.getUnitsPerPixel().derive(offsetX, offsetY, 0.0, 0.0);
+        return offsets;
+    }
+
+    private void moveToClick(MouseEvent e) {
+        // Get the offset from the Camera view center in Camera's units.
+        Location offsets = getCameraViewCenterOffsetsFromXy(e.getX(), e.getY());
         // And move there.
         UiUtils.submitUiMachineTask(() -> {
             if (camera.getHead() == null) {
@@ -1517,7 +1538,7 @@ public class CameraView extends JComponent implements CameraListener {
     private MouseWheelListener mouseWheelListener = new MouseWheelListener() {
         @Override
         public void mouseWheelMoved(MouseWheelEvent e) {
-            zoom -= e.getPreciseWheelRotation() * 0.01d;
+            zoom -= e.getPreciseWheelRotation() * zoomIncPerMouseWheelTick;
             zoom = Math.max(zoom, 1.0d);
             zoom = Math.min(zoom, 100d);
             calculateScalingData();

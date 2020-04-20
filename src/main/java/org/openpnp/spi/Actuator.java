@@ -50,4 +50,6 @@ public interface Actuator
      * @throws Exception if there was an error reading the actuator.
      */
     public String read() throws Exception;
+
+    public String read(double value) throws Exception;
 }

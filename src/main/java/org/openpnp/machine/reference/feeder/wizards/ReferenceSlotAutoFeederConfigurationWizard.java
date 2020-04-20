@@ -26,6 +26,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -74,6 +75,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
     private JComboBox postPickActuatorType;
     private JTextField feederNameTf;
     private JTextField bankNameTf;
+    private JCheckBox ckBoxMoveBeforeFeed;
 
     public ReferenceSlotAutoFeederConfigurationWizard(ReferenceSlotAutoFeeder feeder) {
         this.feeder = feeder;
@@ -247,6 +249,8 @@ public class ReferenceSlotAutoFeederConfigurationWizard
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblActuatorName = new JLabel("Actuator Name");
@@ -291,6 +295,14 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         
         JLabel lblForBoolean_1 = new JLabel("For Boolean: 1 = True, 0 = False");
         panelActuator.add(lblForBoolean_1, "10, 6");
+        
+        JLabel lblMoveBeforeFeed = new JLabel("Move before feed");
+        panelActuator.add(lblMoveBeforeFeed, "2, 8, right, default");
+        lblMoveBeforeFeed.setToolTipText("Move nozzle to pick location before actuating feed actuator");
+        
+        ckBoxMoveBeforeFeed = new JCheckBox();
+        panelActuator.add(ckBoxMoveBeforeFeed, "4, 8, left, default");
+
         try {
         }
         catch (Throwable t) {
@@ -380,6 +392,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         addWrappedBinding(feeder, "postPickActuatorType", postPickActuatorType, "selectedItem");
         addWrappedBinding(feeder, "postPickActuatorValue", postPickActuatorValue, "text", doubleConverter);
         
+        addWrappedBinding(feeder, "moveBeforeFeed", ckBoxMoveBeforeFeed, "selected");
         
         addWrappedBinding(feeder, "feedRetryCount", retryCountTf, "text", intConverter);
         addWrappedBinding(feeder, "pickRetryCount", pickRetryCount, "text", intConverter);

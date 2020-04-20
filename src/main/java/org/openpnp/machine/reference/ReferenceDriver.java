@@ -99,6 +99,18 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
     }
 
     /**
+     * Read a given String value from the given Actuator.
+     * 
+     * @param actuator
+     * @param parameter
+     * @return 
+     * @throws Exception
+     */
+    public default String actuatorRead(ReferenceActuator actuator, double parameter) throws Exception {
+        return null;
+    }
+
+    /**
      * Attempts to enable the Driver, turning on all outputs.
      * 
      * @param enabled
