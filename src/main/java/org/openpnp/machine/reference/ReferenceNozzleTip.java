@@ -448,7 +448,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setVacuumLevelPartOnReading(Double vacuumLevelPartOnReading) {
-        Object oldValue = vacuumLevelPartOnReading;
+        Object oldValue = this.vacuumLevelPartOnReading;
         this.vacuumLevelPartOnReading = vacuumLevelPartOnReading;
         if (!(oldValue == null && vacuumLevelPartOnReading == null)) { // only fire when values are set
             firePropertyChange("vacuumLevelPartOnReading", oldValue, vacuumLevelPartOnReading);
@@ -460,7 +460,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setVacuumDifferencePartOnReading(Double vacuumDifferencePartOnReading) {
-        Object oldValue = vacuumLevelPartOnReading;
+        Object oldValue = this.vacuumDifferencePartOnReading;
         this.vacuumDifferencePartOnReading = vacuumDifferencePartOnReading;
         if (!(oldValue == null && vacuumDifferencePartOnReading == null)) { // only fire when values are set
             firePropertyChange("vacuumDifferencePartOnReading", oldValue, vacuumDifferencePartOnReading);
@@ -472,7 +472,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setVacuumLevelPartOffReading(Double vacuumLevelPartOffReading) {
-        Object oldValue = vacuumLevelPartOnReading;
+        Object oldValue = this.vacuumLevelPartOffReading;
         this.vacuumLevelPartOffReading = vacuumLevelPartOffReading;
         if (!(oldValue == null && vacuumLevelPartOffReading == null)) { // only fire when values are set
             firePropertyChange("vacuumLevelPartOffReading", oldValue, vacuumLevelPartOffReading);
@@ -484,7 +484,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setVacuumDifferencePartOffReading(Double vacuumDifferencePartOffReading) {
-        Object oldValue = vacuumLevelPartOnReading;
+        Object oldValue = this.vacuumDifferencePartOffReading;
         this.vacuumDifferencePartOffReading = vacuumDifferencePartOffReading;
         if (!(oldValue == null && vacuumDifferencePartOffReading == null)) { // only fire when values are set
             firePropertyChange("vacuumDifferencePartOffReading", oldValue, vacuumDifferencePartOffReading);
@@ -496,10 +496,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setVacuumPartOnGraph(SimpleGraph vacuumPartOnGraph) {
-        Object oldValue = vacuumPartOnGraph;
+        Object oldValue = this.vacuumPartOnGraph;
         this.vacuumPartOnGraph = vacuumPartOnGraph;
         if (!(oldValue == null && vacuumPartOnGraph == null)) { // only fire when values are set
-            firePropertyChange("vacuumPartOnGraph", null/*oldValue*/, vacuumPartOnGraph);
+            firePropertyChange("vacuumPartOnGraph", oldValue, vacuumPartOnGraph);
         }
     }
 
@@ -508,10 +508,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setVacuumPartOffGraph(SimpleGraph vacuumPartOffGraph) {
-        Object oldValue = vacuumPartOffGraph;
+        Object oldValue = this.vacuumPartOffGraph;
         this.vacuumPartOffGraph = vacuumPartOffGraph;
         if (!(oldValue == null && vacuumPartOffGraph == null)) { // only fire when values are set
-            firePropertyChange("vacuumPartOffGraph", null/*oldValue*/, vacuumPartOffGraph);
+            firePropertyChange("vacuumPartOffGraph", oldValue, vacuumPartOffGraph);
         }
     }
 
@@ -558,16 +558,16 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         // start a new graph 
         SimpleGraph vacuumGraph = new SimpleGraph();
         vacuumGraph.setOffsetMode(true);
-        vacuumGraph.setRelativePaddingLeft(0.1);
+        vacuumGraph.setRelativePaddingLeft(0.05);
         long t = System.currentTimeMillis();
         // init pressure scale
         SimpleGraph.DataScale vacuumScale =  vacuumGraph.getScale(PRESSURE);
-        vacuumScale.setRelativePaddingBottom(0.25);
+        vacuumScale.setRelativePaddingBottom(0.3);
         vacuumScale.setColor(new Color(0, 0, 0, 64));
         // init valve scale
         SimpleGraph.DataScale valveScale =  vacuumGraph.getScale(BOOLEAN);
-        valveScale.setRelativePaddingTop(0.8);
-        valveScale.setRelativePaddingBottom(0.1);
+        valveScale.setRelativePaddingTop(0.75);
+        valveScale.setRelativePaddingBottom(0.2);
         // record the current pressure
         SimpleGraph.DataRow vacuumData = vacuumGraph.getRow(PRESSURE, VACUUM);
         vacuumData.setColor(new Color(255, 0, 0));

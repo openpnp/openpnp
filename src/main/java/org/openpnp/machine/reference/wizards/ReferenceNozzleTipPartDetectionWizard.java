@@ -422,9 +422,9 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         vacuumLevelPartOffLow.setVisible(partOff);
         vacuumLevelPartOffHigh.setVisible(partOff);
         vacuumLevelPartOffReading.setVisible(partOff);
+        lblProbingTimePartOff.setVisible(partOff);
+        partOffProbingMilliseconds.setVisible(partOff);
         
-        lblProbingTimePartOff.setVisible(partOffDifference);
-        partOffProbingMilliseconds.setVisible(partOffDifference);
         lblPartOffDifferenceRange.setVisible(partOffDifference);
         vacuumDifferencePartOffLow.setVisible(partOffDifference);
         vacuumDifferencePartOffHigh.setVisible(partOffDifference);

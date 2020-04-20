@@ -586,7 +586,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
 
             feed(feeder, nozzle);
-            
+
+            // TODO: move over the pick location first to let more time pass? 
+            // What happens if feeders already position the nozzle in feed()? 
+            // (there are several, e.g. drag, lever, push-pull, blinds feeder with push cover)
+            // it did not work in my tests, as the previous check already built up some underpressure
+            checkPartOff(nozzle, part);
+
             pick(nozzle, feeder, placement, part);
 
             /** 
@@ -666,9 +672,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 
                 // Move to pick location.
                 MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
-
-                // Last chance to check if any previously picked part is off
-                checkPartOff(nozzle, part);
 
                 // Pick
                 nozzle.pick(part);
