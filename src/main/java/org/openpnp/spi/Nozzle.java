@@ -74,20 +74,36 @@ public interface Nozzle
      * if a user initiated, manual, pick is performed with no Part to reference. 
      */
     public Part getPart();
-    
+
+    public enum PartOnStep {
+        AfterPick,
+        Align,
+        BeforePlace
+    }
+
     /**
      * Returns true if the isPartOn() method is available. Some machines do not have
      * vacuum sensors or other part detection sensors, so this feature is optional.
+     * 
+     * @param step determines which JobProcessor Step wants to perform the check 
      * @return
      */
-    public boolean isPartOnEnabled();
+    public boolean isPartOnEnabled(PartOnStep step);
     
+
+    public enum PartOffStep {
+        AfterPlace,
+        BeforePick
+    }
+
     /**
      * Returns true if the isPartOff() method is available. Some machines do not have
      * vacuum sensors or other part detection sensors, so this feature is optional.
+     * 
+     * @param step determines which JobProcessor Step wants to perform the check 
      * @return
      */
-    public boolean isPartOffEnabled();
+    public boolean isPartOffEnabled(PartOffStep step);
 
     /**
      * Returns true if a part appears to be on the nozzle. This is typically implemented by
