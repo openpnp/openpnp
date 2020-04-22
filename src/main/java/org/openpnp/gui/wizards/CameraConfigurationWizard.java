@@ -38,16 +38,26 @@ import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.components.SimpleGraphView;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.DoubleConverter;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.LongConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.base.AbstractCamera;
+import org.openpnp.spi.base.AbstractCamera.SettleMethod;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.JCheckBox;
+import java.awt.Font;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeEvent;
 
 @SuppressWarnings("serial")
 public class CameraConfigurationWizard extends AbstractConfigurationWizard {
@@ -152,23 +162,142 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelVision);
-        panelVision.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelVision.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("default:grow"),}));
+        
+        lblSettleMethod = new JLabel("Settle Method");
+        panelVision.add(lblSettleMethod, "2, 2, right, default");
+        
+        settleMethod = new JComboBox(AbstractCamera.SettleMethod.values());
+        settleMethod.addPropertyChangeListener(new PropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent evt) {
+                adaptDialog();
+            }
+        });
+        panelVision.add(settleMethod, "4, 2, fill, default");
 
-        lblSettleTimems = new JLabel("Settle Time (ms)");
-        panelVision.add(lblSettleTimems, "2, 2, right, default");
+        lblSettleTimeMs = new JLabel("Settle Time (ms)");
+        panelVision.add(lblSettleTimeMs, "2, 4, right, default");
 
-        textFieldSettleTime = new JTextField();
-        panelVision.add(textFieldSettleTime, "4, 2, fill, default");
-        textFieldSettleTime.setColumns(10);
+        settleTimeMs = new JTextField();
+        panelVision.add(settleTimeMs, "4, 4, fill, default");
+        settleTimeMs.setColumns(10);
+        
+        lblSettleTimeoutMs = new JLabel("Settle Timeout (ms)");
+        panelVision.add(lblSettleTimeoutMs, "2, 6, right, default");
+        
+        settleTimeoutMs = new JTextField();
+        panelVision.add(settleTimeoutMs, "4, 6, fill, default");
+        settleTimeoutMs.setColumns(10);
+        
+        lblSettleThreshold = new JLabel("Settle Threshold");
+        panelVision.add(lblSettleThreshold, "2, 8, right, default");
+        
+        settleThreshold = new JTextField();
+        panelVision.add(settleThreshold, "4, 8, fill, default");
+        settleThreshold.setColumns(10);
+        
+        lblSettleFullColor = new JLabel("Full Color?");
+        panelVision.add(lblSettleFullColor, "2, 10, right, default");
+        
+        settleFullColor = new JCheckBox("");
+        settleFullColor.setToolTipText("Compare as full color image, i.e. different colors with same brightness will register");
+        panelVision.add(settleFullColor, "4, 10");
+        
+        lblSettleGaussianBlur = new JLabel("Gaussian Blur (Pixel)");
+        panelVision.add(lblSettleGaussianBlur, "2, 12, right, default");
+        
+        settleGaussianBlur = new JTextField();
+        panelVision.add(settleGaussianBlur, "4, 12, fill, default");
+        settleGaussianBlur.setColumns(10);
+        
+        lblSettleMaskCircle = new JLabel("Center Mask Ratio");
+        lblSettleMaskCircle.setToolTipText("<html>\r\n<p>Analyze the movement inside a central circular mask of given size, relative to the camera<br/> dimension (height or width, whichever is smaller.</p>\r\n<p>Examples:</p>\r\n<ul>\r\n<li>0.0 No mask</li>\r\n<li>0.5 Circular center area of half the size of the camera view</li>\r\n<li>1.0 Circular center area to the edge of the camera view</li>\r\n</ul>\r\n</html>");
+        panelVision.add(lblSettleMaskCircle, "2, 14, right, default");
+        
+        settleMaskCircle = new JTextField();
+        panelVision.add(settleMaskCircle, "4, 14, fill, default");
+        settleMaskCircle.setColumns(10);
+        
+        lblSettleDiagnostics = new JLabel("Diagnostics?");
+        panelVision.add(lblSettleDiagnostics, "2, 16, right, default");
+        
+        settleDiagnostics = new JCheckBox("");
+        settleDiagnostics.addPropertyChangeListener(new PropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent evt) {
+                adaptDialog();
+            }
+        });
+        panelVision.add(settleDiagnostics, "4, 16");
+        
+        lblSettleGraph = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nDifference <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nThreshold <span style=\"color:#00BB00\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nCapture <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n</p>\r\n</body>\r\n</html>");
+        panelVision.add(lblSettleGraph, "2, 18");
+        
+        settleGraph = new SimpleGraphView();
+        settleGraph.setFont(new Font("SansSerif", Font.PLAIN, 9));
+        panelVision.add(settleGraph, "4, 18, 3, 1, default, fill");
+    }
+
+    private void adaptDialog() {
+        AbstractCamera.SettleMethod method = (SettleMethod) settleMethod.getSelectedItem();
+        boolean fixedTime = (method == SettleMethod.FixedTime);
+
+        lblSettleTimeMs.setVisible(fixedTime);
+        settleTimeMs.setVisible(fixedTime);
+        lblSettleTimeoutMs.setVisible(!fixedTime);
+        settleTimeoutMs.setVisible(!fixedTime);
+
+        lblSettleThreshold.setVisible(!fixedTime);
+        settleThreshold.setVisible(!fixedTime);
+
+        lblSettleFullColor.setVisible(!fixedTime);
+        settleFullColor.setVisible(!fixedTime);
+
+        lblSettleGaussianBlur.setVisible(!fixedTime);
+        settleGaussianBlur.setVisible(!fixedTime);
+
+        lblSettleMaskCircle.setVisible(!fixedTime);
+        settleMaskCircle.setVisible(!fixedTime);
+
+        lblSettleDiagnostics.setVisible(!fixedTime);
+        settleDiagnostics.setVisible(!fixedTime);
+
+        lblSettleGraph.setVisible(settleDiagnostics.isSelected() && !fixedTime);
+        settleGraph.setVisible(settleDiagnostics.isSelected() && !fixedTime);
     }
 
     @Override
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter(uppFormat);
         LongConverter longConverter = new LongConverter();
+        IntegerConverter intConverter = new IntegerConverter();
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
         addWrappedBinding(camera, "name", nameTf, "text");
         addWrappedBinding(camera, "looking", lookingCb, "selectedItem");
@@ -178,8 +307,16 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         addWrappedBinding(unitsPerPixel, "lengthX", textFieldUppX, "text", lengthConverter);
         addWrappedBinding(unitsPerPixel, "lengthY", textFieldUppY, "text", lengthConverter);
 
-        addWrappedBinding(camera, "settleTimeMs", textFieldSettleTime, "text", longConverter);
-
+        addWrappedBinding(camera, "settleMethod", settleMethod, "selectedItem");
+        addWrappedBinding(camera, "settleTimeMs", settleTimeMs, "text", longConverter);
+        addWrappedBinding(camera, "settleTimeoutMs", settleTimeoutMs, "text", longConverter);
+        addWrappedBinding(camera, "settleThreshold", settleThreshold, "text", doubleConverter);
+        addWrappedBinding(camera, "settleFullColor", settleFullColor, "selected");
+        addWrappedBinding(camera, "settleGaussianBlur", settleGaussianBlur, "text", intConverter);
+        addWrappedBinding(camera, "settleMaskCircle", settleMaskCircle, "text", doubleConverter);
+        addWrappedBinding(camera, "settleDiagnostics", settleDiagnostics, "selected");
+        addWrappedBinding(camera, "settleGraph", settleGraph, "graph");
+        
         ComponentDecorators.decorateWithAutoSelect(textFieldUppX);
         ComponentDecorators.decorateWithAutoSelect(textFieldUppY);
         ComponentDecorators.decorateWithLengthConversion(textFieldUppX, uppFormat);
@@ -188,7 +325,13 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         ComponentDecorators.decorateWithAutoSelect(nameTf);
         ComponentDecorators.decorateWithAutoSelect(textFieldWidth);
         ComponentDecorators.decorateWithAutoSelect(textFieldHeight);
-        ComponentDecorators.decorateWithAutoSelect(textFieldSettleTime);
+        ComponentDecorators.decorateWithAutoSelect(settleTimeMs);
+
+        ComponentDecorators.decorateWithAutoSelect(settleTimeMs);
+        ComponentDecorators.decorateWithAutoSelect(settleTimeoutMs);
+        ComponentDecorators.decorateWithAutoSelect(settleThreshold);
+        ComponentDecorators.decorateWithAutoSelect(settleGaussianBlur);
+        ComponentDecorators.decorateWithAutoSelect(settleMaskCircle);
     }
 
     private Action measureAction = new AbstractAction("Measure") {
@@ -235,11 +378,27 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     private JLabel lblX;
     private JLabel lblY;
     private JPanel panelVision;
-    private JLabel lblSettleTimems;
-    private JTextField textFieldSettleTime;
+    private JLabel lblSettleTimeMs;
+    private JTextField settleTimeMs;
     private JPanel panel;
     private JLabel lblName;
     private JLabel lblLooking;
     private JComboBox lookingCb;
     private JTextField nameTf;
+    private JLabel lblSettleMethod;
+    private JComboBox settleMethod;
+    private JLabel lblSettleTimeoutMs;
+    private JTextField settleTimeoutMs;
+    private JTextField settleThreshold;
+    private JLabel lblSettleThreshold;
+    private JTextField settleGaussianBlur;
+    private JLabel lblSettleGaussianBlur;
+    private JLabel lblSettleFullColor;
+    private JCheckBox settleFullColor;
+    private JLabel lblSettleMaskCircle;
+    private JTextField settleMaskCircle;
+    private JLabel lblSettleDiagnostics;
+    private JCheckBox settleDiagnostics;
+    private SimpleGraphView settleGraph;
+    private JLabel lblSettleGraph;
 }

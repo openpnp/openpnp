@@ -1,6 +1,9 @@
 package org.openpnp.spi.base;
 
+import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,7 +15,13 @@ import javax.swing.Icon;
 
 import org.opencv.core.Core;
 import org.opencv.core.Core.MinMaxLocResult;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.CameraListener;
 import org.openpnp.ConfigurationListener;
@@ -26,9 +35,12 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.VisionProvider;
 import org.openpnp.util.OpenCvUtils;
+import org.openpnp.util.SimpleGraph;
+import org.openpnp.vision.FluentCv;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 public abstract class AbstractCamera extends AbstractModelObject implements Camera {
     @Attribute
@@ -46,8 +58,78 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     @Element(required = false)
     protected VisionProvider visionProvider;
 
+    public enum SettleMethod {
+        FixedTime,
+        MaximumPixelDifference,
+        OverallDifference,
+        EuclideanMetric;
+        
+        int getNorm() {
+            if (this ==  MaximumPixelDifference) {
+                return Core.NORM_INF;
+            }
+            else if (this ==  OverallDifference) {
+                return Core.NORM_L1;
+            }
+            else if (this ==  EuclideanMetric) {
+                return Core.NORM_L2;
+            }
+            return -1;
+        }
+        double normedResult(double result, Mat mat) {
+            if (this ==  MaximumPixelDifference) {
+                return result/(mat.channels()*2.55);
+            }
+            else if (this ==  OverallDifference) {
+                return result/(mat.cols()*mat.rows()*mat.channels()*2.55);
+            }
+            else if (this ==  EuclideanMetric) {
+                return result/(mat.channels()*2.55);
+            }
+            return -1;
+        }
+    }
+
+    @Attribute(required = false)
+    protected SettleMethod settleMethod = null;
+
     @Attribute(required = false)
     protected long settleTimeMs = 250;
+
+    @Attribute(required = false)
+    protected long settleTimeoutMs = 500;
+
+    @Attribute(required = false)
+    protected double settleThreshold = 0.0;
+
+    @Attribute(required = false)
+    protected boolean settleFullColor = false;
+
+    @Attribute(required = false)
+    protected int settleGaussianBlur = 0;
+
+    @Attribute(required = false)
+    protected double settleMaskCircle = 0.0;
+
+    @Attribute(required = false)
+    protected boolean settleDiagnostics = false;
+
+
+    @Commit
+    protected void commit() throws Exception {
+        if (settleMethod == null) {
+            if (settleTimeMs < 0) {
+                settleMethod = SettleMethod.MaximumPixelDifference;
+                // migrate the old threshold, coded as a negative number
+                settleThreshold = Math.abs(settleTimeMs)/2.55;
+                settleTimeMs = 250;
+            }
+            else {
+                settleMethod = SettleMethod.FixedTime;
+            }
+        }
+    }
+
 
     protected Set<ListenerEntry> listeners = Collections.synchronizedSet(new HashSet<>());
 
@@ -60,6 +142,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     private boolean headSet = false;
     
     private Mat lastSettleMat = null;
+    private SimpleGraph settleGraph = null;
 
     public AbstractCamera() {
         this.id = Configuration.createId("CAM");
@@ -159,29 +242,124 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     public VisionProvider getVisionProvider() {
         return visionProvider;
     }
-    
+
+    public static final String DIFFERENCE = "D"; 
+    public static final String BOOLEAN = "B"; 
+
+    private void startDiagnostics() {
+        if (settleDiagnostics) {
+            SimpleGraph settleGraph = new SimpleGraph();
+            settleGraph.setOffsetMode(true);
+            settleGraph.setRelativePaddingLeft(0.05);
+            // init difference scale
+            SimpleGraph.DataScale settleScale =  settleGraph.getScale(DIFFERENCE);
+            settleScale.setRelativePaddingBottom(0.3);
+            settleScale.setColor(new Color(0, 0, 0, 64));
+            SimpleGraph.DataScale captureScale =  settleGraph.getScale(BOOLEAN);
+            captureScale.setRelativePaddingTop(0.8);
+            captureScale.setRelativePaddingBottom(0.1);
+            // init the difference data
+            settleGraph.getRow(DIFFERENCE, "D")
+                .setColor(new Color(255, 0, 0));
+            // setpoint
+            settleGraph.getRow(DIFFERENCE, "S")
+            .setColor(new Color(0, 200, 0));
+            // init the capture data
+            settleGraph.getRow(BOOLEAN, "C")
+                .setColor(new Color(00, 0x5B, 0xD9)); // the OpenPNP color
+            // set to trigger property change
+            setSettleGraph(settleGraph);
+        }
+        else {
+            setSettleGraph(null);
+        }
+    }
+
     private BufferedImage autoSettleAndCapture() {
-        long t = System.currentTimeMillis();
-        while (true) {
-            // Capture an image, convert to Mat and convert to gray.
+        Mat mask = null;
+        long t0 = System.currentTimeMillis();
+        long timeout = t0 + settleTimeoutMs;
+        startDiagnostics();
+        while(true) {
+            // Capture an image. 
+            long t = System.currentTimeMillis();
+            if (settleGraph != null) {
+                // record capture begins
+                settleGraph.getRow(BOOLEAN, "C").recordDataPoint(t-1, 0);
+                settleGraph.getRow(BOOLEAN, "C").recordDataPoint(t, 1);
+            }
             BufferedImage image = capture();
+            t = System.currentTimeMillis();
+            if (settleGraph != null) {
+                // record capture ends
+                settleGraph.getRow(BOOLEAN, "C").recordDataPoint(t-1, 1);
+                settleGraph.getRow(BOOLEAN, "C").recordDataPoint(t, 0);
+            }
+            // convert to Mat and convert to gray.
             Mat mat = OpenCvUtils.toMat(image);
-            Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
-            
+            if (!settleFullColor) {
+                Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
+            }
+
+            if (settleMaskCircle > 0.0) {
+                // Crop the image to the mask dimension. 
+                int imageDimension = Math.min(mat.rows(), mat.cols());
+                int maskDiameter = Math.max(1,  Math.min(imageDimension, (int)(settleMaskCircle*imageDimension)));
+                Rect rectCrop = new Rect(
+                        (mat.cols() - maskDiameter)/2, (mat.rows() - maskDiameter)/2,
+                        maskDiameter, maskDiameter);
+                Mat matCrop = mat.submat(rectCrop);
+                mat.release();
+                mat = matCrop;
+
+                if (mask == null) {
+                    // This must be the first frame, also create the mask circle
+                    mask = new Mat(mat.rows(), mat.cols(), CvType.CV_8U, Scalar.all(0));
+                    Imgproc.circle(mask,
+                            new Point( mat.rows() / 2, mat.cols() / 2 ),
+                            maskDiameter/2,
+                            new Scalar(255, 255, 255), -1);
+                }
+            }
+            if (settleGaussianBlur > 1) {
+                // Apply the Gaussian blur, make the kernel size an odd number 
+                Imgproc.GaussianBlur(mat, mat, new Size(settleGaussianBlur|1, settleGaussianBlur|1), 0);
+            }
+            if (settleDiagnostics) {
+                // Write the image to disk.
+                try {
+                    File file = Configuration.get().createResourceFile(getClass(), "settle", ".png");
+                    Mat masked = new Mat(mat.rows(), mat.cols(), mat.type(), Scalar.all(0));
+                    mat.copyTo(masked, mask);
+                    Imgcodecs.imwrite(file.getAbsolutePath(), masked);
+                    masked.release();
+                }
+                catch (IOException e) {
+                    Logger.error(e);
+                }
+            }
+            t = System.currentTimeMillis();
             // If this is the first time through the loop then assign the new image to
             // the lastSettleMat and loop again. We need at least two images to check.
-            // to lastSettleMat and 
             if (lastSettleMat == null) {
                 lastSettleMat = mat;
                 continue;
             }
-            
-            // Take the absdiff of the two images and get the max changed pixel.
-            Mat diff = new Mat();
-            Core.absdiff(lastSettleMat, mat, diff);
-            MinMaxLocResult result = Core.minMaxLoc(diff);
-            Logger.debug("autoSettleAndCapture auto settle score: " + result.maxVal);
-            diff.release();
+
+            // Take the norm of the differences of the two images.
+            double result; 
+            if (mask != null) { 
+                // masked by the circle
+                result = settleMethod.normedResult(Core.norm(lastSettleMat, mat, settleMethod.getNorm(), mask), mat);
+            }
+            else {
+                // the whole image
+                result = settleMethod.normedResult(Core.norm(lastSettleMat, mat, settleMethod.getNorm()), mat);
+            }
+            if (settleGraph != null) {
+                settleGraph.getRow(DIFFERENCE, "D").recordDataPoint(t, result);
+            }
+            Logger.debug("autoSettleAndCapture t="+(t-t0)+" auto settle score: " + result);
 
             // Release the lastSettleMat and store the new image as the lastSettleMat.
             lastSettleMat.release();
@@ -191,10 +369,24 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
             // threshold, we have a winner. The check for > 0 is to ensure that we're not just
             // receiving a duplicate frame from the camera. Every camera has at least a little
             // noise so we're just checking that at least one pixel changed by 1 bit.
-            if (result.maxVal > 0 && result.maxVal < Math.abs(getSettleTimeMs())) {
+            if ((t > timeout)
+                    || (result > 0.0 && result < settleThreshold)) {
                 lastSettleMat.release();
                 lastSettleMat = null;
-                Logger.debug("autoSettleAndCapture in {} ms", System.currentTimeMillis() - t);
+                if (mask != null) {
+                    mask.release();
+                    mask = null;
+                }
+                if (settleGraph != null) {
+                   // record last points in graph 
+                   settleGraph.getRow(BOOLEAN, "C").recordDataPoint(t, 0);
+                   settleGraph.getRow(DIFFERENCE, "S").recordDataPoint(t0, settleThreshold);
+                   settleGraph.getRow(DIFFERENCE, "S").recordDataPoint(t+10, settleThreshold);
+                   settleGraph.getRow(DIFFERENCE, "D").recordDataPoint(t+10, result);
+                    // set to trigger the property change
+                    setSettleGraph(settleGraph);
+                }
+                Logger.debug("autoSettleAndCapture in {} ms", System.currentTimeMillis() - t0);
                 return image;
             }
         }
@@ -211,7 +403,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         }
         
     	
-        if (getSettleTimeMs() >= 0) {
+        if (settleMethod == SettleMethod.FixedTime) {
             try {
                 Thread.sleep(getSettleTimeMs());
             }
@@ -231,12 +423,80 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         }
     }
 
+    public SettleMethod getSettleMethod() {
+        return settleMethod;
+    }
+
+    public void setSettleMethod(SettleMethod settleMethod) {
+        this.settleMethod = settleMethod;
+    }
+
     public long getSettleTimeMs() {
         return settleTimeMs;
     }
 
     public void setSettleTimeMs(long settleTimeMs) {
         this.settleTimeMs = settleTimeMs;
+    }
+
+    public long getSettleTimeoutMs() {
+        return settleTimeoutMs;
+    }
+
+    public void setSettleTimeoutMs(long settleTimeoutMs) {
+        this.settleTimeoutMs = settleTimeoutMs;
+    }
+
+    public double getSettleThreshold() {
+        return settleThreshold;
+    }
+
+    public void setSettleThreshold(double settleThreshold) {
+        this.settleThreshold = settleThreshold;
+    }
+
+    public boolean isSettleFullColor() {
+        return settleFullColor;
+    }
+
+    public void setSettleFullColor(boolean settleFullColor) {
+        this.settleFullColor = settleFullColor;
+    }
+
+    public int getSettleGaussianBlur() {
+        return settleGaussianBlur;
+    }
+
+    public void setSettleGaussianBlur(int settleGaussianBlur) {
+        Object oldValue = this.settleGaussianBlur;
+        this.settleGaussianBlur = settleGaussianBlur <= 1 ? 0 : settleGaussianBlur|1; // make it odd
+        firePropertyChange("settleGaussianBlur", oldValue, settleGaussianBlur);
+    }
+
+    public double getSettleMaskCircle() {
+        return settleMaskCircle;
+    }
+
+    public void setSettleMaskCircle(double settleMaskCircle) {
+        this.settleMaskCircle = settleMaskCircle;
+    }
+
+    public boolean isSettleDiagnostics() {
+        return settleDiagnostics;
+    }
+
+    public void setSettleDiagnostics(boolean settleDiagnostics) {
+        this.settleDiagnostics = settleDiagnostics;
+    }
+
+    public SimpleGraph getSettleGraph() {
+        return settleGraph;
+    }
+
+    public void setSettleGraph(SimpleGraph settleGraph) {
+        Object oldValue = this.settleGraph;
+        this.settleGraph = settleGraph;
+        firePropertyChange("settleGraph", oldValue, settleGraph);
     }
 
     @Override

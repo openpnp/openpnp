@@ -134,7 +134,8 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     }
 
     @Commit
-    public void commit() {
+    public void commit() throws Exception {
+        super.commit();
         backLightCompensation.setCamera(this);
         brightness.setCamera(this);
         contrast.setCamera(this);
