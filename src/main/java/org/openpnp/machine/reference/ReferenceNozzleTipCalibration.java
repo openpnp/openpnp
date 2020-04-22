@@ -162,21 +162,19 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         }
 
         public ModelBasedRunoutCompensation(List<Location> nozzleTipMeasuredLocations, List<Location> nozzleTipExpectedLocations) {
-            //store data for possible later usage
-            this.nozzleTipMeasuredLocations = nozzleTipMeasuredLocations;
             // save the units as the model is persisted without the locations 
             this.units = nozzleTipMeasuredLocations.size() > 0 ? 
                     nozzleTipMeasuredLocations.get(0).getUnits() : LengthUnit.Millimeters;
 
-            List<Location> detrendedMeasuredLocations = detrend(nozzleTipMeasuredLocations);
-            for (int i=0; i<detrendedMeasuredLocations.size(); i++) {
-                Logger.trace("orig: " + nozzleTipMeasuredLocations.get(i) + "  detrended: " + detrendedMeasuredLocations.get(i));
-            }
-            
             //Compute the best fit affine transform that takes the expected locations to the measured locations
-            AffineTransform at = Utils2D.deriveAffineTransform(nozzleTipExpectedLocations, detrendedMeasuredLocations);
+            AffineTransform at = Utils2D.deriveAffineTransform(nozzleTipExpectedLocations, nozzleTipMeasuredLocations);
             Utils2D.AffineInfo ai = Utils2D.affineInfo(at);
-            Logger.trace("[nozzleTipCalibration]affineTransform = " + ai);
+            Logger.trace("[nozzleTipCalibration]nozzle tip affine transform = " + ai);
+            
+            //This is just an arbitrary quality measure of the transformation.  Ideally, the x and y scale factors should be
+            //the same and the shear should be zero which would make this quantity go to infinity.  
+            double quality = 1.0 / Math.sqrt((1 - ai.xScale/ai.yScale)*(1 - ai.xScale/ai.yScale) + ai.xShear*ai.xShear);
+            Logger.trace("[nozzleTipCalibration]affine quality measure: " + quality);
             
             //The expected locations were generated with a deliberate 1 mm runout so the affine scale is a direct 
             //measure of the true runout in millimeters.  However, since the affine transform gives both an x and y
@@ -222,63 +220,6 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             return new Location(this.units);
         }
 
-        /**
-         * Removes trends from the measurements that are linear with respect to the measurement angle
-         * @param measurements
-         * @return
-         */
-        protected List<Location> detrend(List<Location> measurements) {
-            LengthUnit unit = measurements.get(0).getUnits();
-            int n = measurements.size();
-            int last = n-1;
-            
-            double sumDeltaXdeltaAngle = 0;
-            double sumDeltaYdeltaAngle = 0;
-            double sumDeltaAngle2 = 0;
-            
-            for (int i=0; i<last; i++) {
-                Location mi = measurements.get(i).convertToUnits(unit);
-                for (int j=i+1; j<n; j++) {
-                    Location mj = measurements.get(j).convertToUnits(unit);
-                    double deltaAngle = mj.getRotation() - mi.getRotation();
-                    //Only use measurements that are multiples of 360 degrees apart
-                    if (Math.abs(Utils2D.normalizeAngle180(deltaAngle)) < 0.1) {
-                        if (i==0) {
-                            last = j;
-                        }
-                        double deltaX = mj.getX() - mi.getX();
-                        double deltaY = mj.getY() - mi.getY();
-                        
-                        sumDeltaXdeltaAngle = sumDeltaXdeltaAngle + deltaX * deltaAngle;
-                        sumDeltaYdeltaAngle = sumDeltaYdeltaAngle + deltaY * deltaAngle;
-                        sumDeltaAngle2 = sumDeltaAngle2 + deltaAngle * deltaAngle;
-                    }
-                }
-            }
-            
-            if (sumDeltaAngle2 == 0) {
-                //No complete circle was found so just return the original measurements
-                return measurements;
-            }
-            
-            double mx = sumDeltaXdeltaAngle / sumDeltaAngle2;
-            double my = sumDeltaYdeltaAngle / sumDeltaAngle2;
-            
-            double startAngle = 0;
-            for(Location measurement : measurements) {
-                startAngle = startAngle + measurement.getRotation();
-            }
-            startAngle = startAngle / n;
-            
-            ArrayList<Location> ret = new ArrayList<>();
-            for(Location measurement : measurements) {
-                double deltaAngle = measurement.getRotation() - startAngle;
-                Location delta = new Location(unit, mx*deltaAngle, my*deltaAngle, 0, 0);
-                ret.add(measurement.subtract(delta));
-            }
-            return ret;
-        }
-        
         protected void calcCircleFitKasa(List<Location> nozzleTipMeasuredLocations) {
             /* 
              * this function fits a circle my means of the Kasa Method to the given List<Location>.
@@ -503,7 +444,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     private Map<String, RunoutCompensation> runoutCompensationLookup = new HashMap<>();
 
     public enum RunoutCompensationAlgorithm {
-        Model, ModelNoOffset, ModelCameraOffset, Table
+        Model, ModelNoOffset, ModelCameraOffset, ModelCameraOffsetAffine, Table
     }
 
     public enum RecalibrationTrigger {
@@ -612,11 +553,9 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             int angleSubdivisions = this.angleSubdivisions;
             if(Math.abs(angleStart + 360 - angleStop) < 0.1) {
                 // we're measuring a full circle, the last measurement can be omitted
-//                angleSubdivisions--;
+                angleSubdivisions--;
             }
 
-            angleSubdivisions *= 8; //REMOVE THIS!!!!!!!
-            
             Logger.debug("[nozzleTipCalibration]starting measurement; angleStart: {}, angleStop: {}, angleIncrement: {}, angleSubdivisions: {}", 
                     angleStart, angleStop, angleIncrement, angleSubdivisions);
 
@@ -678,28 +617,39 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                     this.setRunoutCompensation(nozzle, new ModelBasedRunoutNoOffsetCompensation(nozzleTipMeasuredLocations));
                 } else if (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelCameraOffset) {
                     this.setRunoutCompensation(nozzle, new ModelBasedRunoutCameraOffsetCompensation(nozzleTipMeasuredLocations));
+                } else if (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelCameraOffsetAffine) {
                     this.setRunoutCompensation(nozzle, new ModelBasedRunoutCameraOffsetCompensation(nozzleTipMeasuredLocations, nozzleTipExpectedLocations));
                 } else {
                     this.setRunoutCompensation(nozzle, new TableBasedRunoutCompensation(nozzleTipMeasuredLocations));
                 }
             }
             else {
-                ModelBasedRunoutCompensation cameraCompensation = new ModelBasedRunoutCompensation(nozzleTipMeasuredLocations);
-                // Calculate and apply the new camera position
-                Location newCameraPosition = referenceCamera.getHeadOffsets()
-                        .subtract(cameraCompensation.getAxisOffset());
-                Logger.debug("[nozzleTipCalibration]applying axis offset to bottom camera position: {} - {} = {}", 
-                        referenceCamera.getHeadOffsets(),
-                        cameraCompensation.getAxisOffset(),
-                        newCameraPosition);
-                referenceCamera.setHeadOffsets(newCameraPosition);
-                // Calculate and apply the new angle
-                double newCameraAngle = referenceCamera.getRotation() - cameraCompensation.getPhaseShift();
-                Logger.debug("[nozzleTipCalibration]applying angle offset to bottom camera rotation: {} - {} = {}", 
-                        referenceCamera.getRotation(),
-                        cameraCompensation.getPhaseShift(),
-                        newCameraAngle);
-                referenceCamera.setRotation(newCameraAngle);
+                if (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelCameraOffsetAffine) {
+                    AffineTransform at = Utils2D.deriveAffineTransform(nozzleTipMeasuredLocations, nozzleTipExpectedLocations);
+                    Utils2D.AffineInfo ai = Utils2D.affineInfo(at);
+                    Logger.debug("[nozzleTipCalibration]bottom camera affine transform: " + ai);
+                    Location newCameraPosition = new Location(LengthUnit.Millimeters, ai.xTranslation, ai.yTranslation, 0, 0);
+                    newCameraPosition = referenceCamera.getHeadOffsets().derive(newCameraPosition, true, true, false, false);
+                    double newCameraAngle = referenceCamera.getRotation() - ai.rotationAngleDeg;
+                    referenceCamera.setHeadOffsets(newCameraPosition);
+                    referenceCamera.setRotation(newCameraAngle);
+                } else {
+                    ModelBasedRunoutCompensation cameraCompensation = new ModelBasedRunoutCompensation(nozzleTipMeasuredLocations);
+                    Location newCameraPosition = referenceCamera.getHeadOffsets()
+                            .subtract(cameraCompensation.getAxisOffset());
+                    Logger.debug("[nozzleTipCalibration]applying axis offset to bottom camera position: {} - {} = {}", 
+                            referenceCamera.getHeadOffsets(),
+                            cameraCompensation.getAxisOffset(),
+                            newCameraPosition);
+                    referenceCamera.setHeadOffsets(newCameraPosition);
+                    // Calculate and apply the new angle
+                    double newCameraAngle = referenceCamera.getRotation() - cameraCompensation.getPhaseShift();
+                    Logger.debug("[nozzleTipCalibration]applying angle offset to bottom camera rotation: {} - {} = {}", 
+                            referenceCamera.getRotation(),
+                            cameraCompensation.getPhaseShift(),
+                            newCameraAngle);
+                    referenceCamera.setRotation(newCameraAngle);
+                }
             }
         }
         finally {
