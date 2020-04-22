@@ -282,12 +282,17 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOffVacuumSensing.add(vacuumLevelPartOffReading, "10, 10, fill, default");
         vacuumLevelPartOffReading.setColumns(10);
         
-        lblProbingTimePartOff = new JLabel("Probing time (ms)");
+        lblProbingTimePartOff = new JLabel("Valve open/close (ms)");
+        lblProbingTimePartOff.setToolTipText("<html>\r\n<p>The valve is opened and closed to create a small underpressure pulse. </p>\r\n<p>The open time should be quite short, no point in creating full pick suction.</p>\r\n<p>The close time can be used to wait for the system to react to the pulse.<br/>\r\nincluding delays in sensor signal propagation and readout.</p>\r\n</html>");
         panelPartOffVacuumSensing.add(lblProbingTimePartOff, "2, 12, right, default");
         
         partOffProbingMilliseconds = new JTextField();
         panelPartOffVacuumSensing.add(partOffProbingMilliseconds, "4, 12, default, center");
         partOffProbingMilliseconds.setColumns(10);
+        
+        partOffDwellMilliseconds = new JTextField();
+        panelPartOffVacuumSensing.add(partOffDwellMilliseconds, "6, 12, fill, default");
+        partOffDwellMilliseconds.setColumns(10);
         
         lblPartOffDifferenceRange = new JLabel("Difference Range");
         panelPartOffVacuumSensing.add(lblPartOffDifferenceRange, "2, 14, right, default");
@@ -357,6 +362,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
     private JLabel lblPerformPartOffChecks;
     private JCheckBox partOffCheckAfterPlace;
     private JCheckBox partOffCheckBeforePick;
+    private JTextField partOffDwellMilliseconds;
     
     private void adaptDialog() {
         VacuumMeasurementMethod methodOn = (VacuumMeasurementMethod)methodPartOn.getSelectedItem();
@@ -424,6 +430,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         vacuumLevelPartOffReading.setVisible(partOff);
         lblProbingTimePartOff.setVisible(partOff);
         partOffProbingMilliseconds.setVisible(partOff);
+        partOffDwellMilliseconds.setVisible(partOff);
         
         lblPartOffDifferenceRange.setVisible(partOffDifference);
         vacuumDifferencePartOffLow.setVisible(partOffDifference);
@@ -458,6 +465,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         addWrappedBinding(nozzleTip, "vacuumLevelPartOffHigh", vacuumLevelPartOffHigh, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumLevelPartOffReading", vacuumLevelPartOffReading, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "partOffProbingMilliseconds", partOffProbingMilliseconds, "text", integerConverter);
+        addWrappedBinding(nozzleTip, "partOffDwellMilliseconds", partOffDwellMilliseconds, "text", integerConverter);
         addWrappedBinding(nozzleTip, "vacuumDifferencePartOffLow", vacuumDifferencePartOffLow, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumDifferencePartOffHigh", vacuumDifferencePartOffHigh, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumDifferencePartOffReading", vacuumDifferencePartOffReading, "text", doubleConverter);
@@ -501,7 +509,8 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         }
 
         ComponentDecorators.decorateWithAutoSelect(partOffProbingMilliseconds);
-        
+        ComponentDecorators.decorateWithAutoSelect(partOffDwellMilliseconds);
+
         ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOnLow);
         ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOnHigh);
         ComponentDecorators.decorateWithAutoSelect(vacuumDifferencePartOnLow);
