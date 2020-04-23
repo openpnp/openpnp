@@ -430,7 +430,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     private double angleStop = 180;
     // The excenter radius as a ratio of the camera minimum dimension.  
     @Attribute(required = false)
-    private double excenterRatio = 0.45;
+    private double excenterRatio = 0.25;
 
     @Attribute(required = false)
     private boolean enabled;
