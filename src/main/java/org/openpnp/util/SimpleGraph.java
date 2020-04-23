@@ -24,9 +24,10 @@ package org.openpnp.util;
 import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
 
 public class SimpleGraph {
 
@@ -148,6 +149,15 @@ public class SimpleGraph {
     public void setOffsetMode(boolean offsetMode) {
         this.offsetMode = offsetMode;
     }
+    public double getOffset() {
+        for (DataScale dataScale : dataScales) {
+            Point2D.Double min = getMinimum(dataScale);
+            if (min != null) {
+                return min.x;
+            }
+        }
+        return 0.0;
+    }
 
     public double getRelativePaddingLeft() {
         return relativePaddingLeft;
@@ -165,11 +175,10 @@ public class SimpleGraph {
     public static class DataRow {
         private String label;
         private Color color;
-        private HashMap<Double, Double> data = new HashMap<>();
+        private TreeMap<Double, Double> data = new TreeMap<>();
 
         // housekeeping
         boolean dirty = false;
-        private List<Double> sortedKeys;
         private Point2D.Double minimum = null;
         private Point2D.Double maximum = null;
 
@@ -190,18 +199,29 @@ public class SimpleGraph {
         public Double getDataPoint(double x) {
             return data.get(x);
         }
+        public Double getInterpolated(double x) {
+            Entry<Double, Double> entry0 = data.floorEntry(x);
+            Entry<Double, Double> entry1 = data.ceilingEntry(x);
+            if (entry0 != null && entry1 != null) {
+                double x0 = entry0.getKey();
+                double x1 = entry1.getKey();
+                double y0 = data.get(x0);
+                double y1 = data.get(x1);
+                double r = (x-x0)/(x1-x0);
+                return y0+r*(y1-y0);
+            }
+            return null;
+        }
         public int size() {
             return data.size();
         }
 
         protected void recalc() {
             if (dirty) {
-                sortedKeys = new ArrayList<Double>(data.size());
-                sortedKeys.addAll(data.keySet());
-                Collections.sort(sortedKeys);
                 minimum = null;
                 maximum = null;
-                for (double x : sortedKeys) {
+                for (Entry<Double, Double> entry : data.entrySet()) {
+                    double x = entry.getKey();
                     double y = data.get(x);
                     if (minimum == null) {
                         minimum = new Point2D.Double(x, y);
@@ -222,9 +242,8 @@ public class SimpleGraph {
             }
         }
 
-        public List<Double> getXAxis() {
-            recalc();
-            return sortedKeys;
+        public Set<Double> getXAxis() {
+            return data.keySet();
         }
         public Point2D.Double getMinimum() {
             recalc();
@@ -253,13 +272,6 @@ public class SimpleGraph {
         public void setColor(Color color) {
             this.color = color;
         }
-        public HashMap<Double, Double> getData() {
-            return data;
-        }
-        public void setData(HashMap<Double, Double> data) {
-            this.data = data;
-        }
-
     }
 
 

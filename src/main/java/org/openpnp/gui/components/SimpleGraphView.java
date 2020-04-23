@@ -28,12 +28,15 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
-import java.util.List;
+import java.util.Set;
 
 import javax.swing.JComponent;
 
@@ -42,14 +45,21 @@ import org.openpnp.util.SimpleGraph.DataRow;
 import org.openpnp.util.SimpleGraph.DataScale;
 
 @SuppressWarnings("serial")
-public class SimpleGraphView extends JComponent {  
+public class SimpleGraphView extends JComponent implements MouseMotionListener, MouseListener {  
 
     private SimpleGraph graph;
     private final Dimension preferredSize = new Dimension(100, 80);
+    private Integer xMouse;
+    private Integer yMouse;
+    private Double indicatorX;
+    private Double indicatorXAbsolute;
 
     public SimpleGraphView() {
+        addMouseMotionListener(this);
+        addMouseListener(this);
     }
     public SimpleGraphView(SimpleGraph graph) {
+        this();
         this.graph = graph;
     }
 
@@ -60,17 +70,48 @@ public class SimpleGraphView extends JComponent {
         this.graph = graph;
         repaint();
     }
-    protected String formatNumber(double y) {
-        // format numbers without necessary digits (incredibly difficult in Java) 
-        DecimalFormat format = new DecimalFormat("0.####"); // Choose the number of decimal places to work with in case they are different than zero and zero value will be removed
-        format.setRoundingMode(RoundingMode.HALF_UP); // choose your Rounding Mode
+
+    public Double getIndicatorX() {
+        return indicatorX;
+    }
+    public void setIndicatorX(Double indicatorX) {
+        Object oldValue = this.indicatorX;
+        this.indicatorX = indicatorX;
+        firePropertyChange("indicatorX", oldValue, indicatorX);
+    }
+    public Double getIndicatorXAbsolute() {
+        return indicatorXAbsolute;
+    }
+    public void setIndicatorXAbsolute(Double indicatorXAbsolute) {
+        Object oldValue = this.indicatorXAbsolute;
+        this.indicatorXAbsolute = indicatorXAbsolute;
+        firePropertyChange("indicatorXAbsolute", oldValue, indicatorXAbsolute);
+    }
+
+    protected String formatNumber(double y, double unit) {
+        // format numbers without necessary digits (I'm sure there's a better/simpler way)
+        int digits = (int)Math.floor(Math.log10(unit)+0.1);
+        StringBuilder formatPattern = new StringBuilder();
+        if (digits < 0) {
+            formatPattern.append("0.");
+            while (digits++ < 0) {
+                formatPattern.append("0");
+            }
+        }
+        else {
+            formatPattern.append("0");
+        }
+        DecimalFormat format = new DecimalFormat(formatPattern.toString());
+        format.setRoundingMode(RoundingMode.HALF_UP); 
         return format.format(y);
     }
+
+    @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        
+
         Font font = getFont();
         FontMetrics dfm = g2d.getFontMetrics(font);
         int fontLineHeight = dfm.getAscent()+1; // numbers are all ascent
@@ -90,34 +131,45 @@ public class SimpleGraphView extends JComponent {
                     double yOrigin = (h-1)*(1.0-dataScale.getRelativePaddingBottom());
                     double yScale = (h-1)*(1.0-dataScale.getRelativePaddingTop()-dataScale.getRelativePaddingBottom())/(max.y-min.y);
 
+                    double yUnitFont = fontLineHeight/yScale;
+                    double yUnit10 = Math.pow(10.0, Math.ceil(Math.log10(yUnitFont)));
+                    double yUnit = yUnit10;
+                    if (yUnitFont < yUnit/5) {
+                        yUnit /= 5;
+                    }
+                    else if (yUnitFont < yUnit/2) {
+                        yUnit /= 2;
+                    }
+                    indicatorX = null;
+                    indicatorXAbsolute = null;
+
                     if (dataScale.getColor() != null) {
-                        double yUnitFont = fontLineHeight/yScale;
-                        double yUnit10 = Math.pow(10.0, Math.ceil(Math.log10(yUnitFont)));
-                        double yUnit = yUnit10;
-                        if (yUnitFont < yUnit/5) {
-                            yUnit /= 5;
-                        }
-                        else if (yUnitFont < yUnit/2) {
-                            yUnit /= 2;
-                        }
+                        // Scale is colored -> draw it
+                        g2d.setColor(dataScale.getColor());
                         double yUnit0 = Math.ceil((min.y+yUnitFont*0.5)/yUnit)*yUnit;
                         double yUnit1 = Math.floor((max.y-yUnitFont*0.5)/yUnit)*yUnit;
-                        double maxWidth = 0;
-                        // measure longest scale label
-                        for (double y = yUnit0; y <= yUnit1+yUnit*0.5; y += yUnit) {
-                            String text = formatNumber(y);
-                            Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
-                            maxWidth = Math.max(maxWidth, bounds.getWidth());
-                        }
-                        // draw the scale 
-                        for (double y = yUnit0; y <= yUnit1+yUnit*0.5; y += yUnit) {
-                            g2d.setColor(dataScale.getColor());
-                            g2d.drawLine((int)maxWidth+2, (int)(yOrigin-(y-min.y)*yScale), w-1, (int)(yOrigin-(y-min.y)*yScale));
-                            String text = formatNumber(y);
-                            Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
-                            g2d.drawString(text, (int)(maxWidth-bounds.getWidth()), (int)(yOrigin-(y-min.y)*yScale)+fontAscent/2);
-                        }
 
+                        if (yMouse != null) {
+                            double y = (-yMouse + yOrigin)/yScale + min.y;
+                            drawYIndicator(g2d, dfm, fontAscent, w, min, yOrigin, yScale, yUnit, y,
+                                    dataScale.getColor());
+                        }
+                        else {
+                            // measure longest scale label
+                            double maxWidth = 0;
+                            for (double y = yUnit0; y <= yUnit1+yUnit*0.5; y += yUnit) {
+                                String text = formatNumber(y, yUnit);
+                                Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
+                                maxWidth = Math.max(maxWidth, bounds.getWidth());
+                            }
+                            // draw the scale 
+                            for (double y = yUnit0; y <= yUnit1+yUnit*0.5; y += yUnit) {
+                                g2d.drawLine((int)maxWidth+2, (int)(yOrigin-(y-min.y)*yScale), w-1, (int)(yOrigin-(y-min.y)*yScale));
+                                String text = formatNumber(y, yUnit);
+                                Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
+                                g2d.drawString(text, (int)(maxWidth-bounds.getWidth()), (int)(yOrigin-(y-min.y)*yScale)+fontAscent/2);
+                            }
+                        }
                         if (firstScale) {
                             firstScale = false;
                             double xUnitFont = fontLineHeight/xScale;
@@ -142,31 +194,47 @@ public class SimpleGraphView extends JComponent {
                                 xUnit1 = Math.floor((max.x-xUnitFont*0.5)/xUnit)*xUnit;
                                 xMin = min.x;
                             }
-                            maxWidth = 0;
-                            // measure longest scale label
-                            for (double x = xUnit0; x <= xUnit1+xUnit*0.5; x += xUnit) {
-                                String text = formatNumber(x);
-                                Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
-                                maxWidth = Math.max(maxWidth, bounds.getWidth());
+                            if (xMouse != null) {
+                                setIndicatorX((xMouse - xOrigin)/xScale + xMin);
+                                setIndicatorXAbsolute((xMouse - xOrigin)/xScale + min.x);
                             }
-                            // draw the scale 
-                            for (double x = xUnit0; x <= xUnit1+xUnit*0.5; x += xUnit) {
-                                g2d.setColor(dataScale.getColor());
-                                g2d.drawLine((int)(xOrigin+(x-xMin)*xScale), h-1-(int)maxWidth-2, (int)(xOrigin+(x-xMin)*xScale), 0);
-                                String text = formatNumber(x);
+                            if (indicatorX != null) {
+                                String text = formatNumber(indicatorX, xUnit*0.1);
                                 Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
+                                g2d.drawLine((int)(xOrigin+(indicatorX-xMin)*xScale), h-1-(int)bounds.getWidth()-2, (int)(xOrigin+(indicatorX-xMin)*xScale), 0);
                                 AffineTransform transform = g2d.getTransform();
-                                int tx = (int)(xOrigin+(x-xMin)*xScale)+fontAscent/2;
-                                int ty = (int)(h - 1 - maxWidth  + bounds.getWidth());
+                                int tx = (int)(xOrigin+(indicatorX-xMin)*xScale)+fontAscent/2;
+                                int ty = (int)(h - 1);
                                 g2d.rotate(-Math.PI/2.0, tx, ty);
                                 g2d.drawString(text, tx, ty);
-                                g2d.setTransform(transform); 
+                                g2d.setTransform(transform);
+                            }
+                            else {
+                                // measure longest scale label
+                                double maxWidth = 0;
+                                for (double x = xUnit0; x <= xUnit1+xUnit*0.5; x += xUnit) {
+                                    String text = formatNumber(x, xUnit);
+                                    Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
+                                    maxWidth = Math.max(maxWidth, bounds.getWidth());
+                                }
+                                // draw the scale 
+                                for (double x = xUnit0; x <= xUnit1+xUnit*0.5; x += xUnit) {
+                                    g2d.drawLine((int)(xOrigin+(x-xMin)*xScale), h-1-(int)maxWidth-2, (int)(xOrigin+(x-xMin)*xScale), 0);
+                                    String text = formatNumber(x, xUnit);
+                                    Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
+                                    AffineTransform transform = g2d.getTransform();
+                                    int tx = (int)(xOrigin+(x-xMin)*xScale)+fontAscent/2;
+                                    int ty = (int)(h - 1 - maxWidth  + bounds.getWidth());
+                                    g2d.rotate(-Math.PI/2.0, tx, ty);
+                                    g2d.drawString(text, tx, ty);
+                                    g2d.setTransform(transform); 
+                                }
                             }
                         }
 
                     }
                     for (DataRow dataRow : dataScale.getDataRows()) {
-                        List<Double> xAxis = dataRow.getXAxis();
+                        Set<Double> xAxis = dataRow.getXAxis();
                         if (xAxis != null) {
                             double y0 = Double.NaN;
                             double x0 = Double.NaN;
@@ -180,6 +248,10 @@ public class SimpleGraphView extends JComponent {
                                 x0 = x;
                                 y0 = y;
                             }
+                            if (indicatorX != null) {
+                                drawYIndicator(g2d, dfm, fontAscent, w, min, yOrigin, yScale, yUnit, 
+                                        dataRow.getInterpolated(indicatorXAbsolute), dataRow.getColor());
+                            }
                         }
                     }
                 }
@@ -192,11 +264,54 @@ public class SimpleGraphView extends JComponent {
             g2d.drawString(text, (int)(Math.min(h, w)/2-bounds.getWidth()/2), (int)(h/2));
         }
     }
+    protected void drawYIndicator(Graphics2D g2d, FontMetrics dfm, int fontAscent, int w,
+            Point2D.Double min, double yOrigin, double yScale, double yUnit, Double y,
+            Color color) {
+        if (y == null) {
+            return;
+        }
+        String text = formatNumber(y, yUnit*0.1);
+        Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
+        g2d.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 64));
+        g2d.drawLine((int)bounds.getWidth()+2, (int)(yOrigin-(y-min.y)*yScale), w-1, (int)(yOrigin-(y-min.y)*yScale));
+        g2d.setColor(color);
+        g2d.drawString(text, 0, (int)(yOrigin-(y-min.y)*yScale)+fontAscent/2);
+    }
+
     @Override
     public Dimension getPreferredSize() {
         Dimension superDim = super.getPreferredSize();
         int width = (int)Math.max(superDim.getWidth(), preferredSize.getWidth());
         int height = (int)Math.max(superDim.getHeight(), preferredSize.getHeight()); 
         return new Dimension(width, height);
+    }
+    @Override
+    public void mouseDragged(MouseEvent e) {
+    }
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        xMouse = e.getX();
+        yMouse = e.getY();
+        repaint();
+    }
+    @Override
+    public void mouseClicked(MouseEvent e) {
+    }
+    @Override
+    public void mousePressed(MouseEvent e) {
+    }
+    @Override
+    public void mouseReleased(MouseEvent e) {
+    }
+    @Override
+    public void mouseEntered(MouseEvent e) {
+    }
+    @Override
+    public void mouseExited(MouseEvent e) {
+        xMouse = null;
+        yMouse = null;
+        setIndicatorX(null);
+        setIndicatorXAbsolute(null);
+        repaint();
     }
 }
