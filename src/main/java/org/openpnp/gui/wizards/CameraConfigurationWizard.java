@@ -29,6 +29,7 @@ import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
@@ -41,14 +42,18 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.SimpleGraphView;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.LongConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.base.AbstractCamera;
 import org.openpnp.spi.base.AbstractCamera.SettleMethod;
+import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -56,6 +61,7 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import javax.swing.JCheckBox;
 import java.awt.Font;
+import java.awt.HeadlessException;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
 
@@ -170,8 +176,12 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.MIN_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -222,13 +232,51 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         settleThreshold = new JTextField();
         panelVision.add(settleThreshold, "4, 8, fill, default");
         settleThreshold.setColumns(10);
-        
+
         lblSettleFullColor = new JLabel("Full Color?");
         panelVision.add(lblSettleFullColor, "2, 10, right, default");
         
         settleFullColor = new JCheckBox("");
         settleFullColor.setToolTipText("Compare as full color image, i.e. different colors with same brightness will register");
         panelVision.add(settleFullColor, "4, 10");
+        
+        panel_1 = new JPanel();
+        panelVision.add(panel_1, "8, 2, 1, 17, fill, fill");
+        panel_1.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.MIN_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.MIN_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.MIN_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        btnSettleTestCam = new JButton(settleTestAction);
+        panel_1.add(btnSettleTestCam, "2, 2");
+        
+        btnTestRear = new JButton(settleTestRearAction);
+        panel_1.add(btnTestRear, "4, 2");
+        
+        btnTestLeft = new JButton(settleTestLeftAction);
+        panel_1.add(btnTestLeft, "2, 4");
+        
+        btnTestZ = new JButton(settleTestUpAction);
+        panel_1.add(btnTestZ, "4, 4");
+                
+                btnTestRight = new JButton(settleTestRightAction);
+                panel_1.add(btnTestRight, "6, 4");
+                
+                btnTestFront = new JButton(settleTestFrontAction);
+                panel_1.add(btnTestFront, "4, 6");
+                
+                        btnTestRotate = new JButton(settleTestRotateAction);
+                        panel_1.add(btnTestRotate, "6, 6");
         
         lblSettleGaussianBlur = new JLabel("Gaussian Blur (Pixel)");
         panelVision.add(lblSettleGaussianBlur, "2, 12, right, default");
@@ -237,16 +285,23 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panelVision.add(settleGaussianBlur, "4, 12, fill, default");
         settleGaussianBlur.setColumns(10);
         
+        lblSettleGradient = new JLabel("Use Gradient?");
+        lblSettleGradient.setToolTipText("Use the gradients of the images rather than brightness.");
+        panelVision.add(lblSettleGradient, "2, 14, right, default");
+        
+        settleGradients = new JCheckBox("");
+        panelVision.add(settleGradients, "4, 14");
+        
         lblSettleMaskCircle = new JLabel("Center Mask Ratio");
         lblSettleMaskCircle.setToolTipText("<html>\r\n<p>Analyze the movement inside a central circular mask of given size, relative to the camera<br/> dimension (height or width, whichever is smaller.</p>\r\n<p>Examples:</p>\r\n<ul>\r\n<li>0.0 No mask</li>\r\n<li>0.5 Circular center area of half the size of the camera view</li>\r\n<li>1.0 Circular center area to the edge of the camera view</li>\r\n</ul>\r\n</html>");
-        panelVision.add(lblSettleMaskCircle, "2, 14, right, default");
+        panelVision.add(lblSettleMaskCircle, "2, 16, right, default");
         
         settleMaskCircle = new JTextField();
-        panelVision.add(settleMaskCircle, "4, 14, fill, default");
+        panelVision.add(settleMaskCircle, "4, 16, fill, default");
         settleMaskCircle.setColumns(10);
         
         lblSettleDiagnostics = new JLabel("Diagnostics?");
-        panelVision.add(lblSettleDiagnostics, "2, 16, right, default");
+        panelVision.add(lblSettleDiagnostics, "2, 18, right, default");
         
         settleDiagnostics = new JCheckBox("");
         settleDiagnostics.addPropertyChangeListener(new PropertyChangeListener() {
@@ -254,14 +309,14 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                 adaptDialog();
             }
         });
-        panelVision.add(settleDiagnostics, "4, 16");
+        panelVision.add(settleDiagnostics, "4, 18");
         
         lblSettleGraph = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nDifference <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nThreshold <span style=\"color:#00BB00\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nCapture <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n</p>\r\n</body>\r\n</html>");
-        panelVision.add(lblSettleGraph, "2, 18");
+        panelVision.add(lblSettleGraph, "2, 20");
         
         settleGraph = new SimpleGraphView();
         settleGraph.setFont(new Font("SansSerif", Font.PLAIN, 9));
-        panelVision.add(settleGraph, "4, 18, 3, 1, default, fill");
+        panelVision.add(settleGraph, "4, 20, 5, 1, default, fill");
     }
 
     private void adaptDialog() {
@@ -281,6 +336,9 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
         lblSettleGaussianBlur.setVisible(!fixedTime);
         settleGaussianBlur.setVisible(!fixedTime);
+        
+        lblSettleGradient.setVisible(!fixedTime);
+        settleGradients.setVisible(!fixedTime);
 
         lblSettleMaskCircle.setVisible(!fixedTime);
         settleMaskCircle.setVisible(!fixedTime);
@@ -313,6 +371,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         addWrappedBinding(camera, "settleThreshold", settleThreshold, "text", doubleConverter);
         addWrappedBinding(camera, "settleFullColor", settleFullColor, "selected");
         addWrappedBinding(camera, "settleGaussianBlur", settleGaussianBlur, "text", intConverter);
+        addWrappedBinding(camera, "settleGradients", settleGradients, "selected");
         addWrappedBinding(camera, "settleMaskCircle", settleMaskCircle, "text", doubleConverter);
         addWrappedBinding(camera, "settleDiagnostics", settleDiagnostics, "selected");
         addWrappedBinding(camera, "settleGraph", settleGraph, "graph");
@@ -332,6 +391,12 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         ComponentDecorators.decorateWithAutoSelect(settleThreshold);
         ComponentDecorators.decorateWithAutoSelect(settleGaussianBlur);
         ComponentDecorators.decorateWithAutoSelect(settleMaskCircle);
+        
+        if (camera.getHead() != null) {
+            btnTestRotate.setVisible(false);
+            btnTestZ.setEnabled(false);
+            btnTestZ.setIcon(Icons.captureCamera);
+        }
     }
 
     private Action measureAction = new AbstractAction("Measure") {
@@ -369,6 +434,130 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
             cameraView.setSelectionEnabled(false);
         }
     };
+
+    private HeadMountable getJogTool() {
+        if (camera.getHead() == null) {
+            // Bottom camera - jog the nozzle in front of it.
+            return MainFrame.get().getMachineControls().getSelectedNozzle();
+        }
+        else {
+            // Down-looking camera can jog itself.
+            return camera;
+        }
+    }
+
+    protected void settleTestPlanar(ActionEvent e, int x, int y, int c) throws HeadlessException {
+        UiUtils.messageBoxOnException(() -> {
+            applyAction.actionPerformed(e);
+            HeadMountable jogTool = getJogTool();
+            if ((x != 0 || y != 0) 
+                    && !initialJogWarningDisplayed) {
+                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "<html>This will move "+jogTool.getName()+" for one jog increment and back. <br/>"
+                                + ((jogTool instanceof Camera) ? "" : "<span style=\"color:red\">WARNING: No move to Safe Z!</span><br/>")
+                                + "Are you sure?</html>",
+                                null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (result == JOptionPane.NO_OPTION) {
+                    // cancel this
+                    return;
+                }
+                initialJogWarningDisplayed = true;
+            }
+            UiUtils.submitUiMachineTask(() -> {
+                if (jogTool instanceof Camera) {
+                    camera.moveToSafeZ();
+                }
+                MainFrame.get().getMachineControls().getJogControlsPanel().jogTool(x, y, 0, c, jogTool);
+                MainFrame.get().getMachineControls().getJogControlsPanel().jogTool(-x, -y, 0, -c, jogTool);
+                camera.settleAndCapture();
+            });
+        });
+    }
+
+    private Action settleTestLeftAction = new AbstractAction("", Icons.arrowRight) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Makes a move to the left and back, then settles the Camera. Uses the Jog increment distance.");
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            settleTestPlanar(e, -1, 0, 0);
+        }
+    };
+    private Action settleTestRightAction = new AbstractAction("", Icons.arrowLeft) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Makes a move to the right and back, then settles the Camera. Uses the Jog increment distance.");
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            settleTestPlanar(e, 1, 0, 0);
+        }
+    };
+    private Action settleTestRearAction = new AbstractAction("", Icons.arrowDown) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Makes a move to the rear and back, then settles the Camera. Uses the Jog increment distance.");
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            settleTestPlanar(e, 0, 1, 0);
+        }
+    };
+    private Action settleTestFrontAction = new AbstractAction("", Icons.arrowUp) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Makes a move to the front and back, then settles the Camera. Uses the Jog increment distance.");
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            settleTestPlanar(e, 0, -1, 0);
+        }
+    };
+    private Action settleTestRotateAction = new AbstractAction("", Icons.rotateCounterclockwise) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Makes a rotation and back, then settles the Camera. Uses the Jog increment.");
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            settleTestPlanar(e, 0, 0, 1);
+        }
+    };
+    private Action settleTestUpAction = new AbstractAction("", Icons.centerTool) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Makes a move up and back down, then settles the Camera. Uses Safe Z.");
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.messageBoxOnException(() -> {
+                applyAction.actionPerformed(e);
+                HeadMountable jogTool = getJogTool();
+                Location location = jogTool.getLocation();
+                UiUtils.submitUiMachineTask(() -> {
+                    jogTool.moveToSafeZ();
+                    jogTool.moveTo(location);
+                    camera.settleAndCapture();
+                });
+            });
+        }
+    };
+    private Action settleTestAction = new AbstractAction("", Icons.captureCamera) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Just test settles the Camera still(also an important test).");
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.messageBoxOnException(() -> {
+                applyAction.actionPerformed(e);
+                camera.settleAndCapture();
+            });
+        }
+    };
+
+    
     private JTextField textFieldWidth;
     private JTextField textFieldHeight;
     private JTextField textFieldUppX;
@@ -401,4 +590,16 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     private JCheckBox settleDiagnostics;
     private SimpleGraphView settleGraph;
     private JLabel lblSettleGraph;
+    private JLabel lblSettleGradient;
+    private JCheckBox settleGradients;
+    private JButton btnTestRight;
+    private JButton btnTestRear;
+    private JButton btnTestZ;
+    
+    private boolean initialJogWarningDisplayed;
+    private JButton btnTestLeft;
+    private JButton btnTestFront;
+    private JButton btnTestRotate;
+    private JButton btnSettleTestCam;
+    private JPanel panel_1;
 }

@@ -60,33 +60,62 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
 
     public enum SettleMethod {
         FixedTime,
-        MaximumPixelDifference,
-        OverallDifference,
-        EuclideanMetric;
+        Maximum,
+        MaximumPerBrightness,
+        MaximumPerContrast,
+        Mean,
+        MeanPerBrightness,
+        MeanPerContrast,
+        Euclidean,
+        EuclideanPerBrightness,
+        EuclideanPerContrast,
+        Square,
+        SquarePerBrightness,
+        SquarePerContrast;
         
         int getNorm() {
-            if (this ==  MaximumPixelDifference) {
-                return Core.NORM_INF;
-            }
-            else if (this ==  OverallDifference) {
-                return Core.NORM_L1;
-            }
-            else if (this ==  EuclideanMetric) {
-                return Core.NORM_L2;
+            switch(this) {
+                case Maximum:
+                    return Core.NORM_INF;
+                case MaximumPerBrightness:
+                    return Core.NORM_INF | Core.NORM_RELATIVE;
+                case MaximumPerContrast:
+                    return Core.NORM_INF | Core.NORM_RELATIVE | Core.NORM_MINMAX;
+                case Mean:
+                    return Core.NORM_L1;
+                case MeanPerBrightness:
+                    return Core.NORM_L1 | Core.NORM_RELATIVE;
+                case MeanPerContrast:
+                    return Core.NORM_L1 | Core.NORM_RELATIVE | Core.NORM_MINMAX;
+                case Euclidean:
+                    return Core.NORM_L2;
+                case EuclideanPerBrightness:
+                    return Core.NORM_L2 | Core.NORM_RELATIVE;
+                case EuclideanPerContrast:
+                    return Core.NORM_L2 | Core.NORM_RELATIVE | Core.NORM_MINMAX;
+                case Square:
+                    return Core.NORM_L2;
+                case SquarePerBrightness:
+                    return Core.NORM_L2 | Core.NORM_RELATIVE;
+                case SquarePerContrast:
+                    return Core.NORM_L2 | Core.NORM_RELATIVE | Core.NORM_MINMAX;
             }
             return -1;
         }
         double normedResult(double result, Mat mat) {
-            if (this ==  MaximumPixelDifference) {
-                return result/(mat.channels()*2.55);
+            if (this == Maximum) {
+                return result/(mat.channels()*255);
             }
-            else if (this ==  OverallDifference) {
-                return result/(mat.cols()*mat.rows()*mat.channels()*2.55);
+            else if (this ==  Mean) {
+                return result/(mat.cols()*mat.rows()*mat.channels()*255);
             }
-            else if (this ==  EuclideanMetric) {
-                return result/(mat.channels()*2.55);
+            else if (this == Euclidean) {
+                return result/(Math.sqrt(mat.cols()*mat.rows()*mat.channels())*255);
             }
-            return -1;
+            else if (this == Square) {
+                return result/(mat.cols()*mat.rows()*mat.channels()*255*255);
+            }
+            return result;
         }
     }
 
@@ -109,6 +138,9 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     protected int settleGaussianBlur = 0;
 
     @Attribute(required = false)
+    protected boolean settleGradients = false;
+
+    @Attribute(required = false)
     protected double settleMaskCircle = 0.0;
 
     @Attribute(required = false)
@@ -119,7 +151,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     protected void commit() throws Exception {
         if (settleMethod == null) {
             if (settleTimeMs < 0) {
-                settleMethod = SettleMethod.MaximumPixelDifference;
+                settleMethod = SettleMethod.Maximum;
                 // migrate the old threshold, coded as a negative number
                 settleThreshold = Math.abs(settleTimeMs)/2.55;
                 settleTimeMs = 250;
@@ -325,6 +357,14 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                 // Apply the Gaussian blur, make the kernel size an odd number 
                 Imgproc.GaussianBlur(mat, mat, new Size(settleGaussianBlur|1, settleGaussianBlur|1), 0);
             }
+            if (settleGradients) {
+                Mat dst = new Mat();
+                // applying Laplacian transform
+                Imgproc.Laplacian(mat, dst, CvType.CV_16S, 3, 1, 0, Core.BORDER_DEFAULT);
+                Core.convertScaleAbs(dst, dst);
+                mat.release();
+                mat = dst;
+            }
             if (settleDiagnostics) {
                 // Write the image to disk.
                 try {
@@ -453,6 +493,14 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
 
     public void setSettleThreshold(double settleThreshold) {
         this.settleThreshold = settleThreshold;
+    }
+
+    public boolean isSettleGradients() {
+        return settleGradients;
+    }
+
+    public void setSettleGradients(boolean settleGradients) {
+        this.settleGradients = settleGradients;
     }
 
     public boolean isSettleFullColor() {
