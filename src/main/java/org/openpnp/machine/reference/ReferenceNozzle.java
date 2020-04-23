@@ -360,6 +360,17 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public void moveToSafeZ(double speed) throws Exception {
         Logger.debug("{}.moveToSafeZ({})", getName(), speed);
         Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
+        // if safeZ is lower than 0, use dynamic safeZ
+        if (safeZ.getValue() < -0.00001 ) {  // ignore Units, just be sure it's really not set to zero
+            // if a part is loaded, decrease (higher) safeZ
+            if (part != null) {
+                safeZ = safeZ.add(part.getHeight());
+            }
+            // make sure safeZ is never above 0
+            if (safeZ.getValue() > 0 ) {
+                safeZ.setValue(0);
+            }
+        }
         Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN,
                 safeZ.getValue(), Double.NaN);
         getDriver().moveTo(this, l, getHead().getMaxPartSpeed() * speed);
