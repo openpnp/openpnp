@@ -284,7 +284,9 @@ public class SimpleGraph {
         for (DataScale dataScale : dataScales) {
             if (dataScale != dataScaleForY) {
                 Point2D.Double scaleMin = dataScale.getMinimum();
-                minimum.x = Math.min(scaleMin.x, minimum.x);
+                if (scaleMin != null) {
+                    minimum.x = Math.min(scaleMin.x, minimum.x);
+                }
             }
         }
         return minimum; 
@@ -297,8 +299,10 @@ public class SimpleGraph {
         // expand x axis over all the scales 
         for (DataScale dataScale : dataScales) {
             if (dataScale != dataScaleForY) {
-                Point2D.Double scaleMin = dataScale.getMaximum();
-                maximum.x = Math.max(scaleMin.x, maximum.x);
+                Point2D.Double scaleMax = dataScale.getMaximum();
+                if (scaleMax != null) {
+                    maximum.x = Math.max(scaleMax.x, maximum.x);
+                }
             }
         }
         return maximum; 

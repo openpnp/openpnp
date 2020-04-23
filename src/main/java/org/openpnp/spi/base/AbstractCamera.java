@@ -96,7 +96,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                 case Euclidean:
                     return result/(Math.sqrt(mat.cols()*mat.rows()*mat.channels())*2.55);
                 case Square:
-                    return result/(mat.cols()*mat.rows()*mat.channels()*255*2.55);
+                    return result/((double)0.001*mat.cols()*mat.rows()*mat.channels());
             }
             return result*100.0;
         }
@@ -160,6 +160,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     private boolean headSet = false;
     
     private Mat lastSettleMat = null;
+    private SimpleGraph settleGraphStaged = null;
     private SimpleGraph settleGraph = null;
 
     public AbstractCamera() {
@@ -264,37 +265,38 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     public static final String DIFFERENCE = "D"; 
     public static final String BOOLEAN = "B"; 
     
-    protected TreeMap<Double, BufferedImage> settleRecordedImages = null;
+    protected TreeMap<Double, BufferedImage> settleImagesStaged = null;
+    protected TreeMap<Double, BufferedImage> settleImagesRecorded = null;
 
     private void startDiagnostics() {
         if (settleDiagnostics) {
-            SimpleGraph settleGraph = new SimpleGraph();
-            settleGraph.setOffsetMode(true);
-            settleGraph.setRelativePaddingLeft(0.05);
+            settleGraphStaged = new SimpleGraph();
+            settleGraphStaged.setOffsetMode(true);
+            settleGraphStaged.setRelativePaddingLeft(0.05);
             // init difference scale
-            SimpleGraph.DataScale settleScale =  settleGraph.getScale(DIFFERENCE);
+            SimpleGraph.DataScale settleScale =  settleGraphStaged.getScale(DIFFERENCE);
             settleScale.setRelativePaddingBottom(0.3);
             settleScale.setColor(new Color(0, 0, 0, 64));
-            SimpleGraph.DataScale captureScale =  settleGraph.getScale(BOOLEAN);
+            SimpleGraph.DataScale captureScale =  settleGraphStaged.getScale(BOOLEAN);
             captureScale.setRelativePaddingTop(0.8);
             captureScale.setRelativePaddingBottom(0.1);
             // init the difference data
-            settleGraph.getRow(DIFFERENCE, "D")
+            settleGraphStaged.getRow(DIFFERENCE, "D")
                 .setColor(new Color(255, 0, 0));
             // setpoint
-            settleGraph.getRow(DIFFERENCE, "S")
+            settleGraphStaged.getRow(DIFFERENCE, "S")
             .setColor(new Color(0, 200, 0));
             // init the capture data
-            settleGraph.getRow(BOOLEAN, "C")
+            settleGraphStaged.getRow(BOOLEAN, "C")
                 .setColor(new Color(00, 0x5B, 0xD9)); // the OpenPNP color
-            // set to trigger property change
-            setSettleGraph(settleGraph);
             // a place to store images
-            settleRecordedImages = new TreeMap<>();
+            settleImagesStaged = new TreeMap<>();
         }
         else {
+            settleGraphStaged = null;
             setSettleGraph(null);
-            settleRecordedImages = null;
+            settleImagesStaged = null;
+            settleImagesRecorded = null;
         }
     }
 
@@ -306,17 +308,17 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         while(true) {
             // Capture an image. 
             long t = System.currentTimeMillis();
-            if (settleGraph != null) {
+            if (settleGraphStaged != null) {
                 // record capture begins
-                settleGraph.getRow(BOOLEAN, "C").recordDataPoint(t-1, 0);
-                settleGraph.getRow(BOOLEAN, "C").recordDataPoint(t, 1);
+                settleGraphStaged.getRow(BOOLEAN, "C").recordDataPoint(t-1, 0);
+                settleGraphStaged.getRow(BOOLEAN, "C").recordDataPoint(t, 1);
             }
             BufferedImage image = capture();
             t = System.currentTimeMillis();
-            if (settleGraph != null) {
+            if (settleGraphStaged != null) {
                 // record capture ends
-                settleGraph.getRow(BOOLEAN, "C").recordDataPoint(t-1, 1);
-                settleGraph.getRow(BOOLEAN, "C").recordDataPoint(t, 0);
+                settleGraphStaged.getRow(BOOLEAN, "C").recordDataPoint(t-1, 1);
+                settleGraphStaged.getRow(BOOLEAN, "C").recordDataPoint(t, 0);
             }
             // convert to Mat and convert to gray.
             Mat mat = OpenCvUtils.toMat(image);
@@ -388,7 +390,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                         resultMat = mat;
                     }
                     img = OpenCvUtils.toBufferedImage(resultMat);
-                    settleRecordedImages.put((double)t, img);
+                    settleImagesStaged.put((double)t, img);
                     if (Logger.getLevel() == org.pmw.tinylog.Level.DEBUG || Logger.getLevel() == org.pmw.tinylog.Level.TRACE) {
                         File file = Configuration.get().createResourceFile(getClass(), "settle", ".png");
                         Imgcodecs.imwrite(file.getAbsolutePath(), resultMat);
@@ -418,8 +420,8 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                 // the whole image
                 result = settleMethod.normedResult(Core.norm(lastSettleMat, mat, settleMethod.getNorm()), mat);
             }
-            if (settleGraph != null) {
-                settleGraph.getRow(DIFFERENCE, "D").recordDataPoint(t, result);
+            if (settleGraphStaged != null) {
+                settleGraphStaged.getRow(DIFFERENCE, "D").recordDataPoint(t, result);
             }
             Logger.debug("autoSettleAndCapture t="+(t-t0)+" auto settle score: " + result);
 
@@ -439,14 +441,19 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                     mask.release();
                     mask = null;
                 }
-                if (settleGraph != null) {
+                if (settleGraphStaged != null) {
                    // record last points in graph 
-                   settleGraph.getRow(BOOLEAN, "C").recordDataPoint(t, 0);
-                   settleGraph.getRow(DIFFERENCE, "S").recordDataPoint(t0, settleThreshold);
-                   settleGraph.getRow(DIFFERENCE, "S").recordDataPoint(t+10, settleThreshold);
-                   settleGraph.getRow(DIFFERENCE, "D").recordDataPoint(t+10, result);
+                   settleGraphStaged.getRow(BOOLEAN, "C").recordDataPoint(t, 0);
+                   settleGraphStaged.getRow(DIFFERENCE, "S").recordDataPoint(t0, settleThreshold);
+                   settleGraphStaged.getRow(DIFFERENCE, "S").recordDataPoint(t+10, settleThreshold);
+                   settleGraphStaged.getRow(DIFFERENCE, "D").recordDataPoint(t+10, result);
                     // set to trigger the property change
-                    setSettleGraph(settleGraph);
+                    setSettleGraph(settleGraphStaged);
+                    settleGraphStaged = null;
+                }
+                if (settleImagesStaged != null) {
+                    settleImagesRecorded = settleImagesStaged;
+                    settleImagesStaged = null;
                 }
                 Logger.debug("autoSettleAndCapture in {} ms", System.currentTimeMillis() - t0);
                 return image;
@@ -571,35 +578,42 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         return settleGraph;
     }
 
-    public BufferedImage getRecordedImage(double t) {
-        Map.Entry<Double, BufferedImage> entry = settleRecordedImages.floorEntry(t);
-        if (entry != null) {
-            return entry.getValue();
-        }
-        return null;
-    }
-    public void playRecordedImage(double t) {
-        Map.Entry<Double, BufferedImage> entry = settleRecordedImages.floorEntry(t);
-        if (entry != null) {
-            // I'm sure there's a better way to count the preceding images :-(
-            int n = 0;
-            for (Double t0 : settleRecordedImages.keySet()) {
-                if (t0 > t) {
-                    break;
-                }
-                ++n;
-            }
-            double t0 = (settleGraph != null ? settleGraph.getOffset() : 0.0);
-            String message = "Camera settling, frame number "+n+", t=+"+(entry.getKey()-t0)+"ms";
-            MainFrame.get().getCameraViews().getCameraView(this)
-            .showFilteredImage(entry.getValue(), message, 1000);
-        }
-    }
-
     public void setSettleGraph(SimpleGraph settleGraph) {
         Object oldValue = this.settleGraph;
         this.settleGraph = settleGraph;
         firePropertyChange("settleGraph", oldValue, settleGraph);
+    }
+
+    public BufferedImage getRecordedImage(double t) {
+        if (settleImagesRecorded != null) {
+            Map.Entry<Double, BufferedImage> entry = settleImagesRecorded.floorEntry(t);
+            if (entry != null) {
+                return entry.getValue();
+            }
+        }
+        return null;
+    }
+    public void playRecordedImage(double t) {
+        if (settleImagesRecorded != null) {
+            Map.Entry<Double, BufferedImage> entry = settleImagesRecorded.floorEntry(t);
+            if (entry != null) {
+                // I'm sure there's a better way to count the preceding images :-(
+                int n = 0;
+                for (Double t0 : settleImagesRecorded.keySet()) {
+                    if (t0 > t) {
+                        break;
+                    }
+                    ++n;
+                }
+                double t0 = (settleGraph != null ? settleGraph.getOffset() : 0.0);
+                String message = "Camera settling, frame number "+n+", t=+"+(entry.getKey()-t0)+"ms";
+                MainFrame.get().getCameraViews().getCameraView(this)
+                .showFilteredImage(entry.getValue(), message, 2000);
+                SwingUtilities.invokeLater(() -> {
+                    MainFrame.get().getCameraViews().ensureCameraVisible(this);
+                });
+            }
+        }
     }
 
     @Override
