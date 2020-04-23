@@ -153,14 +153,21 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             this.units = nozzleTipMeasuredLocations.size() > 0 ? 
                     nozzleTipMeasuredLocations.get(0).getUnits() : LengthUnit.Millimeters;
 
-                    // first calculate the circle fit and store the values to centerXY and radius
-                    // the measured offsets describe a circle with the rotational axis as the center, the runout is the circle radius
-                    this.calcCircleFitKasa(nozzleTipMeasuredLocations);
+            // first calculate the circle fit and store the values to centerXY and radius
+            // the measured offsets describe a circle with the rotational axis as the center, the runout is the circle radius
+            this.calcCircleFitKasa(nozzleTipMeasuredLocations);
 
-                    // afterwards calc the phaseShift angle mapping
-                    this.calcPhaseShift(nozzleTipMeasuredLocations);
+            // afterwards calc the phaseShift angle mapping
+            this.calcPhaseShift(nozzleTipMeasuredLocations);
+            
+            estimateModelError(nozzleTipMeasuredLocations);
         }
 
+        /**
+         * Constructor that uses an affine transform to initialize the model
+         * @param nozzleTipMeasuredLocations
+         * @param nozzleTipExpectedLocations
+         */
         public ModelBasedRunoutCompensation(List<Location> nozzleTipMeasuredLocations, List<Location> nozzleTipExpectedLocations) {
             // save the units as the model is persisted without the locations 
             this.units = nozzleTipMeasuredLocations.size() > 0 ? 
@@ -171,27 +178,47 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             Utils2D.AffineInfo ai = Utils2D.affineInfo(at);
             Logger.trace("[nozzleTipCalibration]nozzle tip affine transform = " + ai);
             
-            //This is just an arbitrary quality measure of the transformation.  Ideally, the x and y scale factors should be
-            //the same and the shear should be zero which would make this quantity go to infinity.  
-            double quality = 1.0 / Math.sqrt((1 - ai.xScale/ai.yScale)*(1 - ai.xScale/ai.yScale) + ai.xShear*ai.xShear);
-            Logger.trace("[nozzleTipCalibration]affine quality measure: " + quality);
-            
             //The expected locations were generated with a deliberate 1 mm runout so the affine scale is a direct 
             //measure of the true runout in millimeters.  However, since the affine transform gives both an x and y
             //scaling, their geometric mean is used to compute the radius.
-            this.radius = Math.sqrt(ai.xScale * ai.yScale);
+            this.radius = new Length( Math.sqrt(ai.xScale * ai.yScale),
+                    LengthUnit.Millimeters).convertToUnits(this.units).getValue();
             
             //The phase shift is just the rotation of the affine transform (negated because of the subtraction in getRunout)
             this.phaseShift = -ai.rotationAngleDeg;
             
             //The center is just the translation part of the affine transform
-            this.centerX = ai.xTranslation;
-            this.centerY = ai.yTranslation;
+            this.centerX = new Length( ai.xTranslation, LengthUnit.Millimeters).convertToUnits(this.units).getValue();
+            this.centerY = new Length( ai.yTranslation, LengthUnit.Millimeters).convertToUnits(this.units).getValue();
             
             Logger.debug("[nozzleTipCalibration]calculated nozzleEccentricity: {}", this.toString());
             Logger.debug("[nozzleTipCalibration]calculated phaseShift: {}", this.phaseShift);
+            estimateModelError(nozzleTipMeasuredLocations);
         }
 
+        /**
+         * Estimates the model error based on the distance between the nozzle
+         * tip measured locations and the locations computed by the model
+         * @param nozzleTipMeasuredLocations
+         * @return
+         */
+        private void estimateModelError(List<Location> nozzleTipMeasuredLocations) {
+            double sumError2 = 0;
+            double maxError = 0;
+            for (Location l : nozzleTipMeasuredLocations) {
+                //can't use getOffset here because it may be overridden
+                Location m = getRunout(l.getRotation()).add(new Location(this.units, this.centerX, this.centerY, 0, 0));
+                Logger.trace("[nozzleTipCalibration]compare measured = {}, modeled = {}", l, m);
+                double error = l.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(m);
+                sumError2 += error*error;
+                if (error > maxError) {
+                    maxError = error;
+                }
+            }
+            Logger.debug("[nozzleTipCalibration]estimated modeling error: {} millimeters peak, {} millimeters rms",
+                    String.format("%.3f", maxError), String.format("%.3f", Math.sqrt(sumError2/nozzleTipMeasuredLocations.size())));
+        }
+        
         /* function to calc the model based runout in cartesian coordinates */
         public Location getRunout(double angle) {
             //add phase shift
@@ -402,7 +429,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         public ModelBasedRunoutCameraOffsetCompensation(List<Location> nozzleTipMeasuredLocations, List<Location> nozzleTipExpectedLocations) {
             super(nozzleTipMeasuredLocations, nozzleTipExpectedLocations);
         }
-
+        
         @Override
         public String toString() {
             return String.format(Locale.US, "Camera position offset %f, %f, Runout %f", centerX, centerY, radius);
@@ -630,8 +657,16 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                     Logger.debug("[nozzleTipCalibration]bottom camera affine transform: " + ai);
                     Location newCameraPosition = new Location(LengthUnit.Millimeters, ai.xTranslation, ai.yTranslation, 0, 0);
                     newCameraPosition = referenceCamera.getHeadOffsets().derive(newCameraPosition, true, true, false, false);
-                    double newCameraAngle = referenceCamera.getRotation() - ai.rotationAngleDeg;
+                    Logger.debug("[nozzleTipCalibration]applying axis offset to bottom camera position: {} - {} = {}", 
+                            referenceCamera.getHeadOffsets(),
+                            referenceCamera.getHeadOffsets().subtract(newCameraPosition),
+                            newCameraPosition);
                     referenceCamera.setHeadOffsets(newCameraPosition);
+                    double newCameraAngle = referenceCamera.getRotation() - ai.rotationAngleDeg;
+                    Logger.debug("[nozzleTipCalibration]applying angle offset to bottom camera rotation: {} - {} = {}", 
+                            referenceCamera.getRotation(),
+                            ai.rotationAngleDeg,
+                            newCameraAngle);
                     referenceCamera.setRotation(newCameraAngle);
                 } else {
                     ModelBasedRunoutCompensation cameraCompensation = new ModelBasedRunoutCompensation(nozzleTipMeasuredLocations);
@@ -784,10 +819,10 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 // Instead the number of obtained fixes is evaluated later.
                 return null;
             } else if (locations.size() > 1) {
-                // one could throw an exception here, but we just log an info for now since
-                // - invalid measurements above threshold are removed from results already and
-                // - we expect the best match delivered from pipeline to be the first on the list.
-                Logger.info("[nozzleTipCalibration]Got more than one result from pipeline. For best performance tweak pipeline to return exactly one result only. First location from the following set is taken as valid: " + locations);
+                // Don't throw an exception here either. Since we've gotten more results than expected we can't be
+                // sure which, if any, are the correct result so just discard them all and log an info message.
+                Logger.info("[nozzleTipCalibration]Got more than one result from pipeline. For best performance tweak pipeline to return exactly one result only. Discarding all locations (since it is unknown which may be correct) from the following set: " + locations);
+                return null;
             }
 
             // finally return the location at index (0) which is either a) the only one or b) the one best matching the nozzle tip
