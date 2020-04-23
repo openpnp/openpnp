@@ -25,13 +25,11 @@ package org.openpnp.machine.reference.feeder.wizards;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.PrintWriter;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -69,6 +67,7 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
+import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -149,13 +148,13 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                 ColumnSpec.decode("right:default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
         try {
         }
         catch (Throwable t) {
@@ -661,6 +660,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                 j.setMultiSelectionEnabled(false);
                 if (j.showOpenDialog(getTopLevelAncestor()) == JFileChooser.APPROVE_OPTION) {
                     File directory = j.getSelectedFile();
+                    boolean opended = true;
                     for (String fileName : new String[] { "BlindsFeeder-Library.scad", "BlindsFeeder-3DPrinting.scad" }) {
                         String fileContent = IOUtils.toString(BlindsFeeder.class
                                 .getResource(fileName));
@@ -671,7 +671,16 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                         try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
                             out.print(fileContent);
                         }
-                        java.awt.Desktop.getDesktop().edit(file);
+                        try {
+                            java.awt.Desktop.getDesktop().edit(file);
+                        }
+                        catch (Exception e1) {
+                            Logger.error(e1);
+                            opended = false;
+                        }
+                    }
+                    if (! opended) {
+                        JOptionPane.showMessageDialog(getTopLevelAncestor(), "<html><p>Files extracted to:</p><p>"+directory.getAbsolutePath()+"</p><p>Cannot open with OpenSCAD automatically (Desktop command failed)</p>");
                     }
                 }
             });
@@ -839,7 +848,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         public void actionPerformed(ActionEvent e) {
             applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
-                feeder.actuateCover(true);
+                feeder.actuateCover(MainFrame.get().getMachineControls().getSelectedNozzle(), true);
             });
         }
     };
@@ -853,7 +862,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         public void actionPerformed(ActionEvent e) {
             applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
-                feeder.actuateCover(false);
+                feeder.actuateCover(MainFrame.get().getMachineControls().getSelectedNozzle(), false);
             });
         }
     };
@@ -868,7 +877,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         public void actionPerformed(ActionEvent e) {
             applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
-                BlindsFeeder.actuateAllFeederCovers(true);
+                BlindsFeeder.actuateAllFeederCovers(MainFrame.get().getMachineControls().getSelectedNozzle(), true);
             });
         }
     };
@@ -883,7 +892,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         public void actionPerformed(ActionEvent e) {
             applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
-                BlindsFeeder.actuateAllFeederCovers(false);
+                BlindsFeeder.actuateAllFeederCovers(MainFrame.get().getMachineControls().getSelectedNozzle(), false);
             });
         }
     };
@@ -918,7 +927,6 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     private JTextField textFieldEdgeClosingDistance;
     private JButton btnCalibrateEdges;
     private JButton btnShowInfo;
-    private JButton btnOpenAllButton;
     private JTextField textFieldFirstPocket;
     private JLabel lblFirstPocket;
     private JButton btnExtractOpenscadModel;
@@ -948,14 +956,6 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         feeder.setPipelineToAllFeeders();
     }
     protected void initDataBindings() {
-    }
-    private class SwingAction extends AbstractAction {
-        public SwingAction() {
-            putValue(NAME, "SwingAction");
-            putValue(SHORT_DESCRIPTION, "Some short description");
-        }
-        public void actionPerformed(ActionEvent e) {
-        }
     }
 }
 

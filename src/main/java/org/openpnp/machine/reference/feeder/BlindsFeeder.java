@@ -31,14 +31,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.Action;
 
 import org.apache.commons.io.IOUtils;
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
@@ -49,12 +46,14 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.feeder.wizards.BlindsFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
@@ -71,6 +70,7 @@ import org.openpnp.util.TravellingSalesman;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.Ransac.Line;
+import org.openpnp.vision.SimpleHistogram;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -341,12 +341,12 @@ public class BlindsFeeder extends ReferenceFeeder {
                 if (!isCoverOpen()) {
                     // Note, with CoverActuation.OpenOnJobStart, this should only happen with a manual or exceptional feed.
                     // Also restore the previously loaded NozzleTip afterwards. 
-                    actuateCover(true, true, true);
+                    actuateCover(nozzle, true, true, true);
                 }
             }
         }
         else if (coverType == CoverType.PushCover) {
-            actuateCover(true);
+            actuateCover(nozzle, true);
         }
         // increase the feed count 
         setFeedCount(getFeedCount() + 1);
@@ -429,7 +429,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
             // calculate the diagonal text size
             double fontScale = 1.0;
-            Size size = Imgproc.getTextSize(String.valueOf(getPocketCount()), Core.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
+            Size size = Imgproc.getTextSize(String.valueOf(getPocketCount()), Imgproc.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
             Location textSizeMm = camera.getUnitsPerPixel().multiply(size.width, size.height, 0., 0.)
                     .convertToUnits(LengthUnit.Millimeters);
             if (textSizeMm.getY() < 0.0) {
@@ -458,7 +458,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             // go through all the pockets, step-wise 
             for (int i = step; i <= getPocketCount(); i += step) {
                 String text = String.valueOf(i);
-                Size textSize = Imgproc.getTextSize(text, Core.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
+                Size textSize = Imgproc.getTextSize(text, Imgproc.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
 
                 Location partLocation = getUncalibratedPickLocation(i).convertToUnits(LengthUnit.Millimeters);
                 // go below the pocket
@@ -501,7 +501,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                     }
                     Imgproc.putText(mat, text, 
                             new org.opencv.core.Point(p.x + alignX, p.y + alignY), 
-                            Core.FONT_HERSHEY_PLAIN, 
+                            Imgproc.FONT_HERSHEY_PLAIN, 
                             fontScale, 
                             FluentCv.colorToScalar(color), 2, 0, false);
                 }
@@ -517,77 +517,6 @@ public class BlindsFeeder extends ReferenceFeeder {
                 angle += 90;
             }
             return angle;
-        }
-
-        /** 
-         * Very simple histogram with zero knowledge about the range. 
-         * Good only for low numbers of measurements.
-         * The bins are filled with an 2-bin wide square kernel centered on the measurement, recording 
-         * the overlap of the kernel with the bins. If the distribution of measurements clusters near the 
-         * edge between two bins (dithering between the two), the recorded weight is still comparable to a 
-         * similar distribution centered in the middle of a bin. Therefore the minimum/maximum is 
-         * still reliably captured in these cases, even in the presence of background noise. 
-         */
-        class Histogram {
-            private Map<Integer, Double> histogram = new HashMap<>();
-            private Integer minimum = null;
-            private double minimumVal = Double.NaN;
-            private Integer maximum = null;
-            private double maximumVal = Double.NaN;
-            private double resolution;
-            public Histogram(double resolution) {
-                this.resolution = resolution;
-            }
-            void add(double key, double val) {
-                // the three histogram bins around the key position
-                int binY1 = (int)Math.round(key/resolution);   
-                int binY0 = binY1-1; 
-                int binY2 = binY1+1;
-                // calculate the weight according to overlap with the kernel spreading 2 bins 
-                double w1 = 1.0;
-                double w0 = ((binY0+1.5)*resolution - key)/resolution;
-                double w2 = (-(binY2-1.5)*resolution + key)/resolution;
-                add(binY1, w1*val);
-                add(binY0, w0*val);
-                add(binY2, w2*val);
-            }
-            void add(int key, double val) {
-
-                double newVal = histogram.get(key) == null ? val : histogram.get(key)+val;
-                histogram.put(key, newVal);
-                if (maximum == null || maximumVal < newVal) {
-                    maximumVal = newVal;
-                    maximum = key;
-                }
-                if (minimum == null || minimumVal > newVal) {
-                    minimumVal = newVal;
-                    minimum = key;
-                }
-            }
-            public Map<Integer, Double> getHistogram() {
-                return histogram;
-            }
-            public Integer getMinimum() {
-                return minimum;
-            }
-            public double getMinimumKey() {
-                return minimum == null ? Double.NaN : minimum*resolution;
-            }
-            public double getMinimumVal() {
-                return minimumVal;
-            }
-            public Integer getMaximum() {
-                return maximum;
-            }
-            public double getMaximumKey() {
-                return maximum == null ? Double.NaN : maximum*resolution;
-            }
-            public double getMaximumVal() {
-                return maximumVal;
-            }
-            public double getResolution() {
-                return resolution;
-            }
         }
 
         @SuppressWarnings("unchecked")
@@ -642,8 +571,8 @@ public class BlindsFeeder extends ReferenceFeeder {
                 fiducials = new ArrayList<>();
 
                 // Create center and corner histograms
-                Histogram histogramUpper = new Histogram(0.1);
-                Histogram histogramLower = new Histogram(0.1);
+                SimpleHistogram histogramUpper = new SimpleHistogram(0.1);
+                SimpleHistogram histogramLower = new SimpleHistogram(0.1);
 
                 for (RotatedRect result : results) {
                     org.opencv.core.Point points[] = new org.opencv.core.Point[4];
@@ -780,7 +709,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
                 // Try to determine the pocket pitch by creating a histogram of sorted blinds distances. 
                 Location previous = null;
-                Histogram histogramPitch = new Histogram(2);
+                SimpleHistogram histogramPitch = new SimpleHistogram(2);
                 for (RotatedRect rect : blinds) {
                     Location location = transformMachineToFeederLocation(VisionUtils.getPixelLocation(camera, rect.center.x, rect.center.y))
                             .convertToUnits(LengthUnit.Millimeters);
@@ -798,7 +727,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 double pocketPitchPosMm = (getPocketPitch().getValue() != 0. ? 
                         getPocketPitch().convertToUnits(LengthUnit.Millimeters).getValue() 
                         :   pocketPitchMm); 
-                Histogram histogramDistance = new Histogram(0.05);
+                SimpleHistogram histogramDistance = new SimpleHistogram(0.05);
                 for (RotatedRect rect : blinds) {
                     Location location = transformMachineToFeederLocation(VisionUtils.getPixelLocation(camera, rect.center.x, rect.center.y))
                             .convertToUnits(LengthUnit.Millimeters);
@@ -844,8 +773,10 @@ public class BlindsFeeder extends ReferenceFeeder {
                     drawRotatedRects(resultMat, getFiducials(), Color.white);
                     drawLines(resultMat, getLines(), new Color(0, 0, 128));
                     drawPartNumbers(resultMat, Color.orange);
-                    File file = Configuration.get().createResourceFile(getClass(), "blinds-feeder", ".png");
-                    Imgcodecs.imwrite(file.getAbsolutePath(), resultMat);
+                    if (Logger.getLevel() == org.pmw.tinylog.Level.DEBUG || Logger.getLevel() == org.pmw.tinylog.Level.TRACE) {
+                        File file = Configuration.get().createResourceFile(getClass(), "blinds-feeder", ".png");
+                        Imgcodecs.imwrite(file.getAbsolutePath(), resultMat);
+                    }
                     BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
                     resultMat.release();
                     MainFrame.get().getCameraViews().getCameraView(camera)
@@ -1132,24 +1063,24 @@ public class BlindsFeeder extends ReferenceFeeder {
         return feederList;
     }
 
-    public static void actuateAllFeederCovers(boolean openState) throws Exception  {
+    public static void actuateAllFeederCovers(Nozzle preferredNozzle, boolean openState) throws Exception  {
         List<BlindsFeeder> feederList = getFeedersWithCoverToActuate(Configuration.get().getMachine().getFeeders(), 
                 new CoverActuation [] { CoverActuation.Manual, CoverActuation.CheckOpen, CoverActuation.OpenOnFirstUse, CoverActuation.OpenOnJobStart }, 
                 openState); 
         if (feederList.size() == 0) {
             throw new Exception("[BlindsFeeder] No feeders found to "+(openState ? "open." : "close."));
         }
-        actuateListedFeederCovers(feederList, openState, false);
+        actuateListedFeederCovers(preferredNozzle, feederList, openState, false);
     }
 
-    public static void actuateListedFeederCovers(List<BlindsFeeder> feederList, boolean openState, boolean restoreNozzleTip) throws Exception  {
+    public static void actuateListedFeederCovers(Nozzle preferredNozzle, List<BlindsFeeder> feederList, boolean openState, boolean restoreNozzleTip) throws Exception  {
         if (feederList.size() == 0) {
             // nothing to do, avoid changing the nozzle tip for nothing.
             return;
         }
 
         // Get the push nozzle for the current position. This will also throw if none is allowed.
-        NozzleAndTipForPushing nozzleAndTipForPushing = BlindsFeeder.getNozzleAndTipForPushing(true);
+        NozzleAndTipForPushing nozzleAndTipForPushing = BlindsFeeder.getNozzleAndTipForPushing(preferredNozzle, true);
 
         // Use a Travelling Salesman algorithm to optimize the path to actuate all the feeder covers.
         TravellingSalesman<BlindsFeeder> tsm = new TravellingSalesman<>(
@@ -1208,14 +1139,16 @@ public class BlindsFeeder extends ReferenceFeeder {
     public static class NozzleAndTipForPushing {
         private Nozzle nozzle;
         private NozzleTip nozzleTipLoadedBefore;
+        private boolean changed;
 
-        public NozzleAndTipForPushing(Nozzle nozzle, NozzleTip nozzleTipLoadedBefore) {
+        public NozzleAndTipForPushing(Nozzle nozzle, NozzleTip nozzleTipLoadedBefore, boolean changed) {
             super();
             this.nozzle = nozzle;
             this.nozzleTipLoadedBefore = nozzleTipLoadedBefore;
+            this.changed = changed;
         }
         void restoreNozzleTipLoadedBefore() throws Exception {
-            if (this.nozzle != null & this.nozzleTipLoadedBefore != null) {
+            if (this.nozzle != null & this.nozzleTipLoadedBefore != null && this.changed) {
                 if (this.nozzleTipLoadedBefore != this.nozzle.getNozzleTip()) {
                     this.nozzle.loadNozzleTip(this.nozzleTipLoadedBefore);
                 }
@@ -1233,69 +1166,116 @@ public class BlindsFeeder extends ReferenceFeeder {
         public NozzleTip getNozzleTipLoadedBefore() {
             return nozzleTipLoadedBefore;
         }
+        public boolean isChanged() {
+            return changed;
+        }
     }
-    public static NozzleAndTipForPushing getNozzleAndTipForPushing(boolean loadNozzleTipIfNeeded) throws Exception {
-        // first search for any NozzleTip already loaded that may be used for pushing 
-        Machine machine = Configuration.get().getMachine();
-        for (Head head : machine.getHeads()) {
-            for (Nozzle nozzle :  head.getNozzles()) {
-                NozzleTip nozzleTip = nozzle.getNozzleTip();
+    public static NozzleAndTipForPushing getNozzleAndTipForPushing(Nozzle preferredNozzle, boolean loadNozzleTipIfNeeded) throws Exception {
+        // Search for any nozzle and nozzle tip that may be used for cover pushing. 
+        // First, try the preferredNozzle.
+        if (preferredNozzle != null ) {
+            if (preferredNozzle.getPart() == null) { 
+                // Nozzle is free
+                NozzleTip nozzleTip = preferredNozzle.getNozzleTip();
                 if (nozzleTip.isPushAndDragAllowed()) {
                     // Return the nozzle and nozzle tip.
-                    return new NozzleAndTipForPushing(nozzle, nozzleTip);
+                    return new NozzleAndTipForPushing(preferredNozzle, nozzleTip, false);
                 }
             }
         }
 
-        // We arrived here, so none was found.
+        // Second, try any free nozzle with loaded nozzle tip. 
+        Machine machine = Configuration.get().getMachine();
+        for (Head head : machine.getHeads()) {
+            for (Nozzle nozzle :  head.getNozzles()) {
+                if (nozzle.getPart() == null) { 
+                    // Nozzle is free
+                    NozzleTip nozzleTip = nozzle.getNozzleTip();
+                    if (nozzleTip.isPushAndDragAllowed()) {
+                        // Return the nozzle and nozzle tip.
+                        return new NozzleAndTipForPushing(nozzle, nozzleTip, false);
+                    }
+                }
+            }
+        }
+
+        // Third, try load a nozzle tip for pushing.
         if (loadNozzleTipIfNeeded) {
+            // We're allowed to load the nozzle tip, go find a free nozzle.
             for (Head head : machine.getHeads()) {
                 for (Nozzle nozzle :  head.getNozzles()) {
-                    for (NozzleTip pushNozzleTip : nozzle.getCompatibleNozzleTips()) {
-                        if (pushNozzleTip.isPushAndDragAllowed()) {
-                            NozzleTip nozzleTip = nozzle.getNozzleTip();
-                            // Alas, found one for pushing, load it
-                            nozzle.loadNozzleTip(pushNozzleTip);
-                            // And return the nozzle and nozzle tip.
-                            return new NozzleAndTipForPushing(nozzle, nozzleTip);
+                    if (nozzle.getPart() == null) { 
+                        // Nozzle is free
+                        for (NozzleTip pushNozzleTip : nozzle.getCompatibleNozzleTips()) {
+                            if (pushNozzleTip.isPushAndDragAllowed()) {
+                                NozzleTip nozzleTip = nozzle.getNozzleTip();
+                                // Alas, found one for pushing, load it
+                                nozzle.loadNozzleTip(pushNozzleTip);
+                                // And return the nozzle and nozzle tip.
+                                return new NozzleAndTipForPushing(nozzle, nozzleTip, true);
+                            }
                         }
                     }
                 }
             }
             // None could be loaded.
-            throw new Exception("BlindsFeeder: No Nozzle/NozzleTip found that allows pushing.");
+            throw new Exception("BlindsFeeder: No empty Nozzle/NozzleTip found that allows pushing.");
         }
         // None compatible.
-        return new NozzleAndTipForPushing(null, null);
+        return new NozzleAndTipForPushing(null, null, false);
     }
 
+
     @Override
-    public void prepareForJob(List<Feeder> feedersToPrepare) throws Exception {
-        super.prepareForJob(feedersToPrepare);
+    public Location getJobPreparationLocation() {
         if (getCoverActuation() == CoverActuation.OpenOnJobStart
                 && ! isCoverOpen()) {
-            // Note, we will not only open our own cover, but all the BlindFeeders' covers in bulk
-            // to allow for the TravellingSalesman optimization.
-            // prepareForJob() will be called for subsequent BlindsFeeders, but because the covers 
-            // are already registered as open, there will be no further action. 
-            List<BlindsFeeder> feederList = getFeedersWithCoverToActuate(feedersToPrepare, 
-                    new CoverActuation[] { CoverActuation.OpenOnJobStart }, 
-                    true); 
-            // Now bulk-open the covers. 
-            // If needed, load a NozzleTip that allows pushing and then restore the previous NozzleTip.
-            // The restore may result in one unnecessary change but the alternative is unexpected behaviour
-            // as the planner will take the currently loaded nozzle tips into consideration and therefore 
-            // favor the pushing nozzle tip, which might be completely unwanted.
-            actuateListedFeederCovers(feederList, true, false);
+            return getUncalibratedPickLocation(0);
         }
+        else {
+            return null;
+        }
+    }
+
+    // transient store for the job preparation nozzle tip change
+    private NozzleAndTipForPushing nozzleAndTipForPushing = null;
+
+    @Override
+    public void prepareForJob(boolean visit) throws Exception {
+        super.prepareForJob(visit);
+        if (visit && getCoverActuation() == CoverActuation.OpenOnJobStart
+                && ! isCoverOpen()) {
+            // Get the push nozzle for the current position. This will also throw if none is allowed.
+            // Note, we save this for pass two of the feeder prep to restore.
+            nozzleAndTipForPushing = BlindsFeeder.getNozzleAndTipForPushing(null, true);
+
+            // Actuate the cover.
+            actuateCover(true);
+            
+            if (!nozzleAndTipForPushing.isChanged()) {
+                // no need to rememeber
+                nozzleAndTipForPushing = null;
+            }
+        }
+        else if (! visit) {
+            // in the non-visit preparation step, let's restore the nozzle tip if changed before
+            if (nozzleAndTipForPushing != null) {
+                nozzleAndTipForPushing.restoreNozzleTipLoadedBefore();
+                nozzleAndTipForPushing = null;
+            }
+        }
+    }
+
+    public void actuateCover(Nozzle preferredNozzle, boolean openState) throws Exception {
+        // If needed, load a NozzleTip that allows pushing but do not restore the previously loaded NozzleTip. 
+        actuateCover(preferredNozzle, openState, true, false);
     }
 
     public void actuateCover(boolean openState) throws Exception {
-        // If needed, load a NozzleTip that allows pushing but do not restore the previously loaded NozzleTip. 
-        actuateCover(openState, true, false);
+        actuateCover(null, openState);
     }
 
-    public void actuateCover(boolean openState, boolean loadNozzleTipIfNeeded, boolean restoreNozzleTip) throws Exception {
+    public void actuateCover(Nozzle preferredNozzle, boolean openState, boolean loadNozzleTipIfNeeded, boolean restoreNozzleTip) throws Exception {
         if (coverType == CoverType.NoCover) {
             throw new Exception("Feeder " + getName() + ": has no cover to actuate.");
         }
@@ -1305,7 +1285,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             }
 
             // Get the nozzle for pushing
-            NozzleAndTipForPushing nozzleAndTipForPushing = BlindsFeeder.getNozzleAndTipForPushing(loadNozzleTipIfNeeded);
+            NozzleAndTipForPushing nozzleAndTipForPushing = BlindsFeeder.getNozzleAndTipForPushing(preferredNozzle, loadNozzleTipIfNeeded);
             Nozzle nozzle = nozzleAndTipForPushing.getNozzle();
             NozzleTip nozzleTip = nozzleAndTipForPushing.getNozzleTip();
             if (nozzleTip == null) {
@@ -1765,7 +1745,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             pipeline.setProperty("camera", camera);
             pipeline.setProperty("feeder", this);
 
-            /* this won't work, properties must be hardwired in the stages
+            /* TODO: read the override property in the FilterContours stage
              * 
              * // Provide pixel min/max area to pipeline.
             // We restrict this to 24mm tape carrier having a 20.1mm max pocket size.
@@ -2045,7 +2025,6 @@ public class BlindsFeeder extends ReferenceFeeder {
     public void setFeedCount(int feedCount) {
         int oldValue = this.feedCount;
         this.feedCount = feedCount;
-        //this.visionOffsets = null;
         firePropertyChange("feedCount", oldValue, feedCount);
     }
 

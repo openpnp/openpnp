@@ -9,6 +9,7 @@ import java.beans.MethodDescriptor;
 import java.beans.PropertyDescriptor;
 
 import org.opencv.core.Mat;
+import org.openpnp.model.LengthUnit;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -84,6 +85,12 @@ public abstract class CvStage {
         catch (Exception e) {
             return null;
         }
+    }
+
+    // a stage may optionally define a length unit which is handled in the pipeline editor's 
+    // ResultsPanel.matView
+    public LengthUnit getLengthUnit() {
+        return null;
     }
 
     public BeanInfo getBeanInfo() {

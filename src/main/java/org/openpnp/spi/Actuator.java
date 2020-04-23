@@ -43,6 +43,12 @@ public interface Actuator
      */
     public void actuate(double value) throws Exception;
     
+    /**
+     * Read a value from the actuator. The value will be returned exactly as provided by the
+     * Actuator and can be interpreted as needed by the caller. 
+     * @return The value read.
+     * @throws Exception if there was an error reading the actuator.
+     */
     public String read() throws Exception;
 
     public String read(double value) throws Exception;
