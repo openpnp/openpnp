@@ -143,6 +143,10 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         protected double phaseShift;
         @Attribute(required = false)
         protected LengthUnit units = LengthUnit.Millimeters;
+        @Attribute(required = false)
+        protected double peakError;
+        @Attribute(required = false)
+        protected double rmsError;
 
         public ModelBasedRunoutCompensation() {
         }
@@ -161,12 +165,14 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             this.calcPhaseShift(nozzleTipMeasuredLocations);
             
             estimateModelError(nozzleTipMeasuredLocations);
+
+            Logger.debug("[nozzleTipCalibration]calculated nozzleEccentricity: {}", this.toString());
         }
 
         /**
          * Constructor that uses an affine transform to initialize the model
-         * @param nozzleTipMeasuredLocations
-         * @param nozzleTipExpectedLocations
+         * @param nozzleTipMeasuredLocations - list of measured nozzle tip locations
+         * @param nozzleTipExpectedLocations - list of expected nozzle tip locations
          */
         public ModelBasedRunoutCompensation(List<Location> nozzleTipMeasuredLocations, List<Location> nozzleTipExpectedLocations) {
             // save the units as the model is persisted without the locations 
@@ -191,32 +197,33 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             this.centerX = new Length( ai.xTranslation, LengthUnit.Millimeters).convertToUnits(this.units).getValue();
             this.centerY = new Length( ai.yTranslation, LengthUnit.Millimeters).convertToUnits(this.units).getValue();
             
-            Logger.debug("[nozzleTipCalibration]calculated nozzleEccentricity: {}", this.toString());
-            Logger.debug("[nozzleTipCalibration]calculated phaseShift: {}", this.phaseShift);
             estimateModelError(nozzleTipMeasuredLocations);
+
+            Logger.debug("[nozzleTipCalibration]calculated nozzleEccentricity: {}", this.toString());
         }
 
         /**
          * Estimates the model error based on the distance between the nozzle
          * tip measured locations and the locations computed by the model
-         * @param nozzleTipMeasuredLocations
-         * @return
+         * @param nozzleTipMeasuredLocations - list of measured nozzle tip locations
          */
         private void estimateModelError(List<Location> nozzleTipMeasuredLocations) {
+            Location peakErrorLocation = new Location(this.units);
             double sumError2 = 0;
-            double maxError = 0;
+            peakError = 0;
             for (Location l : nozzleTipMeasuredLocations) {
                 //can't use getOffset here because it may be overridden
                 Location m = getRunout(l.getRotation()).add(new Location(this.units, this.centerX, this.centerY, 0, 0));
                 Logger.trace("[nozzleTipCalibration]compare measured = {}, modeled = {}", l, m);
-                double error = l.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(m);
+                double error = l.convertToUnits(this.units).getLinearDistanceTo(m);
                 sumError2 += error*error;
-                if (error > maxError) {
-                    maxError = error;
+                if (error > peakError) {
+                    peakError = error;
+                    peakErrorLocation = l;
                 }
             }
-            Logger.debug("[nozzleTipCalibration]estimated modeling error: {} millimeters peak, {} millimeters rms",
-                    String.format("%.3f", maxError), String.format("%.3f", Math.sqrt(sumError2/nozzleTipMeasuredLocations.size())));
+            rmsError = Math.sqrt(sumError2/nozzleTipMeasuredLocations.size());
+            Logger.trace("[nozzleTipCalibration]peak error location = {}, error = {}", peakErrorLocation, peakError);
         }
         
         /* function to calc the model based runout in cartesian coordinates */
@@ -320,8 +327,6 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 this.centerY = nozzleTipMeasuredLocations.get(0).getY();
                 this.radius = 0;
             }
-
-            Logger.debug("[nozzleTipCalibration]calculated nozzleEccentricity: {}", this.toString());
         }
 
         protected void calcPhaseShift(List<Location> nozzleTipMeasuredLocations) {
@@ -375,14 +380,12 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             phaseShift = Utils2D.normalizeAngle180(differenceAngleMean / nozzleTipMeasuredLocations.size());
 
             this.phaseShift = phaseShift;
-
-            Logger.debug("[nozzleTipCalibration]calculated phaseShift: {}", this.phaseShift);
         }
 
 
         @Override
         public String toString() {
-            return String.format(Locale.US, "Center %f, %f, Runout %f", centerX, centerY, radius);
+            return String.format(Locale.US, "Center %.3f, %.3f, Runout %.3f, Phase %.3f, Peak err %.3f, RMS err %.3f %s", centerX, centerY, radius, phaseShift, peakError, rmsError, units.getShortName());
         }
 
         @Override
@@ -393,6 +396,22 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
         public double getPhaseShift() {
             return phaseShift;
+        }
+        
+        /**
+         * @return The peak error (in this.units) of the measured nozzle tip
+         * locations relative to the locations computed by the model
+         */
+        public double getPeakError() {
+            return peakError;
+        }
+        
+        /**
+         * @return The rms error (in this.units) of the measured nozzle tip
+         * locations relative to the locations computed by the model
+         */
+       public double getRmsError() {
+            return rmsError;
         }
     }
 
@@ -409,7 +428,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
         @Override
         public String toString() {
-            return String.format(Locale.US, "Camera position error %f, %f, Runout %f", centerX, centerY, radius);
+            return String.format(Locale.US, "Camera position error %.3f, %.3f, Runout %.3f, Phase %.3f, Peak err %.3f, RMS err %.3f %s", centerX, centerY, radius, phaseShift, peakError, rmsError, units.getShortName());
         }
 
         @Override 
@@ -432,7 +451,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         
         @Override
         public String toString() {
-            return String.format(Locale.US, "Camera position offset %f, %f, Runout %f", centerX, centerY, radius);
+            return String.format(Locale.US, "Camera position offset %.3f, %.3f, Runout %.3f, Phase %.3f, Peak err %.3f, RMS err %.3f %s", centerX, centerY, radius, phaseShift, peakError, rmsError, units.getShortName());
         }
 
         @Override
