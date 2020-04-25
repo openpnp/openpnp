@@ -253,6 +253,8 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         stream = null;
         setPropertiesStream(stream);
 
+        clearCalibrationCache();
+        
         // If a device and format are not set, see if we can read them from the stored
         // properties. This will only happen during startup.
         if (device == null && format == null) {

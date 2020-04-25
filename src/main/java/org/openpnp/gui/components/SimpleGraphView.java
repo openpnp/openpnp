@@ -199,7 +199,7 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                                 setIndicatorXAbsolute((xMouse - xOrigin)/xScale + min.x);
                             }
                             if (indicatorX != null) {
-                                String text = formatNumber(indicatorX, xUnit*0.1);
+                                String text = formatNumber(indicatorX, xUnit*0.25);
                                 Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
                                 g2d.drawLine((int)(xOrigin+(indicatorX-xMin)*xScale), h-1-(int)bounds.getWidth()-2, (int)(xOrigin+(indicatorX-xMin)*xScale), 0);
                                 AffineTransform transform = g2d.getTransform();
@@ -270,7 +270,7 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
         if (y == null) {
             return;
         }
-        String text = formatNumber(y, yUnit*0.1);
+        String text = formatNumber(y, yUnit*0.25);
         Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
         g2d.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 64));
         g2d.drawLine((int)bounds.getWidth()+2, (int)(yOrigin-(y-min.y)*yScale), w-1, (int)(yOrigin-(y-min.y)*yScale));

@@ -526,15 +526,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
                 calibration.setCameraMatrixMat(lensCalibration.getCameraMatrix());
                 calibration
                         .setDistortionCoefficientsMat(lensCalibration.getDistortionCoefficients());
-                // Clear the calibration cache
-                if (undistortionMap1 != null) {
-                    undistortionMap1.release();
-                    undistortionMap1 = null;
-                }
-                if (undistortionMap2 != null) {
-                    undistortionMap2.release();
-                    undistortionMap2 = null;
-                }
+                clearCalibrationCache();
                 calibration.setEnabled(true);
 
                 lensCalibration.close();
@@ -549,6 +541,18 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         }
 
         return appliedMat;
+    }
+
+    protected void clearCalibrationCache() {
+        // Clear the calibration cache
+        if (undistortionMap1 != null) {
+            undistortionMap1.release();
+            undistortionMap1 = null;
+        }
+        if (undistortionMap2 != null) {
+            undistortionMap2.release();
+            undistortionMap2 = null;
+        }
     }
 
     public void startCalibration(CalibrationCallback callback) {
@@ -695,4 +699,5 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             this.distortionCoefficients = distortionCoefficients.clone();
         }
     }
+
 }
