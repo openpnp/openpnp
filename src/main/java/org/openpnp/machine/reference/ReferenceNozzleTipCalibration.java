@@ -490,7 +490,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     private Map<String, RunoutCompensation> runoutCompensationLookup = new HashMap<>();
 
     public enum RunoutCompensationAlgorithm {
-        Model, ModelNoOffset, ModelCameraOffset, ModelCameraOffsetAffine, Table
+        Model, ModelAffine, ModelNoOffset, ModelNoOffsetAffine, ModelCameraOffset, ModelCameraOffsetAffine, Table
     }
 
     public enum RecalibrationTrigger {
@@ -659,8 +659,12 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             if (!calibrateCamera) {
                 if (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.Model) {
                     this.setRunoutCompensation(nozzle, new ModelBasedRunoutCompensation(nozzleTipMeasuredLocations));
+                } else if (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelAffine) {
+                    this.setRunoutCompensation(nozzle, new ModelBasedRunoutCompensation(nozzleTipMeasuredLocations, nozzleTipExpectedLocations));
                 } else if (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelNoOffset) {
                     this.setRunoutCompensation(nozzle, new ModelBasedRunoutNoOffsetCompensation(nozzleTipMeasuredLocations));
+                } else if (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelNoOffsetAffine) {
+                    this.setRunoutCompensation(nozzle, new ModelBasedRunoutNoOffsetCompensation(nozzleTipMeasuredLocations, nozzleTipExpectedLocations));
                 } else if (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelCameraOffset) {
                     this.setRunoutCompensation(nozzle, new ModelBasedRunoutCameraOffsetCompensation(nozzleTipMeasuredLocations));
                 } else if (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelCameraOffsetAffine) {
@@ -670,7 +674,11 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 }
             }
             else {
-                if (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelCameraOffsetAffine) {
+                if ((this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelAffine) ||
+                    (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelNoOffsetAffine) ||
+                    (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelCameraOffsetAffine)) {
+                    //This camera alignment stuff should be moved out of nozzle tip calibration
+                    //and placed with the rest of the camera setup stuff
                     AffineTransform at = Utils2D.deriveAffineTransform(nozzleTipMeasuredLocations, nozzleTipExpectedLocations);
                     Utils2D.AffineInfo ai = Utils2D.affineInfo(at);
                     Logger.debug("[nozzleTipCalibration]bottom camera affine transform: " + ai);
