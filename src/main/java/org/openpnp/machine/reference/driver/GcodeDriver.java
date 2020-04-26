@@ -1512,4 +1512,28 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         }
     }
     
+    public static class ScalingTransform implements AxisTransform {
+
+        @Attribute(required = false)
+        private double scaleFactor = 1;
+
+        @Override
+        public double toTransformed(Axis axis, HeadMountable hm, double rawCoordinate) {
+            if (scaleFactor == 0) {
+                Logger.info("Scale factor 0 is not allowed, defaults to 1.");
+                scaleFactor = 1;
+            }
+            return rawCoordinate / scaleFactor;
+        }
+
+        @Override
+        public double toRaw(Axis axis, HeadMountable hm, double transformedCoordinate) {
+            if (scaleFactor == 0) {
+                Logger.info("Scale factor 0 is not allowed, defaults to 1.");
+                scaleFactor = 1;
+            }
+            return transformedCoordinate * scaleFactor;
+        }
+    }
+    
 }
