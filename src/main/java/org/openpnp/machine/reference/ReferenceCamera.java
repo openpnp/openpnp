@@ -699,5 +699,4 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             this.distortionCoefficients = distortionCoefficients.clone();
         }
     }
-
 }

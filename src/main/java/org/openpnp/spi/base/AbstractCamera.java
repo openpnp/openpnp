@@ -3,32 +3,26 @@ package org.openpnp.spi.base;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
-import javax.imageio.ImageIO;
 import javax.swing.Icon;
 import javax.swing.SwingUtilities;
 
 import org.opencv.core.Core;
 import org.opencv.core.Core.MinMaxLocResult;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.CameraListener;
 import org.openpnp.ConfigurationListener;
@@ -44,7 +38,6 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.VisionProvider;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.SimpleGraph;
-import org.openpnp.vision.FluentCv;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -649,7 +642,10 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
             Logger.warn(e);
         }
         
-    	
+        if (settleMethod == null) {
+            // Method undetermined, probably created a new camera (no @Commit handler)
+            settleMethod = SettleMethod.FixedTime;
+        }
         if (settleMethod == SettleMethod.FixedTime) {
             try {
                 Thread.sleep(getSettleTimeMs());
