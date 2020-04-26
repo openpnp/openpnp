@@ -47,6 +47,8 @@ public class ActuatorControlDialog extends JDialog {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
+        setModalityType(JDialog.ModalityType.MODELESS);
+        
         JLabel lblBoolean = new JLabel("Set Boolean Value");
         getContentPane().add(lblBoolean, "2, 2");
         
