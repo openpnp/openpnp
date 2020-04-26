@@ -105,7 +105,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
             }
         }
 
-        protected double computeDifferenceMetric(Mat mat0, Mat mat1, double settleContrastEnhance, Mat mask) { 
+        protected double computeDifference(Mat mat0, Mat mat1, double settleContrastEnhance, Mat mask) { 
             // Compute the method difference norm
             double result, range = 1.0;
             if (mask != null) { 
@@ -345,7 +345,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                 // Capture an image. 
                 long t = System.currentTimeMillis();
                 if (settleGraph != null) {
-                    // record capture begins
+                    // Record begin of capture.
                     settleGraph.getRow(BOOLEAN, CAPTURE).recordDataPoint(t-1, 0);
                     settleGraph.getRow(BOOLEAN, CAPTURE).recordDataPoint(t, 1);
                 }
@@ -353,11 +353,11 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                 // The actual capture.
                 BufferedImage image = capture();
 
-                long tC = System.currentTimeMillis();
+                long tCapture = System.currentTimeMillis();
                 if (settleGraph != null) {
-                    // record capture ends
-                    settleGraph.getRow(BOOLEAN, CAPTURE).recordDataPoint(tC-1, 1);
-                    settleGraph.getRow(BOOLEAN, CAPTURE).recordDataPoint(tC, 0);
+                    // Record end of capture.
+                    settleGraph.getRow(BOOLEAN, CAPTURE).recordDataPoint(tCapture-1, 1);
+                    settleGraph.getRow(BOOLEAN, CAPTURE).recordDataPoint(tCapture, 0);
                 }
 
                 // Convert to Mat and if not full color, convert to gray.
@@ -368,9 +368,9 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
 
                 if (settleContrastEnhance > 0.0) {
                     // Enhance the contrast. Note we need to do this before scaling the image down, so mixed
-                    // colors can be created in the enhanced dynamic range. 
+                    // colors can be created in color the resolution of the spread-out dynamic range. 
 
-                    // Need to create a full size mask.
+                    // Prepare a full size mask, if wanted.
                     if (settleMaskCircle > 0.0 && maskFullsize == null) {
                         int imageDimension = Math.min(mat.rows(), mat.cols());
                         int maskDiameter = Math.max(1,  Math.min(imageDimension, (int)(settleMaskCircle*imageDimension)));
@@ -381,34 +381,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                                 new Scalar(255, 255, 255), -1);
                     }
 
-                    // It's really hard to extract the minimum level from an image, it seems.
-                    // Core.norm(norm|NORM_MINMAX) does not seem to work and minMaxLoc() takes only
-                    // single channel images. So we need to extract channels here. I must be missing 
-                    // something.
-                    double max = SettleMethod.minimumRange/255.0;
-                    double range = SettleMethod.minimumRange/255.0;
-                    int nChannels = mat.channels();
-                    if (nChannels > 1) {
-                        Mat workingMat = new Mat();
-                        for (int cn=0; cn < nChannels; cn++) {
-                            Core.extractChannel(mat, workingMat, cn);
-                            MinMaxLocResult res = Core.minMaxLoc(workingMat, maskFullsize); // Note, mask can for once be null
-                            workingMat.release();
-                            max = Math.max(max, res.maxVal)/255.0;
-                            range = Math.max(range, res.maxVal-res.minVal)/255.0;
-                        }
-                    }
-                    else {
-                        MinMaxLocResult res = Core.minMaxLoc(mat, maskFullsize); // Note, mask can for once be null
-                        max = Math.max(max, res.maxVal)/255.0;
-                        range = Math.max(range, res.maxVal-res.minVal)/255.0;
-                    }
-                    double scale = settleContrastEnhance/range + (1.0 - settleContrastEnhance);
-                    double offset = -(max-range)*settleContrastEnhance/range;
-                    Mat tmpMat = new Mat();  
-                    Core.convertScaleAbs(mat, tmpMat, scale, offset*255.0);
-                    mat.release();
-                    mat = tmpMat;
+                    mat = enhanceContrast(mat, maskFullsize);
                 }
 
                 // Gaussian blur is the most expensive operation, so if it is large, we rescale the image instead.
@@ -420,7 +393,6 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                 if (divisor > 1) {
                     gaussianBlurEff = ((settleGaussianBlur)/divisor)|1;
                     Mat resizeMat = new Mat();
-                    // TODO: find a way to roll resize and crop into one.
                     Imgproc.resize(mat, resizeMat, new Size(mat.cols()/divisor, mat.rows()/divisor), 1.0/divisor, 1.0/divisor);
                     mat.release();
                     mat = resizeMat;
@@ -452,15 +424,16 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                 }
 
                 if (settleGradients) {
+                    // Apply Laplacian transform.
                     Mat gradientMat = new Mat();
-                    // apply Laplacian transform
                     Imgproc.Laplacian(mat, gradientMat, CvType.CV_16S, 3, 1, 0, Core.BORDER_REPLICATE );
                     Core.convertScaleAbs(gradientMat, gradientMat);
                     mat.release();
                     mat = gradientMat;
                 }
 
-                recordDiagnosticImage(tC, lastSettleMat, mat, mask, settleImages);
+                // Record the image with the caputure time.
+                recordDiagnosticImage(tCapture, lastSettleMat, mat, mask, settleImages);
                 t = System.currentTimeMillis();
 
                 // If this is the first time through the loop then assign the new image to
@@ -470,8 +443,8 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                     continue;
                 }
 
-                // Take the norm of the differences of the two images.
-                double result = settleMethod.computeDifferenceMetric(lastSettleMat, mat, settleContrastEnhance, mask);
+                // Compute the differences of the two images according to the method.
+                double result = settleMethod.computeDifference(lastSettleMat, mat, settleContrastEnhance, mask);
                 if (settleGraph != null) {
                     settleGraph.getRow(DIFFERENCE, DATA).recordDataPoint(t, result);
                 }
@@ -494,20 +467,21 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                     debounceCount++;
                 }
                 if (t > timeout || debounceCount > settleDebounce) {
+                    // Timeout or debounced settleThreshold reached.
+                    // Cleanup.
                     lastSettleMat.release();
                     lastSettleMat = null;
                     if (settleGraph != null) {
-                        // record last points in graph 
+                        // Record last points in graph 
                         settleGraph.getRow(BOOLEAN, CAPTURE).recordDataPoint(t, 0);
                         settleGraph.getRow(DIFFERENCE, THRESHOLD).recordDataPoint(t0, settleThreshold);
                         settleGraph.getRow(DIFFERENCE, THRESHOLD).recordDataPoint(t+1, settleThreshold);
                         settleGraph.getRow(DIFFERENCE, DATA).recordDataPoint(t+1, result);
-                        // set to trigger the property change
+                        // Set the graph to the camera (so it will now be drawn)
                         setSettleGraph(settleGraph);
-                        settleGraph = null;
                     }
                     if (settleImages != null) {
-                        recordedImages = settleImages;
+                        setRecordedImages(settleImages);
                     }
                     Logger.debug("autoSettleAndCapture in {} ms", System.currentTimeMillis() - t0);
                     return image;
@@ -528,6 +502,37 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         }
     }
 
+    protected Mat enhanceContrast(Mat mat, Mat mask) {
+        // It's weirdly difficult to extract the minimum level (black point) from an image, it seems.
+        // Core.norm(... NORM_MINMAX) does not seem to work and minMaxLoc() takes only single channel images. 
+        // So we need to work with the channels individually here. I must be missing something.
+        double max = SettleMethod.minimumRange/255.0;
+        double range = SettleMethod.minimumRange/255.0;
+        int nChannels = mat.channels();
+        if (nChannels > 1) {
+            Mat workingMat = new Mat();
+            for (int cn=0; cn < nChannels; cn++) {
+                Core.extractChannel(mat, workingMat, cn);
+                MinMaxLocResult res = Core.minMaxLoc(workingMat, mask); // Note, mask can for once be null
+                workingMat.release();
+                max = Math.max(max, res.maxVal)/255.0;
+                range = Math.max(range, res.maxVal-res.minVal)/255.0;
+            }
+        }
+        else {
+            MinMaxLocResult res = Core.minMaxLoc(mat, mask); // Note, mask can for once be null
+            max = Math.max(max, res.maxVal)/255.0;
+            range = Math.max(range, res.maxVal-res.minVal)/255.0;
+        }
+        double scale = settleContrastEnhance/range + (1.0 - settleContrastEnhance);
+        double offset = -(max-range)*settleContrastEnhance/range;
+        Mat tmpMat = new Mat();  
+        Core.convertScaleAbs(mat, tmpMat, scale, offset*255.0);
+        mat.release();
+        mat = tmpMat;
+        return mat;
+    }
+
     protected void recordDiagnosticImage(long t, Mat mat0, Mat mat1, Mat mask,
             TreeMap<Double, BufferedImage> settleImages) {
         if (settleImages != null) {
@@ -546,6 +551,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
 
             // Create the difference heat-map
             if (mat0 != null) {
+                // We have mat0, i.e. this is at least the second frame. 
                 Mat diffMat = new Mat();
                 Core.absdiff(mat0, mat1, diffMat);
                 if (settleFullColor) {
@@ -574,29 +580,34 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                     Imgproc.cvtColor(diagnosticMat, backgroundMat, Imgproc.COLOR_GRAY2BGR);
                 }
 
-                // Am I doing something wrong? This arithmetic is awful to use. 
-                Mat norm2Mat = new Mat();
-                Core.multiply(normMat, normMat, norm2Mat, 1/255.0/255.0, CvType.CV_32F);
+                // Am I doing something wrong? This OpenCV arithmetic is awful to code. 
+                Mat alphaMat = new Mat();
+                // Square the normed diff, to emphasize large mevements for the alpha channel.
+                Core.multiply(normMat, normMat, alphaMat, 1/255.0/255.0, CvType.CV_32F);
+                // Create the complement for the alpha channel.
+                Mat oneMat = new Mat(alphaMat.rows(), alphaMat.cols(), alphaMat.type(), Scalar.all(1.0));
+                Mat invertedAlphaMat = new Mat();
+                Core.subtract(oneMat, alphaMat, invertedAlphaMat);
+                oneMat.release();
+                // Use the alpha channel for the heat map.
                 Mat mulMat = new Mat();
-                Core.multiply(heatmapMat, norm2Mat, mulMat, 1.0, CvType.CV_8U);
+                Core.multiply(heatmapMat, alphaMat, mulMat, 1.0, CvType.CV_8U);
                 heatmapMat.release();
                 heatmapMat = mulMat;
-                Mat allMat = new Mat(norm2Mat.rows(), norm2Mat.cols(), norm2Mat.type(), Scalar.all(1.0));
-                Mat inverted2NormMat = new Mat();
-                Core.subtract(allMat, norm2Mat, inverted2NormMat);
-                allMat.release();
+                // Use the inverted alpha channel for the backgound image.
                 mulMat = new Mat();
-                Core.multiply(backgroundMat, inverted2NormMat, mulMat, 1.0, CvType.CV_8U);
+                Core.multiply(backgroundMat, invertedAlphaMat, mulMat, 1.0, CvType.CV_8U);
                 backgroundMat.release();
                 backgroundMat = mulMat;
+                // Blend the two.
                 Mat blendedMat = new Mat();
                 Core.add(backgroundMat, heatmapMat, blendedMat);
                 backgroundMat.release();
                 heatmapMat.release();
-                // cleanup
+                // Cleanup
                 normMat.release();
-                norm2Mat.release();
-                inverted2NormMat.release();
+                alphaMat.release();
+                invertedAlphaMat.release();
                 // New result
                 if (diagnosticMat != mat1) {
                     diagnosticMat.release();
