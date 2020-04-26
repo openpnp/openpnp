@@ -73,7 +73,9 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         Euclidean,
         Square;
 
-        int getNorm() {
+        protected static final double minimumRange = 16;
+
+        protected int getNorm() {
             switch(this) {
                 case Maximum:
                     return Core.NORM_INF;
@@ -82,22 +84,48 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                 case Euclidean:
                     return Core.NORM_L2;
                 case Square:
-                    return Core.NORM_L2;
+                    return Core.NORM_L2SQR;
+                default:
+                    return -1;
             }
-            return -1;
         }
-        double normedResult(double result, Mat mat) {
-            // all results are scaled to 100 (percent)
+
+        protected double getScale(Mat mat) {
             switch(this) {
                 case Maximum:
-                    return result/(mat.channels()*2.55);
+                    return 255.0;
                 case Mean:
-                    return result/(mat.cols()*mat.rows()*mat.channels()*2.55);
+                    return 255.0*mat.cols()*mat.rows()*mat.channels();
                 case Euclidean:
-                    return result/(Math.sqrt(mat.cols()*mat.rows()*mat.channels())*2.55);
+                    return 255.0*Math.sqrt(mat.cols()*mat.rows()*mat.channels());
                 case Square:
-                    return result/((double)0.001*mat.cols()*mat.rows()*mat.channels());
+                    return 255.0*255.0*mat.cols()*mat.rows()*mat.channels(); 
+                default:
+                    return -1;
             }
+        }
+
+        protected double computeDifferenceMetric(Mat mat0, Mat mat1, double settleContrastEnhance, Mat mask) { 
+            // Compute the method difference norm
+            double result, range = 1.0;
+            if (mask != null) { 
+                // masked by the circle
+                result = Core.norm(mat0, mat1, getNorm(), mask)/getScale(mat1);
+                if (settleContrastEnhance != 0.0) {
+                    range = Core.norm(mat1, getNorm(), mask)/getScale(mat1);
+                }
+            }
+            else {
+                // the whole image
+                result = Core.norm(mat0, mat1, getNorm())/getScale(mat1);
+                if (settleContrastEnhance != 0.0) {
+                    range = Core.norm(mat1, getNorm())/getScale(mat1);
+                }
+            }
+            if (range != 0.0) {
+                result = (settleContrastEnhance/range + (1.0 - settleContrastEnhance))*result;
+            }
+            // Make it percent
             return result*100.0;
         }
     }
@@ -303,9 +331,10 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     }
 
     private BufferedImage autoSettleAndCapture() {
-        final boolean minMaxNeeded = settleContrastEnhance > 0.0 && !settleGradients;
         Mat mask = null;
+        Mat maskFullsize = null;
         Mat lastSettleMat = null;
+
         try {
             long t0 = System.currentTimeMillis();
             long timeout = t0 + settleTimeoutMs;
@@ -336,10 +365,55 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                 if (!settleFullColor) {
                     Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
                 }
-                
-                // Gaussian blur is the most expensive operation, so if it is large, rescale the image instead.
-                // This is effectively a box blur followed (later) by a 5 pixel Gaussian blur, i.e. still reasonable quality.
-                // It will make all subsequent steps significantly faster. 
+
+                if (settleContrastEnhance > 0.0) {
+                    // Enhance the contrast. Note we need to do this before scaling the image down, so mixed
+                    // colors can be created in the enhanced dynamic range. 
+
+                    // Need to create a full size mask.
+                    if (settleMaskCircle > 0.0 && maskFullsize == null) {
+                        int imageDimension = Math.min(mat.rows(), mat.cols());
+                        int maskDiameter = Math.max(1,  Math.min(imageDimension, (int)(settleMaskCircle*imageDimension)));
+                        maskFullsize = new Mat(mat.rows(), mat.cols(), CvType.CV_8U, Scalar.all(0));
+                        Imgproc.circle(maskFullsize,
+                                new Point( mat.rows() / 2, mat.cols() / 2 ),
+                                maskDiameter/2,
+                                new Scalar(255, 255, 255), -1);
+                    }
+
+                    // It's really hard to extract the minimum level from an image, it seems.
+                    // Core.norm(norm|NORM_MINMAX) does not seem to work and minMaxLoc() takes only
+                    // single channel images. So we need to extract channels here. I must be missing 
+                    // something.
+                    double max = SettleMethod.minimumRange/255.0;
+                    double range = SettleMethod.minimumRange/255.0;
+                    int nChannels = mat.channels();
+                    if (nChannels > 1) {
+                        Mat workingMat = new Mat();
+                        for (int cn=0; cn < nChannels; cn++) {
+                            Core.extractChannel(mat, workingMat, cn);
+                            MinMaxLocResult res = Core.minMaxLoc(workingMat, maskFullsize); // Note, mask can for once be null
+                            workingMat.release();
+                            max = Math.max(max, res.maxVal)/255.0;
+                            range = Math.max(range, res.maxVal-res.minVal)/255.0;
+                        }
+                    }
+                    else {
+                        MinMaxLocResult res = Core.minMaxLoc(mat, maskFullsize); // Note, mask can for once be null
+                        max = Math.max(max, res.maxVal)/255.0;
+                        range = Math.max(range, res.maxVal-res.minVal)/255.0;
+                    }
+                    double scale = settleContrastEnhance/range + (1.0 - settleContrastEnhance);
+                    double offset = -(max-range)*settleContrastEnhance/range;
+                    Mat tmpMat = new Mat();  
+                    Core.convertScaleAbs(mat, tmpMat, scale, offset*255.0);
+                    mat.release();
+                    mat = tmpMat;
+                }
+
+                // Gaussian blur is the most expensive operation, so if it is large, we rescale the image instead.
+                // This is effectively a box blur followed (later) by a Gaussian blur, i.e. still reasonable quality.
+                // Rescaling will make all subsequent steps significantly faster. 
                 final int resizeToMaxGaussianKernelSize = 5;
                 int gaussianBlurEff = settleGaussianBlur;
                 int divisor = (settleGaussianBlur+resizeToMaxGaussianKernelSize/2)/resizeToMaxGaussianKernelSize;
@@ -347,7 +421,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                     gaussianBlurEff = ((settleGaussianBlur)/divisor)|1;
                     Mat resizeMat = new Mat();
                     // TODO: find a way to roll resize and crop into one.
-                    Imgproc.resize(mat, resizeMat, new Size(mat.cols()/divisor, mat.rows()/divisor));
+                    Imgproc.resize(mat, resizeMat, new Size(mat.cols()/divisor, mat.rows()/divisor), 1.0/divisor, 1.0/divisor);
                     mat.release();
                     mat = resizeMat;
                 }
@@ -363,7 +437,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                     mat.release();
                     mat = cropMat;
                     if (mask == null) {
-                        // This must be the first frame, also create the mask circle
+                        // This must be the first frame, also create the mask circle.
                         mask = new Mat(mat.rows(), mat.cols(), CvType.CV_8U, Scalar.all(0));
                         Imgproc.circle(mask,
                                 new Point( mat.rows() / 2, mat.cols() / 2 ),
@@ -371,97 +445,24 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                                 new Scalar(255, 255, 255), -1);
                     }
                 }
-                
+
                 if (gaussianBlurEff > 1) {
                     // Apply the Gaussian blur, make the kernel size an odd number. 
                     Imgproc.GaussianBlur(mat, mat, new Size(gaussianBlurEff|1, gaussianBlurEff|1), 0);
                 }
-                
+
                 if (settleGradients) {
                     Mat gradientMat = new Mat();
                     // apply Laplacian transform
-                    Imgproc.Laplacian(mat, gradientMat, CvType.CV_16S, 3, 1, 0, Core.BORDER_DEFAULT);
-                    if (settleContrastEnhance > 0.0) {
-                        double range;
-                        double max;
-                        if (mask != null) {
-                            range = Core.norm(mat, Core.NORM_INF | Core.NORM_MINMAX, mask);
-                            max = Core.norm(mat, Core.NORM_INF, mask);
-                        }
-                        else {
-                            range = Core.norm(mat, Core.NORM_INF | Core.NORM_MINMAX);
-                            max = Core.norm(mat, Core.NORM_INF);
-                        }
-                            
-                        double scale = settleContrastEnhance*255.999/range + (1.0-settleContrastEnhance);
-                        double offset = (255.999-max*scale)*0.5;
-                        Core.convertScaleAbs(gradientMat, gradientMat, scale, offset);
-                    }
-                    else {
-                        Core.convertScaleAbs(gradientMat, gradientMat);
-                    }
+                    Imgproc.Laplacian(mat, gradientMat, CvType.CV_16S, 3, 1, 0, Core.BORDER_REPLICATE );
+                    Core.convertScaleAbs(gradientMat, gradientMat);
                     mat.release();
                     mat = gradientMat;
                 }
+
+                recordDiagnosticImage(tC, lastSettleMat, mat, mask, settleImages);
                 t = System.currentTimeMillis();
-                double range = 1.0;
-                if (minMaxNeeded) {
-                    if (mask != null) {
-                        range = Core.norm(mat, Core.NORM_INF | Core.NORM_MINMAX, mask)/255.0;
-                    }
-                    else {
-                        range = Core.norm(mat, Core.NORM_INF | Core.NORM_MINMAX)/255.0;
-                    }
-                }
-                if (settleDiagnostics) {
-                    // Write the image to disk.
-                    Mat resultMat = mat;
-                    if (minMaxNeeded) {
-                        // Simulate the contrast enhancement for the diagnostic image.  
-                        double max; 
-                        if (mask != null) {
-                            max = Core.norm(mat, Core.NORM_INF, mask);
-                        }
-                        else {
-                            max = Core.norm(mat, Core.NORM_INF);
-                        }
-                        double scale = settleContrastEnhance/range + (1.0 - settleContrastEnhance);
-                        double offset = (255.0-max*scale)*0.5;
-                        Mat tmpMat = new Mat();  
-                        Core.convertScaleAbs(resultMat, tmpMat, scale, offset);
-                        if (resultMat != mat) {
-                            resultMat.release();
-                        }
-                        resultMat = tmpMat;
-                    }
-                    if (mask != null) {
-                        // Simulate the mask for the diagnostic image.
-                        Mat tmpMat = new Mat(resultMat.rows(), resultMat.cols(), resultMat.type(), Scalar.all(0));
-                        resultMat.copyTo(tmpMat, mask);
-                        if (resultMat != mat) {
-                            resultMat.release();
-                        }
-                        resultMat = tmpMat;
-                    }
-                    if (settleImages != null) {
-                        BufferedImage img;
-                        img = OpenCvUtils.toBufferedImage(resultMat);
-                        settleImages.put((double)tC, img);
-                    }
-                    if (Logger.getLevel() == org.pmw.tinylog.Level.DEBUG || Logger.getLevel() == org.pmw.tinylog.Level.TRACE) {
-                        try {
-                            File file = Configuration.get()
-                                    .createResourceFile(getClass(), "settle", ".png");
-                            Imgcodecs.imwrite(file.getAbsolutePath(), resultMat);
-                        }
-                        catch (Exception e) {
-                            Logger.error(e);
-                        }
-                    }
-                    if (resultMat != mat) {
-                        resultMat.release();
-                    }
-                }
+
                 // If this is the first time through the loop then assign the new image to
                 // the lastSettleMat and loop again. We need at least two images to check.
                 if (lastSettleMat == null) {
@@ -470,18 +471,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                 }
 
                 // Take the norm of the differences of the two images.
-                double result; 
-                if (mask != null) { 
-                    // masked by the circle
-                    result = settleMethod.normedResult(Core.norm(lastSettleMat, mat, settleMethod.getNorm(), mask), mat);
-                }
-                else {
-                    // the whole image
-                    result = settleMethod.normedResult(Core.norm(lastSettleMat, mat, settleMethod.getNorm()), mat);
-                }
-                if (minMaxNeeded) {
-                    result = settleContrastEnhance*result/range + (1.0-settleContrastEnhance)*result;
-                }
+                double result = settleMethod.computeDifferenceMetric(lastSettleMat, mat, settleContrastEnhance, mask);
                 if (settleGraph != null) {
                     settleGraph.getRow(DIFFERENCE, DATA).recordDataPoint(t, result);
                 }
@@ -529,8 +519,111 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
             if (mask != null) {
                 mask.release();
             }
+            if (maskFullsize != null) {
+                maskFullsize.release();
+            }
             if (lastSettleMat != null) {
                 lastSettleMat.release();
+            }
+        }
+    }
+
+    protected void recordDiagnosticImage(long t, Mat mat0, Mat mat1, Mat mask,
+            TreeMap<Double, BufferedImage> settleImages) {
+        if (settleImages != null) {
+            // Record diagnostic images.
+            Mat diagnosticMat = mat1;
+
+            if (mask != null) {
+                // Simulate the mask for the diagnostic image.
+                Mat tmpMat = new Mat(diagnosticMat.rows(), diagnosticMat.cols(), diagnosticMat.type(), Scalar.all(0));
+                diagnosticMat.copyTo(tmpMat, mask);
+                if (diagnosticMat != mat1) {
+                    diagnosticMat.release();
+                }
+                diagnosticMat = tmpMat;
+            }
+
+            // Create the difference heat-map
+            if (mat0 != null) {
+                Mat diffMat = new Mat();
+                Core.absdiff(mat0, mat1, diffMat);
+                if (settleFullColor) {
+                    Imgproc.cvtColor(diffMat, diffMat, Imgproc.COLOR_BGR2GRAY);
+                }
+                Mat normMat = new Mat();
+                if (mask != null) {
+                    Core.normalize(diffMat, normMat, 255, 0, 
+                            Core.NORM_INF, 
+                            0, mask);
+                }
+                else {
+                    Core.normalize(diffMat, normMat, 255, 0, 
+                            Core.NORM_INF, 
+                            0);
+                }
+                Imgproc.cvtColor(normMat, normMat, Imgproc.COLOR_GRAY2BGR);
+                diffMat.release();
+                Mat heatmapMat = new Mat();
+                Imgproc.applyColorMap(normMat, heatmapMat, Imgproc.COLORMAP_HOT);
+                Mat backgroundMat = new Mat();
+                if (settleFullColor) {
+                    diagnosticMat.copyTo(backgroundMat);
+                }
+                else {
+                    Imgproc.cvtColor(diagnosticMat, backgroundMat, Imgproc.COLOR_GRAY2BGR);
+                }
+
+                // Am I doing something wrong? This arithmetic is awful to use. 
+                Mat norm2Mat = new Mat();
+                Core.multiply(normMat, normMat, norm2Mat, 1/255.0/255.0, CvType.CV_32F);
+                Mat mulMat = new Mat();
+                Core.multiply(heatmapMat, norm2Mat, mulMat, 1.0, CvType.CV_8U);
+                heatmapMat.release();
+                heatmapMat = mulMat;
+                Mat allMat = new Mat(norm2Mat.rows(), norm2Mat.cols(), norm2Mat.type(), Scalar.all(1.0));
+                Mat inverted2NormMat = new Mat();
+                Core.subtract(allMat, norm2Mat, inverted2NormMat);
+                allMat.release();
+                mulMat = new Mat();
+                Core.multiply(backgroundMat, inverted2NormMat, mulMat, 1.0, CvType.CV_8U);
+                backgroundMat.release();
+                backgroundMat = mulMat;
+                Mat blendedMat = new Mat();
+                Core.add(backgroundMat, heatmapMat, blendedMat);
+                backgroundMat.release();
+                heatmapMat.release();
+                // cleanup
+                normMat.release();
+                norm2Mat.release();
+                inverted2NormMat.release();
+                // New result
+                if (diagnosticMat != mat1) {
+                    diagnosticMat.release();
+                }
+                diagnosticMat = blendedMat;
+            }
+
+            // Save file to disk.
+            if (Logger.getLevel() == org.pmw.tinylog.Level.DEBUG || Logger.getLevel() == org.pmw.tinylog.Level.TRACE) {
+                try {
+                    File file = Configuration.get()
+                            .createResourceFile(getClass(), "settle", ".png");
+                    Imgcodecs.imwrite(file.getAbsolutePath(), diagnosticMat);
+                }
+                catch (Exception e) {
+                    Logger.error(e);
+                }
+            }
+
+            // Record this image to play later
+            BufferedImage img;
+            img = OpenCvUtils.toBufferedImage(diagnosticMat);
+            settleImages.put((double)t, img);
+
+            // cleanup
+            if (diagnosticMat != mat1) {
+                diagnosticMat.release();
             }
         }
     }
@@ -654,6 +747,11 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
 
     public void setSettleDiagnostics(boolean settleDiagnostics) {
         this.settleDiagnostics = settleDiagnostics;
+        if (!settleDiagnostics) {
+            // get rid of recordings
+            setSettleGraph(null);
+            setRecordedImages(null);
+        }
     }
 
     public SimpleGraph getSettleGraph() {
@@ -675,6 +773,16 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         }
         return null;
     }
+    
+    
+    protected TreeMap<Double, BufferedImage> getRecordedImages() {
+        return recordedImages;
+    }
+
+    protected void setRecordedImages(TreeMap<Double, BufferedImage> recordedImages) {
+        this.recordedImages = recordedImages;
+    }
+
     public void playRecordedImage(double t) {
         if (recordedImages != null) {
             Map.Entry<Double, BufferedImage> entry = recordedImages.floorEntry(t);

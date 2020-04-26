@@ -124,7 +124,7 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
             for (DataScale dataScale : graph.getDataScales()) {
                 Point2D.Double min = graph.getMinimum(dataScale);
                 Point2D.Double max = graph.getMaximum(dataScale);
-                if (min != null && max != null) {
+                if (min != null && max != null && (max.y-min.y) > 0.0 && (max.x-min.x) > 0.0) {
                     double xOrigin = (w-1)*graph.getRelativePaddingLeft();
                     double xScale = (w-1)*(1.0-graph.getRelativePaddingLeft()-graph.getRelativePaddingRight())/(max.x-min.x);
 
