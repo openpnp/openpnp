@@ -216,6 +216,3 @@ Here's what we accomplished:
 [Pro Git, written by Scott Chacon and Ben Straub](https://git-scm.com/book/en/v2) is the best way to learn more about Git. It covers everything we've learned here and expands on each thing so that you can really understand what is happening.
 
 [Github Bootcamp](https://help.github.com/categories/bootcamp/) is a great way to learn more about Github.
-
-
-
