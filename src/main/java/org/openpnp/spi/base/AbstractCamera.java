@@ -359,31 +359,46 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                     Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
                 }
 
+                // Gaussian blur is the most expensive operation, so if it is large, we rescale the image instead.
+                // This is effectively a box blur followed (later) by a Gaussian blur, i.e. still reasonable quality.
+                // Rescaling will also make all subsequent steps significantly faster.
+                // Do these calculations up front.
+                final int resizeToMaxGaussianKernelSize = 5;
+                int gaussianBlurEff = settleGaussianBlur;
+                int divisor = (resizeToMaxGaussianKernelSize > resizeToMaxGaussianKernelSize) ? 
+                        (settleGaussianBlur+resizeToMaxGaussianKernelSize/2)/resizeToMaxGaussianKernelSize
+                        : 1;
+
+                if (settleMaskCircle > 0.0) {
+                    // Crop the image to the mask dimension. 
+                    int imageDimension = Math.min(mat.rows(), mat.cols());
+                    int maskDiameter = Math.max(1,  Math.min(imageDimension, (int)(settleMaskCircle*imageDimension)));
+                    // Make it a multiple of the rescale divisor.
+                    maskDiameter = (int)Math.floor(maskDiameter/divisor)*divisor;
+                    Rect rectCrop = new Rect(
+                            (mat.cols() - maskDiameter)/2, (mat.rows() - maskDiameter)/2,
+                            maskDiameter, maskDiameter);
+                    Mat cropMat = mat.submat(rectCrop);
+                    mat.release();
+                    mat = cropMat;
+                    if (maskFullsize == null) {
+                        // This must be the first frame, also create the mask circle.
+                        maskFullsize = createMask(mat);
+                        if (divisor == 1) {
+                            // also valid as the rescaled mask
+                            mask = maskFullsize;
+                        }
+                    }
+                }
+
                 if (settleContrastEnhance > 0.0) {
                     // Enhance the contrast. Note we need to do this before scaling the image down, so mixed
-                    // colors can be created in color the resolution of the spread-out dynamic range. 
-
-                    // Prepare a full size mask, if wanted.
-                    if (settleMaskCircle > 0.0 && maskFullsize == null) {
-                        int imageDimension = Math.min(mat.rows(), mat.cols());
-                        int maskDiameter = Math.max(1,  Math.min(imageDimension, (int)(settleMaskCircle*imageDimension)));
-                        maskFullsize = new Mat(mat.rows(), mat.cols(), CvType.CV_8U, Scalar.all(0));
-                        Imgproc.circle(maskFullsize,
-                                new Point( mat.rows() / 2, mat.cols() / 2 ),
-                                maskDiameter/2,
-                                new Scalar(255, 255, 255), -1);
-                    }
-
+                    // colors can be created in the full dynamic range. 
                     mat = enhanceContrast(mat, maskFullsize);
                 }
 
-                // Gaussian blur is the most expensive operation, so if it is large, we rescale the image instead.
-                // This is effectively a box blur followed (later) by a Gaussian blur, i.e. still reasonable quality.
-                // Rescaling will make all subsequent steps significantly faster. 
-                final int resizeToMaxGaussianKernelSize = 5;
-                int gaussianBlurEff = settleGaussianBlur;
-                int divisor = (settleGaussianBlur+resizeToMaxGaussianKernelSize/2)/resizeToMaxGaussianKernelSize;
                 if (divisor > 1) {
+                    // Scale the image down, see the calculations further up.  
                     gaussianBlurEff = ((settleGaussianBlur)/divisor)|1;
                     Mat resizeMat = new Mat();
                     Imgproc.resize(mat, resizeMat, new Size(mat.cols()/divisor, mat.rows()/divisor), 1.0/divisor, 1.0/divisor);
@@ -391,24 +406,9 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                     mat = resizeMat;
                 }
 
-                if (settleMaskCircle > 0.0) {
-                    // Crop the image to the mask dimension. 
-                    int imageDimension = Math.min(mat.rows(), mat.cols());
-                    int maskDiameter = Math.max(1,  Math.min(imageDimension, (int)(settleMaskCircle*imageDimension)));
-                    Rect rectCrop = new Rect(
-                            (mat.cols() - maskDiameter)/2, (mat.rows() - maskDiameter)/2,
-                            maskDiameter, maskDiameter);
-                    Mat cropMat = mat.submat(rectCrop);
-                    mat.release();
-                    mat = cropMat;
-                    if (mask == null) {
-                        // This must be the first frame, also create the mask circle.
-                        mask = new Mat(mat.rows(), mat.cols(), CvType.CV_8U, Scalar.all(0));
-                        Imgproc.circle(mask,
-                                new Point( mat.rows() / 2, mat.cols() / 2 ),
-                                maskDiameter/2,
-                                new Scalar(255, 255, 255), -1);
-                    }
+                if (settleMaskCircle > 0.0 && mask == null) {
+                    // This must be the first frame, also create the mask circle after rescale.
+                    mask = createMask(mat);
                 }
 
                 if (gaussianBlurEff > 1) {
@@ -425,8 +425,10 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                     mat = gradientMat;
                 }
 
-                // Record the image with the caputure time.
-                recordDiagnosticImage(tCapture, lastSettleMat, mat, mask, settleImages);
+                // Record the image with the capture time (it will be refined later).
+                BufferedImage img;
+                img = OpenCvUtils.toBufferedImage(mat);
+                settleImages.put((double)tCapture, img);
                 t = System.currentTimeMillis();
 
                 // If this is the first time through the loop then assign the new image to
@@ -474,6 +476,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                         setSettleGraph(settleGraph);
                     }
                     if (settleImages != null) {
+                        refineDiagnosticImages(settleImages);
                         setRecordedImages(settleImages);
                     }
                     Logger.debug("autoSettleAndCapture in {} ms", System.currentTimeMillis() - t0);
@@ -482,17 +485,32 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
             }
         }
         finally {
-            // whatever happens, always release these looping mats
-            if (mask != null) {
-                mask.release();
-            }
+            // Whatever happens, always release these looping mats.
             if (maskFullsize != null) {
                 maskFullsize.release();
+                if (mask == maskFullsize) {
+                    mask = null;
+                }
+            }
+            if (mask != null) {
+                mask.release();
             }
             if (lastSettleMat != null) {
                 lastSettleMat.release();
             }
         }
+    }
+
+    protected Mat createMask(Mat mat) {
+        Mat mask;
+        int imageDimension = Math.min(mat.rows(), mat.cols());
+        int maskDiameter = Math.max(1,  Math.min(imageDimension, (int)(settleMaskCircle*imageDimension)));
+        mask = new Mat(mat.rows(), mat.cols(), CvType.CV_8U, Scalar.all(0));
+        Imgproc.circle(mask,
+                new Point(mat.rows()/2, mat.cols()/2),
+                maskDiameter/2,
+                new Scalar(255, 255, 255), -1);
+        return mask;
     }
 
     protected Mat enhanceContrast(Mat mat, Mat mask) {
@@ -526,7 +544,34 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         return mat;
     }
 
-    protected void recordDiagnosticImage(long t, Mat mat0, Mat mat1, Mat mask,
+    protected void refineDiagnosticImages(TreeMap<Double, BufferedImage> settleImages) {
+        ArrayList<Double> keyFrames = new ArrayList<Double>(settleImages.keySet());
+        Mat mat0 = null;
+        Mat mask = null;
+        try {
+            for (Double keyFrame : keyFrames) {
+                BufferedImage img = settleImages.get(keyFrame); 
+                Mat mat1 = OpenCvUtils.toMat(img);
+                if (settleMaskCircle > 0.0 && mask == null) {
+                    // This must be the first frame, also create the mask.
+                    mask = createMask(mat1);
+                }
+                refineDiagnosticImage(keyFrame, mat0, mat1, mask, settleImages);
+                mat0 = mat1;
+            }
+        }
+        finally {
+            // Whatever happens, always release these looping mats.
+            if (mask != null) {
+                mask.release();
+            }
+            if (mat0 != null) {
+                mat0.release();
+            }
+        }
+    }
+
+    protected void refineDiagnosticImage(double t, Mat mat0, Mat mat1, Mat mask,
             TreeMap<Double, BufferedImage> settleImages) {
         if (settleImages != null) {
             // Record diagnostic images.
