@@ -159,8 +159,16 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     public synchronized BufferedImage internalCapture() {
         ensureOpen();
         try {
+            /**
+             * The timeout is only needed if the stream is somehow in error and not producing frames (anymore) 
+             * which can happen, if you disconnect the USB port and then try to capture from a pipeline.  
+             */
+            long timeout = System.currentTimeMillis()+500;
             while (!stream.hasNewFrame()) {
                 Thread.yield();
+                if (System.currentTimeMillis() > timeout) {
+                    return null;
+                }
             }
             BufferedImage img = stream.capture();
             /**
