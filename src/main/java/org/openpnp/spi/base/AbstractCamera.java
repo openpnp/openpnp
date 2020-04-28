@@ -563,7 +563,6 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
             // Simulate the mask for the diagnostic image.
             Mat tmpMat = new Mat(diagnosticMat.rows(), diagnosticMat.cols(), diagnosticMat.type(), Scalar.all(0));
             diagnosticMat.copyTo(tmpMat, mask);
-            mask.release();
             if (diagnosticMat != mat1) {
                 diagnosticMat.release();
             }
