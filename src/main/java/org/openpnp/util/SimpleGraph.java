@@ -31,10 +31,11 @@ import java.util.TreeMap;
 
 public class SimpleGraph {
 
-    private boolean offsetMode = false;
     private double relativePaddingLeft;
     private double relativePaddingRight;
-    private List<DataScale> dataScales = new ArrayList<>();  
+    private List<DataScale> dataScales = new ArrayList<>();
+    private long zeroNanoTime = Long.MIN_VALUE;
+    private long lastNanoTime = Long.MIN_VALUE;
 
     public static class DataScale {
         private String label;
@@ -143,20 +144,24 @@ public class SimpleGraph {
         return dataRow;
     }
 
-    public boolean isOffsetMode() {
-        return offsetMode;
-    }
-    public void setOffsetMode(boolean offsetMode) {
-        this.offsetMode = offsetMode;
-    }
-    public double getOffset() {
-        for (DataScale dataScale : dataScales) {
-            Point2D.Double min = getMinimum(dataScale);
-            if (min != null) {
-                return min.x;
-            }
+    /**
+     * @return Time in Milliseconds since the first call on this instance. Guaranteed to be monotone and unique.
+     *
+     */
+    public double getT() {
+        if (zeroNanoTime == Long.MIN_VALUE) {
+            zeroNanoTime = System.nanoTime();
+            return 0.0;
         }
-        return 0.0;
+        long dt = (System.nanoTime() - zeroNanoTime);
+        if (dt <= lastNanoTime) {
+            dt = lastNanoTime++;
+        }
+        else {
+            lastNanoTime  = dt;
+        }
+        // to Milliseconds
+        return 1e-6*dt;
     }
 
     public double getRelativePaddingLeft() {

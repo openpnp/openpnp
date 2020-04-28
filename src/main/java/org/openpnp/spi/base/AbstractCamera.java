@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -190,6 +191,8 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     public static final String DATA = "D"; 
     
     protected TreeMap<Double, BufferedImage> recordedImages = null;
+    protected TreeMap<Double, BufferedImage> heatMappedImages = null;
+    protected Double recordedImagePlayed = null;
     private SimpleGraph settleGraph = null;
 
     public AbstractCamera() {
@@ -295,7 +298,6 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         if (settleDiagnostics) {
             // Diagnostics wanted, create the simple graph.
             SimpleGraph settleGraph = new SimpleGraph();
-            settleGraph.setOffsetMode(true);
             settleGraph.setRelativePaddingLeft(0.05);
             // init difference scale
             SimpleGraph.DataScale settleScale =  settleGraph.getScale(DIFFERENCE);
@@ -332,25 +334,29 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
             long t0 = System.currentTimeMillis();
             long timeout = t0 + settleTimeoutMs;
             int debounceCount = 0;
+            final double seq = 0.01;
             SimpleGraph settleGraph = startDiagnostics();
-            TreeMap<Double, BufferedImage> settleImages = new TreeMap<>();
+            TreeMap<Double, BufferedImage> settleImages = null;
+            if (settleGraph != null) {
+                settleImages = new TreeMap<>();
+            }
             while(true) {
                 // Capture an image. 
-                long t = System.currentTimeMillis();
                 if (settleGraph != null) {
                     // Record begin of capture.
-                    settleGraph.getRow(BOOLEAN, CAPTURE).recordDataPoint(t-1, 0);
-                    settleGraph.getRow(BOOLEAN, CAPTURE).recordDataPoint(t, 1);
+                    settleGraph.getRow(BOOLEAN, CAPTURE).recordDataPoint(settleGraph.getT(), 0);
+                    settleGraph.getRow(BOOLEAN, CAPTURE).recordDataPoint(settleGraph.getT(), 1);
                 }
 
                 // The actual capture.
                 BufferedImage image = capture();
 
-                long tCapture = System.currentTimeMillis();
+                double tCapture = 0.0; 
                 if (settleGraph != null) {
+                    tCapture = settleGraph.getT();
                     // Record end of capture.
-                    settleGraph.getRow(BOOLEAN, CAPTURE).recordDataPoint(tCapture-1, 1);
-                    settleGraph.getRow(BOOLEAN, CAPTURE).recordDataPoint(tCapture, 0);
+                    settleGraph.getRow(BOOLEAN, CAPTURE).recordDataPoint(tCapture, 1);
+                    settleGraph.getRow(BOOLEAN, CAPTURE).recordDataPoint(settleGraph.getT(), 0);
                 }
 
                 // Convert to Mat and if not full color, convert to gray.
@@ -425,11 +431,13 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                     mat = gradientMat;
                 }
 
-                // Record the image with the capture time (it will be refined later).
-                BufferedImage img;
-                img = OpenCvUtils.toBufferedImage(mat);
-                settleImages.put((double)tCapture, img);
-                t = System.currentTimeMillis();
+                // Record the image with the capture time.
+                if (settleGraph != null) {
+                    BufferedImage img;
+                    img = OpenCvUtils.toBufferedImage(mat);
+                    settleImages.put(tCapture, img);
+                    
+                }
 
                 // If this is the first time through the loop then assign the new image to
                 // the lastSettleMat and loop again. We need at least two images to check.
@@ -441,13 +449,15 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                 // Compute the differences of the two images according to the method.
                 double result = settleMethod.computeDifference(lastSettleMat, mat, settleContrastEnhance, mask);
                 if (settleGraph != null) {
-                    settleGraph.getRow(DIFFERENCE, DATA).recordDataPoint(t, result);
+                    settleGraph.getRow(DIFFERENCE, DATA).recordDataPoint(settleGraph.getT(), result);
                 }
-                Logger.debug("autoSettleAndCapture t="+(t-t0)+" auto settle score: " + result);
 
                 // Release the lastSettleMat and store the new image as the lastSettleMat.
                 lastSettleMat.release();
                 lastSettleMat = mat;
+
+                long t = System.currentTimeMillis();
+                Logger.debug("autoSettleAndCapture t="+(t-t0)+" auto settle score: " + result);
 
                 // If the image changed at least a bit (due to noise) and less than our
                 // threshold, we have a winner. The check for > 0 is to ensure that we're not just
@@ -467,16 +477,15 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                     lastSettleMat.release();
                     lastSettleMat = null;
                     if (settleGraph != null) {
-                        // Record last points in graph 
-                        settleGraph.getRow(BOOLEAN, CAPTURE).recordDataPoint(t, 0);
-                        settleGraph.getRow(DIFFERENCE, THRESHOLD).recordDataPoint(t0, settleThreshold);
-                        settleGraph.getRow(DIFFERENCE, THRESHOLD).recordDataPoint(t+1, settleThreshold);
-                        settleGraph.getRow(DIFFERENCE, DATA).recordDataPoint(t+1, result);
-                        // Set the graph to the camera (so it will now be drawn)
+                        // Record last points in the graph. 
+                        double tEnd = settleGraph.getT()+1;
+                        settleGraph.getRow(BOOLEAN, CAPTURE).recordDataPoint(tEnd, 0);
+                        settleGraph.getRow(DIFFERENCE, THRESHOLD).recordDataPoint(0.0, settleThreshold);
+                        settleGraph.getRow(DIFFERENCE, THRESHOLD).recordDataPoint(tEnd, settleThreshold);
+                        settleGraph.getRow(DIFFERENCE, DATA).recordDataPoint(tEnd, result);
+                        // Set the graph to the camera.
                         setSettleGraph(settleGraph);
-                    }
-                    if (settleImages != null) {
-                        refineDiagnosticImages(settleImages);
+                        // Set recorded images along with the graph.
                         setRecordedImages(settleImages);
                     }
                     Logger.debug("autoSettleAndCapture in {} ms", System.currentTimeMillis() - t0);
@@ -514,7 +523,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     }
 
     protected Mat enhanceContrast(Mat mat, Mat mask) {
-        // It's weirdly difficult to extract the minimum level (black point) from an image, it seems.
+        // It's weirdly difficult to extract the minimum level (black point) from an image.
         // Core.norm(... NORM_MINMAX) does not seem to work and minMaxLoc() takes only single channel images. 
         // So we need to work with the channels individually here. I must be missing something.
         double max = SettleMethod.minimumRange/255.0;
@@ -544,137 +553,110 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         return mat;
     }
 
-    protected void refineDiagnosticImages(TreeMap<Double, BufferedImage> settleImages) {
-        ArrayList<Double> keyFrames = new ArrayList<Double>(settleImages.keySet());
-        Mat mat0 = null;
+    protected BufferedImage createHeatMapDiagnosticImage(Mat mat0, Mat mat1) {
+        // Record diagnostic images.
+        Mat diagnosticMat = mat1;
         Mat mask = null;
-        try {
-            for (Double keyFrame : keyFrames) {
-                BufferedImage img = settleImages.get(keyFrame); 
-                Mat mat1 = OpenCvUtils.toMat(img);
-                if (settleMaskCircle > 0.0 && mask == null) {
-                    // This must be the first frame, also create the mask.
-                    mask = createMask(mat1);
-                }
-                refineDiagnosticImage(keyFrame, mat0, mat1, mask, settleImages);
-                mat0 = mat1;
-            }
-        }
-        finally {
-            // Whatever happens, always release these looping mats.
-            if (mask != null) {
-                mask.release();
-            }
-            if (mat0 != null) {
-                mat0.release();
-            }
-        }
-    }
-
-    protected void refineDiagnosticImage(double t, Mat mat0, Mat mat1, Mat mask,
-            TreeMap<Double, BufferedImage> settleImages) {
-        if (settleImages != null) {
-            // Record diagnostic images.
-            Mat diagnosticMat = mat1;
-
-            if (mask != null) {
-                // Simulate the mask for the diagnostic image.
-                Mat tmpMat = new Mat(diagnosticMat.rows(), diagnosticMat.cols(), diagnosticMat.type(), Scalar.all(0));
-                diagnosticMat.copyTo(tmpMat, mask);
-                if (diagnosticMat != mat1) {
-                    diagnosticMat.release();
-                }
-                diagnosticMat = tmpMat;
-            }
-
-            // Create the difference heat-map
-            if (mat0 != null) {
-                // We have mat0, i.e. this is at least the second frame. 
-                Mat diffMat = new Mat();
-                Core.absdiff(mat0, mat1, diffMat);
-                if (settleFullColor) {
-                    Imgproc.cvtColor(diffMat, diffMat, Imgproc.COLOR_BGR2GRAY);
-                }
-                Mat normMat = new Mat();
-                if (mask != null) {
-                    Core.normalize(diffMat, normMat, 255, 0, 
-                            Core.NORM_INF, 
-                            0, mask);
-                }
-                else {
-                    Core.normalize(diffMat, normMat, 255, 0, 
-                            Core.NORM_INF, 
-                            0);
-                }
-                Imgproc.cvtColor(normMat, normMat, Imgproc.COLOR_GRAY2BGR);
-                diffMat.release();
-                Mat heatmapMat = new Mat();
-                Imgproc.applyColorMap(normMat, heatmapMat, Imgproc.COLORMAP_HOT);
-                Mat backgroundMat = new Mat();
-                if (settleFullColor) {
-                    diagnosticMat.copyTo(backgroundMat);
-                }
-                else {
-                    Imgproc.cvtColor(diagnosticMat, backgroundMat, Imgproc.COLOR_GRAY2BGR);
-                }
-
-                // Am I doing something wrong? This OpenCV arithmetic is awful to code. 
-                Mat alphaMat = new Mat();
-                // Square the normed diff, to emphasize large mevements for the alpha channel.
-                Core.multiply(normMat, normMat, alphaMat, 1/255.0/255.0, CvType.CV_32F);
-                // Create the complement for the alpha channel.
-                Mat oneMat = new Mat(alphaMat.rows(), alphaMat.cols(), alphaMat.type(), Scalar.all(1.0));
-                Mat invertedAlphaMat = new Mat();
-                Core.subtract(oneMat, alphaMat, invertedAlphaMat);
-                oneMat.release();
-                // Use the alpha channel for the heat map.
-                Mat mulMat = new Mat();
-                Core.multiply(heatmapMat, alphaMat, mulMat, 1.0, CvType.CV_8U);
-                heatmapMat.release();
-                heatmapMat = mulMat;
-                // Use the inverted alpha channel for the backgound image.
-                mulMat = new Mat();
-                Core.multiply(backgroundMat, invertedAlphaMat, mulMat, 1.0, CvType.CV_8U);
-                backgroundMat.release();
-                backgroundMat = mulMat;
-                // Blend the two.
-                Mat blendedMat = new Mat();
-                Core.add(backgroundMat, heatmapMat, blendedMat);
-                backgroundMat.release();
-                heatmapMat.release();
-                // Cleanup
-                normMat.release();
-                alphaMat.release();
-                invertedAlphaMat.release();
-                // New result
-                if (diagnosticMat != mat1) {
-                    diagnosticMat.release();
-                }
-                diagnosticMat = blendedMat;
-            }
-
-            // Save file to disk.
-            if (Logger.getLevel() == org.pmw.tinylog.Level.DEBUG || Logger.getLevel() == org.pmw.tinylog.Level.TRACE) {
-                try {
-                    File file = Configuration.get()
-                            .createResourceFile(getClass(), "settle", ".png");
-                    Imgcodecs.imwrite(file.getAbsolutePath(), diagnosticMat);
-                }
-                catch (Exception e) {
-                    Logger.error(e);
-                }
-            }
-
-            // Record this image to play later
-            BufferedImage img;
-            img = OpenCvUtils.toBufferedImage(diagnosticMat);
-            settleImages.put((double)t, img);
-
-            // cleanup
+        if (settleMaskCircle > 0.0) {
+            // This must be the first frame, also create the mask.
+            mask = createMask(mat1);
+            // Simulate the mask for the diagnostic image.
+            Mat tmpMat = new Mat(diagnosticMat.rows(), diagnosticMat.cols(), diagnosticMat.type(), Scalar.all(0));
+            diagnosticMat.copyTo(tmpMat, mask);
+            mask.release();
             if (diagnosticMat != mat1) {
                 diagnosticMat.release();
             }
+            diagnosticMat = tmpMat;
         }
+
+        // Create the difference heat-map
+        if (mat0 != null) {
+            // We have mat0, i.e. this is at least the second frame. 
+            Mat diffMat = new Mat();
+            Core.absdiff(mat0, mat1, diffMat);
+            if (settleFullColor) {
+                Imgproc.cvtColor(diffMat, diffMat, Imgproc.COLOR_BGR2GRAY);
+            }
+            Mat normMat = new Mat();
+            if (mask != null) {
+                Core.normalize(diffMat, normMat, 255, 0, 
+                        Core.NORM_INF, 
+                        0, mask);
+            }
+            else {
+                Core.normalize(diffMat, normMat, 255, 0, 
+                        Core.NORM_INF, 
+                        0);
+            }
+            Imgproc.cvtColor(normMat, normMat, Imgproc.COLOR_GRAY2BGR);
+            diffMat.release();
+            Mat heatmapMat = new Mat();
+            Imgproc.applyColorMap(normMat, heatmapMat, Imgproc.COLORMAP_HOT);
+            Mat backgroundMat = new Mat();
+            if (settleFullColor) {
+                diagnosticMat.copyTo(backgroundMat);
+            }
+            else {
+                Imgproc.cvtColor(diagnosticMat, backgroundMat, Imgproc.COLOR_GRAY2BGR);
+            }
+
+            // Am I doing something wrong? This OpenCV arithmetic is awful to code. 
+            Mat alphaMat = new Mat();
+            // Square the normed diff, to emphasize large mevements for the alpha channel.
+            Core.multiply(normMat, normMat, alphaMat, 1/255.0/255.0, CvType.CV_32F);
+            // Create the complement for the alpha channel.
+            Mat oneMat = new Mat(alphaMat.rows(), alphaMat.cols(), alphaMat.type(), Scalar.all(1.0));
+            Mat invertedAlphaMat = new Mat();
+            Core.subtract(oneMat, alphaMat, invertedAlphaMat);
+            oneMat.release();
+            // Use the alpha channel for the heat map.
+            Mat mulMat = new Mat();
+            Core.multiply(heatmapMat, alphaMat, mulMat, 1.0, CvType.CV_8U);
+            heatmapMat.release();
+            heatmapMat = mulMat;
+            // Use the inverted alpha channel for the backgound image.
+            mulMat = new Mat();
+            Core.multiply(backgroundMat, invertedAlphaMat, mulMat, 1.0, CvType.CV_8U);
+            backgroundMat.release();
+            backgroundMat = mulMat;
+            // Blend the two.
+            Mat blendedMat = new Mat();
+            Core.add(backgroundMat, heatmapMat, blendedMat);
+            backgroundMat.release();
+            heatmapMat.release();
+            // Cleanup
+            normMat.release();
+            alphaMat.release();
+            invertedAlphaMat.release();
+            // New result
+            if (diagnosticMat != mat1) {
+                diagnosticMat.release();
+            }
+            diagnosticMat = blendedMat;
+        }
+
+        // Save file to disk.
+        if (Logger.getLevel() == org.pmw.tinylog.Level.DEBUG || Logger.getLevel() == org.pmw.tinylog.Level.TRACE) {
+            try {
+                File file = Configuration.get()
+                        .createResourceFile(getClass(), "settle", ".png");
+                Imgcodecs.imwrite(file.getAbsolutePath(), diagnosticMat);
+            }
+            catch (Exception e) {
+                Logger.error(e);
+            }
+        }
+
+        BufferedImage img = OpenCvUtils.toBufferedImage(diagnosticMat);
+        // cleanup
+        if (diagnosticMat != mat1) {
+            diagnosticMat.release();
+        }
+        if (mask != null) {
+            mask.release();
+        }
+        return img;
     }
 
     public BufferedImage settleAndCapture() {
@@ -816,6 +798,28 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         firePropertyChange("settleGraph", oldValue, settleGraph);
     }
 
+    protected TreeMap<Double, BufferedImage> getRecordedImages() {
+        return recordedImages;
+    }
+
+    protected void setRecordedImages(TreeMap<Double, BufferedImage> recordedImages) {
+        this.recordedImages = recordedImages;
+        this.heatMappedImages = recordedImages == null ? null : new TreeMap<>();
+    }
+
+    public Double getRecordedImagePlayed() {
+        return recordedImagePlayed;
+    }
+
+    public void setRecordedImagePlayed(Double recordedImagePlayed) {
+        Object oldValue = this.recordedImagePlayed;
+        this.recordedImagePlayed = recordedImagePlayed;
+        firePropertyChange("recordedImagePlayed", oldValue, recordedImagePlayed);
+        if (recordedImagePlayed != null && oldValue != recordedImagePlayed) {
+            playRecordedImage(recordedImagePlayed);
+        }
+    }
+
     public BufferedImage getRecordedImage(double t) {
         if (recordedImages != null) {
             Map.Entry<Double, BufferedImage> entry = recordedImages.floorEntry(t);
@@ -825,32 +829,40 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         }
         return null;
     }
-    
-    
-    protected TreeMap<Double, BufferedImage> getRecordedImages() {
-        return recordedImages;
-    }
-
-    protected void setRecordedImages(TreeMap<Double, BufferedImage> recordedImages) {
-        this.recordedImages = recordedImages;
-    }
 
     public void playRecordedImage(double t) {
         if (recordedImages != null) {
-            Map.Entry<Double, BufferedImage> entry = recordedImages.floorEntry(t);
-            if (entry != null) {
+            BufferedImage img = null;
+            Map.Entry<Double, BufferedImage> entry1 = recordedImages.floorEntry(t);
+            if (entry1 != null) {
+                double tFrame = entry1.getKey();
+                img = heatMappedImages.get(tFrame);
+                if (img == null) {
+                    // first time use, create the heat mapped image
+                    Map.Entry<Double, BufferedImage> entry0 = recordedImages.lowerEntry(tFrame);
+                    Mat mat0 = null;
+                    if (entry0 != null) {
+                        mat0 = OpenCvUtils.toMat(entry0.getValue());
+                    }
+                    Mat mat1 = OpenCvUtils.toMat(entry1.getValue());
+                    img = createHeatMapDiagnosticImage(mat0, mat1);
+                    if (mat0 != null) {
+                        mat0.release();
+                    }
+                    mat1.release();
+                    heatMappedImages.put(tFrame, img);
+                }
                 // I'm sure there's a better way to count the preceding images :-(
                 int n = 0;
-                for (Double t0 : recordedImages.keySet()) {
-                    if (t0 > t) {
+                for (Double t1 : recordedImages.keySet()) {
+                    if (t1 > t) {
                         break;
                     }
                     ++n;
                 }
-                double t0 = (settleGraph != null ? settleGraph.getOffset() : 0.0);
-                String message = "Camera settling, frame number "+n+", t=+"+(entry.getKey()-t0)+"ms";
+                String message = "Camera settling, frame number "+n+", t=+"+String.format(Locale.US, "%.1f", tFrame)+"ms";
                 MainFrame.get().getCameraViews().getCameraView(this)
-                .showFilteredImage(entry.getValue(), message, 1500);
+                .showFilteredImage(img, message, 1500);
                 SwingUtilities.invokeLater(() -> {
                     MainFrame.get().getCameraViews().ensureCameraVisible(this);
                 });

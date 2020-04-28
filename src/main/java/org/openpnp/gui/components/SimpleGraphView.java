@@ -51,8 +51,7 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
     private final Dimension preferredSize = new Dimension(100, 80);
     private Integer xMouse;
     private Integer yMouse;
-    private Double indicatorX;
-    private Double indicatorXAbsolute;
+    private Double selectedX;
 
     public SimpleGraphView() {
         addMouseMotionListener(this);
@@ -71,21 +70,13 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
         repaint();
     }
 
-    public Double getIndicatorX() {
-        return indicatorX;
+    public Double getSelectedX() {
+        return selectedX;
     }
-    public void setIndicatorX(Double indicatorX) {
-        Object oldValue = this.indicatorX;
-        this.indicatorX = indicatorX;
-        firePropertyChange("indicatorX", oldValue, indicatorX);
-    }
-    public Double getIndicatorXAbsolute() {
-        return indicatorXAbsolute;
-    }
-    public void setIndicatorXAbsolute(Double indicatorXAbsolute) {
-        Object oldValue = this.indicatorXAbsolute;
-        this.indicatorXAbsolute = indicatorXAbsolute;
-        firePropertyChange("indicatorXAbsolute", oldValue, indicatorXAbsolute);
+    public void setSelectedX(Double selectedX) {
+        Object oldValue = this.selectedX;
+        this.selectedX = selectedX;
+        firePropertyChange("selectedX", oldValue, selectedX);
     }
 
     protected String formatNumber(double y, double unit) {
@@ -140,8 +131,7 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                     else if (yUnitFont < yUnit/2) {
                         yUnit /= 2;
                     }
-                    indicatorX = null;
-                    indicatorXAbsolute = null;
+                    selectedX = null;
 
                     if (dataScale.getColor() != null) {
                         // Scale is colored -> draw it
@@ -183,27 +173,17 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                             }
                             double xUnit0;
                             double xUnit1;
-                            double xMin;
-                            if (graph.isOffsetMode()) {
-                                xUnit0 = 0;
-                                xUnit1 = Math.floor((max.x-min.x-xUnitFont*0.5)/xUnit)*xUnit;
-                                xMin = 0; 
-                            }
-                            else {
-                                xUnit0 = Math.ceil((min.x+xUnitFont*0.5)/xUnit)*xUnit;
-                                xUnit1 = Math.floor((max.x-xUnitFont*0.5)/xUnit)*xUnit;
-                                xMin = min.x;
-                            }
+                            xUnit0 = Math.ceil((min.x+xUnitFont*0.5)/xUnit)*xUnit;
+                            xUnit1 = Math.floor((max.x-xUnitFont*0.5)/xUnit)*xUnit;
                             if (xMouse != null) {
-                                setIndicatorX((xMouse - xOrigin)/xScale + xMin);
-                                setIndicatorXAbsolute((xMouse - xOrigin)/xScale + min.x);
+                                setSelectedX((xMouse - xOrigin)/xScale + min.x);
                             }
-                            if (indicatorX != null) {
-                                String text = formatNumber(indicatorX, xUnit*0.25);
+                            if (selectedX != null) {
+                                String text = formatNumber(selectedX, xUnit*0.25);
                                 Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
-                                g2d.drawLine((int)(xOrigin+(indicatorX-xMin)*xScale), h-1-(int)bounds.getWidth()-2, (int)(xOrigin+(indicatorX-xMin)*xScale), 0);
+                                g2d.drawLine((int)(xOrigin+(selectedX-min.x)*xScale), h-1-(int)bounds.getWidth()-2, (int)(xOrigin+(selectedX-min.x)*xScale), 0);
                                 AffineTransform transform = g2d.getTransform();
-                                int tx = (int)(xOrigin+(indicatorX-xMin)*xScale)+fontAscent/2;
+                                int tx = (int)(xOrigin+(selectedX-min.x)*xScale)+fontAscent/2;
                                 int ty = (int)(h - 1);
                                 g2d.rotate(-Math.PI/2.0, tx, ty);
                                 g2d.drawString(text, tx, ty);
@@ -219,11 +199,11 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                                 }
                                 // draw the scale 
                                 for (double x = xUnit0; x <= xUnit1+xUnit*0.5; x += xUnit) {
-                                    g2d.drawLine((int)(xOrigin+(x-xMin)*xScale), h-1-(int)maxWidth-2, (int)(xOrigin+(x-xMin)*xScale), 0);
+                                    g2d.drawLine((int)(xOrigin+(x-min.x)*xScale), h-1-(int)maxWidth-2, (int)(xOrigin+(x-min.x)*xScale), 0);
                                     String text = formatNumber(x, xUnit);
                                     Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
                                     AffineTransform transform = g2d.getTransform();
-                                    int tx = (int)(xOrigin+(x-xMin)*xScale)+fontAscent/2;
+                                    int tx = (int)(xOrigin+(x-min.x)*xScale)+fontAscent/2;
                                     int ty = (int)(h - 1 - maxWidth  + bounds.getWidth());
                                     g2d.rotate(-Math.PI/2.0, tx, ty);
                                     g2d.drawString(text, tx, ty);
@@ -248,9 +228,9 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                                 x0 = x;
                                 y0 = y;
                             }
-                            if (indicatorX != null) {
+                            if (selectedX != null) {
                                 drawYIndicator(g2d, dfm, fontAscent, w, min, yOrigin, yScale, yUnit, 
-                                        dataRow.getInterpolated(indicatorXAbsolute), dataRow.getColor());
+                                        dataRow.getInterpolated(selectedX), dataRow.getColor());
                             }
                         }
                     }
@@ -310,8 +290,7 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
     public void mouseExited(MouseEvent e) {
         xMouse = null;
         yMouse = null;
-        setIndicatorX(null);
-        setIndicatorXAbsolute(null);
+        setSelectedX(null);
         repaint();
     }
 }

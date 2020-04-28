@@ -61,9 +61,9 @@ import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
 public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard {
-    private final Camera camera;
+    private final AbstractCamera camera;
 
-    public CameraVisionConfigurationWizard(Camera camera) {
+    public CameraVisionConfigurationWizard(AbstractCamera camera) {
         this.camera = camera;
 
         panelVision = new JPanel();
@@ -237,11 +237,9 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         settleGraph = new SimpleGraphView();
         settleGraph.addPropertyChangeListener(new PropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent evt) {
-                if (evt.getPropertyName().equals("indicatorXAbsolute")) {
-                    Double indicator = settleGraph.getIndicatorXAbsolute();
-                    if (indicator != null && camera instanceof AbstractCamera) {
-                        (( AbstractCamera)camera).playRecordedImage(indicator);
-                    }
+                if (evt.getPropertyName().equals("selectedX")) {
+                    Double t = settleGraph.getSelectedX();
+                    camera.setRecordedImagePlayed(t);
                 }
             }
         });
