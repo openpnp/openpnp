@@ -35,7 +35,7 @@ public class SimpleGraph {
     private double relativePaddingRight;
     private List<DataScale> dataScales = new ArrayList<>();
     private long zeroNanoTime = Long.MIN_VALUE;
-    private long lastNanoTime = Long.MIN_VALUE;
+    private long lastT = 0;
 
     public static class DataScale {
         private String label;
@@ -145,22 +145,24 @@ public class SimpleGraph {
     }
 
     /**
-     * @return Time in Milliseconds since the first call on this instance. Guaranteed to be monotone and unique.
+     * @return Time in Milliseconds since the first call on this instance. System.nanoTime() based. 
+     * Guaranteed to be monotone and unique.
      *
      */
     public double getT() {
         if (zeroNanoTime == Long.MIN_VALUE) {
             zeroNanoTime = System.nanoTime();
+            lastT = 0;
             return 0.0;
         }
         long dt = (System.nanoTime() - zeroNanoTime);
-        if (dt <= lastNanoTime) {
-            dt = lastNanoTime++;
+        if (dt <= lastT) {
+            dt = lastT++;
         }
         else {
-            lastNanoTime  = dt;
+            lastT  = dt;
         }
-        // to Milliseconds
+        // From Nano to Milliseconds
         return 1e-6*dt;
     }
 
