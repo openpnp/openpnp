@@ -609,6 +609,31 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
                 else {
                     discard(nozzle);
+                    /**
+                     * TODO STOPSHIP So, the bug is that we return, essentially normally from here
+                     * and PlannedPlacementStep marks the placement as complete. It expects to
+                     * see an error if there's an error, not a normal return. Is the problem
+                     * just that this should throw?
+                     * 
+                     * Okay, if it throws then it's a normal error and either alerts or defers. So
+                     * the problem is that this whole retry concept is broken. It needs to happen
+                     * internally, rather than relying on the job processor to do it. It needs
+                     * to happen within the step.
+                     * 
+                     * That makes the align retry essentially impossible, then, because that concerns
+                     * more than one step.
+                     * 
+                     *   alertOrDeferIfError
+                     *       alignRetry(part.alignRetryCount)
+                     *           pickRetry(part.pickRetryCount)
+                     *               feedRetry(feeder.feedRetryCount)
+                     *                   feed
+                     *               repickRetry(part.repickRetryCount)
+                     *                   pick
+                     *           align
+                     *       place
+                     * 
+                     */
                     return this;
                 }
             }

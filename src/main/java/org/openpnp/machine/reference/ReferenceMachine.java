@@ -98,7 +98,7 @@ public class ReferenceMachine extends AbstractMachine {
     private boolean isHomed = false;
 
     private List<Class<? extends Feeder>> registeredFeederClasses = new ArrayList<>();
-
+    
     @Commit
     protected void commit() {
         super.commit();
@@ -272,8 +272,6 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(ActuatorSignaler.class);
         return l;
     }
-
-    private List<Class<? extends PartAlignment>> registeredAlignmentClasses = new ArrayList<>();
 
     @Override
     public void home() throws Exception {
