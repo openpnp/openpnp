@@ -821,7 +821,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             double vacuumLevel;
             do {
                 vacuumLevel = readVacuumLevel();
-                vacuumData.recordDataPoint(System.currentTimeMillis(), vacuumLevel);
+                vacuumData.recordDataPoint(vacuumGraph.getT(), vacuumLevel);
                 if (nt.isEstablishPartOnLevel() 
                         && vacuumLevel >= nt.getVacuumLevelPartOnLow() && vacuumLevel <= nt.getVacuumLevelPartOnHigh()) {
                     // within range, we're done
@@ -831,7 +831,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             while (System.currentTimeMillis() < timeout);
             // valve is still on
             vacuumGraph.getRow(ReferenceNozzleTip.BOOLEAN, ReferenceNozzleTip.VALVE_ON)
-                .recordDataPoint(System.currentTimeMillis(), 1);
+                .recordDataPoint(vacuumGraph.getT(), 1);
             nt.setVacuumPartOnGraph(vacuumGraph);
             if (nt.getMethodPartOn().isDifferenceMethod()) {
                 nt.setVacuumLevelPartOnReading(vacuumLevel);
@@ -852,7 +852,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             double vacuumLevel;
             do {
                 vacuumLevel = readVacuumLevel();
-                vacuumData.recordDataPoint(System.currentTimeMillis(), vacuumLevel);
+                vacuumData.recordDataPoint(vacuumGraph.getT(), vacuumLevel);
                 if (nt.isEstablishPartOffLevel() 
                         && vacuumLevel >= nt.getVacuumLevelPartOffLow() && vacuumLevel <= nt.getVacuumLevelPartOffHigh()) {
                     // within range, we're done
@@ -862,7 +862,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             while (System.currentTimeMillis() < timeout);
             // valve is still off
             vacuumGraph.getRow(ReferenceNozzleTip.BOOLEAN, ReferenceNozzleTip.VALVE_ON)
-                .recordDataPoint(System.currentTimeMillis(), 0);
+                .recordDataPoint(vacuumGraph.getT(), 0);
             nt.setVacuumPartOffGraph(vacuumGraph);
             if (nt.getMethodPartOff().isDifferenceMethod()) {
                 nt.setVacuumLevelPartOffReading(vacuumLevel);
@@ -884,7 +884,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             // store in graph, if one is present
             if (vacuumGraph != null) {
                 vacuumGraph.getRow(ReferenceNozzleTip.PRESSURE, ReferenceNozzleTip.VACUUM)
-                .recordDataPoint(System.currentTimeMillis(), vacuumLevel);
+                .recordDataPoint(vacuumGraph.getT(), vacuumLevel);
             }
             // store as baseline
             nt.setVacuumLevelPartOffReading(vacuumLevel);
@@ -893,7 +893,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (vacuumGraph != null) {
             // record valve still off
             vacuumGraph.getRow(ReferenceNozzleTip.BOOLEAN, ReferenceNozzleTip.VALVE_ON)
-            .recordDataPoint(System.currentTimeMillis(), 0);
+            .recordDataPoint(vacuumGraph.getT(), 0);
         }
         try {
             // switch vacuum on for the test
@@ -902,19 +902,19 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             if (vacuumGraph != null) {
                 // record valve on
                 vacuumGraph.getRow(ReferenceNozzleTip.BOOLEAN, ReferenceNozzleTip.VALVE_ON)
-                .recordDataPoint(System.currentTimeMillis(), 1);
+                .recordDataPoint(vacuumGraph.getT(), 1);
                 // record the slope of the vacuum level
                 long timeout = System.currentTimeMillis() + probingMilliseconds;
                 SimpleGraph.DataRow vacuumData = vacuumGraph.getRow(ReferenceNozzleTip.PRESSURE, ReferenceNozzleTip.VACUUM);
                 double vacuumLevel;
                 do {
                     vacuumLevel = readVacuumLevel();
-                    vacuumData.recordDataPoint(System.currentTimeMillis(), vacuumLevel);
+                    vacuumData.recordDataPoint(vacuumGraph.getT(), vacuumLevel);
                 }
                 while (System.currentTimeMillis() < timeout);
                 // record valve still on
                 vacuumGraph.getRow(ReferenceNozzleTip.BOOLEAN, ReferenceNozzleTip.VALVE_ON)
-                .recordDataPoint(System.currentTimeMillis(), 1);
+                .recordDataPoint(vacuumGraph.getT(), 1);
             }
             else {
                 // simple method, just dwell 
@@ -929,19 +929,19 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (vacuumGraph != null) {
             // record valve off
             vacuumGraph.getRow(ReferenceNozzleTip.BOOLEAN, ReferenceNozzleTip.VALVE_ON)
-            .recordDataPoint(System.currentTimeMillis(), 0);
+            .recordDataPoint(vacuumGraph.getT(), 0);
             // record the slope of the vacuum level
             long timeout = System.currentTimeMillis() + dwellMilliseconds;
             SimpleGraph.DataRow vacuumData = vacuumGraph.getRow(ReferenceNozzleTip.PRESSURE, ReferenceNozzleTip.VACUUM);
             double vacuumLevel;
             do {
                 vacuumLevel = readVacuumLevel();
-                vacuumData.recordDataPoint(System.currentTimeMillis(), vacuumLevel);
+                vacuumData.recordDataPoint(vacuumGraph.getT(), vacuumLevel);
             }
             while (System.currentTimeMillis() < timeout);
             // record valve still off
             vacuumGraph.getRow(ReferenceNozzleTip.BOOLEAN, ReferenceNozzleTip.VALVE_ON)
-            .recordDataPoint(System.currentTimeMillis(), 0);
+            .recordDataPoint(vacuumGraph.getT(), 0);
             // save the graph back (for the property to fire
             nt.setVacuumPartOffGraph(vacuumGraph);
             return vacuumLevel;
@@ -962,10 +962,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         SimpleGraph vacuumGraph = nt.getVacuumPartOnGraph();
         if (vacuumGraph != null) {
             vacuumGraph.getRow(ReferenceNozzleTip.PRESSURE, ReferenceNozzleTip.VACUUM)
-                .recordDataPoint(System.currentTimeMillis(), vacuumLevel);
+                .recordDataPoint(vacuumGraph.getT(), vacuumLevel);
             // valve is still on
             vacuumGraph.getRow(ReferenceNozzleTip.BOOLEAN, ReferenceNozzleTip.VALVE_ON)
-                .recordDataPoint(System.currentTimeMillis(), 1);
+                .recordDataPoint(vacuumGraph.getT(), 1);
         }
         if (nt.getMethodPartOn().isDifferenceMethod()) {
             // observe the trend as a difference from the baseline reading

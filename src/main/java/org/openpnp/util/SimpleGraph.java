@@ -197,10 +197,6 @@ public class SimpleGraph {
             data.put(x, y);
             dirty = true;
         }
-        public void recordDataPoint(long x, double y) {
-            data.put((double)x, y);
-            dirty = true;
-        }
         public Double getDataPoint(double x) {
             return data.get(x);
         }

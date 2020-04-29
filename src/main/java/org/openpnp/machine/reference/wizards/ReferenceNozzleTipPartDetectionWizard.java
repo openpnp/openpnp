@@ -469,44 +469,8 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         addWrappedBinding(nozzleTip, "vacuumDifferencePartOffLow", vacuumDifferencePartOffLow, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumDifferencePartOffHigh", vacuumDifferencePartOffHigh, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumDifferencePartOffReading", vacuumDifferencePartOffReading, "text", doubleConverter);
-        
         addWrappedBinding(nozzleTip, "vacuumPartOnGraph", vacuumPartOnGraph, "graph");
-        
-        final boolean testMode = false;
-        if (!testMode) {
-            addWrappedBinding(nozzleTip, "vacuumPartOffGraph", vacuumPartOffGraph, "graph");
-        }
-        else {
-            SimpleGraph vacuumGraph = new SimpleGraph();
-            vacuumGraph.setOffsetMode(true);
-            vacuumGraph.setRelativePaddingLeft(0.1);
-            long t = System.currentTimeMillis();
-            double scale = Math.exp(Math.random()*7.0-3.0);
-            double offset = (Math.random()-0.3)*scale*2.0;
-            long duration = (long)(Math.random()*1000.0);
-            // init pressure scale
-            SimpleGraph.DataScale vacuumScale =  vacuumGraph.getScale("P");
-            vacuumScale.setRelativePaddingBottom(0.25);
-            vacuumScale.setColor(new Color(0, 0, 0, 64));
-            // init valve scale
-            SimpleGraph.DataScale valveScale =  vacuumGraph.getScale("B");
-            valveScale.setRelativePaddingTop(0.8);
-            valveScale.setRelativePaddingBottom(0.1);
-            // record the current pressure
-            SimpleGraph.DataRow vacuumData = vacuumGraph.getRow("P", "V");
-            vacuumData.setColor(new Color(255, 0, 0));
-            // record the valve switching off
-            SimpleGraph.DataRow valveData = vacuumGraph.getRow("B", "S");
-            valveData.setColor(new Color(00, 0x5B, 0xD9));
-            valveData.recordDataPoint(t-1, 0);
-            valveData.recordDataPoint(t, 1);
-            for (long td = t; td < t+duration; td++) {
-                vacuumData.recordDataPoint(td, Math.sin(td*3.0/duration)*scale+offset+Math.random()*scale*0.05);
-            }
-            valveData.recordDataPoint(t+duration-1, 1);
-            valveData.recordDataPoint(t+duration, 0);
-            vacuumPartOffGraph.setGraph(vacuumGraph);
-        }
+        addWrappedBinding(nozzleTip, "vacuumPartOffGraph", vacuumPartOffGraph, "graph");
 
         ComponentDecorators.decorateWithAutoSelect(partOffProbingMilliseconds);
         ComponentDecorators.decorateWithAutoSelect(partOffDwellMilliseconds);
