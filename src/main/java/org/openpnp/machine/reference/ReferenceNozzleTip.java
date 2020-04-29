@@ -120,6 +120,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     @Attribute(required = false)
     private int partOffProbingMilliseconds;
 
+    @Attribute(required = false)
+    private int partOffDwellMilliseconds;
+
     @Element(required = false)
     private double vacuumDifferencePartOffLow;
 
@@ -425,6 +428,14 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     public void setPartOffProbingMilliseconds(int partOffProbingMilliseconds) {
         this.partOffProbingMilliseconds = partOffProbingMilliseconds;
+    }
+
+    public int getPartOffDwellMilliseconds() {
+        return partOffDwellMilliseconds;
+    }
+
+    public void setPartOffDwellMilliseconds(int partOffDwellMilliseconds) {
+        this.partOffDwellMilliseconds = partOffDwellMilliseconds;
     }
 
     public double getVacuumDifferencePartOffLow() {
