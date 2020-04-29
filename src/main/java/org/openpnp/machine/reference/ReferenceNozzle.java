@@ -61,6 +61,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     @Element(required = false)
     protected Length safeZ = new Length(0, LengthUnit.Millimeters);
 
+    @Attribute(required = false)
+    private boolean enableDynamicSafeZ = false;
+
     /**
      * TODO Deprecated in favor of vacuumActuatorName. Remove Jan 1, 2021.
      */
@@ -114,6 +117,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     public void setLimitRotation(boolean limitRotation) {
         this.limitRotation = limitRotation;
+    }
+
+    public boolean isEnableDynamicSafeZ() {
+        return enableDynamicSafeZ;
+    }
+
+    public void setEnableDynamicSafeZ(boolean enableDynamicSafeZ) {
+        this.enableDynamicSafeZ = enableDynamicSafeZ;
     }
 
     public int getPickDwellMilliseconds() {
@@ -369,6 +380,16 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public void moveToSafeZ(double speed) throws Exception {
         Logger.debug("{}.moveToSafeZ({})", getName(), speed);
         Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
+        if (enableDynamicSafeZ) { 
+            // if a part is loaded, decrease (higher) safeZ
+            if (part != null) {
+                safeZ = safeZ.add(part.getHeight());
+            }
+            // make sure safeZ is never above 0
+            if (safeZ.getValue() > 0 ) {
+                safeZ.setValue(0);
+            }
+        }
         Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN,
                 safeZ.getValue(), Double.NaN);
         getDriver().moveTo(this, l, getHead().getMaxPartSpeed() * speed);

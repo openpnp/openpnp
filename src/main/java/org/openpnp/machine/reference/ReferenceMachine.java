@@ -30,6 +30,7 @@ import javax.swing.Action;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.marek.MarekNozzle;
 import org.openpnp.machine.neoden4.Neoden4Camera;
 import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.machine.reference.camera.OnvifIPCamera;
@@ -251,6 +252,7 @@ public class ReferenceMachine extends AbstractMachine {
         List<Class<? extends Nozzle>> l = new ArrayList<>();
         l.add(ReferenceNozzle.class);
         l.add(ContactProbeNozzle.class);
+        l.add(MarekNozzle.class);
         return l;
     }
 
