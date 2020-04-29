@@ -212,7 +212,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         settleGaussianBlur.setColumns(10);
 
         lblSettleMaskCircle = new JLabel("Center Mask");
-        lblSettleMaskCircle.setToolTipText("<html>\r\n<p>Size of the central circular mask, relative to the camera dimension <br/>\r\n(height or width, whichever is smaller).</p>\r\n<p>Examples:</p>\r\n<ul>\r\n<li>0.0 No mask</li>\r\n<li>0.5 Circular center area of half the camera view</li>\r\n<li>1.0 Circular center area to the edge of the camera view</li>\r\n</ul>\r\n</html>");
+        lblSettleMaskCircle.setToolTipText("<html>\r\n<p>Size of the central circular mask, relative to the camera dimension <br/>\r\n(height or width, whichever is smaller).</p>\r\n<p>Examples:</p>\r\n<ul>\r\n<li>0.0 No mask</li>\r\n<li>0.5 Circular center area of half the camera view</li>\r\n<li>1.0 Circular center area to the edge of the camera view</li>\r\n<li>1.5 Circular area vignetting the camera view</li>\r\n</ul>\r\n</html>");
         panelVision.add(lblSettleMaskCircle, "2, 12, right, default");
 
         settleMaskCircle = new JTextField();

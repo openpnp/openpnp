@@ -184,7 +184,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOnVacuumSensing.add(lblLegendPartOn, "2, 16, right, default");
         
         vacuumPartOnGraph = new SimpleGraphView();
-        vacuumPartOnGraph.setFont(new Font("SansSerif", Font.PLAIN, 9));
+        vacuumPartOnGraph.setFont(new Font("Dialog", Font.PLAIN, 11));
         panelPartOnVacuumSensing.add(vacuumPartOnGraph, "4, 16, 9, 1, default, fill");
         
         panelPartOffVacuumSensing = new JPanel();
@@ -314,7 +314,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOffVacuumSensing.add(lblLegendPartOff, "2, 18, right, default");
         
         vacuumPartOffGraph = new SimpleGraphView();
-        vacuumPartOffGraph.setFont(new Font("SansSerif", Font.PLAIN, 9));
+        vacuumPartOffGraph.setFont(new Font("Dialog", Font.PLAIN, 11));
         panelPartOffVacuumSensing.add(vacuumPartOffGraph, "4, 18, 9, 1, default, fill");
     }
     

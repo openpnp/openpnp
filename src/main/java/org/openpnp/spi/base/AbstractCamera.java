@@ -194,6 +194,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     protected TreeMap<Double, BufferedImage> heatMappedImages = null;
     protected Double recordedImagePlayed = null;
     private SimpleGraph settleGraph = null;
+    private int recordedMaskDiameter;
 
     public AbstractCamera() {
         this.id = Configuration.createId("CAM");
@@ -375,21 +376,26 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                         (settleGaussianBlur+resizeToMaxGaussianKernelSize/2)/resizeToMaxGaussianKernelSize
                         : 1;
 
+                int maskDiameter = 0;
                 if (settleMaskCircle > 0.0) {
                     // Crop the image to the mask dimension. 
                     int imageDimension = Math.min(mat.rows(), mat.cols());
-                    int maskDiameter = Math.max(1,  Math.min(imageDimension, (int)(settleMaskCircle*imageDimension)));
-                    // Make it a multiple of the rescale divisor.
-                    maskDiameter = (int)Math.floor(maskDiameter/divisor)*divisor;
+                    maskDiameter = Math.max(1, (int)(settleMaskCircle*imageDimension));
+                    int maskedWidth= Math.min(mat.cols(), maskDiameter);
+                    int maskedHeight= Math.min(mat.rows(), maskDiameter);
+                    // Make it multiples of the rescale divisor*2.
+                    maskDiameter = (int)Math.floor(maskDiameter/divisor/2)*divisor*2;
+                    maskedWidth = (int)Math.floor(maskedWidth/divisor/2)*divisor*2;
+                    maskedHeight = (int)Math.floor(maskedHeight/divisor/2)*divisor*2;
                     Rect rectCrop = new Rect(
-                            (mat.cols() - maskDiameter)/2, (mat.rows() - maskDiameter)/2,
-                            maskDiameter, maskDiameter);
+                            (mat.cols() - maskedWidth)/2, (mat.rows() - maskedHeight)/2,
+                            maskedWidth, maskedHeight);
                     Mat cropMat = mat.submat(rectCrop);
                     mat.release();
                     mat = cropMat;
                     if (maskFullsize == null) {
                         // This must be the first frame, also create the mask circle.
-                        maskFullsize = createMask(mat);
+                        maskFullsize = createMask(mat, maskDiameter);
                         if (divisor == 1) {
                             // also valid as the rescaled mask
                             mask = maskFullsize;
@@ -410,11 +416,12 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                     Imgproc.resize(mat, resizeMat, new Size(mat.cols()/divisor, mat.rows()/divisor), 1.0/divisor, 1.0/divisor);
                     mat.release();
                     mat = resizeMat;
+                    maskDiameter /= divisor;
                 }
 
-                if (settleMaskCircle > 0.0 && mask == null) {
+                if (maskDiameter > 0 && mask == null) {
                     // This must be the first frame, also create the mask circle after rescale.
-                    mask = createMask(mat);
+                    mask = createMask(mat, maskDiameter);
                 }
 
                 if (gaussianBlurEff > 1) {
@@ -487,6 +494,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                         setSettleGraph(settleGraph);
                         // Set recorded images along with the graph.
                         setRecordedImages(settleImages);
+                        recordedMaskDiameter = maskDiameter;
                     }
                     Logger.debug("autoSettleAndCapture in {} ms", System.currentTimeMillis() - t0);
                     return image;
@@ -510,13 +518,11 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         }
     }
 
-    protected Mat createMask(Mat mat) {
+    protected Mat createMask(Mat mat, int maskDiameter) {
         Mat mask;
-        int imageDimension = Math.min(mat.rows(), mat.cols());
-        int maskDiameter = Math.max(1,  Math.min(imageDimension, (int)(settleMaskCircle*imageDimension)));
         mask = new Mat(mat.rows(), mat.cols(), CvType.CV_8U, Scalar.all(0));
         Imgproc.circle(mask,
-                new Point(mat.rows()/2, mat.cols()/2),
+                new Point(mat.cols()/2, mat.rows()/2),
                 maskDiameter/2,
                 new Scalar(255, 255, 255), -1);
         return mask;
@@ -557,9 +563,9 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         // Record diagnostic images.
         Mat diagnosticMat = mat1;
         Mat mask = null;
-        if (settleMaskCircle > 0.0) {
-            // This must be the first frame, also create the mask.
-            mask = createMask(mat1);
+        if (recordedMaskDiameter > 0) {
+            // Also create the mask.
+            mask = createMask(mat1, recordedMaskDiameter);
             // Simulate the mask for the diagnostic image.
             Mat tmpMat = new Mat(diagnosticMat.rows(), diagnosticMat.cols(), diagnosticMat.type(), Scalar.all(0));
             diagnosticMat.copyTo(tmpMat, mask);

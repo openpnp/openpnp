@@ -816,6 +816,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         ReferenceNozzleTip nt = getNozzleTip();
         SimpleGraph vacuumGraph = nt.getVacuumPartOnGraph();
         if (vacuumGraph != null) {
+            // valve is sure on
+            vacuumGraph.getRow(ReferenceNozzleTip.BOOLEAN, ReferenceNozzleTip.VALVE_ON)
+            .recordDataPoint(vacuumGraph.getT(), 1);
             long timeout = System.currentTimeMillis() + milliseconds;
             SimpleGraph.DataRow vacuumData = vacuumGraph.getRow(ReferenceNozzleTip.PRESSURE, ReferenceNozzleTip.VACUUM);
             double vacuumLevel;
@@ -847,6 +850,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         ReferenceNozzleTip nt = getNozzleTip();
         SimpleGraph vacuumGraph = nt.getVacuumPartOffGraph();
         if (vacuumGraph != null) {
+            // valve is sure off
+            vacuumGraph.getRow(ReferenceNozzleTip.BOOLEAN, ReferenceNozzleTip.VALVE_ON)
+            .recordDataPoint(vacuumGraph.getT(), 0);
             long timeout = System.currentTimeMillis() + milliseconds;
             SimpleGraph.DataRow vacuumData = vacuumGraph.getRow(ReferenceNozzleTip.PRESSURE, ReferenceNozzleTip.VACUUM);
             double vacuumLevel;
@@ -876,7 +882,18 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     protected double probePartOffVacuumLevel(int probingMilliseconds, int dwellMilliseconds) throws Exception {
         ReferenceNozzleTip nt = getNozzleTip();
-        SimpleGraph vacuumGraph = nt.getVacuumPartOffGraph();
+        SimpleGraph vacuumGraph = null;
+        if (isPartOnGraphEnabled()) {
+            vacuumGraph = nt.getVacuumPartOffGraph();
+            if (vacuumGraph == null || vacuumGraph.getT() > 1000.0) {
+                // Time since last action too long, this is probably a BeforePick check, start a new graph.
+                vacuumGraph = nt.startNewVacuumGraph(readVacuumLevel(), true);
+                nt.setVacuumPartOffGraph(vacuumGraph);
+            }
+            // record valve off
+            vacuumGraph.getRow(ReferenceNozzleTip.BOOLEAN, ReferenceNozzleTip.VALVE_ON)
+            .recordDataPoint(vacuumGraph.getT(), 0);
+        }
 
         if (nt.getMethodPartOff().isDifferenceMethod()) {
             // we might have multiple partOff checks, so refresh the difference baseline
@@ -890,11 +907,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             nt.setVacuumLevelPartOffReading(vacuumLevel);
         }
 
-        if (vacuumGraph != null) {
-            // record valve still off
-            vacuumGraph.getRow(ReferenceNozzleTip.BOOLEAN, ReferenceNozzleTip.VALVE_ON)
-            .recordDataPoint(vacuumGraph.getT(), 0);
-        }
         try {
             // switch vacuum on for the test
             actuateVacuumValve(true);
@@ -912,7 +924,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     vacuumData.recordDataPoint(vacuumGraph.getT(), vacuumLevel);
                 }
                 while (System.currentTimeMillis() < timeout);
-                // record valve still on
+                // record valve still on 
                 vacuumGraph.getRow(ReferenceNozzleTip.BOOLEAN, ReferenceNozzleTip.VALVE_ON)
                 .recordDataPoint(vacuumGraph.getT(), 1);
             }
@@ -942,7 +954,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             // record valve still off
             vacuumGraph.getRow(ReferenceNozzleTip.BOOLEAN, ReferenceNozzleTip.VALVE_ON)
             .recordDataPoint(vacuumGraph.getT(), 0);
-            // save the graph back (for the property to fire
+            // save the graph back (for the property change to fire)
             nt.setVacuumPartOffGraph(vacuumGraph);
             return vacuumLevel;
         }

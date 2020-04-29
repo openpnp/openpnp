@@ -510,7 +510,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         Object oldValue = this.vacuumPartOnGraph;
         this.vacuumPartOnGraph = vacuumPartOnGraph;
         if (!(oldValue == null && vacuumPartOnGraph == null)) { // only fire when values are set
-            firePropertyChange("vacuumPartOnGraph", oldValue, vacuumPartOnGraph);
+            firePropertyChange("vacuumPartOnGraph", null /*always treat as change*/, vacuumPartOnGraph); 
         }
     }
 
@@ -522,7 +522,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         Object oldValue = this.vacuumPartOffGraph;
         this.vacuumPartOffGraph = vacuumPartOffGraph;
         if (!(oldValue == null && vacuumPartOffGraph == null)) { // only fire when values are set
-            firePropertyChange("vacuumPartOffGraph", oldValue, vacuumPartOffGraph);
+            firePropertyChange("vacuumPartOffGraph", null /*always treat as change*/, vacuumPartOffGraph);
         }
     }
 
