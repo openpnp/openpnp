@@ -212,8 +212,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
             Rectangle selection = cameraView.getSelection();
             double width = Double.parseDouble(textFieldWidth.getText());
             double height = Double.parseDouble(textFieldHeight.getText());
-            textFieldUppX.setText(String.format(Locale.US, uppFormat, (width / selection.width)));
-            textFieldUppY.setText(String.format(Locale.US, uppFormat, (height / selection.height)));
+            textFieldUppX.setText(String.format(Locale.US, uppFormat, (width / Math.abs(selection.width))));
+            textFieldUppY.setText(String.format(Locale.US, uppFormat, (height / Math.abs(selection.height))));
         }
     };
 
