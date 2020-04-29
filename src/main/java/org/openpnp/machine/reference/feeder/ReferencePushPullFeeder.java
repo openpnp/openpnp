@@ -242,6 +242,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     public static final Location nullLocation = new Location(LengthUnit.Millimeters);
 
+    @Override
+    public boolean isParentIdChangable() {
+        return false;
+    }
+    
     private void checkHomedState(Machine machine) {
         if (!machine.isHomed()) {
             this.resetCalibration();
