@@ -29,7 +29,7 @@ On your GCodeDriver choose the new contact probing Actuator and define the ACTUA
 
 ![grafik](https://user-images.githubusercontent.com/9963310/69479755-4f839100-0e01-11ea-89b7-201993ef22b7.png)
 
-An example (for Smoothieware) could be (Note, we are using M400 followed by M114.2 instead of plain M114 because Smoothieware does not report the rotation axis with M114):
+An example (for Smoothieware) could be:
 ``` 
 {True:G38.2 Z-4 F1200   ; Probe down max. 4mm for contact with picked/placed part }
 {True:M400          ; Wait until machine has stopped }
@@ -38,6 +38,7 @@ An example (for Smoothieware) could be (Note, we are using M400 followed by M114
 {False:M400         ; Wait until machine has stopped }
 {False:M114.2       ; Report current realtime position, as M114 does not report rotation }
 ```
+Note, we are using M400 followed by M114.2 instead of plain M114 because Smoothieware does not report the rotation axis with M114. That's an ugly HACK, I will try to find a better solution soon. 
 
 You need to define the POSITION_REPORT_REGEX to read back the probed Z i.e. to get OpenPNP back in sync with the machine position after probing. 
 
