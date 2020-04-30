@@ -267,7 +267,7 @@ OpenPnP now includes a generic Gcode driver that is far more flexible than the o
 ## Troubleshooting
 
 * If you are using TinyG G2 you may need to set DTR and RTS. You can do this from the driver configuration UI in Machine Setup.
-* If your pick and place commands fire before moves are complete, make sure you are using `move-to-complete-regex` as shown in the configuration above.
+* If your pick and place commands fire before moves are complete, make sure you are using `move-to-complete-regex` as shown in the configuration above. Sometimes this is also not sufficient. After connecting to the machine, go to Machine Setup -> Driver -> GCodeDriver -> Console. Send the message "$$", which will cause the TinyG to reply with its complete configuration. After this, moves should be reported correctly. This process needs to be done each time the TinyG starts up.
 
 ## Quirks
 
