@@ -2,7 +2,7 @@ Important information for anyone interested in hacking on or contributing to any
 
 # Getting Started
 
-Before starting to develop for OpenPnP you should review the [User Manual](User Manual) to become familiar with the interface and major components of the system.
+Before starting to develop for OpenPnP you should review the [User Manual](User-Manual) to become familiar with the interface and major components of the system.
 
 # Contributing
 
@@ -83,7 +83,7 @@ OpenCV is now included with OpenPnP, so an additional installation is not requir
 OpenPnP uses Maven for dependencies and building. You can get it at http://maven.apache.org/download.cgi#. See http://maven.apache.org/install.html for additional information on installing it. Once installed, make sure
 you can run `mvn --version` from your command line with no errors.
 
-If you are using an IDE with Maven included you don't need to install the command line version. 
+If you are using an IDE with Maven included you don't need to install the command line version. You can find list of modules and dependencies [here](https://sourcespy.com/github/openpnpopenpnp/xx-omodulesc-.html).
 
 ## Compiling
 
@@ -107,6 +107,8 @@ Simply import the `openpnp` folder as a Maven project.
  
 
 # System Architecture
+
+This [sourcespy dashboard](https://sourcespy.com/github/openpnpopenpnp/) provides a high level overview of architecture, build process and dependencies of the project.
 
 ## Framework
 
@@ -159,9 +161,9 @@ The root of the model in OpenPnP is the Configuration object and it is responsib
 
 ### User Interface
 
-The user interface is the heart of OpenPnP. It starts with `MainFrame` in [the gui package](http://openpnp.github.io/openpnp/develop/org/openpnp/gui/package-frame.html) and branches out from there.
+The user interface is the heart of OpenPnP. It starts with `MainFrame` in [the gui package](http://openpnp.github.io/openpnp/develop/org/openpnp/gui/package-frame.html) and branches out from there. Visual representation of user interface components can be found on this [class diagram](https://sourcespy.com/github/openpnpopenpnp/xx-ouiswing-.html).
 
-The user interface is primarily a single window application with 3 main content areas. These are Machine Controls, Cameras, and Jobs and Configuration.
+The user interface is primarily a single window application with 3 main content areas. These are Machine Controls, Cameras, and Jobs and Configuration. 
 
 It should be noted that the user interface is in transition. I am not very happy with the currently model driven user interface and will be working to make it more of a workflow based interface in the future. For the time being, most of the things you see in the user interface map very closely to one of the model classes.
 
