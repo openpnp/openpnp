@@ -366,6 +366,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
 
         ReferenceNozzleTip calibrationNozzleTip = getCalibrationNozzleTip();
+        // check if totally raw move, in that case disable nozzle calibration
+        for (MoveToOption option: options) {
+            if (option == MoveToOption.RAW) {
+                calibrationNozzleTip = null;
+            }
+        }
         if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated(this)) {
             Location correctionOffset = calibrationNozzleTip.getCalibration().getCalibratedOffset(this, location.getRotation());
             location = location.subtract(correctionOffset);
