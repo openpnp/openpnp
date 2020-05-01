@@ -9,6 +9,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.pmw.tinylog.Logger;
 
 public class MarekNozzle extends ReferenceNozzle {
@@ -21,7 +22,7 @@ public class MarekNozzle extends ReferenceNozzle {
     }
     
     @Override
-    public void moveTo(Location location, double speed) throws Exception {
+    public void moveTo(Location location, double speed, MoveToOption... options) throws Exception {
         // Shortcut Double.NaN. Sending Double.NaN in a Location is an old API that should no
         // longer be used. It will be removed eventually:
         // https://github.com/openpnp/openpnp/issues/255
@@ -107,7 +108,7 @@ public class MarekNozzle extends ReferenceNozzle {
 
         location = location.convertToUnits(loc.getUnits()); // convert units back; // Cri's change
 
-        ((ReferenceHead) getHead()).moveTo(this, location, getHead().getMaxPartSpeed() * speed);
+        ((ReferenceHead) getHead()).moveTo(this, location, getHead().getMaxPartSpeed() * speed, options);
         getMachine().fireMachineHeadActivity(head);
     }
 

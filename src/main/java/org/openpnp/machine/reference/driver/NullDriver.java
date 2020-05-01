@@ -36,6 +36,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.PropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -98,7 +99,7 @@ public class NullDriver implements ReferenceDriver {
      * considerations when writing your own driver.
      */
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOptions... options)
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOption... options)
             throws Exception {
         Logger.debug("moveTo({}, {}, {})", hm, location, speed);
         checkEnabled();

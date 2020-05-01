@@ -9,7 +9,6 @@ import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
-import org.openpnp.machine.reference.ReferenceDriver.MoveToOptions;
 import org.openpnp.machine.reference.driver.test.TestDriver;
 import org.openpnp.machine.reference.driver.test.TestDriver.TestDriverDelegate;
 import org.openpnp.model.Board;
@@ -24,6 +23,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.Nozzle;
 
 import com.google.common.io.Files;
@@ -156,7 +156,7 @@ public class BasicJobTest {
         }
 
         @Override
-        public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOptions...options)
+        public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOption...options)
                 throws Exception {
             System.out.println(hm + " " + location);
             if (expectedOps.isEmpty()) {

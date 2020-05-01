@@ -27,7 +27,6 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
-import org.openpnp.machine.reference.ReferenceDriver.MoveToOptions;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConsole;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverGcodes;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverSettings;
@@ -38,6 +37,7 @@ import org.openpnp.model.Named;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
@@ -488,7 +488,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOptions...options)
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOption...options)
             throws Exception {
         // for options make a local copy of all possibly affected variables
         double backlashOffsetX = this.backlashOffsetX;
@@ -497,16 +497,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         double backlashOffsetR = this.backlashOffsetX;
         double nonSquarenessFactor = this.nonSquarenessFactor;
         // check options
-        for (MoveToOptions currentOption: options) {
+        for (MoveToOption currentOption: options) {
             switch (currentOption) {
-                case NO_BACKSLASH:          // for this move backslash is zero
+                case NO_ADDITIONAL_MOVES:     // for this move backslash is zero
                     backlashOffsetX = 0;
                     backlashOffsetY = 0;
                     backlashOffsetZ = 0;
                     backlashOffsetR = 0;
-                    break;
-                case NO_NONSQUARNESS:       // for this move nonSquarnessFactor is zero
-                    nonSquarenessFactor = 0;
                     break;
                 case RAW:                   // for this move all corrections are zero
                     backlashOffsetX = 0;

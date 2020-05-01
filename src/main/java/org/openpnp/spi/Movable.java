@@ -2,7 +2,16 @@ package org.openpnp.spi;
 
 import org.openpnp.model.Location;
 
-public interface Movable extends Locatable {
+public interface Movable extends Locatable {    
+    /**
+     * Contains all possible options for the moveTo command.
+     * RAW: disable all internal corrections, just tell the driver to move to that position
+     * NO_ADDITIONAL_MOVES: disable backslash compensation or anything else, that causes aditional moves
+     */
+    public enum MoveToOption { RAW, NO_ADDITIONAL_MOVES }
+
+    
+    
     /**
      * Move the object to the Location at the feedRate.
      * 
@@ -13,9 +22,9 @@ public interface Movable extends Locatable {
      *        minimum feed rate while still moving.
      * @throws Exception
      */
-    public void moveTo(Location location, double speed) throws Exception;
+    public void moveTo(Location location, double speed, MoveToOption... options) throws Exception;
 
-    public void moveTo(Location location) throws Exception;
+    public void moveTo(Location location, MoveToOption... options) throws Exception;
 
     public void moveToSafeZ(double speed) throws Exception;
 

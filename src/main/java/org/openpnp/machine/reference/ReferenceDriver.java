@@ -22,6 +22,7 @@ package org.openpnp.machine.reference;
 import java.io.Closeable;
 
 import org.openpnp.model.Location;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.WizardConfigurable;
 
@@ -44,16 +45,7 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
      * 
      * @throws Exception
      */
-    public void home(ReferenceHead head) throws Exception;
-    
-    
-    /**
-     * Contains all possible options for the moveTo command.
-     * RAW: disable all internal corrections, just tell the driver to move to that position
-     * NO_BACKSLASH: disable backslash compensation
-     */
-    public enum MoveToOptions { RAW, NO_BACKSLASH, NO_NONSQUARNESS }
-    
+    public void home(ReferenceHead head) throws Exception;    
 
     /**
      * Moves the specified HeadMountable to the given location at a speed defined by (maximum feed
@@ -68,7 +60,7 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
      * @param options zero to n options from the MoveToOptions enum.
      * @throws Exception
      */
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOptions... options) throws Exception;
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOption... options) throws Exception;
 
     /**
      * Returns a clone of the HeadMountable's current location. It's important that the returned
