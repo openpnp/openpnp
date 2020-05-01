@@ -27,6 +27,7 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.ReferenceDriver.MoveToOptions;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConsole;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverGcodes;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverSettings;
@@ -487,8 +488,36 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOptions...options)
             throws Exception {
+        // for options make a local copy of all possibly affected variables
+        double backlashOffsetX = this.backlashOffsetX;
+        double backlashOffsetY = this.backlashOffsetX;
+        double backlashOffsetZ = this.backlashOffsetX;
+        double backlashOffsetR = this.backlashOffsetX;
+        double nonSquarenessFactor = this.nonSquarenessFactor;
+        // check options
+        for (MoveToOptions currentOption: options) {
+            switch (currentOption) {
+                case NO_BACKSLASH:          // for this move backslash is zero
+                    backlashOffsetX = 0;
+                    backlashOffsetY = 0;
+                    backlashOffsetZ = 0;
+                    backlashOffsetR = 0;
+                    break;
+                case NO_NONSQUARNESS:       // for this move nonSquarnessFactor is zero
+                    nonSquarenessFactor = 0;
+                    break;
+                case RAW:                   // for this move all corrections are zero
+                    backlashOffsetX = 0;
+                    backlashOffsetY = 0;
+                    backlashOffsetZ = 0;
+                    backlashOffsetR = 0;
+                    nonSquarenessFactor = 0;
+                    break;
+            }
+        }
+        
         // keep copy for calling subdrivers as to not add offset on offset
         Location locationOriginal = location;
 

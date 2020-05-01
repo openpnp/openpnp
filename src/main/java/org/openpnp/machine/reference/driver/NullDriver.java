@@ -32,7 +32,6 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
-import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -99,7 +98,7 @@ public class NullDriver implements ReferenceDriver {
      * considerations when writing your own driver.
      */
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOptions... options)
             throws Exception {
         Logger.debug("moveTo({}, {}, {})", hm, location, speed);
         checkEnabled();

@@ -11,6 +11,7 @@ import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.machine.reference.ReferenceDriver.MoveToOptions;
 import org.openpnp.machine.reference.driver.AbstractReferenceDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
@@ -488,7 +489,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOptions...options)
             throws Exception {
         location = location.convertToUnits(units);
         location = location.subtract(hm.getHeadOffsets());

@@ -35,7 +35,7 @@ public class TestDriver implements ReferenceDriver {
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOptions...options)
             throws Exception {
         // Subtract the offsets from the incoming Location. This converts the
         // offset coordinates to driver / absolute coordinates.
@@ -91,7 +91,7 @@ public class TestDriver implements ReferenceDriver {
         }
 
         @Override
-        public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+        public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOptions...options)
                 throws Exception {
 
         }

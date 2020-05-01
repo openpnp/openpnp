@@ -45,6 +45,15 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
      * @throws Exception
      */
     public void home(ReferenceHead head) throws Exception;
+    
+    
+    /**
+     * Contains all possible options for the moveTo command.
+     * RAW: disable all internal corrections, just tell the driver to move to that position
+     * NO_BACKSLASH: disable backslash compensation
+     */
+    public enum MoveToOptions { RAW, NO_BACKSLASH, NO_NONSQUARNESS }
+    
 
     /**
      * Moves the specified HeadMountable to the given location at a speed defined by (maximum feed
@@ -54,11 +63,12 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
      * HeadMountable object types include Nozzle, Camera and Actuator.
      * 
      * @param hm
-     * @param location
-     * @param speed
+     * @param location destination
+     * @param speed relative speed (0-1) of the move
+     * @param options zero to n options from the MoveToOptions enum.
      * @throws Exception
      */
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed) throws Exception;
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOptions... options) throws Exception;
 
     /**
      * Returns a clone of the HeadMountable's current location. It's important that the returned

@@ -9,6 +9,7 @@ import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
+import org.openpnp.machine.reference.ReferenceDriver.MoveToOptions;
 import org.openpnp.machine.reference.driver.test.TestDriver;
 import org.openpnp.machine.reference.driver.test.TestDriver.TestDriverDelegate;
 import org.openpnp.model.Board;
@@ -155,7 +156,7 @@ public class BasicJobTest {
         }
 
         @Override
-        public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+        public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOptions...options)
                 throws Exception {
             System.out.println(hm + " " + location);
             if (expectedOps.isEmpty()) {
