@@ -415,6 +415,8 @@ public class CameraView extends JComponent implements CameraListener {
                 }
             }
         });
+        // Make sure the filtered image is shown immediately and also counted as fps (for 0 or low fps cameras). 
+        frameReceived(null);
     }
 
     public BufferedImage captureSelectionImage() {

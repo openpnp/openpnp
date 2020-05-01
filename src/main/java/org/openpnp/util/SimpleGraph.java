@@ -24,16 +24,18 @@ package org.openpnp.util;
 import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
 
 public class SimpleGraph {
 
-    private boolean offsetMode = false;
     private double relativePaddingLeft;
     private double relativePaddingRight;
-    private List<DataScale> dataScales = new ArrayList<>();  
+    private List<DataScale> dataScales = new ArrayList<>();
+    private long zeroNanoTime = Long.MIN_VALUE;
+    private long lastT = 0;
 
     public static class DataScale {
         private String label;
@@ -55,20 +57,6 @@ public class SimpleGraph {
             this.label = label;
         }
 
-        public Point2D.Double getMinimum() {
-            Point2D.Double minimum = null;
-            for (DataRow dataRow : dataRows) {
-                Point2D.Double rowMin = dataRow.getMinimum();
-                if (minimum == null) {
-                    minimum = rowMin;
-                }
-                else {
-                    minimum.x = Math.min(rowMin.x, minimum.x);
-                    minimum.y = Math.min(rowMin.y, minimum.y);
-                }
-            }
-            return minimum; 
-        }
         public String getLabel() {
             return label;
         }
@@ -92,11 +80,31 @@ public class SimpleGraph {
             this.relativePaddingBottom = relativePaddingBottom;
         }
 
+        public Point2D.Double getMinimum() {
+            Point2D.Double minimum = null;
+            for (DataRow dataRow : dataRows) {
+                Point2D.Double rowMin = dataRow.getMinimum();
+                if (rowMin == null) {
+                    // skip
+                }
+                else if (minimum == null) {
+                    minimum = rowMin;
+                }
+                else {
+                    minimum.x = Math.min(rowMin.x, minimum.x);
+                    minimum.y = Math.min(rowMin.y, minimum.y);
+                }
+            }
+            return minimum; 
+        }
         public Point2D.Double getMaximum() {
             Point2D.Double maximum = null;
             for (DataRow dataRow : dataRows) {
                 Point2D.Double rowMax = dataRow.getMaximum();
-                if (maximum == null) {
+                if (rowMax == null) {
+                    // skip
+                }
+                else if (maximum == null) {
                     maximum = rowMax;
                 }
                 else {
@@ -136,11 +144,26 @@ public class SimpleGraph {
         return dataRow;
     }
 
-    public boolean isOffsetMode() {
-        return offsetMode;
-    }
-    public void setOffsetMode(boolean offsetMode) {
-        this.offsetMode = offsetMode;
+    /**
+     * @return Time in Milliseconds since the first call on this instance. System.nanoTime() based. 
+     * Guaranteed to be monotone and unique.
+     *
+     */
+    public double getT() {
+        if (zeroNanoTime == Long.MIN_VALUE) {
+            zeroNanoTime = System.nanoTime();
+            lastT = 0;
+            return 0.0;
+        }
+        long dt = (System.nanoTime() - zeroNanoTime);
+        if (dt <= lastT) {
+            dt = lastT++;
+        }
+        else {
+            lastT  = dt;
+        }
+        // From Nano to Milliseconds
+        return 1e-6*dt;
     }
 
     public double getRelativePaddingLeft() {
@@ -159,11 +182,10 @@ public class SimpleGraph {
     public static class DataRow {
         private String label;
         private Color color;
-        private HashMap<Double, Double> data = new HashMap<>();
+        private TreeMap<Double, Double> data = new TreeMap<>();
 
         // housekeeping
         boolean dirty = false;
-        private List<Double> sortedKeys;
         private Point2D.Double minimum = null;
         private Point2D.Double maximum = null;
 
@@ -177,12 +199,21 @@ public class SimpleGraph {
             data.put(x, y);
             dirty = true;
         }
-        public void recordDataPoint(long x, double y) {
-            data.put((double)x, y);
-            dirty = true;
-        }
         public Double getDataPoint(double x) {
             return data.get(x);
+        }
+        public Double getInterpolated(double x) {
+            Entry<Double, Double> entry0 = data.floorEntry(x);
+            Entry<Double, Double> entry1 = data.ceilingEntry(x);
+            if (entry0 != null && entry1 != null) {
+                double x0 = entry0.getKey();
+                double x1 = entry1.getKey();
+                double y0 = data.get(x0);
+                double y1 = data.get(x1);
+                double r = (x-x0)/(x1-x0);
+                return y0+r*(y1-y0);
+            }
+            return null;
         }
         public int size() {
             return data.size();
@@ -190,12 +221,10 @@ public class SimpleGraph {
 
         protected void recalc() {
             if (dirty) {
-                sortedKeys = new ArrayList<Double>(data.size());
-                sortedKeys.addAll(data.keySet());
-                Collections.sort(sortedKeys);
                 minimum = null;
                 maximum = null;
-                for (double x : sortedKeys) {
+                for (Entry<Double, Double> entry : data.entrySet()) {
+                    double x = entry.getKey();
                     double y = data.get(x);
                     if (minimum == null) {
                         minimum = new Point2D.Double(x, y);
@@ -216,14 +245,13 @@ public class SimpleGraph {
             }
         }
 
-        public List<Double> getXAxis() {
-            recalc();
-            return sortedKeys;
+        public Set<Double> getXAxis() {
+            return data.keySet();
         }
         public Point2D.Double getMinimum() {
             recalc();
             if (minimum == null) {
-                return new Point2D.Double();
+                return null;
             }
             else {
                 return (Point2D.Double)minimum.clone();
@@ -232,7 +260,7 @@ public class SimpleGraph {
         public Point2D.Double getMaximum() {
             recalc();
             if (maximum == null) {
-                return new Point2D.Double();
+                return null;
             }
             else {
                 return (Point2D.Double)maximum.clone();
@@ -247,34 +275,37 @@ public class SimpleGraph {
         public void setColor(Color color) {
             this.color = color;
         }
-        public HashMap<Double, Double> getData() {
-            return data;
-        }
-        public void setData(HashMap<Double, Double> data) {
-            this.data = data;
-        }
-
     }
 
 
     public Point2D.Double getMinimum(DataScale dataScaleForY) {
         Point2D.Double minimum = dataScaleForY.getMinimum();
+        if (minimum == null) {
+            return null;
+        }
         // expand x axis over all the scales 
         for (DataScale dataScale : dataScales) {
             if (dataScale != dataScaleForY) {
                 Point2D.Double scaleMin = dataScale.getMinimum();
-                minimum.x = Math.min(scaleMin.x, minimum.x);
+                if (scaleMin != null) {
+                    minimum.x = Math.min(scaleMin.x, minimum.x);
+                }
             }
         }
         return minimum; 
     }
     public Point2D.Double getMaximum(DataScale dataScaleForY) {
         Point2D.Double maximum = dataScaleForY.getMaximum();
+        if (maximum == null) {
+            return null;
+        }
         // expand x axis over all the scales 
         for (DataScale dataScale : dataScales) {
             if (dataScale != dataScaleForY) {
-                Point2D.Double scaleMin = dataScale.getMaximum();
-                maximum.x = Math.max(scaleMin.x, maximum.x);
+                Point2D.Double scaleMax = dataScale.getMaximum();
+                if (scaleMax != null) {
+                    maximum.x = Math.max(scaleMax.x, maximum.x);
+                }
             }
         }
         return maximum; 

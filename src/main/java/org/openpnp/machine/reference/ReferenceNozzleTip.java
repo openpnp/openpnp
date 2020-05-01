@@ -120,6 +120,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     @Attribute(required = false)
     private int partOffProbingMilliseconds;
 
+    @Attribute(required = false)
+    private int partOffDwellMilliseconds;
+
     @Element(required = false)
     private double vacuumDifferencePartOffLow;
 
@@ -427,6 +430,14 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         this.partOffProbingMilliseconds = partOffProbingMilliseconds;
     }
 
+    public int getPartOffDwellMilliseconds() {
+        return partOffDwellMilliseconds;
+    }
+
+    public void setPartOffDwellMilliseconds(int partOffDwellMilliseconds) {
+        this.partOffDwellMilliseconds = partOffDwellMilliseconds;
+    }
+
     public double getVacuumDifferencePartOffLow() {
         return vacuumDifferencePartOffLow;
     }
@@ -499,7 +510,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         Object oldValue = this.vacuumPartOnGraph;
         this.vacuumPartOnGraph = vacuumPartOnGraph;
         if (!(oldValue == null && vacuumPartOnGraph == null)) { // only fire when values are set
-            firePropertyChange("vacuumPartOnGraph", oldValue, vacuumPartOnGraph);
+            firePropertyChange("vacuumPartOnGraph", null /*always treat as change*/, vacuumPartOnGraph); 
         }
     }
 
@@ -511,7 +522,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         Object oldValue = this.vacuumPartOffGraph;
         this.vacuumPartOffGraph = vacuumPartOffGraph;
         if (!(oldValue == null && vacuumPartOffGraph == null)) { // only fire when values are set
-            firePropertyChange("vacuumPartOffGraph", oldValue, vacuumPartOffGraph);
+            firePropertyChange("vacuumPartOffGraph", null /*always treat as change*/, vacuumPartOffGraph);
         }
     }
 
@@ -557,9 +568,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     protected final SimpleGraph startNewVacuumGraph(double vacuumLevel, boolean valveSwitchingOn) {
         // start a new graph 
         SimpleGraph vacuumGraph = new SimpleGraph();
-        vacuumGraph.setOffsetMode(true);
         vacuumGraph.setRelativePaddingLeft(0.05);
-        long t = System.currentTimeMillis();
+        double t = vacuumGraph.getT();
         // init pressure scale
         SimpleGraph.DataScale vacuumScale =  vacuumGraph.getScale(PRESSURE);
         vacuumScale.setRelativePaddingBottom(0.3);
@@ -571,12 +581,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         // record the current pressure
         SimpleGraph.DataRow vacuumData = vacuumGraph.getRow(PRESSURE, VACUUM);
         vacuumData.setColor(new Color(255, 0, 0));
-        vacuumData.recordDataPoint(t-1, vacuumLevel);
+        vacuumData.recordDataPoint(t, vacuumLevel);
         // record the valve switching off
         SimpleGraph.DataRow valveData = vacuumGraph.getRow(BOOLEAN, VALVE_ON);
         valveData.setColor(new Color(00, 0x5B, 0xD9)); // the OpenPNP color
-        valveData.recordDataPoint(t-1, valveSwitchingOn ? 0 : 1);
-        valveData.recordDataPoint(t, valveSwitchingOn ? 1 : 0);
+        valveData.recordDataPoint(t, valveSwitchingOn ? 0 : 1);
+        valveData.recordDataPoint(vacuumGraph.getT(), valveSwitchingOn ? 1 : 0);
         return vacuumGraph;
     }
 
