@@ -1,6 +1,19 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2020-04-29
+
+## Advanced Camera Settle
+
+Camera Autosettle is now exposed on the GUI, it was significantly expanded to allow for
+different methods in image processing and for settling quantification. Graphical diagnostics 
+and image replay with motion "heat map" are provided. 
+
+## Advanced Part On/Off Detection
+
+Vacuum sensing part-on/part-off detection was significantly expanded to allow for differencial
+vacuum level assessment and adaptive dwell times. Graphical diagnostics are provided.
+
 # 2020-04-20
 
 ## Improved Actuator Read Errors

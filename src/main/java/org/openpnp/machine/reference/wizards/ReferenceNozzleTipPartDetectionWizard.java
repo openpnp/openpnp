@@ -184,7 +184,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOnVacuumSensing.add(lblLegendPartOn, "2, 16, right, default");
         
         vacuumPartOnGraph = new SimpleGraphView();
-        vacuumPartOnGraph.setFont(new Font("SansSerif", Font.PLAIN, 9));
+        vacuumPartOnGraph.setFont(new Font("Dialog", Font.PLAIN, 11));
         panelPartOnVacuumSensing.add(vacuumPartOnGraph, "4, 16, 9, 1, default, fill");
         
         panelPartOffVacuumSensing = new JPanel();
@@ -282,12 +282,17 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOffVacuumSensing.add(vacuumLevelPartOffReading, "10, 10, fill, default");
         vacuumLevelPartOffReading.setColumns(10);
         
-        lblProbingTimePartOff = new JLabel("Probing time (ms)");
+        lblProbingTimePartOff = new JLabel("Valve open/close (ms)");
+        lblProbingTimePartOff.setToolTipText("<html>\r\n<p>The valve is opened and closed to create a small underpressure pulse. </p>\r\n<p>The open time should be quite short, no point in creating full pick suction.</p>\r\n<p>The close time can be used to wait for the system to react to the pulse.<br/>\r\nincluding delays in sensor signal propagation and readout.</p>\r\n</html>");
         panelPartOffVacuumSensing.add(lblProbingTimePartOff, "2, 12, right, default");
         
         partOffProbingMilliseconds = new JTextField();
         panelPartOffVacuumSensing.add(partOffProbingMilliseconds, "4, 12, default, center");
         partOffProbingMilliseconds.setColumns(10);
+        
+        partOffDwellMilliseconds = new JTextField();
+        panelPartOffVacuumSensing.add(partOffDwellMilliseconds, "6, 12, fill, default");
+        partOffDwellMilliseconds.setColumns(10);
         
         lblPartOffDifferenceRange = new JLabel("Difference Range");
         panelPartOffVacuumSensing.add(lblPartOffDifferenceRange, "2, 14, right, default");
@@ -309,7 +314,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOffVacuumSensing.add(lblLegendPartOff, "2, 18, right, default");
         
         vacuumPartOffGraph = new SimpleGraphView();
-        vacuumPartOffGraph.setFont(new Font("SansSerif", Font.PLAIN, 9));
+        vacuumPartOffGraph.setFont(new Font("Dialog", Font.PLAIN, 11));
         panelPartOffVacuumSensing.add(vacuumPartOffGraph, "4, 18, 9, 1, default, fill");
     }
     
@@ -357,6 +362,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
     private JLabel lblPerformPartOffChecks;
     private JCheckBox partOffCheckAfterPlace;
     private JCheckBox partOffCheckBeforePick;
+    private JTextField partOffDwellMilliseconds;
     
     private void adaptDialog() {
         VacuumMeasurementMethod methodOn = (VacuumMeasurementMethod)methodPartOn.getSelectedItem();
@@ -424,6 +430,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         vacuumLevelPartOffReading.setVisible(partOff);
         lblProbingTimePartOff.setVisible(partOff);
         partOffProbingMilliseconds.setVisible(partOff);
+        partOffDwellMilliseconds.setVisible(partOff);
         
         lblPartOffDifferenceRange.setVisible(partOffDifference);
         vacuumDifferencePartOffLow.setVisible(partOffDifference);
@@ -458,50 +465,16 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         addWrappedBinding(nozzleTip, "vacuumLevelPartOffHigh", vacuumLevelPartOffHigh, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumLevelPartOffReading", vacuumLevelPartOffReading, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "partOffProbingMilliseconds", partOffProbingMilliseconds, "text", integerConverter);
+        addWrappedBinding(nozzleTip, "partOffDwellMilliseconds", partOffDwellMilliseconds, "text", integerConverter);
         addWrappedBinding(nozzleTip, "vacuumDifferencePartOffLow", vacuumDifferencePartOffLow, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumDifferencePartOffHigh", vacuumDifferencePartOffHigh, "text", doubleConverter);
         addWrappedBinding(nozzleTip, "vacuumDifferencePartOffReading", vacuumDifferencePartOffReading, "text", doubleConverter);
-        
         addWrappedBinding(nozzleTip, "vacuumPartOnGraph", vacuumPartOnGraph, "graph");
-        
-        final boolean testMode = false;
-        if (!testMode) {
-            addWrappedBinding(nozzleTip, "vacuumPartOffGraph", vacuumPartOffGraph, "graph");
-        }
-        else {
-            SimpleGraph vacuumGraph = new SimpleGraph();
-            vacuumGraph.setOffsetMode(true);
-            vacuumGraph.setRelativePaddingLeft(0.1);
-            long t = System.currentTimeMillis();
-            double scale = Math.exp(Math.random()*7.0-3.0);
-            double offset = (Math.random()-0.3)*scale*2.0;
-            long duration = (long)(Math.random()*1000.0);
-            // init pressure scale
-            SimpleGraph.DataScale vacuumScale =  vacuumGraph.getScale("P");
-            vacuumScale.setRelativePaddingBottom(0.25);
-            vacuumScale.setColor(new Color(0, 0, 0, 64));
-            // init valve scale
-            SimpleGraph.DataScale valveScale =  vacuumGraph.getScale("B");
-            valveScale.setRelativePaddingTop(0.8);
-            valveScale.setRelativePaddingBottom(0.1);
-            // record the current pressure
-            SimpleGraph.DataRow vacuumData = vacuumGraph.getRow("P", "V");
-            vacuumData.setColor(new Color(255, 0, 0));
-            // record the valve switching off
-            SimpleGraph.DataRow valveData = vacuumGraph.getRow("B", "S");
-            valveData.setColor(new Color(00, 0x5B, 0xD9));
-            valveData.recordDataPoint(t-1, 0);
-            valveData.recordDataPoint(t, 1);
-            for (long td = t; td < t+duration; td++) {
-                vacuumData.recordDataPoint(td, Math.sin(td*3.0/duration)*scale+offset+Math.random()*scale*0.05);
-            }
-            valveData.recordDataPoint(t+duration-1, 1);
-            valveData.recordDataPoint(t+duration, 0);
-            vacuumPartOffGraph.setGraph(vacuumGraph);
-        }
+        addWrappedBinding(nozzleTip, "vacuumPartOffGraph", vacuumPartOffGraph, "graph");
 
         ComponentDecorators.decorateWithAutoSelect(partOffProbingMilliseconds);
-        
+        ComponentDecorators.decorateWithAutoSelect(partOffDwellMilliseconds);
+
         ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOnLow);
         ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOnHigh);
         ComponentDecorators.decorateWithAutoSelect(vacuumDifferencePartOnLow);
