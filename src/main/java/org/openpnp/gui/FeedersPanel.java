@@ -220,6 +220,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                     multiSelectActionGroup.setEnabled(true);
                 }
 
+                refreshSetParentMenu(selections);
+                
                 if (table.getSelectedRow() != priorRowIndex) {
                     if (keepUnAppliedFeederConfigurationChanges()) {
                         table.setRowSelectionInterval(priorRowIndex, priorRowIndex);
