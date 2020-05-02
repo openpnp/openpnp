@@ -31,7 +31,6 @@ import com.jgoodies.forms.layout.RowSpec;
 public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWizard {
 
 	private final ReferenceMachine machine;
-    private JComboBox comboBoxDriver;
     private JCheckBox checkBoxHomeAfterEnabled;
     private String driverClassName;
     private JTextField discardXTf;
@@ -53,23 +52,10 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
-        JLabel lblDriver = new JLabel("Driver");
-        panelGeneral.add(lblDriver, "2, 2");
-        
-                comboBoxDriver = new JComboBox();
-        panelGeneral.add(comboBoxDriver, "2, 4");
         
         checkBoxHomeAfterEnabled = new JCheckBox("Home after enabled?");
-        panelGeneral.add(checkBoxHomeAfterEnabled, "2, 6");
-        
-                comboBoxDriver.addItem(NullDriver.class.getCanonicalName());
-        comboBoxDriver.addItem(GcodeDriver.class.getCanonicalName());
-        comboBoxDriver.addItem(NeoDen4Driver.class.getCanonicalName());
+        panelGeneral.add(checkBoxHomeAfterEnabled, "2, 2");
         
                 JPanel panelLocations = new JPanel();
         panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
@@ -123,8 +109,6 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
                 LocationButtonsPanel locationButtonsPanel =
                         new LocationButtonsPanel(discardXTf, discardYTf, discardZTf, discardCTf);
         panelLocations.add(locationButtonsPanel, "12, 4");
-
-        this.driverClassName = machine.getDriver().getClass().getCanonicalName();
     }
 
     @Override
@@ -133,7 +117,6 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         LengthConverter lengthConverter = new LengthConverter();
 
-        addWrappedBinding(this, "driverClassName", comboBoxDriver, "selectedItem");
         addWrappedBinding(machine, "homeAfterEnabled", checkBoxHomeAfterEnabled, "selected");
 
         MutableLocationProxy discardLocation = new MutableLocationProxy();
@@ -147,21 +130,5 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discardYTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discardZTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discardCTf);
-    }
-
-    public String getDriverClassName() {
-        return driverClassName;
-    }
-
-    public void setDriverClassName(String driverClassName) throws Exception {
-        if (machine.getDriver().getClass().getCanonicalName().equals(driverClassName)) {
-            return;
-        }
-        ReferenceDriver driver = (ReferenceDriver) Class.forName(driverClassName).newInstance();
-        driver.createDefaults();
-        machine.setDriver(driver);
-        this.driverClassName = driverClassName;
-        MessageBoxes.infoBox("Restart Required",
-                "Please restart OpenPnP for the changes to take effect.");
     }
 }

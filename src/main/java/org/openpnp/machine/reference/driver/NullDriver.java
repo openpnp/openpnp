@@ -38,6 +38,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.base.AbstractDriver;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
@@ -46,8 +47,7 @@ import org.simpleframework.xml.Attribute;
  * a set of coordinates for each Head that it is asked to handle and simply logs all commands sent
  * to it.
  */
-public class NullDriver implements ReferenceDriver {
-
+public class NullDriver extends AbstractDriver implements ReferenceDriver {
 
     @Attribute(required = false)
     private double feedRateMmPerMinute = 5000;
@@ -253,32 +253,6 @@ public class NullDriver implements ReferenceDriver {
     public Wizard getConfigurationWizard() {
         return null;
     }
-
-    @Override
-    public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName();
-    }
-
-    @Override
-    public PropertySheetHolder[] getChildPropertySheetHolders() {
-        return null;
-    }
-
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
-    }
-
-    @Override
-    public Icon getPropertySheetHolderIcon() {
-        return null;
-    }
-
-    @Override
-    public Action[] getPropertySheetHolderActions() {
-        return null;
-    }
-
     private void checkEnabled() throws Exception {
         if (!enabled) {
             throw new Exception("Driver is not yet enabled!");

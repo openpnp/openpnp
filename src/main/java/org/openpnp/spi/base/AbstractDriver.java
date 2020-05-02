@@ -1,6 +1,7 @@
 package org.openpnp.spi.base;
 
 import java.awt.event.ActionEvent;
+import java.io.Closeable;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -13,22 +14,20 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.Driver;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 
-public abstract class AbstractAxis extends AbstractModelObject implements Axis {
+public abstract class AbstractDriver extends AbstractModelObject implements Driver {
 
-    @Attribute
+    @Attribute(required = false) 
     protected String id;
 
     @Attribute(required = false)
     protected String name;
 
-    @Attribute(required = false)
-    protected Axis.Type type;
-
-    public AbstractAxis() {
-        this.id = Configuration.createId("AXS");
+    public AbstractDriver() {
+        this.id = Configuration.createId("DRV");
         this.name = getClass().getSimpleName();
     }
 
@@ -50,17 +49,6 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
     }
 
     @Override
-    public Axis.Type getType() {
-        return type;
-    }
-
-    @Override
-    public void setType(Axis.Type type) {
-        this.type = type;
-    }
-
-
-    @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard()),
@@ -73,11 +61,11 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
     }
 
     @SuppressWarnings("serial")
-    public Action deleteAction = new AbstractAction("Delete Axis") {
+    public Action deleteAction = new AbstractAction("Delete Driver") {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Axis");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected axis.");
+            putValue(NAME, "Delete Driver");
+            putValue(SHORT_DESCRIPTION, "Delete the currently selected driver.");
         }
 
         @Override
@@ -86,14 +74,14 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
                     "Are you sure you want to delete " + getName() + "?",
                     "Delete " + getName() + "?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
-                Configuration.get().getMachine().removeAxis(AbstractAxis.this);
+                Configuration.get().getMachine().removeDriver(AbstractDriver.this);
             }
         }
     };
 
     @Override
     public Icon getPropertySheetHolderIcon() {
-        return Icons.axisAll;
+        return Icons.driver;
     }
 
     @Override

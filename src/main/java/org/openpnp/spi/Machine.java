@@ -101,6 +101,15 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public Actuator getActuatorByName(String name);
 
     /**
+     * Gets a List of Drivers attached to the Machine.
+     * 
+     * @return
+     */
+    public List<Driver> getDrivers();
+
+    public Driver getDriver(String id);
+
+    /**
      * Commands all Heads to move to their home positions and reset their current positions to
      * 0,0,0,0. Depending on the head configuration of the machine the home positions may not all be
      * the same but the end result should be that any head commanded to move to a certain position
@@ -158,9 +167,15 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public List<Class<? extends Signaler>> getCompatibleSignalerClasses();
 
+    public List<Class<? extends Driver>> getCompatibleDriverClasses();
+
     public void addAxis(Axis axis) throws Exception;
 
     public void removeAxis(Axis axis);
+
+    public void addDriver(Driver driver) throws Exception;
+
+    public void removeDriver(Driver driver);
 
     public void addFeeder(Feeder feeder) throws Exception;
 

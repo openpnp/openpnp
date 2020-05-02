@@ -16,12 +16,13 @@ import org.openpnp.machine.reference.driver.SerialPortCommunications.StopBits;
 import org.openpnp.machine.reference.driver.wizards.AbstractReferenceDriverConfigurationWizard;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.base.AbstractDriver;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
-public abstract class AbstractReferenceDriver extends AbstractModelObject implements ReferenceDriver, Closeable {
+public abstract class AbstractReferenceDriver extends AbstractDriver implements ReferenceDriver {
     @Element(required = false)
     protected SerialPortCommunications serial = new SerialPortCommunications();
 
@@ -219,27 +220,6 @@ public abstract class AbstractReferenceDriver extends AbstractModelObject implem
 
     public void setPort(int port) {
         tcp.setPort(port);
-    }
-
-
-    @Override
-    public Icon getPropertySheetHolderIcon() {
-        return null;
-    }
-
-    @Override
-    public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName();
-    }
-
-    @Override
-    public PropertySheetHolder[] getChildPropertySheetHolders() {
-        return null;
-    }
-
-    @Override
-    public Action[] getPropertySheetHolderActions() {
-        return null;
     }
 
     @Override

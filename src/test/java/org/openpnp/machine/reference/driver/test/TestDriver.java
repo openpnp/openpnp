@@ -14,9 +14,10 @@ import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.base.AbstractDriver;
 import org.simpleframework.xml.Attribute;
 
-public class TestDriver implements ReferenceDriver {
+public class TestDriver extends AbstractDriver implements ReferenceDriver {
     @Attribute(required = false)
     private String dummy;
 
@@ -144,6 +145,20 @@ public class TestDriver implements ReferenceDriver {
         @Override
         public void close() throws IOException {
 
+        }
+
+        @Override
+        public String getName() {
+            return null;
+        }
+
+        @Override
+        public void setName(String name) {
+        }
+
+        @Override
+        public String getId() {
+            return null;
         }
     }
 

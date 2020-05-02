@@ -69,7 +69,10 @@ public class GcodeDriverTest {
          * Configure the machine to use the new GcodeDriver and initialize the machine.
          */
         ReferenceMachine referenceMachine = (ReferenceMachine) Configuration.get().getMachine();
-        referenceMachine.setDriver(driver);
+        while (referenceMachine.getDrivers().size() > 0) {
+            referenceMachine.removeDriver(referenceMachine.getDrivers().get(0));
+        }
+        referenceMachine.addDriver(driver);
         
         /**
          * Start the machine.

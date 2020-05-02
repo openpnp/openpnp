@@ -95,10 +95,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
 
     @Attribute(required = false)
     protected int connectWaitTimeMilliseconds = 3000;
-    
-    @Attribute(required = false)
-    protected String name = "NeoDen4Driver";
-    
+
     @Attribute(required = false)
     protected double homeCoordinateX = -437.;
     
@@ -866,16 +863,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
             new PropertySheetWizardAdapter(new Neoden4DriverConfigurationWizard(this), "Machine")
         };
     }
-    
-    public String getName() {
-        return name;
-    }
 
-    public void setName(String name) {
-        this.name = name;
-        firePropertyChange("name", null, getName());
-    }
-    
     public LengthUnit getUnits() {
         return units;
     }

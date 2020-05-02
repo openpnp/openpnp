@@ -1,5 +1,6 @@
 package org.openpnp.spi.base;
 
+import java.io.Closeable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,6 +21,7 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Driver;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
@@ -71,6 +73,9 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     @ElementList(required = false)
     protected IdentifiableList<PartAlignment> partAlignments = new IdentifiableList<>();
+
+    @ElementList(required = false)
+    protected IdentifiableList<Driver> drivers = new IdentifiableList<>();
 
     @Element(required = false)
     protected Location discardLocation = new Location(LengthUnit.Millimeters);
@@ -156,6 +161,16 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @Override
     public Camera getCamera(String id) {
         return cameras.get(id);
+    }
+
+    @Override
+    public List<Driver> getDrivers() {
+        return Collections.unmodifiableList(drivers);
+    }
+
+    @Override
+    public Driver getDriver(String id) {
+        return drivers.get(id);
     }
 
     @Override
@@ -268,6 +283,20 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         int index = actuators.indexOf(actuator);
         if (actuators.remove(actuator)) {
             fireIndexedPropertyChange("actuators", index, actuator, null);
+        }
+    }
+
+    @Override
+    public void addDriver(Driver driver) throws Exception {
+        drivers.add(driver);
+        fireIndexedPropertyChange("drivers", drivers.size() - 1, null, drivers);
+    }
+
+    @Override
+    public void removeDriver(Driver driver) {
+        int index = drivers.indexOf(driver);
+        if (drivers.remove(driver)) {
+            fireIndexedPropertyChange("drivers", index, driver, null);
         }
     }
 

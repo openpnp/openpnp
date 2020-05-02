@@ -31,6 +31,7 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.marek.MarekNozzle;
+import org.openpnp.machine.neoden4.NeoDen4Driver;
 import org.openpnp.machine.neoden4.Neoden4Camera;
 import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.machine.reference.camera.OnvifIPCamera;
@@ -39,6 +40,7 @@ import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.camera.SwitcherCamera;
 import org.openpnp.machine.reference.camera.Webcams;
+import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.feeder.AdvancedLoosePartFeeder;
 import org.openpnp.machine.reference.feeder.BlindsFeeder;
@@ -57,6 +59,7 @@ import org.openpnp.machine.reference.feeder.SlotSchultzFeeder;
 import org.openpnp.machine.reference.psh.ActuatorsPropertySheetHolder;
 import org.openpnp.machine.reference.psh.AxesPropertySheetHolder;
 import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
+import org.openpnp.machine.reference.psh.DriversPropertySheetHolder;
 import org.openpnp.machine.reference.psh.NozzleTipsPropertySheetHolder;
 import org.openpnp.machine.reference.psh.SignalersPropertySheetHolder;
 import org.openpnp.machine.reference.signaler.ActuatorSignaler;
@@ -68,6 +71,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Driver;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
@@ -83,8 +87,9 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
 public class ReferenceMachine extends AbstractMachine {
+    @Deprecated
     @Element(required = false)
-    private ReferenceDriver driver = new NullDriver();
+    private ReferenceDriver driver = null;
 
     @Element(required = false)
     protected PnpJobProcessor pnpJobProcessor = new ReferencePnpJobProcessor();
@@ -103,21 +108,18 @@ public class ReferenceMachine extends AbstractMachine {
 
     private List<Class<? extends Feeder>> registeredFeederClasses = new ArrayList<>();
 
+    private List<Class<? extends Driver>> registeredDriverClasses = new ArrayList<>();
+
     @Commit
     protected void commit() {
         super.commit();
     }
 
+    @Deprecated
     public ReferenceDriver getDriver() {
-        return driver;
-    }
-
-    public void setDriver(ReferenceDriver driver) throws Exception {
-        if (driver != this.driver) {
-            setEnabled(false);
-            close();
-        }
-        this.driver = driver;
+        // TODO: all callers must do axis mapping.
+        // For now, just return the first Driver
+        return (ReferenceDriver) drivers.get(0);
     }
 
     public ReferenceMachine() {
@@ -129,6 +131,20 @@ public class ReferenceMachine extends AbstractMachine {
                                  throws Exception {
                              if (partAlignments.isEmpty()) {
                                  partAlignments.add(new ReferenceBottomVision());
+                             }
+                             // Migrate the one-driver property to the list of drivers.
+                             // Also migrate the GcodeDriver specific sub-drivers.
+                             if (driver != null) {
+                                 addDriver(driver);
+                                 if (driver instanceof GcodeDriver) {
+                                     GcodeDriver gcodeDriver= (GcodeDriver)driver;
+                                     drivers.addAll(gcodeDriver.getSubDrivers());
+                                 }
+                                 driver = null;
+                             }
+                             // But if this is a brand new Machine, create a NullDriver.
+                             if (drivers.isEmpty()) {
+                                 drivers.add(new NullDriver());
                              }
                          }
                      });
@@ -144,7 +160,9 @@ public class ReferenceMachine extends AbstractMachine {
         Logger.debug("setEnabled({})", enabled);
         if (enabled) {
             try {
-                driver.setEnabled(true);
+                for (Driver driver : getDrivers()) {
+                    ((ReferenceDriver)driver).setEnabled(true);
+                }
                 this.enabled = true;
             }
             catch (Exception e) {
@@ -155,7 +173,9 @@ public class ReferenceMachine extends AbstractMachine {
         }
         else {
             try {
-                driver.setEnabled(false);
+                for (Driver driver : getDrivers()) {
+                    ((ReferenceDriver)driver).setEnabled(false);
+                }
                 this.enabled = false;
             }
             catch (Exception e) {
@@ -189,8 +209,7 @@ public class ReferenceMachine extends AbstractMachine {
         children.add(new NozzleTipsPropertySheetHolder("Nozzle Tips", getNozzleTips(), null));
         children.add(new CamerasPropertySheetHolder(null, "Cameras", getCameras(), null));
         children.add(new ActuatorsPropertySheetHolder(null, "Actuators", getActuators(), null));
-        children.add(
-                new SimplePropertySheetHolder("Driver", Collections.singletonList(getDriver())));
+        children.add(new DriversPropertySheetHolder(this, "Drivers", getDrivers(), null));
         children.add(new SimplePropertySheetHolder("Job Processors",
                 Arrays.asList(getPnpJobProcessor())));
 
@@ -286,6 +305,15 @@ public class ReferenceMachine extends AbstractMachine {
         return l;
     }
 
+    @Override
+    public List<Class<? extends Driver>> getCompatibleDriverClasses() {
+        List<Class<? extends Driver>> l = new ArrayList<>();
+        l.add(NullDriver.class);
+        l.add(GcodeDriver.class);
+        l.add(NeoDen4Driver.class);
+        return l;
+    }
+
     private List<Class<? extends PartAlignment>> registeredAlignmentClasses = new ArrayList<>();
 
     @Override
@@ -310,11 +338,13 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Override
     public void close() throws IOException {
-        try {
-            driver.close();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+        for (Driver driver : getDrivers()) {
+            try {
+                driver.close();
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         for (Camera camera : getCameras()) {
             try {

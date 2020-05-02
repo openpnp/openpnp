@@ -181,15 +181,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     @ElementList(required = false, inline = true)
     public ArrayList<Command> commands = new ArrayList<>();
 
+    @Deprecated
     @ElementList(required = false)
     protected List<GcodeDriver> subDrivers = new ArrayList<>();
 
     @ElementList(required = false)
     protected List<Axis> axes = new ArrayList<>();
     
-    @Attribute(required = false)
-    protected String name = "GcodeDriver";
-
     private Thread readerThread;
     private boolean disconnectRequested;
     private boolean connected;
@@ -1120,6 +1118,20 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
     
    
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(new GcodeDriverSettings(this), "Driver Settings"),
+                new PropertySheetWizardAdapter(new GcodeDriverGcodes(this), "Gcode"),
+                new PropertySheetWizardAdapter(new GcodeDriverConsole(this), "Console"),
+                new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Communications")
+        };
+    }
+    
+/*
+ *
+ *    
     @Override
     public String getPropertySheetHolderTitle() {
         return getName() == null ? "GcodeDriver" : getName();
@@ -1132,16 +1144,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             children.add(new SimplePropertySheetHolder("Sub-Drivers", subDrivers));
         }
         return children.toArray(new PropertySheetHolder[] {});
-    }
-
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {
-                new PropertySheetWizardAdapter(new GcodeDriverGcodes(this), "Gcode"),
-                new PropertySheetWizardAdapter(new GcodeDriverSettings(this), "General Settings"),
-                new PropertySheetWizardAdapter(new GcodeDriverConsole(this), "Console"),
-                new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Communications")
-        };
     }
     
     @Override
@@ -1189,7 +1191,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             }
         }
     };
-
+*/
     public LengthUnit getUnits() {
         return units;
     }
@@ -1270,15 +1272,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         this.connectWaitTimeMilliseconds = connectWaitTimeMilliseconds;
     }
     
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-        firePropertyChange("name", null, getName());
-    }
-    
     public boolean isVisualHomingEnabled() {
         return visualHomingEnabled;
     }
@@ -1293,6 +1286,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
 
     public void setBackslashEscapedCharactersEnabled(boolean backslashEscapedCharactersEnabled) {
         this.backslashEscapedCharactersEnabled = backslashEscapedCharactersEnabled;
+    }
+
+    @Deprecated
+    public List<GcodeDriver> getSubDrivers() {
+        return subDrivers;
     }
 
     public static class Axis {

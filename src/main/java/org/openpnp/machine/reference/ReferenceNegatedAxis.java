@@ -23,12 +23,23 @@ public class ReferenceNegatedAxis extends AbstractTransformedAxis {
 
     @Override
     public Location transformToRaw(Location location) {
-        return null;
+        switch(type) {
+            case X:
+                return location.derive(-location.getX(), null, null, null);
+            case Y:
+                return location.derive(null, -location.getY(), null, null);
+            case Z:
+                return location.derive(null, null, -location.getZ(),  null);
+            case Rotation:
+                return location.derive(null, null, null, -location.getRotation());
+            default:
+                return location;
+        }
     }
 
     @Override
     public Location transformFromRaw(Location location) {
-        return null;
+        // it's reversible
+        return transformToRaw(location);
     }
-
 }
