@@ -18,6 +18,7 @@ import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
@@ -49,6 +50,9 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     public enum State {
         ERROR
     }
+
+    @ElementList(required = false)
+    protected IdentifiableList<Axis> axes = new IdentifiableList<>();
 
     @ElementList
     protected IdentifiableList<Head> heads = new IdentifiableList<>();
@@ -92,6 +96,16 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         for (Head head : heads) {
             head.setMachine(this);
         }
+    }
+
+    @Override
+    public List<Axis> getAxes() {
+        return Collections.unmodifiableList(axes);
+    }
+
+    @Override
+    public Axis getAxis(String id) {
+        return axes.get(id);
     }
 
     @Override
@@ -197,6 +211,20 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @Override
     public void removeListener(MachineListener listener) {
         listeners.remove(listener);
+    }
+
+    @Override
+    public void addAxis(Axis axis) throws Exception {
+        axes.add(axis);
+        fireIndexedPropertyChange("axes", axes.size() - 1, null, axis);
+    }
+
+    @Override
+    public void removeAxis(Axis axis) {
+        int index = axes.indexOf(axis);
+        if (axes.remove(axis)) {
+            fireIndexedPropertyChange("axes", index, axis, null);
+        }
     }
 
     @Override

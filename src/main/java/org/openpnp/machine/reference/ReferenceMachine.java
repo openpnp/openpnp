@@ -55,6 +55,7 @@ import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.machine.reference.feeder.SchultzFeeder;
 import org.openpnp.machine.reference.feeder.SlotSchultzFeeder;
 import org.openpnp.machine.reference.psh.ActuatorsPropertySheetHolder;
+import org.openpnp.machine.reference.psh.AxesPropertySheetHolder;
 import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
 import org.openpnp.machine.reference.psh.NozzleTipsPropertySheetHolder;
 import org.openpnp.machine.reference.psh.SignalersPropertySheetHolder;
@@ -65,6 +66,7 @@ import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
@@ -96,6 +98,8 @@ public class ReferenceMachine extends AbstractMachine {
     private boolean enabled;
 
     private boolean isHomed = false;
+
+    private List<Class<? extends Axis>> registeredAxisClasses = new ArrayList<>();
 
     private List<Class<? extends Feeder>> registeredFeederClasses = new ArrayList<>();
 
@@ -178,6 +182,7 @@ public class ReferenceMachine extends AbstractMachine {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
+        children.add(new AxesPropertySheetHolder(this, "Axes", getAxes(), null));
         children.add(new SignalersPropertySheetHolder(this, "Signalers", getSignalers(), null));
         children.add(new SimplePropertySheetHolder("Feeders", getFeeders()));
         children.add(new SimplePropertySheetHolder("Heads", getHeads()));
@@ -210,6 +215,14 @@ public class ReferenceMachine extends AbstractMachine {
 
     public void registerFeederClass(Class<? extends Feeder> cls) {
         registeredFeederClasses.add(cls);
+    }
+
+    @Override
+    public List<Class<? extends Axis>> getCompatibleAxisClasses() {
+        List<Class<? extends Axis>> l = new ArrayList<>();
+        l.add(ReferenceControllerAxis.class);
+        l.add(ReferenceNegatedAxis.class);
+        return l;
     }
 
     @Override
