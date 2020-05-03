@@ -1,7 +1,5 @@
 package org.openpnp.machine.reference;
 
-import javax.swing.Icon;
-
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceControllerAxisConfigurationWizard;
 import org.openpnp.spi.base.AbstractControllerAxis;

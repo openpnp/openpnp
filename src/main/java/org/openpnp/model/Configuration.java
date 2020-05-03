@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -36,6 +37,7 @@ import org.apache.commons.io.FileUtils;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Scripting;
 import org.openpnp.spi.Machine;
+import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.ResourceUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
@@ -536,8 +538,10 @@ public class Configuration extends AbstractModelObject {
         return serializer;
     }
 
+    
     public static String createId(String prefix) {
-        return prefix + System.currentTimeMillis();
+        // NanosecondTime guarantees unique Ids, even if created in rapid succession such as in migration code.
+        return prefix + NanosecondTime.get().toString(16);
     }
 
     /**

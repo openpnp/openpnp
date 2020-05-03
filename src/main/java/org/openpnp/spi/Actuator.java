@@ -27,6 +27,13 @@ package org.openpnp.spi;
 public interface Actuator
         extends HeadMountable, WizardConfigurable, PropertySheetHolder {
     /**
+     * @return the driver through which this Actuator is controlled. 
+     */
+    public Driver getDriver();
+    
+    public void setDriver(Driver driver);
+
+    /**
      * Turns the Actuator on or off.
      * 
      * @param on

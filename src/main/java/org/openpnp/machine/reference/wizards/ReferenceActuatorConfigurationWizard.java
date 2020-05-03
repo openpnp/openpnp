@@ -31,15 +31,21 @@ import javax.swing.border.TitledBorder;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.DriversComboBoxModel;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.ReferenceActuator;
+import org.openpnp.model.Configuration;
+import org.openpnp.spi.Driver;
+import org.openpnp.spi.base.AbstractMachine;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.JComboBox;
 
 @SuppressWarnings("serial")
 public class ReferenceActuatorConfigurationWizard extends AbstractConfigurationWizard {
@@ -59,6 +65,8 @@ public class ReferenceActuatorConfigurationWizard extends AbstractConfigurationW
     private JPanel panelProperties;
     private JLabel lblName;
     private JTextField nameTf;
+    private JLabel lblDriver;
+    private JComboBox driver;
 
     public ReferenceActuatorConfigurationWizard(ReferenceActuator actuator) {
         this.actuator = actuator;
@@ -70,16 +78,24 @@ public class ReferenceActuatorConfigurationWizard extends AbstractConfigurationW
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
+                ColumnSpec.decode("default:grow"),},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
+        lblDriver = new JLabel("Driver");
+        panelProperties.add(lblDriver, "2, 2, right, default");
+        
+        driver = new JComboBox(new DriversComboBoxModel((AbstractMachine) Configuration.get().getMachine(), true));
+        panelProperties.add(driver, "4, 2, fill, default");
+        
         lblName = new JLabel("Name");
-        panelProperties.add(lblName, "2, 2, right, default");
+        panelProperties.add(lblName, "2, 4, right, default");
         
         nameTf = new JTextField();
-        panelProperties.add(nameTf, "4, 2, fill, default");
+        panelProperties.add(nameTf, "4, 4, fill, default");
         nameTf.setColumns(20);
 
         headMountablePanel = new JPanel();
@@ -162,7 +178,9 @@ public class ReferenceActuatorConfigurationWizard extends AbstractConfigurationW
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
         IntegerConverter intConverter = new IntegerConverter();
+        NamedConverter<Driver> driverConverter = new NamedConverter<>(Configuration.get().getMachine().getDrivers()); 
 
+        addWrappedBinding(actuator, "driver", driver, "selectedItem", driverConverter);
         addWrappedBinding(actuator, "name", nameTf, "text");
         MutableLocationProxy headOffsets = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, actuator, "headOffsets", headOffsets, "location");

@@ -3,6 +3,8 @@ package org.openpnp.machine.reference;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceNegatedAxisConfigurationWizard;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Axis;
+import org.openpnp.spi.base.AbstractControllerAxis;
 import org.openpnp.spi.base.AbstractTransformedAxis;
 
 /**
@@ -41,5 +43,10 @@ public class ReferenceNegatedAxis extends AbstractTransformedAxis {
     public Location transformFromRaw(Location location) {
         // it's reversible
         return transformToRaw(location);
+    }
+
+    @Override
+    public Class<? extends Axis> getInputAxesClass() {
+        return AbstractControllerAxis.class;
     }
 }

@@ -859,7 +859,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
-            new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Communications"),
+            new PropertySheetWizardAdapter(super.getConfigurationWizard()),
             new PropertySheetWizardAdapter(new Neoden4DriverConfigurationWizard(this), "Machine")
         };
     }

@@ -197,9 +197,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     @Commit
     public void commit() {
         super.commit();
-        for (GcodeDriver driver : subDrivers) {
-            driver.parent = this;
-        }
     }
     
     public void createDefaults() {
@@ -1122,10 +1119,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
+                new PropertySheetWizardAdapter(super.getConfigurationWizard()),
                 new PropertySheetWizardAdapter(new GcodeDriverSettings(this), "Driver Settings"),
                 new PropertySheetWizardAdapter(new GcodeDriverGcodes(this), "Gcode"),
                 new PropertySheetWizardAdapter(new GcodeDriverConsole(this), "Console"),
-                new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Communications")
         };
     }
     
@@ -1289,8 +1286,12 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
 
     @Deprecated
-    public List<GcodeDriver> getSubDrivers() {
-        return subDrivers;
+    public void migrateSubDrivers(ReferenceMachine machine) throws Exception {
+        for (GcodeDriver gcodeDriver : subDrivers) {
+            machine.addDriver(gcodeDriver);
+        }
+        // TODO: set it null after the last use of it was reworked.
+        subDrivers = new ArrayList<>();
     }
 
     public static class Axis {

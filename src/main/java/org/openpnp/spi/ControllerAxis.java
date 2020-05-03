@@ -29,12 +29,22 @@ import org.openpnp.model.Length;
  */
 public interface ControllerAxis extends Axis {
     /**
-     * @return the designator of the Axis as recognized by the machine controller.
+     * @return the driver through which this ControllerAxis is controlled. 
+     */
+    public Driver getDriver();
+    
+    public void setDriver(Driver driver);
+
+    /**
+     * @return the designator of the ControllerAxis as recognized by the machine controller.
      */
     public String getDesignator();
 
     public void setDesignator(String designator);
 
+    /**
+     * @return the coordinate after doing the machine controller's homing.  
+     */
     public Length getHomeCoordinate();
 
     public void setHomeCoordinate(Length homeCoordinate);

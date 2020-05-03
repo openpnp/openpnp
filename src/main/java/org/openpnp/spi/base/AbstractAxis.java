@@ -93,7 +93,12 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
 
     @Override
     public Icon getPropertySheetHolderIcon() {
-        return Icons.axisAll;
+        if (type == Axis.Type.Rotation) {
+            return Icons.axisRotation;
+        }
+        else {
+            return Icons.axisCartesian;
+        }
     }
 
     @Override

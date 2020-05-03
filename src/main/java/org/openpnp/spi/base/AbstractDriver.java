@@ -1,7 +1,6 @@
 package org.openpnp.spi.base;
 
 import java.awt.event.ActionEvent;
-import java.io.Closeable;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -13,7 +12,6 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
-import org.openpnp.spi.Axis;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;

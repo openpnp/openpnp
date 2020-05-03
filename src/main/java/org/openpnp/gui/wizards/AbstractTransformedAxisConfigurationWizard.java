@@ -30,6 +30,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.base.AbstractControllerAxis;
 import org.openpnp.spi.base.AbstractMachine;
+import org.openpnp.spi.base.AbstractTransformedAxis;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -78,25 +79,26 @@ public abstract class AbstractTransformedAxisConfigurationWizard extends Abstrac
         lblInputAxisX = new JLabel("Input X");
         panelTransformation.add(lblInputAxisX, "2, 2, right, default");
         
-        inputAxisX = new JComboBox(new AxesComboBoxModel(machine, true, true));
+        AbstractTransformedAxis axis = (AbstractTransformedAxis) getAxis();
+        inputAxisX = new JComboBox(new AxesComboBoxModel(machine, axis.getInputAxesClass(), true));
         panelTransformation.add(inputAxisX, "4, 2, fill, default");
         
         lblInputAxisY = new JLabel("Input Y");
         panelTransformation.add(lblInputAxisY, "2, 4, right, default");
         
-        inputAxisY = new JComboBox(new AxesComboBoxModel(machine, true, true));
+        inputAxisY = new JComboBox(new AxesComboBoxModel(machine, axis.getInputAxesClass(), true));
         panelTransformation.add(inputAxisY, "4, 4, fill, default");
         
         lblInputAxisZ = new JLabel("Input Z");
         panelTransformation.add(lblInputAxisZ, "2, 6, right, default");
         
-        inputAxisZ = new JComboBox(new AxesComboBoxModel(machine, true, true));
+        inputAxisZ = new JComboBox(new AxesComboBoxModel(machine, axis.getInputAxesClass(), true));
         panelTransformation.add(inputAxisZ, "4, 6, fill, default");
         
         lblInputAxisRotation = new JLabel("Input Rotation");
         panelTransformation.add(lblInputAxisRotation, "2, 8, right, default");
         
-        inputAxisRotation = new JComboBox(new AxesComboBoxModel(machine, true, true));
+        inputAxisRotation = new JComboBox(new AxesComboBoxModel(machine, axis.getInputAxesClass(), true));
         panelTransformation.add(inputAxisRotation, "4, 8, fill, default");
     }
 

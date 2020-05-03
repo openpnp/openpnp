@@ -138,7 +138,7 @@ public class ReferenceMachine extends AbstractMachine {
                                  addDriver(driver);
                                  if (driver instanceof GcodeDriver) {
                                      GcodeDriver gcodeDriver= (GcodeDriver)driver;
-                                     drivers.addAll(gcodeDriver.getSubDrivers());
+                                     gcodeDriver.migrateSubDrivers(ReferenceMachine.this);
                                  }
                                  driver = null;
                              }

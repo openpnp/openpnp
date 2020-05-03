@@ -35,6 +35,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Driver;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractActuator;
 import org.pmw.tinylog.Logger;
@@ -43,7 +44,7 @@ import org.simpleframework.xml.Element;
 
 public class ReferenceActuator extends AbstractActuator implements ReferenceHeadMountable {
 
-
+    
     @Element
     private Location headOffsets = new Location(LengthUnit.Millimeters);
 
@@ -195,11 +196,12 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     public void setSafeZ(Length safeZ) {
         this.safeZ = safeZ;
     }
-    
-    ReferenceDriver getDriver() {
-        return getMachine().getDriver();
+
+    @Override
+    public ReferenceDriver getDriver() {
+        return (ReferenceDriver)super.getDriver();
     }
-    
+
     ReferenceMachine getMachine() {
         return (ReferenceMachine) Configuration.get().getMachine();
     }

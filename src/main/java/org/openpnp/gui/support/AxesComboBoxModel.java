@@ -43,12 +43,12 @@ public class AxesComboBoxModel extends DefaultComboBoxModel implements PropertyC
     };
     final private AbstractMachine machine; 
     final private boolean addEmpty;
-    final private boolean controllerOnly;
+    final private Class<? extends Axis> types;
 
-    public AxesComboBoxModel(AbstractMachine machine, boolean controllerOnly, boolean addEmpty) {
+    public AxesComboBoxModel(AbstractMachine machine, Class<? extends Axis> types, boolean addEmpty) {
         this.machine = machine;
         this.addEmpty = addEmpty;
-        this.controllerOnly = controllerOnly;
+        this.types = types;
         addAllElements();
         if (machine != null) { // we're not in Window Builder Design Mode
             this.machine.addPropertyChangeListener("axes", this);
@@ -63,7 +63,7 @@ public class AxesComboBoxModel extends DefaultComboBoxModel implements PropertyC
         axes = new ArrayList<>(machine.getAxes());
         Collections.sort(axes, comparator);
         for (Axis axis : axes) {
-            if (!controllerOnly || axis instanceof AbstractControllerAxis) {
+            if (types.isInstance(axis)) {
                 addElement(axis.getName());
             }
         }
