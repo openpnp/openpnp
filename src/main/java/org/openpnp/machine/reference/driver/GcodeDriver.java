@@ -499,13 +499,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         // check options
         for (MoveToOption currentOption: options) {
             switch (currentOption) {
-                case NO_ADDITIONAL_MOVES:     // for this move backslash is zero
+                case SpeedOverPrecision:     // for this move backslash is zero
                     backlashOffsetX = 0;
                     backlashOffsetY = 0;
                     backlashOffsetZ = 0;
                     backlashOffsetR = 0;
                     break;
-                case RAW:                   // for this move all corrections are zero
+                case RawMove:                   // for this move all corrections are zero
                     backlashOffsetX = 0;
                     backlashOffsetY = 0;
                     backlashOffsetZ = 0;
