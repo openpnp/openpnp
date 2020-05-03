@@ -61,8 +61,8 @@ public abstract class AbstractActuator extends AbstractModelObject implements Ac
     }
 
     @Override
-    public void moveTo(Location location) throws Exception {
-        moveTo(location, getHead().getMachine().getSpeed());
+    public void moveTo(Location location, MoveToOption... options) throws Exception {
+        moveTo(location, getHead().getMachine().getSpeed(), options);
     }
 
     @Override

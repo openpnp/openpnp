@@ -37,6 +37,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.VisionProvider;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.SimpleGraph;
 import org.pmw.tinylog.Logger;
@@ -894,8 +895,8 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     }
     
     @Override
-    public void moveTo(Location location) throws Exception {
-        moveTo(location, getHead().getMachine().getSpeed());
+    public void moveTo(Location location, MoveToOption... options) throws Exception {
+        moveTo(location, getHead().getMachine().getSpeed(), options);
     }
 
     @Override
