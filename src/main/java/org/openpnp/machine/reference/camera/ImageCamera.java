@@ -68,7 +68,8 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 
     @SuppressWarnings("unused")
     @Commit
-    private void commit() throws Exception {
+    protected void commit() throws Exception {
+        super.commit();
         setSourceUri(sourceUri);
     }
 

@@ -134,7 +134,8 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     }
 
     @Commit
-    public void commit() {
+    public void commit() throws Exception {
+        super.commit();
         backLightCompensation.setCamera(this);
         brightness.setCamera(this);
         contrast.setCamera(this);
@@ -158,8 +159,16 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     public synchronized BufferedImage internalCapture() {
         ensureOpen();
         try {
+            /**
+             * The timeout is only needed if the stream is somehow in error and not producing frames (anymore) 
+             * which can happen, if you disconnect the USB port and then try to capture from a pipeline.  
+             */
+            long timeout = System.currentTimeMillis()+500;
             while (!stream.hasNewFrame()) {
                 Thread.yield();
+                if (System.currentTimeMillis() > timeout) {
+                    return null;
+                }
             }
             BufferedImage img = stream.capture();
             /**
@@ -252,6 +261,8 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         stream = null;
         setPropertiesStream(stream);
 
+        clearCalibrationCache();
+        
         // If a device and format are not set, see if we can read them from the stored
         // properties. This will only happen during startup.
         if (device == null && format == null) {
