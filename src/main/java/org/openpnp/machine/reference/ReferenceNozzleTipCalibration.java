@@ -144,9 +144,9 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         @Attribute(required = false)
         protected LengthUnit units = LengthUnit.Millimeters;
         @Attribute(required = false)
-        protected double peakError;
+        protected Double peakError;
         @Attribute(required = false)
-        protected double rmsError;
+        protected Double rmsError;
 
         public ModelBasedRunoutCompensation() {
         }
@@ -210,7 +210,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         private void estimateModelError(List<Location> nozzleTipMeasuredLocations) {
             Location peakErrorLocation = new Location(this.units);
             double sumError2 = 0;
-            peakError = 0;
+            peakError = 0.0;
             for (Location l : nozzleTipMeasuredLocations) {
                 //can't use getOffset here because it may be overridden
                 Location m = getRunout(l.getRotation()).add(new Location(this.units, this.centerX, this.centerY, 0, 0));
@@ -402,7 +402,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
          * @return The peak error (in this.units) of the measured nozzle tip
          * locations relative to the locations computed by the model
          */
-        public double getPeakError() {
+        public Double getPeakError() {
             return peakError;
         }
         
@@ -410,7 +410,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
          * @return The rms error (in this.units) of the measured nozzle tip
          * locations relative to the locations computed by the model
          */
-       public double getRmsError() {
+       public Double getRmsError() {
             return rmsError;
         }
     }
@@ -498,7 +498,8 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     }
 
     @Attribute(required = false)
-    private ReferenceNozzleTipCalibration.RunoutCompensationAlgorithm runoutCompensationAlgorithm = RunoutCompensationAlgorithm.ModelCameraOffset;
+    private ReferenceNozzleTipCalibration.RunoutCompensationAlgorithm runoutCompensationAlgorithm =
+        RunoutCompensationAlgorithm.ModelCameraOffsetAffine;
     
     @Attribute(required = false)
     private double version = 1.0;
@@ -522,6 +523,18 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             version = 2.0;
             // Force ModelCameraOffset calibration system.
             runoutCompensationAlgorithm = RunoutCompensationAlgorithm.ModelCameraOffset;
+        }
+        
+        //Update from KASA to Affine transform technique
+        if (version < 2.1) {
+            version = 2.1; //bump version number so this update is only done once
+            if (runoutCompensationAlgorithm == RunoutCompensationAlgorithm.Model) {
+                runoutCompensationAlgorithm = RunoutCompensationAlgorithm.ModelAffine;
+            } else if (runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelNoOffset) {
+                runoutCompensationAlgorithm = RunoutCompensationAlgorithm.ModelNoOffsetAffine;
+            } else if (runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelCameraOffset) {
+                runoutCompensationAlgorithm = RunoutCompensationAlgorithm.ModelCameraOffsetAffine;
+            }
         }
     }
 
