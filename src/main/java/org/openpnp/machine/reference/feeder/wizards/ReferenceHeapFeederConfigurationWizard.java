@@ -22,7 +22,6 @@ package org.openpnp.machine.reference.feeder.wizards;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -38,8 +37,8 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AbstractBindingListener;
-import org.jdesktop.beansbinding.Binding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.jdesktop.beansbinding.Binding;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
@@ -57,7 +56,6 @@ import org.openpnp.machine.reference.feeder.ReferenceHeapFeeder.DropBox;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
-import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
@@ -76,13 +74,13 @@ public class ReferenceHeapFeederConfigurationWizard
     public ReferenceHeapFeederConfigurationWizard(ReferenceHeapFeeder feeder) {
         this.feeder = feeder;
         
-        JPanel HeapPanel = new JPanel();
-        HeapPanel.setBorder(new TitledBorder(null, "Heap", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        contentPanel.add(HeapPanel);
-        HeapPanel.setLayout(new BoxLayout(HeapPanel, BoxLayout.Y_AXIS));
+        JPanel heapPanel = new JPanel();
+        heapPanel.setBorder(new TitledBorder(null, "Heap", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(heapPanel);
+        heapPanel.setLayout(new BoxLayout(heapPanel, BoxLayout.Y_AXIS));
         
         JPanel whateverPanel = new JPanel();
-        HeapPanel.add(whateverPanel);
+        heapPanel.add(whateverPanel);
         FormLayout fl_whateverPanel = new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -192,19 +190,19 @@ public class ReferenceHeapFeederConfigurationWizard
         JLabel lblDropBoxCenterBottom = new JLabel("Center Bottom");
         dropBoxPanel.add(lblDropBoxCenterBottom, "2, 4, right, default");
         
-        TfCenterBottomLocation_x = new JTextField();
-        dropBoxPanel.add(TfCenterBottomLocation_x, "4, 4");
-        TfCenterBottomLocation_x.setColumns(10);
+        tfCenterBottomLocation_x = new JTextField();
+        dropBoxPanel.add(tfCenterBottomLocation_x, "4, 4");
+        tfCenterBottomLocation_x.setColumns(10);
         
-        TfCenterBottomLocation_y = new JTextField();
-        dropBoxPanel.add(TfCenterBottomLocation_y, "6, 4");
-        TfCenterBottomLocation_y.setColumns(10);
+        tfCenterBottomLocation_y = new JTextField();
+        dropBoxPanel.add(tfCenterBottomLocation_y, "6, 4");
+        tfCenterBottomLocation_y.setColumns(10);
         
-        TfCenterBottomLocation_z = new JTextField();
-        dropBoxPanel.add(TfCenterBottomLocation_z, "8, 4");
-        TfCenterBottomLocation_z.setColumns(10);
+        tfCenterBottomLocation_z = new JTextField();
+        dropBoxPanel.add(tfCenterBottomLocation_z, "8, 4");
+        tfCenterBottomLocation_z.setColumns(10);
         
-        dropBoxLocButtons = new LocationButtonsPanel(TfCenterBottomLocation_x, TfCenterBottomLocation_y, TfCenterBottomLocation_z, (JTextField) null);
+        dropBoxLocButtons = new LocationButtonsPanel(tfCenterBottomLocation_x, tfCenterBottomLocation_y, tfCenterBottomLocation_z, (JTextField) null);
         FlowLayout flowLayout_5 = (FlowLayout) dropBoxLocButtons.getLayout();
         flowLayout_5.setAlignment(FlowLayout.LEFT);
         dropBoxPanel.add(dropBoxLocButtons, "10, 4, fill, fill");
@@ -218,17 +216,21 @@ public class ReferenceHeapFeederConfigurationWizard
         btnResetPartsPipeline = new JButton(actionPipelineResetDropBox);
         dropBoxPanel.add(btnResetPartsPipeline, "6, 6");
         
-        lblNozzleUnknown = new JLabel("Nozzle Unknown");
-        lblNozzleUnknown.setToolTipText("Nozzle for unknown Parts");
-        dropBoxPanel.add(lblNozzleUnknown, "2, 8, right, default");
+        lblDummyPart = new JLabel("Dummy Part");
+        lblDummyPart.setToolTipText("");
+        dropBoxPanel.add(lblDummyPart, "2, 8, right, default");
         
-        cbNozzleForUnknownParts = new JComboBox();
-        dropBoxPanel.add(cbNozzleForUnknownParts, "4, 8, fill, default");
+        cbDummyPartForUnknownParts = new JComboBox();
+        cbDummyPartForUnknownParts.setToolTipText("Dummy part for moving unknown parts (e.g. to the trash). Is also used to determine the used nozzle.");
+        dropBoxPanel.add(cbDummyPartForUnknownParts, "4, 8, fill, default");
         
-        for (NozzleTip tip : Configuration.get().getMachine().getNozzleTips()) {
-            cbNozzleForUnknownParts.addItem(tip);
-            if ( feeder.getDropBox() != null && feeder.getDropBox().getNozzleTipForUnknown() == tip) {
-                cbNozzleForUnknownParts.setSelectedItem(tip);
+        btnCleanDropbox = new JButton(actionCleanDropbox);
+        dropBoxPanel.add(btnCleanDropbox, "10, 8");
+        
+        for (Part part : Configuration.get().getParts()) {
+            cbDummyPartForUnknownParts.addItem(part);
+            if ( feeder.getDropBox() != null && feeder.getDropBox().getDummyPartForUnknown() == part) {
+                cbDummyPartForUnknownParts.setSelectedItem(part);
             }
         }
 
@@ -245,19 +247,19 @@ public class ReferenceHeapFeederConfigurationWizard
         JLabel lblHeapCenter = new JLabel("Center (Top)");
         whateverPanel.add(lblHeapCenter, "2, 6, right, default");
         
-        TfCenter_x = new JTextField();
-        whateverPanel.add(TfCenter_x, "4, 6");
-        TfCenter_x.setColumns(10);
+        tfCenter_x = new JTextField();
+        whateverPanel.add(tfCenter_x, "4, 6");
+        tfCenter_x.setColumns(10);
         
-        TfCenter_y = new JTextField();
-        whateverPanel.add(TfCenter_y, "6, 6");
-        TfCenter_y.setColumns(10);
+        tfCenter_y = new JTextField();
+        whateverPanel.add(tfCenter_y, "6, 6");
+        tfCenter_y.setColumns(10);
         
-        TfCenter_z = new JTextField();
-        whateverPanel.add(TfCenter_z, "8, 6");
-        TfCenter_z.setColumns(10);
+        tfCenter_z = new JTextField();
+        whateverPanel.add(tfCenter_z, "8, 6");
+        tfCenter_z.setColumns(10);
         
-        centerLocButtons = new LocationButtonsPanel(TfCenter_x, TfCenter_y, TfCenter_z, null);
+        centerLocButtons = new LocationButtonsPanel(tfCenter_x, tfCenter_y, tfCenter_z, null);
         FlowLayout flowLayout = (FlowLayout) centerLocButtons.getLayout();
         flowLayout.setAlignment(FlowLayout.LEFT);
         whateverPanel.add(centerLocButtons, "10, 6");
@@ -265,19 +267,19 @@ public class ReferenceHeapFeederConfigurationWizard
         JLabel lblMove1 = new JLabel("Move 1");
         whateverPanel.add(lblMove1, "2, 8, right, default");
         
-        TfMove1_x = new JTextField();
-        TfMove1_x.setColumns(10);
-        whateverPanel.add(TfMove1_x, "4, 8, fill, default");
+        tfMove1_x = new JTextField();
+        tfMove1_x.setColumns(10);
+        whateverPanel.add(tfMove1_x, "4, 8, fill, default");
         
-        TfMove1_y = new JTextField();
-        TfMove1_y.setColumns(10);
-        whateverPanel.add(TfMove1_y, "6, 8, fill, default");
+        tfMove1_y = new JTextField();
+        tfMove1_y.setColumns(10);
+        whateverPanel.add(tfMove1_y, "6, 8, fill, default");
         
-        TfMove1_z = new JTextField();
-        TfMove1_z.setColumns(10);
-        whateverPanel.add(TfMove1_z, "8, 8, fill, default");
+        tfMove1_z = new JTextField();
+        tfMove1_z.setColumns(10);
+        whateverPanel.add(tfMove1_z, "8, 8, fill, default");
         
-        move1LocButtons = new LocationButtonsPanel(TfMove1_x, TfMove1_y, TfMove1_z, (JTextField) null);
+        move1LocButtons = new LocationButtonsPanel(tfMove1_x, tfMove1_y, tfMove1_z, (JTextField) null);
         FlowLayout flowLayout_2 = (FlowLayout) move1LocButtons.getLayout();
         flowLayout_2.setAlignment(FlowLayout.LEFT);
         whateverPanel.add(move1LocButtons, "10, 8, fill, default");
@@ -285,19 +287,19 @@ public class ReferenceHeapFeederConfigurationWizard
         JLabel lblMove2 = new JLabel("Move 2");
         whateverPanel.add(lblMove2, "2, 10, right, default");
         
-        TfMove2_x = new JTextField();
-        TfMove2_x.setColumns(10);
-        whateverPanel.add(TfMove2_x, "4, 10, fill, default");
+        tfMove2_x = new JTextField();
+        tfMove2_x.setColumns(10);
+        whateverPanel.add(tfMove2_x, "4, 10, fill, default");
         
-        TfMove2_y = new JTextField();
-        TfMove2_y.setColumns(10);
-        whateverPanel.add(TfMove2_y, "6, 10, fill, default");
+        tfMove2_y = new JTextField();
+        tfMove2_y.setColumns(10);
+        whateverPanel.add(tfMove2_y, "6, 10, fill, default");
         
-        TfMove2_z = new JTextField();
-        TfMove2_z.setColumns(10);
-        whateverPanel.add(TfMove2_z, "8, 10, fill, default");
+        tfMove2_z = new JTextField();
+        tfMove2_z.setColumns(10);
+        whateverPanel.add(tfMove2_z, "8, 10, fill, default");
         
-        move2LocButtons = new LocationButtonsPanel(TfMove2_x, TfMove2_y, TfMove2_z, (JTextField) null);
+        move2LocButtons = new LocationButtonsPanel(tfMove2_x, tfMove2_y, tfMove2_z, (JTextField) null);
         FlowLayout flowLayout_3 = (FlowLayout) move2LocButtons.getLayout();
         flowLayout_3.setAlignment(FlowLayout.LEFT);
         whateverPanel.add(move2LocButtons, "10, 10, fill, fill");
@@ -305,19 +307,19 @@ public class ReferenceHeapFeederConfigurationWizard
         JLabel lblMove3 = new JLabel("Move 3");
         whateverPanel.add(lblMove3, "2, 12, right, default");
         
-        TfMove3_x = new JTextField();
-        TfMove3_x.setColumns(10);
-        whateverPanel.add(TfMove3_x, "4, 12, fill, default");
+        tfMove3_x = new JTextField();
+        tfMove3_x.setColumns(10);
+        whateverPanel.add(tfMove3_x, "4, 12, fill, default");
         
-        TfMove3_y = new JTextField();
-        TfMove3_y.setColumns(10);
-        whateverPanel.add(TfMove3_y, "6, 12, fill, default");
+        tfMove3_y = new JTextField();
+        tfMove3_y.setColumns(10);
+        whateverPanel.add(tfMove3_y, "6, 12, fill, default");
         
-        TfMove3_z = new JTextField();
-        TfMove3_z.setColumns(10);
-        whateverPanel.add(TfMove3_z, "8, 12, fill, default");
+        tfMove3_z = new JTextField();
+        tfMove3_z.setColumns(10);
+        whateverPanel.add(tfMove3_z, "8, 12, fill, default");
         
-        move3LocButtons = new LocationButtonsPanel(TfMove3_x, TfMove3_y, TfMove3_z, (JTextField) null);
+        move3LocButtons = new LocationButtonsPanel(tfMove3_x, tfMove3_y, tfMove3_z, (JTextField) null);
         FlowLayout flowLayout_4 = (FlowLayout) move3LocButtons.getLayout();
         flowLayout_4.setAlignment(FlowLayout.LEFT);
         whateverPanel.add(move3LocButtons, "10, 12, fill, fill");
@@ -427,44 +429,44 @@ public class ReferenceHeapFeederConfigurationWizard
          */
         MutableLocationProxy binCenterLocation = new MutableLocationProxy();
         addWrappedBinding(feeder, "location", binCenterLocation, "location");
-        bind(UpdateStrategy.READ_WRITE, binCenterLocation, "lengthX", TfCenter_x, "text", lengthConverter);
-        bind(UpdateStrategy.READ_WRITE, binCenterLocation, "lengthY", TfCenter_y, "text", lengthConverter);
-        bind(UpdateStrategy.READ_WRITE, binCenterLocation, "lengthZ", TfCenter_z, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, binCenterLocation, "lengthX", tfCenter_x, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, binCenterLocation, "lengthY", tfCenter_y, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, binCenterLocation, "lengthZ", tfCenter_z, "text", lengthConverter);
         bind(UpdateStrategy.READ_WRITE, binCenterLocation, "rotation", null, "text", doubleConverter);
-        bind(UpdateStrategy.READ, binCenterLocation, "location", centerLocButtons, "baseLocation");
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(TfCenter_x);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(TfCenter_y);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(TfCenter_z);
+//        bind(UpdateStrategy.READ, binCenterLocation, "location", centerLocButtons, "baseLocation");
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfCenter_x);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfCenter_y);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfCenter_z);
 
         MutableLocationProxy move1Location = new MutableLocationProxy();
         addWrappedBinding(feeder, "way1", move1Location, "location");
-        bind(UpdateStrategy.READ_WRITE, move1Location, "lengthX", TfMove1_x, "text", lengthConverter);
-        bind(UpdateStrategy.READ_WRITE, move1Location, "lengthY", TfMove1_y, "text", lengthConverter);
-        bind(UpdateStrategy.READ_WRITE, move1Location, "lengthZ", TfMove1_z, "text", lengthConverter);
-        bind(UpdateStrategy.READ, move1Location, "location", move1LocButtons, "baseLocation");
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(TfMove1_x);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(TfMove1_y);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(TfMove1_z);
+        bind(UpdateStrategy.READ_WRITE, move1Location, "lengthX", tfMove1_x, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, move1Location, "lengthY", tfMove1_y, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, move1Location, "lengthZ", tfMove1_z, "text", lengthConverter);
+//        bind(UpdateStrategy.READ, move1Location, "location", move1LocButtons, "baseLocation");
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfMove1_x);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfMove1_y);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfMove1_z);
 
         MutableLocationProxy move2Location = new MutableLocationProxy();
         addWrappedBinding(feeder, "way2", move2Location, "location");
-        bind(UpdateStrategy.READ_WRITE, move2Location, "lengthX", TfMove2_x, "text", lengthConverter);
-        bind(UpdateStrategy.READ_WRITE, move2Location, "lengthY", TfMove2_y, "text", lengthConverter);
-        bind(UpdateStrategy.READ_WRITE, move2Location, "lengthZ", TfMove2_z, "text", lengthConverter);
-        bind(UpdateStrategy.READ, move2Location, "location", move2LocButtons, "baseLocation");
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(TfMove2_x);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(TfMove2_y);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(TfMove2_z);
+        bind(UpdateStrategy.READ_WRITE, move2Location, "lengthX", tfMove2_x, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, move2Location, "lengthY", tfMove2_y, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, move2Location, "lengthZ", tfMove2_z, "text", lengthConverter);
+//        bind(UpdateStrategy.READ, move2Location, "location", move2LocButtons, "baseLocation");
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfMove2_x);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfMove2_y);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfMove2_z);
         
         MutableLocationProxy move3Location = new MutableLocationProxy();
         addWrappedBinding(feeder, "way3", move3Location, "location");
-        bind(UpdateStrategy.READ_WRITE, move3Location, "lengthX", TfMove3_x, "text", lengthConverter);
-        bind(UpdateStrategy.READ_WRITE, move3Location, "lengthY", TfMove3_y, "text", lengthConverter);
-        bind(UpdateStrategy.READ_WRITE, move3Location, "lengthZ", TfMove3_z, "text", lengthConverter);
-        bind(UpdateStrategy.READ, move3Location, "location", move3LocButtons, "baseLocation");
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(TfMove3_x);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(TfMove3_y);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(TfMove3_z);
+        bind(UpdateStrategy.READ_WRITE, move3Location, "lengthX", tfMove3_x, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, move3Location, "lengthY", tfMove3_y, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, move3Location, "lengthZ", tfMove3_z, "text", lengthConverter);
+//        bind(UpdateStrategy.READ, move3Location, "location", move3LocButtons, "baseLocation");
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfMove3_x);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfMove3_y);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfMove3_z);
         
         
         /**
@@ -486,17 +488,17 @@ public class ReferenceHeapFeederConfigurationWizard
                     SwingUtilities.invokeLater(() -> dropBoxCb.repaint());
                 }
             });
-        bind(UpdateStrategy.READ_WRITE, dropBoxWrapper, "value.nozzleTipForUnknown", cbNozzleForUnknownParts, "selectedItem");
+        bind(UpdateStrategy.READ_WRITE, dropBoxWrapper, "value.nozzleTipForUnknown", cbDummyPartForUnknownParts, "selectedItem");
 
         MutableLocationProxy dropBoxLocation = new MutableLocationProxy();
         addWrappedBinding(feeder.getDropBox(), "centerBottomLocation", dropBoxLocation, "location");
-        bind(UpdateStrategy.READ_WRITE, dropBoxLocation, "lengthX", TfCenterBottomLocation_x, "text", lengthConverter);
-        bind(UpdateStrategy.READ_WRITE, dropBoxLocation, "lengthY", TfCenterBottomLocation_y, "text", lengthConverter);
-        bind(UpdateStrategy.READ_WRITE, dropBoxLocation, "lengthZ", TfCenterBottomLocation_z, "text", lengthConverter);
-        bind(UpdateStrategy.READ, dropBoxLocation, "location", dropBoxLocButtons, "baseLocation");
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(TfCenterBottomLocation_x);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(TfCenterBottomLocation_y);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(TfCenterBottomLocation_z);
+        bind(UpdateStrategy.READ_WRITE, dropBoxLocation, "lengthX", tfCenterBottomLocation_x, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, dropBoxLocation, "lengthY", tfCenterBottomLocation_y, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, dropBoxLocation, "lengthZ", tfCenterBottomLocation_z, "text", lengthConverter);
+        //bind(UpdateStrategy.READ, dropBoxLocation, "location", dropBoxLocButtons, "baseLocation");
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfCenterBottomLocation_x);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfCenterBottomLocation_y);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfCenterBottomLocation_z);
         bind(UpdateStrategy.READ_WRITE, dropBoxWrapper, "value.centerBottomLocation", dropBoxLocation, "location");
         
         
@@ -596,6 +598,15 @@ public class ReferenceHeapFeederConfigurationWizard
         }
     };
 
+    private Action actionCleanDropbox = new AbstractAction("Clean DropBox") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.messageBoxOnException(() -> {
+                feeder.getDropBox().clean(Configuration.get().getMachine().getHeads().get(0).getDefaultNozzle());
+            });
+        }
+    };
+
     
     private Action newDropBoxAction = new AbstractAction("New") {
         @Override
@@ -631,12 +642,12 @@ public class ReferenceHeapFeederConfigurationWizard
 
     private JComboBox<DropBox> dropBoxCb;
     private JComboBox<Part> partCb;
-    private JTextField TfCenterBottomLocation_x;
-    private JTextField TfCenterBottomLocation_y;
-    private JTextField TfCenterBottomLocation_z;
-    private JTextField TfCenter_x;
-    private JTextField TfCenter_y;
-    private JTextField TfCenter_z;
+    private JTextField tfCenterBottomLocation_x;
+    private JTextField tfCenterBottomLocation_y;
+    private JTextField tfCenterBottomLocation_z;
+    private JTextField tfCenter_x;
+    private JTextField tfCenter_y;
+    private JTextField tfCenter_z;
     private JTextField retryCountTf;
     private LocationButtonsPanel centerLocButtons;
     private LocationButtonsPanel move1LocButtons;
@@ -644,15 +655,15 @@ public class ReferenceHeapFeederConfigurationWizard
     private LocationButtonsPanel move3LocButtons;
     private JTextField pickRetryCount;
     private JTextField maxFlipAttemptsTf;
-    private JTextField TfMove1_x;
-    private JTextField TfMove2_x;
-    private JTextField TfMove3_x;
-    private JTextField TfMove1_z;
-    private JTextField TfMove2_z;
-    private JTextField TfMove3_z;
-    private JTextField TfMove1_y;
-    private JTextField TfMove2_y;
-    private JTextField TfMove3_y;
+    private JTextField tfMove1_x;
+    private JTextField tfMove2_x;
+    private JTextField tfMove3_x;
+    private JTextField tfMove1_z;
+    private JTextField tfMove2_z;
+    private JTextField tfMove3_z;
+    private JTextField tfMove1_y;
+    private JTextField tfMove2_y;
+    private JTextField tfMove3_y;
     private JLabel lblDepth;
     private JLabel lblLastFeedDepth;
     private JTextField binDepthTf;
@@ -667,11 +678,12 @@ public class ReferenceHeapFeederConfigurationWizard
     private JButton btnResetDetectionPipeline;
     private JButton btnResetTemplatePipeline;
     private JLabel lblPartsPipeline;
-    private JLabel lblNozzleUnknown;
-    private JComboBox<NozzleTip> cbNozzleForUnknownParts;
+    private JLabel lblDummyPart;
+    private JComboBox<Part> cbDummyPartForUnknownParts;
     private JButton btnEditPartsPipeline;
     private JButton btnResetPartsPipeline;
     private LocationButtonsPanel dropBoxLocButtons;
     private JButton btnNewDropBox;
     private JButton btnDeleteDropBox;
+    private JButton btnCleanDropbox;
 }
