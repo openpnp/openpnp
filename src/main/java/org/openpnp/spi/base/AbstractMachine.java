@@ -242,6 +242,18 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         }
     }
 
+    @Override 
+    public void permutateAxis(Axis axis, int direction) {
+        int index0 = axes.indexOf(axis);
+        int index1 = direction > 0 ? index0+1 : index0-1;
+        if (0 <= index1 && axes.size() > index1) {
+            axes.remove(axis);
+            axes.add(index1, axis);
+            fireIndexedPropertyChange("axes", index0, axis, axes.get(index0));
+            fireIndexedPropertyChange("axes", index1, axes.get(index0), axis);
+        }
+    }
+
     @Override
     public void addFeeder(Feeder feeder) throws Exception {
         feeders.add(feeder);

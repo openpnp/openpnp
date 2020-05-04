@@ -33,6 +33,12 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.marek.MarekNozzle;
 import org.openpnp.machine.neoden4.NeoDen4Driver;
 import org.openpnp.machine.neoden4.Neoden4Camera;
+import org.openpnp.machine.reference.axis.ReferenceCamMasterAxis;
+import org.openpnp.machine.reference.axis.ReferenceCamSlaveAxis;
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.machine.reference.axis.ReferenceLinearTransformAxis;
+import org.openpnp.machine.reference.axis.ReferenceNegatedAxis;
+import org.openpnp.machine.reference.axis.wizards.ReferenceLinearTransformAxisConfigurationWizard;
 import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.machine.reference.camera.OnvifIPCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
@@ -241,6 +247,9 @@ public class ReferenceMachine extends AbstractMachine {
         List<Class<? extends Axis>> l = new ArrayList<>();
         l.add(ReferenceControllerAxis.class);
         l.add(ReferenceNegatedAxis.class);
+        l.add(ReferenceCamMasterAxis.class);
+        l.add(ReferenceCamSlaveAxis.class);
+        l.add(ReferenceLinearTransformAxis.class);
         return l;
     }
 

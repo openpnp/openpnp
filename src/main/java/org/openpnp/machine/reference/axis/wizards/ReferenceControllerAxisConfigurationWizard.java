@@ -19,7 +19,7 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.machine.reference.wizards;
+package org.openpnp.machine.reference.axis.wizards;
 
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
@@ -30,7 +30,7 @@ import org.openpnp.gui.support.DriversComboBoxModel;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.gui.wizards.AbstractAxisConfigurationWizard;
-import org.openpnp.machine.reference.ReferenceControllerAxis;
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Driver;
@@ -47,8 +47,6 @@ import javax.swing.JComboBox;
 
 @SuppressWarnings("serial")
 public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConfigurationWizard {
-    protected final AbstractAxis axis;
-    
     private JPanel panelControllerSettings;
     private JTextField homeCoordinate;
     private JLabel lblDesignator;
@@ -57,8 +55,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
     private JComboBox driver;
 
     public ReferenceControllerAxisConfigurationWizard(ReferenceControllerAxis axis) {
-        super();
-        this.axis = axis;
+        super(axis);
 
         panelControllerSettings = new JPanel();
         panelControllerSettings.setBorder(new TitledBorder(null, "Controller Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -67,7 +64,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),},
+                FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
@@ -113,10 +110,5 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
 
         ComponentDecorators.decorateWithAutoSelect(designator);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(homeCoordinate);
-    }
-
-    @Override
-    protected AbstractAxis getAxis() {
-        return axis;
     }
 }

@@ -29,7 +29,6 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.machine.reference.ReferenceControllerAxis;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.base.AbstractAxis;
 
@@ -40,13 +39,16 @@ import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
 public abstract class AbstractAxisConfigurationWizard extends AbstractConfigurationWizard {
+    protected final AbstractAxis axis;
     protected JPanel panelProperties;
     protected JLabel lblName;
     protected JTextField name;
     protected JLabel lblType;
     protected JComboBox type;
 
-    public AbstractAxisConfigurationWizard() {
+    public AbstractAxisConfigurationWizard(AbstractAxis axis) {
+        super();
+        this.axis = axis;
         panelProperties = new JPanel();
         panelProperties.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelProperties);
@@ -75,12 +77,14 @@ public abstract class AbstractAxisConfigurationWizard extends AbstractConfigurat
         name.setColumns(20);
     }
 
-    protected abstract AbstractAxis getAxis();
+    protected AbstractAxis getAxis() {
+        return axis;
+    }
     
     @Override
     public void createBindings() {
-        addWrappedBinding(getAxis(), "type", type, "selectedItem");
-        addWrappedBinding(getAxis(), "name", name, "text");
+        addWrappedBinding(axis, "type", type, "selectedItem");
+        addWrappedBinding(axis, "name", name, "text");
 
         ComponentDecorators.decorateWithAutoSelect(name);
     }

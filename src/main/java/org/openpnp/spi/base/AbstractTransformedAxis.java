@@ -21,74 +21,7 @@
 
 package org.openpnp.spi.base;
 
-import org.openpnp.ConfigurationListener;
-import org.openpnp.model.Configuration;
 import org.openpnp.spi.TransformedAxis;
-import org.simpleframework.xml.Attribute;
 
 public abstract class AbstractTransformedAxis extends AbstractAxis implements TransformedAxis {
-    // The input axes of the transformation. Any of these can be null. 
-    private AbstractAxis inputAxisX;
-    private AbstractAxis inputAxisY;
-    private AbstractAxis inputAxisZ;
-    private AbstractAxis inputAxisRotation;
-
-    @Attribute(required = false)
-    private String inputAxisXId;
-    @Attribute(required = false)
-    private String inputAxisYId;
-    @Attribute(required = false)
-    private String inputAxisZId;
-    @Attribute(required = false)
-    private String inputAxisRotationId;
-
-    protected AbstractTransformedAxis() {
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-
-            @Override
-            public void configurationLoaded(Configuration configuration) throws Exception {
-                inputAxisX = (AbstractAxis) configuration.getMachine().getAxis(inputAxisXId);
-                inputAxisY = (AbstractAxis) configuration.getMachine().getAxis(inputAxisYId);
-                inputAxisZ = (AbstractAxis) configuration.getMachine().getAxis(inputAxisZId);
-                inputAxisRotation = (AbstractAxis) configuration.getMachine().getAxis(inputAxisRotationId);
-            }
-        });
-    }
-
-    public AbstractAxis getInputAxisX() {
-        return inputAxisX;
-    }
-    public void setInputAxisX(AbstractAxis inputAxisX) {
-        Object oldValue = this.inputAxisX;
-        this.inputAxisX = inputAxisX;
-        this.inputAxisXId = (inputAxisX == null) ? null : inputAxisX.getId();
-        firePropertyChange("inputAxisX", oldValue, inputAxisX);
-    }
-    public AbstractAxis getInputAxisY() {
-        return inputAxisY;
-    }
-    public void setInputAxisY(AbstractAxis inputAxisY) {
-        Object oldValue = this.inputAxisY;
-        this.inputAxisY = inputAxisY;
-        this.inputAxisYId = (inputAxisY == null) ? null : inputAxisY.getId();
-        firePropertyChange("inputAxisY", oldValue, inputAxisY);
-    }
-    public AbstractAxis getInputAxisZ() {
-        return inputAxisZ;
-    }
-    public void setInputAxisZ(AbstractAxis inputAxisZ) {
-        Object oldValue = this.inputAxisZ;
-        this.inputAxisZ = inputAxisZ;
-        this.inputAxisZId = (inputAxisZ == null) ? null : inputAxisZ.getId();
-        firePropertyChange("inputAxisZ", oldValue, inputAxisZ);
-    }
-    public AbstractAxis getInputAxisRotation() {
-        return inputAxisRotation;
-    }
-    public void setInputAxisRotation(AbstractAxis inputAxisRotation) {
-        Object oldValue = this.inputAxisRotation;
-        this.inputAxisRotation = inputAxisRotation;
-        this.inputAxisRotationId = (inputAxisRotation == null) ? null : inputAxisRotation.getId();
-        firePropertyChange("inputAxisRotation", oldValue, inputAxisRotation);
-    }
 }

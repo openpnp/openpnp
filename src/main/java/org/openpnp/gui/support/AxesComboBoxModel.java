@@ -29,8 +29,8 @@ import java.util.Comparator;
 
 import javax.swing.DefaultComboBoxModel;
 
+import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;
-import org.openpnp.spi.base.AbstractControllerAxis;
 import org.openpnp.spi.base.AbstractMachine;
 
 @SuppressWarnings({"serial", "rawtypes"})
@@ -41,35 +41,48 @@ public class AxesComboBoxModel extends DefaultComboBoxModel implements PropertyC
             return o1.getName().compareTo(o2.getName());
         }
     };
-    final private AbstractMachine machine; 
     final private boolean addEmpty;
     final private Class<? extends Axis> types;
+    final private AbstractMachine machine; 
+    private Axis.Type axisType; 
 
-    public AxesComboBoxModel(AbstractMachine machine, Class<? extends Axis> types, boolean addEmpty) {
+    public AxesComboBoxModel(AbstractMachine machine, Class<? extends Axis> types, Axis.Type axisType, boolean addEmpty) {
         this.machine = machine;
         this.addEmpty = addEmpty;
         this.types = types;
-        addAllElements();
+        this.axisType = axisType;
         if (machine != null) { // we're not in Window Builder Design Mode
-            this.machine.addPropertyChangeListener("axes", this);
+            addAllElements();
+            machine.addPropertyChangeListener("axes", this);
         }
     }
 
     private void addAllElements() {
-        if (machine == null) {
-            return;// we're in Window Builder Design Mode
-        }
-        ArrayList<Axis> axes = null;
-        axes = new ArrayList<>(machine.getAxes());
-        Collections.sort(axes, comparator);
-        for (Axis axis : axes) {
-            if (types.isInstance(axis)) {
-                addElement(axis.getName());
+        if (machine != null) { // we're not in Window Builder Design Mode
+            ArrayList<Axis> axes = null;
+            axes = new ArrayList<>(machine.getAxes());
+            Collections.sort(axes, comparator);
+            for (Axis axis : axes) {
+                if (types.isInstance(axis)) {
+                    if (axisType == null || axisType == axis.getType()) {
+                        addElement(axis.getName());
+                    }
+                }
+            }
+            if (addEmpty) {
+                addElement(new String());
             }
         }
-        if (addEmpty) {
-            addElement(new String());
-        }
+    }
+
+    public Axis.Type getAxisType() {
+        return axisType;
+    }
+
+    public void setAxisType(Axis.Type axisType) {
+        this.axisType = axisType;
+        removeAllElements();
+        addAllElements();
     }
 
     @Override

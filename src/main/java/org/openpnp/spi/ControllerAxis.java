@@ -27,7 +27,7 @@ import org.openpnp.model.Length;
  * A ControllerAxis is an axis coordinate dimension as exposed by the machine's controller/driver.
  * These can already be Cartesian-coordinate or rotary axes, or raw actuator axes to be transformed by a TransformedAxis. 
  */
-public interface ControllerAxis extends Axis {
+public interface ControllerAxis extends LinearInputAxis {
     /**
      * @return the driver through which this ControllerAxis is controlled. 
      */

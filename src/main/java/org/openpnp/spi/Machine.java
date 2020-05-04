@@ -173,6 +173,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public void removeAxis(Axis axis);
 
+    public void permutateAxis(Axis axis, int direction);
+
     public void addDriver(Driver driver) throws Exception;
 
     public void removeDriver(Driver driver);

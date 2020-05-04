@@ -7,7 +7,6 @@ import org.openpnp.model.Location;
  * is transformed from/to a MachineAxis. 
  */
 public interface TransformedAxis extends Axis {
-    public Class<? extends Axis> getInputAxesClass();
     public Location transformToRaw(Location location); 
     public Location transformFromRaw(Location location); 
 }

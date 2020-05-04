@@ -1,26 +1,29 @@
-package org.openpnp.machine.reference;
+package org.openpnp.machine.reference.axis;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.wizards.ReferenceNegatedAxisConfigurationWizard;
+import org.openpnp.machine.reference.axis.wizards.ReferenceNegatedAxisConfigurationWizard;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.base.AbstractControllerAxis;
+import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractTransformedAxis;
+import org.openpnp.spi.base.AbstractSingleTransformedAxis;
 
 /**
  * A TransformedAxis for heads with dual linear Z axes powered by one motor. The two Z axes are
  * defined as normal and negated. Normal gets the raw coordinate value and negated gets the same
  * value negated. So, as normal moves up, negated moves down.
  */
-public class ReferenceNegatedAxis extends AbstractTransformedAxis {
+public class ReferenceNegatedAxis extends AbstractSingleTransformedAxis {
 
-    ReferenceNegatedAxis() {
+    public ReferenceNegatedAxis() {
         super();
     }
 
     @Override
     public Wizard getConfigurationWizard() {
-        return new ReferenceNegatedAxisConfigurationWizard(this);
+        return new ReferenceNegatedAxisConfigurationWizard((AbstractMachine)Configuration.get().getMachine(), this);
     }
 
     @Override
@@ -43,10 +46,5 @@ public class ReferenceNegatedAxis extends AbstractTransformedAxis {
     public Location transformFromRaw(Location location) {
         // it's reversible
         return transformToRaw(location);
-    }
-
-    @Override
-    public Class<? extends Axis> getInputAxesClass() {
-        return AbstractControllerAxis.class;
     }
 }

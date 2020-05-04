@@ -1125,70 +1125,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 new PropertySheetWizardAdapter(new GcodeDriverConsole(this), "Console"),
         };
     }
-    
-/*
- *
- *    
-    @Override
-    public String getPropertySheetHolderTitle() {
-        return getName() == null ? "GcodeDriver" : getName();
-    }
 
-    @Override
-    public PropertySheetHolder[] getChildPropertySheetHolders() {
-        ArrayList<PropertySheetHolder> children = new ArrayList<>();
-        if (parent == null) {
-            children.add(new SimplePropertySheetHolder("Sub-Drivers", subDrivers));
-        }
-        return children.toArray(new PropertySheetHolder[] {});
-    }
-    
-    @Override
-    public Action[] getPropertySheetHolderActions() {
-        if (parent == null) {
-            return new Action[] {addSubDriverAction};
-        }
-        else {
-            return new Action[] {deleteSubDriverAction};
-        }
-    }
-    
-    public Action addSubDriverAction = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "Add Sub-Driver...");
-            putValue(SHORT_DESCRIPTION, "Add a new sub-driver.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            GcodeDriver driver = new GcodeDriver();
-            driver.commands.add(new Command(null, CommandType.COMMAND_CONFIRM_REGEX, "^ok.*"));
-            driver.parent = GcodeDriver.this;
-            subDrivers.add(driver);
-            fireIndexedPropertyChange("subDrivers", subDrivers.size() - 1, null, driver);
-        }
-    };
-
-    public Action deleteSubDriverAction = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Sub-Driver...");
-            putValue(SHORT_DESCRIPTION, "Delete the selected sub-driver.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
-                    "Are you sure you want to delete the selected sub-driver?",
-                    "Delete Sub-Driver?", JOptionPane.YES_NO_OPTION);
-            if (ret == JOptionPane.YES_OPTION) {
-                parent.subDrivers.remove(GcodeDriver.this);
-                parent.fireIndexedPropertyChange("subDrivers", subDrivers.size() - 1, GcodeDriver.this, null);
-            }
-        }
-    };
-*/
     public LengthUnit getUnits() {
         return units;
     }

@@ -69,7 +69,7 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        return new Action[] { deleteAction };
+        return new Action[] { deleteAction, permutateUpAction, permutateDownAction };
     }
 
     @SuppressWarnings("serial")
@@ -88,6 +88,34 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
             if (ret == JOptionPane.YES_OPTION) {
                 Configuration.get().getMachine().removeAxis(AbstractAxis.this);
             }
+        }
+    };
+
+    @SuppressWarnings("serial")
+    public Action permutateUpAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.arrowUp);
+            putValue(NAME, "Permutate Up");
+            putValue(SHORT_DESCRIPTION, "Move the currently selected axis one position up.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            Configuration.get().getMachine().permutateAxis(AbstractAxis.this, -1);
+        }
+    };
+
+    @SuppressWarnings("serial")
+    public Action permutateDownAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.arrowDown);
+            putValue(NAME, "Permutate Down");
+            putValue(SHORT_DESCRIPTION, "Move the currently selected axis one position down.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            Configuration.get().getMachine().permutateAxis(AbstractAxis.this, +1);
         }
     };
 
