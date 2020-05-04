@@ -674,22 +674,35 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         catch (Exception e) {
             Logger.warn(e);
         }
-        
-        if (settleMethod == null) {
-            // Method undetermined, probably created a new camera (no @Commit handler)
-            settleMethod = SettleMethod.FixedTime;
+
+        try {
+            if (settleMethod == null) {
+                // Method undetermined, probably created a new camera (no @Commit handler)
+                settleMethod = SettleMethod.FixedTime;
+            }
+            if (settleMethod == SettleMethod.FixedTime) {
+                try {
+                    Thread.sleep(getSettleTimeMs());
+                }
+                catch (Exception e) {
+
+                }
+                return capture();
+            }
+            else {
+                return autoSettleAndCapture();
+            }
         }
-        if (settleMethod == SettleMethod.FixedTime) {
+        finally {
+
             try {
-                Thread.sleep(getSettleTimeMs());
+                Map<String, Object> globals = new HashMap<>();
+                globals.put("camera", this);
+                Configuration.get().getScripting().on("Camera.AfterSettle", globals);
             }
             catch (Exception e) {
-
+                Logger.warn(e);
             }
-            return capture();
-        }
-        else {
-            return autoSettleAndCapture();
         }
     }
 
