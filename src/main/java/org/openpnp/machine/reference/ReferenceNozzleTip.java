@@ -303,6 +303,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public VacuumMeasurementMethod getMethodPartOn() {
+        if (methodPartOn == null) {
+            // First time access after creation and no @Commit handler: initialize.
+            methodPartOn = VacuumMeasurementMethod.None;
+        }
         return methodPartOn;
     }
 
@@ -375,6 +379,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public VacuumMeasurementMethod getMethodPartOff() {
+        if (methodPartOff == null) {
+            // First time access after creation and no @Commit handler: initialize.
+            methodPartOff = VacuumMeasurementMethod.None;
+        }
         return methodPartOff;
     }
 

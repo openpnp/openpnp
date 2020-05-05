@@ -33,6 +33,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.base.AbstractHead;
 import org.pmw.tinylog.Logger;
 
@@ -101,7 +102,7 @@ public class ReferenceHead extends AbstractHead {
         return true;
     }
 
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed) throws Exception {
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOption... options) throws Exception {
         if (! isInsideSoftLimits(hm, location)) {
             throw new Exception(String.format("Can't move %s to %s, outside of soft limits on head %s.",
                     hm.getName(), location, getName()));
