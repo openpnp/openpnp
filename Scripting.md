@@ -56,6 +56,7 @@ Scripting Events allow you to define scripts that will be run automatically by O
 ## Scripting Event List
 
 * [Camera.AfterCapture](#CameraAfterCapture): Called after an image capture.
+* [Camera.AfterSettle](#CameraAfterSettle): Called after the camera settle time.
 * [Camera.BeforeCapture](#CameraBeforeCapture): Called before an image capture.
 * [Camera.BeforeSettle](#CameraBeforeSettle): Called before the camera settle time, preceding a capture.
 * [Camera.AfterPosition](#CameraAfterPosition): Called after moving the camera using the Position Camera icon.
@@ -153,7 +154,7 @@ javax.imageio.ImageIO.write(image, "PNG", file);
 
 ### Camera.BeforeSettle
 
-Called concurrently with the start of the settle timer before an image is captured from a camera. This is intended to be used to control lighting, mirrors, strobes, etc. Using Camera.BeforeSettle instead Camera.BeforeCapture gives the lighting more time to actually turn on and gives the camera more time to adjust to a new lighting condition.
+Called concurrently with the start of the settle timer before an image is captured from a camera. This is intended to be used to control lighting, mirrors, strobes, etc. Using Camera.BeforeSettle instead of Camera.BeforeCapture gives the lighting more time to actually turn on and gives the camera more time to adjust to a new lighting condition.
 
 Variables:
 
@@ -185,7 +186,7 @@ else if (camera.looking == Packages.org.openpnp.spi.Camera.Looking.Down) {
 
 ### Camera.BeforeCapture
 
-Called before an image is captured from a Camera. This is intended to be used to control lighting, mirrors, strobes, etc.
+Called before an image is captured from a Camera. This is intended to be used to control lighting, mirrors, strobes, etc. It is not guaranteed to be run before the captured frame is physically taken by the camera (due to buffering). In other words, if used for lighting, this may turn on the lights too late.
 
 Variables:
 
@@ -193,31 +194,20 @@ Variables:
 | ------------- | ------------- | -------------- |
 | camera  | [org.openpnp.spi.Camera](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Camera.html) | The Camera which will be used to capture an image. |
 
-Example:
-
-.scripts/events/Camera.BeforeCapture.js
-```js
-/**
- * Controls lighting for the two cameras using two named actuators. The lights
- * for the up camera and down camera are turned on and off based on which camera
- * needs to capture.
- */
- var upCamLights = machine.getActuatorByName("UpCamLights");
- var downCamLights = machine.getActuatorByName("DownCamLights");
-
-if (camera.looking == Packages.org.openpnp.spi.Camera.Looking.Up) {
-	upCamLights.actuate(true);
-	downCamLights.actuate(false);
-}
-else if (camera.looking == Packages.org.openpnp.spi.Camera.Looking.Down) {
-	upCamLights.actuate(false);
-	downCamLights.actuate(true);
-}
-```
 
 ### Camera.AfterCapture
 
-Called after an image is captured from a Camera. This is intended to be used to control lighting, mirrors, strobes, etc.
+Called after an image is captured from a Camera. It is not recommended to be used for lighting.
+Variables:
+
+| Name  | Type | Description |
+| ------------- | ------------- | -------------- |
+| camera  | [org.openpnp.spi.Camera](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Camera.html) | The Camera which will be used to capture an image. |
+
+
+### Camera.AfterSettle
+
+Called after the camera is settled, and an image is captured. This is intended to be used to control lighting, mirrors, strobes, etc. Using Camera.AfterSettle instead of Camera.AfterCapture gives the lighting more time to turn off.
 
 Variables:
 
@@ -227,7 +217,7 @@ Variables:
 
 Example:
 
-.scripts/events/Camera.AfterCapture.js
+.scripts/events/Camera.AfterSettle.js
 ```js
 /**
  * Controls lighting for the two cameras using two named actuators. All
