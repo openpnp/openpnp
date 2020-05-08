@@ -8,6 +8,7 @@ If you can help add detail to this page, please click the Edit button!
 
 At a high level, a pick and place machine consists of the following systems:
 
+* Frame and Bed: The frame and bed make up the physical elements of the machine that everything else attaches to.
 * Motion Control: Hardware, electronics, and firmware that controls the movement of the machine.
 * Vacuum and Air: Vacuum pumps, plumbing, solenoid valves, vacuum sensors, "blow off" pumps, etc.
 * Computer Vision: Cameras, lenses, and lighting which lets the machine "see" things.
@@ -25,6 +26,12 @@ Before CNC, machines like milling machines, lathes, plasma cutters, saws, pipe b
 CNC is important in this discussion because a pick and place machine is, at it's heart, a CNC machine. You could certainly move the nozzle around by hand, and turn the vacuum on and off with a switch, but it's so much easier and fun to let your computer, and OpenPnP, do it for you!
 
 In the discussion below, when you see CNC you can just think of it as a machine controlled by a computer.
+
+# Frame and Bed
+
+The frame of the machine is simply what you attach everything else to. Frames come in all shapes and sizes, and everyone has their own idea of the perfect layout. They can be 3D printed, made out of wood or metal, welded or screwed together, and on professional machines they are even made out of multi-ton cast iron moldings! The most common frame material for DIY pick and place machines is t-slot aluminum extrusion.
+
+Mass plays an important role in frame design. The more mass your frame has, the less likely it is to move around as the motors do their work. Stiffness, or rigidity, of a frame is important too. If your frame flexes as the machine does it's work it will be less precise.
 
 # Motion Control
 
