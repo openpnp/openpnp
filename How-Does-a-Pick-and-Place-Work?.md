@@ -4,6 +4,32 @@ A pick and place machine is a very complicated piece of hardware made up of seve
 
 If you can help add detail to this page, please click the Edit button!
 
+# Rough Outline
+
+- Frame and Bed
+  - Work Holding
+- Motion Control
+  - Motors
+    - Steppers
+    - Servos
+  - Motor Drivers
+  - Rotational to Linear Motion
+  - Motion Controllers
+- Vacuum and Air
+  - Vacuum Pumps
+  - Solenoid Valves
+  - Vacuum Sensors
+  - Blow Off Systems
+- Vision Systems
+  - Cameras
+    - USB
+    - IP
+  - Lenses
+  - Lighting
+- Feeders
+- Conveyors
+- Software
+
 # Overview
 
 At a high level, a pick and place machine consists of the following systems:
