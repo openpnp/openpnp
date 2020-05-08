@@ -300,6 +300,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
 
         // Check home complete response against user's regex
         String homeCompleteRegex = getCommand(null, CommandType.HOME_COMPLETE_REGEX);
+        String commandErrorRegex = getCommand(null, CommandType.COMMAND_ERROR_REGEX);
         if (homeCompleteRegex != null) {
             if (timeout == -1) {
                 timeout = Long.MAX_VALUE;
@@ -307,8 +308,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             if (!containsMatch(responses, homeCompleteRegex)) {
                 long t = System.currentTimeMillis();
                 boolean done = false;
-                while (!done && System.currentTimeMillis() - t < timeout) {
-                    done = containsMatch(sendCommand(null, 250), homeCompleteRegex);
+                boolean err = false;
+                while (!done && !err && System.currentTimeMillis() - t < timeout) {
+                    responses = sendCommandNoFlush(null, 250); //Don't flush because the response we're looking for could have happened before this send
+                    if (commandErrorRegex != null) {
+                        err = containsMatch(responses, commandErrorRegex);
+                    }
+                    done = containsMatch(responses, homeCompleteRegex);
+                }
+                if (err) {
+                    throw new Exception("Controller raised an error during homing: " + responses);
                 }
                 if (!done) {
                     // Should never get here but just in case.
@@ -492,9 +501,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             throws Exception {
         // for options make a local copy of all possibly affected variables
         double backlashOffsetX = this.backlashOffsetX;
-        double backlashOffsetY = this.backlashOffsetX;
-        double backlashOffsetZ = this.backlashOffsetX;
-        double backlashOffsetR = this.backlashOffsetX;
+        double backlashOffsetY = this.backlashOffsetY;
+        double backlashOffsetZ = this.backlashOffsetZ;
+        double backlashOffsetR = this.backlashOffsetR;
         double nonSquarenessFactor = this.nonSquarenessFactor;
         // check options
         for (MoveToOption currentOption: options) {
@@ -732,16 +741,25 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                  * response before continuing. We first search the initial responses from the
                  * command for the regex. If it's not found we then collect responses for up to
                  * timeoutMillis while searching the responses for the regex. As soon as it is
-                 * matched we continue. If it's not matched within the timeout we throw an
-                 * Exception.
+                 * matched we continue. If it's not matched within the timeout or the controller
+                 * reports an error, we throw an Exception.
                  */
                 String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
+                String commandErrorRegex = getCommand(hm, CommandType.COMMAND_ERROR_REGEX);
                 if (moveToCompleteRegex != null) {
                     if (!containsMatch(responses, moveToCompleteRegex)) {
                         long t = System.currentTimeMillis();
                         boolean done = false;
-                        while (!done && System.currentTimeMillis() - t < timeoutMilliseconds) {
-                            done = containsMatch(sendCommand(null, 250), moveToCompleteRegex);
+                        boolean err = false;
+                        while (!done && !err && System.currentTimeMillis() - t < timeoutMilliseconds) {
+                            responses = sendCommandNoFlush(null, 250); //Don't flush because the response we're looking for could have happened before this send
+                            if (commandErrorRegex != null) {
+                                err = containsMatch(responses, commandErrorRegex);
+                            }
+                            done = containsMatch(responses, moveToCompleteRegex);
+                        }
+                        if (err) {
+                            throw new Exception("Controller raised an error during move: " + responses);
                         }
                         if (!done) {
                             throw new Exception("Timed out waiting for move to complete.");
@@ -961,12 +979,18 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             return new ArrayList<>();
         }
         List<String> responses = new ArrayList<>();
+        boolean first = true;
         for (String command : gCode.split("\n")) {
             command = command.trim();
             if (command.length() == 0) {
                 continue;
             }
-            responses.addAll(sendCommand(command, timeout));
+            if (first) {
+                responses.addAll(sendCommand(command, timeout));
+                first = false;
+            } else {
+                responses.addAll(sendCommandNoFlush(command, timeout));
+            }
         }
         return responses;
     }
@@ -981,6 +1005,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         // Read any responses that might be queued up so that when we wait
         // for a response to a command we actually wait for the one we expect.
         responseQueue.drainTo(responses);
+        responses.clear();
+        
+        return sendCommandNoFlush(command, timeout);
+    }
+
+    protected List<String> sendCommandNoFlush(String command, long timeout) throws Exception {
+        List<String> responses = new ArrayList<>();
 
         Logger.debug("sendCommand({}, {})...", command, timeout);
 
