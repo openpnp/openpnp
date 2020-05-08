@@ -43,7 +43,7 @@ This means that our motion control system has to have a minimum of four axes. In
 
 OpenPnP speaks in real world units. When OpenPnP wants to place a part, it tells [[Motion Controllers]] to move to a real world coordinate, like 10mm in X, 20mm in Y, -10mm in Z and 90 degrees in rotation. A motion controller is a piece of hardware responsible for converting between those real world coordinates and electricity to move motors.
 
-## The Motion Controller
+## Motion Control
 
 The motion controller is, in many ways, the most important part of a pick and place. The motion controller is usually a PCB with a microprocessor and a number of outputs, but it can also be a piece of software running on a PC. It's job is to convert real world coordinates into motion.
 
@@ -75,9 +75,16 @@ Finally, it's important to note that most stepper motors use **open loop control
 
 ## Servos
 
-The other most common type of motor used in CNC is a servo. You may have run into a servo motor before in radio controlled planes and cars, and the concept is the same. A servo is a DC or AC motor that can control it's position with feedback from a sensor.
+The other most common type of motor used in CNC is a servo. You may have run into a servo motor before in radio controlled planes and cars, and the concept is the same. A servo is a motor that can control it's position with feedback from a sensor.
 
 In an RC hobby servo, the sensor is often a potentiometer connected to the shaft of the motor. As the motor turns, the potentiometer's resistance changes and a controller reads the resistance. The controller maps the resistance to a position and it keeps the motor turning until it's reached the right position and then stops.
 
 In CNC servos the sensor is usually referred to as an "encoder". A potentiometer is a type of encoder, in that it it encodes a position into an output, but CNC encoders are usually optical or magnetic. These types of encoders can be extremely precise, measuring 10,000 positions per rev or more!
 
+So, with a servo you have a motor that can turn in either direction, and a sensor that tells you something about the position of the shaft of the motor. Reading this sensor and moving the shaft until the position is correct is called "closed loop control".
+
+Servos come in a variety of shapes, sizes, and configurations. They can be AC or DC and brushed or brushless.
+
+## Motor Drivers
+
+Motor drivers take a variety of low voltage, low current inputs, usually digital, and convert them to (sometimes) high voltage, high current outputs to drive the motor. We talked about step and direction a bit above, and that is the most common type of motor driver used for CNC. Motor drivers can be incredibly complex, incorporation PID control, encoder reading, tuning, and switching of massive voltages and currents. 
