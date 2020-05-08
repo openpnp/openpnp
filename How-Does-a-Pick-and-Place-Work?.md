@@ -49,7 +49,35 @@ The motion controller is, in many ways, the most important part of a pick and pl
 
 Some motion controllers, like Smoothie, can drive motors directly, while other motion controllers like LinuxCNC leave the motor driving to separate electronics.
 
-The most common type of motion controller is a Gcode step and direction controller. Let's break that down:
+The most common type of motion controller is a Gcode step and direction stepper motor controller. Let's break that down:
 
 - Gcode: [Gcode](https://en.wikipedia.org/wiki/G-code) is a text based language for telling machines how and where to move. OpenPnP can send Gcode commands to a motion controller to tell it where to move the head of the machine. Gcode can be incredibly complex, but OpenPnP only uses a very small subset of it. We'll touch on this more later.
-- Step and direction: Step and direction or step/dir is the most common method of driving 
+- Step and direction: Step and direction or step/dir is the most common method of driving a variety of motors commonly used for CNC. It is a simple interface with two pins: step and direction. You set the direction pin high or low based on whether you want the motor to turn clockwise or anti-clockwise and then you pulse the step pin once for each "step" you want the motor to take. We'll talk more about this in the motors section below.
+- Stepper motor: Stepper motors are the most common type of motor used in DIY CNC machines. They are commonly found in 3D printers. A stepper motor is differs from a "normal" motor like you'd find in a drill or washing machine in that the stepper motor moves in small, defined steps instead of continuously rotating.
+
+So, putting that all back together, a *Gcode step and direction stepper motor controller* reads Gcode commands and converts them step and direction pulses to control a stepper motor.
+
+# Motors
+
+There are a lot of different ways to move a machine around. In pick and place machines, and in other CNC machines, the most common way is to use electric motors that can be told to move to a specific position. The two most common types of motors that can do this are stepper motors, and servos.
+
+## Stepper Motors
+
+We touched on stepper motors above, but it's worth expanding on it. Most stepper motors in use today are 200 steps per revolution, which means that the motor can stop at any one of 200 positions per turn. Since a turn is 360 degrees, this means the motor turns 1.8 degrees per step. You'll find these common numbers popping up all over the place when learning about stepper motors.
+
+Most common stepper motors are bipolar, four wire motors. Bipolar means there are two sets of magnetic windings that are used to control the position of the motor. Each set of windings has two wires. By applying power to the two sets of windings in various configurations you can cause the motor to move one step in either direction.
+
+Some stepper motor drivers also support something called microstepping. Microstepping allows the driver to position the motor in between steps. If you have a driver that supports "16x microstepping" this means it can (theoretically) position the motor at 16 microsteps per step. In other words, instead of the motor having 200 steps per rev, it has 200 * 16 = 3200 steps per rev!
+
+Microstepping can be used to increase the resolution of your axes, but in reality it doesn't increase resolution much beyond 4x. It's still useful past 4x, though, as it helps smooth the motion out.
+
+Finally, it's important to note that most stepper motors use **open loop control**. Open loop control means that the controller will tell the motor to move to a position, but it has no way to know that it did. If something was blocking the motor from moving, for instance, it might not be able to reach the position, and the controller will never know. This results in what is called "lost steps", and it can be a big problem if you try to drive your motor too fast. The opposite of open loop control is closed loop control, and we'll explore that below.
+
+## Servos
+
+The other most common type of motor used in CNC is a servo. You may have run into a servo motor before in radio controlled planes and cars, and the concept is the same. A servo is a DC or AC motor that can control it's position with feedback from a sensor.
+
+In an RC hobby servo, the sensor is often a potentiometer connected to the shaft of the motor. As the motor turns, the potentiometer's resistance changes and a controller reads the resistance. The controller maps the resistance to a position and it keeps the motor turning until it's reached the right position and then stops.
+
+In CNC servos the sensor is usually referred to as an "encoder". A potentiometer is a type of encoder, in that it it encodes a position into an output, but CNC encoders are usually optical or magnetic. These types of encoders can be extremely precise, measuring 10,000 positions per rev or more!
+
