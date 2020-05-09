@@ -23,14 +23,26 @@ public class ReferenceCamSlaveAxis extends AbstractSingleTransformedAxis {
         return new ReferenceCamSlaveAxisConfigurationWizard((AbstractMachine)Configuration.get().getMachine(), this);
     }
 
-    @Override
-    public Location transformToRaw(Location location) {
-        return location;
+    public ReferenceCamMasterAxis getMasterAxis() {
+        if (inputAxis != null) {
+            return (ReferenceCamMasterAxis)inputAxis;
+        }
+        return null;
     }
 
     @Override
-    public Location transformFromRaw(Location location) {
-        // it's reversible
-        return transformToRaw(location);
+    public double toRaw(Location location, double [][] invertedAffineTransform) {
+        if (getMasterAxis() != null) {
+            return getMasterAxis().toRaw(location, true);
+        }
+        return 0.0;
+    }
+
+    @Override
+    public double toTransformed(Location location) {
+        if (getMasterAxis() != null) {
+            return getMasterAxis().toTransformed(location, true);
+        }
+        return 0.0;
     }
 }

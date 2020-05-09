@@ -36,6 +36,7 @@ import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractDriver;
@@ -52,45 +53,20 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
     @Attribute(required = false)
     private double feedRateMmPerMinute = 5000;
 
-    private HashMap<Head, Location> headLocations = new HashMap<>();
-
     private boolean enabled;
 
-    /**
-     * Gets the Location object being tracked for a specific Head. This is the absolute coordinates
-     * of a virtual Head on the machine.
-     * 
-     * @param head
-     * @return
-     */
-    protected Location getHeadLocation(Head head) {
-        Location l = headLocations.get(head);
-        if (l == null) {
-            l = new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
-            setHeadLocation(head, l);
-        }
-        return l;
-    }
-
-    protected void setHeadLocation(Head head, Location l) {
-        headLocations.put(head, l);
-    }
-
     @Override
-    public void home(ReferenceHead head) throws Exception {
+    public void home(ReferenceHead head, MappedAxes mappedAxes, Location location) throws Exception {
         Logger.debug("home()");
         checkEnabled();
-        setHeadLocation(head, getHeadLocation(head).derive(0.0, 0.0, 0.0, 0.0));
+        mappedAxes.setLocation(location, this);
     }
 
-    /**
-     * Return the Location of a specific ReferenceHeadMountable on the machine. We get the
-     * coordinates for the Head the object is attached to, and then we add the offsets assigned to
-     * the object to make the coordinates correct for that object.
-     */
+
     @Override
-    public Location getLocation(ReferenceHeadMountable hm) {
-        return getHeadLocation(hm.getHead()).add(hm.getHeadOffsets());
+    public void resetLocation(ReferenceHead head, MappedAxes mappedAxes, Location location)
+            throws Exception {
+        mappedAxes.setLocation(location, this);
     }
 
     /**
@@ -99,37 +75,25 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
      * considerations when writing your own driver.
      */
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed)
             throws Exception {
         Logger.debug("moveTo({}, {}, {})", hm, location, speed);
         checkEnabled();
-
-        // Subtract the offsets from the incoming Location. This converts the
-        // offset coordinates to driver / absolute coordinates.
-        location = location.subtract(hm.getHeadOffsets());
 
         // Convert the Location to millimeters, since that's the unit that
         // this driver works in natively.
         location = location.convertToUnits(LengthUnit.Millimeters);
 
         // Get the current location of the Head that we'll move
-        Location hl = getHeadLocation(hm.getHead());
+        Location hl = mappedAxes.getLocation(this);
 
         if (feedRateMmPerMinute > 0) {
-            simulateMovement(hm, location, hl, speed);
+            simulateMovement(hm, mappedAxes, location, hl, speed);
         }
 
         // Now that movement is complete, update the stored Location to the new
-        // Location, unless the incoming Location specified an axis with a value
-        // of NaN. NaN is interpreted to mean "Don't move this axis" so we don't
-        // update the value, either.
-
-        hl = hl.derive(Double.isNaN(location.getX()) ? null : location.getX(),
-                Double.isNaN(location.getY()) ? null : location.getY(),
-                Double.isNaN(location.getZ()) ? null : location.getZ(),
-                Double.isNaN(location.getRotation()) ? null : location.getRotation());
-
-        setHeadLocation(hm.getHead(), hl);
+        // Location.
+        mappedAxes.setLocation(location, this);
     }
 
     /**
@@ -142,7 +106,7 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
      * @param speed
      * @throws Exception
      */
-    protected void simulateMovement(ReferenceHeadMountable hm, Location location, Location hl,
+    protected void simulateMovement(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, Location hl,
             double speed) throws Exception {
         double x = hl.getX();
         double y = hl.getY();
@@ -201,7 +165,7 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
             }
 
             hl = hl.derive(x, y, z, c);
-            setHeadLocation(hm.getHead(), hl);
+            mappedAxes.setLocation(hl, this);
 
             // Provide live updates to the Machine as the move progresses.
             ((ReferenceMachine) Configuration.get().getMachine())
@@ -270,5 +234,16 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
     @Override
     public void close() throws IOException {
 
+    }
+
+    @Override
+    public LengthUnit getUnits() {
+        return LengthUnit.Millimeters;
+    }
+
+    @Deprecated
+    @Override
+    public void migrateDriver(ReferenceMachine machine) throws Exception {
+        migrateNonMappedDriver(machine); 
     }
 }

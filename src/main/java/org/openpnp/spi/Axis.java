@@ -1,6 +1,7 @@
 package org.openpnp.spi;
 
 import org.openpnp.model.Identifiable;
+import org.openpnp.model.Location;
 import org.openpnp.model.Named;
 
 /**
@@ -13,9 +14,12 @@ public interface Axis extends Identifiable, Named, WizardConfigurable, PropertyS
         Y,
         Z,
         Rotation
-    };
+    }
 
     public Type getType();
 
     public void setType(Type type);
+
+    double getLocationAxisCoordinate(Location location);
+
 }

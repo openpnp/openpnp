@@ -312,6 +312,18 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         }
     }
 
+    @Override 
+    public void permutateDriver(Driver driver, int direction) {
+        int index0 = drivers.indexOf(driver);
+        int index1 = direction > 0 ? index0+1 : index0-1;
+        if (0 <= index1 && drivers.size() > index1) {
+            drivers.remove(driver);
+            drivers.add(index1, driver);
+            fireIndexedPropertyChange("drivers", index0, driver, drivers.get(index0));
+            fireIndexedPropertyChange("drivers", index1, drivers.get(index0), driver);
+        }
+    }
+
     @Override
     public void addSignaler(Signaler signaler) throws Exception {
         signalers.add(signaler);

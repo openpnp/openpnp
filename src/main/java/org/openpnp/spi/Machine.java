@@ -179,6 +179,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public void removeDriver(Driver driver);
 
+    public void permutateDriver(Driver driver, int direction);
+
     public void addFeeder(Feeder feeder) throws Exception;
 
     public void removeFeeder(Feeder feeder);

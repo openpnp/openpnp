@@ -12,7 +12,7 @@ import org.openpnp.spi.Driver;
 import org.openpnp.spi.Head;
 import org.simpleframework.xml.Attribute;
 
-public abstract class AbstractActuator extends AbstractModelObject implements Actuator {
+public abstract class AbstractActuator extends AbstractHeadMountable implements Actuator {
     @Attribute
     protected String id;
 
@@ -89,16 +89,6 @@ public abstract class AbstractActuator extends AbstractModelObject implements Ac
     @Override
     public Icon getPropertySheetHolderIcon() {
         return null;
-    }
-
-    @Override
-    public void moveTo(Location location) throws Exception {
-        moveTo(location, getHead().getMachine().getSpeed());
-    }
-
-    @Override
-    public void moveToSafeZ() throws Exception {
-        moveToSafeZ(getHead().getMachine().getSpeed());
     }
 
     @Override

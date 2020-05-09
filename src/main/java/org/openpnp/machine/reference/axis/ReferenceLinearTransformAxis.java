@@ -30,9 +30,11 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.base.AbstractAxis;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractTransformedAxis;
+import org.openpnp.util.Matrix;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
@@ -74,6 +76,41 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
                 inputAxisRotation = (AbstractAxis) configuration.getMachine().getAxis(inputAxisRotationId);
             }
         });
+    }
+
+    public AbstractAxis getPrimaryInputAxis() {
+        switch (type) {
+            case X:
+                return inputAxisX;
+            case Y:
+                return inputAxisY;
+            case Z:
+                return inputAxisZ;
+            case Rotation:
+                return inputAxisRotation;
+            default:
+                return null;
+        }
+    }
+
+    @Override
+    public ControllerAxis getControllerAxis() {
+        AbstractAxis inputAxis = getPrimaryInputAxis();
+        if (inputAxis != null) {
+            return inputAxis.getControllerAxis();
+        }
+        return null;
+    }
+
+    @Override
+    public double[] getLinearTransform(LengthUnit lengthUnit) {
+        return new double[] { 
+                inputAxisX != null ? factorX : 0.0,
+                        inputAxisY != null ? factorY : 0.0,
+                                inputAxisZ != null ? factorZ : 0.0,
+                                        inputAxisRotation != null ? factorRotation : 0.0,
+                                                offset.convertToUnits(lengthUnit).getValue(),
+        };
     }
 
     public AbstractAxis getInputAxisX() {
@@ -154,20 +191,32 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
     }
 
     @Override
-    public Location transformToRaw(Location location) {
-        // TODO Auto-generated method stub
-        return null;
+    public double toRaw(Location location, double [][] invertedAffineTransform) {
+        double [][] transformedVector = new double [][] {
+            { AbstractTransformedAxis.toTransformed(inputAxisX, location) },
+            { AbstractTransformedAxis.toTransformed(inputAxisY, location) },
+            { AbstractTransformedAxis.toTransformed(inputAxisZ, location) },
+            { AbstractTransformedAxis.toTransformed(inputAxisRotation, location) },
+        };
+        double [][] rawVector = Matrix.multiply(invertedAffineTransform, transformedVector);
+        return rawVector[type.ordinal()][0];
     }
 
     @Override
-    public Location transformFromRaw(Location location) {
-        // TODO Auto-generated method stub
-        return null;
+    public double toTransformed(Location location) {
+        double x = AbstractTransformedAxis.toTransformed(inputAxisX, location);
+        double y = AbstractTransformedAxis.toTransformed(inputAxisY, location);
+        double z = AbstractTransformedAxis.toTransformed(inputAxisZ, location);
+        double rotation = AbstractTransformedAxis.toTransformed(inputAxisRotation, location);
+        return x * factorX
+                + y * factorY
+                + z * factorZ
+                + rotation * factorRotation
+                + offset.convertToUnits(location.getUnits()).getValue();
     }
 
     @Override
     public Wizard getConfigurationWizard() {
         return new ReferenceLinearTransformAxisConfigurationWizard((AbstractMachine)Configuration.get().getMachine(), this);
     }
-
 }

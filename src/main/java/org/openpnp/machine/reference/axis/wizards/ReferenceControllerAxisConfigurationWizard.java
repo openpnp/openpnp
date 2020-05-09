@@ -26,6 +26,7 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AxesComboBoxModel;
+import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.DriversComboBoxModel;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.NamedConverter;
@@ -53,6 +54,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
     private JTextField designator;
     private JLabel lblDriver;
     private JComboBox driver;
+    private JLabel lblResolution;
+    private JTextField resolution;
 
     public ReferenceControllerAxisConfigurationWizard(ReferenceControllerAxis axis) {
         super(axis);
@@ -61,6 +64,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         panelControllerSettings.setBorder(new TitledBorder(null, "Controller Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelControllerSettings);
         panelControllerSettings.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -96,17 +101,26 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         homeCoordinate = new JTextField();
         panelControllerSettings.add(homeCoordinate, "4, 8, fill, default");
         homeCoordinate.setColumns(10);
+        
+        lblResolution = new JLabel("Resolution");
+        panelControllerSettings.add(lblResolution, "2, 10, right, default");
+        
+        resolution = new JTextField();
+        panelControllerSettings.add(resolution, "4, 10, fill, default");
+        resolution.setColumns(10);
     }
 
     @Override
     public void createBindings() {
         super.createBindings();
         LengthConverter lengthConverter = new LengthConverter();
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         NamedConverter<Driver> driverConverter = new NamedConverter<>(Configuration.get().getMachine().getDrivers()); 
 
         addWrappedBinding(axis, "driver", driver, "selectedItem", driverConverter);
         addWrappedBinding(axis, "designator", designator, "text");
         addWrappedBinding(axis, "homeCoordinate", homeCoordinate, "text", lengthConverter);
+        addWrappedBinding(axis, "resolution", resolution, "text", doubleConverter);
 
         ComponentDecorators.decorateWithAutoSelect(designator);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(homeCoordinate);

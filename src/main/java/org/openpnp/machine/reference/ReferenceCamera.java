@@ -232,23 +232,6 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     }
 
     @Override
-    public void moveTo(Location location, double speed) throws Exception {
-        Logger.debug("moveTo({}, {})", location, speed);
-        ((ReferenceHead) getHead()).moveTo(this, location, getHead().getMaxPartSpeed() * speed);
-        getMachine().fireMachineHeadActivity(head);
-    }
-
-    @Override
-    public void moveToSafeZ(double speed) throws Exception {
-        Logger.debug("{}.moveToSafeZ({})", getName(), speed);
-        Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
-        Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN,
-                safeZ.getValue(), Double.NaN);
-        getDriver().moveTo(this, l, getHead().getMaxPartSpeed() * speed);
-        getMachine().fireMachineHeadActivity(head);
-    }
-
-    @Override
     public void home() throws Exception {
     }
 
@@ -574,16 +557,18 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         return calibration;
     }
 
-    @Override
+/* This should now work automatically right due to no axes mapped.
+ *  @Override
     public Location getLocation() {
         // If this is a fixed camera we just treat the head offsets as it's
         // table location.
         if (getHead() == null) {
             return getHeadOffsets();
         }
-        return getDriver().getLocation(this);
-    }
+        return super.getLocation(this);
+    }*/
 
+    @Override 
     public Length getSafeZ() {
         return safeZ;
     }
@@ -601,7 +586,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
                 new PropertySheetWizardAdapter(new CameraConfigurationWizard(this), "General Configuration"),
                 new PropertySheetWizardAdapter(new CameraVisionConfigurationWizard(this), "Vision"),
                 new PropertySheetWizardAdapter(getConfigurationWizard(), "Device Settings"),
-                new PropertySheetWizardAdapter(new ReferenceCameraPositionConfigurationWizard(this), "Position"),
+                new PropertySheetWizardAdapter(new ReferenceCameraPositionConfigurationWizard(getMachine(), this), "Position"),
                 new PropertySheetWizardAdapter(new ReferenceCameraCalibrationConfigurationWizard(this), "Lens Calibration"),
                 new PropertySheetWizardAdapter(new ReferenceCameraTransformsConfigurationWizard(this), "Image Transforms"),
         };

@@ -23,12 +23,13 @@ package org.openpnp.spi.base;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.LinearInputAxis;
 import org.simpleframework.xml.Attribute;
 
 public abstract class AbstractSingleTransformedAxis extends AbstractTransformedAxis implements LinearInputAxis {
     // The input axis of the transformation.  
-    private AbstractAxis inputAxis;
+    protected AbstractAxis inputAxis;
 
     @Attribute(required = false)
     private String inputAxisId;
@@ -41,6 +42,14 @@ public abstract class AbstractSingleTransformedAxis extends AbstractTransformedA
                 inputAxis = (AbstractAxis) configuration.getMachine().getAxis(inputAxisId);
             }
         });
+    }
+
+    @Override
+    public ControllerAxis getControllerAxis() {
+        if (inputAxis != null) {
+            return inputAxis.getControllerAxis();
+        }
+        return null;
     }
 
     public AbstractAxis getInputAxis() {

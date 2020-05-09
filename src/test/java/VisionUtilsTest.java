@@ -8,6 +8,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
@@ -15,6 +16,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider;
+import org.openpnp.spi.base.AbstractHeadMountable;
 import org.openpnp.util.VisionUtils;
 
 
@@ -32,7 +34,7 @@ public class VisionUtilsTest {
         Assert.assertEquals(pixelLocation, new Location(LengthUnit.Millimeters, -220, 140, 0, 0));
     }
 
-    static class TestCamera implements Camera {
+    static class TestCamera extends AbstractHeadMountable implements Camera {
         protected Head head;
 
         @Override
@@ -217,6 +219,20 @@ public class VisionUtilsTest {
         @Override
         public void moveToSafeZ() throws Exception {
             moveToSafeZ(getHead().getMachine().getSpeed());
+        }
+
+        @Override
+        public Length getSafeZ() {
+            return null;
+        }
+
+        @Override
+        public Location getHeadOffsets() {
+            return null;
+        }
+
+        @Override
+        public void setHeadOffsets(Location headOffsets) {
         }
     }
 }

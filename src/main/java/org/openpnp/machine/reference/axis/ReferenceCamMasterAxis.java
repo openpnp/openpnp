@@ -15,9 +15,9 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
 /**
- * A TransformedAxis for heads with dual rocker or seesaw driven Z axes powered by one motor. The two Z 
- * axes are defined as Master and Slave. 
- * Master gets the positive rotation of the axis motor as positive Z (up). Slave gets the negated transform. 
+ * A TransformedAxis for heads with dual rocker or seesaw driven Z axes powered by one motor. 
+ * The two Z axes are defined as Master and Slave. 
+ * Master gets the positive rotation of the axis motor as positive Z (up). Slave gets the negative. 
  */
 public class ReferenceCamMasterAxis extends AbstractSingleTransformedAxis {
 
@@ -40,14 +40,39 @@ public class ReferenceCamMasterAxis extends AbstractSingleTransformedAxis {
     }
 
     @Override
-    public Location transformToRaw(Location location) {
-        return location;
+    public double toRaw(Location location, double [][] invertedAffineTransform) {
+        return toRaw(location, false);
+    }
+
+    protected double toRaw(Location location, boolean slave) {
+        double transformedCoordinate = getLocationAxisCoordinate(location);
+        double rawCoordinate = (transformedCoordinate 
+                - camWheelRadius.convertToUnits(location.getUnits()).getValue() 
+                - camWheelGap.convertToUnits(location.getUnits()).getValue()) 
+                / camRadius.convertToUnits(location.getUnits()).getValue();
+        rawCoordinate = Math.min(Math.max(rawCoordinate, -1), 1);
+        rawCoordinate = Math.toDegrees(Math.asin(rawCoordinate));
+        if (slave) {
+            rawCoordinate = -rawCoordinate;
+        }
+        return rawCoordinate;
     }
 
     @Override
-    public Location transformFromRaw(Location location) {
-        // it's reversible
-        return transformToRaw(location);
+    public double toTransformed(Location location) {
+        return toTransformed(location, false);
+    }
+
+    protected double toTransformed(Location location, boolean slave) {
+        double rawCoordinate = getLocationAxisCoordinate(location);
+        double transformedCoordinate = Math.sin(Math.toRadians(rawCoordinate)) 
+                * camRadius.convertToUnits(location.getUnits()).getValue();
+        if (slave) {
+            transformedCoordinate = -transformedCoordinate;
+        }
+        transformedCoordinate += camWheelRadius.convertToUnits(location.getUnits()).getValue() 
+                + camWheelGap.convertToUnits(location.getUnits()).getValue();
+        return transformedCoordinate;
     }
 
     public Length getCamRadius() {

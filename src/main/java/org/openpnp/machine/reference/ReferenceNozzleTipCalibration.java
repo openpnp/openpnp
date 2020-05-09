@@ -622,7 +622,6 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         }
 
         return this.getRunoutCompensation(nozzle).getOffset(angle);
-
     }
 
     /*

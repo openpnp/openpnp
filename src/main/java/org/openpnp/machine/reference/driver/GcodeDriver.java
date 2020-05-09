@@ -27,18 +27,23 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConsole;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverGcodes;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverSettings;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.MappedAxes;
 import org.openpnp.model.Named;
 import org.openpnp.model.Part;
+import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.base.AbstractHead;
+import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -59,9 +64,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         CONNECT_COMMAND,
         ENABLE_COMMAND,
         DISABLE_COMMAND,
+        @Deprecated
         POST_VISION_HOME_COMMAND,
         HOME_COMMAND("Id", "Name"),
         HOME_COMPLETE_REGEX(true),
+        POSITION_RESET_COMMAND("Id", "Name", "X", "Y", "Z", "Rotation"),
         @Deprecated
         PUMP_ON_COMMAND,
         @Deprecated
@@ -283,7 +290,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
 
     @Override
-    public void home(ReferenceHead head) throws Exception {
+    public void home(ReferenceHead head, MappedAxes mappedAxes, Location location) throws Exception {
         // Home is sent with an infinite timeout since it's tough to tell how long it will
         // take.
         String command = getCommand(null, CommandType.HOME_COMMAND);
@@ -311,81 +318,58 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             }
         }
 
-
-
-        // We need to specially handle X and Y axes to support the non-squareness factor.
-        Axis xAxis = null;
-        Axis yAxis = null;
-        double xHomeCoordinateNonSquare = 0;
-        double yHomeCoordinate = 0;
-        for (Axis axis : axes) {
-            if (axis.getType() == Axis.Type.X) {
-                xAxis = axis;
-                xHomeCoordinateNonSquare = axis.getHomeCoordinate();
-            }
-            if (axis.getType() == Axis.Type.Y) {
-                yAxis = axis;
-                yHomeCoordinate = axis.getHomeCoordinate();
-            }
+        for (ControllerAxis axis : mappedAxes.getAxes()) {
+            // Set this axis to the homed coordinate.
+            axis.setLengthCoordinate(axis.getHomeCoordinate());
         }
-        // Compensate non-squareness factor: 
-        // We are homing to the native controller's non-square coordinate system, this does not
-        // match OpenPNP's square coordinate system, if the controller's Y home is non-zero. 
-        // The two coordinate systems coincide at Y0 only, see the non-squareness 
-        // transformation. It is not a good idea to change the transformation i.e. for the coordinate 
-        // systems to coincide at Y home, as this would break coordinates captured before this change. 
-        // In order to home the square internal coordinate system we need to account for the 
-        // non-squareness X offset here.  
-        // NOTE this changes nothing in the behavior or the coordinate system of the machine. It just
-        // sets the internal X coordinate correctly immediately after homing, so we can capture the 
-        // home location correctly. Without this compensation the discrepancy between internal and 
-        // machines coordinates was resolved with the first move, as it is done in absolute mode. 
-        double xHomeCoordinateSquare = xHomeCoordinateNonSquare - nonSquarenessFactor*yHomeCoordinate;
-        
-        for (Axis axis : axes) {
-            if (axis == xAxis) {
-            	// for X use the coordinate adjusted for non-squareness.
-            	axis.setCoordinate(xHomeCoordinateSquare);
-            }
-            else {
-            	// otherwise just use the standard coordinate.
-            	axis.setCoordinate(axis.getHomeCoordinate());
-            }
-        }
+    }
 
-        for (ReferenceDriver driver : subDrivers) {
-            driver.home(head);
-        }
-
-        if (visualHomingEnabled) {
-            /*
-             * The head camera for nozzle-1 should now be (if everything has homed correctly) directly
-             * above the homing pin in the machine bed, use the head camera scan for this and make sure
-             * this is exactly central - otherwise we move the camera until it is, and then reset all
-             * the axis back to 0,0,0,0 as this is calibrated home.
-             */
-            Part homePart = Configuration.get().getPart("FIDUCIAL-HOME");
-            if (homePart != null) {
-                Configuration.get().getMachine().getFiducialLocator()
-                        .getHomeFiducialLocation(homingFiducialLocation, homePart);
-
-                // homeOffset contains the offset, but we are not really concerned with that,
-                // we just reset X,Y back to the home-coordinate at this point.
-                if (xAxis != null) { 
-                	xAxis.setCoordinate(xHomeCoordinateSquare);
+    @Override
+    public void resetLocation(ReferenceHead head, MappedAxes mappedAxes, Location location)
+            throws Exception {
+        // Convert to driver units
+        location = location.convertToUnits(getUnits());
+        // Compose the command
+        String command = getCommand(null, CommandType.POSITION_RESET_COMMAND);
+        if (command != null) {
+            command = substituteVariable(command, "Id", head.getId());
+            command = substituteVariable(command, "Name", head.getName());
+            for (org.openpnp.spi.Axis.Type axisType : org.openpnp.spi.Axis.Type.values()) {
+                ControllerAxis axis = mappedAxes.getAxis(axisType, this);
+                if (axis != null) {
+                    command = substituteVariable(command, axisType.toString(), 
+                            axis.getLocationAxisCoordinate(location));
+                    command = substituteVariable(command, axisType+"S", 
+                            axis.getDesignator());
+                    // Store the new current coordinate on the axis.
+                    axis.setCoordinate(axis.getLocationAxisCoordinate(location));
                 }
-                if (yAxis != null) { 
-                	yAxis.setCoordinate(yHomeCoordinate);
+                else {
+                    command = substituteVariable(command, axisType.toString(), null);
+                    command = substituteVariable(command, axisType+"S", null); 
                 }
-                
-                String g92command = getCommand(null, CommandType.POST_VISION_HOME_COMMAND);
-                // make sure to use the native non-square X home coordinate.
-                g92command = substituteVariable(g92command, "X", xHomeCoordinateNonSquare);
-                g92command = substituteVariable(g92command, "Y", yHomeCoordinate);
-                sendGcode(g92command, -1);
+            }
+            sendGcode(command, -1);
+        }
+        else {
+            // Try the legacy POST_VISION_HOME_COMMAND
+            String postVisionHomeCommand = getCommand(null, CommandType.POST_VISION_HOME_COMMAND);
+            if (postVisionHomeCommand != null 
+                    && mappedAxes.getAxisX() != null 
+                    && mappedAxes.getAxisY() != null
+                    && mappedAxes.getAxisX().getDriver() == this 
+                    && mappedAxes.getAxisY().getDriver() == this) { 
+                // X, Y, are mapped to this driver, legacy support enabled
+                postVisionHomeCommand = substituteVariable(postVisionHomeCommand, "X", mappedAxes.getAxisX().getLocationAxisCoordinate(location));
+                postVisionHomeCommand = substituteVariable(postVisionHomeCommand, "Y", mappedAxes.getAxisY().getLocationAxisCoordinate(location));
+                // Store the new current coordinate on the axis.
+                mappedAxes.getAxisX().setCoordinate(location.getX());
+                mappedAxes.getAxisY().setCoordinate(location.getY());
+                sendGcode(postVisionHomeCommand, -1);
             }
         }
     }
+    
 
     public Axis getAxis(HeadMountable hm, Axis.Type type) {
         for (Axis axis : axes) {
@@ -448,47 +432,12 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
 
     @Override
-    public Location getLocation(ReferenceHeadMountable hm) {
-        // according main driver
-        Axis xAxis = getAxis(hm, Axis.Type.X);
-        Axis yAxis = getAxis(hm, Axis.Type.Y);
-        Axis zAxis = getAxis(hm, Axis.Type.Z);
-        Axis rotationAxis = getAxis(hm, Axis.Type.Rotation);
-
-        // additional info might be on subdrivers (note that subdrivers can only be one level deep)
-        for (ReferenceDriver driver : subDrivers) {
-            GcodeDriver d = (GcodeDriver) driver;
-            if (d.getAxis(hm, Axis.Type.X) != null) {
-                xAxis = d.getAxis(hm, Axis.Type.X);
-            }
-            if (d.getAxis(hm, Axis.Type.Y) != null) {
-                yAxis = d.getAxis(hm, Axis.Type.Y);
-            }
-            if (d.getAxis(hm, Axis.Type.Z) != null) {
-                zAxis = d.getAxis(hm, Axis.Type.Z);
-            }
-            if (d.getAxis(hm, Axis.Type.Rotation) != null) {
-                rotationAxis = d.getAxis(hm, Axis.Type.Rotation);
-            }
-        }
-
-        Location location =
-                new Location(units, xAxis == null ? 0 : xAxis.getTransformedCoordinate(hm),
-                        yAxis == null ? 0 : yAxis.getTransformedCoordinate(hm),
-                        zAxis == null ? 0 : zAxis.getTransformedCoordinate(hm),
-                        rotationAxis == null ? 0 : rotationAxis.getTransformedCoordinate(hm))
-                                .add(hm.getHeadOffsets());
-        return location;
-    }
-
-    @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed)
             throws Exception {
         // keep copy for calling subdrivers as to not add offset on offset
         Location locationOriginal = location;
 
         location = location.convertToUnits(units);
-        location = location.subtract(hm.getHeadOffsets());
 
         double x = location.getX();
         double y = location.getY();
@@ -740,7 +689,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
 
         // regardless of any action above the subdriver needs its actions based on original input
         for (ReferenceDriver driver : subDrivers) {
-            driver.moveTo(hm, locationOriginal, speed);
+            driver.moveTo(hm, mappedAxes, locationOriginal, speed);
         }
 
         // if there was a move
@@ -1126,6 +1075,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         };
     }
 
+    @Override
     public LengthUnit getUnits() {
         return units;
     }
@@ -1223,9 +1173,24 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
 
     @Deprecated
-    public void migrateSubDrivers(ReferenceMachine machine) throws Exception {
+    @Override
+    public void migrateDriver(ReferenceMachine machine) throws Exception {
+        // Migrate visual homing setting.
+        for (Head head : machine.getHeads()) {
+            if (visualHomingEnabled) {
+                // Assuming only one (sub-) driver will have this enabled.  
+                ((AbstractHead)head).setVisualHomingEnabled(visualHomingEnabled);
+                Location homingFiducialLocation = this.homingFiducialLocation;
+                // because squareness compensation is now properly applied to the homing fiducial location, we need to "unapply" it here.
+                homingFiducialLocation = homingFiducialLocation
+                        .subtract(new Location(homingFiducialLocation.getUnits(), homingFiducialLocation.getY()*nonSquarenessFactor, 0, 0, 0));
+                ((AbstractHead)head).setHomingFiducialLocation(homingFiducialLocation);
+            }
+        }
+        // Handle sub-drivers.
         for (GcodeDriver gcodeDriver : subDrivers) {
             machine.addDriver(gcodeDriver);
+            gcodeDriver.migrateDriver(machine);
         }
         // TODO: set it null after the last use of it was reworked.
         subDrivers = new ArrayList<>();
@@ -1471,5 +1436,5 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             return transformedCoordinate * scaleFactor;
         }
     }
-    
+
 }

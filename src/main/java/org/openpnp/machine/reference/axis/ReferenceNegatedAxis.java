@@ -27,24 +27,27 @@ public class ReferenceNegatedAxis extends AbstractSingleTransformedAxis {
     }
 
     @Override
-    public Location transformToRaw(Location location) {
-        switch(type) {
+    public double toRaw(Location location, double [][] invertedAffineTransform) {
+        if (inputAxis != null) {
+            switch(type) {
             case X:
-                return location.derive(-location.getX(), null, null, null);
+                return inputAxis.toRaw(location.derive(-location.getX(), null, null, null), invertedAffineTransform);
             case Y:
-                return location.derive(null, -location.getY(), null, null);
+                return inputAxis.toRaw(location.derive(null, -location.getY(), null, null), invertedAffineTransform);
             case Z:
-                return location.derive(null, null, -location.getZ(),  null);
+                return inputAxis.toRaw(location.derive(null, null, -location.getZ(),  null), invertedAffineTransform);
             case Rotation:
-                return location.derive(null, null, null, -location.getRotation());
-            default:
-                return location;
+                return inputAxis.toRaw(location.derive(null, null, null, -location.getRotation()), invertedAffineTransform);
+            }
         }
+        return 0.0;
     }
 
     @Override
-    public Location transformFromRaw(Location location) {
-        // it's reversible
-        return transformToRaw(location);
+    public double toTransformed(Location location) {
+        if (inputAxis != null) {
+            return -inputAxis.toTransformed(location);
+        }
+        return 0.0;
     }
 }

@@ -54,6 +54,13 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     @Element(required = false)
     protected String pumpActuatorName;
 
+    @Attribute(required = false)
+    protected boolean visualHomingEnabled;
+
+    @Element(required = false)
+    protected Location homingFiducialLocation;
+
+
     protected Machine machine;
 
     public AbstractHead() {
@@ -319,5 +326,21 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     public void setPumpActuatorName(String pumpActuatorName) {
         this.pumpActuatorName = pumpActuatorName;
+    }
+
+    public boolean isVisualHomingEnabled() {
+        return visualHomingEnabled;
+    }
+
+    public void setVisualHomingEnabled(boolean visualHomingEnabled) {
+        this.visualHomingEnabled = visualHomingEnabled;
+    }
+
+    public Location getHomingFiducialLocation() {
+        return homingFiducialLocation;
+    }
+
+    public void setHomingFiducialLocation(Location homingFiducialLocation) {
+        this.homingFiducialLocation = homingFiducialLocation;
     }
 }

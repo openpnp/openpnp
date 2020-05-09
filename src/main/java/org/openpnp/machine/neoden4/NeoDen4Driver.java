@@ -15,6 +15,7 @@ import org.openpnp.machine.reference.driver.AbstractReferenceDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.MappedAxes;
 import org.openpnp.model.Named;
 import org.openpnp.spi.Nozzle;
 import org.pmw.tinylog.Logger;
@@ -333,7 +334,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
     
     @Override
-    public void home(ReferenceHead head) throws Exception {
+    public void home(ReferenceHead head, MappedAxes mappedAxes, Location location) throws Exception {
         /* Make sure *all* nozzles are up before moving */ 
         moveZ(1, 0);
         moveZ(2, 0);
@@ -366,21 +367,13 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         machine.fireMachineHeadActivity(head);
     }
 
+
     @Override
-    public Location getLocation(ReferenceHeadMountable hm) {
-        switch (hm.getId()) {
-            case "N1":
-                return new Location(units, x, y, z1, c1).add(hm.getHeadOffsets());
-            case "N2":
-                return new Location(units, x, y, z2, c2).add(hm.getHeadOffsets());
-            case "N3":
-                return new Location(units, x, y, z3, c3).add(hm.getHeadOffsets());
-            case "N4":
-                return new Location(units, x, y, z4, c4).add(hm.getHeadOffsets());
-        }
-        return new Location(units, x, y, 0, 0).add(hm.getHeadOffsets());
+    public void resetLocation(ReferenceHead head, MappedAxes mappedAxes, Location location)
+            throws Exception {
+        // TODO: if the driver supports it, please implement 
     }
-    
+
     private void moveXy(double x, double y) throws Exception {
         write(0x48);
         expect(0x05);
@@ -485,10 +478,9 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed)
             throws Exception {
         location = location.convertToUnits(units);
-        location = location.subtract(hm.getHeadOffsets());
 
         double x = location.getX();
         double y = location.getY();
@@ -918,5 +910,11 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
 
     public void setScaleFactorY(double scaleFactorY) {
         this.scaleFactorY = scaleFactorY;
+    }
+
+    @Deprecated
+    @Override
+    public void migrateDriver(ReferenceMachine machine) throws Exception {
+        migrateNonMappedDriver(machine); 
     }
 }

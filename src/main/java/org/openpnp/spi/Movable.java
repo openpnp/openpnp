@@ -1,5 +1,6 @@
 package org.openpnp.spi;
 
+import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 
 public interface Movable extends Locatable {
@@ -13,13 +14,17 @@ public interface Movable extends Locatable {
      *        minimum feed rate while still moving.
      * @throws Exception
      */
-    public void moveTo(Location location, double speed) throws Exception;
+    void moveTo(Location location, double speed) throws Exception;
 
-    public void moveTo(Location location) throws Exception;
+    void moveTo(Location location) throws Exception;
 
-    public void moveToSafeZ(double speed) throws Exception;
+    Length getSafeZ();
 
-    public void moveToSafeZ() throws Exception;
+    Length getEffectiveSafeZ();
+
+    void moveToSafeZ(double speed) throws Exception;
+
+    void moveToSafeZ() throws Exception;
     
     /**
      * Perform any homing operation on each movable. The head and driver have already been homed
@@ -27,5 +32,6 @@ public interface Movable extends Locatable {
      * 
      * @throws Exception
      */
-    public void home() throws Exception;
+    void home() throws Exception;
+
 }

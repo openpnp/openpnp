@@ -4,7 +4,7 @@ import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 import org.openpnp.model.Named;
 
-public interface HeadMountable extends Movable, Identifiable, Named {
+public interface HeadMountable extends MovableMountable, Identifiable, Named {
     /**
      * Gets the Head that this HeadMountable is attached to. If it is not attached to a Head this
      * method returns null.

@@ -1,22 +1,18 @@
 package org.openpnp.machine.reference.driver;
 
-import java.io.Closeable;
 import java.io.IOException;
-
-import javax.swing.Action;
-import javax.swing.Icon;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceDriver;
+import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.DataBits;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.FlowControl;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.Parity;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.StopBits;
 import org.openpnp.machine.reference.driver.wizards.AbstractReferenceDriverConfigurationWizard;
-import org.openpnp.model.AbstractModelObject;
-import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractDriver;
+import org.openpnp.spi.base.AbstractMachine;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -280,6 +276,4 @@ public abstract class AbstractReferenceDriver extends AbstractDriver implements 
         }
         return sb.toString();
     }
-
-
 }

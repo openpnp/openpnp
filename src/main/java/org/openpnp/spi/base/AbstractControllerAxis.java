@@ -1,6 +1,7 @@
 package org.openpnp.spi.base;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -22,6 +23,16 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
     @Element(required = false)
     private Length homeCoordinate = new Length(0.0, LengthUnit.Millimeters);
 
+    /**
+     * The resolution of the axis will be used to determined if an axis has moved i.e. whether the sent coordinate 
+     * will be different.  
+     * @see %.4f format in CommandType.MOVE_TO_COMMAND in GcodeDriver.createDefaults() or Configuration.getLengthDisplayFormat()
+     * Comparing coordinates rounded to resolution will also suppress false differences from floating point artifacts 
+     * prompted by forward/backward raw <-> transformed calculations. 
+     */
+    @Element(required = false)
+    private double resolution = 0.0001; // 
+
     protected AbstractControllerAxis () {
         super();
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
@@ -33,6 +44,21 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
         });    
     }
 
+    public double roundedToResolution(double coordinate) {
+        if (resolution != 0.0) {
+            return Math.round(coordinate/resolution)*resolution;
+        }
+        else {
+            return coordinate;
+        }
+    }
+    
+    @Override
+    public AbstractControllerAxis getControllerAxis() {
+        return this;
+    }
+    
+    @Override
     public Driver getDriver() {
         return driver;
     }
@@ -66,5 +92,15 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
         Object oldValue = this.homeCoordinate;
         this.homeCoordinate = homeCoordinate;
         firePropertyChange("homeCoordinate", oldValue, homeCoordinate);
+    }
+
+    public double getResolution() {
+        return resolution;
+    }
+
+    public void setResolution(double resolution) {
+        Object oldValue = this.resolution;
+        this.resolution = resolution;
+        firePropertyChange("resolution", oldValue, resolution);
     }
 }

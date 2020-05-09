@@ -18,6 +18,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.MappedAxes;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
@@ -56,6 +57,7 @@ public class BasicJobTest {
 
         Configuration.initialize(workingDirectory);
         Configuration.get().load();
+        Configuration.get().save();
 
         Machine machine = Configuration.get().getMachine();
         ReferenceMachine referenceMachine = (ReferenceMachine) machine;
@@ -155,23 +157,23 @@ public class BasicJobTest {
         }
 
         @Override
-        public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+        public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed)
                 throws Exception {
             System.out.println(hm + " " + location);
             if (expectedOps.isEmpty()) {
-                throw new Exception("Unexpected Move " + location + ".");
+                throw new Exception("Unexpected Move " + hm + " " + location + ".");
             }
             else {
                 ExpectedOp op = expectedOps.remove();
 
                 if (!(op instanceof ExpectedMove)) {
-                    throw new Exception("Unexpected Move " + location + ". Expected " + op);
+                    throw new Exception("Unexpected Move " + hm + " " + location + ". Expected " + op);
                 }
 
                 ExpectedMove move = (ExpectedMove) op;
 
-                if (!move.location.equals(location) || hm != move.headMountable) {
-                    throw new Exception("Unexpected Move " + location + ". Expected " + op);
+                if (!mappedAxes.locationMatches(move.location, location, this) || hm != move.headMountable) {
+                    throw new Exception("Unexpected Move " + hm + " " + location + ". Expected " + op);
                 }
             }
         }
@@ -216,7 +218,8 @@ public class BasicJobTest {
             public ExpectedMove(String description, HeadMountable headMountable, Location location,
                     double speed) {
                 this.headMountable = headMountable;
-                this.location = location;
+                // The expected location is in head coordinates.
+                this.location = location.subtract(((ReferenceHeadMountable) headMountable).getHeadOffsets());
                 this.speed = speed;
                 this.description = description;
             }

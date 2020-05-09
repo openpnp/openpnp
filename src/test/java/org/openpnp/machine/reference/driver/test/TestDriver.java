@@ -10,9 +10,10 @@ import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
-import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractDriver;
 import org.simpleframework.xml.Attribute;
@@ -21,8 +22,6 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
     @Attribute(required = false)
     private String dummy;
 
-    private Location location = new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
-
     private ReferenceDriver delegate = new TestDriverDelegate();
 
     public void setDelegate(ReferenceDriver delegate) {
@@ -30,41 +29,30 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
     }
 
     @Override
-    public void home(ReferenceHead head) throws Exception {
+    public void home(ReferenceHead head, MappedAxes mappedAxes, Location location) throws Exception {
         location = new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
-        delegate.home(head);
+        delegate.home(head, mappedAxes, location);
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+    public void resetLocation(ReferenceHead head, MappedAxes mappedAxes, Location location)
             throws Exception {
-        // Subtract the offsets from the incoming Location. This converts the
-        // offset coordinates to driver / absolute coordinates.
-        location = location.subtract(hm.getHeadOffsets());
+        delegate.resetLocation(head, mappedAxes, location);
+    }
 
+    @Override
+    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed)
+            throws Exception {
         // Convert the Location to millimeters, since that's the unit that
         // this driver works in natively.
         location = location.convertToUnits(LengthUnit.Millimeters);
 
-        // Get the current location of the Head that we'll move
-        Location hl = this.location;
-
-        hl = hl.derive(Double.isNaN(location.getX()) ? null : location.getX(),
-                Double.isNaN(location.getY()) ? null : location.getY(),
-                Double.isNaN(location.getZ()) ? null : location.getZ(),
-                Double.isNaN(location.getRotation()) ? null : location.getRotation());
-
-        if (!this.location.equals(hl)) {
-            this.location = hl;
-            delegate.moveTo(hm, this.location, speed);
+        if (!mappedAxes.locationMatches(mappedAxes.getLocation(this), location, this)) {
+            delegate.moveTo(hm, mappedAxes, location, speed);
+            mappedAxes.setLocation(location, this);
         }
     }
 
-    @Override
-    public Location getLocation(ReferenceHeadMountable hm) {
-        return location.add(hm.getHeadOffsets());
-    }
-    
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
         delegate.actuate(actuator, on);
@@ -87,19 +75,19 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
         }
 
         @Override
-        public void home(ReferenceHead head) throws Exception {
+        public void home(ReferenceHead head, MappedAxes mappedAxes, Location location) throws Exception {
 
         }
 
         @Override
-        public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+        public void resetLocation(ReferenceHead head, MappedAxes mappedAxes, Location location)
+                throws Exception {
+        }
+ 
+        @Override
+        public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed)
                 throws Exception {
 
-        }
-
-        @Override
-        public Location getLocation(ReferenceHeadMountable hm) {
-            return null;
         }
 
         @Override
@@ -160,7 +148,23 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
         public String getId() {
             return null;
         }
+
+        @Override
+        public LengthUnit getUnits() {
+            return LengthUnit.Millimeters;
+        }
+
+        @Deprecated
+        @Override
+        public void migrateDriver(ReferenceMachine machine) throws Exception {
+        }
+   }
+
+    @Override
+    public LengthUnit getUnits() {
+        return LengthUnit.Millimeters;
     }
+
 
     @Override
     public String getPropertySheetHolderTitle() {
@@ -194,5 +198,11 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
     @Override
     public Wizard getConfigurationWizard() {
         return null;
+    }
+
+    @Deprecated
+    @Override
+    public void migrateDriver(ReferenceMachine machine) throws Exception {
+        migrateNonMappedDriver(machine);
     }
 }

@@ -83,11 +83,6 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     }
 
     @Override
-    public Location getLocation() {
-        return getDriver().getLocation(this);
-    }
-
-    @Override
     public Location getCameraToolCalibratedOffset(Camera camera) {
         return new Location(camera.getUnitsPerPixel().getUnits());
     }
@@ -116,29 +111,12 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     }
 
     @Override
-    public void moveTo(Location location, double speed) throws Exception {
-        Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
-        ((ReferenceHead) getHead()).moveTo(this, location, getHead().getMaxPartSpeed() * speed);
-        getMachine().fireMachineHeadActivity(head);
-    }
-
-    @Override
-    public void moveToSafeZ(double speed) throws Exception {
-        Logger.debug("{}.moveToSafeZ({})", getName(), speed);
-        Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
-        Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN,
-                safeZ.getValue(), Double.NaN);
-        getDriver().moveTo(this, l, getHead().getMaxPartSpeed() * speed);
-        getMachine().fireMachineHeadActivity(head);
-    }
-
-    @Override
     public void home() throws Exception {
     }
 
     @Override
     public Wizard getConfigurationWizard() {
-        return new ReferenceActuatorConfigurationWizard(this);
+        return new ReferenceActuatorConfigurationWizard(getMachine(), this);
     }
 
     @Override
@@ -189,6 +167,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         return getName();
     }
 
+    @Override
     public Length getSafeZ() {
         return safeZ;
     }

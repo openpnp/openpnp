@@ -21,7 +21,29 @@
 
 package org.openpnp.spi.base;
 
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.TransformedAxis;
 
 public abstract class AbstractTransformedAxis extends AbstractAxis implements TransformedAxis {
+    // Convenience functions for null checking.
+    public static double toTransformed(AbstractAxis axis, Location location) {
+        if (axis != null) {
+            return axis.toTransformed(location);
+        }
+        return 0.0;
+    }
+    public static double toRaw(AbstractAxis axis, Location location,  double [][] invertedAffineTranform) {
+        if (axis != null) {
+            return axis.toRaw(location, invertedAffineTranform);
+        }
+        return 0.0;
+    }
+    public static double [] getLinearTransform(AbstractAxis axis, LengthUnit lengthUnit) {
+        if (axis != null) {
+            return axis.getLinearTransform(lengthUnit);
+        }
+        return new double [] { 0, 0, 0, 0, 0 };
+    }
 }

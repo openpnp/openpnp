@@ -31,10 +31,18 @@ import javax.swing.border.TitledBorder;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.AxesComboBoxModel;
+import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.model.Configuration;
+import org.openpnp.spi.Axis;
+import org.openpnp.spi.LinearInputAxis;
+import org.openpnp.spi.base.AbstractAxis;
+import org.openpnp.spi.base.AbstractMachine;
 
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -42,6 +50,7 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import javax.swing.SwingConstants;
+import javax.swing.JComboBox;
 
 @SuppressWarnings("serial")
 public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWizard {
@@ -65,8 +74,16 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
     private JLabel lblLimitRota;
     private JLabel lblDynamicSafeZ;
     private JCheckBox chckbxDynamicsafez;
+    private JComboBox axisX;
+    private JComboBox axisY;
+    private JComboBox axisZ;
+    private JLabel lblRotation;
+    private JTextField locationRotation;
+    private JComboBox axisRotation;
+    private JLabel lblAxis;
+    private JLabel lblOffset;
 
-    public ReferenceNozzleConfigurationWizard(ReferenceNozzle nozzle) {
+    public ReferenceNozzleConfigurationWizard(AbstractMachine machine, ReferenceNozzle nozzle) {
         this.nozzle = nozzle;
         
         panelProperties = new JPanel();
@@ -89,38 +106,76 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         nameTf.setColumns(20);
 
         panelOffsets = new JPanel();
-        panelOffsets.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Offsets", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-        panelOffsets.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelOffsets.setBorder(new TitledBorder(null,
+                "Coordinate System", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        panelOffsets.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblX = new JLabel("X");
-        panelOffsets.add(lblX, "2, 2");
+        panelOffsets.add(lblX, "4, 2");
 
         JLabel lblY = new JLabel("Y");
-        panelOffsets.add(lblY, "4, 2");
+        panelOffsets.add(lblY, "6, 2");
 
         JLabel lblZ = new JLabel("Z");
-        panelOffsets.add(lblZ, "6, 2");
+        panelOffsets.add(lblZ, "8, 2");
+
+        lblRotation = new JLabel("Rotation");
+        panelOffsets.add(lblRotation, "10, 2");
+
+        lblAxis = new JLabel("Axis");
+        panelOffsets.add(lblAxis, "2, 4, right, default");
+
+        axisX = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.X, true));
+        panelOffsets.add(axisX, "4, 4, fill, default");
+
+        axisY = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.Y, true));
+        panelOffsets.add(axisY, "6, 4, fill, default");
+
+        axisZ = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.Z, true));
+        panelOffsets.add(axisZ, "8, 4, fill, default");
+
+        axisRotation = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.Rotation, true));
+        panelOffsets.add(axisRotation, "10, 4, fill, default");
+
+        lblOffset = new JLabel("Offset");
+        panelOffsets.add(lblOffset, "2, 6, right, default");
 
         locationX = new JTextField();
-        panelOffsets.add(locationX, "2, 4");
+        panelOffsets.add(locationX, "4, 6");
         locationX.setColumns(10);
 
         locationY = new JTextField();
-        panelOffsets.add(locationY, "4, 4");
+        panelOffsets.add(locationY, "6, 6");
         locationY.setColumns(10);
 
         locationZ = new JTextField();
-        panelOffsets.add(locationZ, "6, 4");
+        panelOffsets.add(locationZ, "8, 6");
         locationZ.setColumns(10);
 
         contentPanel.add(panelOffsets);
+        
+        locationRotation = new JTextField();
+        panelOffsets.add(locationRotation, "10, 6, fill, default");
+        locationRotation.setColumns(10);
 
         JPanel panelSafeZ = new JPanel();
         panelSafeZ.setBorder(new TitledBorder(null, "Safe Z", TitledBorder.LEADING,
@@ -154,7 +209,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
 
 
         panelChanger = new JPanel();
-        panelChanger.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+        panelChanger.setBorder(new TitledBorder(null,
                 "Settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelChanger);
         panelChanger
@@ -207,15 +262,25 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
 
     @Override
     public void createBindings() {
+        AbstractMachine machine = (AbstractMachine) Configuration.get().getMachine();
         LengthConverter lengthConverter = new LengthConverter();
         IntegerConverter intConverter = new IntegerConverter();
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+        NamedConverter<Axis> axisConverter = new NamedConverter<>(machine.getAxes()); 
 
         addWrappedBinding(nozzle, "name", nameTf, "text");
+
+        addWrappedBinding(nozzle, "axisX", axisX, "selectedItem", axisConverter);
+        addWrappedBinding(nozzle, "axisY", axisY, "selectedItem", axisConverter);
+        addWrappedBinding(nozzle, "axisZ", axisZ, "selectedItem", axisConverter);
+        addWrappedBinding(nozzle, "axisRotation", axisRotation, "selectedItem", axisConverter);
+
         MutableLocationProxy headOffsets = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, nozzle, "headOffsets", headOffsets, "location");
         addWrappedBinding(headOffsets, "lengthX", locationX, "text", lengthConverter);
         addWrappedBinding(headOffsets, "lengthY", locationY, "text", lengthConverter);
         addWrappedBinding(headOffsets, "lengthZ", locationZ, "text", lengthConverter);
+        addWrappedBinding(headOffsets, "rotation", locationRotation, "text", doubleConverter);
 
         addWrappedBinding(nozzle, "limitRotation", chckbxLimitRotationTo, "selected");
         addWrappedBinding(nozzle, "enableDynamicSafeZ", chckbxDynamicsafez, "selected");
@@ -229,6 +294,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationZ);
+        ComponentDecorators.decorateWithAutoSelect(locationRotation);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
     }
 }

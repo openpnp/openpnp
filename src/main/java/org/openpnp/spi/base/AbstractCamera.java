@@ -44,7 +44,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
-public abstract class AbstractCamera extends AbstractModelObject implements Camera {
+public abstract class AbstractCamera extends AbstractHeadMountable implements Camera {
     @Attribute
     protected String id;
 
@@ -247,10 +247,10 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     @Override
     public Location getLocation(HeadMountable tool) {
         if (tool != null) {
-            return getLocation().subtract(tool.getCameraToolCalibratedOffset(this));
+            return super.getLocation().subtract(tool.getCameraToolCalibratedOffset(this));
         }
 
-        return getLocation();
+        return super.getLocation();
     }
 
     @Override
@@ -879,17 +879,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     public Icon getPropertySheetHolderIcon() {
         return Icons.captureCamera;
     }
-    
-    @Override
-    public void moveTo(Location location) throws Exception {
-        moveTo(location, getHead().getMachine().getSpeed());
-    }
 
-    @Override
-    public void moveToSafeZ() throws Exception {
-        moveToSafeZ(getHead().getMachine().getSpeed());
-    }
-    
     @Override
     public String toString() {
         return getName();

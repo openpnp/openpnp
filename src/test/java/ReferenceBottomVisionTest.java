@@ -36,6 +36,7 @@ public class ReferenceBottomVisionTest {
 
         Configuration.initialize(workingDirectory);
         Configuration.get().load();
+        Configuration.get().save();
 
         Machine machine = Configuration.get().getMachine();
         Nozzle nozzle = machine.getDefaultHead().getDefaultNozzle();

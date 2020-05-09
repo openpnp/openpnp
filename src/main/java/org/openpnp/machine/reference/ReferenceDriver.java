@@ -22,13 +22,14 @@ package org.openpnp.machine.reference;
 import java.io.Closeable;
 
 import org.openpnp.model.Location;
+import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.WizardConfigurable;
 
 /**
  * Defines the interface for a simple driver that the ReferenceMachine can drive. All methods result
- * in machine operations and all methods should block until they are complete or throw an error.
+ * in machine operations and most methods should block until they are complete or throw an error.
  * 
  * This Driver interface is intended to model a machine with one or more Heads, and each Head having
  * one or more Nozzles and zero or more Cameras and Actuators.
@@ -40,15 +41,27 @@ import org.openpnp.spi.WizardConfigurable;
  */
 public interface ReferenceDriver extends Driver, WizardConfigurable, PropertySheetHolder, Closeable {
     /**
-     * Performing the hardware homing operation for the given Head. When this call completes the
-     * Head should be at it's 0,0,0,0 position.
+     * Performing the hardware homing operation for the given head with mappedAxes. When this call completes 
+     * the axes should be at the given location.  
      * 
      * @throws Exception
      */
-    public void home(ReferenceHead head) throws Exception;
+    public void home(ReferenceHead head, MappedAxes mappedAxes, Location location) throws Exception;
 
     /**
-     * Moves the specified HeadMountable to the given location at a speed defined by (maximum feed
+     * Resets the controller's current physical position to the given coordinates. This is used after visual homing
+     * to make the homing fiducial's X, Y coordinates to be at their nominal location. Other uses with other axes should 
+     * also be supported by the driver. 
+     *  
+     * @param head
+     * @param mappedAxes specifies the axes that should be reset
+     * @param location 
+     * @throws Exception
+     */
+    public void resetLocation(ReferenceHead head, MappedAxes mappedAxes, Location location) throws Exception;
+
+    /**
+     * Moves the specified MappedAxes to the given location at a speed defined by (maximum feed
      * rate * speed) where speed is greater than 0 and typically less than or equal to 1. A speed of
      * 0 means to move at the minimum possible speed.
      * 
@@ -59,16 +72,7 @@ public interface ReferenceDriver extends Driver, WizardConfigurable, PropertyShe
      * @param speed
      * @throws Exception
      */
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed) throws Exception;
-
-    /**
-     * Returns a clone of the HeadMountable's current location. It's important that the returned
-     * object is a clone, since the caller may modify the returned Location.
-     * 
-     * @param hm
-     * @return
-     */
-    public Location getLocation(ReferenceHeadMountable hm);
+    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed) throws Exception;
 
     /**
      * Actuates a machine defined object with a boolean state.
@@ -119,5 +123,8 @@ public interface ReferenceDriver extends Driver, WizardConfigurable, PropertyShe
      */
     public void setEnabled(boolean enabled) throws Exception;
 
-    public default void createDefaults() {};
+    public default void createDefaults() {}
+
+    @Deprecated
+    void migrateDriver(ReferenceMachine machine) throws Exception;
 }

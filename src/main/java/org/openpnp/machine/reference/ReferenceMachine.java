@@ -142,10 +142,7 @@ public class ReferenceMachine extends AbstractMachine {
                              // Also migrate the GcodeDriver specific sub-drivers.
                              if (driver != null) {
                                  addDriver(driver);
-                                 if (driver instanceof GcodeDriver) {
-                                     GcodeDriver gcodeDriver= (GcodeDriver)driver;
-                                     gcodeDriver.migrateSubDrivers(ReferenceMachine.this);
-                                 }
+                                 driver.migrateDriver(ReferenceMachine.this);
                                  driver = null;
                              }
                              // But if this is a brand new Machine, create a NullDriver.

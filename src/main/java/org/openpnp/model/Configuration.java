@@ -291,7 +291,9 @@ public class Configuration extends AbstractModelObject {
 
         loaded = true;
 
-        for (ConfigurationListener listener : listeners) {
+        // Tell all listeners the configuration is loaded. Use a snapshot of the list in order to tolerate new
+        // listener additions that may happen through object migration.
+        for (ConfigurationListener listener : new ArrayList<>(listeners)) {
             listener.configurationLoaded(this);
         }
 

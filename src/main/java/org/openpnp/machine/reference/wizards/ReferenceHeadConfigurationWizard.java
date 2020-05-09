@@ -53,6 +53,7 @@ import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import java.awt.Color;
 
 @SuppressWarnings("serial")
 public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizard {
@@ -69,54 +70,104 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         panel.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         contentPanel.add(panel);
-        panel.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(80dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblX = new JLabel("X");
         panel.add(lblX, "4, 2, center, default");
 
         JLabel lblY = new JLabel("Y");
         panel.add(lblY, "6, 2, center, default");
+        
+        JLabel lblHomingFiducial = new JLabel("Homing Fiducial");
+        panel.add(lblHomingFiducial, "2, 4, right, default");
+        
+        homingFiducialX = new JTextField();
+        panel.add(homingFiducialX, "4, 4, fill, default");
+        homingFiducialX.setColumns(10);
+        
+        homingFiducialY = new JTextField();
+        homingFiducialY.setText("");
+        panel.add(homingFiducialY, "6, 4, fill, default");
+        homingFiducialY.setColumns(10);
+        
+        JButton btnCaptureHome = new JButton(captureHomeCoordinatesAction);
+        btnCaptureHome.setHideActionText(true);
+        panel.add(btnCaptureHome, "8, 4");
+        
+        JButton btnPositionHome = new JButton(positionHomeCoordinatesAction);
+        btnPositionHome.setHideActionText(true);
+        panel.add(btnPositionHome, "10, 4");
+        
+        JLabel lblEnableVisualHoming = new JLabel("Enabled?");
+        panel.add(lblEnableVisualHoming, "2, 6, right, default");
+        
+        visualHomingEnabled = new JCheckBox("");
+        panel.add(visualHomingEnabled, "4, 6");
 
         JLabel lblParkLocation = new JLabel("Park Location");
-        panel.add(lblParkLocation, "2, 4, right, default");
+        panel.add(lblParkLocation, "2, 10, right, default");
 
         parkX = new JTextField();
-        panel.add(parkX, "4, 4, fill, default");
+        panel.add(parkX, "4, 10, fill, default");
         parkX.setColumns(5);
 
         parkY = new JTextField();
         parkY.setColumns(5);
-        panel.add(parkY, "6, 4, fill, default");
+        panel.add(parkY, "6, 10, fill, default");
 
         JButton btnNewButton = new JButton(captureParkCoordinatesAction);
         btnNewButton.setHideActionText(true);
-        panel.add(btnNewButton, "8, 4");
+        panel.add(btnNewButton, "8, 10");
 
         JButton btnNewButton_1 = new JButton(positionParkCoordinatesAction);
         btnNewButton_1.setHideActionText(true);
-        panel.add(btnNewButton_1, "10, 4");
+        panel.add(btnNewButton_1, "10, 10");
 
         JPanel panel_1 = new JPanel();
         panel_1.setBorder(new TitledBorder(null, "Soft Limits", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panel_1);
-        panel_1.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("center:default"),
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("center:default"),
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panel_1.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(80dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("center:default"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("center:default"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblNewLabel = new JLabel("X");
         panel_1.add(lblNewLabel, "4, 2");
@@ -129,11 +180,11 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
 
         minX = new JTextField();
         panel_1.add(minX, "4, 4, fill, default");
-        minX.setColumns(5);
+        minX.setColumns(10);
 
         minY = new JTextField();
         panel_1.add(minY, "6, 4, fill, default");
-        minY.setColumns(5);
+        minY.setColumns(10);
 
         JButton btncaptureMin = new JButton(captureMinCoordinatesAction);
         btncaptureMin.setHideActionText(true);
@@ -148,11 +199,11 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
 
         maxX = new JTextField();
         panel_1.add(maxX, "4, 6, fill, default");
-        maxX.setColumns(5);
+        maxX.setColumns(10);
 
         maxY = new JTextField();
         panel_1.add(maxY, "6, 6, fill, default");
-        maxY.setColumns(5);
+        maxY.setColumns(10);
 
         JButton btnNewButton_2 = new JButton(captureMaxCoordinatesAction);
         btnNewButton_2.setHideActionText(true);
@@ -161,18 +212,21 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         JButton btnNewButton_4 = new JButton(positionMaxCoordinatesAction);
         btnNewButton_4.setHideActionText(true);
         panel_1.add(btnNewButton_4, "10, 6");
-
-        softLimitsEnabled = new JCheckBox("Enabled?");
-        panel_1.add(softLimitsEnabled, "2, 8, 7, 1");
+                        
+                        JLabel lblEnabled = new JLabel("Enabled?");
+                        panel_1.add(lblEnabled, "2, 8, right, default");
+                
+                        softLimitsEnabled = new JCheckBox("");
+                        panel_1.add(softLimitsEnabled, "4, 8, left, default");
         
         JPanel panel_2 = new JPanel();
         panel_2.setBorder(new TitledBorder(null, "Z Probe", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel_2);
         panel_2.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("max(100dlu;default)"),
+                ColumnSpec.decode("max(80dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),},
+                ColumnSpec.decode("max(50dlu;default)"),},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
@@ -189,9 +243,9 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         contentPanel.add(panel_3);
         panel_3.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("max(100dlu;default)"),
+                ColumnSpec.decode("max(80dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),},
+                ColumnSpec.decode("max(50dlu;default)"),},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
@@ -208,6 +262,13 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
     @Override
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
+
+        MutableLocationProxy homingFiducialLocation = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, head, "homingFiducialLocation", homingFiducialLocation, "location");
+        addWrappedBinding(homingFiducialLocation, "lengthX", homingFiducialX, "text", lengthConverter);
+        addWrappedBinding(homingFiducialLocation, "lengthY", homingFiducialY, "text", lengthConverter);
+
+        addWrappedBinding(head, "visualHomingEnabled", visualHomingEnabled, "selected");
 
         MutableLocationProxy parkLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, head, "parkLocation", parkLocation, "location");
@@ -229,6 +290,8 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         addWrappedBinding(head, "zProbeActuatorName", comboBoxZProbeActuator, "selectedItem");
         addWrappedBinding(head, "pumpActuatorName", comboBoxPumpActuator, "selectedItem");
 
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(homingFiducialX);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(homingFiducialY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(parkX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(parkY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(minX);
@@ -252,6 +315,42 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                                          .getSystemUnits(),
                 x, y, z, rotation);
     }
+
+    private Action captureHomeCoordinatesAction =
+            new AbstractAction("Get Camera Coordinates", Icons.captureCamera) {
+                {
+                    putValue(Action.SHORT_DESCRIPTION,
+                            "Capture the location that the camera is centered on.");
+                }
+
+                @Override
+                public void actionPerformed(ActionEvent arg0) {
+                    UiUtils.messageBoxOnException(() -> {
+                        Location l = head.getDefaultCamera()
+                                         .getLocation();
+                        Helpers.copyLocationIntoTextFields(l, homingFiducialX, homingFiducialY, null, null);
+                    });
+                }
+            };
+
+
+    private Action positionHomeCoordinatesAction =
+            new AbstractAction("Position Camera", Icons.centerCamera) {
+                {
+                    putValue(Action.SHORT_DESCRIPTION,
+                            "Position the camera over the center of the location.");
+                }
+
+                @Override
+                public void actionPerformed(ActionEvent arg0) {
+                    UiUtils.submitUiMachineTask(() -> {
+                        Camera camera = head.getDefaultCamera();
+                        Location location = getParsedLocation(homingFiducialX, homingFiducialY);
+                        MovableUtils.moveToLocationAtSafeZ(camera, location);
+                    });
+                }
+            };
+
 
     private Action captureParkCoordinatesAction =
             new AbstractAction("Get Camera Coordinates", Icons.captureCamera) {
@@ -365,4 +464,9 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
     private JCheckBox softLimitsEnabled;
     private JComboBox comboBoxZProbeActuator;
     private JComboBox comboBoxPumpActuator;
+    private JTextField homingFiducialX;
+    private JTextField homingFiducialY;
+
+
+    private JCheckBox visualHomingEnabled;
 }

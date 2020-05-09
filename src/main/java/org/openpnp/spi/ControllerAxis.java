@@ -22,6 +22,8 @@
 package org.openpnp.spi;
 
 import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 
 /**
  * A ControllerAxis is an axis coordinate dimension as exposed by the machine's controller/driver.
@@ -48,4 +50,16 @@ public interface ControllerAxis extends LinearInputAxis {
     public Length getHomeCoordinate();
 
     public void setHomeCoordinate(Length homeCoordinate);
+
+    public LengthUnit getUnits();
+
+    public double getCoordinate();
+
+    public Length getLengthCoordinate();
+
+    public void setCoordinate(double coordinate);
+
+    public void setLengthCoordinate(Length coordinate);
+
+    public boolean locationCoordinateMatches(Location locationA, Location locationB);
 }

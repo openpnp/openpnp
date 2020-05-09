@@ -12,10 +12,17 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 
+/**
+ * @author Markus
+ *
+ */
 public abstract class AbstractAxis extends AbstractModelObject implements Axis {
 
     @Attribute
@@ -59,6 +66,73 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
         this.type = type;
     }
 
+    @Override
+    public double getLocationAxisCoordinate(Location location) {
+        switch (type) { 
+            case X:
+                return location.getX();
+            case Y:
+                return location.getY();
+            case Z:
+                return location.getZ();
+            case Rotation:
+                return location.getRotation();
+            default:
+                return 0.0;
+        }
+    }
+
+    /**
+     * @return the ControllerAxis that is the ultimate input axis of the TransformedAxis stack. 
+     */
+    public abstract ControllerAxis getControllerAxis();
+
+    public static ControllerAxis getControllerAxis(AbstractAxis axis) {
+        if (axis != null) {
+            return axis.getControllerAxis();
+        }
+        return null;
+    }
+
+    /**
+     * Computes the transformed coordinate for this Axis, starting from the given raw location.  
+     * A ControllerAxis will just return the unchanged coordinate. 
+     * A TransformedAxis will first call the input axes' transformation and then perform its own.
+     *        
+     * @param location
+     * @return the transformed axis coordinate in the LengthUnit of the given Location.  
+     */
+    public abstract double toTransformed(Location location); 
+
+    /**
+     * Computes the raw coordinate for this Axis, starting from the given transformed location.  
+     * A ControllerAxis will just return the unchanged coordinate. 
+     * A TransformedAxis will first perform its own transformation and then call the input axis'.
+     *        
+     * @param location
+     * @return the raw axis coordinate in the LengthUnit of the given Location.  
+     */
+    public abstract double toRaw(Location location, double [][] invertedAffineTransform); 
+
+    /**
+     * @param lengthUnit
+     * @return the transformation 5D vector (factors, offset in given LengthUnit) for this Axis. 
+     * Returns the unit vector if not a linear transformation.  
+     */
+    public double[] getLinearTransform(LengthUnit lengthUnit) {
+        switch (type) {
+            case X: 
+                return new double [] {1, 0, 0, 0, 0};
+            case Y: 
+                return new double [] {0, 1, 0, 0, 0};
+            case Z: 
+                return new double [] {0, 0, 1, 0, 0};
+            case Rotation: 
+                return new double [] {0, 0, 0, 1, 0};
+            default:
+                return new double [] {0, 0, 0, 0, 0};
+        }
+    }
 
     @Override
     public PropertySheet[] getPropertySheets() {

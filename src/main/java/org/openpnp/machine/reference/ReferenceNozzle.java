@@ -334,26 +334,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     @Override
-    public void moveTo(Location location, double speed) throws Exception {
-        // Shortcut Double.NaN. Sending Double.NaN in a Location is an old API that should no
-        // longer be used. It will be removed eventually:
-        // https://github.com/openpnp/openpnp/issues/255
-        // In the mean time, since Double.NaN would cause a problem for calibration, we shortcut
-        // it here by replacing any NaN values with the current value from the driver.
-        Location currentLocation = getLocation().convertToUnits(location.getUnits());
-        if (Double.isNaN(location.getX())) {
-            location = location.derive(currentLocation.getX(), null, null, null);
-        }
-        if (Double.isNaN(location.getY())) {
-            location = location.derive(null, currentLocation.getY(), null, null);
-        }
-        if (Double.isNaN(location.getZ())) {
-            location = location.derive(null, null, currentLocation.getZ(), null);
-        }
-        if (Double.isNaN(location.getRotation())) {
-            location = location.derive(null, null, null, currentLocation.getRotation());
-        }
-
+    public Location toHeadLocation(Location location, Location currentLocation) {
+        location = super.toHeadLocation(location, currentLocation);
+        // Nozzle rotation handling
         if (limitRotation) {
             //Set the rotation to be within the +/-180 degree range
             location = location.derive(null, null, null,
@@ -363,23 +346,34 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             location = location.derive(null, null, null, currentLocation.getRotation() +
                     Utils2D.normalizeAngle180(location.getRotation() - currentLocation.getRotation()));
         }
-
+        // Apply runout compensation.
         ReferenceNozzleTip calibrationNozzleTip = getCalibrationNozzleTip();
         if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated(this)) {
             Location correctionOffset = calibrationNozzleTip.getCalibration().getCalibratedOffset(this, location.getRotation());
             location = location.subtract(correctionOffset);
-            Logger.debug("{}.moveTo({}, {}) (runout compensation: {})", getName(), location, speed, correctionOffset);
+            Logger.debug("{}.transformToHeadLocation({}, ...) runout compensation: {}", getName(), location, correctionOffset);
         } else {
-            Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
+            Logger.debug("{}.transformToHeadLocation({}, ...)", getName(), location);
         }
-        ((ReferenceHead) getHead()).moveTo(this, location, getHead().getMaxPartSpeed() * speed);
-        getMachine().fireMachineHeadActivity(head);
+        return location;
     }
 
     @Override
-    public void moveToSafeZ(double speed) throws Exception {
-        Logger.debug("{}.moveToSafeZ({})", getName(), speed);
-        Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
+    public Location fromHeadLocation(Location location, Location currentLocation) {
+        location = super.fromHeadLocation(location, currentLocation);
+        // Unapply runout compensation.
+        ReferenceNozzleTip calibrationNozzleTip = getCalibrationNozzleTip();
+        if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated(this)) {
+            Location offset =
+                    calibrationNozzleTip.getCalibration().getCalibratedOffset(this, location.getRotation());
+            location = location.add(offset);
+        }
+        return location;
+    }
+
+    @Override 
+    public Length getEffectiveSafeZ() {
+        Length safeZ = super.getEffectiveSafeZ();
         if (enableDynamicSafeZ) { 
             // if a part is loaded, decrease (higher) safeZ
             if (part != null) {
@@ -390,12 +384,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 safeZ.setValue(0);
             }
         }
-        Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN,
-                safeZ.getValue(), Double.NaN);
-        getDriver().moveTo(this, l, getHead().getMaxPartSpeed() * speed);
-        getMachine().fireMachineHeadActivity(head);
+        return safeZ;
     }
-    
+
     @Override
     public void home() throws Exception {
         Logger.debug("{}.home()", getName());
@@ -579,18 +570,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
     }
 
-    @Override
-    public Location getLocation() {
-        Location location = getDriver().getLocation(this);
-        ReferenceNozzleTip calibrationNozzleTip = getCalibrationNozzleTip();
-        if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated(this)) {
-            Location offset =
-                    calibrationNozzleTip.getCalibration().getCalibratedOffset(this, location.getRotation());
-            location = location.add(offset);
-        }
-        return location;
-    }
-
     public boolean isChangerEnabled() {
         return changerEnabled;
     }
@@ -601,7 +580,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public Wizard getConfigurationWizard() {
-        return new ReferenceNozzleConfigurationWizard(this);
+        return new ReferenceNozzleConfigurationWizard(getMachine(), this);
     }
 
     @Override
@@ -657,6 +636,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         return getName() + " " + getId();
     }
 
+    @Override
     public Length getSafeZ() {
         return safeZ;
     }
@@ -667,21 +647,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         firePropertyChange("safeZ", oldValue, safeZ);
     }
 
-    @Override
-    public void moveTo(Location location) throws Exception {
-        moveTo(location, getHead().getMachine().getSpeed());
-    }
-
-    @Override
-    public void moveToSafeZ() throws Exception {
-        moveToSafeZ(getHead().getMachine().getSpeed());
-    }
-
-    ReferenceDriver getDriver() {
-        return getMachine().getDriver();
-    }
-
-    ReferenceMachine getMachine() {
+    protected ReferenceMachine getMachine() {
         return (ReferenceMachine) Configuration.get().getMachine();
     }
 

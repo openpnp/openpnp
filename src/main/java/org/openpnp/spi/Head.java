@@ -119,6 +119,19 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
     
     public Location getParkLocation();
 
+    public HeadMountable getHomingHeadMountable() throws Exception;
+
+    /**
+     * All HeadMountable motion must go through the head to map to the right
+     * drivers.  
+     * 
+     * @param hm
+     * @param location
+     * @param speed
+     * @throws Exception
+     */
+    public void moveTo(HeadMountable hm, Location location, double speed) throws Exception;
+
     /**
      * Returns true if any nozzle on the Head is currently carrying a part.
      * @return

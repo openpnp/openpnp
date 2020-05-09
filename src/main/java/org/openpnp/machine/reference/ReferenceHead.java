@@ -31,18 +31,64 @@ import org.openpnp.machine.reference.psh.NozzlesPropertySheetHolder;
 import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
+import org.openpnp.model.MappedAxes;
+import org.openpnp.model.Part;
+import org.openpnp.spi.Driver;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractHead;
+import org.openpnp.spi.base.AbstractHeadMountable;
 import org.pmw.tinylog.Logger;
 
 public class ReferenceHead extends AbstractHead {
+
     @Override
     public void home() throws Exception {
         Logger.debug("{}.home()", getName());
-        getDriver().home(this);
+        HeadMountable hm = getHomingHeadMountable();
+        MappedAxes mappedAxes = hm.getMappedAxes();
+        
+        for (Driver driver : mappedAxes.getMappedDrivers()) {
+            ((ReferenceDriver) driver).home(this, mappedAxes, mappedAxes.getHomeLocation());
+        }
+        if (isVisualHomingEnabled()) {
+            /*
+             * The head camera should now be (if everything has homed correctly) directly
+             * above the homing pin in the machine bed, use the head camera scan for this and make sure
+             * this is exactly central - otherwise we move the camera until it is, and then reset all
+             * the axis back to the fiducial location as this is calibrated home.
+             */
+            Part homePart = Configuration.get().getPart("FIDUCIAL-HOME");
+            if (homePart != null) {
+                Location homingLocation = Configuration.get().getMachine().getFiducialLocator()
+                        .getHomeFiducialLocation(getHomingFiducialLocation(), homePart);
+
+                if (homingLocation == null) {
+                    // Homing failed
+                    throw new Exception("Visual homing failed");
+                }
+                
+                // Convert to raw coordinates;  
+                homingLocation = hm.toRaw(homingLocation);
+                
+                // Reset the homing fiducial location as the new current location.
+                for (Driver driver : mappedAxes.getMappedDrivers()) {
+                    ((ReferenceDriver) driver).resetLocation(this, mappedAxes, getHomingFiducialLocation());
+                }
+            }
+        }
+
         super.home();
         getMachine().fireMachineHeadActivity(this);
+    }
+
+    @Override
+    public ReferenceHeadMountable getHomingHeadMountable() throws Exception {
+        ReferenceHeadMountable hm = (ReferenceHeadMountable) getDefaultCamera();
+        if (hm == null) {
+            throw new Exception("Default Camera missing, cannot determine homing axes.");
+        }
+        return hm;
     }
 
     @Override
@@ -88,8 +134,8 @@ public class ReferenceHead extends AbstractHead {
              * to know where the Camera will land, not the HeadMountable.
              */
             if (hm instanceof ReferenceHeadMountable) {
-                Location cameraLocation = location.subtract(((ReferenceHeadMountable)hm).getHeadOffsets());
-                cameraLocation = cameraLocation.add(((ReferenceCamera) getDefaultCamera()).getHeadOffsets());
+                Location cameraLocation = ((AbstractHeadMountable) hm).toHeadLocation(location);
+                cameraLocation = ((ReferenceCamera) getDefaultCamera()).fromHeadLocation(cameraLocation);
                 Location minLocation = this.minLocation.convertToUnits(cameraLocation.getUnits());
                 Location maxLocation = this.maxLocation.convertToUnits(cameraLocation.getUnits());
                 if (cameraLocation.getX() < minLocation.getX() || cameraLocation.getX() > maxLocation.getX() ||
@@ -101,13 +147,20 @@ public class ReferenceHead extends AbstractHead {
         return true;
     }
 
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed) throws Exception {
-        if (! isInsideSoftLimits(hm, location)) {
-            throw new Exception(String.format("Can't move %s to %s, outside of soft limits on head %s.",
-                    hm.getName(), location, getName()));
+    @Override
+    public void moveTo(HeadMountable hm, Location location, double speed) throws Exception {
+        MappedAxes mappedAxes = hm.getMappedAxes();
+        if (!mappedAxes.isEmpty()) {
+            if (! isInsideSoftLimits(hm, location)) {
+                throw new Exception(String.format("Can't move %s to %s, outside of soft limits on head %s.",
+                        hm.getName(), location, getName()));
+            }
+            location = hm.toRaw(location);
+            for (Driver driver : mappedAxes.getMappedDrivers()) {
+                ((ReferenceDriver) driver).moveTo((ReferenceHeadMountable) hm, mappedAxes, location, speed);
+            }
+            getMachine().fireMachineHeadActivity(this);
         }
-        getDriver().moveTo(hm, location, speed);
-        getMachine().fireMachineHeadActivity(this);
     }
 
     @Override
