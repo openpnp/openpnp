@@ -13,3 +13,8 @@ After installing java 8, run the .deb package in package manager, press install 
 
 On some operating systems, there will be no start menu shortcut, if so navigate to `opt -> openpnp` and you should find `openpnp.sh`
 
+To add a launcher shortcut (in Ubuntu) run:
+
+```
+sudo cp OpenPnP.desktop  /usr/share/applications/
+```
