@@ -4,7 +4,7 @@ In order for the linux install to work, you need to first install java 8. In a t
 `sudo apt-get install oracle-java8-installer`  
 `sudo apt-get install oracle-java8-set-default`  
 
-Note, if the packages above are disabled, try:
+Note, if the packages cannot be found, try:
 ```
 sudo apt-get install default-jre
 ```
