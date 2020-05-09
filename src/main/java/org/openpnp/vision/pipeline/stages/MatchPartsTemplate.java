@@ -47,7 +47,11 @@ import org.simpleframework.xml.Attribute;
  * and returns a list of matches.
  */
 @Stage(category = "Image Processing",
+<<<<<<< HEAD
         description = "OpenCV based image template matching with local maxima detection improvements. On match, returns the true orientation of the input models.")
+=======
+        description = "OpenCV based image template matching with local maxima detection improvements. On match, returns the true orientation of the input model.")
+>>>>>>> Added MatchPartsTemplate Pipeline stage (goes over all rotated
 
 public class MatchPartsTemplate extends CvStage {
 
@@ -153,6 +157,7 @@ public class MatchPartsTemplate extends CvStage {
             if (res != null) {
                 ((List<RotatedRect>) result.model).add(res);
             }
+<<<<<<< HEAD
         } else if (model instanceof List<?> ) {
             for (Object rect: ((List<?>) model)) {
                 if (rect instanceof RotatedRect) {
@@ -160,6 +165,14 @@ public class MatchPartsTemplate extends CvStage {
                     if (res != null) {
                         ((List<RotatedRect>) result.model).add(res);
                     }
+=======
+        }
+        else if (model instanceof List<?> && ((List<?>) model).get(0) instanceof RotatedRect) {
+            for (RotatedRect rect: ((List<RotatedRect>) model)) {
+                RotatedRect res = handleSingleRectangle(originalImage, template, rect);
+                if (res != null) {
+                    ((List<RotatedRect>) result.model).add(res);
+>>>>>>> Added MatchPartsTemplate Pipeline stage (goes over all rotated
                 }
             }
         }
@@ -180,6 +193,7 @@ public class MatchPartsTemplate extends CvStage {
     private RotatedRect handleSingleRectangle(Mat originalImage, Result template,
             RotatedRect rrect) {
         Mat timage = template.image.clone();
+<<<<<<< HEAD
         
         if (log) {
             Logger.info("part found = " + rrect);
@@ -211,6 +225,19 @@ public class MatchPartsTemplate extends CvStage {
             rrect.size.height = tmp;
         }
 
+=======
+
+        if (log) {
+            Logger.info("part found = " + rrect);
+        }
+        // put the model at a known orientation, upright, or portrait
+//        if (rrect.size.width > rrect.size.height) {
+//            rrect.angle += 90.0;
+//            double tmp = rrect.size.width;
+//            rrect.size.width = rrect.size.height;
+//            rrect.size.height = tmp;
+//        }
+>>>>>>> Added MatchPartsTemplate Pipeline stage (goes over all rotated
         // store original rect for later use
         RotatedRect orect = rrect.clone();
 
@@ -231,7 +258,20 @@ public class MatchPartsTemplate extends CvStage {
         if (log) {
             Logger.info("part angle = " + rrect.angle);
         }
+<<<<<<< HEAD
 
+=======
+        // we need a RotatedRect model for the template
+        RotatedRect trect = null;
+        if (template.model == null) {
+            // no model in template so, make one up
+            trect = new RotatedRect(new org.opencv.core.Point(((int) timage.size().width) / 2,
+                    ((int) timage.size().height) / 2), timage.size(), 0.0);
+        }
+        else {
+            trect = ((RotatedRect) template.model).clone();
+        }
+>>>>>>> Added MatchPartsTemplate Pipeline stage (goes over all rotated
         // first rotation
         // rotate the template to be the same as rrect
         timage = rotateRect(timage, trect, -rrect.angle);
@@ -283,14 +323,23 @@ public class MatchPartsTemplate extends CvStage {
         }
         // correct original model's angle to the orientation detected
         orect.angle = rrect.angle + (winrot - 1) * angleAdv;
+<<<<<<< HEAD
                 
+=======
+
+>>>>>>> Added MatchPartsTemplate Pipeline stage (goes over all rotated
         if (winrot != 0) {
 
             orect.angle = orect.angle % 360.0;
             if (log) {
                 Logger.info("winning rotation = " + winrot);
             }
+<<<<<<< HEAD
         } else {
+=======
+        }
+        else {
+>>>>>>> Added MatchPartsTemplate Pipeline stage (goes over all rotated
             // No match was found. Could deliver the original model unchanged,
             // but that would not be expected for polarized parts, since it would be taken as having
             // the correct orientation. So, return null, instead.

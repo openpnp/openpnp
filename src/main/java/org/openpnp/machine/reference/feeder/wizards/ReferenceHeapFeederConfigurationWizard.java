@@ -479,7 +479,7 @@ public class ReferenceHeapFeederConfigurationWizard
         bind(UpdateStrategy.READ_WRITE, dropBoxWrapper, "value.centerBottomLocation", dropBoxLocation, "location");
         
         
-        partCb.addActionListener(e -> {
+        dropBoxCb.addActionListener(e -> {
             notifyChange();
         });
     }
