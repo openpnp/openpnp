@@ -569,6 +569,8 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
 
     @Root
     public static class DropBox extends AbstractModelObject implements Identifiable, Named {
+        // some settings that I might expose later
+        final static int dropHeight = 15;   // too high and they might jump out of the DropBox
 
         @Attribute(name = "id")
         final private String id;
@@ -648,7 +650,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
          * @throws Exception something went wrong.
          */
         public void dropInto(Nozzle nozzle) throws Exception {
-            dropPart(nozzle, centerBottomLocation.derive(null, null, Double.NaN, null));
+            dropPart(nozzle, centerBottomLocation.add(new Location(LengthUnit.Millimeters, 0d, 0d, dropHeight, 0d)));
         }
 
         /**
@@ -665,7 +667,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             } else {
                 // pick part, move up, drop ist
                 pickPart(nozzle, partLocation, lastHeap.getPart());
-                dropPart(nozzle, centerBottomLocation.derive(Double.NaN, Double.NaN, 0.0, Double.NaN)); // max height => good chance for a flip
+                dropInto(nozzle);
             }
 
             return false;
