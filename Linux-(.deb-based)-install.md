@@ -16,5 +16,5 @@ On some operating systems, there will be no start menu shortcut, if so navigate 
 To add a launcher shortcut (in Ubuntu) run:
 
 ```
-sudo cp OpenPnP.desktop  /usr/share/applications/
+sudo cp /opt/openpnp/OpenPnP.desktop  /usr/share/applications/
 ```
