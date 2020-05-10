@@ -143,6 +143,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(ReadModelProperty.class);
         registerStageClass(ReadPartTemplateImage.class);
         registerStageClass(Rotate.class);
+        registerStageClass(SelectSingleRect.class);
         registerStageClass(SetColor.class);
         registerStageClass(ScriptRun.class);
         registerStageClass(SimpleBlobDetector.class);
