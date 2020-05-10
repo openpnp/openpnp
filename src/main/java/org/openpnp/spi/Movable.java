@@ -6,12 +6,27 @@ import org.openpnp.model.Location;
 public interface Movable extends Locatable {
     /**
      * Contains all possible options for the moveTo command.
-     * RawMove: disable all internal corrections, just tell the driver to move to that position
      * SpeedOverPrecision: disable backslash compensation or anything else, that causes additional moves
      */
-    public enum MoveToOption { RawMove, SpeedOverPrecision }
+    public enum MoveToOption { SpeedOverPrecision }
 
-    
+    /**
+     * Contains all possible options for getting approximative locations.
+     * KeepX, KeepY, KeepZ, KeepRotation: keep these raw coordinates the same. 
+     * SuppressCompensation: calculate a location that will result in no extra moves for compensation.
+     */
+    public enum LocationOption { KeepX, KeepY, KeepZ, KeepRotation, SuppressCompensation }
+
+    /**
+     * Get an approximative Location in order to avoid extra compensation moves. 
+     * 
+     * @param currentLocation The current location, usually obtained using Headmountable.getLocation()
+     * @param desiredLocation The desired location to approximate. 
+     * @param options Options for the approximation.
+     * @return
+     */
+    Location getApproximativeLocation(Location currentLocation, Location desiredLocation, LocationOption... options);
+
     /**
      * Move the object to the Location at the feedRate.
      * 

@@ -427,7 +427,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         for (MoveToOption currentOption: options) {
             switch (currentOption) {
                 case SpeedOverPrecision:        // for this move backslash is zero
-                case RawMove:                   // for this move all corrections are zero
                     enableBacklash = false;
                     break;
             }

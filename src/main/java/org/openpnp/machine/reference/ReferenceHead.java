@@ -136,7 +136,7 @@ public class ReferenceHead extends AbstractHead {
              */
             if (hm instanceof ReferenceHeadMountable) {
                 Location cameraLocation = ((AbstractHeadMountable) hm).toHeadLocation(location);
-                cameraLocation = ((ReferenceCamera) getDefaultCamera()).fromHeadLocation(cameraLocation);
+                cameraLocation = ((ReferenceCamera) getDefaultCamera()).toHeadMountableLocation(cameraLocation);
                 Location minLocation = this.minLocation.convertToUnits(cameraLocation.getUnits());
                 Location maxLocation = this.maxLocation.convertToUnits(cameraLocation.getUnits());
                 if (cameraLocation.getX() < minLocation.getX() || cameraLocation.getX() > maxLocation.getX() ||

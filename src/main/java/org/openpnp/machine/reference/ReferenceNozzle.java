@@ -30,6 +30,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.SimpleGraph;
@@ -334,7 +335,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     @Override
-    public Location toHeadLocation(Location location, Location currentLocation) {
+    public Location toHeadLocation(Location location, Location currentLocation, LocationOption... options) {
         location = super.toHeadLocation(location, currentLocation);
         // Nozzle rotation handling
         if (limitRotation) {
@@ -348,6 +349,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
         // Apply runout compensation.
         ReferenceNozzleTip calibrationNozzleTip = getCalibrationNozzleTip();
+        // check if totally raw move, in that case disable nozzle calibration
+        for (LocationOption option: options) {
+            if (option == LocationOption.SuppressCompensation) {
+                calibrationNozzleTip = null;
+            }
+        }
         if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated(this)) {
             Location correctionOffset = calibrationNozzleTip.getCalibration().getCalibratedOffset(this, location.getRotation());
             location = location.subtract(correctionOffset);
@@ -359,10 +366,16 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     @Override
-    public Location fromHeadLocation(Location location, Location currentLocation) {
-        location = super.fromHeadLocation(location, currentLocation);
+    public Location toHeadMountableLocation(Location location, Location currentLocation, LocationOption... options) {
+        location = super.toHeadMountableLocation(location, currentLocation);
         // Unapply runout compensation.
         ReferenceNozzleTip calibrationNozzleTip = getCalibrationNozzleTip();
+        // Check SuppressCompensation, in that case disable nozzle calibration.
+        for (LocationOption option: options) {
+            if (option == LocationOption.SuppressCompensation) {
+                calibrationNozzleTip = null;
+            }
+        }
         if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated(this)) {
             Location offset =
                     calibrationNozzleTip.getCalibration().getCalibratedOffset(this, location.getRotation());

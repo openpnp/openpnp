@@ -8,6 +8,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.Movable.LocationOption;
 import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.util.Matrix;
 import org.pmw.tinylog.Logger;
@@ -151,7 +152,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
                 AbstractAxis.getControllerAxis(axisRotation));
     }
 
-    public Location toHeadLocation(Location location, Location currentLocation) {
+    public Location toHeadLocation(Location location, Location currentLocation, LocationOption... options) {
         // Shortcut Double.NaN. Sending Double.NaN in a Location is an old API that should no
         // longer be used. It will be removed eventually:
         // https://github.com/openpnp/openpnp/issues/255
@@ -166,11 +167,11 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         location = location.subtract(getHeadOffsets());
         return location;
     }
-    final public Location toHeadLocation(Location location) {
-        return toHeadLocation(location, getLocation());
+    final public Location toHeadLocation(Location location, LocationOption... options) {
+        return toHeadLocation(location, getLocation(), options);
     }
 
-    public Location fromHeadLocation(Location location, Location currentLocation) {
+    public Location toHeadMountableLocation(Location location, Location currentLocation, LocationOption... options) {
         if (currentLocation != null) {
             // Shortcut Double.NaN. Sending Double.NaN in a Location is an old API that should no
             // longer be used. It will be removed eventually:
@@ -187,22 +188,22 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         location = location.add(getHeadOffsets());
         return location;
     }
-    final public Location fromHeadLocation(Location location) {
-        return fromHeadLocation(location, null);
+    final public Location toHeadMountableLocation(Location location, LocationOption... options) {
+        return toHeadMountableLocation(location, null, options);
     }
 
     @Override
-    public Location toTransformed(Location location) {
+    public Location toTransformed(Location location, LocationOption... options) {
         // The forward transformation is easy, as it can be done axis by axis.
         double x = AbstractTransformedAxis.toTransformed(axisX, location);
         double y = AbstractTransformedAxis.toTransformed(axisY, location);
         double z = AbstractTransformedAxis.toTransformed(axisZ, location);
         double rotation = AbstractTransformedAxis.toTransformed(axisRotation, location);
-        return new Location (location.getUnits(), x, y, z, rotation);
+        return new Location(location.getUnits(), x, y, z, rotation);
     }
 
     @Override
-    public Location toRaw(Location location) {
+    public Location toRaw(Location location, LocationOption... options) {
         // The backward transformation is a bit more complicated, as it may have transformations 
         // based on multiple input axis. Currently we only allow linear transformations and only
         // at the last stage. Given this simplification we can solve the inverse by inverting the 
@@ -234,7 +235,43 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         MappedAxes mappedAxes = getMappedAxes();
         Location location = toTransformed(mappedAxes.getLocation(null));
         // From head to HeadMountable.
-        location = fromHeadLocation(location);
+        location = toHeadMountableLocation(location);
         return location;
+    }
+
+    @Override
+    public Location getApproximativeLocation(Location currentLocation, Location desiredLocation, LocationOption... options) {
+        // Convert the desired location to a raw location, applying the approximation options, 
+        // which means some extra motion for compensation effects is suppressed.
+        Location desiredHeadLocation = toHeadLocation(desiredLocation, options);
+        Location currentHeadLocation = toHeadLocation(currentLocation);
+        Location desiredRawLocation = toRaw(desiredHeadLocation, options);
+        Location currentRawLocation = toRaw(currentHeadLocation);
+        Location aproximativeRawLocation = desiredRawLocation;
+        // Evaluate the Keep options. 
+        for (LocationOption option: options) {
+            switch (option) {
+                case KeepX:
+                    desiredRawLocation = desiredRawLocation.derive(currentRawLocation, true, false, false, false);
+                    break;
+                case KeepY:
+                    desiredRawLocation = desiredRawLocation.derive(currentRawLocation, false, true, false, false);
+                    break;
+                case KeepZ:
+                    desiredRawLocation = desiredRawLocation.derive(currentRawLocation, false, false, true, false);
+                    break;
+                case KeepRotation:
+                    desiredRawLocation = desiredRawLocation.derive(currentRawLocation, false, false, false, true);
+                    break;
+                default:
+                    break;
+            }
+        }    
+        // Now convert it back NOT applying any options, i.e. when a moveTo() is later made, 
+        // effectively reversing the option-less transformation, the result will be the same.
+        // The approximation will in effect be applied. 
+        Location headApproximativeLocation = toTransformed(desiredRawLocation);
+        Location approximativeLocation = toHeadMountableLocation(headApproximativeLocation);
+        return approximativeLocation;
     }
 }
