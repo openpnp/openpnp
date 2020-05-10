@@ -158,6 +158,11 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
         @Override
         public void migrateDriver(ReferenceMachine machine) throws Exception {
         }
+
+        @Override
+        public boolean isSupportingPreMove() {
+            return false;
+        }
    }
 
     @Override
@@ -203,6 +208,7 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
     @Deprecated
     @Override
     public void migrateDriver(ReferenceMachine machine) throws Exception {
-        migrateNonMappedDriver(machine);
+        machine.addDriver(this);
+        createAxisMappingDefaults(machine);
     }
 }

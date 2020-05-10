@@ -1,7 +1,9 @@
 package org.openpnp.spi.base;
 
+import org.openpnp.ConfigurationListener;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.model.AbstractModelObject;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.MappedAxes;
@@ -24,6 +26,19 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     private String axisZId;
     @Attribute(required = false)
     private String axisRotationId;
+
+    public AbstractHeadMountable() {
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+
+            @Override
+            public void configurationLoaded(Configuration configuration) throws Exception {
+                axisX = (AbstractAxis) configuration.getMachine().getAxis(axisXId);
+                axisY = (AbstractAxis) configuration.getMachine().getAxis(axisYId);
+                axisZ = (AbstractAxis) configuration.getMachine().getAxis(axisZId);
+                axisRotation = (AbstractAxis) configuration.getMachine().getAxis(axisRotationId);
+            }
+        });
+    }
 
     @Override
     public AbstractAxis getAxisX() {

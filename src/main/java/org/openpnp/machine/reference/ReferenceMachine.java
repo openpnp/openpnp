@@ -33,11 +33,11 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.marek.MarekNozzle;
 import org.openpnp.machine.neoden4.NeoDen4Driver;
 import org.openpnp.machine.neoden4.Neoden4Camera;
-import org.openpnp.machine.reference.axis.ReferenceCamMasterAxis;
-import org.openpnp.machine.reference.axis.ReferenceCamSlaveAxis;
+import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
+import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceLinearTransformAxis;
-import org.openpnp.machine.reference.axis.ReferenceNegatedAxis;
+import org.openpnp.machine.reference.axis.ReferenceMappedAxis;
 import org.openpnp.machine.reference.axis.wizards.ReferenceLinearTransformAxisConfigurationWizard;
 import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.machine.reference.camera.OnvifIPCamera;
@@ -121,10 +121,11 @@ public class ReferenceMachine extends AbstractMachine {
         super.commit();
     }
 
-    @Deprecated
-    public ReferenceDriver getDriver() {
-        // TODO: all callers must do axis mapping.
-        // For now, just return the first Driver
+    public ReferenceDriver getDefaultDriver() {
+        // If this is a brand new Machine, create a NullDriver.
+        if (drivers.isEmpty()) {
+            drivers.add(new NullDriver());
+        }
         return (ReferenceDriver) drivers.get(0);
     }
 
@@ -138,16 +139,12 @@ public class ReferenceMachine extends AbstractMachine {
                              if (partAlignments.isEmpty()) {
                                  partAlignments.add(new ReferenceBottomVision());
                              }
-                             // Migrate the one-driver property to the list of drivers.
-                             // Also migrate the GcodeDriver specific sub-drivers.
+                             // Migrate the driver.
                              if (driver != null) {
-                                 addDriver(driver);
+                                 // Note, the migrated driver will add itself to the machine driver list and for GcodeDrivers
+                                 // it will recurse into the sub-drivers.
                                  driver.migrateDriver(ReferenceMachine.this);
                                  driver = null;
-                             }
-                             // But if this is a brand new Machine, create a NullDriver.
-                             if (drivers.isEmpty()) {
-                                 drivers.add(new NullDriver());
                              }
                          }
                      });
@@ -243,9 +240,9 @@ public class ReferenceMachine extends AbstractMachine {
     public List<Class<? extends Axis>> getCompatibleAxisClasses() {
         List<Class<? extends Axis>> l = new ArrayList<>();
         l.add(ReferenceControllerAxis.class);
-        l.add(ReferenceNegatedAxis.class);
-        l.add(ReferenceCamMasterAxis.class);
-        l.add(ReferenceCamSlaveAxis.class);
+        l.add(ReferenceMappedAxis.class);
+        l.add(ReferenceCamCounterClockwiseAxis.class);
+        l.add(ReferenceCamClockwiseAxis.class);
         l.add(ReferenceLinearTransformAxis.class);
         return l;
     }

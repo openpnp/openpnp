@@ -12,4 +12,6 @@ import org.openpnp.model.Named;
 public interface Driver extends Identifiable, Named, Closeable, WizardConfigurable, PropertySheetHolder {
 
     LengthUnit getUnits();
+
+    boolean isSupportingPreMove();
 }

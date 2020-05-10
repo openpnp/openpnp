@@ -1,7 +1,7 @@
 package org.openpnp.machine.reference.axis;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.axis.wizards.ReferenceCamMasterAxisConfigurationWizard;
+import org.openpnp.machine.reference.axis.wizards.ReferenceCamCounterClockwiseAxisConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -19,7 +19,7 @@ import org.simpleframework.xml.Element;
  * The two Z axes are defined as Master and Slave. 
  * Master gets the positive rotation of the axis motor as positive Z (up). Slave gets the negative. 
  */
-public class ReferenceCamMasterAxis extends AbstractSingleTransformedAxis {
+public class ReferenceCamCounterClockwiseAxis extends AbstractSingleTransformedAxis {
 
     @Element(required = false)
     private Length camRadius = new Length(24.0, LengthUnit.Millimeters);
@@ -30,13 +30,13 @@ public class ReferenceCamMasterAxis extends AbstractSingleTransformedAxis {
     @Element(required = false)
     private Length camWheelGap = new Length(2, LengthUnit.Millimeters);
 
-    public ReferenceCamMasterAxis() {
+    public ReferenceCamCounterClockwiseAxis() {
         super();
     }
 
     @Override
     public Wizard getConfigurationWizard() {
-        return new ReferenceCamMasterAxisConfigurationWizard((AbstractMachine)Configuration.get().getMachine(), this);
+        return new ReferenceCamCounterClockwiseAxisConfigurationWizard((AbstractMachine)Configuration.get().getMachine(), this);
     }
 
     @Override

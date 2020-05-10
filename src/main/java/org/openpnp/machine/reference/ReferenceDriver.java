@@ -123,7 +123,7 @@ public interface ReferenceDriver extends Driver, WizardConfigurable, PropertyShe
      */
     public void setEnabled(boolean enabled) throws Exception;
 
-    public default void createDefaults() {}
+    public default void createDefaults() throws Exception  {}
 
     @Deprecated
     void migrateDriver(ReferenceMachine machine) throws Exception;

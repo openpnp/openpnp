@@ -81,17 +81,25 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         comboBoxHm.addItem(new HeadMountableItem(null));
         for (Head head : Configuration.get().getMachine().getHeads()) {
             for (Nozzle hm : head.getNozzles()) {
-                comboBoxHm.addItem(new HeadMountableItem(hm));
+                if (!hm.getMappedAxes().isEmpty(driver)) {
+                    comboBoxHm.addItem(new HeadMountableItem(hm));
+                }
             }
             for (Camera hm : head.getCameras()) {
-                comboBoxHm.addItem(new HeadMountableItem(hm));
+                if (!hm.getMappedAxes().isEmpty(driver)) {
+                    comboBoxHm.addItem(new HeadMountableItem(hm));
+                }
             }
             for (Actuator hm : head.getActuators()) {
-                comboBoxHm.addItem(new HeadMountableItem(hm));
+                if (hm.getDriver() == driver || !hm.getMappedAxes().isEmpty(driver)) {
+                    comboBoxHm.addItem(new HeadMountableItem(hm));
+                }
             }
         }
         for (Actuator actuator : Configuration.get().getMachine().getActuators()) {
-            comboBoxHm.addItem(new HeadMountableItem(actuator));
+            if (actuator.getDriver() == driver) {
+                comboBoxHm.addItem(new HeadMountableItem(actuator));
+            }
         }
 
         comboBoxCommandType = new JComboBox<>();

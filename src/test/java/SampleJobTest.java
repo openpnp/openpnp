@@ -37,7 +37,7 @@ public class SampleJobTest {
 
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
 
-        NullDriver driver = (NullDriver) machine.getDriver();
+        NullDriver driver = (NullDriver) machine.getDefaultDriver();
         driver.setFeedRateMmPerMinute(0);
 
         Camera camera = machine.getDefaultHead().getDefaultCamera();

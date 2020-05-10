@@ -1,7 +1,7 @@
 package org.openpnp.machine.reference.axis;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.axis.wizards.ReferenceCamSlaveAxisConfigurationWizard;
+import org.openpnp.machine.reference.axis.wizards.ReferenceCamClockwiseAxisConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.base.AbstractMachine;
@@ -12,20 +12,20 @@ import org.openpnp.spi.base.AbstractSingleTransformedAxis;
  * defined as normal and negated. Normal gets the raw coordinate value and negated gets the same
  * value negated. So, as normal moves up, negated moves down.
  */
-public class ReferenceCamSlaveAxis extends AbstractSingleTransformedAxis {
+public class ReferenceCamClockwiseAxis extends AbstractSingleTransformedAxis {
 
-    public ReferenceCamSlaveAxis() {
+    public ReferenceCamClockwiseAxis() {
         super();
     }
 
     @Override
     public Wizard getConfigurationWizard() {
-        return new ReferenceCamSlaveAxisConfigurationWizard((AbstractMachine)Configuration.get().getMachine(), this);
+        return new ReferenceCamClockwiseAxisConfigurationWizard((AbstractMachine)Configuration.get().getMachine(), this);
     }
 
-    public ReferenceCamMasterAxis getMasterAxis() {
+    public ReferenceCamCounterClockwiseAxis getMasterAxis() {
         if (inputAxis != null) {
-            return (ReferenceCamMasterAxis)inputAxis;
+            return (ReferenceCamCounterClockwiseAxis)inputAxis;
         }
         return null;
     }

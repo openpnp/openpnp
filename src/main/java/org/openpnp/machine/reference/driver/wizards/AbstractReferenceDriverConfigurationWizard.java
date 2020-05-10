@@ -64,7 +64,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         
         driverName = new JTextField();
         panelController.add(driverName, "4, 2, fill, default");
-        driverName.setColumns(10);
+        driverName.setColumns(20);
 
         //Selector code
         JPanel panelComms = new JPanel();

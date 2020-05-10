@@ -40,7 +40,7 @@ import org.openpnp.gui.support.AxesComboBoxModel;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.gui.wizards.AbstractAxisConfigurationWizard;
-import org.openpnp.machine.reference.axis.ReferenceCamMasterAxis;
+import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Axis.Type;
@@ -55,7 +55,7 @@ import com.jgoodies.forms.layout.RowSpec;
 import javax.swing.JTextField;
 
 @SuppressWarnings("serial")
-public class ReferenceCamMasterAxisConfigurationWizard extends AbstractAxisConfigurationWizard {
+public class ReferenceCamCounterClockwiseAxisConfigurationWizard extends AbstractAxisConfigurationWizard {
 
     private JPanel panelTransformation;
     private JLabel lblInputAxis;
@@ -70,10 +70,10 @@ public class ReferenceCamMasterAxisConfigurationWizard extends AbstractAxisConfi
     private JLabel labelSpacer;
     private AxesComboBoxModel inputAxisModel;
 
-    public ReferenceCamMasterAxisConfigurationWizard(AbstractMachine machine, ReferenceCamMasterAxis axis) {
+    public ReferenceCamCounterClockwiseAxisConfigurationWizard(AbstractMachine machine, ReferenceCamCounterClockwiseAxis axis) {
         super(axis);
         panelTransformation = new JPanel();
-        panelTransformation.setBorder(new TitledBorder(null, "Cam Axis (Master)", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelTransformation.setBorder(new TitledBorder(null, "Cam Counter-Clockwise Axis", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelTransformation);
         panelTransformation.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,

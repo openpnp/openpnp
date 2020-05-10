@@ -167,11 +167,7 @@ public class ReferenceHead extends AbstractHead {
     public String toString() {
         return getName();
     }
-    
-    ReferenceDriver getDriver() {
-        return getMachine().getDriver();
-    }
-    
+
     public ReferenceMachine getMachine() {
         return (ReferenceMachine) Configuration.get().getMachine();
     }

@@ -915,6 +915,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     @Deprecated
     @Override
     public void migrateDriver(ReferenceMachine machine) throws Exception {
-        migrateNonMappedDriver(machine); 
+        machine.addDriver(this);
+        createAxisMappingDefaults(machine); 
     }
 }

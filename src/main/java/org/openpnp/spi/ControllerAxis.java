@@ -38,11 +38,11 @@ public interface ControllerAxis extends LinearInputAxis {
     public void setDriver(Driver driver);
 
     /**
-     * @return the designator of the ControllerAxis as recognized by the machine controller.
+     * @return the letter (X, Y, Z, etc.) of the ControllerAxis as recognized by the machine controller.
      */
-    public String getDesignator();
+    public String getLetter();
 
-    public void setDesignator(String designator);
+    public void setLetter(String designator);
 
     /**
      * @return the coordinate after doing the machine controller's homing.  
@@ -61,5 +61,8 @@ public interface ControllerAxis extends LinearInputAxis {
 
     public void setLengthCoordinate(Length coordinate);
 
+    double roundedToResolution(double coordinate);
+
     public boolean locationCoordinateMatches(Location locationA, Location locationB);
+
 }

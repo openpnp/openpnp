@@ -43,7 +43,7 @@ public class ReferenceBottomVisionTest {
         SimulatedUpCamera camera = (SimulatedUpCamera) VisionUtils.getBottomVisionCamera();
         Part part = Configuration.get().getPart("R0805-1K"); 
         ReferenceBottomVision bottomVision = (ReferenceBottomVision) machine.getPartAlignments().get(0);
-        NullDriver driver = (NullDriver) ((ReferenceMachine) machine).getDriver();
+        NullDriver driver = (NullDriver) ((ReferenceMachine) machine).getDefaultDriver();
         driver.setFeedRateMmPerMinute(0);
         
         camera.setErrorOffsets(error);

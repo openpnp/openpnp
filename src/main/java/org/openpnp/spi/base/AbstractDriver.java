@@ -51,10 +51,14 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
         firePropertyChange("name", oldValue, name);
     }
 
-    @Deprecated
-    protected void migrateNonMappedDriver(ReferenceMachine machine) throws Exception {
+    @Override
+    public boolean isSupportingPreMove() {
+        return false;
+    }
+
+    protected void createAxisMappingDefaults(ReferenceMachine machine) throws Exception {
         if (machine.getAxes().size() == 0) {
-            // Create and map the standard axes (this is only done for non-GcodeDriver) 
+            // Create and map the standard axes to the HeadMountables. 
             ReferenceControllerAxis axisX = migrateAxis(machine, Axis.Type.X, "");
             ReferenceControllerAxis axisY = migrateAxis(machine, Axis.Type.Y, "");
             for (Camera hm : machine.getDefaultHead().getCameras()) {
@@ -62,8 +66,8 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
                 ((AbstractHeadMountable)hm).setAxisY(axisY);
             }
             for (Nozzle hm : machine.getDefaultHead().getNozzles()) {
-                // Note, we create dedicated axes, even if some drivers/machines may have shared axes physically.
-                // We just assume those are abstracted from us. 
+                // Note, we create dedicated axes per Nozzle, assuming this is a test driver that does not
+                // care about shared/dedicated axes or a single nozzle test GcodeDriver.  
                 ReferenceControllerAxis axisZ = migrateAxis(machine, Axis.Type.Z, hm.getName());
                 ReferenceControllerAxis axisRotation = migrateAxis(machine, Axis.Type.Rotation, hm.getName());
                 ((AbstractHeadMountable)hm).setAxisX(axisX);
@@ -71,7 +75,7 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
                 ((AbstractHeadMountable)hm).setAxisZ(axisZ);
                 ((AbstractHeadMountable)hm).setAxisRotation(axisRotation);
             }
-            // No movable actuators mapped for these drivers.
+            // No movable actuators mapped for these test drivers.
         }
     }
 

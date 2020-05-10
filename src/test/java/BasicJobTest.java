@@ -61,7 +61,7 @@ public class BasicJobTest {
 
         Machine machine = Configuration.get().getMachine();
         ReferenceMachine referenceMachine = (ReferenceMachine) machine;
-        TestDriver testDriver = (TestDriver) referenceMachine.getDriver();
+        TestDriver testDriver = (TestDriver) referenceMachine.getDefaultDriver();
         BasicJobTestDriverDelegate delegate = new BasicJobTestDriverDelegate();
         testDriver.setDelegate(delegate);
 

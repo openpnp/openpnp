@@ -244,6 +244,7 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
     @Deprecated
     @Override
     public void migrateDriver(ReferenceMachine machine) throws Exception {
-        migrateNonMappedDriver(machine); 
+        machine.addDriver(this);
+        createAxisMappingDefaults(machine); 
     }
 }

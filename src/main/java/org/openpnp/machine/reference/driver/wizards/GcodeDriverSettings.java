@@ -46,6 +46,7 @@ import com.jgoodies.forms.layout.RowSpec;
 
 public class GcodeDriverSettings extends AbstractConfigurationWizard {
     private final GcodeDriver driver;
+    private JCheckBox backslashEscapedCharacters;
 
     public GcodeDriverSettings(GcodeDriver driver) {
         this.driver = driver;
@@ -63,10 +64,6 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -105,67 +102,30 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         settingsPanel.add(connectWaitTimeTf, "4, 4, fill, default");
         connectWaitTimeTf.setColumns(10);
         
-        JLabel lblBacklashOffsetX = new JLabel("Backlash Offset X [Units]");
-        settingsPanel.add(lblBacklashOffsetX, "2, 6, right, default");
-        
-        backlashOffsetXTf = new JTextField();
-        settingsPanel.add(backlashOffsetXTf, "4, 6, fill, default");
-        backlashOffsetXTf.setColumns(10);
-        
-        JLabel lblBacklashOffsetY = new JLabel("Backlash Offset Y [Units]");
-        settingsPanel.add(lblBacklashOffsetY, "6, 6, right, default");
-        
-        backlashOffsetYTf = new JTextField();
-        settingsPanel.add(backlashOffsetYTf, "8, 6, fill, default");
-        backlashOffsetYTf.setColumns(5);
-        
-        JLabel lblBacklashOffsetZ = new JLabel("Backlash Offset Z [Units]");
-        settingsPanel.add(lblBacklashOffsetZ, "2, 8, right, default");
-        
-        backlashOffsetZTf = new JTextField();
-        backlashOffsetZTf.setToolTipText("Amount of z-axis backlash compensation");
-        settingsPanel.add(backlashOffsetZTf, "4, 8, fill, default");
-        backlashOffsetZTf.setColumns(10);
-        
-        JLabel lblBacklashOffsetR = new JLabel("Backlash Offset R [Units]");
-        settingsPanel.add(lblBacklashOffsetR, "6, 8, right, default");
-        
-        backlashOffsetRTf = new JTextField();
-        backlashOffsetRTf.setToolTipText("Amount of rotation backlash compensation");
-        settingsPanel.add(backlashOffsetRTf, "8, 8, fill, default");
-        backlashOffsetRTf.setColumns(5);
-        
         JLabel lblBacklashFeedSpeedFactor = new JLabel("Backlash Feed Rate Factor");
-        settingsPanel.add(lblBacklashFeedSpeedFactor, "2, 10, right, default");
+        settingsPanel.add(lblBacklashFeedSpeedFactor, "2, 6, right, default");
         
         backlashFeedRateFactorTf = new JTextField();
-        settingsPanel.add(backlashFeedRateFactorTf, "4, 10, fill, default");
+        settingsPanel.add(backlashFeedRateFactorTf, "4, 6, fill, default");
         backlashFeedRateFactorTf.setColumns(10);
         
-        JLabel lblNonSquarenessFactor = new JLabel("Non-Squareness Factor");
-        settingsPanel.add(lblNonSquarenessFactor, "2, 12, right, default");
-        
-        nonSquarenessFactorTf = new JTextField();
-        settingsPanel.add(nonSquarenessFactorTf, "4, 12, fill, default");
-        nonSquarenessFactorTf.setColumns(10);
-        
-        JLabel lblVisualHoming = new JLabel("Visual Homing");
-        settingsPanel.add(lblVisualHoming, "6, 12, right, default");
-        
-        visualHoming = new JCheckBox("");
-        settingsPanel.add(visualHoming, "8, 12");
-        
-        JLabel lblBackslashEscapedCharacters = new JLabel("Backslash Escaped Characters");
+        JLabel lblBackslashEscapedCharacters = new JLabel("Backslash Escaped Characters?");
         lblBackslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                 + "feed, \\r for carriage return, and \\f for form feed.");
-        settingsPanel.add(lblBackslashEscapedCharacters, "2, 14, right, default");
+        settingsPanel.add(lblBackslashEscapedCharacters, "2, 8, right, default");
         
         backslashEscapedCharacters = new JCheckBox("");
         backslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                 + "feed, \\r for carriage return, and \\f for form feed.");
-        settingsPanel.add(backslashEscapedCharacters, "4, 14");
+        settingsPanel.add(backslashEscapedCharacters, "4, 8");
+        
+        JLabel lblAllowPremoveCommands = new JLabel("Allow Pre-Move Commands?");
+        settingsPanel.add(lblAllowPremoveCommands, "2, 10, right, default");
+        
+        supportingPreMove = new JCheckBox("");
+        settingsPanel.add(supportingPreMove, "4, 10");
     }
 
     @Override
@@ -177,23 +137,13 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         
         addWrappedBinding(driver, "units", unitsCb, "selectedItem");
         addWrappedBinding(driver, "maxFeedRate", maxFeedRateTf, "text", intConverter);
-        addWrappedBinding(driver, "backlashOffsetX", backlashOffsetXTf, "text", doubleConverter);
-        addWrappedBinding(driver, "backlashOffsetY", backlashOffsetYTf, "text", doubleConverter);
-        addWrappedBinding(driver, "backlashOffsetZ", backlashOffsetZTf, "text", doubleConverter);
-        addWrappedBinding(driver, "backlashOffsetR", backlashOffsetRTf, "text", doubleConverter);
-        addWrappedBinding(driver, "nonSquarenessFactor", nonSquarenessFactorTf, "text", doubleConverterFine);
         addWrappedBinding(driver, "backlashFeedRateFactor", backlashFeedRateFactorTf, "text", doubleConverter);
         addWrappedBinding(driver, "timeoutMilliseconds", commandTimeoutTf, "text", intConverter);
         addWrappedBinding(driver, "connectWaitTimeMilliseconds", connectWaitTimeTf, "text", intConverter);
-        addWrappedBinding(driver, "visualHomingEnabled", visualHoming, "selected");
         addWrappedBinding(driver, "backslashEscapedCharactersEnabled", backslashEscapedCharacters, "selected");
+        addWrappedBinding(driver, "supportingPreMove", supportingPreMove, "selected");
         
         ComponentDecorators.decorateWithAutoSelect(maxFeedRateTf);
-        ComponentDecorators.decorateWithAutoSelect(backlashOffsetXTf);
-        ComponentDecorators.decorateWithAutoSelect(nonSquarenessFactorTf);
-        ComponentDecorators.decorateWithAutoSelect(backlashOffsetYTf);
-        ComponentDecorators.decorateWithAutoSelect(backlashOffsetZTf);
-        ComponentDecorators.decorateWithAutoSelect(backlashOffsetRTf);
         ComponentDecorators.decorateWithAutoSelect(backlashFeedRateFactorTf);
         ComponentDecorators.decorateWithAutoSelect(commandTimeoutTf);
         ComponentDecorators.decorateWithAutoSelect(connectWaitTimeTf);
@@ -326,17 +276,12 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         }
     };
     private JTextField maxFeedRateTf;
-    private JTextField backlashOffsetXTf;
-    private JTextField backlashOffsetYTf;
-    private JTextField backlashOffsetZTf;
-    private JTextField backlashOffsetRTf;
     private JTextField backlashFeedRateFactorTf;
-    private JTextField nonSquarenessFactorTf;
     private JTextField commandTimeoutTf;
     private JTextField connectWaitTimeTf;
     private JComboBox unitsCb;
-    private JCheckBox visualHoming;
-    private JCheckBox backslashEscapedCharacters;
+    private JCheckBox backslashEscapedChar;
+    private JCheckBox supportingPreMove;
 
     static class HeadMountableItem {
         private HeadMountable hm;

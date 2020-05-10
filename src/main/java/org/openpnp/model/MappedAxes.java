@@ -133,10 +133,17 @@ public class MappedAxes {
         return 0.0;
     }
 
+    /**
+     * Returns the current Location stored in the mapped axes (0 for unmapped axes). 
+     * @param driver filters the axes for those that are mapped to the driver. 
+     * Returns all the mapped axes' coordinates, if driver == null.
+     * @return the location in driver units, or system units if driver == null
+     */
     public Location getLocation(Driver driver) {
-        // As each axis can be driven by a different driver, they could (theoretically) have different
-        // LengthUnits. Convert everything into system units.
-        LengthUnit lengthUnit = Configuration.get().getSystemUnits();
+        // If no driver is given, each axis can be driven by a different driver, they could (theoretically) 
+        // have different LengthUnits. So we use system units.
+        LengthUnit lengthUnit = (driver != null) ? driver.getUnits()
+                :Configuration.get().getSystemUnits();
         return new Location(lengthUnit, 
                 getX(driver).convertToUnits(lengthUnit).getValue(), 
                 getY(driver).convertToUnits(lengthUnit).getValue(), 
@@ -219,10 +226,10 @@ public class MappedAxes {
         }
         return true;
     }
-    public boolean isEmpty() {
-        return axisX == null 
-                && axisY == null
-                        && axisZ == null
-                                && axisRotation == null;
+    final public boolean isEmpty(Driver driver) {
+        return getAxes(driver).isEmpty();
+    }
+    final public boolean isEmpty() {
+        return getAxes().isEmpty();
     }
 }

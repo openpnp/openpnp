@@ -23,7 +23,7 @@ package org.openpnp.machine.reference.axis;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.axis.wizards.ReferenceCamMasterAxisConfigurationWizard;
+import org.openpnp.machine.reference.axis.wizards.ReferenceCamCounterClockwiseAxisConfigurationWizard;
 import org.openpnp.machine.reference.axis.wizards.ReferenceLinearTransformAxisConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;

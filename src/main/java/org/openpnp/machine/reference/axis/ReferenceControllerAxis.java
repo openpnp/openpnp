@@ -6,25 +6,25 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.base.AbstractControllerAxis;
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 
 public class ReferenceControllerAxis extends AbstractControllerAxis {
-    
-    private double coordinate;
-    
-     
-    
+    // The more implementation specific properties are in the ReferenceControllerAxis
+
+    @Element(required = false)
+    private Length backlashOffset = new Length(0.0, LengthUnit.Millimeters);
+
+    @Element(required = false, data = true)
+    private String preMoveCommand;
+
     @Override
     public Wizard getConfigurationWizard() {
         return new ReferenceControllerAxisConfigurationWizard(this);
     }
 
-    @Override
-    public LengthUnit getUnits() {
-        if (getDriver() != null) {
-            return getDriver().getUnits();
-        }
-        return LengthUnit.Millimeters;
-    }
+    // Stored current axis coordinate.
+    private double coordinate;
 
     @Override
     public double getCoordinate() {
@@ -47,6 +47,22 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     @Override
     public void setLengthCoordinate(Length coordinate) {
         setCoordinate(coordinate.convertToUnits(getUnits()).getValue());
+    }
+
+    public String getPreMoveCommand() {
+        return preMoveCommand;
+    }
+
+    public void setPreMoveCommand(String preMoveCommand) {
+        this.preMoveCommand = preMoveCommand;
+    }
+
+    public Length getBacklashOffset() {
+        return backlashOffset;
+    }
+
+    public void setBacklashOffset(Length backlashOffset) {
+        this.backlashOffset = backlashOffset;
     }
 
     @Override

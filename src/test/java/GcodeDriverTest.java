@@ -88,7 +88,7 @@ public class GcodeDriverTest {
         Actuator actuator = new ReferenceActuator();
         actuator.setName("A1");
         machine.addActuator(actuator);
-        GcodeDriver driver = (GcodeDriver) ((ReferenceMachine) machine).getDriver();
+        GcodeDriver driver = (GcodeDriver) ((ReferenceMachine) machine).getDefaultDriver();
         driver.setCommand(actuator, CommandType.ACTUATOR_READ_COMMAND, "READ A1");
         driver.setCommand(actuator, CommandType.ACTUATOR_READ_REGEX, "read:a1:(?<Value>-?\\d+)");
 
@@ -106,7 +106,7 @@ public class GcodeDriverTest {
         Actuator actuator = new ReferenceActuator();
         actuator.setName("A1");
         machine.addActuator(actuator);
-        GcodeDriver driver = (GcodeDriver) ((ReferenceMachine) machine).getDriver();
+        GcodeDriver driver = (GcodeDriver) ((ReferenceMachine) machine).getDefaultDriver();
         driver.setCommand(actuator, CommandType.ACTUATOR_READ_COMMAND, "READ A1");
 
         server.addCommandResponse("READ A1", "read:a1:497\nok");
@@ -129,7 +129,7 @@ public class GcodeDriverTest {
         Actuator actuator = new ReferenceActuator();
         actuator.setName("A1");
         machine.addActuator(actuator);
-        GcodeDriver driver = (GcodeDriver) ((ReferenceMachine) machine).getDriver();
+        GcodeDriver driver = (GcodeDriver) ((ReferenceMachine) machine).getDefaultDriver();
         driver.setCommand(actuator, CommandType.ACTUATOR_READ_REGEX, "read:a1:(?<Value>-?\\d+)");
 
         server.addCommandResponse("READ A1", "read:a1:497\nok");
@@ -152,7 +152,7 @@ public class GcodeDriverTest {
         Actuator actuator = new ReferenceActuator();
         actuator.setName("A1");
         machine.addActuator(actuator);
-        GcodeDriver driver = (GcodeDriver) ((ReferenceMachine) machine).getDriver();
+        GcodeDriver driver = (GcodeDriver) ((ReferenceMachine) machine).getDefaultDriver();
         driver.setCommand(actuator, CommandType.ACTUATOR_READ_COMMAND, "READ A1");
         driver.setCommand(actuator, CommandType.ACTUATOR_READ_REGEX, "reXXad:a1:(?<Value>-?\\d+)");
 

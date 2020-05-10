@@ -45,17 +45,27 @@ import com.jgoodies.forms.layout.RowSpec;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.JComboBox;
+import javax.swing.JTextArea;
+import javax.swing.JScrollPane;
+import java.awt.event.ItemListener;
+import java.awt.event.ItemEvent;
 
 @SuppressWarnings("serial")
 public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConfigurationWizard {
     private JPanel panelControllerSettings;
     private JTextField homeCoordinate;
     private JLabel lblDesignator;
-    private JTextField designator;
+    private JTextField letter;
     private JLabel lblDriver;
     private JComboBox driver;
     private JLabel lblResolution;
     private JTextField resolution;
+    private JLabel lblPremoveCommand;
+    private JTextArea preMoveCommand;
+    private JScrollPane scrollPane;
+    protected NamedConverter<Driver> driverConverter;
+    private JLabel lblBacklashOffset;
+    private JTextField backlashOffset;
 
     public ReferenceControllerAxisConfigurationWizard(ReferenceControllerAxis axis) {
         super(axis);
@@ -69,6 +79,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(50dlu;default):grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -80,49 +92,91 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("default:grow"),}));
         
         lblDriver = new JLabel("Driver");
         panelControllerSettings.add(lblDriver, "2, 2, right, default");
         
         driver = new JComboBox(new DriversComboBoxModel((AbstractMachine) Configuration.get().getMachine(), true));
+        driver.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                adaptDialog();
+            }
+        });
         panelControllerSettings.add(driver, "4, 2, fill, default");
         
-        lblDesignator = new JLabel("Axis Designator");
+        lblDesignator = new JLabel("Axis Letter");
+        lblDesignator.setToolTipText("The axis letter (X, Y, Z etc.) as used by the Controller.");
         panelControllerSettings.add(lblDesignator, "2, 4, right, default");
         
-        designator = new JTextField();
-        panelControllerSettings.add(designator, "4, 4, fill, default");
-        designator.setColumns(10);
+        letter = new JTextField();
+        panelControllerSettings.add(letter, "4, 4, fill, default");
+        letter.setColumns(10);
 
         JLabel lblHomeCoordinate = new JLabel("Home Coordinate");
-        panelControllerSettings.add(lblHomeCoordinate, "2, 8, right, default");
+        panelControllerSettings.add(lblHomeCoordinate, "2, 6, right, default");
 
         homeCoordinate = new JTextField();
-        panelControllerSettings.add(homeCoordinate, "4, 8, fill, default");
+        panelControllerSettings.add(homeCoordinate, "4, 6, fill, default");
         homeCoordinate.setColumns(10);
         
-        lblResolution = new JLabel("Resolution");
+        lblBacklashOffset = new JLabel("Backlash Offset");
+        panelControllerSettings.add(lblBacklashOffset, "2, 8, right, default");
+        
+        backlashOffset = new JTextField();
+        panelControllerSettings.add(backlashOffset, "4, 8, fill, default");
+        backlashOffset.setColumns(10);
+        
+        lblResolution = new JLabel("Resolution [Driver Units]");
+        lblResolution.setToolTipText("<html>Numeric resolution of this axis. Coordinates will be rounded to the nearest multiple<br/>\r\nwhen comparing them in order to determine whether a move is necessary. <br/>\r\nFor the GcodeDriver, make sure the resolution can be expressed with the format in the <br/>\r\n<code>MOVE_TO_COMMAND</code>. Default is 0.0001 which corresponds to the %.4f <br/>\r\n(four fractional digits) format in the <code>MOVE_TO_COMMAND</code>.<br/>\r\nNote, the resolution is given and applied in driver (not system) units.\r\n</html>");
         panelControllerSettings.add(lblResolution, "2, 10, right, default");
         
         resolution = new JTextField();
         panelControllerSettings.add(resolution, "4, 10, fill, default");
         resolution.setColumns(10);
+        
+        lblPremoveCommand = new JLabel("Pre-Move Command");
+        panelControllerSettings.add(lblPremoveCommand, "2, 14, right, top");
+        
+        scrollPane = new JScrollPane();
+        panelControllerSettings.add(scrollPane, "4, 14, 3, 1, fill, fill");
+        
+        preMoveCommand = new JTextArea();
+        preMoveCommand.setRows(1);
+        scrollPane.setViewportView(preMoveCommand);
+        
+        driverConverter = new NamedConverter<>(Configuration.get().getMachine().getDrivers()); 
+    }
+
+    protected void adaptDialog() {
+        Driver selectedDriver = driverConverter.convertReverse((String) driver.getSelectedItem());
+        boolean showPreMove = (selectedDriver != null && selectedDriver.isSupportingPreMove());
+        lblPremoveCommand.setVisible(showPreMove);
+        scrollPane.setVisible(showPreMove);
     }
 
     @Override
     public void createBindings() {
         super.createBindings();
         LengthConverter lengthConverter = new LengthConverter();
-        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
-        NamedConverter<Driver> driverConverter = new NamedConverter<>(Configuration.get().getMachine().getDrivers()); 
+        DoubleConverter doubleConverter = new DoubleConverter("%f"); 
 
         addWrappedBinding(axis, "driver", driver, "selectedItem", driverConverter);
-        addWrappedBinding(axis, "designator", designator, "text");
+        addWrappedBinding(axis, "letter", letter, "text");
         addWrappedBinding(axis, "homeCoordinate", homeCoordinate, "text", lengthConverter);
+        addWrappedBinding(axis, "backlashOffset", backlashOffset, "text", lengthConverter);
         addWrappedBinding(axis, "resolution", resolution, "text", doubleConverter);
-
-        ComponentDecorators.decorateWithAutoSelect(designator);
+        addWrappedBinding(axis, "preMoveCommand", preMoveCommand, "text");
+                
+        ComponentDecorators.decorateWithAutoSelect(letter);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(homeCoordinate);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(backlashOffset);
+        ComponentDecorators.decorateWithAutoSelect(resolution);
+        
+        adaptDialog();
     }
 }

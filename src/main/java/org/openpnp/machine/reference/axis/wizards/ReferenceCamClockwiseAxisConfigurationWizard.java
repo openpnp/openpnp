@@ -26,40 +26,37 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
 
+import org.jdesktop.beansbinding.AutoBinding;
+import org.jdesktop.beansbinding.BeanProperty;
+import org.jdesktop.beansbinding.Bindings;
+import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.support.AxesComboBoxModel;
 import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.gui.wizards.AbstractAxisConfigurationWizard;
-import org.openpnp.machine.reference.axis.ReferenceNegatedAxis;
+import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
+import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;
-import org.openpnp.spi.base.AbstractControllerAxis;
+import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.base.AbstractMachine;
-import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeEvent;
-import org.jdesktop.beansbinding.BeanProperty;
-import org.jdesktop.beansbinding.AutoBinding;
-import org.jdesktop.beansbinding.Bindings;
-import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
-import org.openpnp.spi.Axis.Type;
 
 @SuppressWarnings("serial")
-public class ReferenceNegatedAxisConfigurationWizard extends AbstractAxisConfigurationWizard {
+public class ReferenceCamClockwiseAxisConfigurationWizard extends AbstractAxisConfigurationWizard {
 
     private JPanel panelTransformation;
     private JLabel lblInputAxis;
     private JComboBox inputAxis;
     private AxesComboBoxModel inputAxisModel;
 
-    public ReferenceNegatedAxisConfigurationWizard(AbstractMachine machine, ReferenceNegatedAxis axis) {
+    public ReferenceCamClockwiseAxisConfigurationWizard(AbstractMachine machine, ReferenceCamClockwiseAxis axis) {
         super(axis);
         panelTransformation = new JPanel();
-        panelTransformation.setBorder(new TitledBorder(null, "Negated Axis", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelTransformation.setBorder(new TitledBorder(null, "Cam Clockwise Axis", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelTransformation);
         panelTransformation.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -70,22 +67,32 @@ public class ReferenceNegatedAxisConfigurationWizard extends AbstractAxisConfigu
                 ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        RowSpec.decode("bottom:default:grow"),}));
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("default:grow(2)"),
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("bottom:default:grow"),
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblInputAxis = new JLabel("Input Axis");
+        lblInputAxis = new JLabel("Counter-Clockwise Axis");
         panelTransformation.add(lblInputAxis, "2, 2, right, default");
 
-        inputAxisModel = new AxesComboBoxModel(machine, AbstractControllerAxis.class, null, true);
+        inputAxisModel = new AxesComboBoxModel(machine, ReferenceCamCounterClockwiseAxis.class, null, true);
         inputAxis = new JComboBox(inputAxisModel);
         panelTransformation.add(inputAxis, "4, 2, fill, default");
         initDataBindings();
@@ -100,6 +107,7 @@ public class ReferenceNegatedAxisConfigurationWizard extends AbstractAxisConfigu
 
         addWrappedBinding(axis, "inputAxis", inputAxis, "selectedItem", axisConverter);
     }
+
     protected void initDataBindings() {
         BeanProperty<JComboBox, Axis.Type> jComboBoxBeanProperty = BeanProperty.create("selectedItem");
         BeanProperty<AxesComboBoxModel, Type> axesComboBoxModelBeanProperty = BeanProperty.create("axisType");

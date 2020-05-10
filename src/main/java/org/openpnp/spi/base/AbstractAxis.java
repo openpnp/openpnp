@@ -95,7 +95,12 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
     }
 
     /**
-     * Computes the transformed coordinate for this Axis, starting from the given raw location.  
+     * Transform the raw axis coordinate taken from the specified location into it's corresponding 
+     * transformed coordinate. 
+     * The transformed coordinate is what the user sees, while the raw coordinate is what the
+     * motion controller sees.
+     * Some transformations handle multiple axes, therefore the full Location is passed through.
+     * 
      * A ControllerAxis will just return the unchanged coordinate. 
      * A TransformedAxis will first call the input axes' transformation and then perform its own.
      *        
@@ -105,7 +110,12 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
     public abstract double toTransformed(Location location); 
 
     /**
-     * Computes the raw coordinate for this Axis, starting from the given transformed location.  
+     * Transform the specified transformed location into it's corresponding raw location, returning
+     * the coordinate for this axis. 
+     * The transformed location is what the user sees, while the raw coordinate is what the motion 
+     * controller sees.
+     * Some transformations handle multiple axes, therefore the full Location is passed through.
+     * 
      * A ControllerAxis will just return the unchanged coordinate. 
      * A TransformedAxis will first perform its own transformation and then call the input axis'.
      *        

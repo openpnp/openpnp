@@ -13,13 +13,13 @@ import org.simpleframework.xml.Element;
 public abstract class AbstractControllerAxis extends AbstractAxis implements ControllerAxis {
 
     private Driver driver;
-    
+
     @Attribute(required = false)
     private String driverId;
 
     @Attribute(required = false)
-    private String designator;
-    
+    private String letter;
+
     @Element(required = false)
     private Length homeCoordinate = new Length(0.0, LengthUnit.Millimeters);
 
@@ -36,7 +36,7 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
     protected AbstractControllerAxis () {
         super();
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
-    
+
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
                 driver = configuration.getMachine().getDriver(driverId);
@@ -44,6 +44,7 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
         });    
     }
 
+    @Override
     public double roundedToResolution(double coordinate) {
         if (resolution != 0.0) {
             return Math.round(coordinate/resolution)*resolution;
@@ -52,12 +53,12 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
             return coordinate;
         }
     }
-    
+
     @Override
     public AbstractControllerAxis getControllerAxis() {
         return this;
     }
-    
+
     @Override
     public Driver getDriver() {
         return driver;
@@ -71,15 +72,23 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
     }
 
     @Override
-    public String getDesignator() {
-        return designator;
+    public LengthUnit getUnits() {
+        if (getDriver() != null) {
+            return getDriver().getUnits();
+        }
+        return LengthUnit.Millimeters;
     }
 
     @Override
-    public void setDesignator(String designator) {
-        Object oldValue = this.designator;
-        this.designator = designator;
-        firePropertyChange("designator", oldValue, designator);
+    public String getLetter() {
+        return letter;
+    }
+
+    @Override
+    public void setLetter(String letter) {
+        Object oldValue = this.letter;
+        this.letter = letter;
+        firePropertyChange("letter", oldValue, letter);
     }
 
     @Override
