@@ -179,17 +179,37 @@ public class MatchPartsTemplate extends CvStage {
     private RotatedRect handleSingleRectangle(Mat originalImage, Result template,
             RotatedRect rrect) {
         Mat timage = template.image.clone();
-
+        
         if (log) {
             Logger.info("part found = " + rrect);
         }
-        // put the model at a known orientation, upright, or portrait
-//        if (rrect.size.width > rrect.size.height) {
-//            rrect.angle += 90.0;
-//            double tmp = rrect.size.width;
-//            rrect.size.width = rrect.size.height;
-//            rrect.size.height = tmp;
-//        }
+        
+        // we need a RotatedRect model for the template
+        RotatedRect trect = null;
+        if (template.model == null) {
+            // no model in template so, make one up
+            trect = new RotatedRect(new org.opencv.core.Point(((int) timage.size().width) / 2,
+                    ((int) timage.size().height) / 2), timage.size(), 0.0);
+        }
+        else {
+            trect = ((RotatedRect) template.model).clone();
+        }
+
+        boolean isTemplateOrientationPortrait = (trect.size.width / trect.size.height) > 1.0;
+        
+        // put the model in the same orientation as the template
+        if (rrect.size.width > rrect.size.height && !isTemplateOrientationPortrait) {
+            rrect.angle += 90.0;
+            double tmp = rrect.size.width;
+            rrect.size.width = rrect.size.height;
+            rrect.size.height = tmp;
+        } else if (rrect.size.width < rrect.size.height && isTemplateOrientationPortrait) {
+            rrect.angle += 90.0;
+            double tmp = rrect.size.width;
+            rrect.size.width = rrect.size.height;
+            rrect.size.height = tmp;
+        }
+
         // store original rect for later use
         RotatedRect orect = rrect.clone();
 
@@ -210,16 +230,7 @@ public class MatchPartsTemplate extends CvStage {
         if (log) {
             Logger.info("part angle = " + rrect.angle);
         }
-        // we need a RotatedRect model for the template
-        RotatedRect trect = null;
-        if (template.model == null) {
-            // no model in template so, make one up
-            trect = new RotatedRect(new org.opencv.core.Point(((int) timage.size().width) / 2,
-                    ((int) timage.size().height) / 2), timage.size(), 0.0);
-        }
-        else {
-            trect = ((RotatedRect) template.model).clone();
-        }
+
         // first rotation
         // rotate the template to be the same as rrect
         timage = rotateRect(timage, trect, -rrect.angle);
@@ -271,15 +282,14 @@ public class MatchPartsTemplate extends CvStage {
         }
         // correct original model's angle to the orientation detected
         orect.angle = rrect.angle + (winrot - 1) * angleAdv;
-
+                
         if (winrot != 0) {
 
             orect.angle = orect.angle % 360.0;
             if (log) {
                 Logger.info("winning rotation = " + winrot);
             }
-        }
-        else {
+        } else {
             // No match was found. Could deliver the original model unchanged,
             // but that would not be expected for polarized parts, since it would be taken as having
             // the correct orientation. So, return null, instead.
