@@ -153,12 +153,13 @@ public class MatchPartsTemplate extends CvStage {
             if (res != null) {
                 ((List<RotatedRect>) result.model).add(res);
             }
-        }
-        else if (model instanceof List<?> && ((List<?>) model).get(0) instanceof RotatedRect) {
-            for (RotatedRect rect: ((List<RotatedRect>) model)) {
-                RotatedRect res = handleSingleRectangle(originalImage, template, rect);
-                if (res != null) {
-                    ((List<RotatedRect>) result.model).add(res);
+        } else if (model instanceof List<?> ) {
+            for (Object rect: ((List<?>) model)) {
+                if (rect instanceof RotatedRect) {
+                    RotatedRect res = handleSingleRectangle(originalImage, template, (RotatedRect)rect);
+                    if (res != null) {
+                        ((List<RotatedRect>) result.model).add(res);
+                    }
                 }
             }
         }
