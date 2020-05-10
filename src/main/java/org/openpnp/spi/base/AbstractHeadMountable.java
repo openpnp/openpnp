@@ -209,7 +209,8 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         // at the last stage. Given this simplification we can solve the inverse by inverting the 
         // 5D Affine Transform Matrix. 
 
-        // Query each axis for an Affine Transform vector.
+        // Query each axis for an Affine Transform vector. Will just return the unit vector if not
+        // a linear transformation.
         double  [][] affineTransform = new double [][] {
             AbstractTransformedAxis.getLinearTransform(axisX, location.getUnits()),
             AbstractTransformedAxis.getLinearTransform(axisY, location.getUnits()),
@@ -221,7 +222,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         // Compute the inverse.
         double [][] invertedAffineTransform = Matrix.inverse(affineTransform);
 
-        // We provide the inverted Affine Tranform for those axes that actually do the linear transform.
+        // We provide the inverted Affine Tranform for use by those axes that actually do the linear transform.
         double x = AbstractTransformedAxis.toRaw(axisX, location, invertedAffineTransform);
         double y = AbstractTransformedAxis.toRaw(axisY, location, invertedAffineTransform);
         double z = AbstractTransformedAxis.toRaw(axisZ, location, invertedAffineTransform);
@@ -268,8 +269,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
             }
         }    
         // Now convert it back NOT applying any options, i.e. when a moveTo() is later made, 
-        // effectively reversing the option-less transformation, the result will be the same.
-        // The approximation will in effect be applied. 
+        // it will effectively reverse the option-less transformation and end up in the desired approximative location. 
         Location headApproximativeLocation = toTransformed(desiredRawLocation);
         Location approximativeLocation = toHeadMountableLocation(headApproximativeLocation);
         return approximativeLocation;
