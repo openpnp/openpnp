@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
  * 
- * For more information about OpenPnP visit http://openpnp.org
+ * For more information about OpenPnP visit http://openpnp.org 
  */
 
 package org.openpnp.vision.pipeline.stages;
