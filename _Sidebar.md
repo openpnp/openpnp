@@ -3,6 +3,21 @@ OpenPnP
 
 * [[Quick Start]]
 * [[Setup and Calibration]]
+    * [Before You Start](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Before-You-Start)
+    * [Driver Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup)
+    * [Top Camera Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Top-Camera-Setup)
+    * [Steps Per Mm](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Steps-Per-Mm)
+    * [Nozzle Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Nozzle-Setup)
+    * [Actuators](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators)
+    * [Vacuum Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup)
+    * [Bottom Camera Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Bottom-Camera-Setup)
+    * [Park Location](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Park-Location)
+    * [Discard Location](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Discard-Location)
+    * [Feeders](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Feeders)
+    * [Bottom Vision](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Bottom-Vision)
+    * [Vacuum Sensing](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Sensing)
+    * [Camera Lighting](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Camera-Lighting)
+    * [Next Steps](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Next-Steps)
 * [[GcodeDriver]]
     * [Commands](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference)
     * [Regular Expressions](https://github.com/openpnp/openpnp/wiki/GcodeDriver#regular-expressions-receiving-responses)
