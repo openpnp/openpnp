@@ -47,7 +47,7 @@ import org.simpleframework.xml.Attribute;
  * and returns a list of matches.
  */
 @Stage(category = "Image Processing",
-        description = "OpenCV based image template matching with local maxima detection improvements. On match, returns the true orientation of the input model.")
+        description = "OpenCV based image template matching with local maxima detection improvements. On match, returns the true orientation of the input models.")
 
 public class MatchPartsTemplate extends CvStage {
 

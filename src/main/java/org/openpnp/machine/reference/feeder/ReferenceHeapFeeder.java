@@ -668,9 +668,8 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
                 // pick part, move up, drop ist
                 pickPart(nozzle, partLocation, lastHeap.getPart());
                 dropInto(nozzle);
+                return true;
             }
-
-            return false;
         }
 
         /**
