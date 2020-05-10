@@ -124,10 +124,8 @@ public class MatchPartsTemplate extends CvStage {
 
             model = (List<?>) pipeline.getResult(modelStageName.toString()).model;
         }
-        Mat originalImage = pipeline.getWorkingImage()
-                                    .clone();
 
-        if (model == null || originalImage == null) {
+        if (model == null || pipeline.getWorkingImage() == null) {
             if (log) {
                 Logger.info("No input image or model was found.");
             }
@@ -145,15 +143,20 @@ public class MatchPartsTemplate extends CvStage {
             return null;
         }
         
-        Result result  = new Result(originalImage, new ArrayList<RotatedRect>());
+        Result result  = new Result(pipeline.getWorkingImage(), new ArrayList<RotatedRect>());
 
 
         if (model instanceof RotatedRect) {
+            Mat originalImage = pipeline.getWorkingImage()
+                    .clone();
             RotatedRect res = handleSingleRectangle(originalImage, template, ((RotatedRect) model).clone());
+            originalImage.release();
             if (res != null) {
                 ((List<RotatedRect>) result.model).add(res);
             }
         } else if (model instanceof List<?> ) {
+            Mat originalImage = pipeline.getWorkingImage()
+                    .clone();
             for (Object rect: ((List<?>) model)) {
                 if (rect instanceof RotatedRect) {
                     RotatedRect res = handleSingleRectangle(originalImage, template, (RotatedRect)rect);
@@ -162,6 +165,7 @@ public class MatchPartsTemplate extends CvStage {
                     }
                 }
             }
+            originalImage.release();
         }
         else {
             // only RotatedRects are handled
@@ -258,8 +262,7 @@ public class MatchPartsTemplate extends CvStage {
                  * new Scalar(255,255,255));
                  */
             }
-            Result mresult = matchTemplate(image, timage);
-            List<TemplateMatch> matches = (List<TemplateMatch>) mresult.model;
+            List<TemplateMatch> matches = matchTemplate(image, timage);
             double rotScore = 0;
             // get the best of local matches
             for (int j = 0; j < matches.size(); j++) {
@@ -281,6 +284,11 @@ public class MatchPartsTemplate extends CvStage {
                 Logger.info("rotation" + i + " score = " + rotScore);
             }
         }
+        
+        // release not used Mat
+        timage.release();
+        image.release();
+        
         // correct original model's angle to the orientation detected
         orect.angle = rrect.angle + (winrot - 1) * angleAdv;
                 
@@ -300,10 +308,10 @@ public class MatchPartsTemplate extends CvStage {
         return orect;
     }
 
-    Result matchTemplate(Mat mat, Mat template) {
-
+    List<TemplateMatch>  matchTemplate(Mat mat, Mat template) {
+        
         Mat result = new Mat();
-
+        
         Imgproc.matchTemplate(mat, template, result, Imgproc.TM_CCOEFF_NORMED);
 
         MinMaxLocResult mmr = Core.minMaxLoc(result);
@@ -321,6 +329,9 @@ public class MatchPartsTemplate extends CvStage {
                     new TemplateMatch(x, y, template.cols(), template.rows(), result.get(y, x)[0]);
             matches.add(match);
         }
+        
+        // release
+        result.release();
 
         Collections.sort(matches, new Comparator<TemplateMatch>() {
             @Override
@@ -330,7 +341,7 @@ public class MatchPartsTemplate extends CvStage {
         });
 
 
-        return new Result(result, matches);
+        return matches;
     }
 
     static Mat rotateRect(Mat mat, RotatedRect rect, double degrees) {
