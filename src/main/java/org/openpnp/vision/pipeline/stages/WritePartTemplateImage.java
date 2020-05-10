@@ -46,6 +46,11 @@ public class WritePartTemplateImage extends CvStage {
     private String extension = ".png";
 
     @Attribute(required = false)
+    @Property(description = "Prefix of the filename. Used for automatic filename generation to distinguish between different uses (e.g. up/down camera). Default empty.")
+    private String prefix = "";
+
+    
+    @Attribute(required = false)
     @Property(description = "Write image as a package template.")
     private boolean asPackage = false;
 
@@ -126,13 +131,15 @@ public class WritePartTemplateImage extends CvStage {
                 filepath += File.separator;
             }
             if (asPackage) {
-                filepath += feeder.getPart()
+                filepath += prefix 
+                        + feeder.getPart()
                                   .getPackage()
                                   .getId()
                         + extension;
             }
             else {
-                filepath += feeder.getPart()
+                filepath += prefix 
+                        + feeder.getPart()
                                   .getId()
                         + extension;
             }
