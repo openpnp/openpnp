@@ -8,6 +8,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.util.Matrix;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -116,10 +117,10 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     @Override
-    public void moveTo(Location location, double speed) throws Exception {
+    public void moveTo(Location location, double speed, MoveToOption... options) throws Exception {
         Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
         location = toHeadLocation(location, getLocation());
-        getHead().moveTo(this, location, getHead().getMaxPartSpeed() * speed);
+        getHead().moveTo(this, location, getHead().getMaxPartSpeed() * speed, options);
     }
 
     @Override
@@ -132,8 +133,8 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     @Override
-    public void moveTo(Location location) throws Exception {
-        moveTo(location, getHead().getMachine().getSpeed());
+    public void moveTo(Location location, MoveToOption... options) throws Exception {
+        moveTo(location, getHead().getMachine().getSpeed(), options);
     }
 
     @Override

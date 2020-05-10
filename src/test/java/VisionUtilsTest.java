@@ -53,21 +53,6 @@ public class VisionUtilsTest {
         }
 
         @Override
-        public void moveTo(Location location, double speed) throws Exception {
-
-        }
-
-        @Override
-        public void moveToSafeZ(double speed) throws Exception {
-
-        }
-
-        @Override
-        public void home() throws Exception {
-
-        }
-
-        @Override
         public Location getLocation() {
             return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
         }
@@ -212,16 +197,6 @@ public class VisionUtilsTest {
         }
 
         @Override
-        public void moveTo(Location location) throws Exception {
-            moveTo(location, getHead().getMachine().getSpeed());
-        }
-
-        @Override
-        public void moveToSafeZ() throws Exception {
-            moveToSafeZ(getHead().getMachine().getSpeed());
-        }
-
-        @Override
         public Length getSafeZ() {
             return null;
         }
@@ -233,6 +208,10 @@ public class VisionUtilsTest {
 
         @Override
         public void setHeadOffsets(Location headOffsets) {
+        }
+
+        @Override
+        public void home() throws Exception {
         }
     }
 }

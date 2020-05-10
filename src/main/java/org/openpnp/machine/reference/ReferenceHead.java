@@ -36,6 +36,7 @@ import org.openpnp.model.Part;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.base.AbstractHead;
 import org.openpnp.spi.base.AbstractHeadMountable;
 import org.pmw.tinylog.Logger;
@@ -147,8 +148,8 @@ public class ReferenceHead extends AbstractHead {
         return true;
     }
 
-    @Override
-    public void moveTo(HeadMountable hm, Location location, double speed) throws Exception {
+    @Override 
+    public void moveTo(HeadMountable hm, Location location, double speed, MoveToOption... options) throws Exception {
         MappedAxes mappedAxes = hm.getMappedAxes();
         if (!mappedAxes.isEmpty()) {
             if (! isInsideSoftLimits(hm, location)) {
@@ -157,7 +158,7 @@ public class ReferenceHead extends AbstractHead {
             }
             location = hm.toRaw(location);
             for (Driver driver : mappedAxes.getMappedDrivers()) {
-                ((ReferenceDriver) driver).moveTo((ReferenceHeadMountable) hm, mappedAxes, location, speed);
+                ((ReferenceDriver) driver).moveTo((ReferenceHeadMountable) hm, mappedAxes, location, speed, options);
             }
             getMachine().fireMachineHeadActivity(this);
         }

@@ -41,6 +41,7 @@ import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.base.AbstractAxis;
 import org.openpnp.spi.base.AbstractHead;
@@ -414,7 +415,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed)
+    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed, MoveToOption...options)
             throws Exception {
         // Start composing the command, will decide later, whether we actually send it.
         String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
@@ -422,6 +423,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             return;
         }
 
+        boolean enableBacklash = true;
+        for (MoveToOption currentOption: options) {
+            switch (currentOption) {
+                case SpeedOverPrecision:        // for this move backslash is zero
+                case RawMove:                   // for this move all corrections are zero
+                    enableBacklash = false;
+                    break;
+            }
+        }
+        
         // Convert to driver units.
         location = location.convertToUnits(getUnits());
         Location previousLocation = mappedAxes.getLocation(this);
@@ -470,7 +481,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 command = substituteVariable(command, axisType+"F", coordinate);
                 command = substituteVariable(command, axisType+"L", axis.getLetter());
                 // Apply backlash offset.
-                double backlashOffset = ((ReferenceControllerAxis) axis).getBacklashOffset().convertToUnits(getUnits()).getValue();
+                double backlashOffset = enableBacklash ? 
+                        ((ReferenceControllerAxis) axis).getBacklashOffset().convertToUnits(getUnits()).getValue()
+                        : 0.0;
                 command = substituteVariable(command, "BacklashOffset"+axisType, coordinate + backlashOffset); 
                 command = substituteVariable(command, axisType+"Decreasing", direction < 0 ? true : null);
                 command = substituteVariable(command, axisType+"Increasing", direction > 0 ? true : null);

@@ -22,6 +22,7 @@ package org.openpnp.machine.reference;
 import java.io.Closeable;
 
 import org.openpnp.model.Location;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.PropertySheetHolder;
@@ -68,11 +69,12 @@ public interface ReferenceDriver extends Driver, WizardConfigurable, PropertyShe
      * HeadMountable object types include Nozzle, Camera and Actuator.
      * 
      * @param hm
-     * @param location
-     * @param speed
+     * @param location destination
+     * @param speed relative speed (0-1) of the move
+     * @param options zero to n options from the MoveToOptions enum.
      * @throws Exception
      */
-    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed) throws Exception;
+    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed, MoveToOption... options) throws Exception;
 
     /**
      * Actuates a machine defined object with a boolean state.

@@ -6,6 +6,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.pmw.tinylog.Logger;
 
 public class MarekNozzle extends ReferenceNozzle {
@@ -18,7 +19,7 @@ public class MarekNozzle extends ReferenceNozzle {
     }
     
     @Override
-    public void moveTo(Location location, double speed) throws Exception {
+    public void moveTo(Location location, double speed, MoveToOption... options) throws Exception {
         Location currentLocation = getLocation().convertToUnits(location.getUnits());
         location = toHeadLocation(location, currentLocation);
 
@@ -35,7 +36,7 @@ public class MarekNozzle extends ReferenceNozzle {
             }
         }
 
-        ((ReferenceHead) getHead()).moveTo(this, location, getHead().getMaxPartSpeed() * speed);
+        ((ReferenceHead) getHead()).moveTo(this, location, getHead().getMaxPartSpeed() * speed, options);
         getMachine().fireMachineHeadActivity(head);
     }
 

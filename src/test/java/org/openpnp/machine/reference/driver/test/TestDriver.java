@@ -14,6 +14,7 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.MappedAxes;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractDriver;
 import org.simpleframework.xml.Attribute;
@@ -41,7 +42,7 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed)
+    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed, MoveToOption... options)
             throws Exception {
         // Convert the Location to millimeters, since that's the unit that
         // this driver works in natively.
@@ -85,7 +86,7 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
         }
  
         @Override
-        public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed)
+        public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed, MoveToOption... options)
                 throws Exception {
 
         }
