@@ -53,6 +53,10 @@ public class ReadPartTemplateImage extends CvStage {
     private String extension = ".png";
 
     @Attribute(required = false)
+    @Property(description = "Prefix of the filename. Used for automatic filename generation to distinguish between different uses (e.g. up/down camera). Default empty.")
+    private String prefix = "";
+    
+    @Attribute(required = false)
     @Property(description = "Enable logging.")
     private boolean log = false;
 
@@ -132,15 +136,16 @@ public class ReadPartTemplateImage extends CvStage {
             if (!filepath.endsWith(File.separator)) {
                 filepath += File.separator;
             }
-            filename = filepath + feeder.getPart()
-                                        .getId()
+            filename = filepath 
+                    + prefix 
+                    + feeder.getPart().getId()
                     + extension;
             file = new File(filename);
             if (!file.exists()) {
                 // try the package id
-                filename = filepath + feeder.getPart()
-                                            .getPackage()
-                                            .getId()
+                filename = filepath 
+                        + prefix 
+                        + feeder.getPart().getPackage().getId()
                         + extension;
                 file = new File(filename);
                 if (!file.exists()) {
