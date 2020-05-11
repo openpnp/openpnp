@@ -12,7 +12,7 @@
 ## Machine Working Outside OpenPnP
 Before you start trying to make your machine work with OpenPnP you should first make sure all of its major functionality is working outside of OpenPnP.
 
-You should be able to jog the machine in X and Y, rotate your nozzle, and move the head up and down in Z. Ideally you will also be able to test that any pumps or solenoids can be controlled.
+You should be able to jog the machine in X and Y, rotate your nozzle, and move the head up and down in Z. Ideally you will also be able to test that any pump, solenoids, valves, sensors, etc. can be controlled and read.
 
 If your machine uses Gcode, you can use a tool like [Printrun](https://github.com/kliment/Printrun) to test the machine.
 
