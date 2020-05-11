@@ -19,13 +19,19 @@
 
 package org.openpnp.machine.reference.wizards;
 
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
@@ -35,28 +41,12 @@ import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.ReferenceNozzleTip.VacuumMeasurementMethod;
-import org.openpnp.machine.reference.feeder.BlindsFeeder;
 import org.openpnp.model.Configuration;
-import org.openpnp.util.SimpleGraph;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JCheckBox;
-import java.awt.BorderLayout;
-import javax.swing.UIManager;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.GradientPaint;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeEvent;
-import java.awt.Font;
 
 public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfigurationWizard {
     private final ReferenceNozzleTip nozzleTip;
@@ -108,8 +98,8 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOnVacuumSensing.add(lblPartOnMeasurement, "2, 2, right, default");
         
         methodPartOn = new JComboBox(ReferenceNozzleTip.VacuumMeasurementMethod.values());
-        methodPartOn.addPropertyChangeListener(new PropertyChangeListener() {
-            public void propertyChange(PropertyChangeEvent evt) {
+        methodPartOn.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
                 adaptDialog();
             }
         });
@@ -120,8 +110,8 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOnVacuumSensing.add(lblEstablishPartOnLevel, "2, 4, right, default");
         
         establishPartOnLevel = new JCheckBox("");
-        establishPartOnLevel.addPropertyChangeListener(new PropertyChangeListener() {
-            public void propertyChange(PropertyChangeEvent evt) {
+        establishPartOnLevel.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
                 adaptDialog();
             }
         });
@@ -229,8 +219,8 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOffVacuumSensing.add(lblPartOffMeasurement, "2, 2");
         
         methodPartOff = new JComboBox(ReferenceNozzleTip.VacuumMeasurementMethod.values());
-        methodPartOff.addPropertyChangeListener(new PropertyChangeListener() {
-            public void propertyChange(PropertyChangeEvent evt) {
+        methodPartOff.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
                 adaptDialog();
             }
         });
@@ -241,8 +231,8 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOffVacuumSensing.add(lblEstablishPartOffLevel, "2, 4, right, default");
         
         establishPartOffLevel = new JCheckBox("");
-        establishPartOffLevel.addPropertyChangeListener(new PropertyChangeListener() {
-            public void propertyChange(PropertyChangeEvent evt) {
+        establishPartOffLevel.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
                 adaptDialog();
             }
         });
@@ -483,5 +473,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOffHigh);
         ComponentDecorators.decorateWithAutoSelect(vacuumDifferencePartOffLow);
         ComponentDecorators.decorateWithAutoSelect(vacuumDifferencePartOffHigh);
+
+        adaptDialog();
     }
 }

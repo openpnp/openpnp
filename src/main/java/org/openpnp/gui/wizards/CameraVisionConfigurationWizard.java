@@ -22,6 +22,8 @@ package org.openpnp.gui.wizards;
 import java.awt.Font;
 import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
@@ -107,8 +109,8 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         panelVision.add(lblSettleMethod, "2, 2, 1, 3, right, default");
 
         settleMethod = new JComboBox(AbstractCamera.SettleMethod.values());
-        settleMethod.addPropertyChangeListener(new PropertyChangeListener() {
-            public void propertyChange(PropertyChangeEvent evt) {
+        settleMethod.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
                 adaptDialog();
             }
         });
@@ -224,8 +226,8 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         panelVision.add(lblSettleDiagnostics, "8, 12, right, default");
 
         settleDiagnostics = new JCheckBox("");
-        settleDiagnostics.addPropertyChangeListener(new PropertyChangeListener() {
-            public void propertyChange(PropertyChangeEvent evt) {
+        settleDiagnostics.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
                 adaptDialog();
             }
         });
@@ -318,6 +320,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
             btnTestRotate.setVisible(false);
             btnTestZ.setVisible(false);
         }
+        adaptDialog();
     }
 
     private HeadMountable getJogTool() {
