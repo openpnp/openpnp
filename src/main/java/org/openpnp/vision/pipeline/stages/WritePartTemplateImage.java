@@ -49,8 +49,7 @@ public class WritePartTemplateImage extends CvStage {
     @Property(description = "Prefix of the filename. Used for automatic filename generation to distinguish between different uses (e.g. up/down camera). Default empty.")
     private String prefix = "";
 
-    
-    @Attribute(required = false)
+        @Attribute(required = false)
     @Property(description = "Write image as a package template.")
     private boolean asPackage = false;
 
@@ -78,6 +77,15 @@ public class WritePartTemplateImage extends CvStage {
         this.asPackage = asPackage;
     }
 
+    public String getPrefix() {
+        return prefix;
+    }
+
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
+    }
+
+    
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         /**
