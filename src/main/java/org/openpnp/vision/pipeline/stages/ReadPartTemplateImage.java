@@ -83,6 +83,14 @@ public class ReadPartTemplateImage extends CvStage {
     public void setLog(boolean log) {
         this.log = log;
     }
+    
+    public String getPrefix() {
+        return prefix;
+    }
+
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
+    }
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
