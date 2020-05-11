@@ -98,7 +98,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      * Used to avoid endless retries if a part is not recognizable.
      */
     @Attribute(required = false)
-    private int throwAwayDropBoxContentAfterFailedFeeds = 6;
+    private int throwAwayDropBoxContentAfterFailedFeeds = 7;
 
     /**
      * Needed increase in the vacuum while stirring in a heap to define "part(s) on the nozzle".
@@ -570,7 +570,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
     @Root
     public static class DropBox extends AbstractModelObject implements Identifiable, Named {
         // some settings that I might expose later
-        final static int dropHeight = 15;   // too high and they might jump out of the DropBox
+        final static int dropHeight = 20;   // too high and they might jump out of the DropBox
 
         @Attribute(name = "id")
         final private String id;
@@ -650,7 +650,11 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
          * @throws Exception something went wrong.
          */
         public void dropInto(Nozzle nozzle) throws Exception {
-            dropPart(nozzle, centerBottomLocation.add(new Location(LengthUnit.Millimeters, 0d, 0d, dropHeight, 0d)));
+            Location dropLocation = centerBottomLocation.add(new Location(LengthUnit.Millimeters, 0d, 0d, dropHeight, 0d));
+            if (dropLocation.getZ() > 0) {
+                dropLocation = dropLocation.derive(null, null, 0d, null);
+            }
+            dropPart(nozzle, dropLocation);
         }
 
         /**
