@@ -58,30 +58,30 @@ public class ReferenceHead extends AbstractHead {
              */
             HeadMountable hm = getDefaultCamera();
             Part homePart = Configuration.get().getPart("FIDUCIAL-HOME");
-            if (homePart != null) {
-                Location homingLocation = Configuration.get().getMachine().getFiducialLocator()
-                        .getHomeFiducialLocation(getHomingFiducialLocation(), homePart);
+            if (homePart == null) {
+                throw new Exception("Visual homing is missing the FIDUCIAL-HOME part. Please create it.");
+            }
+            Location homingLocation = Configuration.get().getMachine().getFiducialLocator()
+                    .getHomeFiducialLocation(getHomingFiducialLocation(), homePart);
+            if (homingLocation == null) {
+                // Homing failed
+                throw new Exception("Visual homing failed");
+            }
 
-                if (homingLocation == null) {
-                    // Homing failed
-                    throw new Exception("Visual homing failed");
-                }
-
-                ReferenceMachine machine = getMachine();
-                MappedAxes mappedAxes = hm.getMappedAxes(machine); 
-                AxesLocation axesHomingLocation;
-                if (getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
-                    // Convert to raw coordinates;  
-                    axesHomingLocation = hm.toRaw(hm.toHeadLocation(getHomingFiducialLocation()));
-                }
-                else {
-                    axesHomingLocation = mappedAxes.getHomeLocation(); 
-                }
-                
-                // Reset the homing fiducial location as the new current location.
-                for (Driver driver : mappedAxes.getMappedDrivers(machine)) {
-                    ((ReferenceDriver) driver).resetLocation(machine, new MappedAxes(mappedAxes, driver), axesHomingLocation);
-                }
+            ReferenceMachine machine = getMachine();
+            MappedAxes mappedAxes = hm.getMappedAxes(machine); 
+            AxesLocation axesHomingLocation;
+            if (getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
+                // Convert to raw coordinates;  
+                axesHomingLocation = hm.toRaw(hm.toHeadLocation(getHomingFiducialLocation()));
+            }
+            else {
+                axesHomingLocation = mappedAxes.getHomeLocation(); 
+            }
+            
+            // Reset the homing fiducial location as the new current location.
+            for (Driver driver : mappedAxes.getMappedDrivers(machine)) {
+                ((ReferenceDriver) driver).resetLocation(machine, new MappedAxes(mappedAxes, driver), axesHomingLocation);
             }
         }
         // Now that the machine is physically homed, do the logical homing.

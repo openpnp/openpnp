@@ -19,7 +19,10 @@
 
 package org.openpnp.machine.reference.camera;
 
+import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeSupport;
 import java.net.URL;
@@ -129,11 +132,10 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
          */
         BufferedImage frame = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
-        Graphics gFrame = frame.getGraphics();
+        Graphics2D gFrame = frame.createGraphics();
+        gFrame.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        Location location = getLocation()
-                .convertToUnits(LengthUnit.Millimeters);
-        location = NullDriver.simulateImperfectLocation(location, getLooking());
+        Location location = NullDriver.getSimulatedPhysicalLocation(this, getLooking());
         
         double locationX = location.getX();
         double locationY = location.getY();
@@ -146,11 +148,14 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 
         gFrame.drawImage(source, 0, 0, width - 1, height - 1, dx1, dy1, dx1 + width - 1,
                 dy1 + height - 1, null);
+        
+        NullDriver.drawSimulatedCameraNoise(gFrame, width, height);
 
         gFrame.dispose();
 
         return frame;
     }
+
 
     private synchronized void initialize() throws Exception {
         stop();
@@ -173,7 +178,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
         while (!Thread.interrupted()) {
             broadcastCapture(captureForPreview());
             try {
-                Thread.sleep(1000 / fps);
+                Thread.sleep(100 / fps);
             }
             catch (InterruptedException e) {
                 return;

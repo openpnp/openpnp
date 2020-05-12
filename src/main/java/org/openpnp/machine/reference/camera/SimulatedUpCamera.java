@@ -13,13 +13,16 @@ import java.awt.image.BufferedImage;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.camera.wizards.SimulatedUpCameraConfigurationWizard;
 import org.openpnp.machine.reference.driver.NullDriver;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.MappedAxes;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
@@ -76,9 +79,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         for (Head head :  Configuration.get()
                 .getMachine().getHeads()) {
             for (Nozzle nozzle : head.getNozzles()) {
-                Location l = nozzle.getLocation()
-                                   .convertToUnits(LengthUnit.Millimeters);
-                l = NullDriver.simulateImperfectLocation(l, getLooking());
+                Location l = NullDriver.getSimulatedPhysicalLocation(nozzle, getLooking());
                 if (phyBounds.contains(l.getX(), l.getY())) {
                     drawNozzle(g, nozzle);
                 }
@@ -86,7 +87,11 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         }
 
         g.setTransform(tx);
+
+        NullDriver.drawSimulatedCameraNoise(g, width, height);
+
         g.dispose();
+
         return image;
     }
 
@@ -100,9 +105,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         
         // Draw the nozzle
         // Get nozzle offsets from camera
-        Location l = nozzle.getLocation()
-                .convertToUnits(LengthUnit.Millimeters);
-        l = NullDriver.simulateImperfectLocation(l, getLooking());    
+        Location l = NullDriver.getSimulatedPhysicalLocation(nozzle, getLooking());
         Location offsets = l.subtractWithRotation(getLocation());
         
         // Create a nozzle shape

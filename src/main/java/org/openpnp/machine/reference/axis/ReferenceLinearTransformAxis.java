@@ -208,12 +208,23 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
     }
 
 
-    public static double [] getLinearTransform(ReferenceLinearTransformAxis axis) throws Exception {
+    private static double [] getLinearTransform(ReferenceLinearTransformAxis axis, double [] unit) throws Exception {
         if (axis != null) {
             return axis.getLinearTransform();
         }
-        return new double [] { 0, 0, 0, 0, 0 };
+        return unit;
     }
+
+    private static double getLinearCoordinate(AxesLocation location,
+            ReferenceLinearTransformAxis linearAxis, AbstractAxis inputAxis) {
+        if (linearAxis != null) {
+            return location.getCoordinate(linearAxis);
+        }
+        else {
+            return location.getCoordinate(inputAxis);
+        }
+    }
+
 
     @Override
     public AxesLocation toTransformed(AxesLocation location) {
@@ -263,10 +274,10 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
         }
         // Query each axis for its Affine Transform vector.
         double  [][] affineTransform = new double [][] {
-            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[0]),
-            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[1]),
-            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[2]),
-            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[3]),
+            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[0], new double [] { 1, 0, 0, 0, 0}),
+            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[1], new double [] { 0, 1, 0, 0, 0}),
+            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[2], new double [] { 0, 0, 1, 0, 0}),
+            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[3], new double [] { 0, 0, 0, 1, 0}),
             { 0, 0, 0, 0, 1 }
         };
 
@@ -274,10 +285,10 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
         double [][] invertedAffineTransform = Matrix.inverse(affineTransform);
         // Get the transformed vector by querying the linear axes' coordinates.
         double [][] transformedVector = new double [][] {
-            { location.getCoordinate(linearAxes[0]) },
-            { location.getCoordinate(linearAxes[1]) },
-            { location.getCoordinate(linearAxes[2]) },
-            { location.getCoordinate(linearAxes[3]) },
+            { ReferenceLinearTransformAxis.getLinearCoordinate(location, linearAxes[0], inputAxes[0]) },
+            { ReferenceLinearTransformAxis.getLinearCoordinate(location, linearAxes[1], inputAxes[1]) },
+            { ReferenceLinearTransformAxis.getLinearCoordinate(location, linearAxes[2], inputAxes[2]) },
+            { ReferenceLinearTransformAxis.getLinearCoordinate(location, linearAxes[3], inputAxes[3]) },
             { 1 }
         };
         // Calculate the raw vector by applying the inverdet Affine Transform.
@@ -289,12 +300,11 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
         location = location.put(new AxesLocation(inputAxes[3], rawVector[3][0]));
         // Recurse input axes to raw.
         location = AbstractTransformedAxis.toRaw(inputAxes[0], location);
+        location = AbstractTransformedAxis.toRaw(inputAxes[1], location);
         location = AbstractTransformedAxis.toRaw(inputAxes[2], location);
         location = AbstractTransformedAxis.toRaw(inputAxes[3], location);
-        location = AbstractTransformedAxis.toRaw(inputAxes[4], location);
         return location;
     }
-
     protected void consolidateInputAxes(Axis axis, AbstractAxis inputAxis, Axis.Type inputType,
             AbstractAxis[] inputAxes) throws Exception {
         int j = inputType.ordinal();
