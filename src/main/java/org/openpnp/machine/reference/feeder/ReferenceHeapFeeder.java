@@ -749,7 +749,10 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
          */
         public void dropPart(Nozzle nozzle, Location location) throws Exception {
             // move to the  location
-            MovableUtils.moveToLocationAtSafeZ(nozzle, location);
+            if (nozzle.getLocation().getLinearDistanceTo(location) > 0.0001) {
+                nozzle.moveToSafeZ();
+            }
+            nozzle.moveTo(location);
             // discard the part
             nozzle.place();
             long  dropWait = System.currentTimeMillis() + Math.round(1.3 * (((ReferenceNozzle)nozzle).getPlaceDwellMilliseconds() + ((ReferenceNozzleTip)nozzle.getNozzleTip()).getPlaceDwellMilliseconds()));
@@ -758,7 +761,6 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
                 nozzle.moveTo(location.addWithRotation(new Location(LengthUnit.Millimeters, 1, 1, 0, 15)), 1, Movable.MoveToOption.SpeedOverPrecision);
                 nozzle.moveTo(location.addWithRotation(new Location(LengthUnit.Millimeters, -1, -1, 0, -15)), 1, Movable.MoveToOption.SpeedOverPrecision);
             }
-            nozzle.moveToSafeZ();
             if (!nozzle.isPartOff()) {
                 throw new Exception("DropBox " + getName() + ": Dropping part failed, check nozzle tip");
             }
