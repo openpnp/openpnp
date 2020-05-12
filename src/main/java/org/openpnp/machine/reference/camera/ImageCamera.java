@@ -29,7 +29,10 @@ import javax.imageio.ImageIO;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.camera.wizards.ImageCameraConfigurationWizard;
+import org.openpnp.machine.reference.driver.NullDriver;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
@@ -128,7 +131,10 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 
         Graphics gFrame = frame.getGraphics();
 
-        Location location = getLocation();
+        Location location = getLocation()
+                .convertToUnits(LengthUnit.Millimeters);
+        location = NullDriver.simulateImperfectLocation(location, getLooking());
+        
         double locationX = location.getX();
         double locationY = location.getY();
 

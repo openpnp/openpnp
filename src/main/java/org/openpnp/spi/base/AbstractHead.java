@@ -79,7 +79,7 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     private VisualHomingMethod visualHomingMethod = VisualHomingMethod.None;
 
     @Element(required = false)
-    protected Location homingFiducialLocation;
+    protected Location homingFiducialLocation = new Location(LengthUnit.Millimeters);
 
 
     protected Machine machine;

@@ -130,18 +130,13 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         visualHomingMethod = new JComboBox(VisualHomingMethod.values());
         visualHomingMethod.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
-                boolean homingCapture = (visualHomingMethod.getSelectedItem() == VisualHomingMethod.ResetToFiducialLocation);
-                boolean homingFiducial = (visualHomingMethod.getSelectedItem() != VisualHomingMethod.None);
-                captureHomeCoordinatesAction.setEnabled(homingCapture);
-                positionHomeCoordinatesAction.setEnabled(homingCapture);
-                homingFiducialX.setEnabled(homingFiducial);
-                homingFiducialY.setEnabled(homingFiducial);
+                adaptDialog();
             }
         });
         panel.add(visualHomingMethod, "4, 6, 3, 1, fill, default");
         
-        JLabel lblWarningChangingThese = new JLabel("<html>Warning: changing the above settings or physically moving the <br/>\r\nhoming fiducial might break all your captured locations on the machine!<br/>\r\n&nbsp;</html>");
-        lblWarningChangingThese.setForeground(Color.RED);
+        JLabel lblWarningChangingThese = new JLabel("<html><p>\r\n<strong>Important Notice</strong>: the homing fiducial should be mounted \r\nand configured early in the build process, before you start capturing a large number of\r\nlocations for the Machine Setup (nozzle tip changer, feeders etc.) \r\n</p>\r\n<p style=\"color:red\">Each time the above settings are changed or the fiducial physically moved, all the already captured locations in the Machine Setup will be broken. </p></html>");
+        lblWarningChangingThese.setForeground(Color.BLACK);
         panel.add(lblWarningChangingThese, "4, 8, 7, 1");
 
         JLabel lblParkLocation = new JLabel("Park Location");
@@ -317,7 +312,17 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(minY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxY);
-        
+
+        adaptDialog();
+    }
+
+    protected void adaptDialog() {
+        boolean homingCapture = (visualHomingMethod.getSelectedItem() == VisualHomingMethod.ResetToFiducialLocation);
+        boolean homingFiducial = (visualHomingMethod.getSelectedItem() != VisualHomingMethod.None);
+        captureHomeCoordinatesAction.setEnabled(homingCapture);
+        positionHomeCoordinatesAction.setEnabled(homingCapture);
+        homingFiducialX.setEnabled(homingFiducial);
+        homingFiducialY.setEnabled(homingFiducial);
     }
 
     private static Location getParsedLocation(JTextField textFieldX, JTextField textFieldY) {

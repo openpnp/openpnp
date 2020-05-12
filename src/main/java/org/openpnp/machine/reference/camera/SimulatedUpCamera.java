@@ -13,13 +13,16 @@ import java.awt.image.BufferedImage;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.camera.wizards.SimulatedUpCameraConfigurationWizard;
+import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.Utils2D;
@@ -70,12 +73,12 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
                 location.getY() - phyHeight / 2, phyWidth, phyHeight);
 
         // determine if there are any nozzles within our bounds and if so render them
-        for (Head head : Configuration.get()
-                                      .getMachine()
-                                      .getHeads()) {
+        for (Head head :  Configuration.get()
+                .getMachine().getHeads()) {
             for (Nozzle nozzle : head.getNozzles()) {
                 Location l = nozzle.getLocation()
                                    .convertToUnits(LengthUnit.Millimeters);
+                l = NullDriver.simulateImperfectLocation(l, getLooking());
                 if (phyBounds.contains(l.getX(), l.getY())) {
                     drawNozzle(g, nozzle);
                 }
@@ -97,9 +100,10 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         
         // Draw the nozzle
         // Get nozzle offsets from camera
-        Location offsets = nozzle.getLocation()
-                .convertToUnits(units)
-                .subtractWithRotation(getLocation());
+        Location l = nozzle.getLocation()
+                .convertToUnits(LengthUnit.Millimeters);
+        l = NullDriver.simulateImperfectLocation(l, getLooking());    
+        Location offsets = l.subtractWithRotation(getLocation());
         
         // Create a nozzle shape
         fillShape(g, new Ellipse2D.Double(-0.5, -0.5, 1, 1), Color.green, unitsPerPixel, offsets, false);

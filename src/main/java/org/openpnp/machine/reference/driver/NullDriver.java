@@ -20,31 +20,25 @@
 package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
-import java.util.HashMap;
 
-import javax.swing.Action;
-import javax.swing.Icon;
-
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
-import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
-import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.MappedAxes;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.Machine;
+import org.openpnp.spi.Axis;
+import org.openpnp.spi.Camera.Looking;
+import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Movable.MoveToOption;
-import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractDriver;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 
 /**
  * An example of the simplest possible driver that can support multiple heads. This driver maintains
@@ -56,12 +50,31 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
     @Attribute(required = false)
     private double feedRateMmPerMinute = 5000;
 
+    /**
+     * The simulated non-squareness is applied to what the simulated cameras see.
+     * Works on ImageCamera and SimulatedUpCamera
+     */
+    @Attribute(required = false)
+    private double simulatedNonSquarenessFactor;
+
+    /**
+     * The simulated home offsets are applied to what the simulated cameras see.
+     * This works like G92.
+     * Works on ImageCamera and SimulatedUpCamera
+     */
+    @Element(required = false)
+    private Location homingOffsets = new Location(LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Location simulatedRunout = new Location(LengthUnit.Millimeters, 0.1, 0.02, 0, 0);
+
     private boolean enabled;
 
     @Override
     public void home(ReferenceMachine machine, MappedAxes mappedAxes) throws Exception {
         Logger.debug("home()");
         checkEnabled();
+        homingOffsets = new Location(LengthUnit.Millimeters);
         mappedAxes.setLocation(new AxesLocation());
     }
 
@@ -70,6 +83,17 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
     public void resetLocation(ReferenceMachine machine, MappedAxes mappedAxes, AxesLocation location)
             throws Exception {
         Logger.debug("resetLocation("+location+")");
+        AxesLocation offsets = location.subtract(mappedAxes.getLocation());
+        double x = 0, y = 0;
+        for (ControllerAxis axis : mappedAxes.getAxes()) {
+            if (axis.getType() == Axis.Type.X) {
+                x = offsets.getCoordinate(axis) + homingOffsets.getX();
+            }
+            else if (axis.getType() == Axis.Type.Y) {
+                y = offsets.getCoordinate(axis) + homingOffsets.getY();
+            }
+        }
+        homingOffsets = new Location(AxesLocation.getUnits(), x, y, 0, 0);
         mappedAxes.setLocation(location);
     }
 
@@ -108,7 +132,7 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
      */
     protected void simulateMovement(ReferenceHeadMountable hm, MappedAxes mappedAxes, AxesLocation location, AxesLocation hl,
             double speed) throws Exception {
-        AxesLocation delta = hl.subtract(location);
+        AxesLocation delta = location.subtract(hl);
         double distanceLinear = delta.distanceLinear();
         double distanceRotational = delta.distanceRotational();
         double timeLinear = distanceLinear / (feedRateMmPerMinute/60.0 * speed);
@@ -119,7 +143,7 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
         double dt;
         do {
             double t = (System.currentTimeMillis() - t0)*0.001;
-            dt = Math.min(1.0, (t-t0)/time);
+            dt = Math.min(1.0, t/time);
             AxesLocation l = hl.add(delta.multiply(dt));
             mappedAxes.setLocation(l);
 
@@ -127,7 +151,7 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
             ((ReferenceMachine) Configuration.get().getMachine())
                     .fireMachineHeadActivity(hm.getHead());
             try {
-                Thread.sleep(100);
+                Thread.sleep(1);
             }
             catch (Exception e) {
 
@@ -198,5 +222,61 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
     public void migrateDriver(ReferenceMachine machine) throws Exception {
         machine.addDriver(this);
         createAxisMappingDefaults(machine); 
+    }
+
+
+    public double getSimulatedNonSquarenessFactor() {
+        return simulatedNonSquarenessFactor;
+    }
+
+
+    public void setSimulatedNonSquarenessFactor(double simulatedNonSquarenessFactor) {
+        this.simulatedNonSquarenessFactor = simulatedNonSquarenessFactor;
+    }
+
+    public Location getHomingOffsets() {
+        return homingOffsets;
+    }
+
+    public void setHomingOffsets(Location homingOffsets) {
+        this.homingOffsets = homingOffsets;
+    }
+
+    public Location getSimulatedRunout() {
+        return simulatedRunout;
+    }
+
+
+    public void setSimulatedRunout(Location simulatedRunout) {
+        this.simulatedRunout = simulatedRunout;
+    }
+
+
+    /**
+     * Simulates imperfection in a NullDriver. If any other driver is configured this remains ineffective. 
+     * 
+     * @param location The perfect location to be made imperfect.
+     * @param looking 
+     * @return The imperfect location adjusted for non-squareness compensation and a visual homing offset.
+     */
+    public static Location simulateImperfectLocation(Location location, Looking looking) {
+        ReferenceMachine machine = (ReferenceMachine) Configuration.get()
+                .getMachine();
+        if (machine.getDefaultDriver() instanceof NullDriver) {
+            NullDriver driver =  (NullDriver) machine.getDefaultDriver();
+            double simulatedNonSquarenessFactor = driver.getSimulatedNonSquarenessFactor();
+            Location homeOffset = driver.getHomingOffsets();
+            if (looking == Looking.Down) {
+                location = location.subtract(homeOffset);
+            }
+            else if (looking == Looking.Up) {
+                location = location.add(homeOffset);
+                location = location.add(driver.getSimulatedRunout().rotateXy(location.getRotation())); 
+            }
+            location = location.add(new Location(LengthUnit.Millimeters, 
+                    simulatedNonSquarenessFactor*location.getY(), 
+                    0, 0, 0));
+        }
+        return location;
     }
 }
