@@ -74,7 +74,7 @@ public class BasicJobTest {
         Nozzle n2 = h1.getNozzle("N2");
         Camera c1 = h1.getCamera("C1");
 
-        delegate.expectMove("Move N1 Nozzle Change Unload", n1,
+        delegate.expectMove("Move N1 Nozzle Change Load", n1,
                 new Location(LengthUnit.Millimeters, 40, 0, 0, 0), 1.0);
         delegate.expectMove("Move N2 Nozzle Change Load", n2,
                 new Location(LengthUnit.Millimeters, 50, 0, 0, 0), 1.0);
@@ -220,8 +220,8 @@ public class BasicJobTest {
             public ExpectedMove(String description, HeadMountable headMountable, Location location,
                     double speed) throws Exception {
                 this.headMountable = headMountable;
-                // The expected location is in raw coordinates.  
-                location = headMountable.toHeadLocation(location);
+                // The expected location must be converted into raw coordinates but it is already a head location.  
+                // DO NOT DO THIS: Location headLocation = headMountable.toHeadLocation(location);
                 this.location = headMountable.toRaw(location);
                 this.speed = speed;
                 this.description = description;

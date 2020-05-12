@@ -122,8 +122,8 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     @Override
     public void moveTo(Location location, double speed, MoveToOption... options) throws Exception {
         Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
-        location = toHeadLocation(location, getLocation());
-        getHead().moveTo(this, location, getHead().getMaxPartSpeed() * speed, options);
+        Location headLocation = toHeadLocation(location, getLocation());
+        getHead().moveTo(this, headLocation, getHead().getMaxPartSpeed() * speed, options);
     }
 
     @Override
@@ -240,7 +240,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
 
     @Override
     public Location getLocation() {
-        MappedAxes mappedAxes = getMappedAxes(getHead().getMachine());
+        MappedAxes mappedAxes = getMappedAxes(Configuration.get().getMachine());
         Location location = toTransformed(mappedAxes.getLocation());
         // From head to HeadMountable.
         return toHeadMountableLocation(location);

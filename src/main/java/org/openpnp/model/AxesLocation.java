@@ -24,6 +24,7 @@ package org.openpnp.model;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -166,4 +167,22 @@ public class AxesLocation {
         }
         return (location.containsKey(axis));
     }
+
+    @Override
+    public String toString() {
+        StringBuilder str = new StringBuilder();
+        str.append("(");
+        int i = 0;
+        for (Entry<Axis, Double> entry : location.entrySet()) {
+            if (i++ > 0) {
+                str.append(", ");
+            }
+            str.append(entry.getKey().getName());
+            str.append(":");
+            str.append(String.format(Locale.US, "%f", entry.getValue())); 
+        }
+        str.append(")");
+        return str.toString();
+    }
+
 }
