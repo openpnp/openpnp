@@ -21,16 +21,21 @@
 
 package org.openpnp.machine.reference.axis;
 
+import java.util.List;
+
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.axis.wizards.ReferenceCamCounterClockwiseAxisConfigurationWizard;
 import org.openpnp.machine.reference.axis.wizards.ReferenceLinearTransformAxisConfigurationWizard;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.base.AbstractAxis;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractTransformedAxis;
@@ -94,23 +99,13 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
     }
 
     @Override
-    public ControllerAxis getControllerAxis() {
-        AbstractAxis inputAxis = getPrimaryInputAxis();
-        if (inputAxis != null) {
-            return inputAxis.getControllerAxis();
-        }
-        return null;
-    }
-
-    @Override
-    public double[] getLinearTransform(LengthUnit lengthUnit) {
-        return new double[] { 
-                inputAxisX != null ? factorX : 0.0,
-                        inputAxisY != null ? factorY : 0.0,
-                                inputAxisZ != null ? factorZ : 0.0,
-                                        inputAxisRotation != null ? factorRotation : 0.0,
-                                                offset.convertToUnits(lengthUnit).getValue(),
-        };
+    public MappedAxes getControllerAxes(Machine machine) {
+        MappedAxes mappedAxes = new MappedAxes(machine,
+                AbstractAxis.getControllerAxes(inputAxisX, machine),
+                AbstractAxis.getControllerAxes(inputAxisY, machine),
+                AbstractAxis.getControllerAxes(inputAxisZ, machine),
+                AbstractAxis.getControllerAxes(inputAxisRotation, machine));
+        return mappedAxes;
     }
 
     public AbstractAxis getInputAxisX() {
@@ -190,29 +185,126 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
         this.offset = offset;
     }
 
-    @Override
-    public double toRaw(Location location, double [][] invertedAffineTransform) {
-        double [][] transformedVector = new double [][] {
-            { AbstractTransformedAxis.toTransformed(inputAxisX, location) },
-            { AbstractTransformedAxis.toTransformed(inputAxisY, location) },
-            { AbstractTransformedAxis.toTransformed(inputAxisZ, location) },
-            { AbstractTransformedAxis.toTransformed(inputAxisRotation, location) },
+    public double[] getLinearTransform() throws Exception {
+        if (factorX != 0.0 && inputAxisX == null) {
+            throw new Exception(getName()+" has X factor but no input axis."); 
+        }
+        if (factorY != 0.0 && inputAxisY == null) {
+            throw new Exception(getName()+" has Y factor but no input axis."); 
+        }
+        if (factorZ != 0.0 && inputAxisZ == null) {
+            throw new Exception(getName()+" has Z factor but no input axis."); 
+        }
+        if (factorRotation != 0.0 && inputAxisRotation == null) {
+            throw new Exception(getName()+" has Rotation factor but no input axis."); 
+        }
+        return new double[] { 
+                inputAxisX != null ? factorX : 0.0,
+                        inputAxisY != null ? factorY : 0.0,
+                                inputAxisZ != null ? factorZ : 0.0,
+                                        inputAxisRotation != null ? factorRotation : 0.0,
+                                                offset.convertToUnits(AxesLocation.getUnits()).getValue(),
         };
-        double [][] rawVector = Matrix.multiply(invertedAffineTransform, transformedVector);
-        return rawVector[type.ordinal()][0];
+    }
+
+
+    public static double [] getLinearTransform(ReferenceLinearTransformAxis axis) throws Exception {
+        if (axis != null) {
+            return axis.getLinearTransform();
+        }
+        return new double [] { 0, 0, 0, 0, 0 };
     }
 
     @Override
-    public double toTransformed(Location location) {
-        double x = AbstractTransformedAxis.toTransformed(inputAxisX, location);
-        double y = AbstractTransformedAxis.toTransformed(inputAxisY, location);
-        double z = AbstractTransformedAxis.toTransformed(inputAxisZ, location);
-        double rotation = AbstractTransformedAxis.toTransformed(inputAxisRotation, location);
-        return x * factorX
+    public AxesLocation toTransformed(AxesLocation location) {
+        location = AbstractTransformedAxis.toTransformed(inputAxisX, location);
+        location = AbstractTransformedAxis.toTransformed(inputAxisY, location);
+        location = AbstractTransformedAxis.toTransformed(inputAxisZ, location);
+        location = AbstractTransformedAxis.toTransformed(inputAxisRotation, location);
+        double x = location.getCoordinate(inputAxisX);
+        double y = location.getCoordinate(inputAxisY);
+        double z = location.getCoordinate(inputAxisZ);
+        double rotation = location.getCoordinate(inputAxisRotation);
+        double offset = this.offset.convertToUnits(AxesLocation.getUnits()).getValue();
+        return location.put(new AxesLocation(this, 
+                x * factorX
                 + y * factorY
                 + z * factorZ
                 + rotation * factorRotation
-                + offset.convertToUnits(location.getUnits()).getValue();
+                + offset));
+    }
+
+    @Override
+    public AxesLocation toRaw(AxesLocation location) throws Exception {
+        // Check if the transformation was already done by another axis.
+        if (location.contains(inputAxisX)
+                && location.contains(inputAxisY)
+                && location.contains(inputAxisZ)
+                && location.contains(inputAxisRotation)) {
+            // Already done. 
+            return location;
+        }
+        // Get all the ReferenceLinearTransformAxis from the transformed location.
+        ReferenceLinearTransformAxis [] linearAxes = new ReferenceLinearTransformAxis [4]; 
+        AbstractAxis [] inputAxes = new AbstractAxis [4];  
+        for (Axis axis : location.getAxes()) {
+            if (axis instanceof ReferenceLinearTransformAxis) {
+                int i = axis.getType().ordinal();
+                if (linearAxes[i] != null) {
+                    throw new Exception("Axes "+linearAxes[i].getName()+" and "+axis.getName()
+                    +" both have the same type in a linear transformation.");
+                }
+                linearAxes[i] = (ReferenceLinearTransformAxis) axis;
+                consolidateInputAxes(axis, linearAxes[i].inputAxisX, Axis.Type.X, inputAxes);
+                consolidateInputAxes(axis, linearAxes[i].inputAxisY, Axis.Type.Y, inputAxes);
+                consolidateInputAxes(axis, linearAxes[i].inputAxisZ, Axis.Type.Z, inputAxes);
+                consolidateInputAxes(axis, linearAxes[i].inputAxisRotation, Axis.Type.Rotation, inputAxes);
+            }
+        }
+        // Query each axis for its Affine Transform vector.
+        double  [][] affineTransform = new double [][] {
+            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[0]),
+            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[1]),
+            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[2]),
+            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[3]),
+            { 0, 0, 0, 0, 1 }
+        };
+
+        // Compute the inverse.
+        double [][] invertedAffineTransform = Matrix.inverse(affineTransform);
+        // Get the transformed vector by querying the linear axes' coordinates.
+        double [][] transformedVector = new double [][] {
+            { location.getCoordinate(linearAxes[0]) },
+            { location.getCoordinate(linearAxes[1]) },
+            { location.getCoordinate(linearAxes[2]) },
+            { location.getCoordinate(linearAxes[3]) },
+            { 1 }
+        };
+        // Calculate the raw vector by applying the inverdet Affine Transform.
+        double [][] rawVector = Matrix.multiply(invertedAffineTransform, transformedVector);
+        // Place the consolidated result in the location
+        location = location.put(new AxesLocation(inputAxes[0], rawVector[0][0]));
+        location = location.put(new AxesLocation(inputAxes[1], rawVector[1][0]));
+        location = location.put(new AxesLocation(inputAxes[2], rawVector[2][0]));
+        location = location.put(new AxesLocation(inputAxes[3], rawVector[3][0]));
+        // Recurse input axes to raw.
+        location = AbstractTransformedAxis.toRaw(inputAxes[0], location);
+        location = AbstractTransformedAxis.toRaw(inputAxes[2], location);
+        location = AbstractTransformedAxis.toRaw(inputAxes[3], location);
+        location = AbstractTransformedAxis.toRaw(inputAxes[4], location);
+        return location;
+    }
+
+    protected void consolidateInputAxes(Axis axis, AbstractAxis inputAxis, Axis.Type inputType,
+            AbstractAxis[] inputAxes) throws Exception {
+        int j = inputType.ordinal();
+        if (inputAxis != null) {
+            if (inputAxes[j] != null && inputAxes[j] != inputAxis) {
+                throw new Exception("Axes "+axis.getName()+" has a different input "+inputType
+                        +" axis than other linear transformation axes.");
+            }
+            inputAxes[j] = inputAxis;
+        }
     }
 
     @Override

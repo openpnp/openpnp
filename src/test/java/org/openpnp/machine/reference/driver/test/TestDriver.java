@@ -8,11 +8,10 @@ import javax.swing.Icon;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
-import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
 import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.PropertySheetHolder;
@@ -30,27 +29,22 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
     }
 
     @Override
-    public void home(ReferenceHead head, MappedAxes mappedAxes, Location location) throws Exception {
-        location = new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
-        delegate.home(head, mappedAxes, location);
+    public void home(ReferenceMachine machine, MappedAxes mappedAxes) throws Exception {
+        delegate.home(machine, mappedAxes);
     }
 
     @Override
-    public void resetLocation(ReferenceHead head, MappedAxes mappedAxes, Location location)
+    public void resetLocation(ReferenceMachine machine, MappedAxes mappedAxes, AxesLocation location)
             throws Exception {
-        delegate.resetLocation(head, mappedAxes, location);
+        delegate.resetLocation(machine, mappedAxes, location);
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed, MoveToOption... options)
+    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, AxesLocation location, double speed, MoveToOption... options)
             throws Exception {
-        // Convert the Location to millimeters, since that's the unit that
-        // this driver works in natively.
-        location = location.convertToUnits(LengthUnit.Millimeters);
-
-        if (!mappedAxes.locationMatches(mappedAxes.getLocation(this), location, this)) {
+        if (!mappedAxes.locationsMatch(mappedAxes.getLocation(), location)) {
             delegate.moveTo(hm, mappedAxes, location, speed);
-            mappedAxes.setLocation(location, this);
+            mappedAxes.setLocation(location);
         }
     }
 
@@ -76,17 +70,17 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
         }
 
         @Override
-        public void home(ReferenceHead head, MappedAxes mappedAxes, Location location) throws Exception {
+        public void home(ReferenceMachine machine, MappedAxes mappedAxes) throws Exception {
 
         }
 
         @Override
-        public void resetLocation(ReferenceHead head, MappedAxes mappedAxes, Location location)
+        public void resetLocation(ReferenceMachine machine, MappedAxes mappedAxes, AxesLocation location)
                 throws Exception {
         }
  
         @Override
-        public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed, MoveToOption... options)
+        public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, AxesLocation location, double speed, MoveToOption... options)
                 throws Exception {
 
         }

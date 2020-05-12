@@ -28,6 +28,7 @@ import org.openpnp.machine.reference.axis.ReferenceMappedAxis;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConsole;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverGcodes;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverSettings;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -45,6 +46,7 @@ import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.base.AbstractAxis;
 import org.openpnp.spi.base.AbstractHead;
+import org.openpnp.spi.base.AbstractHead.VisualHomingMethod;
 import org.openpnp.spi.base.AbstractHeadMountable;
 import org.openpnp.spi.base.AbstractSingleTransformedAxis;
 import org.openpnp.spi.base.AbstractTransformedAxis;
@@ -198,6 +200,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     @Attribute(required = false)
     boolean supportingPreMove = false;
 
+    @Attribute(required = false)
+    boolean usingLetterVariables = true;
+
     @ElementList(required = false, inline = true)
     public ArrayList<Command> commands = new ArrayList<>();
 
@@ -227,7 +232,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         commands.add(new Command(null, CommandType.COMMAND_CONFIRM_REGEX, "^ok.*"));
         commands.add(new Command(null, CommandType.CONNECT_COMMAND, "G21 ; Set millimeters mode\nG90 ; Set absolute positioning mode\nM82 ; Set absolute mode for extruder"));
         commands.add(new Command(null, CommandType.HOME_COMMAND, "G28 ; Home all axes"));
-        commands.add(new Command(null, CommandType.MOVE_TO_COMMAND, "G0 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:E%.4f} F{FeedRate:%.0f} ; Send standard Gcode move"));
+        commands.add(new Command(null, CommandType.MOVE_TO_COMMAND, "G0 {XL}{X:%.4f} {YL}{Y:%.4f} {ZL}{Z:%.4f} {RotationL}{Rotation:%.4f} F{FeedRate:%.0f} ; Send standard Gcode move"));
         commands.add(new Command(null, CommandType.MOVE_TO_COMPLETE_COMMAND, "M400 ; Wait for moves to complete before returning"));
     }
 
@@ -283,11 +288,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
 
     @Override
-    public void home(ReferenceHead head, MappedAxes mappedAxes, Location location) throws Exception {
+    public void home(ReferenceMachine machine, MappedAxes mappedAxes) throws Exception {
         // Home is sent with an infinite timeout since it's tough to tell how long it will
         // take.
         String command = getCommand(null, CommandType.HOME_COMMAND);
-        command = substituteVariable(command, "Id", head.getId());
+        // legacy head support
+        Head head = machine.getDefaultHead();
+        command = substituteVariable(command, "Id", head.getId()); 
         command = substituteVariable(command, "Name", head.getName());
         long timeout = -1;
         List<String> responses = sendGcode(command, timeout);
@@ -317,29 +324,48 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         }
     }
 
+    protected List<String> getAxisVariables(ReferenceMachine machine) {
+        List<String> variables = new ArrayList<>();
+        if (usingLetterVariables) {
+            MappedAxes machineAxes = new MappedAxes(machine); 
+            for (ControllerAxis axis : machineAxes.getAxes()) {
+                if (axis.getLetter() != null && !axis.getLetter().isEmpty()) {
+                    variables.add(axis.getLetter());
+                }
+            }
+        }
+        else {
+            for (Type type : Type.values()) {
+                variables.add(type.toString());
+            }
+        }
+        return variables;
+    }
+    
     @Override
-    public void resetLocation(ReferenceHead head, MappedAxes mappedAxes, Location location)
+    public void resetLocation(ReferenceMachine machine, MappedAxes mappedAxes, AxesLocation location)
             throws Exception {
-        // Convert to driver units
-        location = location.convertToUnits(getUnits());
         // Compose the command
         String command = getCommand(null, CommandType.POSITION_RESET_COMMAND);
         if (command != null) {
+            // legacy head support
+            Head head = machine.getDefaultHead();
             command = substituteVariable(command, "Id", head.getId());
             command = substituteVariable(command, "Name", head.getName());
-            for (Type axisType : Type.values()) {
-                ControllerAxis axis = mappedAxes.getAxis(axisType, this);
+            for (String variable : getAxisVariables(machine)) {
+                ControllerAxis axis = mappedAxes.getAxisByVariable(variable, usingLetterVariables);
                 if (axis != null) {
-                    command = substituteVariable(command, axisType+"", 
-                            axis.getLocationAxisCoordinate(location));
-                    command = substituteVariable(command, axisType+"L", 
+                    double coordinate = location.getCoordinate(axis, getUnits());
+                    command = substituteVariable(command, variable, coordinate);
+                    command = substituteVariable(command, variable+"L", 
                             axis.getLetter());
+
                     // Store the new current coordinate on the axis.
-                    axis.setCoordinate(axis.getLocationAxisCoordinate(location));
+                    axis.setCoordinate(coordinate);
                 }
                 else {
-                    command = substituteVariable(command, axisType+"", null);
-                    command = substituteVariable(command, axisType+"L", null); 
+                    command = substituteVariable(command, variable, null);
+                    command = substituteVariable(command, variable+"L", null); 
                 }
             }
             sendGcode(command, -1);
@@ -347,18 +373,21 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         else {
             // Try the legacy POST_VISION_HOME_COMMAND
             String postVisionHomeCommand = getCommand(null, CommandType.POST_VISION_HOME_COMMAND);
+            ControllerAxis axisX = mappedAxes.getAxisByVariable("X", false);
+            ControllerAxis axisY = mappedAxes.getAxisByVariable("Y", false);
             if (postVisionHomeCommand != null 
-                    && mappedAxes.getAxisX() != null 
-                    && mappedAxes.getAxisY() != null
-                    && mappedAxes.getAxisX().getDriver() == this 
-                    && mappedAxes.getAxisY().getDriver() == this) { 
+                    && axisX != null
+                    && axisY != null) { 
                 // X, Y, are mapped to this driver, legacy support enabled
-                postVisionHomeCommand = substituteVariable(postVisionHomeCommand, "X", mappedAxes.getAxisX().getLocationAxisCoordinate(location));
-                postVisionHomeCommand = substituteVariable(postVisionHomeCommand, "Y", mappedAxes.getAxisY().getLocationAxisCoordinate(location));
-                // Store the new current coordinate on the axis.
-                mappedAxes.getAxisX().setCoordinate(location.getX());
-                mappedAxes.getAxisY().setCoordinate(location.getY());
+                postVisionHomeCommand = substituteVariable(postVisionHomeCommand, "X", 
+                        location.getCoordinate(axisX, getUnits()));
+                postVisionHomeCommand = substituteVariable(postVisionHomeCommand, "Y", 
+                        location.getCoordinate(axisY, getUnits()));
+                // Execute the command
                 sendGcode(postVisionHomeCommand, -1);
+                // Store the new current coordinate on the axis.
+                axisX.setLengthCoordinate(location.getLengthCoordinate(axisX));
+                axisY.setLengthCoordinate(location.getLengthCoordinate(axisY));
             }
         }
     }
@@ -415,7 +444,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed, MoveToOption...options)
+    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, AxesLocation location, double speed, MoveToOption...options)
             throws Exception {
         // Start composing the command, will decide later, whether we actually send it.
         String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
@@ -431,10 +460,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                     break;
             }
         }
-        
-        // Convert to driver units.
-        location = location.convertToUnits(getUnits());
-        Location previousLocation = mappedAxes.getLocation(this);
 
         command = substituteVariable(command, "Id", hm.getId());
         command = substituteVariable(command, "Name", hm.getName());
@@ -443,15 +468,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
 
         // Go through all the axes and handle them.
         boolean doesMove = false;
-        for (Type axisType : Type.values()) {
-            ControllerAxis axis = mappedAxes.getAxis(axisType, this);
+        ReferenceMachine machine = (ReferenceMachine) hm.getHead().getMachine();
+        for (String variable : getAxisVariables(machine)) {
+            ControllerAxis axis = mappedAxes.getAxisByVariable(variable, usingLetterVariables);
             boolean moveAxis = false;
             boolean includeAxis = false;
             if (axis != null) {
                 // Compare the coordinates using the resolution of the axis to tolerate floating point errors
                 // from transformation etc. Also suppresses rounded-to-0 moves due to MOVE_TO_COMMANDs format 
                 // specifier (usually %.4f).
-                moveAxis = !axis.locationCoordinateMatches(location, previousLocation);
+                moveAxis = !axis.coordinatesMatch(location.getLengthCoordinate(axis), axis.getLengthCoordinate());
                 if (moveAxis) {
                     includeAxis = true;
                 }
@@ -465,27 +491,27 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                     // position change after all. 
                     // Note, there is no need for separate backlash compensation variables, as these are always 
                     // substituted alongside. 
-                    includeAxis = hasVariable(command, axisType+"F");
+                    includeAxis = hasVariable(command, variable+"F");
                 }
             }
             if (axis != null && includeAxis) {
                 // The move is definitely on. 
                 doesMove = true;
                 // TODO: discuss whether we should round to axis precision here.
-                double coordinate = axis.getLocationAxisCoordinate(location); 
-                double previousCoordinate = axis.getLocationAxisCoordinate(previousLocation); 
+                double coordinate = location.getCoordinate(axis); 
+                double previousCoordinate = axis.getCoordinate(); 
                 int direction = ((Double)coordinate).compareTo(previousCoordinate);
                 // Substitute the axis variables.
-                command = substituteVariable(command, axisType+"", coordinate);
-                command = substituteVariable(command, axisType+"F", coordinate);
-                command = substituteVariable(command, axisType+"L", axis.getLetter());
+                command = substituteVariable(command, variable, coordinate);
+                command = substituteVariable(command, variable+"F", coordinate);
+                command = substituteVariable(command, variable+"L", axis.getLetter());
                 // Apply backlash offset.
                 double backlashOffset = enableBacklash ? 
                         ((ReferenceControllerAxis) axis).getBacklashOffset().convertToUnits(getUnits()).getValue()
                         : 0.0;
-                command = substituteVariable(command, "BacklashOffset"+axisType, coordinate + backlashOffset); 
-                command = substituteVariable(command, axisType+"Decreasing", direction < 0 ? true : null);
-                command = substituteVariable(command, axisType+"Increasing", direction > 0 ? true : null);
+                command = substituteVariable(command, "BacklashOffset"+variable, coordinate + backlashOffset); 
+                command = substituteVariable(command, variable+"Decreasing", direction < 0 ? true : null);
+                command = substituteVariable(command, variable+"Increasing", direction > 0 ? true : null);
                 if (isSupportingPreMove() && axis instanceof ReferenceControllerAxis) {
                     // Check for a pre-move command.
                     String preMoveCommand = ((ReferenceControllerAxis) axis).getPreMoveCommand();
@@ -495,16 +521,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                     }
                 }
                 // Store the new current coordinate on the axis.
-                axis.setCoordinate(axis.getLocationAxisCoordinate(location));
+                axis.setCoordinate(coordinate);
             }
             else {
                 // Delete the unused axis variables.
-                command = substituteVariable(command, axisType+"", null);
-                command = substituteVariable(command, axisType+"F", null);
-                command = substituteVariable(command, axisType+"L", null); 
-                command = substituteVariable(command, "BacklashOffset"+axisType, null);
-                command = substituteVariable(command, axisType+"Decreasing", null);
-                command = substituteVariable(command, axisType+"Increasing", null);
+                command = substituteVariable(command, variable, null);
+                command = substituteVariable(command, variable+"F", null);
+                command = substituteVariable(command, variable+"L", null); 
+                command = substituteVariable(command, "BacklashOffset"+variable, null);
+                command = substituteVariable(command, variable+"Decreasing", null);
+                command = substituteVariable(command, variable+"Increasing", null);
             }
         }
         if (doesMove) {
@@ -531,7 +557,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                     }
                 }
             }
-            // TODO: extract
+            // TODO: extract the MOVE_TO_COMPLETE_COMMAND
             /*
              * If moveToCompleteCommand is specified, send it
              */
@@ -928,6 +954,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         this.backslashEscapedCharactersEnabled = backslashEscapedCharactersEnabled;
     }
 
+    public boolean isUsingLetterVariables() {
+        return usingLetterVariables;
+    }
+
+    public void setUsingLetterVariables(boolean usingLetterVariables) {
+        this.usingLetterVariables = usingLetterVariables;
+    }
+
     @Override
     public boolean isSupportingPreMove() {
         return supportingPreMove;
@@ -936,6 +970,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     public void setSupportingPreMove(boolean supportingPreMove) {
         this.supportingPreMove = supportingPreMove;
     }
+
 
     @Deprecated
     public Axis getLegacyAxis(HeadMountable hm, Type type) {
@@ -957,6 +992,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         axis = new ReferenceControllerAxis();
         axis.setType(legacyAxis.type);
         axis.setName(legacyAxis.name);
+        // The letter migration is just a guess and good for Test drivers. It is not relevant until the user switches 
+        // on GcodeDriver.usingLetterVariables and it will be unique tested then. 
+        if (legacyAxis.type == Type.Rotation) {
+            axis.setLetter("E"); // Legacy default.
+        }
+        else {
+            axis.setLetter(legacyAxis.type.toString());
+        }
         axis.setHomeCoordinate(new Length(legacyAxis.homeCoordinate, getUnits()));
         axis.setPreMoveCommand(legacyAxis.preMoveCommand);
         if (axis.getPreMoveCommand() != null && !axis.getPreMoveCommand().isEmpty()) {
@@ -1037,6 +1080,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     @Override
     public void migrateDriver(ReferenceMachine machine) throws Exception {
         machine.addDriver(this);
+        // Legacy type variables.
+        this.usingLetterVariables = false;
         if (machine.getDrivers().size() > 1 
                 && getName().equals("GcodeDriver")) {
             // User has left default name. Make it a bit clearer.
@@ -1097,7 +1142,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             // Migrate visual homing setting.
             if (visualHomingEnabled) {
                 // Assuming only one (sub-) driver will have this enabled.  
-                ((AbstractHead)head).setVisualHomingEnabled(visualHomingEnabled);
+                // Set the legacy Visual Homing Method, @see VisualHomingMethod for more info.
+                ((AbstractHead)head).setVisualHomingMethod(VisualHomingMethod.ResetToHomeLocation);
                 Location homingFiducialLocation = this.homingFiducialLocation;
                 // because squareness compensation is now properly applied to the homing fiducial location, we need to "unapply" it here.
                 homingFiducialLocation = homingFiducialLocation

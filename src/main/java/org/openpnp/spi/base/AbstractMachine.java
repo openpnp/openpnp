@@ -15,9 +15,12 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.Icon;
 
+import org.openpnp.machine.reference.ReferenceDriver;
+import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;

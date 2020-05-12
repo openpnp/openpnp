@@ -1,215 +1,180 @@
 package org.openpnp.model;
 
+/*
+ * Copyright (C) 2020 <mark@makr.zone>
+ * inspired and based on work
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
+ */
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.base.AbstractMachine;
 
 /**
- * The set of ControllerAxes mapped for a specific operation e.g. for a moveTo() or home().
- * This map is given to the drivers and each driver should perform the operation for those
- * axes mapped to it (i.e. where axis.getDriver() == this).   
- *  * 
+ * The set of ControllerAxes mapped for a specific operation e.g. for a moveTo() or home(). The map is 
+ * derived/accumulated from HeadMountables' mapped axes and then separated and filtered by drivers. The map
+ * guarantees to list the axes in the order of their Machine Tree definition.
+ * 
+ * The MappedAxes cannot use the standard OpenPnP 4D Location model because multiple HeadMountables might 
+ * use multiple axes of the same Axis.Type (typically multiple Z and C axes) and we need to be able to home() 
+ * all of them at once. For advanced motion planning, the same is (will be) true for the inner workings of moveTo().  
+ * Furthermore in order to be ready to support advanced Axis Transformations such as Non-Cartesian Arm Solutions, 
+ * (e.g. a Revolver Head) there might be more than 4 axes involved at any one time. The AxisLocation model with 
+ * arbitrary number of axes is providing the necessary support to work with N-Dimensional-Locations. 
+ * 
  */
 public class MappedAxes {
-    private final ControllerAxis axisX;
-    private final ControllerAxis axisY;
-    private final ControllerAxis axisZ;
-    private final ControllerAxis axisRotation;
+    private final List<ControllerAxis> axes;
 
-    public MappedAxes(ControllerAxis axisX, ControllerAxis axisY, ControllerAxis axisZ,
-            ControllerAxis axisRotation) {
-        super();
-        this.axisX = axisX;
-        this.axisY = axisY;
-        this.axisZ = axisZ;
-        this.axisRotation = axisRotation;
+    final public static MappedAxes empty = new MappedAxes();
+
+    protected MappedAxes() {
+        // Empty set
+        this.axes = new ArrayList<>();
     }
-    public ControllerAxis getAxisX() {
-        return axisX;
-    }
-    public ControllerAxis getAxisY() {
-        return axisY;
-    }
-    public ControllerAxis getAxisZ() {
-        return axisZ;
-    }
-    public ControllerAxis getAxisRotation() {
-        return axisRotation;
-    }
-    public ControllerAxis getAxis(Axis.Type type) {
-        switch (type) {
-            case X:
-                return axisX;
-            case Y:
-                return axisY;
-            case Z:
-                return axisZ;
-            case Rotation:
-                return axisRotation;
-            default:
-                return null;
+
+    public MappedAxes(ControllerAxis axis) {
+        // Single axis.
+        this.axes = new ArrayList<>(1);
+        if (axis != null) {
+            this.axes.add(axis);
         }
     }
 
-    public ControllerAxis getAxis(Axis.Type type, Driver driver) {
-        ControllerAxis axis = getAxis(type);
-        if (axis != null && axis.getDriver() == driver) {
-            return axis;
-        }
-        return null;
-    }
-
-    public Length getX(Driver driver) {
-        if (axisX != null && (axisX.getDriver() == driver || driver == null)) {
-            return axisX.getLengthCoordinate();
-        }
-        return new Length(0 , LengthUnit.Millimeters);
-    }
-    public void setX(Length x, Driver driver) {
-        if (axisX != null && (axisX.getDriver() == driver || driver == null)) {
-            axisX.setLengthCoordinate(x);
-        }
-    }
-    public Length getY(Driver driver) {
-        if (axisY != null && (axisY.getDriver() == driver || driver == null)) {
-            return axisY.getLengthCoordinate();
-        }
-        return new Length(0 , LengthUnit.Millimeters);
-    }
-    public void setY(Length y, Driver driver) {
-        if (axisY != null && (axisY.getDriver() == driver || driver == null)) {
-            axisY.setLengthCoordinate(y);
-        }
-    }
-    public Length getZ(Driver driver) {
-        if (axisZ != null && (axisZ.getDriver() == driver || driver == null)) {
-            return axisZ.getLengthCoordinate();
-        }
-        return new Length(0 , LengthUnit.Millimeters);
-    }
-    public void setZ(Length z, Driver driver) {
-        if (axisZ != null && (axisZ.getDriver() == driver || driver == null)) {
-            axisZ.setLengthCoordinate(z);
-        }
-    }
-    public double getRotation(Driver driver) {
-        if (axisRotation != null && (axisRotation.getDriver() == driver || driver == null)) {
-            return axisRotation.getCoordinate();
-        }
-        return 0.0;
-    }
-    public void setRotation(double rotation, Driver driver) {
-        if (axisRotation != null && (axisRotation.getDriver() == driver || driver == null)) {
-            axisRotation.setCoordinate(rotation);
+    public MappedAxes(Machine machine) {
+        // All machine axes.
+        this.axes = new ArrayList<>();
+        for (Axis axis : machine.getAxes()) {
+            if (axis instanceof ControllerAxis) {
+                axes.add((ControllerAxis) axis);
+            }
         }
     }
 
-    public Length getHomeX() {
-        if (axisX != null) {
-            return axisX.getHomeCoordinate();
+    public MappedAxes(Machine machine, Driver driver) {
+        // All machine axes filtered by driver.
+        this.axes = new ArrayList<>();
+        for (Axis axis : machine.getAxes()) {
+            if (axis instanceof ControllerAxis) {
+                if (((ControllerAxis) axis).getDriver() == driver) {
+                    axes.add((ControllerAxis) axis);
+                }
+            }
         }
-        return new Length(0 , LengthUnit.Millimeters);
-    }
-    public Length getHomeY() {
-        if (axisY != null) {
-            return axisY.getHomeCoordinate();
-        }
-        return new Length(0 , LengthUnit.Millimeters);
-    }
-    public Length getHomeZ() {
-        if (axisZ != null) {
-            return axisZ.getHomeCoordinate();
-        }
-        return new Length(0 , LengthUnit.Millimeters);
-    }
-    public double getHomeRotation() {
-        if (axisRotation != null) {
-            return axisRotation.getHomeCoordinate().getValue();
-        }
-        return 0.0;
     }
 
-    /**
-     * Returns the current Location stored in the mapped axes (0 for unmapped axes). 
-     * @param driver filters the axes for those that are mapped to the driver. 
-     * Returns all the mapped axes' coordinates, if driver == null.
-     * @return the location in driver units, or system units if driver == null
-     */
-    public Location getLocation(Driver driver) {
-        // If no driver is given, each axis can be driven by a different driver, they could (theoretically) 
-        // have different LengthUnits. So we use system units.
-        LengthUnit lengthUnit = (driver != null) ? driver.getUnits()
-                :Configuration.get().getSystemUnits();
-        return new Location(lengthUnit, 
-                getX(driver).convertToUnits(lengthUnit).getValue(), 
-                getY(driver).convertToUnits(lengthUnit).getValue(), 
-                getZ(driver).convertToUnits(lengthUnit).getValue(), 
-                getRotation(driver)); 
+    public MappedAxes(Machine machine, AxesLocation location) {
+        // All the axes from the location but ordered as in the machine.
+        this.axes = new ArrayList<>();
+        for (Axis axis : machine.getAxes()) {
+            if (axis instanceof ControllerAxis) {
+                if (location.getAxes().contains(axis)) {
+                    this.axes.add((ControllerAxis) axis);
+                }
+            }
+        }
     }
 
-    public void setLocation(Location location, Driver driver) {
-        setX(location.getLengthX(), driver); 
-        setY(location.getLengthY(), driver); 
-        setZ(location.getLengthZ(), driver); 
-        setRotation(location.getRotation(), driver); 
+    public MappedAxes(Machine machine, MappedAxes... mappedAxes) {
+        // All the axes from the cumulative mappedAxes but ordered as in the machine.
+        this.axes = new ArrayList<>();
+        for (Axis axis : machine.getAxes()) {
+            if (axis instanceof ControllerAxis) {
+                for (MappedAxes oneMappedAxes : mappedAxes) {
+                    if (oneMappedAxes.getAxes().contains(axis)) {
+                        this.axes.add((ControllerAxis) axis);
+                        break;
+                    }
+                }
+            }
+        }
     }
-   
-    public Location getHomeLocation() {
-        LengthUnit lengthUnit = Configuration.get().getSystemUnits();
-        return new Location(lengthUnit, 
-                getHomeX().convertToUnits(lengthUnit).getValue(), 
-                getHomeY().convertToUnits(lengthUnit).getValue(), 
-                getHomeZ().convertToUnits(lengthUnit).getValue(), 
-                getHomeRotation()); 
+
+    public MappedAxes(MappedAxes mappedAxes, Driver driver) {
+        // Filtered by driver.
+        this.axes = new ArrayList<>();
+        for (ControllerAxis axis : mappedAxes.getAxes()) {
+            if (axis.getDriver() == driver) {
+                axes.add(axis);
+            }
+        }
     }
 
     public List<ControllerAxis> getAxes() {
-        List<ControllerAxis> list = new ArrayList<>();
-        if (axisX != null) {
-            list.add(axisX);
-        }
-        if (axisY != null) {
-            list.add(axisY);
-        }
-        if (axisZ != null) {
-            list.add(axisZ);
-        }
-        if (axisRotation != null) {
-            list.add(axisRotation);
-        }
-        return list;
+        return axes;
     }
 
-    public List<ControllerAxis> getAxes(Driver driver) {
-        List<ControllerAxis> list = new ArrayList<>();
-        if (axisX != null && axisX.getDriver() == driver) {
-            list.add(axisX);
+    public ControllerAxis getAxis(Axis.Type axisType) throws Exception {
+        ControllerAxis found = null; 
+        for (ControllerAxis axis : getAxes()) {
+            if (axis.getType() == axisType) {
+                if (found != null) {
+                    // Make this future-proof: 
+                    // Getting axes by type will no longer be allowed inside motion blending applications. 
+                    throw new Exception("Mapped Axis "+axis.getName()+" has duplicate type "+axisType+" assigned.");
+                }
+                found = axis;
+            }
         }
-        if (axisY != null && axisY.getDriver() == driver) {
-            list.add(axisY);
-        }
-        if (axisZ != null && axisZ.getDriver() == driver) {
-            list.add(axisZ);
-        }
-        if (axisRotation != null && axisRotation.getDriver() == driver) {
-            list.add(axisRotation);
-        }
-        return list;
+        return found;
     }
 
-    public List<Driver> getMappedDrivers() {
-        List<Driver> list = new ArrayList<>();
-        List<ControllerAxis> axes = getAxes();
+    /**
+     * @return The current controller Location stored in the mapped axes. 
+     */
+    public AxesLocation getLocation() {
+        return new AxesLocation(getAxes()); 
+    }
+
+    /**
+     * Set the current controller Location stored in the mapped axes. 
+     */
+    public void setLocation(AxesLocation location) {
+        for (ControllerAxis axis : getAxes()) {
+            axis.setLengthCoordinate(location.getLengthCoordinate(axis));
+        }
+    }
+
+    /**
+     * @return The Home Location in raw motion-controller axes coordinates.
+     */
+    public AxesLocation getHomeLocation() {
+        return new AxesLocation(getAxes(), (axis) -> 
+        axis.getHomeCoordinate().convertToUnits(AxesLocation.getUnits()).getValue()); 
+    }
+
+    public List<Driver> getMappedDrivers(Machine machine) {
         // Enumerate drivers in the order they are defined in the machine.
         // This is important, so the order of commands is independent of the 
         // axes that happen to be mapped. 
-        for (Driver driver : Configuration.get().getMachine().getDrivers()) {
+        List<Driver> list = new ArrayList<>();
+        for (Driver driver : machine.getDrivers()) {
             // Check if one or more of the axes are mapped to the driver.
-            for (ControllerAxis axis : axes) {
+            for (ControllerAxis axis : getAxes()) {
                 if (driver == axis.getDriver()) {
                     list.add(driver);
                     break;
@@ -218,18 +183,69 @@ public class MappedAxes {
         }
         return list;
     }
-    public boolean locationMatches(Location locationA, Location locationB, Driver driver) {
-        for (ControllerAxis axis : getAxes(driver)) {
-            if (!axis.locationCoordinateMatches(locationA, locationB)) {
+
+    /**
+     * Returns true if coordinates of the mapped axes within two locations match against each other. 
+     * Uses the resolution of the involved axes for tolerance. 
+     * 
+     * @param locationA
+     * @param locationB
+     * @return 
+     */
+    public boolean locationsMatch(AxesLocation locationA, AxesLocation locationB) {
+        for (ControllerAxis axis : getAxes()) {
+            if (!axis.coordinatesMatch(
+                    locationA.getLengthCoordinate(axis), 
+                    locationB.getLengthCoordinate(axis))) {
                 return false;
             }
         }
         return true;
     }
-    final public boolean isEmpty(Driver driver) {
-        return getAxes(driver).isEmpty();
+    public int size() {
+        return getAxes().size();
     }
-    final public boolean isEmpty() {
+    public boolean isEmpty() {
         return getAxes().isEmpty();
     }
+
+    /**
+     * Returns the axis with the specified variable name. 
+     * 
+     * @param variable The name of the variable.
+     * @param usingLetterVariables If true, the letter name of the axis is used. This is the modern way. 
+     * If false, the type of the axis is used. This is the legacy way. 
+     * @return
+     * @throws Exception If the variable names are unassigned or not unique within the mapped axes.
+     */
+    public ControllerAxis getAxisByVariable(String variable, boolean usingLetterVariables) 
+            throws Exception {
+        ControllerAxis found = null;
+        if (usingLetterVariables) {
+            for (ControllerAxis axis : getAxes()) {
+                if (axis.getLetter() == null ||axis.getLetter().isEmpty()) {
+                    throw new Exception("Axis "+axis.getName()+" has no letter assigned.");
+                }
+                if (axis.getLetter().equals(variable)) {
+                    if (found != null) {
+                        throw new Exception("Mapped Axis "+axis.getName()+" has duplicate letter "+variable+" assigned.");
+                    }
+                    found = axis;
+                }
+            }
+        }
+        else {
+            for (ControllerAxis axis : getAxes()) {
+                if (axis.getType().toString().equals(variable)) {
+                    if (found != null) {
+                        throw new Exception("Mapped Axis "+axis.getName()+" has duplicate type "+variable+" assigned. Use letter variables on the Driver.");
+                    }
+                    found = axis;
+                }
+            }
+        }
+        return found;
+    }
 }
+
+

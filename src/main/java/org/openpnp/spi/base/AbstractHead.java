@@ -1,5 +1,6 @@
 package org.openpnp.spi.base;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -12,6 +13,7 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.IdentifiableList;
@@ -54,8 +56,27 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     @Element(required = false)
     protected String pumpActuatorName;
 
+    /**
+     * Choice of Visual Homing Method.
+     * 
+     * Previous Visual Homing reset the controller to home coordinates not to the fiducial coordinates as one
+     * might expect. As a consequence the fiducial location may shift its meaning before/after homing i.e. it cannot be captured. 
+     * This behavior has been called a bug by Jason. But we absolutely need to migrate this behavior in order not to 
+     * break all the captured coordinates on a machine!
+     *
+     * As a consequence the method is now a choice. Users with new machines can select the more natural  
+     * ResetToFiducialLocation method. This also applies to all Users that had the fiducial location == homing location, 
+     * including those that used extra after-homing G0 X Y to make it so (like myself). 
+     *
+     */
+    public enum VisualHomingMethod {
+        None,
+        ResetToFiducialLocation,
+        ResetToHomeLocation
+    }
+    
     @Attribute(required = false)
-    protected boolean visualHomingEnabled;
+    private VisualHomingMethod visualHomingMethod = VisualHomingMethod.None;
 
     @Element(required = false)
     protected Location homingFiducialLocation;
@@ -176,28 +197,31 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     }
 
     @Override
-    public void moveToSafeZ(double speed) throws Exception {
+    public List<HeadMountable> getHeadMountables() {
+        List<HeadMountable> list = new ArrayList<>();
         for (Nozzle nozzle : nozzles) {
-            nozzle.moveToSafeZ(speed);
+            list.add(nozzle);
         }
         for (Camera camera : cameras) {
-            camera.moveToSafeZ(speed);
+            list.add(camera);
         }
         for (Actuator actuator : actuators) {
-            actuator.moveToSafeZ(speed);
+            list.add(actuator);
+        }
+        return list;
+    }
+
+    @Override
+    public void moveToSafeZ(double speed) throws Exception {
+        for (HeadMountable hm : getHeadMountables()) {
+            hm.moveToSafeZ(speed);
         }
     }
 
     @Override
     public void home() throws Exception {
-        for (Nozzle nozzle : nozzles) {
-            nozzle.home();
-        }
-        for (Camera camera : cameras) {
-            camera.home();
-        }
-        for (Actuator actuator : actuators) {
-            actuator.home();
+        for (HeadMountable hm : getHeadMountables()) {
+            hm.home();
         }
     }
 
@@ -328,12 +352,12 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
         this.pumpActuatorName = pumpActuatorName;
     }
 
-    public boolean isVisualHomingEnabled() {
-        return visualHomingEnabled;
+    public VisualHomingMethod getVisualHomingMethod() {
+        return visualHomingMethod;
     }
 
-    public void setVisualHomingEnabled(boolean visualHomingEnabled) {
-        this.visualHomingEnabled = visualHomingEnabled;
+    public void setVisualHomingMethod(VisualHomingMethod visualHomingMethod) {
+        this.visualHomingMethod = visualHomingMethod;
     }
 
     public Location getHomingFiducialLocation() {

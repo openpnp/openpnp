@@ -23,8 +23,9 @@ package org.openpnp.spi.base;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
-import org.openpnp.spi.ControllerAxis;
+import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.LinearInputAxis;
+import org.openpnp.spi.Machine;
 import org.simpleframework.xml.Attribute;
 
 public abstract class AbstractSingleTransformedAxis extends AbstractTransformedAxis implements LinearInputAxis {
@@ -45,9 +46,9 @@ public abstract class AbstractSingleTransformedAxis extends AbstractTransformedA
     }
 
     @Override
-    public ControllerAxis getControllerAxis() {
+    public MappedAxes getControllerAxes(Machine machine) {
         if (inputAxis != null) {
-            return inputAxis.getControllerAxis();
+            return inputAxis.getControllerAxes(machine);
         }
         return null;
     }

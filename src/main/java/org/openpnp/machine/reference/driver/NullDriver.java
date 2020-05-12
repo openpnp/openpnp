@@ -33,11 +33,13 @@ import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractDriver;
@@ -57,17 +59,18 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
     private boolean enabled;
 
     @Override
-    public void home(ReferenceHead head, MappedAxes mappedAxes, Location location) throws Exception {
+    public void home(ReferenceMachine machine, MappedAxes mappedAxes) throws Exception {
         Logger.debug("home()");
         checkEnabled();
-        mappedAxes.setLocation(location, this);
+        mappedAxes.setLocation(new AxesLocation());
     }
 
 
     @Override
-    public void resetLocation(ReferenceHead head, MappedAxes mappedAxes, Location location)
+    public void resetLocation(ReferenceMachine machine, MappedAxes mappedAxes, AxesLocation location)
             throws Exception {
-        mappedAxes.setLocation(location, this);
+        Logger.debug("resetLocation("+location+")");
+        mappedAxes.setLocation(location);
     }
 
     /**
@@ -76,17 +79,13 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
      * considerations when writing your own driver.
      */
     @Override
-    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed, MoveToOption... options)
+    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, AxesLocation location, double speed, MoveToOption... options)
             throws Exception {
         Logger.debug("moveTo({}, {}, {})", hm, location, speed);
         checkEnabled();
 
-        // Convert the Location to millimeters, since that's the unit that
-        // this driver works in natively.
-        location = location.convertToUnits(LengthUnit.Millimeters);
-
         // Get the current location of the Head that we'll move
-        Location hl = mappedAxes.getLocation(this);
+        AxesLocation hl = mappedAxes.getLocation();
 
         if (feedRateMmPerMinute > 0) {
             simulateMovement(hm, mappedAxes, location, hl, speed);
@@ -94,7 +93,7 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
 
         // Now that movement is complete, update the stored Location to the new
         // Location.
-        mappedAxes.setLocation(location, this);
+        mappedAxes.setLocation(location);
     }
 
     /**
@@ -107,82 +106,34 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
      * @param speed
      * @throws Exception
      */
-    protected void simulateMovement(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, Location hl,
+    protected void simulateMovement(ReferenceHeadMountable hm, MappedAxes mappedAxes, AxesLocation location, AxesLocation hl,
             double speed) throws Exception {
-        double x = hl.getX();
-        double y = hl.getY();
-        double z = hl.getZ();
-        double c = hl.getRotation();
-
-        double x1 = x;
-        double y1 = y;
-        double z1 = z;
-        double c1 = c;
-        double x2 = Double.isNaN(location.getX()) ? x : location.getX();
-        double y2 = Double.isNaN(location.getY()) ? y : location.getY();
-        double z2 = Double.isNaN(location.getZ()) ? z : location.getZ();
-        double c2 = Double.isNaN(location.getRotation()) ? c : location.getRotation();
-
-        c2 = c2 % 360.0;
-
-        // Calculate the linear distance to travel in each axis.
-        double vx = x2 - x1;
-        double vy = y2 - y1;
-        double vz = z2 - z1;
-        double vc = c2 - c1;
-
-        // Calculate the linear distance to travel in each plane XY, Z and C.
-        double pxy = Math.sqrt(vx * vx + vy * vy);
-        double pz = Math.abs(vz);
-        double pc = Math.abs(vc);
-
-        // Distance moved in each plane so far.
-        double dxy = 0, dz = 0, dc = 0;
-
-        // The distance that we'll move each loop.
-        double distancePerTick = (feedRateMmPerMinute * speed) / 60.0 / 10.0;
-        double distancePerTickC = distancePerTick * 10;
-
-        while (dxy < pxy || dz < pz || dc < pc) {
-            if (dxy < pxy) {
-                x = x1 + (vx / pxy * dxy);
-                y = y1 + (vy / pxy * dxy);
-            }
-            else {
-                x = x2;
-                y = y2;
-            }
-            if (dz < pz) {
-                z = z1 + dz * (vz < 0 ? -1 : 1);
-            }
-            else {
-                z = z2;
-            }
-            if (dc < pc) {
-                c = c1 + dc * (vc < 0 ? -1 : 1);
-            }
-            else {
-                c = c2;
-            }
-
-            hl = hl.derive(x, y, z, c);
-            mappedAxes.setLocation(hl, this);
+        AxesLocation delta = hl.subtract(location);
+        double distanceLinear = delta.distanceLinear();
+        double distanceRotational = delta.distanceRotational();
+        double timeLinear = distanceLinear / (feedRateMmPerMinute/60.0 * speed);
+        double timeRotational = distanceRotational / (10.0*feedRateMmPerMinute/60.0 * speed);
+        double time = Math.max(timeLinear, timeRotational) + 0.1;
+        
+        long t0 = System.currentTimeMillis();
+        double dt;
+        do {
+            double t = (System.currentTimeMillis() - t0)*0.001;
+            dt = Math.min(1.0, (t-t0)/time);
+            AxesLocation l = hl.add(delta.multiply(dt));
+            mappedAxes.setLocation(l);
 
             // Provide live updates to the Machine as the move progresses.
             ((ReferenceMachine) Configuration.get().getMachine())
                     .fireMachineHeadActivity(hm.getHead());
-
             try {
                 Thread.sleep(100);
             }
             catch (Exception e) {
 
             }
-
-            dxy = Math.min(pxy, dxy + distancePerTick);
-            dz = Math.min(pz, dz + distancePerTick);
-            dc = Math.min(pc, dc + distancePerTickC);
         }
+        while(dt < 1.0);
     }
 
     @Override

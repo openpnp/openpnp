@@ -24,8 +24,9 @@ public interface Movable extends Locatable {
      * @param desiredLocation The desired location to approximate. 
      * @param options Options for the approximation.
      * @return
+     * @throws Exception 
      */
-    Location getApproximativeLocation(Location currentLocation, Location desiredLocation, LocationOption... options);
+    Location getApproximativeLocation(Location currentLocation, Location desiredLocation, LocationOption... options) throws Exception;
 
     /**
      * Move the object to the Location at the feedRate.

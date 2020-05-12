@@ -3,14 +3,16 @@ package org.openpnp.spi.base;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.model.AbstractModelObject;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Axis;
-import org.openpnp.spi.Movable.LocationOption;
-import org.openpnp.spi.Movable.MoveToOption;
-import org.openpnp.util.Matrix;
+import org.openpnp.spi.ControllerAxis;
+import org.openpnp.spi.Driver;
+import org.openpnp.spi.Machine;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
@@ -144,14 +146,19 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     @Override
-    public MappedAxes getMappedAxes() {
-        return new MappedAxes(
-                AbstractAxis.getControllerAxis(axisX),
-                AbstractAxis.getControllerAxis(axisY),
-                AbstractAxis.getControllerAxis(axisZ),
-                AbstractAxis.getControllerAxis(axisRotation));
+    public MappedAxes getMappedAxes(Machine machine) {
+        return new MappedAxes(machine,
+                AbstractAxis.getControllerAxes(axisX, machine),
+                AbstractAxis.getControllerAxes(axisY, machine),
+                AbstractAxis.getControllerAxes(axisZ, machine),
+                AbstractAxis.getControllerAxes(axisRotation, machine));
     }
 
+    @Override
+    public MappedAxes getMappedAxes(Machine machine, Driver driver) {
+        return new MappedAxes(getMappedAxes(machine), driver);
+    }
+    
     public Location toHeadLocation(Location location, Location currentLocation, LocationOption... options) {
         // Shortcut Double.NaN. Sending Double.NaN in a Location is an old API that should no
         // longer be used. It will be removed eventually:
@@ -167,7 +174,8 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         location = location.subtract(getHeadOffsets());
         return location;
     }
-    final public Location toHeadLocation(Location location, LocationOption... options) {
+    @Override
+    public Location toHeadLocation(Location location, LocationOption... options) throws Exception {
         return toHeadLocation(location, getLocation(), options);
     }
 
@@ -188,81 +196,89 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         location = location.add(getHeadOffsets());
         return location;
     }
-    final public Location toHeadMountableLocation(Location location, LocationOption... options) {
+    @Override
+    public Location toHeadMountableLocation(Location location, LocationOption... options) {
         return toHeadMountableLocation(location, null, options);
     }
 
-    @Override
-    public Location toTransformed(Location location, LocationOption... options) {
-        // The forward transformation is easy, as it can be done axis by axis.
-        double x = AbstractTransformedAxis.toTransformed(axisX, location);
-        double y = AbstractTransformedAxis.toTransformed(axisY, location);
-        double z = AbstractTransformedAxis.toTransformed(axisZ, location);
-        double rotation = AbstractTransformedAxis.toTransformed(axisRotation, location);
-        return new Location(location.getUnits(), x, y, z, rotation);
+    protected Location toMappedLocation(LengthUnit units, AxesLocation location) {
+        double x = location.getLengthCoordinate(axisX).convertToUnits(units).getValue();  
+        double y = location.getLengthCoordinate(axisY).convertToUnits(units).getValue();
+        double z = location.getLengthCoordinate(axisZ).convertToUnits(units).getValue();
+        double rotation = location.getCoordinate(axisRotation);
+        return new Location(units, x, y, z, rotation);
+    }
+
+    protected AxesLocation toAxesLocation(Location location) {
+        return new AxesLocation((a, b) -> (b),
+                new AxesLocation(axisX, location.getLengthX()),
+                new AxesLocation(axisY, location.getLengthY()),
+                new AxesLocation(axisZ, location.getLengthZ()),
+                new AxesLocation(axisRotation, location.getRotation()));
     }
 
     @Override
-    public Location toRaw(Location location, LocationOption... options) {
-        // The backward transformation is a bit more complicated, as it may have transformations 
-        // based on multiple input axis. Currently we only allow linear transformations and only
-        // at the last stage. Given this simplification we can solve the inverse by inverting the 
-        // 5D Affine Transform Matrix. 
-
-        // Query each axis for an Affine Transform vector. Will just return the unit vector if not
-        // a linear transformation.
-        double  [][] affineTransform = new double [][] {
-            AbstractTransformedAxis.getLinearTransform(axisX, location.getUnits()),
-            AbstractTransformedAxis.getLinearTransform(axisY, location.getUnits()),
-            AbstractTransformedAxis.getLinearTransform(axisZ, location.getUnits()),
-            AbstractTransformedAxis.getLinearTransform(axisRotation, location.getUnits()),
-            { 0, 0, 0, 0, 1 }
-        };
-
-        // Compute the inverse.
-        double [][] invertedAffineTransform = Matrix.inverse(affineTransform);
-
-        // We provide the inverted Affine Tranform for use by those axes that actually do the linear transform.
-        double x = AbstractTransformedAxis.toRaw(axisX, location, invertedAffineTransform);
-        double y = AbstractTransformedAxis.toRaw(axisY, location, invertedAffineTransform);
-        double z = AbstractTransformedAxis.toRaw(axisZ, location, invertedAffineTransform);
-        double rotation = AbstractTransformedAxis.toRaw(axisRotation, location, invertedAffineTransform);
-
-        return new Location (location.getUnits(), x, y, z, rotation);
-    }
-
-    @Override
-    public Location getLocation() {
-        MappedAxes mappedAxes = getMappedAxes();
-        Location location = toTransformed(mappedAxes.getLocation(null));
-        // From head to HeadMountable.
-        location = toHeadMountableLocation(location);
+    public Location toTransformed(AxesLocation axesLocation, LocationOption... options) {
+        axesLocation = AbstractTransformedAxis.toTransformed(axisX, axesLocation);
+        axesLocation = AbstractTransformedAxis.toTransformed(axisY, axesLocation);
+        axesLocation = AbstractTransformedAxis.toTransformed(axisZ, axesLocation);
+        axesLocation = AbstractTransformedAxis.toTransformed(axisRotation, axesLocation);
+        Location location = toMappedLocation(Configuration.get().getSystemUnits(), axesLocation);
         return location;
     }
 
     @Override
-    public Location getApproximativeLocation(Location currentLocation, Location desiredLocation, LocationOption... options) {
+    public AxesLocation toRaw(Location location, LocationOption... options) 
+            throws Exception {
+        AxesLocation axesLocation = toAxesLocation(location);
+        axesLocation = AbstractTransformedAxis.toRaw(axisX, axesLocation);
+        axesLocation = AbstractTransformedAxis.toRaw(axisY, axesLocation);
+        axesLocation = AbstractTransformedAxis.toRaw(axisZ, axesLocation);
+        axesLocation = AbstractTransformedAxis.toRaw(axisRotation, axesLocation);
+        return axesLocation;
+    }
+
+    @Override
+    public Location getLocation() {
+        MappedAxes mappedAxes = getMappedAxes(getHead().getMachine());
+        Location location = toTransformed(mappedAxes.getLocation());
+        // From head to HeadMountable.
+        return toHeadMountableLocation(location);
+    }
+
+    @Override
+    public Location getApproximativeLocation(Location currentLocation, Location desiredLocation, LocationOption... options) 
+            throws Exception {
         // Convert the desired location to a raw location, applying the approximation options, 
         // which means some extra motion for compensation effects is suppressed.
         Location desiredHeadLocation = toHeadLocation(desiredLocation, options);
         Location currentHeadLocation = toHeadLocation(currentLocation);
-        Location desiredRawLocation = toRaw(desiredHeadLocation, options);
-        Location currentRawLocation = toRaw(currentHeadLocation);
-        Location aproximativeRawLocation = desiredRawLocation;
+        AxesLocation desiredRawLocation = toRaw(desiredHeadLocation);
+        AxesLocation currentRawLocation = toRaw(currentHeadLocation);
+        MappedAxes mappedAxes = getMappedAxes(getHead().getMachine());
         // Evaluate the Keep options. 
         for (LocationOption option: options) {
+            ControllerAxis rawAxis;
             switch (option) {
                 case KeepX:
-                    desiredRawLocation = desiredRawLocation.derive(currentRawLocation, true, false, false, false);
+                    rawAxis = mappedAxes.getAxis(Axis.Type.X);
+                    desiredRawLocation = desiredRawLocation
+                            .put(new AxesLocation(rawAxis, currentRawLocation.getCoordinate(rawAxis)));
                     break;
                 case KeepY:
-                    desiredRawLocation = desiredRawLocation.derive(currentRawLocation, false, true, false, false);
+                    rawAxis = mappedAxes.getAxis(Axis.Type.Y);
+                    desiredRawLocation = desiredRawLocation
+                            .put(new AxesLocation(rawAxis, currentRawLocation.getCoordinate(rawAxis)));
                     break;
                 case KeepZ:
-                    desiredRawLocation = desiredRawLocation.derive(currentRawLocation, false, false, true, false);
+                    rawAxis = mappedAxes.getAxis(Axis.Type.Z);
+                    desiredRawLocation = desiredRawLocation
+                            .put(new AxesLocation(rawAxis, currentRawLocation.getCoordinate(rawAxis)));
                     break;
                 case KeepRotation:
-                    desiredRawLocation = desiredRawLocation.derive(currentRawLocation, false, false, false, true);
+                    rawAxis = mappedAxes.getAxis(Axis.Type.Rotation);
+                    desiredRawLocation = desiredRawLocation
+                            .put(new AxesLocation(rawAxis, currentRawLocation.getCoordinate(rawAxis)));
                     break;
                 default:
                     break;

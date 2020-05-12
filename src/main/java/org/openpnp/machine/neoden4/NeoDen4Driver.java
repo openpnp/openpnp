@@ -12,12 +12,14 @@ import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.driver.AbstractReferenceDriver;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.MappedAxes;
 import org.openpnp.model.Named;
 import org.openpnp.spi.Movable.MoveToOption;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.Nozzle;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -335,7 +337,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
     
     @Override
-    public void home(ReferenceHead head, MappedAxes mappedAxes, Location location) throws Exception {
+    public void home(ReferenceMachine machine, MappedAxes mappedAxes) throws Exception {
         /* Make sure *all* nozzles are up before moving */ 
         moveZ(1, 0);
         moveZ(2, 0);
@@ -364,15 +366,14 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         this.x = this.homeCoordinateX;
         this.y = this.homeCoordinateY;
 
-        ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
-        machine.fireMachineHeadActivity(head);
+        machine.fireMachineHeadActivity(machine.getDefaultHead());
     }
 
 
     @Override
-    public void resetLocation(ReferenceHead head, MappedAxes mappedAxes, Location location)
+    public void resetLocation(ReferenceMachine machine, MappedAxes mappedAxes, AxesLocation location)
             throws Exception {
-        // TODO: if the driver supports it, please implement 
+        // TODO: if the driver can do it, please implement to support visual homing. 
     }
 
     private void moveXy(double x, double y) throws Exception {
@@ -479,14 +480,12 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed, MoveToOption... options)
+    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, AxesLocation location, double speed, MoveToOption... options)
             throws Exception {
-        location = location.convertToUnits(units);
-
-        double x = location.getX();
-        double y = location.getY();
-        double z = location.getZ();
-        double c = location.getRotation();
+        double x = location.getCoordinate(mappedAxes.getAxis(Axis.Type.X), units);
+        double y = location.getCoordinate(mappedAxes.getAxis(Axis.Type.Y), units);
+        double z = location.getCoordinate(mappedAxes.getAxis(Axis.Type.Z), units);
+        double c = location.getCoordinate(mappedAxes.getAxis(Axis.Type.Rotation), units);
 
         // Handle NaNs, which means don't move this axis for this move. We just copy the existing
         // coordinate.

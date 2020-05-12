@@ -21,12 +21,14 @@ package org.openpnp.machine.reference;
 
 import java.io.Closeable;
 
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Driver;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.WizardConfigurable;
+import org.openpnp.spi.base.AbstractMachine;
 
 /**
  * Defines the interface for a simple driver that the ReferenceMachine can drive. All methods result
@@ -47,19 +49,19 @@ public interface ReferenceDriver extends Driver, WizardConfigurable, PropertyShe
      * 
      * @throws Exception
      */
-    public void home(ReferenceHead head, MappedAxes mappedAxes, Location location) throws Exception;
+    public void home(ReferenceMachine machine, MappedAxes mappedAxes) throws Exception;
 
     /**
      * Resets the controller's current physical position to the given coordinates. This is used after visual homing
      * to make the homing fiducial's X, Y coordinates to be at their nominal location. Other uses with other axes should 
      * also be supported by the driver. 
      *  
-     * @param head
+     * @param machine
      * @param mappedAxes specifies the axes that should be reset
      * @param location 
      * @throws Exception
      */
-    public void resetLocation(ReferenceHead head, MappedAxes mappedAxes, Location location) throws Exception;
+    public void resetLocation(ReferenceMachine machine, MappedAxes mappedAxes, AxesLocation location) throws Exception;
 
     /**
      * Moves the specified MappedAxes to the given location at a speed defined by (maximum feed
@@ -74,7 +76,7 @@ public interface ReferenceDriver extends Driver, WizardConfigurable, PropertyShe
      * @param options zero to n options from the MoveToOptions enum.
      * @throws Exception
      */
-    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed, MoveToOption... options) throws Exception;
+    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, AxesLocation location, double speed, MoveToOption... options) throws Exception;
 
     /**
      * Actuates a machine defined object with a boolean state.

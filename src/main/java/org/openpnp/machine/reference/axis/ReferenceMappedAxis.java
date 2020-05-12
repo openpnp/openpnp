@@ -2,17 +2,14 @@ package org.openpnp.machine.reference.axis;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.axis.wizards.ReferenceMappedAxisConfigurationWizard;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
-import org.openpnp.spi.Axis;
-import org.openpnp.spi.base.AbstractControllerAxis;
 import org.openpnp.spi.base.AbstractMachine;
-import org.openpnp.spi.base.AbstractTransformedAxis;
+import org.openpnp.spi.base.AbstractSingleTransformedAxis;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
-import org.openpnp.spi.base.AbstractSingleTransformedAxis;
 
 /**
  * A TransformedAxis for heads with dual linear Z axes powered by one motor. The two Z axes are
@@ -37,44 +34,11 @@ public class ReferenceMappedAxis extends AbstractSingleTransformedAxis {
         return new ReferenceMappedAxisConfigurationWizard((AbstractMachine)Configuration.get().getMachine(), this);
     }
 
-    @Override
-    public double toRaw(Location location, double [][] invertedAffineTransform) {
-        if (inputAxis != null) {
-            double coordinate = 0.0;
-            switch(type) {
-                case X:
-                    coordinate = location.getX();
-                case Y:
-                    coordinate = location.getY();
-                case Z:
-                    coordinate = location.getZ();
-                case Rotation:
-                    coordinate = location.getRotation();
-            }
-
-            // To raw, i.e. reversed mapped transform:
-            double scale = getScale(location);
-            coordinate = coordinate - mapOutput0.convertToUnits(location.getUnits()).getValue();
-            coordinate = coordinate / scale; 
-            coordinate = coordinate + mapInput0.convertToUnits(location.getUnits()).getValue(); 
-
-            switch(type) {
-                case X:
-                    return inputAxis.toRaw(location.derive(-location.getX(), null, null, null), invertedAffineTransform);
-                case Y:
-                    return inputAxis.toRaw(location.derive(null, -location.getY(), null, null), invertedAffineTransform);
-                case Z:
-                    return inputAxis.toRaw(location.derive(null, null, -location.getZ(),  null), invertedAffineTransform);
-                case Rotation:
-                    return inputAxis.toRaw(location.derive(null, null, null, -location.getRotation()), invertedAffineTransform);
-            }
-        }
-        return 0.0;
-    }
-
-    protected double getScale(Location location) {
-        double dividend = (mapOutput1.convertToUnits(location.getUnits()).getValue() - mapOutput0.convertToUnits(location.getUnits()).getValue()); 
-        double divisor = (mapInput1.convertToUnits(location.getUnits()).getValue() - mapInput0.convertToUnits(location.getUnits()).getValue());
+    protected double getScale() {
+        double dividend = (mapOutput1.convertToUnits(AxesLocation.getUnits()).getValue() 
+                - mapOutput0.convertToUnits(AxesLocation.getUnits()).getValue()); 
+        double divisor = (mapInput1.convertToUnits(AxesLocation.getUnits()).getValue() 
+                - mapInput0.convertToUnits(AxesLocation.getUnits()).getValue());
         if (divisor == 0.0 || dividend == 0.0) {
             Logger.info("[ReferenceMappedAxis] "+getName()+" input/output range must not be zero. Scale defaults to 1.");
             return 1.0;
@@ -83,19 +47,34 @@ public class ReferenceMappedAxis extends AbstractSingleTransformedAxis {
     }
 
     @Override
-    public double toTransformed(Location location) {
-        if (inputAxis != null) {
-            double coordinate = inputAxis.toTransformed(location);
-
-            // To transformed, i.e. forward mapped transform:
-            double scale = getScale(location);
-            coordinate = coordinate - mapInput0.convertToUnits(location.getUnits()).getValue();
-            coordinate = coordinate * scale; 
-            coordinate = coordinate + mapOutput0.convertToUnits(location.getUnits()).getValue(); 
-
-            return coordinate;
+    public AxesLocation toTransformed(AxesLocation location) {
+        if (inputAxis == null) {
+            return location.put(new AxesLocation(this, 0.0));
         }
-        return 0.0;
+        location = inputAxis.toTransformed(location);
+        // To transformed, i.e. forward mapped transform:
+        double coordinate = location.getCoordinate(inputAxis);
+        double scale = getScale();
+        coordinate = coordinate - mapInput0.convertToUnits(AxesLocation.getUnits()).getValue();
+        coordinate = coordinate * scale; 
+        coordinate = coordinate + mapOutput0.convertToUnits(AxesLocation.getUnits()).getValue(); 
+        return location.put(new AxesLocation(this, coordinate));
+    }
+
+    @Override
+    public AxesLocation toRaw(AxesLocation location) 
+            throws Exception {
+        if (inputAxis == null) {
+            throw new Exception(getName()+" has no input axis set");
+        }
+
+        // To raw, i.e. reversed mapped transform:
+        double coordinate = location.getCoordinate(this);
+        double scale = getScale();
+        coordinate = coordinate - mapOutput0.convertToUnits(AxesLocation.getUnits()).getValue();
+        coordinate = coordinate / scale; 
+        coordinate = coordinate + mapInput0.convertToUnits(AxesLocation.getUnits()).getValue(); 
+        return toRaw(location.put(new AxesLocation(inputAxis, coordinate)));
     }
 
     public Length getMapInput0() {

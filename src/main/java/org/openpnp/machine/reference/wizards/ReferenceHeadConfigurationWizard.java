@@ -38,6 +38,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.base.AbstractHead.VisualHomingMethod;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
@@ -54,6 +55,8 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import java.awt.Color;
+import java.awt.event.ItemListener;
+import java.awt.event.ItemEvent;
 
 @SuppressWarnings("serial")
 public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizard {
@@ -91,6 +94,8 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblX = new JLabel("X");
@@ -119,30 +124,44 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         btnPositionHome.setHideActionText(true);
         panel.add(btnPositionHome, "10, 4");
         
-        JLabel lblEnableVisualHoming = new JLabel("Enabled?");
-        panel.add(lblEnableVisualHoming, "2, 6, right, default");
+        JLabel lblHomingMethod = new JLabel("Homing Method");
+        panel.add(lblHomingMethod, "2, 6, right, default");
         
-        visualHomingEnabled = new JCheckBox("");
-        panel.add(visualHomingEnabled, "4, 6");
+        visualHomingMethod = new JComboBox(VisualHomingMethod.values());
+        visualHomingMethod.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                boolean homingCapture = (visualHomingMethod.getSelectedItem() == VisualHomingMethod.ResetToFiducialLocation);
+                boolean homingFiducial = (visualHomingMethod.getSelectedItem() != VisualHomingMethod.None);
+                captureHomeCoordinatesAction.setEnabled(homingCapture);
+                positionHomeCoordinatesAction.setEnabled(homingCapture);
+                homingFiducialX.setEnabled(homingFiducial);
+                homingFiducialY.setEnabled(homingFiducial);
+            }
+        });
+        panel.add(visualHomingMethod, "4, 6, 3, 1, fill, default");
+        
+        JLabel lblWarningChangingThese = new JLabel("<html>Warning: changing the above settings or physically moving the <br/>\r\nhoming fiducial might break all your captured locations on the machine!<br/>\r\n&nbsp;</html>");
+        lblWarningChangingThese.setForeground(Color.RED);
+        panel.add(lblWarningChangingThese, "4, 8, 7, 1");
 
         JLabel lblParkLocation = new JLabel("Park Location");
-        panel.add(lblParkLocation, "2, 10, right, default");
+        panel.add(lblParkLocation, "2, 12, right, default");
 
         parkX = new JTextField();
-        panel.add(parkX, "4, 10, fill, default");
+        panel.add(parkX, "4, 12, fill, default");
         parkX.setColumns(5);
 
         parkY = new JTextField();
         parkY.setColumns(5);
-        panel.add(parkY, "6, 10, fill, default");
+        panel.add(parkY, "6, 12, fill, default");
 
         JButton btnNewButton = new JButton(captureParkCoordinatesAction);
         btnNewButton.setHideActionText(true);
-        panel.add(btnNewButton, "8, 10");
+        panel.add(btnNewButton, "8, 12");
 
         JButton btnNewButton_1 = new JButton(positionParkCoordinatesAction);
         btnNewButton_1.setHideActionText(true);
-        panel.add(btnNewButton_1, "10, 10");
+        panel.add(btnNewButton_1, "10, 12");
 
         JPanel panel_1 = new JPanel();
         panel_1.setBorder(new TitledBorder(null, "Soft Limits", TitledBorder.LEADING,
@@ -268,7 +287,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         addWrappedBinding(homingFiducialLocation, "lengthX", homingFiducialX, "text", lengthConverter);
         addWrappedBinding(homingFiducialLocation, "lengthY", homingFiducialY, "text", lengthConverter);
 
-        addWrappedBinding(head, "visualHomingEnabled", visualHomingEnabled, "selected");
+        addWrappedBinding(head, "visualHomingMethod", visualHomingMethod, "selectedItem");
 
         MutableLocationProxy parkLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, head, "parkLocation", parkLocation, "location");
@@ -468,5 +487,5 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
     private JTextField homingFiducialY;
 
 
-    private JCheckBox visualHomingEnabled;
+    private JComboBox visualHomingMethod;
 }

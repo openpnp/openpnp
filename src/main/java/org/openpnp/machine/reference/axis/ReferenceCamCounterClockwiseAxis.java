@@ -2,11 +2,13 @@ package org.openpnp.machine.reference.axis;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.axis.wizards.ReferenceCamCounterClockwiseAxisConfigurationWizard;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.base.AbstractAxis;
 import org.openpnp.spi.base.AbstractControllerAxis;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractTransformedAxis;
@@ -16,8 +18,8 @@ import org.simpleframework.xml.Element;
 
 /**
  * A TransformedAxis for heads with dual rocker or seesaw driven Z axes powered by one motor. 
- * The two Z axes are defined as Master and Slave. 
- * Master gets the positive rotation of the axis motor as positive Z (up). Slave gets the negative. 
+ * The two Z axes are defined as counter-clockwise and clockwise according how the rocker rotates. 
+ * 
  */
 public class ReferenceCamCounterClockwiseAxis extends AbstractSingleTransformedAxis {
 
@@ -40,39 +42,53 @@ public class ReferenceCamCounterClockwiseAxis extends AbstractSingleTransformedA
     }
 
     @Override
-    public double toRaw(Location location, double [][] invertedAffineTransform) {
-        return toRaw(location, false);
+    public AxesLocation toRaw(AxesLocation location) throws Exception {
+        if (inputAxis == null) {
+            throw new Exception(getName()+" has no input axis set");
+        }
+        double transformedCoordinate = location.getCoordinate(this);
+        double rawCoordinate = toRawCoordinate(transformedCoordinate, false);
+        // store the new coordinate
+        location = location.put(new AxesLocation(inputAxis, rawCoordinate));
+        // recurse
+        return inputAxis.toRaw(location);
     }
 
-    protected double toRaw(Location location, boolean slave) {
-        double transformedCoordinate = getLocationAxisCoordinate(location);
+    protected double toRawCoordinate(double transformedCoordinate, boolean clockwise) throws Exception {
         double rawCoordinate = (transformedCoordinate 
-                - camWheelRadius.convertToUnits(location.getUnits()).getValue() 
-                - camWheelGap.convertToUnits(location.getUnits()).getValue()) 
-                / camRadius.convertToUnits(location.getUnits()).getValue();
+                - camWheelRadius.convertToUnits(AxesLocation.getUnits()).getValue() 
+                - camWheelGap.convertToUnits(AxesLocation.getUnits()).getValue()) 
+                / camRadius.convertToUnits(AxesLocation.getUnits()).getValue();
         rawCoordinate = Math.min(Math.max(rawCoordinate, -1), 1);
         rawCoordinate = Math.toDegrees(Math.asin(rawCoordinate));
-        if (slave) {
+        if (clockwise) {
             rawCoordinate = -rawCoordinate;
         }
+        // recurse
         return rawCoordinate;
     }
 
     @Override
-    public double toTransformed(Location location) {
-        return toTransformed(location, false);
+    public AxesLocation toTransformed(AxesLocation location)  {
+        if (inputAxis == null) {
+            return location.put(new AxesLocation(this, 0.0));
+        }
+        // recurse
+        location = inputAxis.toTransformed(location);
+        double rawCoordinate = location.getCoordinate(inputAxis);
+        double transformedCoordinate  = toTransformedCoordinate(rawCoordinate, false);
+        return location.put(new AxesLocation(this, transformedCoordinate));
     }
 
-    protected double toTransformed(Location location, boolean slave) {
-        double rawCoordinate = getLocationAxisCoordinate(location);
+    protected double toTransformedCoordinate(double rawCoordinate, boolean clockwise) {
         double transformedCoordinate = Math.sin(Math.toRadians(rawCoordinate)) 
-                * camRadius.convertToUnits(location.getUnits()).getValue();
-        if (slave) {
+                * camRadius.convertToUnits(AxesLocation.getUnits()).getValue();
+        if (clockwise) {
             transformedCoordinate = -transformedCoordinate;
         }
-        transformedCoordinate += camWheelRadius.convertToUnits(location.getUnits()).getValue() 
-                + camWheelGap.convertToUnits(location.getUnits()).getValue();
-        return transformedCoordinate;
+        transformedCoordinate += camWheelRadius.convertToUnits(AxesLocation.getUnits()).getValue() 
+                + camWheelGap.convertToUnits(AxesLocation.getUnits()).getValue();
+       return transformedCoordinate;
     }
 
     public Length getCamRadius() {

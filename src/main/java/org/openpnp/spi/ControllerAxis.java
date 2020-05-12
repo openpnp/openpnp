@@ -63,6 +63,6 @@ public interface ControllerAxis extends LinearInputAxis {
 
     double roundedToResolution(double coordinate);
 
-    public boolean locationCoordinateMatches(Location locationA, Location locationB);
+    public boolean coordinatesMatch(Length coordinateA, Length coordinateB);
 
 }

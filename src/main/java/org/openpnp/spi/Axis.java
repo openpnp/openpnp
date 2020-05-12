@@ -21,5 +21,4 @@ public interface Axis extends Identifiable, Named, WizardConfigurable, PropertyS
     public void setType(Type type);
 
     double getLocationAxisCoordinate(Location location);
-
 }

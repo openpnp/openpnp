@@ -1,12 +1,13 @@
 package org.openpnp.spi.base;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
+import org.openpnp.spi.Machine;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
@@ -55,8 +56,8 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
     }
 
     @Override
-    public AbstractControllerAxis getControllerAxis() {
-        return this;
+    public MappedAxes getControllerAxes(Machine machine) {
+        return new MappedAxes(this);
     }
 
     @Override

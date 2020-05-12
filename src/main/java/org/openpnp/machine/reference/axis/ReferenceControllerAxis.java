@@ -2,6 +2,7 @@ package org.openpnp.machine.reference.axis;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.axis.wizards.ReferenceControllerAxisConfigurationWizard;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -66,19 +67,21 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     @Override
-    public double toTransformed(Location location) {
-        return getLocationAxisCoordinate(location);
+    public AxesLocation toTransformed(AxesLocation location) {
+        // No transformation, obviously
+        return location;
     }
 
     @Override
-    public double toRaw(Location location, double[][] invertedAffineTransform) {
-        return getLocationAxisCoordinate(location);
+    public AxesLocation toRaw(AxesLocation location) {
+        // No transformation, obviously
+        return location;
     }
 
     @Override
-    public boolean locationCoordinateMatches(Location locationA, Location locationB) {
-        double coordinateA = roundedToResolution(getLocationAxisCoordinate(locationA.convertToUnits(getUnits())));
-        double coordinateB = roundedToResolution(getLocationAxisCoordinate(locationB.convertToUnits(getUnits())));
-        return coordinateA == coordinateB;
+    public boolean coordinatesMatch(Length coordinateA, Length coordinateB) {
+        double a = roundedToResolution(coordinateA.convertToUnits(getUnits()).getValue());
+        double b = roundedToResolution(coordinateB.convertToUnits(getUnits()).getValue());
+        return a == b;
     }
 }

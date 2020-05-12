@@ -74,6 +74,7 @@ import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
@@ -141,8 +142,8 @@ public class ReferenceMachine extends AbstractMachine {
                              }
                              // Migrate the driver.
                              if (driver != null) {
-                                 // Note, the migrated driver will add itself to the machine driver list and for GcodeDrivers
-                                 // it will recurse into the sub-drivers.
+                                 // Note, the migrated driver will add itself to the machine driver list 
+                                 // and for GcodeDrivers it will recurse into the sub-drivers.
                                  driver.migrateDriver(ReferenceMachine.this);
                                  driver = null;
                              }
@@ -326,6 +327,11 @@ public class ReferenceMachine extends AbstractMachine {
         // if one rehomes, the isHomed flag has to be removed
         this.setHomed(false);
         
+        // Home all the drivers with their respective mapped axes. 
+        for (Driver driver : getDrivers()) {
+            MappedAxes mappedAxes = new MappedAxes(this, driver);
+            ((ReferenceDriver) driver).home(this, mappedAxes);
+        }
         super.home();
 
         try {

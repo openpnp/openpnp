@@ -11,11 +11,14 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.model.AbstractModelObject;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Axis;
-import org.openpnp.spi.ControllerAxis;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 
@@ -83,66 +86,44 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
     }
 
     /**
-     * @return the ControllerAxis that is the ultimate input axis of the TransformedAxis stack. 
+     * @param machine The Machine with the axes to be considered.
+     * @return The set of ControllerAxes that are the ultimate input axes of the axis stack. 
      */
-    public abstract ControllerAxis getControllerAxis();
-
-    public static ControllerAxis getControllerAxis(AbstractAxis axis) {
+    public abstract MappedAxes getControllerAxes(Machine machine);
+    public static MappedAxes getControllerAxes(AbstractAxis axis, Machine machine) {
         if (axis != null) {
-            return axis.getControllerAxis();
+            return axis.getControllerAxes(machine);
         }
-        return null;
+        return MappedAxes.empty;
     }
 
     /**
-     * Transform the raw axis coordinate taken from the specified location into it's corresponding 
-     * transformed coordinate. 
-     * The transformed coordinate is what the user sees, while the raw coordinate is what the
+     * Transform the raw axis coordinate(s) taken from the specified location into the 
+     * transformed coordinate embedded into the returned location. 
+     * The transformed location is what the user sees, while the raw location is what the
+     * motion controller sees.
+     * Some transformations handle multiple axes, therefore the full location is passed through.
+     * A ControllerAxis will just return the unchanged coordinate. 
+     * 
+     * @param location
+     * @return the transformed axis coordinate.  
+     * @throws Exception 
+     */
+    public abstract AxesLocation toTransformed(AxesLocation location); 
+
+    /**
+     * Transform the specified transformed coordinate taken from the specified location into the 
+     * raw coordinate embedded into the returned location. 
+     * The transformed location is what the user sees, while the raw location is what the
      * motion controller sees.
      * Some transformations handle multiple axes, therefore the full Location is passed through.
      * 
      * A ControllerAxis will just return the unchanged coordinate. 
-     * A TransformedAxis will first call the input axes' transformation and then perform its own.
-     *        
-     * @param location
-     * @return the transformed axis coordinate in the LengthUnit of the given Location.  
-     */
-    public abstract double toTransformed(Location location); 
-
-    /**
-     * Transform the specified transformed location into it's corresponding raw location, returning
-     * the coordinate for this axis. 
-     * The transformed location is what the user sees, while the raw coordinate is what the motion 
-     * controller sees.
-     * Some transformations handle multiple axes, therefore the full Location is passed through.
-     * 
-     * A ControllerAxis will just return the unchanged coordinate. 
-     * A TransformedAxis will first perform its own transformation and then call the input axis'.
      *        
      * @param location
      * @return the raw axis coordinate in the LengthUnit of the given Location.  
      */
-    public abstract double toRaw(Location location, double [][] invertedAffineTransform); 
-
-    /**
-     * @param lengthUnit
-     * @return the transformation 5D vector (factors, offset in given LengthUnit) for this Axis. 
-     * Returns the unit vector if not a linear transformation.  
-     */
-    public double[] getLinearTransform(LengthUnit lengthUnit) {
-        switch (type) {
-            case X: 
-                return new double [] {1, 0, 0, 0, 0};
-            case Y: 
-                return new double [] {0, 1, 0, 0, 0};
-            case Z: 
-                return new double [] {0, 0, 1, 0, 0};
-            case Rotation: 
-                return new double [] {0, 0, 0, 1, 0};
-            default:
-                return new double [] {0, 0, 0, 0, 0};
-        }
-    }
+    public abstract AxesLocation toRaw(AxesLocation location) throws Exception; 
 
     @Override
     public PropertySheet[] getPropertySheets() {

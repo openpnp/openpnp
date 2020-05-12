@@ -2,15 +2,14 @@ package org.openpnp.machine.reference.axis;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.axis.wizards.ReferenceCamClockwiseAxisConfigurationWizard;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Location;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractSingleTransformedAxis;
 
 /**
- * A TransformedAxis for heads with dual linear Z axes powered by one motor. The two Z axes are
- * defined as normal and negated. Normal gets the raw coordinate value and negated gets the same
- * value negated. So, as normal moves up, negated moves down.
+ * A TransformedAxis for heads with dual rocker or seesaw driven Z axes powered by one motor. 
+ * The two Z axes are defined as counter-clockwise and clockwise according how the rocker rotates. 
  */
 public class ReferenceCamClockwiseAxis extends AbstractSingleTransformedAxis {
 
@@ -23,7 +22,7 @@ public class ReferenceCamClockwiseAxis extends AbstractSingleTransformedAxis {
         return new ReferenceCamClockwiseAxisConfigurationWizard((AbstractMachine)Configuration.get().getMachine(), this);
     }
 
-    public ReferenceCamCounterClockwiseAxis getMasterAxis() {
+    public ReferenceCamCounterClockwiseAxis getCounterClockwiseAxis() {
         if (inputAxis != null) {
             return (ReferenceCamCounterClockwiseAxis)inputAxis;
         }
@@ -31,18 +30,28 @@ public class ReferenceCamClockwiseAxis extends AbstractSingleTransformedAxis {
     }
 
     @Override
-    public double toRaw(Location location, double [][] invertedAffineTransform) {
-        if (getMasterAxis() != null) {
-            return getMasterAxis().toRaw(location, true);
+    public AxesLocation toRaw(AxesLocation location) throws Exception {
+        if (getCounterClockwiseAxis() == null) {
+            throw new Exception(getName()+" has no counter-clock input axis set");
         }
-        return 0.0;
+        double transformedCoordinate = location.getCoordinate(this);
+        double rawCoordinate = getCounterClockwiseAxis().toRawCoordinate(transformedCoordinate, true);
+        // store the transformed input axis (we're skipping the counter-clock axis)
+        location = location.put(new AxesLocation(getCounterClockwiseAxis().getInputAxis(), rawCoordinate));
+        // recurse
+        return getCounterClockwiseAxis().getInputAxis().toRaw(location);
     }
 
     @Override
-    public double toTransformed(Location location) {
-        if (getMasterAxis() != null) {
-            return getMasterAxis().toTransformed(location, true);
+    public AxesLocation toTransformed(AxesLocation location) {
+        if (getCounterClockwiseAxis() == null) {
+            return location.put(new AxesLocation(this, 0.0));
         }
-        return 0.0;
+        // recurse
+        location = getCounterClockwiseAxis().toTransformed(location);
+        // get the input of the input (we're skipping the counter-clock axis)
+        double rawCoordinate = location.getCoordinate(getCounterClockwiseAxis().getInputAxis());
+        double transformedCoordinate  = getCounterClockwiseAxis().toTransformedCoordinate(rawCoordinate, true);
+        return location.put(new AxesLocation(this, transformedCoordinate));
     }
 }

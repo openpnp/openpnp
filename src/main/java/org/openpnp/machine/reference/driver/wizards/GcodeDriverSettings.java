@@ -121,6 +121,13 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 + "feed, \\r for carriage return, and \\f for form feed.");
         settingsPanel.add(backslashEscapedCharacters, "4, 8");
         
+        JLabel lblLetterVariables = new JLabel("Letter Variables?");
+        lblLetterVariables.setToolTipText("Axis variables in Gcode are named using the Axis Letters rather than the Axis Type.");
+        settingsPanel.add(lblLetterVariables, "6, 8, right, default");
+        
+        letterVariables = new JCheckBox("");
+        settingsPanel.add(letterVariables, "8, 8");
+        
         JLabel lblAllowPremoveCommands = new JLabel("Allow Pre-Move Commands?");
         settingsPanel.add(lblAllowPremoveCommands, "2, 10, right, default");
         
@@ -142,6 +149,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         addWrappedBinding(driver, "connectWaitTimeMilliseconds", connectWaitTimeTf, "text", intConverter);
         addWrappedBinding(driver, "backslashEscapedCharactersEnabled", backslashEscapedCharacters, "selected");
         addWrappedBinding(driver, "supportingPreMove", supportingPreMove, "selected");
+        addWrappedBinding(driver, "usingLetterVariables", letterVariables, "selected");
         
         ComponentDecorators.decorateWithAutoSelect(maxFeedRateTf);
         ComponentDecorators.decorateWithAutoSelect(backlashFeedRateFactorTf);
@@ -282,6 +290,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
     private JComboBox unitsCb;
     private JCheckBox backslashEscapedChar;
     private JCheckBox supportingPreMove;
+    private JCheckBox letterVariables;
 
     static class HeadMountableItem {
         private HeadMountable hm;

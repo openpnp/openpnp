@@ -11,6 +11,7 @@ import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.machine.reference.driver.test.TestDriver;
 import org.openpnp.machine.reference.driver.test.TestDriver.TestDriverDelegate;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -148,7 +149,7 @@ public class BasicJobTest {
         private Queue<ExpectedOp> expectedOps = new LinkedList<>();
 
         public void expectMove(String description, HeadMountable hm, Location location,
-                double speed) {
+                double speed) throws Exception {
             ExpectedMove o = new ExpectedMove(description, hm, location, speed);
             expectedOps.add(o);
         }
@@ -158,7 +159,7 @@ public class BasicJobTest {
         }
 
         @Override
-        public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, Location location, double speed, MoveToOption... options)
+        public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, AxesLocation location, double speed, MoveToOption... options)
                 throws Exception {
             System.out.println(hm + " " + location);
             if (expectedOps.isEmpty()) {
@@ -173,7 +174,7 @@ public class BasicJobTest {
 
                 ExpectedMove move = (ExpectedMove) op;
 
-                if (!mappedAxes.locationMatches(move.location, location, this) || hm != move.headMountable) {
+                if (!mappedAxes.locationsMatch(move.location, location) || hm != move.headMountable) {
                     throw new Exception("Unexpected Move " + hm + " " + location + ". Expected " + op);
                 }
             }
@@ -212,15 +213,16 @@ public class BasicJobTest {
 
         class ExpectedMove extends ExpectedOp {
             public HeadMountable headMountable;
-            public Location location;
+            public AxesLocation location;
             public double speed;
             public String description;
 
             public ExpectedMove(String description, HeadMountable headMountable, Location location,
-                    double speed) {
+                    double speed) throws Exception {
                 this.headMountable = headMountable;
-                // The expected location is in head coordinates.
-                this.location = location.subtract(((ReferenceHeadMountable) headMountable).getHeadOffsets());
+                // The expected location is in raw coordinates.  
+                location = headMountable.toHeadLocation(location);
+                this.location = headMountable.toRaw(location);
                 this.speed = speed;
                 this.description = description;
             }

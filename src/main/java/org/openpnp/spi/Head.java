@@ -89,6 +89,13 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
     public Camera getCamera(String id);
 
     /**
+     * Get a list of all the HeadMountables attached to this Head.
+     * 
+     * @return
+     */
+    List<HeadMountable> getHeadMountables();
+
+    /**
      * Directs the Head to move to it's home position and to move any attached devices to their home
      * positions.
      */
@@ -119,8 +126,6 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
     public Machine getMachine();
     
     public Location getParkLocation();
-
-    public HeadMountable getHomingHeadMountable() throws Exception;
 
     /**
      * All HeadMountable motion must go through the head to map to the right
