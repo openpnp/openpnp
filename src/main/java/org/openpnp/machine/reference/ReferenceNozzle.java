@@ -890,6 +890,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     protected double probePartOffVacuumLevel(int probingMilliseconds, int dwellMilliseconds) throws Exception {
         ReferenceNozzleTip nt = getNozzleTip();
         SimpleGraph vacuumGraph = null;
+        double returnedVacuumLevel = Double.NaN; // this should always be overwritten in one or the other if/else combo 
         if (isPartOnGraphEnabled()) {
             vacuumGraph = nt.getVacuumPartOffGraph();
             if (vacuumGraph == null || vacuumGraph.getT() > 1000.0) {
@@ -934,10 +935,16 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 // record valve still on 
                 vacuumGraph.getRow(ReferenceNozzleTip.BOOLEAN, ReferenceNozzleTip.VALVE_ON)
                 .recordDataPoint(vacuumGraph.getT(), 1);
+                if (dwellMilliseconds <= 0) {
+                    returnedVacuumLevel = vacuumLevel;
+                }
             }
             else {
                 // simple method, just dwell 
                 Thread.sleep(probingMilliseconds);
+                if (dwellMilliseconds <= 0) {
+                    returnedVacuumLevel = readVacuumLevel();
+                }
             }
         }
         finally {
@@ -963,13 +970,20 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             .recordDataPoint(vacuumGraph.getT(), 0);
             // save the graph back (for the property change to fire)
             nt.setVacuumPartOffGraph(vacuumGraph);
-            return vacuumLevel;
+            if (dwellMilliseconds > 0) {
+                returnedVacuumLevel = vacuumLevel;
+            }
+            // return the vacuum level, either from before or after valve closed
+            return returnedVacuumLevel;
         }
         else {
-            // simple method, just dwell 
-            Thread.sleep(dwellMilliseconds);
-            // and then return the vacuum level
-            return readVacuumLevel();
+            // simple method, just dwell and then read the level
+            if (dwellMilliseconds > 0) {
+                Thread.sleep(dwellMilliseconds);
+                returnedVacuumLevel = readVacuumLevel();
+            }
+            // return the vacuum level, either from before or after valve closed
+            return returnedVacuumLevel;
         }
     }
 
