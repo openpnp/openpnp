@@ -26,6 +26,7 @@ public class Normalize extends CvStage {
 	    }
           }
 	  src.put(0, 0, pixel);
+	  dst.release();
 	}
 
     @Override

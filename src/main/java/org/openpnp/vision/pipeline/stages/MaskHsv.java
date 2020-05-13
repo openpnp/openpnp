@@ -170,10 +170,8 @@ public class MaskHsv extends CvStage {
     public Result process(CvPipeline pipeline) throws Exception {
         Mat mat = pipeline.getWorkingImage();
         Mat mask = mat.clone();
-        Mat masked = mat.clone();
         Scalar color = FluentCv.colorToScalar(Color.black);
         mask.setTo(color);
-        masked.setTo(color);
         
         if (auto) {
             // Note that in the code below, because hue, saturation, and value are each considered separately
@@ -391,6 +389,12 @@ public class MaskHsv extends CvStage {
                 endIdx = -1;
                 startIdx = -1;
             }
+            workingMat.release();
+            mv.release();
+            hist.release();
+            ranges.release();
+            channels.release();
+            histSize.release();
             setValueMax( endIdx );
             Logger.trace( "valueMax = " + valueMax );
             setValueMin( startIdx );
@@ -420,6 +424,7 @@ public class MaskHsv extends CvStage {
             Core.inRange(mat, min, max, mask2);
           
             Core.bitwise_or(mask, mask2, mask);
+            mask2.release();
         }
 
         //The mask is normally inverted because it is used to copy the unmasked portions of the
@@ -431,12 +436,6 @@ public class MaskHsv extends CvStage {
         double fractionActuallyMasked = 1.0 - Core.countNonZero(mask) / (double) ( mat.rows() * mat.cols() ) ;
         Logger.trace( "Fraction actually masked = " + fractionActuallyMasked );
         
-        if (binaryMask) {
-            return new Result(mask);
-        } 
-        else {
-            mat.copyTo(masked, mask);
-            return new Result(masked);
-        }
+        return new Result(mask);
     }
 }
