@@ -2,6 +2,8 @@
 
 Camera Settling is used to let your camera adjust to what it's looking at before a picture can be taken for Computer Vision (CV). This usually takes into account any blur from the end of a movement, waiting for vibrations to abate, along with time needed to perform any auto exposure or focus operations, plus any lag in communication and processing.
 
+![AdvancedCameraSettleSmall](https://user-images.githubusercontent.com/9963310/81856586-504fe100-9561-11ea-982a-a0b95bf4c0e8.gif)
+
 # Simple Method: Fixed Time
 
 The simple method is to just wait a moment. The default settle time is 250 milliseconds. If you find that things like fiducial checks are getting blurry images, you may need to increase the settle time.
