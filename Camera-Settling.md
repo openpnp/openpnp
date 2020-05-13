@@ -11,7 +11,7 @@ The simple method is to just wait a moment. The default settle time is 250 milli
 1. With the camera selected in the Machine Setup tab, select the Vision tab.
 2. Set the Settle Method to FixedTime and change the value of Settle Time (ms) to the number of milliseconds required. The easiest way to determine the value is to start high (2000ms) and then lower it until you stop getting good results and use a slightly higher value.
 
-But because the settle scenarios can be quite different, it is hard to find a settle time that covers the worst case, while not slowing down the machine too much. Computer Vision is used in very different scenarios. Sometimes the machine races to a location then stops abruptly and wants to perform a CV operation (e.g. find a fiducial). On the other hand there are "drill-down" type CV operations where many pictures are taken in succession with only minor adjustment moves between them. Unless you have the stiffest machine and the fastest camera, these scenarios will require vastly different settle times due to vibrations and other effects. 
+But because the settle scenarios can be quite different, it is hard to find a settle time that covers the worst case, while not slowing down the machine too much. Computer Vision is used in very different scenarios. Sometimes the machine races to a location then stops abruptly and wants to perform a CV operation (e.g. find a fiducial). On the other hand there are "drill-down" type CV operations where many pictures are taken in succession with only minor adjustment moves between them. Unless you have the stiffest machine and the coolest camera, these scenarios will require vastly different settle times due to vibrations and other effects. 
 
 It is also very difficult to know and provoke the worst case scenario in advance. That is the reason for advanced Settle Methods and diagnostics.
 
@@ -20,15 +20,23 @@ It is also very difficult to know and provoke the worst case scenario in advance
 
 # Advanced Settle Methods and Diagnostics
 
+## The Idea
+
+The Idea is to look at the pictures taken and by comparing each frame with its predecesor, determine when the settling is concluded. So after a brutal machine stop, it might take longer, but "drill-down" micro-move adjustments are very fast. This becomes possible with the advanced Settle Methods (i.e. not Fixed Time).
+
+You can still set a **Settle Timeout (ms)** value, that will end the settling no matter what. You should choose a very conservative time to really cover all the worst case scenarios. The timeout will make sure your Cameras never "hang" when the settle goal (Threshold) is never reached. This could be due to flickering ambient light or a misconfiguration etc.. 
+
 ## Enable Diagnostics
 
-Choose one of the advanced Settle Methods (i.e. not Fixed Time) and enable Diagnostics. Then just press the Camera settle test button.
+To see what we are doing, we need to enable Diagnostics. Choose one of the advanced Settle Methods (i.e. not Fixed Time) and check the Diagnostics checkbox. Then just press the Camera settle test button.
 
 ![grafik](https://user-images.githubusercontent.com/9963310/81853527-d289d680-955c-11ea-804d-4399103ea938.png)
 
 ## Checking the Camera Frame Rate
 
-This should now plot a graph. In the blue curve you see how fast your camera delivers frames. When the blue curve is up, it is waiting for a frame, when it is down, it is analyzing the settling. The scale is Milliseconds. 
+The first task is to see how well the camera performs. We need a steady stream of frames taken. 
+
+The Diagnostics should have plotted plot a graph. In the blue curve you see how fast your camera delivers frames. When the blue curve is up, it is waiting for a frame, when it is down, it is analyzing the settling. The scale is Milliseconds. 
 
 ![grafik](https://user-images.githubusercontent.com/9963310/81853582-e2a1b600-955c-11ea-8812-ed2accaa9f63.png)
 
@@ -44,7 +52,7 @@ Go back to the Camera's Vision tab and retry. Only the occasional irregularity s
 
 ## Basic Tuning
 
-You can start tuning the settings with similar values as in the screenshot. But start with a Settle Threshold of 0.
+You can start tuning the settings with similar values as in the screenshot (below). But start with a Settle Threshold of 0.
 
 Then perform one of the settle tests with the icon buttons. These will move the Nozzle in front of the Bottom Camera  - or the Camera itself, if it is the Down-looking Camera - and then immediately settle the camera. Read the tool tips on the buttons for more info about each one. 
 
@@ -58,7 +66,7 @@ You should now see the red curve descend and settle to some value above 0. Move 
 
 ![grafik](https://user-images.githubusercontent.com/9963310/81854208-e1bd5400-955d-11ea-8931-a5d6be9b388e.png)
 
-When you scratch over the graph you see a red horizontal line with indicated difference value. Go to where you think the frame is stable enough and set this value as your **Threshold**. The last settle frame is also the one taken for computer vision. The higher the threshold the faster your frame settling is. For best speed you need to judge how much residual motion you want to tolerate. If your machine vibrates at all ;-)
+When you scratch over the graph you see a red horizontal line with indicated difference value. Go to where you think the frame is stable enough and set this value as your **Threshold**. The last settle frame is also the one taken for computer vision. The higher the threshold, the faster your frame settling is. For best speed you need to judge how much residual motion you want to tolerate. If your machine vibrates at all ;-)
 
 You will need to repeat this for different motion and Computer Vision scenarios and then take the threshold that works for all of them.
 
