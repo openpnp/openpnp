@@ -76,10 +76,9 @@ There should now be a crosshair with evenly spaced lines in the camera view. Lin
 
 If the lines don't line up, check that you've performed this step correctly. If they do line up in the center but rapidly get worse the further you look from center, read the Lens Calibration section below to perform correction.
 
-## Settle Time
+## Computer Vision and Camera Settling
 
-Settle time is the amount of time it takes for your camera to adjust to what it's looking at before a picture can be taken. This usually takes into account any blur from the end of a movement, along with time needed to perform any auto exposure or focus operations. The default settle time is 250 milliseconds. If you find that things like fiducial checks are getting blurry images, you may need to increase the settle time.
+Settle time is the amount of time it takes for your camera to adjust to what it's looking at before a picture can be taken for Computer Vision. 
 
-1. With the camera selected in the Machine Setup tab, select the General Configuration tab from the right.
-2. In the configuration panel, look for Settle Time (ms) and change the value to the number of milliseconds required. The easiest way to determine the value is to start high (2000ms) and then lower it until you stop getting good results and use a slightly higher value.
+The Setup is described on the [[Camera Settling]] page.
 
