@@ -133,8 +133,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
         BufferedImage frame = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D gFrame = frame.createGraphics();
-        gFrame.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
+        
         Location location = NullDriver.getSimulatedPhysicalLocation(this, getLooking());
         
         double locationX = location.getX();
@@ -143,11 +142,25 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
         double pixelX = locationX / getUnitsPerPixel().getX();
         double pixelY = locationY / getUnitsPerPixel().getY();
 
-        int dx1 = (int) (pixelX - (width / 2));
-        int dy1 = (int) (source.getHeight() - (pixelY + (height / 2)));
+        int dx = (int) (pixelX - (width / 2));
+        int dy = (int) (source.getHeight() - (pixelY + (height / 2)));
+        int dx1 = dx;
+        int dy1 = dy;
+        int w1 = width;
+        int h1 = height;
 
-        gFrame.drawImage(source, 0, 0, width - 1, height - 1, dx1, dy1, dx1 + width - 1,
-                dy1 + height - 1, null);
+        if (dx < 0 || dy < 0 || dx+w1 > source.getWidth() || dy+h1 > source.getHeight()) {
+            // Source margin area
+            gFrame.setColor(Color.darkGray);
+            gFrame.fillRect(0, 0, width, height);
+            w1 += Math.min(0, dx);
+            h1 += Math.min(0, dy);
+            dx1 = Math.max(0, dx);
+            dy1 = Math.max(0, dy);
+            w1 = Math.min(w1, source.getWidth() - dx1);
+            h1 = Math.min(h1, source.getHeight() - dy1);
+        }
+        gFrame.drawImage(source, dx1-dx, dy1-dy, dx1-dx+w1 - 1, dy1-dy+h1 - 1, dx1, dy1, dx1 + w1 - 1, dy1 + h1 - 1, null);
         
         NullDriver.drawSimulatedCameraNoise(gFrame, width, height);
 
