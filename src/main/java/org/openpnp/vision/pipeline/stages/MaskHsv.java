@@ -442,7 +442,7 @@ public class MaskHsv extends CvStage {
             return new Result(mask);
         } else {
             mat.copyTo(masked, mask);
-            mat.release();
+            mask.release();
             return new Result(masked);
         }
     }
