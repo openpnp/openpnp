@@ -170,8 +170,10 @@ public class MaskHsv extends CvStage {
     public Result process(CvPipeline pipeline) throws Exception {
         Mat mat = pipeline.getWorkingImage();
         Mat mask = mat.clone();
+        Mat masked = mat.clone();
         Scalar color = FluentCv.colorToScalar(Color.black);
         mask.setTo(color);
+        masked.setTo(color);
         
         if (auto) {
             // Note that in the code below, because hue, saturation, and value are each considered separately
@@ -435,7 +437,13 @@ public class MaskHsv extends CvStage {
 
         double fractionActuallyMasked = 1.0 - Core.countNonZero(mask) / (double) ( mat.rows() * mat.cols() ) ;
         Logger.trace( "Fraction actually masked = " + fractionActuallyMasked );
-        
-        return new Result(mask);
+        if (binaryMask) {
+            masked.release();
+            return new Result(mask);
+        } else {
+            mat.copyTo(masked, mask);
+            mat.release();
+            return new Result(masked);
+        }
     }
 }
