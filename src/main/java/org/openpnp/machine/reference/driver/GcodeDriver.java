@@ -1120,6 +1120,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                             // The new implementation as a TransformedAxis reverses this to raw --> transformed to unify the 
                             // thinking. Therefore we need to invert the sign.  
                             nonSquarenessAxis.setFactorY(-nonSquarenessFactor);
+                            // Make this a compensation transformation so it can be filtered out on demand.
+                            nonSquarenessAxis.setCompensation(true);
                         }
                     }
     

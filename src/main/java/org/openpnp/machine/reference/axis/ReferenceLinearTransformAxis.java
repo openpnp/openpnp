@@ -21,6 +21,7 @@
 
 package org.openpnp.machine.reference.axis;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.openpnp.ConfigurationListener;
@@ -36,6 +37,7 @@ import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Machine;
+import org.openpnp.spi.Movable.LocationOption;
 import org.openpnp.spi.base.AbstractAxis;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractTransformedAxis;
@@ -69,6 +71,8 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
     private double factorRotation = 0.0;
     @Element(required = false)
     private Length offset = new Length(0.0, LengthUnit.Millimeters);
+    @Attribute(required = false)
+    private boolean compensation = false;
 
     public ReferenceLinearTransformAxis() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
@@ -185,6 +189,14 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
         this.offset = offset;
     }
 
+    public boolean isCompensation() {
+        return compensation;
+    }
+
+    public void setCompensation(boolean compensation) {
+        this.compensation = compensation;
+    }
+
     public double[] getLinearTransform() throws Exception {
         if (factorX != 0.0 && inputAxisX == null) {
             throw new Exception(getName()+" has X factor but no input axis."); 
@@ -208,9 +220,14 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
     }
 
 
-    private static double [] getLinearTransform(ReferenceLinearTransformAxis axis, double [] unit) throws Exception {
-        if (axis != null) {
-            return axis.getLinearTransform();
+    private static double [] getLinearTransform(ReferenceLinearTransformAxis axis, double [] unit, LocationOption... options) throws Exception {
+        if (axis != null) { 
+            if (axis.compensation == false || !Arrays.asList(options).contains(LocationOption.SuppressCompensation)) {
+                return axis.getLinearTransform();
+            }
+            else {
+                return unit;
+            }
         }
         return unit;
     }
@@ -227,26 +244,45 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
 
 
     @Override
-    public AxesLocation toTransformed(AxesLocation location) {
-        location = AbstractTransformedAxis.toTransformed(inputAxisX, location);
-        location = AbstractTransformedAxis.toTransformed(inputAxisY, location);
-        location = AbstractTransformedAxis.toTransformed(inputAxisZ, location);
-        location = AbstractTransformedAxis.toTransformed(inputAxisRotation, location);
+    public AxesLocation toTransformed(AxesLocation location, LocationOption... options) {
+        location = AbstractTransformedAxis.toTransformed(inputAxisX, location, options);
+        location = AbstractTransformedAxis.toTransformed(inputAxisY, location, options);
+        location = AbstractTransformedAxis.toTransformed(inputAxisZ, location, options);
+        location = AbstractTransformedAxis.toTransformed(inputAxisRotation, location, options);
         double x = location.getCoordinate(inputAxisX);
         double y = location.getCoordinate(inputAxisY);
         double z = location.getCoordinate(inputAxisZ);
         double rotation = location.getCoordinate(inputAxisRotation);
-        double offset = this.offset.convertToUnits(AxesLocation.getUnits()).getValue();
-        return location.put(new AxesLocation(this, 
-                x * factorX
-                + y * factorY
-                + z * factorZ
-                + rotation * factorRotation
-                + offset));
+        if (compensation == false || !Arrays.asList(options).contains(LocationOption.SuppressCompensation)) {
+            double offset = this.offset.convertToUnits(AxesLocation.getUnits()).getValue();
+            return location.put(new AxesLocation(this, 
+                    x * factorX
+                    + y * factorY
+                    + z * factorZ
+                    + rotation * factorRotation
+                    + offset));
+        }
+        else {
+            // Compensation suppressed, just return the typed axis (unit transform).
+            double coordinate;
+            switch (getType()) {
+                case X:
+                    coordinate = x; break;
+                case Y:
+                    coordinate = y; break;
+                case Z:
+                    coordinate = z; break;
+                case Rotation:
+                    coordinate = rotation; break;
+                default:
+                    coordinate = 0.0; break;
+            }
+            return location.put(new AxesLocation(this, coordinate));
+        }
     }
 
     @Override
-    public AxesLocation toRaw(AxesLocation location) throws Exception {
+    public AxesLocation toRaw(AxesLocation location, LocationOption... options) throws Exception {
         // Check if the transformation was already done by another axis.
         if (location.contains(inputAxisX)
                 && location.contains(inputAxisY)
@@ -274,10 +310,10 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
         }
         // Query each axis for its Affine Transform vector.
         double  [][] affineTransform = new double [][] {
-            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[0], new double [] { 1, 0, 0, 0, 0}),
-            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[1], new double [] { 0, 1, 0, 0, 0}),
-            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[2], new double [] { 0, 0, 1, 0, 0}),
-            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[3], new double [] { 0, 0, 0, 1, 0}),
+            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[0], new double [] { 1, 0, 0, 0, 0}, options),
+            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[1], new double [] { 0, 1, 0, 0, 0}, options),
+            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[2], new double [] { 0, 0, 1, 0, 0}, options),
+            ReferenceLinearTransformAxis.getLinearTransform(linearAxes[3], new double [] { 0, 0, 0, 1, 0}, options),
             { 0, 0, 0, 0, 1 }
         };
 
@@ -299,10 +335,10 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
         location = location.put(new AxesLocation(inputAxes[2], rawVector[2][0]));
         location = location.put(new AxesLocation(inputAxes[3], rawVector[3][0]));
         // Recurse input axes to raw.
-        location = AbstractTransformedAxis.toRaw(inputAxes[0], location);
-        location = AbstractTransformedAxis.toRaw(inputAxes[1], location);
-        location = AbstractTransformedAxis.toRaw(inputAxes[2], location);
-        location = AbstractTransformedAxis.toRaw(inputAxes[3], location);
+        location = AbstractTransformedAxis.toRaw(inputAxes[0], location, options);
+        location = AbstractTransformedAxis.toRaw(inputAxes[1], location, options);
+        location = AbstractTransformedAxis.toRaw(inputAxes[2], location, options);
+        location = AbstractTransformedAxis.toRaw(inputAxes[3], location, options);
         return location;
     }
     protected void consolidateInputAxes(Axis axis, AbstractAxis inputAxis, Axis.Type inputType,

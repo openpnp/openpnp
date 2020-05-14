@@ -6,6 +6,7 @@ import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.spi.Movable.LocationOption;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractSingleTransformedAxis;
 import org.pmw.tinylog.Logger;
@@ -47,11 +48,11 @@ public class ReferenceMappedAxis extends AbstractSingleTransformedAxis {
     }
 
     @Override
-    public AxesLocation toTransformed(AxesLocation location) {
+    public AxesLocation toTransformed(AxesLocation location, LocationOption... options) {
         if (inputAxis == null) {
             return location.put(new AxesLocation(this, 0.0));
         }
-        location = inputAxis.toTransformed(location);
+        location = inputAxis.toTransformed(location, options);
         // To transformed, i.e. forward mapped transform:
         double coordinate = location.getCoordinate(inputAxis);
         double scale = getScale();
@@ -62,7 +63,7 @@ public class ReferenceMappedAxis extends AbstractSingleTransformedAxis {
     }
 
     @Override
-    public AxesLocation toRaw(AxesLocation location) 
+    public AxesLocation toRaw(AxesLocation location, LocationOption... options) 
             throws Exception {
         if (inputAxis == null) {
             throw new Exception(getName()+" has no input axis set");
@@ -74,7 +75,7 @@ public class ReferenceMappedAxis extends AbstractSingleTransformedAxis {
         coordinate = coordinate - mapOutput0.convertToUnits(AxesLocation.getUnits()).getValue();
         coordinate = coordinate / scale; 
         coordinate = coordinate + mapInput0.convertToUnits(AxesLocation.getUnits()).getValue(); 
-        return toRaw(location.put(new AxesLocation(inputAxis, coordinate)));
+        return toRaw(location.put(new AxesLocation(inputAxis, coordinate)), options);
     }
 
     public Length getMapInput0() {

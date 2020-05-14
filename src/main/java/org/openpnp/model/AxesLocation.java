@@ -33,6 +33,7 @@ import java.util.function.Function;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
+import org.simpleframework.xml.ElementList;
 
 /**
  * Like the classic OpenPnP Location, the AxesLocation stores a set of coordinates. However

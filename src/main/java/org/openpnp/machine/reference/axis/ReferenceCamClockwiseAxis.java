@@ -4,6 +4,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.axis.wizards.ReferenceCamClockwiseAxisConfigurationWizard;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.Movable.LocationOption;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractSingleTransformedAxis;
 
@@ -30,7 +31,7 @@ public class ReferenceCamClockwiseAxis extends AbstractSingleTransformedAxis {
     }
 
     @Override
-    public AxesLocation toRaw(AxesLocation location) throws Exception {
+    public AxesLocation toRaw(AxesLocation location, LocationOption... options) throws Exception {
         if (getCounterClockwiseAxis() == null) {
             throw new Exception(getName()+" has no counter-clock input axis set");
         }
@@ -39,16 +40,16 @@ public class ReferenceCamClockwiseAxis extends AbstractSingleTransformedAxis {
         // store the transformed input axis (we're skipping the counter-clock axis)
         location = location.put(new AxesLocation(getCounterClockwiseAxis().getInputAxis(), rawCoordinate));
         // recurse
-        return getCounterClockwiseAxis().getInputAxis().toRaw(location);
+        return getCounterClockwiseAxis().getInputAxis().toRaw(location, options);
     }
 
     @Override
-    public AxesLocation toTransformed(AxesLocation location) {
+    public AxesLocation toTransformed(AxesLocation location, LocationOption... options) {
         if (getCounterClockwiseAxis() == null) {
             return location.put(new AxesLocation(this, 0.0));
         }
         // recurse
-        location = getCounterClockwiseAxis().toTransformed(location);
+        location = getCounterClockwiseAxis().toTransformed(location, options);
         // get the input of the input (we're skipping the counter-clock axis)
         double rawCoordinate = location.getCoordinate(getCounterClockwiseAxis().getInputAxis());
         double transformedCoordinate  = getCounterClockwiseAxis().toTransformedCoordinate(rawCoordinate, true);

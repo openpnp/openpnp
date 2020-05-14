@@ -33,6 +33,7 @@ import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.camera.wizards.ImageCameraConfigurationWizard;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.model.Configuration;
@@ -134,7 +135,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 
         Graphics2D gFrame = frame.createGraphics();
         
-        Location location = NullDriver.getSimulatedPhysicalLocation(this, getLooking());
+        Location location = SimulationModeMachine.getSimulatedPhysicalLocation(this, getLooking());
         
         double locationX = location.getX();
         double locationY = location.getY();
@@ -150,19 +151,20 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
         int h1 = height;
 
         if (dx < 0 || dy < 0 || dx+w1 > source.getWidth() || dy+h1 > source.getHeight()) {
-            // Source margin area
-            gFrame.setColor(Color.darkGray);
-            gFrame.fillRect(0, 0, width, height);
+            // crop to source area
             w1 += Math.min(0, dx);
             h1 += Math.min(0, dy);
             dx1 = Math.max(0, dx);
             dy1 = Math.max(0, dy);
             w1 = Math.min(w1, source.getWidth() - dx1);
             h1 = Math.min(h1, source.getHeight() - dy1);
+            // paint the rest black
+            gFrame.setColor(Color.black);
+            gFrame.fillRect(0, 0, width, height);
         }
         gFrame.drawImage(source, dx1-dx, dy1-dy, dx1-dx+w1 - 1, dy1-dy+h1 - 1, dx1, dy1, dx1 + w1 - 1, dy1 + h1 - 1, null);
         
-        NullDriver.drawSimulatedCameraNoise(gFrame, width, height);
+        SimulationModeMachine.drawSimulatedCameraNoise(gFrame, width, height);
 
         gFrame.dispose();
 

@@ -20,6 +20,7 @@ import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.Movable.LocationOption;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -109,7 +110,7 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
      * @return the transformed axis coordinate.  
      * @throws Exception 
      */
-    public abstract AxesLocation toTransformed(AxesLocation location); 
+    public abstract AxesLocation toTransformed(AxesLocation location, LocationOption... options); 
 
     /**
      * Transform the specified transformed coordinate taken from the specified location into the 
@@ -123,7 +124,7 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
      * @param location
      * @return the raw axis coordinate in the LengthUnit of the given Location.  
      */
-    public abstract AxesLocation toRaw(AxesLocation location) throws Exception; 
+    public abstract AxesLocation toRaw(AxesLocation location, LocationOption... options) throws Exception; 
 
     @Override
     public PropertySheet[] getPropertySheets() {

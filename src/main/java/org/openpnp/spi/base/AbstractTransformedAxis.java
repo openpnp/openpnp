@@ -22,20 +22,20 @@
 package org.openpnp.spi.base;
 
 import org.openpnp.model.AxesLocation;
-import org.openpnp.model.LengthUnit;
+import org.openpnp.spi.Movable.LocationOption;
 import org.openpnp.spi.TransformedAxis;
 
 public abstract class AbstractTransformedAxis extends AbstractAxis implements TransformedAxis {
     // Convenience functions for null checking.
-    public static AxesLocation toTransformed(AbstractAxis axis, AxesLocation location) {
+    public static AxesLocation toTransformed(AbstractAxis axis, AxesLocation location, LocationOption... options) {
         if (axis != null) {
-            return axis.toTransformed(location);
+            return axis.toTransformed(location, options);
         }
         return location;
     }
-    public static AxesLocation toRaw(AbstractAxis axis, AxesLocation location) throws Exception {
+    public static AxesLocation toRaw(AbstractAxis axis, AxesLocation location, LocationOption... options) throws Exception {
         if (axis != null) {
-            return axis.toRaw(location);
+            return axis.toRaw(location, options);
         }
         return location;
     }

@@ -110,9 +110,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public Driver getDriver(String id);
 
     /**
-     * Commands all Heads to move to their home positions and reset their current positions to
-     * 0,0,0,0. Depending on the head configuration of the machine the home positions may not all be
-     * the same but the end result should be that any head commanded to move to a certain position
+     * Commands all Heads to perform visual homing if available. Depending on the head configuration of the machine 
+     * the home positions may not all be the same but the end result should be that any head commanded to move to a certain position
      * will end up in the same position.
      */
     public void home() throws Exception;

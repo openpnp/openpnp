@@ -15,6 +15,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.camera.wizards.SimulatedUpCameraConfigurationWizard;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.model.AxesLocation;
@@ -79,7 +80,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         for (Head head :  Configuration.get()
                 .getMachine().getHeads()) {
             for (Nozzle nozzle : head.getNozzles()) {
-                Location l = NullDriver.getSimulatedPhysicalLocation(nozzle, getLooking());
+                Location l = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, getLooking());
                 if (phyBounds.contains(l.getX(), l.getY())) {
                     drawNozzle(g, nozzle);
                 }
@@ -88,7 +89,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
 
         g.setTransform(tx);
 
-        NullDriver.drawSimulatedCameraNoise(g, width, height);
+        SimulationModeMachine.drawSimulatedCameraNoise(g, width, height);
 
         g.dispose();
 
@@ -105,7 +106,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         
         // Draw the nozzle
         // Get nozzle offsets from camera
-        Location l = NullDriver.getSimulatedPhysicalLocation(nozzle, getLooking());
+        Location l = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, getLooking());
         Location offsets = l.subtractWithRotation(getLocation());
         
         // Create a nozzle shape

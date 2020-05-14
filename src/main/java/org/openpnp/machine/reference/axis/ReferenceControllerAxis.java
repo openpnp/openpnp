@@ -6,6 +6,7 @@ import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Movable.LocationOption;
 import org.openpnp.spi.base.AbstractControllerAxis;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -67,13 +68,13 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     @Override
-    public AxesLocation toTransformed(AxesLocation location) {
+    public AxesLocation toTransformed(AxesLocation location, LocationOption... options) {
         // No transformation, obviously
         return location;
     }
 
     @Override
-    public AxesLocation toRaw(AxesLocation location) {
+    public AxesLocation toRaw(AxesLocation location, LocationOption... options) {
         // No transformation, obviously
         return location;
     }

@@ -8,6 +8,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.Movable.LocationOption;
 import org.openpnp.spi.base.AbstractAxis;
 import org.openpnp.spi.base.AbstractControllerAxis;
 import org.openpnp.spi.base.AbstractMachine;
@@ -42,7 +43,7 @@ public class ReferenceCamCounterClockwiseAxis extends AbstractSingleTransformedA
     }
 
     @Override
-    public AxesLocation toRaw(AxesLocation location) throws Exception {
+    public AxesLocation toRaw(AxesLocation location, LocationOption... options) throws Exception {
         if (inputAxis == null) {
             throw new Exception(getName()+" has no input axis set");
         }
@@ -51,7 +52,7 @@ public class ReferenceCamCounterClockwiseAxis extends AbstractSingleTransformedA
         // store the new coordinate
         location = location.put(new AxesLocation(inputAxis, rawCoordinate));
         // recurse
-        return inputAxis.toRaw(location);
+        return inputAxis.toRaw(location, options);
     }
 
     protected double toRawCoordinate(double transformedCoordinate, boolean clockwise) throws Exception {
@@ -69,12 +70,12 @@ public class ReferenceCamCounterClockwiseAxis extends AbstractSingleTransformedA
     }
 
     @Override
-    public AxesLocation toTransformed(AxesLocation location)  {
+    public AxesLocation toTransformed(AxesLocation location, LocationOption... options)  {
         if (inputAxis == null) {
             return location.put(new AxesLocation(this, 0.0));
         }
         // recurse
-        location = inputAxis.toTransformed(location);
+        location = inputAxis.toTransformed(location, options);
         double rawCoordinate = location.getCoordinate(inputAxis);
         double transformedCoordinate  = toTransformedCoordinate(rawCoordinate, false);
         return location.put(new AxesLocation(this, transformedCoordinate));

@@ -131,7 +131,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         Logger.debug("{}.moveToSafeZ({})", getName(), speed);
         Location l = getLocation();
         Length safeZ = this.getEffectiveSafeZ().convertToUnits(l.getUnits());
-        l = l.derive( null, null, safeZ.getValue(), null);
+        l = l.derive(null, null, safeZ.getValue(), null);
         moveTo(l, speed);
     }
 
@@ -219,10 +219,10 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
 
     @Override
     public Location toTransformed(AxesLocation axesLocation, LocationOption... options) {
-        axesLocation = AbstractTransformedAxis.toTransformed(axisX, axesLocation);
-        axesLocation = AbstractTransformedAxis.toTransformed(axisY, axesLocation);
-        axesLocation = AbstractTransformedAxis.toTransformed(axisZ, axesLocation);
-        axesLocation = AbstractTransformedAxis.toTransformed(axisRotation, axesLocation);
+        axesLocation = AbstractTransformedAxis.toTransformed(axisX, axesLocation, options);
+        axesLocation = AbstractTransformedAxis.toTransformed(axisY, axesLocation, options);
+        axesLocation = AbstractTransformedAxis.toTransformed(axisZ, axesLocation, options);
+        axesLocation = AbstractTransformedAxis.toTransformed(axisRotation, axesLocation, options);
         Location location = toMappedLocation(Configuration.get().getSystemUnits(), axesLocation);
         return location;
     }
@@ -231,10 +231,10 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     public AxesLocation toRaw(Location location, LocationOption... options) 
             throws Exception {
         AxesLocation axesLocation = toAxesLocation(location);
-        axesLocation = AbstractTransformedAxis.toRaw(axisX, axesLocation);
-        axesLocation = AbstractTransformedAxis.toRaw(axisY, axesLocation);
-        axesLocation = AbstractTransformedAxis.toRaw(axisZ, axesLocation);
-        axesLocation = AbstractTransformedAxis.toRaw(axisRotation, axesLocation);
+        axesLocation = AbstractTransformedAxis.toRaw(axisX, axesLocation, options);
+        axesLocation = AbstractTransformedAxis.toRaw(axisY, axesLocation, options);
+        axesLocation = AbstractTransformedAxis.toRaw(axisZ, axesLocation, options);
+        axesLocation = AbstractTransformedAxis.toRaw(axisRotation, axesLocation, options);
         return axesLocation;
     }
 

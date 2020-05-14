@@ -143,6 +143,15 @@ public class MappedAxes {
         return found;
     }
 
+    public AxesLocation getTypedLocation(Location location) throws Exception {
+         location = location.convertToUnits(AxesLocation.getUnits());
+         return new AxesLocation((a, b) -> (b),
+                new AxesLocation(getAxis(Axis.Type.X), location.getX()),
+                new AxesLocation(getAxis(Axis.Type.Y), location.getY()),
+                new AxesLocation(getAxis(Axis.Type.Z), location.getZ()),
+                new AxesLocation(getAxis(Axis.Type.Rotation), location.getRotation()));
+    }
+
     /**
      * @return The current controller Location stored in the mapped axes. 
      */
@@ -165,6 +174,11 @@ public class MappedAxes {
     public AxesLocation getHomeLocation() {
         return new AxesLocation(getAxes(), (axis) -> 
         axis.getHomeCoordinate().convertToUnits(AxesLocation.getUnits()).getValue()); 
+    }
+
+    public AxesLocation getMappedOnlyLocation(AxesLocation location) {
+        return new AxesLocation(getAxes(), (axis) -> 
+        location.getCoordinate(axis));
     }
 
     public List<Driver> getMappedDrivers(Machine machine) {
@@ -246,6 +260,7 @@ public class MappedAxes {
         }
         return found;
     }
+
 }
 
 
