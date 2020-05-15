@@ -391,12 +391,6 @@ public class MaskHsv extends CvStage {
                 endIdx = -1;
                 startIdx = -1;
             }
-            workingMat.release();
-            mv.release();
-            hist.release();
-            ranges.release();
-            channels.release();
-            histSize.release();
             setValueMax( endIdx );
             Logger.trace( "valueMax = " + valueMax );
             setValueMin( startIdx );
@@ -426,7 +420,6 @@ public class MaskHsv extends CvStage {
             Core.inRange(mat, min, max, mask2);
           
             Core.bitwise_or(mask, mask2, mask);
-            mask2.release();
         }
 
         //The mask is normally inverted because it is used to copy the unmasked portions of the
@@ -437,12 +430,12 @@ public class MaskHsv extends CvStage {
 
         double fractionActuallyMasked = 1.0 - Core.countNonZero(mask) / (double) ( mat.rows() * mat.cols() ) ;
         Logger.trace( "Fraction actually masked = " + fractionActuallyMasked );
+        
         if (binaryMask) {
-            masked.release();
             return new Result(mask);
-        } else {
+        } 
+        else {
             mat.copyTo(masked, mask);
-            mask.release();
             return new Result(masked);
         }
     }

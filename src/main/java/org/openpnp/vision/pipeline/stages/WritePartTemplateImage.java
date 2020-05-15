@@ -23,6 +23,7 @@ import java.io.File;
 
 import org.opencv.imgcodecs.Imgcodecs;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
@@ -126,11 +127,15 @@ public class WritePartTemplateImage extends CvStage {
             // path is assumed to be a directory containing template images
             // check if a part ID can be found from the feeder this pipeline may belong to
             Feeder feeder = (Feeder) pipeline.getProperty("feeder");
-            if (feeder == null || feeder.getPart() == null) {
-
+            Part part = (Part) pipeline.getProperty("part");
+            // path is assumed to be a directory containing template images
+            if (part == null && (feeder == null || feeder.getPart() == null) ) {
                 throw new Exception(
-                        "No part in feeder. Please provide create template image file path.");
+                            "No feeder, part, or useable templateFile found. Cannot figure out part name.");
+            } else {
+                part = feeder.getPart();
             }
+
             // make sure the specified dir exists, otherwise create it
             new File(filepath).mkdirs();
 
@@ -140,15 +145,13 @@ public class WritePartTemplateImage extends CvStage {
             }
             if (asPackage) {
                 filepath += prefix 
-                        + feeder.getPart()
-                                  .getPackage()
+                        + part.getPackage()
                                   .getId()
                         + extension;
             }
             else {
                 filepath += prefix 
-                        + feeder.getPart()
-                                  .getId()
+                        + part.getId()
                         + extension;
             }
             file = new File(filepath);

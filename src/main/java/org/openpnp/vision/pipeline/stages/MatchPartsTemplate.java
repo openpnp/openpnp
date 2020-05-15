@@ -14,11 +14,7 @@
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
  * 
-<<<<<<< HEAD
- * For more information about OpenPnP visit http://openpnp.org 
-=======
  * For more information about OpenPnP visit http://openpnp.org
->>>>>>> f899b82e92b8ee747b25b798f1609b1d4335a01e
  */
 
 package org.openpnp.vision.pipeline.stages;
@@ -288,6 +284,7 @@ public class MatchPartsTemplate extends CvStage {
                 Logger.info("rotation" + i + " score = " + rotScore);
             }
         }
+        
         // release not used Mat
         timage.release();
         image.release();
@@ -332,6 +329,7 @@ public class MatchPartsTemplate extends CvStage {
                     new TemplateMatch(x, y, template.cols(), template.rows(), result.get(y, x)[0]);
             matches.add(match);
         }
+        
         // release
         result.release();
 
@@ -341,6 +339,7 @@ public class MatchPartsTemplate extends CvStage {
                 return ((Double) o2.score).compareTo(o1.score);
             }
         });
+
 
         return matches;
     }
