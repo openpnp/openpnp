@@ -132,7 +132,7 @@ public class WritePartTemplateImage extends CvStage {
             if (part == null && (feeder == null || feeder.getPart() == null) ) {
                 throw new Exception(
                             "No feeder, part, or useable templateFile found. Cannot figure out part name.");
-            } else {
+            } else if (part == null) {
                 part = feeder.getPart();
             }
 

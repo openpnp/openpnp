@@ -78,7 +78,7 @@ public class SelectSingleRect extends CvStage {
 
         RotatedRect results = null;
         
-        if (rects !=  null) {
+        if (rects !=  null && rects.size() > 0) {
             if (position == -1) {
                 results = rects.get(rects.size() -1);
             } else if (position <= rects.size()) {

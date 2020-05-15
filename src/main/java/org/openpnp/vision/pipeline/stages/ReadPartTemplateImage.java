@@ -142,7 +142,7 @@ public class ReadPartTemplateImage extends CvStage {
                             "No feeder, part, or useable templateFile found. Cannot figure out part name.");
                 }
                 return null;
-            } else {
+            } else if (part == null) {
                 part = feeder.getPart();
             }
             
