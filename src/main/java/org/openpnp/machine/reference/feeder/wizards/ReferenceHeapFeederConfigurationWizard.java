@@ -578,9 +578,10 @@ public class ReferenceHeapFeederConfigurationWizard
     private Action actionCleanDropbox = new AbstractAction("Clean DropBox") {
         @Override
         public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
+                //Feeder feeder = getSelection();
                 feeder.getDropBox().clean(Configuration.get().getMachine().getHeads().get(0).getDefaultNozzle());
-            });
+                });
         }
     };
 
