@@ -19,22 +19,14 @@
 
 package org.openpnp.machine.reference.camera;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
-import java.awt.Shape;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeSupport;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -42,29 +34,21 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.opencv.core.Core.MinMaxLocResult;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
-import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.camera.wizards.ImageCameraConfigurationWizard;
-import org.openpnp.machine.reference.driver.NullDriver;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
-import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider.TemplateMatch;
-import org.openpnp.util.LogUtils;
 import org.openpnp.util.OpenCvUtils;
-import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
-import org.openpnp.vision.pipeline.stages.CreateFootprintTemplateImage;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -96,16 +80,19 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
     private double pickLocationToleranceMm = 0.1;
 
     @Attribute(required = false)
-    private double pickLocationMinimumScore = 0.85;
+    private double pickLocationMinimumScore = 0.87;
 
     @Attribute(required = false)
     private double placeLocationToleranceMm = 0.1;
 
     @Attribute(required = false)
-    private double placeLocationMinimumScore = 0.6;
+    private double placeLocationMinimumScore = 0.58;
 
     @Attribute(required = false)
     boolean filterTestImageVision = true;
+
+    @Attribute(required = false)
+    private boolean subPixelRendering = true;
 
     public ImageCamera() {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.04233, 0.04233, 0, 0));
@@ -186,33 +173,48 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 
         Graphics2D gFrame = frame.createGraphics();
 
-
         double locationX = location.getX();
         double locationY = location.getY();
 
         double pixelX = locationX / getUnitsPerPixel().getX();
         double pixelY = locationY / getUnitsPerPixel().getY();
 
-        int dx = (int) (pixelX - (width / 2));
-        int dy = (int) (source.getHeight() - (pixelY + (height / 2)));
-        int dx1 = dx;
-        int dy1 = dy;
-        int w1 = width;
-        int h1 = height;
-
-        if (dx < 0 || dy < 0 || dx+w1 > source.getWidth() || dy+h1 > source.getHeight()) {
-            // crop to source area
-            w1 += Math.min(0, dx);
-            h1 += Math.min(0, dy);
-            dx1 = Math.max(0, dx);
-            dy1 = Math.max(0, dy);
-            w1 = Math.min(w1, source.getWidth() - dx1);
-            h1 = Math.min(h1, source.getHeight() - dy1);
-            // paint the rest black
-            gFrame.setColor(Color.black);
-            gFrame.fillRect(0, 0, width, height);
+        
+        if (subPixelRendering ) {
+            // Sub-pixel rendering.
+            double dx = (pixelX - (width / 2.0));
+            double dy = (source.getHeight() - (pixelY + (height / 2.0)));
+            gFrame.clearRect(0, 0, width, height);
+            gFrame.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            gFrame.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            gFrame.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            AffineTransform t = new AffineTransform();
+            t.translate(-dx, -dy); // x/y set here
+            t.scale(1.0, 1.0);
+            gFrame.drawImage(source, t, null);
         }
-        gFrame.drawImage(source, dx1-dx, dy1-dy, dx1-dx+w1 - 1, dy1-dy+h1 - 1, dx1, dy1, dx1 + w1 - 1, dy1 + h1 - 1, null);
+        else {
+            int dx = (int) (pixelX - (width / 2));
+            int dy = (int) (source.getHeight() - (pixelY + (height / 2)));
+            int dx1 = dx;
+            int dy1 = dy;
+            int w1 = width;
+            int h1 = height;
+    
+            if (dx < 0 || dy < 0 || dx+w1 > source.getWidth() || dy+h1 > source.getHeight()) {
+                // crop to source area
+                w1 += Math.min(0, dx);
+                h1 += Math.min(0, dy);
+                dx1 = Math.max(0, dx);
+                dy1 = Math.max(0, dy);
+                w1 = Math.min(w1, source.getWidth() - dx1);
+                h1 = Math.min(h1, source.getHeight() - dy1);
+                // paint the rest black
+                gFrame.setColor(Color.black);
+                gFrame.fillRect(0, 0, width, height);
+            }
+            gFrame.drawImage(source, dx1-dx, dy1-dy, dx1-dx+w1 - 1, dy1-dy+h1 - 1, dx1, dy1, dx1 + w1 - 1, dy1 + h1 - 1, null);
+        }
 
         if (simulation) {
             SimulationModeMachine.drawSimulatedCameraNoise(gFrame, width, height);
@@ -231,8 +233,8 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
      * @return
      * @throws Exception
      */
-    public boolean isPickLocation(Location physicalLocation, Part part) throws Exception {
-        return isPartLocation(physicalLocation, part, true, Color.black, Color.black, Color.white,
+    public boolean isPickLocation(Location physicalLocation, Nozzle nozzle) throws Exception {
+        return isPartLocation(physicalLocation, nozzle.getPart(), true, Color.black, Color.black, Color.white,
                 pickLocationMinimumScore, pickLocationToleranceMm);
     }
 
@@ -245,8 +247,10 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
      * @return
      * @throws Exception
      */
-    public boolean isPlaceLocation(Location physicalLocation, Part part) throws Exception {
-        return isPartLocation(physicalLocation, part, false, Color.white, Color.black, null,
+    public boolean isPlaceLocation(Location physicalLocation, Nozzle nozzle) throws Exception {
+        // TODO: we should adjust for the offset that aligment found here. But that seems sot accessible outside
+        // the JobProcessor.
+        return isPartLocation(physicalLocation, nozzle.getPart(), false, Color.white, Color.black, null,
                 placeLocationMinimumScore, placeLocationToleranceMm);
     }
 
@@ -267,9 +271,11 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 
             BufferedImage template = OpenCvUtils.createFootprintTemplate(this, footprint, physicalLocation.getRotation(),
                     topView, padsColor, bodyColor, backgroundColor, 1.5, 8);
+            int templateDimension = (int)Math.sqrt(Math.pow(template.getWidth(), 2)+Math.pow(template.getHeight(), 2));
             templateMat = OpenCvUtils.toMat(template);
+            int kernelSize = (templateDimension/4)|1;
             // Blur it to give us a tolerant best match.
-            Imgproc.GaussianBlur(templateMat, templateMat, new Size(7, 7), 0);
+            Imgproc.GaussianBlur(templateMat, templateMat, new Size(kernelSize, kernelSize), 0);
 
             // Get a view of the target area that is 5 x bigger than the template but at least 100px. 
             int dimension = Math.max(Math.max(template.getWidth(), template.getHeight())*5, 80);
@@ -278,14 +284,12 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
             
             if (filterTestImageVision) {
                 // Because the standard ImageCamera PCB view is marked blue and red, we just extract the green 
-                // channels.
+                // channel.
                 Mat greenMat = new Mat();
                 Core.extractChannel(templateMat, greenMat, 2);
                 templateMat.release();
                 templateMat = greenMat;
-               //Hue range wraps past 255 back through 0 so the mask needs to include the range from hueMin
-                //to 255 in addition to the range from 0 to hueMax.  To accomplish this, a mask for each separate
-                //range is created and then ORed together to form the actual mask.
+                // create a HSV mask that selects the blue/red half-blended part overlays in the ImageCamera standard image.
                 Imgproc.cvtColor(mat, mat, FluentCv.ColorCode.Bgr2HsvFull.getCode());
                 Scalar min = new Scalar(0, topView ? 0 : 1, 64);
                 Scalar max = new Scalar(255, 180, 255);
@@ -305,10 +309,12 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
             Location unitsPerPixel = getUnitsPerPixel();
             Location center = new Location(LengthUnit.Millimeters);
             // CV operations are always rounded to the nearest pixel, giving at most an error of 0.5 x pixel diameter. 
-            // Furthermore, because the ImageCamera uses a rather coarse image and also does no sub-pixel rendering, 
-            // as a real camera would, another 0.5 x pixel diameter error can happen. Therefore we take the whole pixel diameter 
-            // as additional tolerance (kind of a "slack") in our assessment of the location distance.   
-            double pixelTolerance = center.getLinearDistanceTo(unitsPerPixel);
+            // The same is true for CV operation that sets up and adjust the StripFeeder. Test have shown, that the test image has 
+            // rendering artifacts creating 1 pixel asymmetry in the parts. 
+            // Therefore we take 1.5 pixel diameters as an additional tolerance ("slack") in our assessment of the PnP location error.  
+            // In addition to that, we allow 2.5% of the template dimension (diagonal) to allow for larger errors in larger parts.
+            // Apparently these happen on the 0805 parts, probably due to aliasing in the gaussian 255 gray tones resolution. 
+            double pixelTolerance = center.getLinearDistanceTo(unitsPerPixel)*(1.5+templateDimension*0.025);
             for (Point point : OpenCvUtils.matMaxima(resultMat, minScore/3, Double.MAX_VALUE)) {
                 int x = point.x;
                 int y = point.y;
@@ -317,7 +323,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
                 offsetX *= unitsPerPixel.getX();
                 offsetY *= unitsPerPixel.getY();
                 Location offsets = new Location(getUnitsPerPixel().getUnits(), offsetX, offsetY, 0, 0);
-                double distance = Math.max(0.0,  center.getLinearDistanceTo(offsets)-pixelTolerance);
+                double distance = center.getLinearDistanceTo(offsets);
                 double score = resultMat.get(y, x)[0];
                 if (bestMatch == null || (bestDistance > distance && bestMatch.score*0.85 < score)) {
                     bestMatch = new TemplateMatch();
@@ -342,9 +348,9 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
                         +", distance "+bestDistance);
                 return false;
             }
-            if (bestDistance > maxDistanceMm) {
+            if (bestDistance > maxDistanceMm + pixelTolerance) {
                 Logger.error("PnP location distance "+bestDistance
-                        +"mm greater than allowed "+maxDistanceMm+"mm, match "+bestMatch
+                        +"mm greater than allowed "+maxDistanceMm+"mm + ("+ pixelTolerance+"mm px tol), match "+bestMatch
                         +", at location "+physicalLocation);
                 return false;
             }
@@ -389,7 +395,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
         while (!Thread.interrupted()) {
             broadcastCapture(captureForPreview());
             try {
-                Thread.sleep(100 / fps);
+                Thread.sleep(1000 / fps);
             }
             catch (InterruptedException e) {
                 return;

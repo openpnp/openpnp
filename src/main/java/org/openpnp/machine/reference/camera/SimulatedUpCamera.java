@@ -40,7 +40,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
 
     protected int height = 1280;
 
-    protected int fps = 10;
+    protected int fps = 24;
 
     private Thread thread;
     

@@ -72,12 +72,12 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(100dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -115,58 +115,61 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
         panelLocations.add(simulatedRunout, "4, 4");
         simulatedRunout.setColumns(10);
         
-        JLabel lblPickPlace = new JLabel("Pick & Place Checking?");
-        panelLocations.add(lblPickPlace, "2, 6, right, default");
-        
-        pickAndPlaceChecking = new JCheckBox("");
-        panelLocations.add(pickAndPlaceChecking, "4, 6");
+        JLabel lblWarnRunout = new JLabel("<html>Be aware that runout will be apparent in the cross-hairs of the Down-looking Camera, when the the Nozzle is positioned (rather than the Camera). This also happens when watching a Job perform.<html>");
+        panelLocations.add(lblWarnRunout, "6, 4, 3, 5, fill, top");
         
         JLabel lblRunoutPhase = new JLabel("Runout Phase");
         lblRunoutPhase.setToolTipText("Phase angle for the simulated runout.");
-        panelLocations.add(lblRunoutPhase, "2, 8, right, default");
+        panelLocations.add(lblRunoutPhase, "2, 6, right, default");
         
         simulatedRunoutPhase = new JTextField();
-        panelLocations.add(simulatedRunoutPhase, "4, 8, fill, default");
+        panelLocations.add(simulatedRunoutPhase, "4, 6, fill, default");
         simulatedRunoutPhase.setColumns(10);
+        
+        JLabel lblPickPlace = new JLabel("Pick & Place Checking?");
+        panelLocations.add(lblPickPlace, "2, 10, right, default");
+        
+        pickAndPlaceChecking = new JCheckBox("");
+        panelLocations.add(pickAndPlaceChecking, "4, 10");
 
         JLabel lblVibrationAmplitude = new JLabel("Vibration Amplitude");
         lblVibrationAmplitude.setToolTipText("Simulates Vibration after a move that will abate quickly. This is the amplitude.");
-        panelLocations.add(lblVibrationAmplitude, "2, 10, right, default");
+        panelLocations.add(lblVibrationAmplitude, "2, 12, right, default");
 
         simulatedVibrationAmplitude = new JTextField();
-        panelLocations.add(simulatedVibrationAmplitude, "4, 10, fill, default");
+        panelLocations.add(simulatedVibrationAmplitude, "4, 12, fill, default");
         simulatedVibrationAmplitude.setColumns(10);
 
         JLabel lblCameraNoise = new JLabel("Camera Noise");
         lblCameraNoise.setToolTipText("<html>\r\nCreates simulated noise in the camera image (number of sparks) <br/>\r\nto satisfy Camera Settling that the frame has changed. \r\n</html>");
-        panelLocations.add(lblCameraNoise, "2, 12, right, default");
+        panelLocations.add(lblCameraNoise, "2, 14, right, default");
 
         simulatedCameraNoise = new JTextField();
-        panelLocations.add(simulatedCameraNoise, "4, 12");
+        panelLocations.add(simulatedCameraNoise, "4, 14");
         simulatedCameraNoise.setColumns(10);
 
         JLabel lblX = new JLabel("X");
-        panelLocations.add(lblX, "4, 16");
+        panelLocations.add(lblX, "4, 18");
         lblX.setHorizontalAlignment(SwingConstants.CENTER);
 
         JLabel lblY = new JLabel("Y");
-        panelLocations.add(lblY, "6, 16");
+        panelLocations.add(lblY, "6, 18");
         lblY.setHorizontalAlignment(SwingConstants.CENTER);
 
         JLabel lblDiscardPoint = new JLabel("Homing Error");
         lblDiscardPoint.setToolTipText("<html>\r\nSimulates an initial homing error by that offset. Used to test visial homing. <br/>\r\nSet the homing fiducial to the PCB fiducial in the lower left corner of the test image.<br/>\r\nUse coordinates 5.736, 6.112 to get original coordinates through Visual homing.\r\n</html>");
-        panelLocations.add(lblDiscardPoint, "2, 18, right, default");
+        panelLocations.add(lblDiscardPoint, "2, 20, right, default");
 
         homingErrorX = new JTextField();
-        panelLocations.add(homingErrorX, "4, 18");
+        panelLocations.add(homingErrorX, "4, 20");
         homingErrorX.setColumns(10);
 
         homingErrorY = new JTextField();
-        panelLocations.add(homingErrorY, "6, 18");
+        panelLocations.add(homingErrorY, "6, 20");
         homingErrorY.setColumns(10);
         
         JLabel label = new JLabel(" ");
-        panelLocations.add(label, "2, 20");
+        panelLocations.add(label, "2, 22");
     }
 
     @Override

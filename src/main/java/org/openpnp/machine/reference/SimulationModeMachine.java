@@ -234,18 +234,20 @@ public class SimulationModeMachine extends ReferenceMachine {
                                 // Got the vacuum actuator, which is a signal to check for pick/place.
                                 if (nozzle.getPart() != null) {
                                     Location location = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, Looking.Down);
-                                    if ((Boolean)value == true) {
-                                        // Pick
-                                        if (!((ImageCamera) camera).isPickLocation(location, nozzle.getPart())) {
-                                            throw new Exception("Nozzle "+nozzle.getName()+" part "+nozzle.getPart().getId()
-                                                    +" pick location not recognized.");
+                                    if (location.getLinearDistanceTo(machine.getDiscardLocation()) > 4.0) {
+                                        if ((Boolean)value == true) {
+                                            // Pick
+                                            if (!((ImageCamera) camera).isPickLocation(location, nozzle)) {
+                                                throw new Exception("Nozzle "+nozzle.getName()+" part "+nozzle.getPart().getId()
+                                                        +" pick location not recognized.");
+                                            }
                                         }
-                                    }
-                                    else {
-                                        // Pick
-                                        if (!((ImageCamera) camera).isPlaceLocation(location, nozzle.getPart())) {
-                                            throw new Exception("Nozzle "+nozzle.getName()+" part "+nozzle.getPart().getId()
-                                                    +" place location not recognized.");
+                                        else {
+                                            // Pick
+                                            if (!((ImageCamera) camera).isPlaceLocation(location, nozzle)) {
+                                                throw new Exception("Nozzle "+nozzle.getName()+" part "+nozzle.getPart().getId()
+                                                        +" place location not recognized.");
+                                            }
                                         }
                                     }
                                 }
