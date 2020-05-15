@@ -267,15 +267,20 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
             double coordinate;
             switch (getType()) {
                 case X:
-                    coordinate = x; break;
+                    coordinate = x; 
+                    break;
                 case Y:
-                    coordinate = y; break;
+                    coordinate = y; 
+                    break;
                 case Z:
-                    coordinate = z; break;
+                    coordinate = z;
+                    break;
                 case Rotation:
-                    coordinate = rotation; break;
+                    coordinate = rotation; 
+                    break;
                 default:
-                    coordinate = 0.0; break;
+                    coordinate = 0.0;
+                    break;
             }
             return location.put(new AxesLocation(this, coordinate));
         }

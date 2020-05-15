@@ -26,6 +26,7 @@ import java.io.IOException;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
+import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.SimulationModeMachine;
@@ -64,7 +65,7 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
      */
     private AxesLocation homingOffsets = new AxesLocation();
     private AxesLocation vibrationVector;
-    private long vibrationTime;
+    private long vibrationStartTime;
 
     @Override
     public void home(ReferenceMachine machine, MappedAxes mappedAxes) throws Exception {
@@ -99,6 +100,8 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
             throws Exception {
         Logger.debug("moveTo({}, {}, {})", hm, location, speed);
         checkEnabled();
+        // Get the location of this driver's axes.
+        location = mappedAxes.getMappedOnlyLocation(location);
 
         // Get the current location of the Head that we'll move
         AxesLocation hl = mappedAxes.getLocation();
@@ -106,11 +109,10 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
         if (feedRateMmPerMinute > 0) {
             simulateMovement(hm, mappedAxes, location, hl, speed);
         }
-
-        // Now that movement is complete, update the stored Location to the new
-        // Location.
-        mappedAxes.setLocation(location);
-        Logger.debug("Machine new location {}", new MappedAxes(Configuration.get().getMachine()).getLocation());
+        if (!mappedAxes.locationsMatch(hl, location)) {
+            mappedAxes.setLocation(location);
+            Logger.debug("Machine new location {}", new MappedAxes(Configuration.get().getMachine()).getLocation());
+        }
     }
 
     /**
@@ -131,19 +133,23 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
         double distanceRotational = delta.distanceRotational();
         double timeLinear = distanceLinear / (feedRateMmPerMinute/60.0 * speed);
         double timeRotational = distanceRotational / (36.0*feedRateMmPerMinute/60.0 * speed);
-        double time = Math.max(timeLinear, timeRotational) + 0.001;
-        
+        double time = Math.max(timeLinear, timeRotational);
+        ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
+
         long t0 = System.currentTimeMillis();
         double dt;
-        do {
+        while (true) {
             double t = (System.currentTimeMillis() - t0)*0.001;
             dt = Math.min(1.0, t/time);
             AxesLocation l = hl.add(delta.multiply(dt));
             mappedAxes.setLocation(l);
 
             // Provide live updates to the Machine as the move progresses.
-            ((ReferenceMachine) Configuration.get().getMachine())
-                    .fireMachineHeadActivity(hm.getHead());
+            machine.fireMachineHeadActivity(hm.getHead());
+            if (dt >= 1.0) {
+                break;
+            }
+            
             try {
                 Thread.sleep(10);
             }
@@ -151,14 +157,15 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
 
             }
         }
-        while(dt < 1.0);
-        if (distanceLinear > 0.01) {
-            vibrationVector = delta.multiply(1.0/Math.max(0.1, distanceLinear));
-            vibrationTime = System.currentTimeMillis();
+        if (distanceLinear > 0.001) {
+            vibrationVector = delta.multiply(1.0/distanceLinear)
+                    .subtract((vibrationVector != null) ? vibrationVector.multiply(0.5) // shake it up, if not yet done 
+                            : new AxesLocation()); 
+            vibrationStartTime = System.currentTimeMillis();
         }
         else if (distanceRotational > 0.1) {
             vibrationVector = new AxesLocation(mappedAxes.getAxis(Axis.Type.X), 1.0);
-            vibrationTime = System.currentTimeMillis();
+            vibrationStartTime = System.currentTimeMillis();
         }
     }
 
@@ -166,18 +173,15 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
         Logger.debug("actuate({}, {})", actuator, value);
         checkEnabled();
-        if (feedRateMmPerMinute > 0) {
-            Thread.sleep(500);
-        }
+        SimulationModeMachine.simulateActuate(actuator, value, feedRateMmPerMinute > 0);
     }
 
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
         Logger.debug("actuate({}, {})", actuator, on);
         checkEnabled();
-        if (feedRateMmPerMinute > 0) {
-            Thread.sleep(500);
-        }
+        
+        SimulationModeMachine.simulateActuate(actuator, on, feedRateMmPerMinute > 0);
     }
     
     @Override
@@ -234,13 +238,13 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
     }
 
 
-    public long getVibrationTime() {
-        return vibrationTime;
+    public long getVibrationStartTime() {
+        return vibrationStartTime;
     }
 
 
-    public void setVibrationTime(long vibrationTime) {
-        this.vibrationTime = vibrationTime;
+    public void setVibrationStartTime(long vibrationStartTime) {
+        this.vibrationStartTime = vibrationStartTime;
     }
 
 
@@ -253,6 +257,9 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
     @Override
     public void migrateDriver(ReferenceMachine machine) throws Exception {
         machine.addDriver(this);
-        createAxisMappingDefaults(machine); 
+        createAxisMappingDefaults(machine);
+        ReferenceHead head = (ReferenceHead) machine.getDefaultHead();
+        // Use the lower left PCB fiducial as homing fiducial (but not enabling Visual Homing yet).
+        head.setHomingFiducialLocation(new Location(LengthUnit.Millimeters, 5.736, 6.112, 0, 0));
     }
 }

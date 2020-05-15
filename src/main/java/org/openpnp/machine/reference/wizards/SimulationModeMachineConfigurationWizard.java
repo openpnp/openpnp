@@ -17,11 +17,13 @@ import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.SimulationModeMachine.SimulationMode;
 import org.openpnp.model.Configuration;
+import org.python.modules.cPickle.Pickler;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.JCheckBox;
 
 public class SimulationModeMachineConfigurationWizard extends AbstractConfigurationWizard {
 
@@ -34,6 +36,7 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
     private JTextField simulatedVibrationAmplitude;
     private JComboBox simulationMode;
     private JTextField simulatedRunoutPhase;
+    private JCheckBox pickAndPlaceChecking;
 
     public SimulationModeMachineConfigurationWizard(SimulationModeMachine machine) {
         this.machine = machine;
@@ -92,6 +95,8 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 RowSpec.decode("default:grow"),}));
 
         JLabel lblNonsquarenessFactor = new JLabel("Non-Squareness Factor");
@@ -110,52 +115,58 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
         panelLocations.add(simulatedRunout, "4, 4");
         simulatedRunout.setColumns(10);
         
+        JLabel lblPickPlace = new JLabel("Pick & Place Checking?");
+        panelLocations.add(lblPickPlace, "2, 6, right, default");
+        
+        pickAndPlaceChecking = new JCheckBox("");
+        panelLocations.add(pickAndPlaceChecking, "4, 6");
+        
         JLabel lblRunoutPhase = new JLabel("Runout Phase");
         lblRunoutPhase.setToolTipText("Phase angle for the simulated runout.");
-        panelLocations.add(lblRunoutPhase, "2, 6, right, default");
+        panelLocations.add(lblRunoutPhase, "2, 8, right, default");
         
         simulatedRunoutPhase = new JTextField();
-        panelLocations.add(simulatedRunoutPhase, "4, 6, fill, default");
+        panelLocations.add(simulatedRunoutPhase, "4, 8, fill, default");
         simulatedRunoutPhase.setColumns(10);
 
         JLabel lblVibrationAmplitude = new JLabel("Vibration Amplitude");
         lblVibrationAmplitude.setToolTipText("Simulates Vibration after a move that will abate quickly. This is the amplitude.");
-        panelLocations.add(lblVibrationAmplitude, "2, 8, right, default");
+        panelLocations.add(lblVibrationAmplitude, "2, 10, right, default");
 
         simulatedVibrationAmplitude = new JTextField();
-        panelLocations.add(simulatedVibrationAmplitude, "4, 8, fill, default");
+        panelLocations.add(simulatedVibrationAmplitude, "4, 10, fill, default");
         simulatedVibrationAmplitude.setColumns(10);
 
         JLabel lblCameraNoise = new JLabel("Camera Noise");
         lblCameraNoise.setToolTipText("<html>\r\nCreates simulated noise in the camera image (number of sparks) <br/>\r\nto satisfy Camera Settling that the frame has changed. \r\n</html>");
-        panelLocations.add(lblCameraNoise, "2, 10, right, default");
+        panelLocations.add(lblCameraNoise, "2, 12, right, default");
 
         simulatedCameraNoise = new JTextField();
-        panelLocations.add(simulatedCameraNoise, "4, 10");
+        panelLocations.add(simulatedCameraNoise, "4, 12");
         simulatedCameraNoise.setColumns(10);
 
         JLabel lblX = new JLabel("X");
-        panelLocations.add(lblX, "4, 14");
+        panelLocations.add(lblX, "4, 16");
         lblX.setHorizontalAlignment(SwingConstants.CENTER);
 
         JLabel lblY = new JLabel("Y");
-        panelLocations.add(lblY, "6, 14");
+        panelLocations.add(lblY, "6, 16");
         lblY.setHorizontalAlignment(SwingConstants.CENTER);
 
         JLabel lblDiscardPoint = new JLabel("Homing Error");
-        lblDiscardPoint.setToolTipText("<html>\r\nSimulates an initial homing error by that offset. Used to test visial homing. <br/>\r\nSet the homing fiducial to the PCB fiducial in the lower left corner of the test image.<br/>\r\nUse coordinates 5.756, 6.070 to approx. get original coordinates through Visual homing.\r\n</html>");
-        panelLocations.add(lblDiscardPoint, "2, 16, right, default");
+        lblDiscardPoint.setToolTipText("<html>\r\nSimulates an initial homing error by that offset. Used to test visial homing. <br/>\r\nSet the homing fiducial to the PCB fiducial in the lower left corner of the test image.<br/>\r\nUse coordinates 5.736, 6.112 to get original coordinates through Visual homing.\r\n</html>");
+        panelLocations.add(lblDiscardPoint, "2, 18, right, default");
 
         homingErrorX = new JTextField();
-        panelLocations.add(homingErrorX, "4, 16");
+        panelLocations.add(homingErrorX, "4, 18");
         homingErrorX.setColumns(10);
 
         homingErrorY = new JTextField();
-        panelLocations.add(homingErrorY, "6, 16");
+        panelLocations.add(homingErrorY, "6, 18");
         homingErrorY.setColumns(10);
         
         JLabel label = new JLabel(" ");
-        panelLocations.add(label, "2, 18");
+        panelLocations.add(label, "2, 20");
     }
 
     @Override
@@ -174,6 +185,7 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
 
         addWrappedBinding(machine, "simulatedRunout", simulatedRunout, "text", lengthConverter);
         addWrappedBinding(machine, "simulatedRunoutPhase", simulatedRunoutPhase, "text", degreeConverter);
+        addWrappedBinding(machine, "pickAndPlaceChecking", pickAndPlaceChecking, "selected");
         addWrappedBinding(machine, "simulatedVibrationAmplitude", simulatedVibrationAmplitude, "text", lengthConverter);
         addWrappedBinding(machine, "simulatedCameraNoise", simulatedCameraNoise, "text", integerConverter);
 

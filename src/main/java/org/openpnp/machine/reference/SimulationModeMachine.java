@@ -2,8 +2,10 @@ package org.openpnp.machine.reference;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.util.Collections;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
+import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.wizards.SimulationModeMachineConfigurationWizard;
 import org.openpnp.model.AxesLocation;
@@ -12,9 +14,12 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.MappedAxes;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Driver;
+import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Movable.LocationOption;
@@ -62,7 +67,7 @@ public class SimulationModeMachine extends ReferenceMachine {
         DynamicImperfectionsMachine;
 
         // Using these methods we can refine the choices later.
-        
+
         public boolean isImperfectMachine() {
             return this.ordinal() > IdealMachine.ordinal();
         }
@@ -83,7 +88,7 @@ public class SimulationModeMachine extends ReferenceMachine {
 
     /**
      * Simulated runout on nozzle tips (currently all noozle tips get the same).
-     * Works on the SimulatedUpCamera;
+     * Works on the SimulatedUpCamera.
      */
     @Element(required = false)
     private Length simulatedRunout = new Length(0, LengthUnit.Millimeters);
@@ -106,12 +111,20 @@ public class SimulationModeMachine extends ReferenceMachine {
 
     /**
      * Simulated homing error. Introduces an initial location error that Visual Homing needs to correct.
-     * Works on ImageCamera;
+     * Works on ImageCamera.
      */
     @Element(required = false)
     private Location homingError = new Location(LengthUnit.Millimeters);
 
-    private static double vibrationToggle = 1.0;
+    /**
+     * Checks Picks/Places by visually locating the tape pocket/solder lands in the ImageCamera.
+     * Throws errors instead.
+     */
+    @Element(required = false)
+    private boolean pickAndPlaceChecking = false;
+
+    private double vibrationToggle = 1.0;
+
 
     @Override
     public void setEnabled(boolean enabled) throws Exception {
@@ -181,6 +194,14 @@ public class SimulationModeMachine extends ReferenceMachine {
         this.homingError = homingError;
     }
 
+    public boolean isPickAndPlaceChecking() {
+        return pickAndPlaceChecking;
+    }
+
+    public void setPickAndPlaceChecking(boolean pickAndPlaceChecking) {
+        this.pickAndPlaceChecking = pickAndPlaceChecking;
+    }
+
     public static SimulationModeMachine getSimulationModeMachine() {
         Machine machine = Configuration.get()
                 .getMachine();
@@ -191,6 +212,59 @@ public class SimulationModeMachine extends ReferenceMachine {
     }
 
     /**
+     * Simulates the Actuator. 
+     * 
+     * @param actuator
+     * @param value
+     * @param realtime
+     * @throws Exception
+     */
+    public static void simulateActuate(Actuator actuator, Object value, boolean realtime) throws Exception {
+        SimulationModeMachine machine = getSimulationModeMachine();
+        if (machine != null 
+                && machine.getSimulationMode() != SimulationMode.Off) {
+            if (value instanceof Boolean && machine.isPickAndPlaceChecking()) {
+                // Check if this is a nozzle vacuum actuator.
+                if (actuator.getHead() != null) {
+                    Camera camera = actuator.getHead().getDefaultCamera();
+                    if (camera instanceof ImageCamera) {
+                        for (Nozzle nozzle : actuator.getHead().getNozzles()) {
+                            if (nozzle instanceof ReferenceNozzle 
+                                    && ((ReferenceNozzle) nozzle).getVacuumActuator() == actuator) {
+                                // Got the vacuum actuator, which is a signal to check for pick/place.
+                                if (nozzle.getPart() != null) {
+                                    Location location = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, Looking.Down);
+                                    if ((Boolean)value == true) {
+                                        // Pick
+                                        if (!((ImageCamera) camera).isPickLocation(location, nozzle.getPart())) {
+                                            throw new Exception("Nozzle "+nozzle.getName()+" part "+nozzle.getPart().getId()
+                                                    +" pick location not recognized.");
+                                        }
+                                    }
+                                    else {
+                                        // Pick
+                                        if (!((ImageCamera) camera).isPlaceLocation(location, nozzle.getPart())) {
+                                            throw new Exception("Nozzle "+nozzle.getName()+" part "+nozzle.getPart().getId()
+                                                    +" place location not recognized.");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (realtime) {
+            try {
+                Thread.sleep(500);
+            }
+            catch (InterruptedException e) {
+            }
+        }
+    }
+
+    /**
      * Simulates imperfections in the physical location of a HeadMountable.  
      *  
      * @param hm
@@ -198,7 +272,7 @@ public class SimulationModeMachine extends ReferenceMachine {
      * @return
      */
     public static Location getSimulatedPhysicalLocation(HeadMountable hm, Looking looking) {
-        // Use ideal location as a default, in case this fails (not a place to throw).
+        // Use ideal location as a default, used too in case this fails (not a place to throw).
         Location location = hm.getLocation().convertToUnits(AxesLocation.getUnits()); 
         // Try to get a simulated physical location.
         SimulationModeMachine machine = getSimulationModeMachine();
@@ -214,7 +288,7 @@ public class SimulationModeMachine extends ReferenceMachine {
                     if (driver instanceof NullDriver) {
                         vibrationVector = ((NullDriver)driver).getVibrationVector();
                         homingOffsets = ((NullDriver)driver).getHomingOffsets();
-                        vibrationTime = ((NullDriver)driver).getVibrationTime();
+                        vibrationTime = ((NullDriver)driver).getVibrationStartTime();
                     }
                     if (looking == Looking.Down) {
                         // Add homing offset
@@ -230,14 +304,14 @@ public class SimulationModeMachine extends ReferenceMachine {
                             ((NullDriver)driver).setVibrationVector(null);
                         }
                         else {
-                            double scale = vibrationToggle*amplitude;
-                            vibrationToggle = -vibrationToggle;
+                            double scale = machine.vibrationToggle*amplitude;
+                            machine.vibrationToggle = -machine.vibrationToggle;
                             axesLocation = axesLocation.add(vibrationVector.multiply(scale));
                         }
                     }
                 }
 
-                if (looking == Looking.Up && hm instanceof Nozzle
+                if (hm instanceof Nozzle
                         && machine.getSimulationMode().isDynamicallyImperfectMachine()) {
                     // Add Runout.
                     double runout = machine.getSimulatedRunout()
@@ -251,7 +325,7 @@ public class SimulationModeMachine extends ReferenceMachine {
                 if (machine.getSimulationMode().isImperfectMachine()) {
                     // Subtract Non-Squareness to simulate it in the sim cameras.
                     double y = axesLocation.getCoordinate(mappedAxes.getAxis(Axis.Type.Y));
-                    axesLocation = axesLocation.subtract(new AxesLocation(mappedAxes.getAxis(Axis.Type.X), 
+                    axesLocation = axesLocation.add(new AxesLocation(mappedAxes.getAxis(Axis.Type.X), 
                             machine.getSimulatedNonSquarenessFactor()*y)); 
                 }
 
