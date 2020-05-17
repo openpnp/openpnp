@@ -33,7 +33,7 @@ Here is a short video showing the steps above: https://www.youtube.com/watch?v=Y
 ***
 
 Add new scripts files, that eliminate the incorrect operation of the light:
- [https://github.com/ozzysv/Camera-Lighting-openpnp/blob/master/Camera%20Lighting.zip](https://github.com/ozzysv/Camera-Lighting-openpnp/blob/master/Camera%20Lighting.zip)
+ [https://github.com/ozzysv/Camera-Lighting-openpnp/raw/master/Camera%20Lighting.zip](https://github.com/ozzysv/Camera-Lighting-openpnp/raw/master/Camera%20Lighting.zip)
 
 Details:
  [https://github.com/openpnp/openpnp/wiki/Scripting#CameraBeforeSettle](https://github.com/openpnp/openpnp/wiki/Scripting#CameraBeforeSettle)
