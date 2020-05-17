@@ -31,6 +31,8 @@ before_deploy:
 - VERSION=`java -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar --version`
 - ./install4j8.0.6/bin/install4jc -r $VERSION -d installers -D mediaFileVersion=$TRAVIS_BRANCH OpenPnP.install4j
 - mv installers/updates.xml installers/updates-$TRAVIS_BRANCH.xml
+- mkdir -p installers/$TRAVIS_BRANCH/$VERSION
+- cp installers/OpenPnP* installers/$TRAVIS_BRANCH/$VERSION
 
 deploy:
   provider: s3
