@@ -55,10 +55,10 @@ Scripting Events allow you to define scripts that will be run automatically by O
 
 ## Scripting Event List
 
+* [Camera.BeforeSettle](#CameraBeforeSettle): Called before the camera settling, preceding a capture.
+* [Camera.BeforeCapture](#CameraBeforeCapture): Called before an image capture.
 * [Camera.AfterCapture](#CameraAfterCapture): Called after an image capture.
 * [Camera.AfterSettle](#CameraAfterSettle): Called after the camera settle time.
-* [Camera.BeforeCapture](#CameraBeforeCapture): Called before an image capture.
-* [Camera.BeforeSettle](#CameraBeforeSettle): Called before the camera settle time, preceding a capture.
 * [Camera.AfterPosition](#CameraAfterPosition): Called after moving the camera using the Position Camera icon.
 * [Job.AfterDiscard](#JobAfterDiscard): Called after a part has been discarded.
 * [Job.Finished](#JobFinished): Called when a job completes.
