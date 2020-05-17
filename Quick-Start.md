@@ -54,7 +54,7 @@ Now that you've seen the user interface a bit, it's time to try running a pick a
 
 1. Select the Job tab at the top of the main OpenPnP window.
 2. From the File menu, select Open Job.
-3. Using your computer's file dialog, find the `samples` directory that came with OpenPnP. It should be in the same directory you installed OpenPnP into.
+3. Using your computer's file dialog, find the `samples` directory that came with OpenPnP. On Windows it's in your `Documents\OpenPnP` directory. On Mac and Unix it is in the same directory you installed OpenPnP into.
 4. In the `samples` directory, find the `pnp-test` directory and open the `pnp-test.job.xml` file inside it.
 5. You'll see the job has loaded and there are now boards and placements listed. You can browse the boards and placements to see what the job will be doing.
 6. If you haven't already, press the green power button <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/power_button_on.svg" height="18"> to start the machine.
