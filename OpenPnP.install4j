@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <install4j version="8.0.6" transformSequenceNumber="8">
-  <directoryPresets config="./LICENSE.txt" />
+  <directoryPresets config="./OPENPNP_2_0.md" />
   <application name="OpenPnP" applicationId="9204-4030-0867-1434" mediaDir="./installers" mediaFilePattern="${compiler:sys.fullName}-${compiler:sys.platform}-${compiler:mediaFileVersion}" shortName="openpnp" publisher="OpenPnP" publisherWeb="http://openpnp.org" version="develop" allPathsRelative="true" macVolumeId="2f75d25b539292d5" javaMinVersion="1.7">
     <variables>
       <variable name="native_path" />
@@ -35,6 +35,7 @@
       <fileEntry mountPoint="22" file="CHANGES.md" />
       <fileEntry mountPoint="22" file="SPONSORS.md" />
       <fileEntry mountPoint="22" file="LICENSE.txt" />
+      <fileEntry mountPoint="22" file="OPENPNP_2_0.md" />
       <dirEntry mountPoint="295" file="samples" entryMode="subdir" subDirectory="samples" excludeSuffixes=".DS_Store">
         <exclude>
           <entry location=".DS_Store" />
