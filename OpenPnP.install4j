@@ -36,6 +36,14 @@
       <fileEntry mountPoint="22" file="SPONSORS.md" />
       <fileEntry mountPoint="22" file="LICENSE.txt" />
       <fileEntry mountPoint="22" file="OPENPNP_2_0.md" />
+      <dirEntry mountPoint="22" file="samples" entryMode="subdir" subDirectory="samples" excludeSuffixes=".DS_Store">
+        <exclude>
+          <entry location=".DS_Store" />
+          <entry location="Demo Board/.DS_Store" />
+          <entry location="MF2015/.DS_Store" />
+          <entry location="pnp-test/.DS_Store" />
+        </exclude>
+      </dirEntry>
       <dirEntry mountPoint="295" file="samples" entryMode="subdir" subDirectory="samples" excludeSuffixes=".DS_Store">
         <exclude>
           <entry location=".DS_Store" />
@@ -953,7 +961,7 @@ if (context.isUnattended()) {
     <linuxRPM name="Linux RPM" id="123" installDir="/opt/openpnp" />
     <linuxDeb name="Linux Deb Archive" id="124" installDir="/opt/openpnp" bzip="true" description="Open Source SMT Pick and Place Software" maintainerEmail="jason@vonnieda.org" />
   </mediaSets>
-  <buildIds buildAll="false">
+  <buildIds>
     <mediaSet refId="119" />
   </buildIds>
   <buildOptions disableJreBundling="true" />
