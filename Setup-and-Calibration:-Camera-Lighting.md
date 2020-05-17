@@ -15,7 +15,8 @@ You can use OpenPnP's [Actuator](https://github.com/openpnp/openpnp/wiki/Setup-a
 1. Go to Main Window -> Machine Controls -> Actuators and click the UpCamLights button. Your lights should come on. Click it again and they should turn off. If this doesn't work, adjust your Gcode settings until it does, or ask for help.
 
 # Add Lighting Control Scripts
-1. Download the [zipfile containing the scripts](https://gist.github.com/vonnieda/1bed59fe30c637b88470e0ca3cb5d05d/archive/fb9682a01708e3555f44d26469df7c81007be34a.zip) to your desktop or somewhere else you can easily find it.
+1. Download the [zipfile containing the scripts](https://gist.github.com/vonnieda/1bed59fe30c637b88470e0ca3cb5d05d/archive/fb9682a01708e3555f44d26469df7c81007be34a.zip) 
+to your desktop or somewhere else you can easily find it.
 2. Expand the zipfile. There should be two scripts inside.
 3. Go to Main Menu -> Scripts -> Open Scripts Directory.
 4. In the folder that opens, open the Events directory.
@@ -30,6 +31,13 @@ If you want to control the Down camera lights, just add another Actuator called 
 Here is a short video showing the steps above: https://www.youtube.com/watch?v=Y4DbYY9a9BQ
 
 ***
+
+Add new scripts files, that eliminate the incorrect operation of the light:
+ [https://github.com/ozzysv/Camera-Lighting-openpnp/blob/master/Camera%20Lighting.zip](https://github.com/ozzysv/Camera-Lighting-openpnp/blob/master/Camera%20Lighting.zip)
+
+Details:
+ [https://github.com/openpnp/openpnp/wiki/Scripting#CameraBeforeSettle](https://github.com/openpnp/openpnp/wiki/Scripting#CameraBeforeSettle)
+[https://github.com/openpnp/openpnp/wiki/Scripting#CameraAfterSettle](https://github.com/openpnp/openpnp/wiki/Scripting#CameraAfterSettle)
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
