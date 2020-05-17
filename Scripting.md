@@ -154,7 +154,7 @@ javax.imageio.ImageIO.write(image, "PNG", file);
 
 ### Camera.BeforeSettle
 
-Called concurrently with the start of the settle timer before an image is captured from a camera. This is intended to be used to control lighting, mirrors, strobes, etc. Using Camera.BeforeSettle instead of Camera.BeforeCapture gives the lighting more time to actually turn on and gives the camera more time to adjust to a new lighting condition.
+Called concurrently with the start of the settle timer before an image is captured from a camera. This is intended to be used to control lighting, mirrors, strobes, etc. Using Camera.BeforeSettle instead of Camera.BeforeCapture gives the lighting time to actually turn on and gives the camera more time to adjust to a new lighting condition.
 
 Variables:
 
@@ -186,7 +186,7 @@ else if (camera.looking == Packages.org.openpnp.spi.Camera.Looking.Down) {
 
 ### Camera.BeforeCapture
 
-Called before an image is captured from a Camera. This is intended to be used to control lighting, mirrors, strobes, etc. It is not guaranteed to be run before the captured frame is physically taken by the camera (due to buffering). In other words, if used for lighting, this may turn on the lights too late.
+Called before an image is captured from a Camera. It is not guaranteed to be run before the captured frame is physically taken by the camera (due to buffering). In other words, if used for lighting, this may turn on the lights too late.
 
 Variables:
 
@@ -207,7 +207,7 @@ Variables:
 
 ### Camera.AfterSettle
 
-Called after the camera is settled, and an image is captured. This is intended to be used to control lighting, mirrors, strobes, etc. Using Camera.AfterSettle instead of Camera.AfterCapture gives the lighting more time to turn off.
+Called after the camera is settled, and an image is captured. This is intended to be used to control lighting, mirrors, strobes, etc. Using Camera.AfterSettle instead of Camera.AfterCapture is the only correct way to control lighting, if you use Auto Settling. 
 
 Variables:
 
