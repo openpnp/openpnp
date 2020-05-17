@@ -1,6 +1,25 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2020-05-17
+
+## Sponsors and About Dialog
+
+- The About dialog now includes a Credits tab to thank sponsors of the project. A SPONSORS.md
+file is also included, which is shown in the dialog.  
+
+- The About menu item is now correctly added to the Help menu on MacOS when the MacOS integrations
+  are not available.
+  
+## Installer Improvements
+
+- Sample files are now installed by the installer in the user's Documents/OpenPnP directory,
+  instead of in the installation directory. This fixes an issue #836 where users loading the
+  sample files on Windows would experience a write error.
+
+- Install4J has been updated from version 6 to 8. 
+  
+
 # 2020-04-29
 
 ## Advanced Camera Settle
