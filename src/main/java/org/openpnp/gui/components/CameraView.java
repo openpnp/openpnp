@@ -65,7 +65,9 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
@@ -606,7 +608,8 @@ public class CameraView extends JComponent implements CameraListener {
     }
     
     private boolean isPointInsideDragJogRotationHandle(int x, int y) {
-        if (camera.getHead() == null) {
+        HeadMountable selectedTool = MainFrame.get().getMachineControls().getSelectedTool(); 
+        if (selectedTool.getAxisRotation() == null) {
             return false;
         }
         
@@ -618,7 +621,7 @@ public class CameraView extends JComponent implements CameraListener {
         
         // The rotation handle is drawn on an imaginary circle centered in the view
         double rotHandleRadius = Math.min(width, height) / 2 * .80;
-        double rotHandleAngle = -Utils2D.normalizeAngle(camera.getLocation().getRotation() + 90);
+        double rotHandleAngle = -Utils2D.normalizeAngle(selectedTool.getLocation().getRotation() + 90);
         double rotHandleX = rotHandleRadius * Math.cos(Math.toRadians(rotHandleAngle)) + (width / 2.);
         double rotHandleY = rotHandleRadius * Math.sin(Math.toRadians(rotHandleAngle)) + (height / 2.);
         
@@ -648,7 +651,8 @@ public class CameraView extends JComponent implements CameraListener {
     }
     
     private void paintDragJogRotationHandle(Graphics2D g2d, boolean active) {
-        if (camera.getHead() == null) {
+        HeadMountable selectedTool = MainFrame.get().getMachineControls().getSelectedTool(); 
+        if (selectedTool.getAxisRotation() == null) {
             return;
         }
         
@@ -658,7 +662,7 @@ public class CameraView extends JComponent implements CameraListener {
 
         // The rotation handle is drawn on an imaginary circle centered in the view
         double rotHandleRadius = Math.min(width, height) / 2 * .80;
-        double rotHandleAngle = -Utils2D.normalizeAngle(camera.getLocation().getRotation() + 90);
+        double rotHandleAngle = -Utils2D.normalizeAngle(selectedTool.getLocation().getRotation() + 90);
         double rotHandleX = rotHandleRadius * Math.cos(Math.toRadians(rotHandleAngle)) + (width / 2.);
         double rotHandleY = rotHandleRadius * Math.sin(Math.toRadians(rotHandleAngle)) + (height / 2.);
 
@@ -1333,15 +1337,12 @@ public class CameraView extends JComponent implements CameraListener {
         double rotTargetHandleAngle = Math.toDegrees(Math.atan2(e.getY() - (height / 2), e.getX() - (width / 2)));
         rotTargetHandleAngle = Utils2D.normalizeAngle(rotTargetHandleAngle);
         double targetAngle = Utils2D.normalizeAngle(-(rotTargetHandleAngle + 90));
+        HeadMountable selectedTool = MainFrame.get().getMachineControls().getSelectedTool();
+        
         UiUtils.submitUiMachineTask(() -> {
-            if (camera.getHead() == null) {
-                Logger.warn("Drag rotate not yet implemented for upward facing cameras."); 
-            }
-            else {
-                Location location = camera.getLocation();
-                location = location.derive(null, null, null, targetAngle);
-                MovableUtils.moveToLocationAtSafeZ(camera, location);
-            }
+            Location location = selectedTool.getLocation();
+            location = location.derive(null, null, null, targetAngle);
+            MovableUtils.moveToLocationAtSafeZ(selectedTool, location);
         });
     }
 
