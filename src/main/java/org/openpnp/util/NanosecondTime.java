@@ -32,7 +32,7 @@ import java.math.BigInteger;
 public class NanosecondTime implements Comparable<NanosecondTime> {
 
     private static long nanosecondsLast = Long.MIN_VALUE;
-    static long getRuntime() {
+    public static long getRuntime() {
         long nanoTime = System.nanoTime();
         if (nanoTime <= nanosecondsLast) {
             // Make it unique even if the calls are more frequent than the underlying nanoTime timer resolution. 
@@ -43,7 +43,10 @@ public class NanosecondTime implements Comparable<NanosecondTime> {
         }
         return nanoTime;
     }
-
+    public static double getRuntimeSeconds() {
+        return (double) getRuntime()*1e-9;
+    }
+    
     private static NanosecondTime systemStartTime = null;
     public static NanosecondTime get() {
         if (systemStartTime == null) {

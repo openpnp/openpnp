@@ -1,3 +1,24 @@
+/*
+ * Copyright (C) 2020 <mark@makr.zone>
+ * inspired and based on work
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
+ */
+
 package org.openpnp.machine.reference.wizards;
 
 import javax.swing.JComboBox;
@@ -17,8 +38,6 @@ import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.SimulationModeMachine.SimulationMode;
 import org.openpnp.model.Configuration;
-import org.python.modules.cPickle.Pickler;
-
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
@@ -37,6 +56,7 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
     private JComboBox simulationMode;
     private JTextField simulatedRunoutPhase;
     private JCheckBox pickAndPlaceChecking;
+    private JTextField simulatedCameraLag;
 
     public SimulationModeMachineConfigurationWizard(SimulationModeMachine machine) {
         this.machine = machine;
@@ -76,6 +96,8 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -147,29 +169,36 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
         simulatedCameraNoise = new JTextField();
         panelLocations.add(simulatedCameraNoise, "4, 14");
         simulatedCameraNoise.setColumns(10);
+        
+        JLabel lblCamersLags = new JLabel("Camers Lag [s]");
+        panelLocations.add(lblCamersLags, "2, 16, right, default");
+        
+        simulatedCameraLag = new JTextField();
+        panelLocations.add(simulatedCameraLag, "4, 16, fill, default");
+        simulatedCameraLag.setColumns(10);
 
         JLabel lblX = new JLabel("X");
-        panelLocations.add(lblX, "4, 18");
+        panelLocations.add(lblX, "4, 20");
         lblX.setHorizontalAlignment(SwingConstants.CENTER);
 
         JLabel lblY = new JLabel("Y");
-        panelLocations.add(lblY, "6, 18");
+        panelLocations.add(lblY, "6, 20");
         lblY.setHorizontalAlignment(SwingConstants.CENTER);
 
         JLabel lblDiscardPoint = new JLabel("Homing Error");
         lblDiscardPoint.setToolTipText("<html>\r\nSimulates an initial homing error by that offset. Used to test visial homing. <br/>\r\nSet the homing fiducial to the PCB fiducial in the lower left corner of the test image.<br/>\r\nUse coordinates 5.736, 6.112 to get original coordinates through Visual homing.\r\n</html>");
-        panelLocations.add(lblDiscardPoint, "2, 20, right, default");
+        panelLocations.add(lblDiscardPoint, "2, 22, right, default");
 
         homingErrorX = new JTextField();
-        panelLocations.add(homingErrorX, "4, 20");
+        panelLocations.add(homingErrorX, "4, 22");
         homingErrorX.setColumns(10);
 
         homingErrorY = new JTextField();
-        panelLocations.add(homingErrorY, "6, 20");
+        panelLocations.add(homingErrorY, "6, 22");
         homingErrorY.setColumns(10);
         
         JLabel label = new JLabel(" ");
-        panelLocations.add(label, "2, 22");
+        panelLocations.add(label, "2, 24");
     }
 
     @Override
@@ -191,6 +220,7 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
         addWrappedBinding(machine, "pickAndPlaceChecking", pickAndPlaceChecking, "selected");
         addWrappedBinding(machine, "simulatedVibrationAmplitude", simulatedVibrationAmplitude, "text", lengthConverter);
         addWrappedBinding(machine, "simulatedCameraNoise", simulatedCameraNoise, "text", integerConverter);
+        addWrappedBinding(machine, "simulatedCameraLag", simulatedCameraLag, "text", doubleConverter);
 
         MutableLocationProxy homingError = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, machine, "homingError", homingError, "location");

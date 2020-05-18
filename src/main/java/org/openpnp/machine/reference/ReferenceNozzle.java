@@ -351,7 +351,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         ReferenceNozzleTip calibrationNozzleTip = getCalibrationNozzleTip();
         // check if totally raw move, in that case disable nozzle calibration
         for (LocationOption option: options) {
-            if (option == LocationOption.SuppressCompensation) {
+            if (option == LocationOption.SuppressDynamicCompensation) {
                 calibrationNozzleTip = null;
             }
         }
@@ -372,7 +372,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         ReferenceNozzleTip calibrationNozzleTip = getCalibrationNozzleTip();
         // Check SuppressCompensation, in that case disable nozzle calibration.
         for (LocationOption option: options) {
-            if (option == LocationOption.SuppressCompensation) {
+            if (option == LocationOption.SuppressDynamicCompensation) {
                 calibrationNozzleTip = null;
             }
         }

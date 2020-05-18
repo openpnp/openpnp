@@ -24,6 +24,15 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
     @Element(required = false)
     private Length homeCoordinate = new Length(0.0, LengthUnit.Millimeters);
 
+    @Element(required = false)
+    private Length feedratePerSecond = new Length(250, LengthUnit.Millimeters);
+    
+    @Element(required = false)
+    private Length accelerationPerSecond2 = new Length(500, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Length jerkPerSecond3 = new Length(2000, LengthUnit.Millimeters);
+
     /**
      * The resolution of the axis will be used to determined if an axis has moved i.e. whether the sent coordinate 
      * will be different.  
@@ -112,5 +121,43 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
         Object oldValue = this.resolution;
         this.resolution = resolution;
         firePropertyChange("resolution", oldValue, resolution);
+    }
+
+    public Length getFeedratePerSecond() {
+        return feedratePerSecond;
+    }
+
+    public void setFeedratePerSecond(Length feedratePerSecond) {
+        this.feedratePerSecond = feedratePerSecond;
+    }
+
+    public Length getAccelerationPerSecond2() {
+        return accelerationPerSecond2;
+    }
+
+    public void setAccelerationPerSecond2(Length accelerationPerSecond2) {
+        this.accelerationPerSecond2 = accelerationPerSecond2;
+    }
+
+    public Length getJerkPerSecond3() {
+        return jerkPerSecond3;
+    }
+
+    public void setJerkPerSecond3(Length jerkPerSecond3) {
+        this.jerkPerSecond3 = jerkPerSecond3;
+    }
+
+    @Override
+    public double getMotionLimit(int order) {
+        if (order == 1) {
+            return getFeedratePerSecond().convertToUnits(LengthUnit.Millimeters).getValue();
+        }
+        else if (order == 2) {
+            return getAccelerationPerSecond2().convertToUnits(LengthUnit.Millimeters).getValue();
+        }
+        else if (order == 3) {
+            return getJerkPerSecond3().convertToUnits(LengthUnit.Millimeters).getValue();
+        }
+        return 0;
     }
 }

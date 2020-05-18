@@ -32,16 +32,23 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.MappedAxes;
+import org.openpnp.model.Motion;
+import org.openpnp.model.AxesLocation.MotionLimits;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.Camera.Looking;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.base.AbstractControllerAxis;
 import org.openpnp.spi.base.AbstractDriver;
+import org.openpnp.util.NanosecondTime;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -64,8 +71,6 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
      * Works like Gcode G92. Initialized with the SimulationModeMachine.getHomingError() on homing.
      */
     private AxesLocation homingOffsets = new AxesLocation();
-    private AxesLocation vibrationVector;
-    private long vibrationStartTime;
 
     @Override
     public void home(ReferenceMachine machine, MappedAxes mappedAxes) throws Exception {
@@ -106,66 +111,20 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
         // Get the current location of the Head that we'll move
         AxesLocation hl = mappedAxes.getLocation();
 
-        if (feedRateMmPerMinute > 0) {
-            simulateMovement(hm, mappedAxes, location, hl, speed);
-        }
         if (!mappedAxes.locationsMatch(hl, location)) {
             mappedAxes.setLocation(location);
             Logger.debug("Machine new location {}", new MappedAxes(Configuration.get().getMachine()).getLocation());
         }
     }
 
-    /**
-     * Simulates true machine movement, which takes time, by tracing the required movement lines
-     * over a period of time based on the input speed.
-     * 
-     * @param hm
-     * @param location
-     * @param hl
-     * @param speed
-     * @throws Exception
-     */
-    protected void simulateMovement(ReferenceHeadMountable hm, MappedAxes mappedAxes, AxesLocation location, AxesLocation hl,
-            double speed) throws Exception {
-        // Roughly NIST RS274NGC Interpreter - Version 3, Section 2.1.2.5 rule A
-        AxesLocation delta = location.subtract(hl);
-        double distanceLinear = delta.distanceLinear();
-        double distanceRotational = delta.distanceRotational();
-        double timeLinear = distanceLinear / (feedRateMmPerMinute/60.0 * speed);
-        double timeRotational = distanceRotational / (36.0*feedRateMmPerMinute/60.0 * speed);
-        double time = Math.max(timeLinear, timeRotational);
-        ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
-
-        long t0 = System.currentTimeMillis();
-        double dt;
-        while (true) {
-            double t = (System.currentTimeMillis() - t0)*0.001;
-            dt = Math.min(1.0, t/time);
-            AxesLocation l = hl.add(delta.multiply(dt));
-            mappedAxes.setLocation(l);
-
-            // Provide live updates to the Machine as the move progresses.
-            machine.fireMachineHeadActivity(hm.getHead());
-            if (dt >= 1.0) {
-                break;
-            }
-            
-            try {
-                Thread.sleep(10);
-            }
-            catch (Exception e) {
-
-            }
-        }
-        if (distanceLinear > 0.001) {
-            vibrationVector = delta.multiply(1.0/distanceLinear)
-                    .subtract((vibrationVector != null) ? vibrationVector.multiply(0.5) // shake it up, if not yet done 
-                            : new AxesLocation()); 
-            vibrationStartTime = System.currentTimeMillis();
-        }
-        else if (distanceRotational > 0.1) {
-            vibrationVector = new AxesLocation(mappedAxes.getAxis(Axis.Type.X), 1.0);
-            vibrationStartTime = System.currentTimeMillis();
+    @Override
+    public void waitForCompletion(ReferenceHeadMountable hm, MappedAxes mappedAxes,
+            CompletionType completionType) throws Exception {
+        ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
+        while (! machine.getMotionPlanner()
+                .getMomentaryMotion(NanosecondTime.getRuntimeSeconds())
+                .hasOption(Motion.MotionOption.Stillstand)) {
+            Thread.sleep(100);
         }
     }
 
@@ -227,27 +186,6 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
         this.homingOffsets = homingOffsets;
     }
 
-
-    public AxesLocation getVibrationVector() {
-        return vibrationVector;
-    }
-
-
-    public void setVibrationVector(AxesLocation vibrationVector) {
-        this.vibrationVector = vibrationVector;
-    }
-
-
-    public long getVibrationStartTime() {
-        return vibrationStartTime;
-    }
-
-
-    public void setVibrationStartTime(long vibrationStartTime) {
-        this.vibrationStartTime = vibrationStartTime;
-    }
-
-
     @Override
     public LengthUnit getUnits() {
         return LengthUnit.Millimeters;
@@ -258,6 +196,22 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
     public void migrateDriver(ReferenceMachine machine) throws Exception {
         machine.addDriver(this);
         createAxisMappingDefaults(machine);
+        // Migrate feedrates etc.
+        for (Axis axis : machine.getAxes()) {
+            if (axis instanceof AbstractControllerAxis) {
+                double feedRateMmPerMinute = this.feedRateMmPerMinute;
+                if (axis.getType() ==Type.Rotation) { 
+                    // like in the original NullDriver simulation, rotation is at 10 x speed
+                    feedRateMmPerMinute *= 10.0;
+                }
+                // Migrate the feedrate to the axes but change to mm/s.
+                ((AbstractControllerAxis) axis).setFeedratePerSecond(new Length(feedRateMmPerMinute/60.0, getUnits()));
+                // Assume 0.5s average acceleration to reach top speed. With jerk control that is 4 x feedrate/s.
+                ((AbstractControllerAxis) axis).setAccelerationPerSecond2(new Length(feedRateMmPerMinute*4/60.0, getUnits()));
+                // Assume full time +1/-1 jerk time.
+                ((AbstractControllerAxis) axis).setJerkPerSecond3(new Length(feedRateMmPerMinute*8/60.0, getUnits()));
+            }
+        }
         ReferenceHead head = (ReferenceHead) machine.getDefaultHead();
         // Use the lower left PCB fiducial as homing fiducial (but not enabling Visual Homing yet).
         head.setHomingFiducialLocation(new Location(LengthUnit.Millimeters, 5.736, 6.112, 0, 0));

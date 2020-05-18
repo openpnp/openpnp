@@ -20,6 +20,7 @@ import org.openpnp.model.MappedAxes;
 import org.openpnp.model.Named;
 import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -572,6 +573,12 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
                 }
                 break;
         }
+    }
+
+    @Override
+    public void waitForCompletion(ReferenceHeadMountable hm, MappedAxes mappedAxes,
+            CompletionType completionType) throws Exception {
+        // TODO Auto-generated method stub
     }
 
     @Override

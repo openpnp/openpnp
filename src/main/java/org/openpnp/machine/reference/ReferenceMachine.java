@@ -46,6 +46,7 @@ import org.openpnp.machine.reference.camera.SwitcherCamera;
 import org.openpnp.machine.reference.camera.Webcams;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.NullDriver;
+import org.openpnp.machine.reference.driver.NullMotionPlanner;
 import org.openpnp.machine.reference.feeder.AdvancedLoosePartFeeder;
 import org.openpnp.machine.reference.feeder.BlindsFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
@@ -80,6 +81,7 @@ import org.openpnp.spi.Driver;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.MotionPlanner;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PnpJobProcessor;
@@ -101,6 +103,9 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Element(required = false)
     protected FiducialLocator fiducialLocator = new ReferenceFiducialLocator();
+
+    @Element(required = false)
+    protected MotionPlanner motionPlanner = new NullMotionPlanner();
 
     @Element(required = false)
     private boolean homeAfterEnabled = false;
@@ -186,6 +191,14 @@ public class ReferenceMachine extends AbstractMachine {
             // remove homed-flag if machine is disabled
             this.setHomed(false);
         }
+    }
+
+    public MotionPlanner getMotionPlanner() {
+        return motionPlanner;
+    }
+
+    public void setMotionPlanner(MotionPlanner motionPlanner) {
+        this.motionPlanner = motionPlanner;
     }
 
     @Override

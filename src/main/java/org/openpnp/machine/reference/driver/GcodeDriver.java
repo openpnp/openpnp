@@ -36,15 +36,18 @@ import org.openpnp.model.Location;
 import org.openpnp.model.MappedAxes;
 import org.openpnp.model.Named;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.base.AbstractAxis;
+import org.openpnp.spi.base.AbstractControllerAxis;
 import org.openpnp.spi.base.AbstractHead;
 import org.openpnp.spi.base.AbstractHead.VisualHomingMethod;
 import org.openpnp.spi.base.AbstractHeadMountable;
@@ -535,7 +538,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         }
         if (doesMove) {
             List<String> responses = sendGcode(command);
-
+            // TODO: determine if it is technically possible to move this to waitForCompletion().
+            
             /*
              * If moveToCompleteRegex is specified we need to wait until we match the regex in a
              * response before continuing. We first search the initial responses from the
@@ -557,14 +561,15 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                     }
                 }
             }
-            // TODO: extract the MOVE_TO_COMPLETE_COMMAND
-            /*
-             * If moveToCompleteCommand is specified, send it
-             */
-            command = getCommand(hm, CommandType.MOVE_TO_COMPLETE_COMMAND);
-            if (command != null) {
-                sendGcode(command);
-            }
+        }
+    }
+
+    @Override
+    public void waitForCompletion(ReferenceHeadMountable hm, MappedAxes mappedAxes,
+            CompletionType completionType) throws Exception {
+        String command = getCommand(hm, CommandType.MOVE_TO_COMPLETE_COMMAND);
+        if (command != null) {
+            sendGcode(command);
         }
     }
 
@@ -1020,6 +1025,12 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 break;
         }
         axis.setDriver(this);
+        // Migrate the feedrate to the axes but change to mm/s.
+        axis.setFeedratePerSecond(new Length(maxFeedRate/60.0, getUnits()));
+        // Assume 0.5s average acceleration to reach top speed. With jerk control that is 4 x feedrate/s.
+        axis.setAccelerationPerSecond2(new Length(maxFeedRate*4/60.0, getUnits()));
+        // Assume full time +1/-1 jerk time.
+        axis.setJerkPerSecond3(new Length(maxFeedRate*8/60.0, getUnits()));
         machine.addAxis(axis);
         return axis;
     }
@@ -1293,4 +1304,5 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         @Attribute(required = false)
         private double scaleFactor = 1;
     }
+
 }

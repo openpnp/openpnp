@@ -13,6 +13,7 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.MappedAxes;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractDriver;
@@ -149,14 +150,19 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
             return LengthUnit.Millimeters;
         }
 
-        @Deprecated
-        @Override
-        public void migrateDriver(ReferenceMachine machine) throws Exception {
-        }
-
         @Override
         public boolean isSupportingPreMove() {
             return false;
+        }
+
+        @Override
+        public void waitForCompletion(ReferenceHeadMountable hm, MappedAxes mappedAxes,
+                CompletionType completionType) throws Exception {
+        }
+
+        @Deprecated
+        @Override
+        public void migrateDriver(ReferenceMachine machine) throws Exception {
         }
    }
 
@@ -198,6 +204,11 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
     @Override
     public Wizard getConfigurationWizard() {
         return null;
+    }
+
+    @Override
+    public void waitForCompletion(ReferenceHeadMountable hm, MappedAxes mappedAxes,
+            CompletionType completionType) throws Exception {
     }
 
     @Deprecated

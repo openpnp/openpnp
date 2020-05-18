@@ -23,8 +23,10 @@ package org.openpnp.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.spi.Axis;
@@ -261,6 +263,20 @@ public class MappedAxes {
         return found;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder str = new StringBuilder();
+        str.append("(");
+        int i = 0;
+        for (ControllerAxis axis : axes) {
+            if (i++ > 0) {
+                str.append(", ");
+            }
+            str.append(axis.getName());
+        }
+        str.append(")");
+        return str.toString();
+    }
 }
 
 

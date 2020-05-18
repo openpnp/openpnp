@@ -222,7 +222,7 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
 
     private static double [] getLinearTransform(ReferenceLinearTransformAxis axis, double [] unit, LocationOption... options) throws Exception {
         if (axis != null) { 
-            if (axis.compensation == false || !Arrays.asList(options).contains(LocationOption.SuppressCompensation)) {
+            if (axis.compensation == false || !Arrays.asList(options).contains(LocationOption.SuppressStaticCompensation)) {
                 return axis.getLinearTransform();
             }
             else {
@@ -253,7 +253,7 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
         double y = location.getCoordinate(inputAxisY);
         double z = location.getCoordinate(inputAxisZ);
         double rotation = location.getCoordinate(inputAxisRotation);
-        if (compensation == false || !Arrays.asList(options).contains(LocationOption.SuppressCompensation)) {
+        if (compensation == false || !Arrays.asList(options).contains(LocationOption.SuppressStaticCompensation)) {
             double offset = this.offset.convertToUnits(AxesLocation.getUnits()).getValue();
             return location.put(new AxesLocation(this, 
                     x * factorX

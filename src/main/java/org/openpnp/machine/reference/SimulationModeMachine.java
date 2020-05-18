@@ -1,8 +1,28 @@
+/*
+ * Copyright (C) 2020 <mark@makr.zone>
+ * inspired and based on work
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
+ */
+
 package org.openpnp.machine.reference;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.util.Collections;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.camera.ImageCamera;
@@ -14,16 +34,17 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.MappedAxes;
+import org.openpnp.model.Motion;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Driver;
-import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Movable.LocationOption;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.util.NanosecondTime;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -104,6 +125,13 @@ public class SimulationModeMachine extends ReferenceMachine {
     private int simulatedCameraNoise = 0;
 
     /**
+     * Simulated camera lag [s] to test camera settle. 
+     * Works on ImageCamera and SimulatedUpCamera.
+     */
+    @Attribute(required = false)
+    private double simulatedCameraLag= 0;
+
+    /**
      * Simulated vibration to test camera settle. Initial max. amplitude.
      */
     @Element(required = false)
@@ -178,6 +206,14 @@ public class SimulationModeMachine extends ReferenceMachine {
         this.simulatedCameraNoise = simulatedCameraNoise;
     }
 
+    public double getSimulatedCameraLag() {
+        return simulatedCameraLag;
+    }
+
+    public void setSimulatedCameraLag(double simulatedCameraLag) {
+        this.simulatedCameraLag = simulatedCameraLag;
+    }
+
     public Length getSimulatedVibrationAmplitude() {
         return simulatedVibrationAmplitude;
     }
@@ -233,7 +269,7 @@ public class SimulationModeMachine extends ReferenceMachine {
                                     && ((ReferenceNozzle) nozzle).getVacuumActuator() == actuator) {
                                 // Got the vacuum actuator, which is a signal to check for pick/place.
                                 if (nozzle.getPart() != null) {
-                                    Location location = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, Looking.Down);
+                                    Location location = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, null);
                                     if (location.getLinearDistanceTo(machine.getDiscardLocation()) > 4.0) {
                                         if ((Boolean)value == true) {
                                             // Pick
@@ -280,47 +316,52 @@ public class SimulationModeMachine extends ReferenceMachine {
         SimulationModeMachine machine = getSimulationModeMachine();
         if (machine != null 
                 && machine.getSimulationMode() != SimulationMode.Off) {
-            MappedAxes mappedAxes = new MappedAxes(machine);
-            AxesLocation axesLocation = mappedAxes.getLocation();
+            double lag = 0;
+            if (looking != null
+                    && machine.getSimulationMode().isDynamicallyImperfectMachine()) {
+                lag = machine.getSimulatedCameraLag();
+            }
+            Motion momentary = machine.getMotionPlanner()
+                    .getMomentaryMotion(NanosecondTime.getRuntimeSeconds() - lag);
+            AxesLocation axesLocation = momentary.getVector(Motion.Derivative.Location);
+            //AxesLocation axesVelocity = momentary.getVector(Motion.Derivative.Velocity);
             try {
+                MappedAxes mappedAxes = hm.getMappedAxes(machine); 
                 for (Driver driver : mappedAxes.getMappedDrivers(machine)) {
-                    AxesLocation vibrationVector = null;
                     AxesLocation homingOffsets = null;
-                    long vibrationTime = 0;
                     if (driver instanceof NullDriver) {
-                        vibrationVector = ((NullDriver)driver).getVibrationVector();
-                        homingOffsets = ((NullDriver)driver).getHomingOffsets();
-                        vibrationTime = ((NullDriver)driver).getVibrationStartTime();
-                    }
-                    if (looking == Looking.Down) {
-                        // Add homing offset
-                        axesLocation = axesLocation.subtract(homingOffsets);
-                    }
-                    if (machine.getSimulationMode().isDynamicallyImperfectMachine()
-                            && vibrationVector != null) {
-                        // Add vibrations
-                        double t = (System.currentTimeMillis()-vibrationTime)*0.001;
-                        double amplitude = machine.getSimulatedVibrationAmplitude().convertToUnits(LengthUnit.Millimeters).getValue() 
-                                *Math.exp(-t/0.005);
-                        if (amplitude < 0.02) {
-                            ((NullDriver)driver).setVibrationVector(null);
-                        }
-                        else {
-                            double scale = machine.vibrationToggle*amplitude;
-                            machine.vibrationToggle = -machine.vibrationToggle;
-                            axesLocation = axesLocation.add(vibrationVector.multiply(scale));
+                        if (looking == Looking.Down) {
+                            homingOffsets = ((NullDriver)driver).getHomingOffsets();
+                            // Apply homing offset
+                            axesLocation = axesLocation.subtract(homingOffsets);
                         }
                     }
                 }
+                /* TODO: reimplement using a velocity? 
+                 * if (machine.getSimulationMode().isDynamicallyImperfectMachine()
 
+                        && vibrationVector != null) {
+                    // Add vibrations
+                    double t = (System.currentTimeMillis()-vibrationTime)*0.001;
+                    double amplitude = machine.getSimulatedVibrationAmplitude().convertToUnits(LengthUnit.Millimeters).getValue() 
+                 *Math.exp(-t/0.005);
+                    double scale = machine.vibrationToggle*amplitude;
+                    machine.vibrationToggle = -machine.vibrationToggle;
+                    axesLocation = axesLocation.add(vibrationVector.multiply(scale));
+                }
+                 */
                 if (hm instanceof Nozzle
                         && machine.getSimulationMode().isDynamicallyImperfectMachine()) {
                     // Add Runout.
                     double runout = machine.getSimulatedRunout()
                             .convertToUnits(AxesLocation.getUnits()).getValue();
+                    // Note, positive  phase shift is the positive shift of the curve which means the angle is subtracted,
+                    // see https://en.wikipedia.org/wiki/Phase_(waves)#General_definition  
+                    // ReferenceNozzleTipCalibration.ModelBasedRunoutCompensation.getRunout(double)
+                    double rotation = axesLocation.getCoordinate(mappedAxes.getAxis(Axis.Type.Rotation));
                     Location runoutVector = new Location(AxesLocation.getUnits(),
                             runout, 0, 0, 0)
-                            .rotateXy(location.getRotation()+machine.getSimulatedRunoutPhase());
+                            .rotateXy(rotation-machine.getSimulatedRunoutPhase());
                     axesLocation = axesLocation.add(mappedAxes.getTypedLocation(runoutVector)); 
                 }
 
@@ -332,9 +373,13 @@ public class SimulationModeMachine extends ReferenceMachine {
                 }
 
                 // NOTE this specifically makes the assumption that the axes transform from raw 1:1
-                location = hm.toTransformed(axesLocation, LocationOption.SuppressCompensation);
+                location = hm.toTransformed(axesLocation, 
+                        LocationOption.SuppressStaticCompensation,
+                        LocationOption.SuppressDynamicCompensation);
                 // Transform back. This bypasses any compensations, such as runout compensation.
-                location = hm.toHeadMountableLocation(location, LocationOption.SuppressCompensation);
+                location = hm.toHeadMountableLocation(location, 
+                        LocationOption.SuppressStaticCompensation,
+                        LocationOption.SuppressDynamicCompensation);
             }
             catch (Exception e) {
                 Logger.error(e);

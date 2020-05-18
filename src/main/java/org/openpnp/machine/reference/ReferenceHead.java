@@ -36,6 +36,7 @@ import org.openpnp.model.MappedAxes;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractHead;
@@ -156,9 +157,9 @@ public class ReferenceHead extends AbstractHead {
                         hm.getName(), location, getName()));
             }
             AxesLocation axesLocation = hm.toRaw(location);
-            for (Driver driver : mappedAxes.getMappedDrivers(machine)) {
-                ((ReferenceDriver) driver).moveTo((ReferenceHeadMountable) hm, new MappedAxes(mappedAxes, driver), axesLocation, speed, options);
-            }
+            machine.getMotionPlanner().moveTo(hm, mappedAxes, axesLocation, speed, options);
+            // For now just do it immediately. TODO: implement smart wait for completion.
+            machine.getMotionPlanner().waitForCompletion(hm, mappedAxes, CompletionType.WaitForStillstand);
             getMachine().fireMachineHeadActivity(this);
         }
     }

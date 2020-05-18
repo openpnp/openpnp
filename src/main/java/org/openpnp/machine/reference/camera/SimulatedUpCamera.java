@@ -82,7 +82,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
             for (Nozzle nozzle : head.getNozzles()) {
                 Location l = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, getLooking());
                 if (phyBounds.contains(l.getX(), l.getY())) {
-                    drawNozzle(g, nozzle);
+                    drawNozzle(g, nozzle, l);
                 }
             }
         }
@@ -97,7 +97,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
     }
 
 
-    private void drawNozzle(Graphics2D g, Nozzle nozzle) {
+    private void drawNozzle(Graphics2D g, Nozzle nozzle, Location l) {
         g.setStroke(new BasicStroke(2f));
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
@@ -106,7 +106,6 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         
         // Draw the nozzle
         // Get nozzle offsets from camera
-        Location l = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, getLooking());
         Location offsets = l.subtractWithRotation(getLocation());
         
         // Create a nozzle shape

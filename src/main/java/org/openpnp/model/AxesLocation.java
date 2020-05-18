@@ -45,6 +45,7 @@ import org.simpleframework.xml.ElementList;
  */
 public class AxesLocation {
     final private HashMap<Axis, Double> location;
+    final public static AxesLocation zero = new AxesLocation();
 
     public AxesLocation() {
         // Empty
@@ -111,23 +112,77 @@ public class AxesLocation {
         return new AxesLocation((a, b) -> (b), this, other);
     }
 
-    public double distanceLinear() {
-        double d = 0.0;
-        for (Entry<Axis, Double> entry : location.entrySet()) {
-            if (entry.getKey().getType() != Axis.Type.Rotation) {
-                d += entry.getValue()*entry.getValue();
+    /**
+     * Calculated motion limits over the given differential AxesLocation.
+     *  
+     * The nth order limit in millimeters/seconds^n.
+     * The 0th order is the distance. 
+     */
+    static public class MotionLimits {
+        final private double [] linearLimits;
+        final private double [] rotationalLimits;
+        public MotionLimits(AxesLocation location) {
+            super();
+            linearLimits = new double [ControllerAxis.motionLimitsOrder+1];
+            rotationalLimits = new double [ControllerAxis.motionLimitsOrder+1];
+            for (int order = 1; order <= ControllerAxis.motionLimitsOrder; order++) {
+                linearLimits[order] = Double.MAX_VALUE;
+                rotationalLimits[order] = Double.MAX_VALUE;
+            }
+            for (Entry<Axis, Double> entry : location.location.entrySet()) {
+                Axis axis = entry.getKey();
+                if (axis instanceof ControllerAxis) {
+
+                    double dSq = entry.getValue()*entry.getValue();  
+                    if (dSq > 0) {
+                        if (axis.getType() == Axis.Type.Rotation) {
+                            rotationalLimits[0] += dSq;
+                            for (int order = 1; order <= ControllerAxis.motionLimitsOrder; order++) {
+                                rotationalLimits[order] = Math.min(rotationalLimits[order],
+                                        ((ControllerAxis) axis).getMotionLimit(order)
+                                        /Math.abs(entry.getValue()));
+                            }
+                        }
+                        else {
+                            linearLimits[0] += dSq;
+                            for (int order = 1; order <= ControllerAxis.motionLimitsOrder; order++) {
+                                linearLimits[order] = Math.min(linearLimits[order],
+                                        ((ControllerAxis) axis).getMotionLimit(order)
+                                        /Math.abs(entry.getValue()));
+                            }
+                        }
+                    }
+                }
+            }
+            linearLimits[0] = Math.sqrt(linearLimits[0]);
+            rotationalLimits[0] = Math.sqrt(rotationalLimits[0]);
+            for (int order = 1; order <= ControllerAxis.motionLimitsOrder; order++) {
+                if (linearLimits[0] > 0) {
+                    linearLimits[order] = linearLimits[order] * linearLimits[0];
+                }
+                if (rotationalLimits[0] > 0) {
+                    rotationalLimits[order] = rotationalLimits[order] * rotationalLimits[0];
+                }
             }
         }
-        return Math.sqrt(d);
-    }
-    public double distanceRotational() {
-        double d = 0.0;
-        for (Entry<Axis, Double> entry : location.entrySet()) {
-            if (entry.getKey().getType() == Axis.Type.Rotation) {
-                d += entry.getValue()*entry.getValue();
-            }
+        public double getLinearLimit(int order) {
+            return linearLimits[order];
         }
-        return Math.sqrt(d);
+        public double getLinearLimit(Motion.Derivative order) {
+            return linearLimits[order.ordinal()];
+        }
+        public double getRotationalLimit(int order) {
+            return rotationalLimits[order];
+        }
+        public double getRotationalLimit(Motion.Derivative order) {
+            return rotationalLimits[order.ordinal()];
+        }
+        public double getLinearDistance() {
+            return linearLimits[0];
+        }
+        public double getRotationalDistance() {
+            return rotationalLimits[0];
+        }
     }
 
     public static LengthUnit getUnits() {

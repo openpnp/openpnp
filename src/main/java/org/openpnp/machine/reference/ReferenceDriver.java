@@ -25,6 +25,7 @@ import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Location;
 import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Driver;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.WizardConfigurable;
@@ -53,7 +54,7 @@ public interface ReferenceDriver extends Driver, WizardConfigurable, PropertyShe
 
     /**
      * Resets the controller's current physical position to the given coordinates. This is used after visual homing
-     * to make the homing fiducial's X, Y coordinates to be at their nominal location. Other uses with other axes should 
+     * to make the homing fiducial's X, Y coordinates to be at their nominal location. Other uses with other axes may 
      * also be supported by the driver. 
      *  
      * @param machine
@@ -68,15 +69,30 @@ public interface ReferenceDriver extends Driver, WizardConfigurable, PropertyShe
      * rate * speed) where speed is greater than 0 and typically less than or equal to 1. A speed of
      * 0 means to move at the minimum possible speed.
      * 
-     * HeadMountable object types include Nozzle, Camera and Actuator.
-     * 
-     * @param hm
+     * @param hm The HeadMountable having triggered the move. This is mostly for proprietary machine driver support  
+     * and might only be a stand-in in some motion blending scenarios on the GcodeDriver.
      * @param location destination
      * @param speed relative speed (0-1) of the move
      * @param options zero to n options from the MoveToOptions enum.
      * @throws Exception
      */
     public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, AxesLocation location, double speed, MoveToOption... options) throws Exception;
+
+    /**
+     * Perform a coordinated wait for completion. This must be issued before capturing camera frames.
+     * @see org.openpnp.spi.MotionPlanner.waitForCompletion(HeadMountable, MappedAxes, CompletionType)  
+     * 
+     * @param hm The HeadMountable we want to wait for. This is mostly for proprietary machine driver support  
+     * and might only be a stand-in in some motion blending scenarios on the GcodeDriver.
+     * @param mappedAxes If not null, wait only for the mappedAxes i.e. for the underlying drivers. In this
+     * case, no guarantees as to the coordination with other axes are given. 
+     * @param completionType The kind of completion wanted.
+     * @return The time when the MotionPlanner estimates this motion to complete. See the MotionPlanner 
+     * class description for more information about the internal time model. 
+     * @throws Exception 
+     */
+    public void waitForCompletion(ReferenceHeadMountable hm, MappedAxes mappedAxes,
+            CompletionType completionType) throws Exception;
 
     /**
      * Actuates a machine defined object with a boolean state.
@@ -131,4 +147,5 @@ public interface ReferenceDriver extends Driver, WizardConfigurable, PropertyShe
 
     @Deprecated
     void migrateDriver(ReferenceMachine machine) throws Exception;
+
 }

@@ -13,9 +13,11 @@ public interface Movable extends Locatable {
     /**
      * Contains all possible options for getting approximative locations.
      * KeepX, KeepY, KeepZ, KeepRotation: keep these raw coordinates the same. 
-     * SuppressCompensation: calculate a location that will result in no extra moves for compensation.
+     * SuppressStaticCompensation: suppress static compensation, such as non-squareness compensation.
+     * SuppressDynamicCompensation: suppress dynamic (i.e. runtime calibrated) compensation, such as
+     * nozzle tip runout compensation.
      */
-    public enum LocationOption { KeepX, KeepY, KeepZ, KeepRotation, SuppressCompensation }
+    public enum LocationOption { KeepX, KeepY, KeepZ, KeepRotation, SuppressStaticCompensation, SuppressDynamicCompensation }
 
     /**
      * Get an approximative Location in order to avoid extra compensation moves. 

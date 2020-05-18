@@ -65,4 +65,6 @@ public interface ControllerAxis extends LinearInputAxis {
 
     public boolean coordinatesMatch(Length coordinateA, Length coordinateB);
 
+    int motionLimitsOrder = 3;
+    public double getMotionLimit(int order);
 }
