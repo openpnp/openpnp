@@ -18,6 +18,7 @@ import org.opencv.core.KeyPoint;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceFiducialLocatorConfigurationWizard;
@@ -27,6 +28,7 @@ import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
@@ -70,6 +72,15 @@ public class ReferenceFiducialLocator implements FiducialLocator {
     
     @Attribute(required = false)
     protected int repeatFiducialRecognition = 3;
+    
+    @Element(required = false)
+    protected FiducialLocatorTolerances tolerances = new FiducialLocatorTolerances();
+    
+    public static class FiducialLocatorTolerances {
+        protected double scalingTolerance = 0.05; //unitless
+        protected double shearingTolerance = 0.05; //unitless
+        protected Length boardLocationTolerance = new Length(5.0, LengthUnit.Millimeters);
+    }
     
     public Location locateBoard(BoardLocation boardLocation) throws Exception {
         return locateBoard(boardLocation, false);
@@ -161,19 +172,37 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             boardLocation.setSide(boardSide);	// restore side
         }
         
-        //Check for out-of-nominal conditions - these limits probably should be user definable values
-        double scalingTolerance = 0.05; //unitless
-        double shearingTolerance = 0.05; //unitless
-        double boardLocationTolerance = 5.0; //mm
-        
         Utils2D.AffineInfo ai = Utils2D.affineInfo(tx);
         Logger.info("Fiducial results: " + ai);
-        double boardOffset = newBoardLocation.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(savedBoardLocation);
-        Logger.info("Board origin offset distance: " + boardOffset + " mm");
-        if ((Math.abs(ai.xScale-1) > scalingTolerance) || (Math.abs(ai.yScale-1) > scalingTolerance) ||
-                (Math.abs(ai.xShear) > shearingTolerance) || (boardOffset > boardLocationTolerance)) {
+        
+        double boardOffset = newBoardLocation.getLinearLengthTo(savedBoardLocation).convertToUnits(LengthUnit.Millimeters).getValue();
+        Logger.info("Board origin offset distance: " + boardOffset + "mm");
+        
+        //Check for out-of-nominal conditions
+        String errString = "";
+        if (Math.abs(ai.xScale-1) > tolerances.scalingTolerance) {
+            errString += "the x scaling = " + String.format("%.5f", ai.xScale) + " is outside of the expected range of [" +
+                    String.format("%.5f", 1-tolerances.scalingTolerance) + ", " + String.format("%.5f", 1+tolerances.scalingTolerance) + "], ";
+        }
+        if (Math.abs(ai.yScale-1) > tolerances.scalingTolerance) {
+            errString += "the y scaling = " + String.format("%.5f", ai.yScale) + " is outside of the expected range of [" +
+                    String.format("%.5f", 1-tolerances.scalingTolerance) + ", " + String.format("%.5f", 1+tolerances.scalingTolerance) + "], ";
+        }
+        if (Math.abs(ai.xShear) > tolerances.shearingTolerance) {
+            errString += "the x shearing = " + String.format("%.5f", ai.xShear) + " is outside of the expected range of [" +
+                    String.format("%.5f", -tolerances.shearingTolerance) + ", " + String.format("%.5f", tolerances.shearingTolerance) + "], ";
+        }
+        if (boardOffset > tolerances.boardLocationTolerance.convertToUnits(LengthUnit.Millimeters).getValue()) {
+            errString += "the board origin moved " + String.format("%.4f", boardOffset) +
+                    "mm which is greater than the allowed amount of " +
+                    String.format("%.4f", tolerances.boardLocationTolerance.convertToUnits(LengthUnit.Millimeters).getValue()) + "mm, ";
+        }
+        if (errString.length() > 0) {
+            errString = errString.substring(0, errString.length()-2); //strip off the last comma and space
             boardLocation.setPlacementTransform(savedPlacementTransform);
-            throw new Exception("Fiducial results out of nominal tolerance limits");
+            throw new Exception("Fiducial locator results are invalid because: " + errString + ".  Potential remidies include " +
+                    "setting the initial board X, Y, Z, and Rotation in the Boards panel; using a different set of fiducials; " +
+                    "or changing the allowable tolerances in the <tolerances> section of the fiducial-locator section in machine.xml.");
         }
 
         return newBoardLocation;
