@@ -1,12 +1,21 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2020-05-18
+
+## Camera Jogging Revert
+
+- The old method of camera jogging by clicking and dragging anywhere has been restored. This
+  was removed when camera rotation jogging was adding because it seemed necessary with the
+  new drag handles, but it turns out it's not necessary and the new version was far less
+  convenient.
+
 # 2020-05-17
 
 ## Sponsors and About Dialog
 
 - The About dialog now includes a Credits tab to thank sponsors of the project. A SPONSORS.md
-file is also included, which is shown in the dialog.  
+  file is also included, which is shown in the dialog.  
 
 - The About menu item is now correctly added to the Help menu on MacOS when the MacOS integrations
   are not available.

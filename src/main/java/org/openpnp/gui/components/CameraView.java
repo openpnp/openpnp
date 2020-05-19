@@ -731,12 +731,16 @@ public class CameraView extends JComponent implements CameraListener {
                     xyTargetHandleX0 + dragJogHandleSize / 2, xyTargetHandleY0 + dragJogHandleSize);
             g2d.drawLine(xyTargetHandleX0, xyTargetHandleY0 + dragJogHandleSize / 2,
                     xyTargetHandleX0 + dragJogHandleSize, xyTargetHandleY0 + dragJogHandleSize / 2);
+            
+            g2d.drawLine(xyHandleX0 + dragJogHandleSize / 2, 
+                    xyHandleY0 + dragJogHandleSize / 2,
+                    targetX, targetY);
         }
     }
     
     private void paintDragJogging(Graphics2D g2d) {
         paintDragJogXyHandle(g2d, isDragJogging() 
-                && isPointInsideDragJogXyHandle(dragJoggingStart.getX(), dragJoggingStart.getY()));
+                && !isPointInsideDragJogRotationHandle(dragJoggingStart.getX(), dragJoggingStart.getY()));
         paintDragJogRotationHandle(g2d, isDragJogging() 
                 && isPointInsideDragJogRotationHandle(dragJoggingStart.getX(), dragJoggingStart.getY()));
     }
@@ -1449,12 +1453,10 @@ public class CameraView extends JComponent implements CameraListener {
     }
     
     private void dragJoggingBegin(MouseEvent e) {
-        if (isPointInsideDragJogHandle(e.getX(), e.getY())) {
-            this.dragJogging = true;
-            this.dragJoggingStart = e;
-            this.dragJoggingTarget = e;
-            repaint();
-        }
+        this.dragJogging = true;
+        this.dragJoggingStart = e;
+        this.dragJoggingTarget = e;
+        repaint();
     }
     
     private void dragJoggingContinue(MouseEvent e) {
@@ -1471,11 +1473,11 @@ public class CameraView extends JComponent implements CameraListener {
         this.dragJoggingTarget = null;
         repaint();
         
-        if (isPointInsideDragJogXyHandle(startX, startY)) {
-            moveToClick(e);
-        }
-        else if (isPointInsideDragJogRotationHandle(startX, startY)) {
+        if (isPointInsideDragJogRotationHandle(startX, startY)) {
             rotateToClick(e);
+        }
+        else {
+            moveToClick(e);
         }
     }
     
