@@ -259,15 +259,15 @@ public class MultiPlacementBoardLocationProcess {
             
             String errString = "";
             if (Math.abs(ai.xScale-1) > props.scalingTolerance) {
-                errString += "the x scaling = " + String.format("%.5f", ai.xScale) + " is outside expected range of [" +
+                errString += "x scaling = " + String.format("%.5f", ai.xScale) + " which is outside the expected range of [" +
                         String.format("%.5f", 1-props.scalingTolerance) + ", " + String.format("%.5f", 1+props.scalingTolerance) + "], ";
             }
             if (Math.abs(ai.yScale-1) > props.scalingTolerance) {
-                errString += "the y scaling = " + String.format("%.5f", ai.yScale) + " is outside expected range of [" +
+                errString += "y scaling = " + String.format("%.5f", ai.yScale) + " which is outside the expected range of [" +
                         String.format("%.5f", 1-props.scalingTolerance) + ", " + String.format("%.5f", 1+props.scalingTolerance) + "], ";
             }
             if (Math.abs(ai.xShear) > props.shearingTolerance) {
-                errString += "the x shearing = " + String.format("%.5f", ai.xShear) + " is outside expected range of [" +
+                errString += "x shearing = " + String.format("%.5f", ai.xShear) + " which is outside the expected range of [" +
                         String.format("%.5f", -props.shearingTolerance) + ", " + String.format("%.5f", props.shearingTolerance) + "], ";
             }
             if (boardOffset > props.boardLocationTolerance.convertToUnits(LengthUnit.Millimeters).getValue()) {

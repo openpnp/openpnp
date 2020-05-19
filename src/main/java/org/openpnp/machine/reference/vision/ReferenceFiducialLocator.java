@@ -18,7 +18,6 @@ import org.opencv.core.KeyPoint;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceFiducialLocatorConfigurationWizard;
@@ -181,15 +180,15 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         //Check for out-of-nominal conditions
         String errString = "";
         if (Math.abs(ai.xScale-1) > tolerances.scalingTolerance) {
-            errString += "the x scaling = " + String.format("%.5f", ai.xScale) + " is outside of the expected range of [" +
+            errString += "x scaling = " + String.format("%.5f", ai.xScale) + " which is outside the expected range of [" +
                     String.format("%.5f", 1-tolerances.scalingTolerance) + ", " + String.format("%.5f", 1+tolerances.scalingTolerance) + "], ";
         }
         if (Math.abs(ai.yScale-1) > tolerances.scalingTolerance) {
-            errString += "the y scaling = " + String.format("%.5f", ai.yScale) + " is outside of the expected range of [" +
+            errString += "the y scaling = " + String.format("%.5f", ai.yScale) + " which is outside the expected range of [" +
                     String.format("%.5f", 1-tolerances.scalingTolerance) + ", " + String.format("%.5f", 1+tolerances.scalingTolerance) + "], ";
         }
         if (Math.abs(ai.xShear) > tolerances.shearingTolerance) {
-            errString += "the x shearing = " + String.format("%.5f", ai.xShear) + " is outside of the expected range of [" +
+            errString += "the x shearing = " + String.format("%.5f", ai.xShear) + " which is outside the expected range of [" +
                     String.format("%.5f", -tolerances.shearingTolerance) + ", " + String.format("%.5f", tolerances.shearingTolerance) + "], ";
         }
         if (boardOffset > tolerances.boardLocationTolerance.convertToUnits(LengthUnit.Millimeters).getValue()) {
