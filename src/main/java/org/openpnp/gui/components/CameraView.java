@@ -646,6 +646,11 @@ public class CameraView extends JComponent implements CameraListener {
     private void drawCircle(Graphics2D g2d, int centerX, int centerY, int radius) {
         g2d.drawArc(centerX - radius, centerY - radius, radius * 2, radius * 2, 0, 360);
     }
+
+    private double snapRotationAngleToTypicalAngles(double angle) {
+        // Round to typical pcb placing angles
+        return ((int) Math.round(angle / 45)) * 45.0;
+    }
     
     private void paintDragJogRotationHandle(Graphics2D g2d, boolean active) {
         if (camera.getHead() == null) {
@@ -677,6 +682,12 @@ public class CameraView extends JComponent implements CameraListener {
             // Now draw the circular handle at it's target position in the active color
             double rotTargetHandleAngle = Math.toDegrees(Math.atan2(targetY - (height / 2), targetX - (width / 2)));
             rotTargetHandleAngle = Utils2D.normalizeAngle(rotTargetHandleAngle);
+
+            // If the alt button is pressed snap to certain angles
+            if(dragJoggingTarget.isAltDown()) {
+                rotTargetHandleAngle = snapRotationAngleToTypicalAngles(rotTargetHandleAngle);
+            }
+
             double rotTargetHandleX = rotHandleRadius * Math.cos(Math.toRadians(rotTargetHandleAngle)) + (width / 2.);
             double rotTargetHandleY = rotHandleRadius * Math.sin(Math.toRadians(rotTargetHandleAngle)) + (height / 2.);
             g2d.setColor(dragJogHandleActiveColor);
@@ -720,12 +731,16 @@ public class CameraView extends JComponent implements CameraListener {
                     xyTargetHandleX0 + dragJogHandleSize / 2, xyTargetHandleY0 + dragJogHandleSize);
             g2d.drawLine(xyTargetHandleX0, xyTargetHandleY0 + dragJogHandleSize / 2,
                     xyTargetHandleX0 + dragJogHandleSize, xyTargetHandleY0 + dragJogHandleSize / 2);
+            
+            g2d.drawLine(xyHandleX0 + dragJogHandleSize / 2, 
+                    xyHandleY0 + dragJogHandleSize / 2,
+                    targetX, targetY);
         }
     }
     
     private void paintDragJogging(Graphics2D g2d) {
         paintDragJogXyHandle(g2d, isDragJogging() 
-                && isPointInsideDragJogXyHandle(dragJoggingStart.getX(), dragJoggingStart.getY()));
+                && !isPointInsideDragJogRotationHandle(dragJoggingStart.getX(), dragJoggingStart.getY()));
         paintDragJogRotationHandle(g2d, isDragJogging() 
                 && isPointInsideDragJogRotationHandle(dragJoggingStart.getX(), dragJoggingStart.getY()));
     }
@@ -1332,6 +1347,12 @@ public class CameraView extends JComponent implements CameraListener {
 
         double rotTargetHandleAngle = Math.toDegrees(Math.atan2(e.getY() - (height / 2), e.getX() - (width / 2)));
         rotTargetHandleAngle = Utils2D.normalizeAngle(rotTargetHandleAngle);
+
+        // If the alt button is pressed snap to certain angles
+        if(e.isAltDown()) {
+            rotTargetHandleAngle = snapRotationAngleToTypicalAngles(rotTargetHandleAngle);
+        }
+
         double targetAngle = Utils2D.normalizeAngle(-(rotTargetHandleAngle + 90));
         UiUtils.submitUiMachineTask(() -> {
             if (camera.getHead() == null) {
@@ -1432,12 +1453,10 @@ public class CameraView extends JComponent implements CameraListener {
     }
     
     private void dragJoggingBegin(MouseEvent e) {
-        if (isPointInsideDragJogHandle(e.getX(), e.getY())) {
-            this.dragJogging = true;
-            this.dragJoggingStart = e;
-            this.dragJoggingTarget = e;
-            repaint();
-        }
+        this.dragJogging = true;
+        this.dragJoggingStart = e;
+        this.dragJoggingTarget = e;
+        repaint();
     }
     
     private void dragJoggingContinue(MouseEvent e) {
@@ -1454,11 +1473,11 @@ public class CameraView extends JComponent implements CameraListener {
         this.dragJoggingTarget = null;
         repaint();
         
-        if (isPointInsideDragJogXyHandle(startX, startY)) {
-            moveToClick(e);
-        }
-        else if (isPointInsideDragJogRotationHandle(startX, startY)) {
+        if (isPointInsideDragJogRotationHandle(startX, startY)) {
             rotateToClick(e);
+        }
+        else {
+            moveToClick(e);
         }
     }
     

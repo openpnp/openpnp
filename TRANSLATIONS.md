@@ -13,5 +13,3 @@ Note: There is an issue where a parent of a nested key is not editable in the to
    
 OpenPnP will detect your language automatically and use the correct language file. If you want
 to change the language you can select "View->Language" from the top menu.
-
-TODO: Decide on Menu.File or Menu.File.Title. Menu.File is not editable in i18n editor.
