@@ -1,6 +1,7 @@
 package org.openpnp.spi.base;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -8,6 +9,7 @@ import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.Machine;
+import org.openpnp.spi.Movable.LocationOption;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
@@ -21,27 +23,15 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
     @Attribute(required = false)
     private String letter;
 
-    @Element(required = false)
-    private Length homeCoordinate = new Length(0.0, LengthUnit.Millimeters);
-
-    @Element(required = false)
-    private Length feedratePerSecond = new Length(250, LengthUnit.Millimeters);
-    
-    @Element(required = false)
-    private Length accelerationPerSecond2 = new Length(500, LengthUnit.Millimeters);
-
-    @Element(required = false)
-    private Length jerkPerSecond3 = new Length(2000, LengthUnit.Millimeters);
+    /**
+     * The coordinate that will be reached when all pending motion has completed.
+     */
+    private double coordinate;
 
     /**
-     * The resolution of the axis will be used to determined if an axis has moved i.e. whether the sent coordinate 
-     * will be different.  
-     * @see %.4f format in CommandType.MOVE_TO_COMMAND in GcodeDriver.createDefaults() or Configuration.getLengthDisplayFormat()
-     * Comparing coordinates rounded to resolution will also suppress false differences from floating point artifacts 
-     * prompted by forward/backward raw <-> transformed calculations. 
+     * The coordinate that will be reached when the last motion sent by the driver has completed.
      */
-    @Element(required = false)
-    private double resolution = 0.0001; // 
+    private double driverCoordinate;
 
     protected AbstractControllerAxis () {
         super();
@@ -55,13 +45,26 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
     }
 
     @Override
-    public double roundedToResolution(double coordinate) {
-        if (resolution != 0.0) {
-            return Math.round(coordinate/resolution)*resolution;
-        }
-        else {
-            return coordinate;
-        }
+    public double getCoordinate() {
+        return coordinate;
+    }
+
+    @Override
+    public Length getLengthCoordinate() {
+        return new Length(coordinate, getUnits());
+    }
+
+    @Override
+    public void setCoordinate(double coordinate) {
+        Object oldValue = this.coordinate;
+        this.coordinate = coordinate;
+        firePropertyChange("coordinate", oldValue, coordinate);
+        firePropertyChange("lengthCoordinate", null, getLengthCoordinate());
+    }
+
+    @Override
+    public void setLengthCoordinate(Length coordinate) {
+        setCoordinate(coordinate.convertToUnits(getUnits()).getValue());
     }
 
     @Override
@@ -102,62 +105,23 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
     }
 
     @Override
-    public Length getHomeCoordinate() {
-        return homeCoordinate;
+    public AxesLocation toTransformed(AxesLocation location, LocationOption... options) {
+        // No transformation, obviously
+        return location;
     }
 
     @Override
-    public void setHomeCoordinate(Length homeCoordinate) {
-        Object oldValue = this.homeCoordinate;
-        this.homeCoordinate = homeCoordinate;
-        firePropertyChange("homeCoordinate", oldValue, homeCoordinate);
-    }
-
-    public double getResolution() {
-        return resolution;
-    }
-
-    public void setResolution(double resolution) {
-        Object oldValue = this.resolution;
-        this.resolution = resolution;
-        firePropertyChange("resolution", oldValue, resolution);
-    }
-
-    public Length getFeedratePerSecond() {
-        return feedratePerSecond;
-    }
-
-    public void setFeedratePerSecond(Length feedratePerSecond) {
-        this.feedratePerSecond = feedratePerSecond;
-    }
-
-    public Length getAccelerationPerSecond2() {
-        return accelerationPerSecond2;
-    }
-
-    public void setAccelerationPerSecond2(Length accelerationPerSecond2) {
-        this.accelerationPerSecond2 = accelerationPerSecond2;
-    }
-
-    public Length getJerkPerSecond3() {
-        return jerkPerSecond3;
-    }
-
-    public void setJerkPerSecond3(Length jerkPerSecond3) {
-        this.jerkPerSecond3 = jerkPerSecond3;
+    public AxesLocation toRaw(AxesLocation location, LocationOption... options) {
+        // No transformation, obviously
+        return location;
     }
 
     @Override
-    public double getMotionLimit(int order) {
-        if (order == 1) {
-            return getFeedratePerSecond().convertToUnits(LengthUnit.Millimeters).getValue();
-        }
-        else if (order == 2) {
-            return getAccelerationPerSecond2().convertToUnits(LengthUnit.Millimeters).getValue();
-        }
-        else if (order == 3) {
-            return getJerkPerSecond3().convertToUnits(LengthUnit.Millimeters).getValue();
-        }
-        return 0;
+    public boolean coordinatesMatch(Length coordinateA, Length coordinateB) {
+        double a = roundedToResolution(coordinateA.convertToUnits(getUnits()).getValue());
+        double b = roundedToResolution(coordinateB.convertToUnits(getUnits()).getValue());
+        return a == b;
     }
+
+
 }

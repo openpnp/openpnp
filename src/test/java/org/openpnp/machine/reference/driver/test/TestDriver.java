@@ -43,9 +43,9 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
     @Override
     public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, AxesLocation location, double speed, MoveToOption... options)
             throws Exception {
-        if (!mappedAxes.locationsMatch(mappedAxes.getLocation(), location)) {
+        if (!mappedAxes.locationsMatch(mappedAxes.getDriverLocation(), location)) {
             delegate.moveTo(hm, mappedAxes, location, speed);
-            mappedAxes.setLocation(location);
+            mappedAxes.setDriverLocation(location);
         }
     }
 

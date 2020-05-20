@@ -24,11 +24,16 @@ package org.openpnp.machine.reference;
 import java.awt.Color;
 import java.awt.Graphics2D;
 
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.machine.reference.driver.NullDriver;
+import org.openpnp.machine.reference.feeder.BlindsFeeder;
+import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.wizards.SimulationModeMachineConfigurationWizard;
 import org.openpnp.model.AxesLocation;
+import org.openpnp.model.Board;
+import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -40,6 +45,7 @@ import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Driver;
+import org.openpnp.spi.Feeder;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Movable.LocationOption;
@@ -236,6 +242,60 @@ public class SimulationModeMachine extends ReferenceMachine {
 
     public void setPickAndPlaceChecking(boolean pickAndPlaceChecking) {
         this.pickAndPlaceChecking = pickAndPlaceChecking;
+    }
+
+    public void resetAllFeeders() {
+        for (Feeder feeder : getFeeders()) {
+            if (feeder instanceof ReferenceStripFeeder) {
+                ((ReferenceStripFeeder) feeder).setFeedCount(0);
+            }
+            if (feeder instanceof BlindsFeeder) {
+                ((BlindsFeeder) feeder).setFeedCount(0);
+            }
+        }
+    }
+
+    public void setMachineTableZ(Length machineTableZ) {
+        for (Feeder feeder : getFeeders()) {
+            if (feeder instanceof ReferenceFeeder) {
+                ((ReferenceFeeder) feeder)
+                 .setLocation(((ReferenceFeeder) feeder).getLocation()
+                         .derive(null, null, 
+                                 machineTableZ.convertToUnits(((ReferenceFeeder) feeder).getLocation().getUnits())
+                                 .getValue(), 
+                                 null));
+            }
+            if (feeder instanceof ReferenceStripFeeder) {
+                ((ReferenceStripFeeder) feeder)
+                .setReferenceHoleLocation(((ReferenceStripFeeder) feeder).getReferenceHoleLocation()
+                        .derive(null, null, 
+                                machineTableZ.convertToUnits(((ReferenceStripFeeder) feeder).getReferenceHoleLocation().getUnits())
+                                .getValue(), 
+                                null));
+                ((ReferenceStripFeeder) feeder)
+                .setLastHoleLocation(((ReferenceStripFeeder) feeder).getLastHoleLocation()
+                        .derive(null, null, 
+                                machineTableZ.convertToUnits(((ReferenceStripFeeder) feeder).getLastHoleLocation().getUnits())
+                                .getValue(), 
+                                null));
+            }
+        }
+        for (BoardLocation boardLocation : MainFrame.get().getJobTab().getJob().getBoardLocations()) {
+            boardLocation.setLocation(boardLocation.getLocation().derive(null, null, 
+                    machineTableZ.convertToUnits(boardLocation.getLocation().getUnits())
+                    .getValue(), 
+                    null));
+        }
+        for (Camera camera : getCameras()) {
+            if (camera instanceof ReferenceCamera) {
+                ((ReferenceCamera) camera)
+                .setHeadOffsets(((ReferenceCamera) camera).getHeadOffsets()
+                        .derive(null, null, 
+                                machineTableZ.convertToUnits(((ReferenceCamera) camera).getHeadOffsets().getUnits())
+                                .getValue(), 
+                                null));
+            }
+        }
     }
 
     public static SimulationModeMachine getSimulationModeMachine() {

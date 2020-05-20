@@ -338,11 +338,7 @@ public class ReferenceMachine extends AbstractMachine {
         // if one rehomes, the isHomed flag has to be removed
         this.setHomed(false);
         
-        // Home all the drivers with their respective mapped axes. 
-        for (Driver driver : getDrivers()) {
-            MappedAxes mappedAxes = new MappedAxes(this, driver);
-            ((ReferenceDriver) driver).home(this, mappedAxes);
-        }
+        getMotionPlanner().home(this);
         super.home();
 
         try {

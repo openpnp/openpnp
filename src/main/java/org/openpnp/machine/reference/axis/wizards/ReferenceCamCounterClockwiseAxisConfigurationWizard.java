@@ -39,7 +39,6 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AxesComboBoxModel;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.NamedConverter;
-import org.openpnp.gui.wizards.AbstractAxisConfigurationWizard;
 import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;

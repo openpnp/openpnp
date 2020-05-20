@@ -29,13 +29,13 @@ import org.openpnp.model.Location;
  * A ControllerAxis is an axis coordinate dimension as exposed by the machine's controller/driver.
  * These can already be Cartesian-coordinate or rotary axes, or raw actuator axes to be transformed by a TransformedAxis. 
  */
-public interface ControllerAxis extends LinearInputAxis {
+public interface ControllerAxis extends LinearInputAxis, CoordinateAxis {
     /**
      * @return the driver through which this ControllerAxis is controlled. 
      */
-    public Driver getDriver();
+    Driver getDriver();
     
-    public void setDriver(Driver driver);
+    void setDriver(Driver driver);
 
     /**
      * @return the letter (X, Y, Z, etc.) of the ControllerAxis as recognized by the machine controller.
@@ -43,28 +43,19 @@ public interface ControllerAxis extends LinearInputAxis {
     public String getLetter();
 
     public void setLetter(String designator);
+    
+    double getDriverCoordinate();
+    
+    void setDriverCoordinate(double coordinate);
 
-    /**
-     * @return the coordinate after doing the machine controller's homing.  
-     */
-    public Length getHomeCoordinate();
-
-    public void setHomeCoordinate(Length homeCoordinate);
-
-    public LengthUnit getUnits();
-
-    public double getCoordinate();
-
-    public Length getLengthCoordinate();
-
-    public void setCoordinate(double coordinate);
-
-    public void setLengthCoordinate(Length coordinate);
+    Length getDriverLengthCoordinate();
+    
+    void setDriverLengthCoordinate(Length coordinate);
 
     double roundedToResolution(double coordinate);
 
-    public boolean coordinatesMatch(Length coordinateA, Length coordinateB);
+    boolean coordinatesMatch(Length coordinateA, Length coordinateB);
 
     int motionLimitsOrder = 3;
-    public double getMotionLimit(int order);
+    double getMotionLimit(int order);
 }

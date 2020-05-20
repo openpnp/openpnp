@@ -30,7 +30,6 @@ import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.DriversComboBoxModel;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.NamedConverter;
-import org.openpnp.gui.wizards.AbstractAxisConfigurationWizard;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;

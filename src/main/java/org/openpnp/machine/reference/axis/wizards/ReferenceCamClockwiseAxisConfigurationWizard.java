@@ -32,7 +32,6 @@ import org.jdesktop.beansbinding.Bindings;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.support.AxesComboBoxModel;
 import org.openpnp.gui.support.NamedConverter;
-import org.openpnp.gui.wizards.AbstractAxisConfigurationWizard;
 import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
 import org.openpnp.model.Configuration;

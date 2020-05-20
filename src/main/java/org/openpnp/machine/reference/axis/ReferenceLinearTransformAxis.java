@@ -45,6 +45,13 @@ import org.openpnp.util.Matrix;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
+/**
+ * The ReferenceLinearTransformAxis is a multi-input axis linear transformation for one output axis. Multiple
+ * ReferenceLinearTransformAxis can be combined into a full Affine Transformation (many-to-many axes). In the reverse 
+ * transformation the ReferenceLinearTransformAxis need to be combined to solve for the inverse transform. The first axis 
+ * encountered will therefore do the job for the combined group. 
+ *
+ */
 public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
     // The input axes of the transformation. Any of these can be null. 
     private AbstractAxis inputAxisX;
@@ -332,7 +339,7 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
             { ReferenceLinearTransformAxis.getLinearCoordinate(location, linearAxes[3], inputAxes[3]) },
             { 1 }
         };
-        // Calculate the raw vector by applying the inverdet Affine Transform.
+        // Calculate the raw vector by applying the inverted Affine Transform.
         double [][] rawVector = Matrix.multiply(invertedAffineTransform, transformedVector);
         // Place the consolidated result in the location
         location = location.put(new AxesLocation(inputAxes[0], rawVector[0][0]));

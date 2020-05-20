@@ -81,9 +81,7 @@ public class ReferenceHead extends AbstractHead {
             }
             
             // Reset the homing fiducial location as the new current location.
-            for (Driver driver : mappedAxes.getMappedDrivers(machine)) {
-                ((ReferenceDriver) driver).resetLocation(machine, new MappedAxes(mappedAxes, driver), axesHomingLocation);
-            }
+            machine.getMotionPlanner().resetLocation(machine, axesHomingLocation);
         }
         // Now that the machine is physically homed, do the logical homing.
         super.home();

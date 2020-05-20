@@ -19,7 +19,7 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.gui.wizards;
+package org.openpnp.machine.reference.axis.wizards;
 
 import javax.swing.JComboBox;
 import javax.swing.JLabel;

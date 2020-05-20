@@ -155,18 +155,35 @@ public class MappedAxes {
     }
 
     /**
-     * @return The current controller Location stored in the mapped axes. 
+     * @return The current Location stored in the mapped axes. 
      */
     public AxesLocation getLocation() {
         return new AxesLocation(getAxes()); 
     }
 
     /**
-     * Set the current controller Location stored in the mapped axes. 
+     * Set the current Location stored in the mapped axes. 
      */
     public void setLocation(AxesLocation location) {
         for (ControllerAxis axis : getAxes()) {
             axis.setLengthCoordinate(location.getLengthCoordinate(axis));
+        }
+    }
+    /**
+     * @return The Driver Location in raw motion-controller axes coordinates.
+     */
+    public AxesLocation getDriverLocation() {
+        return new AxesLocation(getAxes(), (axis) -> 
+        axis.getDriverLengthCoordinate().convertToUnits(AxesLocation.getUnits()).getValue()); 
+    }
+
+
+    /**
+     * Set the current driver Location stored in the mapped axes. 
+     */
+    public void setDriverLocation(AxesLocation location) {
+        for (ControllerAxis axis : getAxes()) {
+            axis.setDriverLengthCoordinate(location.getLengthCoordinate(axis));
         }
     }
 
@@ -226,7 +243,8 @@ public class MappedAxes {
     }
 
     /**
-     * Returns the axis with the specified variable name. 
+     * Returns the axis with the specified variable name. This should only be used inside MappedAxes
+     * of one driver.
      * 
      * @param variable The name of the variable.
      * @param usingLetterVariables If true, the letter name of the axis is used. This is the modern way. 

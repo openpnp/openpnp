@@ -45,7 +45,7 @@ import org.openpnp.spi.base.AbstractMachine;
  */
 public interface ReferenceDriver extends Driver, WizardConfigurable, PropertySheetHolder, Closeable {
     /**
-     * Performing the hardware homing operation for the given head with mappedAxes. When this call completes 
+     * Performing the hardware homing operation for the given machine mappedAxes. When this call completes 
      * the axes should be at the given location.  
      * 
      * @throws Exception

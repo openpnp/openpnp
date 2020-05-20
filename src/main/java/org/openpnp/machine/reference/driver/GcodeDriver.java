@@ -323,7 +323,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
 
         for (ControllerAxis axis : mappedAxes.getAxes()) {
             // Set this axis to the homed coordinate.
-            axis.setLengthCoordinate(axis.getHomeCoordinate());
+            axis.setDriverLengthCoordinate(axis.getHomeCoordinate());
         }
     }
 
@@ -364,7 +364,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                             axis.getLetter());
 
                     // Store the new current coordinate on the axis.
-                    axis.setCoordinate(coordinate);
+                    axis.setDriverCoordinate(coordinate);
                 }
                 else {
                     command = substituteVariable(command, variable, null);
@@ -389,8 +389,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 // Execute the command
                 sendGcode(postVisionHomeCommand, -1);
                 // Store the new current coordinate on the axis.
-                axisX.setLengthCoordinate(location.getLengthCoordinate(axisX));
-                axisY.setLengthCoordinate(location.getLengthCoordinate(axisY));
+                axisX.setDriverLengthCoordinate(location.getLengthCoordinate(axisX));
+                axisY.setDriverLengthCoordinate(location.getLengthCoordinate(axisY));
             }
         }
     }

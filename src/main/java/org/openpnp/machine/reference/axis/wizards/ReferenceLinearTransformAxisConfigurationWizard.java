@@ -32,7 +32,6 @@ import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.NamedConverter;
-import org.openpnp.gui.wizards.AbstractAxisConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.LinearInputAxis;

@@ -38,11 +38,16 @@ import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.SimulationModeMachine.SimulationMode;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
+
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import javax.swing.JCheckBox;
+import javax.swing.JButton;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class SimulationModeMachineConfigurationWizard extends AbstractConfigurationWizard {
 
@@ -57,6 +62,7 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
     private JTextField simulatedRunoutPhase;
     private JCheckBox pickAndPlaceChecking;
     private JTextField simulatedCameraLag;
+    private JTextField machineTableZ;
 
     public SimulationModeMachineConfigurationWizard(SimulationModeMachine machine) {
         this.machine = machine;
@@ -119,6 +125,10 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 RowSpec.decode("default:grow"),}));
 
         JLabel lblNonsquarenessFactor = new JLabel("Non-Squareness Factor");
@@ -155,10 +165,12 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
         panelLocations.add(pickAndPlaceChecking, "4, 10");
 
         JLabel lblVibrationAmplitude = new JLabel("Vibration Amplitude");
+        lblVibrationAmplitude.setEnabled(false);
         lblVibrationAmplitude.setToolTipText("Simulates Vibration after a move that will abate quickly. This is the amplitude.");
         panelLocations.add(lblVibrationAmplitude, "2, 12, right, default");
 
         simulatedVibrationAmplitude = new JTextField();
+        simulatedVibrationAmplitude.setEnabled(false);
         panelLocations.add(simulatedVibrationAmplitude, "4, 12, fill, default");
         simulatedVibrationAmplitude.setColumns(10);
 
@@ -170,8 +182,8 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
         panelLocations.add(simulatedCameraNoise, "4, 14");
         simulatedCameraNoise.setColumns(10);
         
-        JLabel lblCamersLags = new JLabel("Camers Lag [s]");
-        panelLocations.add(lblCamersLags, "2, 16, right, default");
+        JLabel lblCameraLags = new JLabel("Camera Lag [s]");
+        panelLocations.add(lblCameraLags, "2, 16, right, default");
         
         simulatedCameraLag = new JTextField();
         panelLocations.add(simulatedCameraLag, "4, 16, fill, default");
@@ -197,8 +209,33 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
         panelLocations.add(homingErrorY, "6, 22");
         homingErrorY.setColumns(10);
         
+        JButton btnResetFeeders = new JButton("Reset Feeders");
+        btnResetFeeders.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                machine.resetAllFeeders();
+            }
+        });
+        
+        JLabel lblMachineTableZ = new JLabel("Machine Table Z");
+        panelLocations.add(lblMachineTableZ, "2, 24, right, default");
+        
+        machineTableZ = new JTextField();
+        panelLocations.add(machineTableZ, "4, 24, fill, default");
+        machineTableZ.setColumns(10);
+        
+        JButton btnSetMachineTable = new JButton("Set Machine Table Z");
+        btnSetMachineTable.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                LengthConverter lengthConverter = new LengthConverter();
+                Length tableZ = lengthConverter.convertReverse(machineTableZ.getText());
+                machine.setMachineTableZ(tableZ);
+            }
+        });
+        panelLocations.add(btnSetMachineTable, "8, 24");
+        panelLocations.add(btnResetFeeders, "8, 26");
+        
         JLabel label = new JLabel(" ");
-        panelLocations.add(label, "2, 24");
+        panelLocations.add(label, "2, 28");
     }
 
     @Override
@@ -231,5 +268,7 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(homingErrorY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(homingErrorX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(homingErrorY);
+        
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(machineTableZ);
     }
 }

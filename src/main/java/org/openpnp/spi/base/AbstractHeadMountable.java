@@ -241,7 +241,8 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     @Override
     public Location getLocation() {
         MappedAxes mappedAxes = getMappedAxes(Configuration.get().getMachine());
-        Location location = toTransformed(mappedAxes.getLocation());
+        AxesLocation axesLocation = mappedAxes.getLocation();
+        Location location = toTransformed(axesLocation);
         // From head to HeadMountable.
         return toHeadMountableLocation(location);
     }

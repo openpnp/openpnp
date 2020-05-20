@@ -19,8 +19,6 @@
 
 package org.openpnp.machine.reference.driver;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
 import java.io.IOException;
 
 import org.openpnp.gui.support.Wizard;
@@ -30,6 +28,7 @@ import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.SimulationModeMachine;
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -37,21 +36,15 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.MappedAxes;
 import org.openpnp.model.Motion;
-import org.openpnp.model.AxesLocation.MotionLimits;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Axis.Type;
-import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.MotionPlanner.CompletionType;
-import org.openpnp.spi.ControllerAxis;
-import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Movable.MoveToOption;
-import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.base.AbstractControllerAxis;
 import org.openpnp.spi.base.AbstractDriver;
 import org.openpnp.util.NanosecondTime;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
 
 /**
  * An example of the simplest possible driver that can support multiple heads. This driver maintains
@@ -83,7 +76,7 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
         else {
             homingOffsets = new AxesLocation();
         }
-        mappedAxes.setLocation(new AxesLocation());
+        mappedAxes.setDriverLocation(new AxesLocation());
     }
 
 
@@ -91,8 +84,8 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
     public void resetLocation(ReferenceMachine machine, MappedAxes mappedAxes, AxesLocation location)
             throws Exception {
         Logger.debug("resetLocation("+location+")");
-        homingOffsets = mappedAxes.getMappedOnlyLocation(location.subtract(mappedAxes.getLocation()).add(homingOffsets));
-        mappedAxes.setLocation(location);
+        homingOffsets = mappedAxes.getMappedOnlyLocation(location.subtract(mappedAxes.getDriverLocation()).add(homingOffsets));
+        mappedAxes.setDriverLocation(location);
     }
 
     /**
@@ -108,12 +101,12 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
         // Get the location of this driver's axes.
         location = mappedAxes.getMappedOnlyLocation(location);
 
-        // Get the current location of the Head that we'll move
-        AxesLocation hl = mappedAxes.getLocation();
+        // Get the current location of the drivers. 
+        AxesLocation hl = mappedAxes.getDriverLocation();
 
         if (!mappedAxes.locationsMatch(hl, location)) {
-            mappedAxes.setLocation(location);
-            Logger.debug("Machine new location {}", new MappedAxes(Configuration.get().getMachine()).getLocation());
+            mappedAxes.setDriverLocation(location);
+            Logger.debug("Machine new location {}", new MappedAxes(Configuration.get().getMachine()).getDriverLocation());
         }
     }
 
@@ -198,18 +191,18 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
         createAxisMappingDefaults(machine);
         // Migrate feedrates etc.
         for (Axis axis : machine.getAxes()) {
-            if (axis instanceof AbstractControllerAxis) {
+            if (axis instanceof ReferenceControllerAxis) {
                 double feedRateMmPerMinute = this.feedRateMmPerMinute;
                 if (axis.getType() ==Type.Rotation) { 
                     // like in the original NullDriver simulation, rotation is at 10 x speed
                     feedRateMmPerMinute *= 10.0;
                 }
                 // Migrate the feedrate to the axes but change to mm/s.
-                ((AbstractControllerAxis) axis).setFeedratePerSecond(new Length(feedRateMmPerMinute/60.0, getUnits()));
+                ((ReferenceControllerAxis) axis).setFeedratePerSecond(new Length(feedRateMmPerMinute/60.0, getUnits()));
                 // Assume 0.5s average acceleration to reach top speed. With jerk control that is 4 x feedrate/s.
-                ((AbstractControllerAxis) axis).setAccelerationPerSecond2(new Length(feedRateMmPerMinute*4/60.0, getUnits()));
+                ((ReferenceControllerAxis) axis).setAccelerationPerSecond2(new Length(feedRateMmPerMinute*4/60.0, getUnits()));
                 // Assume full time +1/-1 jerk time.
-                ((AbstractControllerAxis) axis).setJerkPerSecond3(new Length(feedRateMmPerMinute*8/60.0, getUnits()));
+                ((ReferenceControllerAxis) axis).setJerkPerSecond3(new Length(feedRateMmPerMinute*8/60.0, getUnits()));
             }
         }
         ReferenceHead head = (ReferenceHead) machine.getDefaultHead();

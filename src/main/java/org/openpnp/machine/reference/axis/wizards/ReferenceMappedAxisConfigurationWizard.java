@@ -24,36 +24,32 @@ package org.openpnp.machine.reference.axis.wizards;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import org.jdesktop.beansbinding.AutoBinding;
+import org.jdesktop.beansbinding.BeanProperty;
+import org.jdesktop.beansbinding.Bindings;
+import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AxesComboBoxModel;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.NamedConverter;
-import org.openpnp.gui.wizards.AbstractAxisConfigurationWizard;
 import org.openpnp.machine.reference.axis.ReferenceMappedAxis;
+import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.base.AbstractControllerAxis;
 import org.openpnp.spi.base.AbstractMachine;
-import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeEvent;
-import org.jdesktop.beansbinding.BeanProperty;
-import org.jdesktop.beansbinding.AutoBinding;
-import org.jdesktop.beansbinding.Bindings;
-import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
-import org.openpnp.spi.Axis.Type;
-import javax.swing.JTextField;
 
 @SuppressWarnings("serial")
 public class ReferenceMappedAxisConfigurationWizard extends AbstractAxisConfigurationWizard {
-
     private JPanel panelTransformation;
     private JLabel lblInputAxis;
     private JComboBox inputAxis;
@@ -166,4 +162,6 @@ public class ReferenceMappedAxisConfigurationWizard extends AbstractAxisConfigur
         AutoBinding<JComboBox, Axis.Type, AxesComboBoxModel, Axis.Type> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ, type, jComboBoxBeanProperty, inputAxisModel, axesComboBoxModelBeanProperty);
         autoBinding.bind();
     }
+
+
 }

@@ -34,9 +34,10 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
 
 /**
- * A TransformedAxis for heads with dual linear Z axes powered by one motor. The two Z axes are
- * defined as normal and negated. Normal gets the raw coordinate value and negated gets the same
- * value negated. So, as normal moves up, negated moves down.
+ * The ReferenceMappedAxis can map from an input Axis using two coordinate points mapped to each other.
+ * Ultimately it is a single axis linear transformation but it calculates the scale and offset for you.
+ * It can do scaling, offset, negation, axis reversal etc. while hopefully being easy to setup without any
+ * linear math knowledge. 
  */
 public class ReferenceMappedAxis extends AbstractSingleTransformedAxis {
     @Element(required = false)
