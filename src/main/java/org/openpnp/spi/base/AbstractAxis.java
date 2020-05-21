@@ -13,14 +13,11 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Machine;
-import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.Movable.LocationOption;
+import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -90,12 +87,12 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
      * @param machine The Machine with the axes to be considered.
      * @return The set of ControllerAxes that are the ultimate input axes of the axis stack. 
      */
-    public abstract MappedAxes getControllerAxes(Machine machine);
-    public static MappedAxes getControllerAxes(AbstractAxis axis, Machine machine) {
+    public abstract AxesLocation getCoordinateAxes(Machine machine);
+    public static AxesLocation getCoordinateAxes(AbstractAxis axis, Machine machine) {
         if (axis != null) {
-            return axis.getControllerAxes(machine);
+            return axis.getCoordinateAxes(machine);
         }
-        return MappedAxes.empty;
+        return AxesLocation.zero;
     }
 
     /**

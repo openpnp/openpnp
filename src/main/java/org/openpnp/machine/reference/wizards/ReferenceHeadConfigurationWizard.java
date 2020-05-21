@@ -157,81 +157,6 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         JButton btnNewButton_1 = new JButton(positionParkCoordinatesAction);
         btnNewButton_1.setHideActionText(true);
         panel.add(btnNewButton_1, "10, 12");
-
-        JPanel panel_1 = new JPanel();
-        panel_1.setBorder(new TitledBorder(null, "Soft Limits", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
-        contentPanel.add(panel_1);
-        panel_1.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("max(80dlu;default)"),
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("center:default"),
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("center:default"),
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-
-        JLabel lblNewLabel = new JLabel("X");
-        panel_1.add(lblNewLabel, "4, 2");
-
-        JLabel lblNewLabel_1 = new JLabel("Y");
-        panel_1.add(lblNewLabel_1, "6, 2");
-
-        JLabel lblNewLabel_2 = new JLabel("Minimum");
-        panel_1.add(lblNewLabel_2, "2, 4, right, default");
-
-        minX = new JTextField();
-        panel_1.add(minX, "4, 4, fill, default");
-        minX.setColumns(10);
-
-        minY = new JTextField();
-        panel_1.add(minY, "6, 4, fill, default");
-        minY.setColumns(10);
-
-        JButton btncaptureMin = new JButton(captureMinCoordinatesAction);
-        btncaptureMin.setHideActionText(true);
-        panel_1.add(btncaptureMin, "8, 4");
-
-        JButton btnNewButton_3 = new JButton(positionMinCoordinatesAction);
-        btnNewButton_3.setHideActionText(true);
-        panel_1.add(btnNewButton_3, "10, 4");
-
-        JLabel lblNewLabel_3 = new JLabel("Maximum");
-        panel_1.add(lblNewLabel_3, "2, 6, right, default");
-
-        maxX = new JTextField();
-        panel_1.add(maxX, "4, 6, fill, default");
-        maxX.setColumns(10);
-
-        maxY = new JTextField();
-        panel_1.add(maxY, "6, 6, fill, default");
-        maxY.setColumns(10);
-
-        JButton btnNewButton_2 = new JButton(captureMaxCoordinatesAction);
-        btnNewButton_2.setHideActionText(true);
-        panel_1.add(btnNewButton_2, "8, 6");
-
-        JButton btnNewButton_4 = new JButton(positionMaxCoordinatesAction);
-        btnNewButton_4.setHideActionText(true);
-        panel_1.add(btnNewButton_4, "10, 6");
-                        
-                        JLabel lblEnabled = new JLabel("Enabled?");
-                        panel_1.add(lblEnabled, "2, 8, right, default");
-                
-                        softLimitsEnabled = new JCheckBox("");
-                        panel_1.add(softLimitsEnabled, "4, 8, left, default");
         
         JPanel panel_2 = new JPanel();
         panel_2.setBorder(new TitledBorder(null, "Z Probe", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -289,17 +214,6 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         addWrappedBinding(parkLocation, "lengthX", parkX, "text", lengthConverter);
         addWrappedBinding(parkLocation, "lengthY", parkY, "text", lengthConverter);
 
-        MutableLocationProxy minLocation = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, head, "minLocation", minLocation, "location");
-        addWrappedBinding(minLocation, "lengthX", minX, "text", lengthConverter);
-        addWrappedBinding(minLocation, "lengthY", minY, "text", lengthConverter);
-
-        MutableLocationProxy maxLocation = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, head, "maxLocation", maxLocation, "location");
-        addWrappedBinding(maxLocation, "lengthX", maxX, "text", lengthConverter);
-        addWrappedBinding(maxLocation, "lengthY", maxY, "text", lengthConverter);
-
-        addWrappedBinding(head, "softLimitsEnabled", softLimitsEnabled, "selected");
 
         addWrappedBinding(head, "zProbeActuatorName", comboBoxZProbeActuator, "selectedItem");
         addWrappedBinding(head, "pumpActuatorName", comboBoxPumpActuator, "selectedItem");
@@ -308,10 +222,6 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(homingFiducialY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(parkX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(parkY);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(minX);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(minY);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxX);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxY);
 
         adaptDialog();
     }
@@ -411,81 +321,8 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                 }
             };
 
-    private Action captureMinCoordinatesAction =
-            new AbstractAction("Get Camera Coordinates", Icons.captureCamera) {
-                {
-                    putValue(Action.SHORT_DESCRIPTION,
-                            "Capture the location that the camera is centered on.");
-                }
-
-                @Override
-                public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.messageBoxOnException(() -> {
-                        Location l = head.getDefaultCamera()
-                                         .getLocation();
-                        Helpers.copyLocationIntoTextFields(l, minX, minY, null, null);
-                    });
-                }
-            };
-
-    private Action positionMinCoordinatesAction =
-            new AbstractAction("Position Camera", Icons.centerCamera) {
-                {
-                    putValue(Action.SHORT_DESCRIPTION,
-                            "Position the camera over the center of the location.");
-                }
-
-                @Override
-                public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.submitUiMachineTask(() -> {
-                        Camera camera = head.getDefaultCamera();
-                        Location location = getParsedLocation(minX, minY);
-                        MovableUtils.moveToLocationAtSafeZ(camera, location);
-                    });
-                }
-            };
-
-    private Action captureMaxCoordinatesAction =
-            new AbstractAction("Get Camera Coordinates", Icons.captureCamera) {
-                {
-                    putValue(Action.SHORT_DESCRIPTION,
-                            "Capture the location that the camera is centered on.");
-                }
-
-                @Override
-                public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.messageBoxOnException(() -> {
-                        Location l = head.getDefaultCamera()
-                                         .getLocation();
-                        Helpers.copyLocationIntoTextFields(l, maxX, maxY, null, null);
-                    });
-                }
-            };
-    private Action positionMaxCoordinatesAction =
-            new AbstractAction("Position Camera", Icons.centerCamera) {
-                {
-                    putValue(Action.SHORT_DESCRIPTION,
-                            "Position the camera over the center of the location.");
-                }
-
-                @Override
-                public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.submitUiMachineTask(() -> {
-                        Camera camera = head.getDefaultCamera();
-                        Location location = getParsedLocation(maxX, maxY);
-                        MovableUtils.moveToLocationAtSafeZ(camera, location);
-                    });
-                }
-            };
-
-
-    private JTextField minX;
-    private JTextField minY;
-    private JTextField maxX;
-    private JTextField maxY;
     private JTextField parkX;
     private JTextField parkY;
-    private JCheckBox softLimitsEnabled;
     private JComboBox comboBoxZProbeActuator;
     private JComboBox comboBoxPumpActuator;
     private JTextField homingFiducialX;

@@ -7,7 +7,6 @@ import org.junit.Test;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
-import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.machine.reference.driver.test.TestDriver;
 import org.openpnp.machine.reference.driver.test.TestDriver.TestDriverDelegate;
@@ -19,7 +18,6 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.MappedAxes;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
@@ -159,7 +157,7 @@ public class BasicJobTest {
         }
 
         @Override
-        public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, AxesLocation location, double speed, MoveToOption... options)
+        public void moveTo(ReferenceHeadMountable hm, AxesLocation location, double speed, MoveToOption... options)
                 throws Exception {
             System.out.println(hm + " " + location);
             if (expectedOps.isEmpty()) {
@@ -174,7 +172,7 @@ public class BasicJobTest {
 
                 ExpectedMove move = (ExpectedMove) op;
 
-                if (!mappedAxes.locationsMatch(move.location, location) || hm != move.headMountable) {
+                if (!location.matches(move.location) || hm != move.headMountable) {
                     throw new Exception("Unexpected Move " + hm + " " + location + ". Expected " + op);
                 }
             }
@@ -220,7 +218,7 @@ public class BasicJobTest {
             public ExpectedMove(String description, HeadMountable headMountable, Location location,
                     double speed) throws Exception {
                 this.headMountable = headMountable;
-                // The expected location must be converted into raw coordinates but it is already a head location.  
+                // The expected location must be converted into raw coordinates, but it is already a head location.  
                 // DO NOT DO THIS: Location headLocation = headMountable.toHeadLocation(location);
                 this.location = headMountable.toRaw(location);
                 this.speed = speed;

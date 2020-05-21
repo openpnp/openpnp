@@ -26,7 +26,6 @@ import org.openpnp.machine.reference.axis.wizards.ReferenceVirtualAxisConfigurat
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Movable.LocationOption;
@@ -93,9 +92,9 @@ public class ReferenceVirtualAxis extends AbstractAxis implements CoordinateAxis
     }
 
     @Override
-    public MappedAxes getControllerAxes(Machine machine) {
-        // no controller axes
-        return MappedAxes.empty;
+    public AxesLocation getCoordinateAxes(Machine machine) {
+        // Yep, we're one.
+        return new AxesLocation(this);
     }
 
     @Override

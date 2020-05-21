@@ -1,6 +1,5 @@
 package org.openpnp.spi.base;
 
-import java.io.Closeable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,12 +14,9 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.Icon;
 
-import org.openpnp.machine.reference.ReferenceDriver;
-import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
@@ -30,8 +26,8 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.NozzleTip;
-import org.openpnp.spi.Signaler;
 import org.openpnp.spi.PartAlignment;
+import org.openpnp.spi.Signaler;
 import org.openpnp.util.IdentifiableList;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;

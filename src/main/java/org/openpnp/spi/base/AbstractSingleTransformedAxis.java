@@ -22,8 +22,8 @@
 package org.openpnp.spi.base;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.LinearInputAxis;
 import org.openpnp.spi.Machine;
 import org.simpleframework.xml.Attribute;
@@ -46,9 +46,9 @@ public abstract class AbstractSingleTransformedAxis extends AbstractTransformedA
     }
 
     @Override
-    public MappedAxes getControllerAxes(Machine machine) {
+    public AxesLocation getCoordinateAxes(Machine machine) {
         if (inputAxis != null) {
-            return inputAxis.getControllerAxes(machine);
+            return inputAxis.getCoordinateAxes(machine);
         }
         return null;
     }

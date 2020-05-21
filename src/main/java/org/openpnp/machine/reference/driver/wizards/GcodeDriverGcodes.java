@@ -83,17 +83,17 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         Machine machine = Configuration.get().getMachine();
         for (Head head : machine.getHeads()) {
             for (Nozzle hm : head.getNozzles()) {
-                if (!hm.getMappedAxes(machine, driver).isEmpty()) {
+                if (!hm.getMappedAxes(machine).drivenBy(driver).isEmpty()) {
                     comboBoxHm.addItem(new HeadMountableItem(hm));
                 }
             }
             for (Camera hm : head.getCameras()) {
-                if (!hm.getMappedAxes(machine, driver).isEmpty()) {
+                if (!hm.getMappedAxes(machine).drivenBy(driver).isEmpty()) {
                     comboBoxHm.addItem(new HeadMountableItem(hm));
                 }
             }
             for (Actuator hm : head.getActuators()) {
-                if (hm.getDriver() == driver || !hm.getMappedAxes(machine, driver).isEmpty()) {
+                if (hm.getDriver() == driver || !hm.getMappedAxes(machine).drivenBy(driver).isEmpty()) {
                     comboBoxHm.addItem(new HeadMountableItem(hm));
                 }
             }

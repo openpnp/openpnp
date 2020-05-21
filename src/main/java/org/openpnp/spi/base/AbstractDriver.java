@@ -11,7 +11,9 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -20,6 +22,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.Axis.Type;
 import org.simpleframework.xml.Attribute;
 
 public abstract class AbstractDriver extends AbstractModelObject implements Driver {
@@ -62,15 +65,20 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
             // Create and map the standard axes to the HeadMountables. 
             ReferenceControllerAxis axisX = migrateAxis(machine, Axis.Type.X, "");
             ReferenceControllerAxis axisY = migrateAxis(machine, Axis.Type.Y, "");
+
             for (Camera hm : machine.getDefaultHead().getCameras()) {
                 ((AbstractHeadMountable)hm).setAxisX(axisX);
                 ((AbstractHeadMountable)hm).setAxisY(axisY);
+                assignCameraVirtualAxes(machine, hm);
             }
             for (Nozzle hm : machine.getDefaultHead().getNozzles()) {
                 // Note, we create dedicated axes per Nozzle, assuming this is a test driver that does not
                 // care about shared/dedicated axes or a single nozzle test GcodeDriver.  
                 ReferenceControllerAxis axisZ = migrateAxis(machine, Axis.Type.Z, hm.getName());
                 ReferenceControllerAxis axisRotation = migrateAxis(machine, Axis.Type.Rotation, hm.getName());
+                if (hm instanceof ReferenceNozzle) {
+                    axisRotation.setLimitRotation(((ReferenceNozzle) hm).isLimitRotation());
+                }
                 ((AbstractHeadMountable)hm).setAxisX(axisX);
                 ((AbstractHeadMountable)hm).setAxisY(axisY);
                 ((AbstractHeadMountable)hm).setAxisZ(axisZ);
@@ -80,12 +88,30 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
         }
     }
 
+    protected void assignCameraVirtualAxes(ReferenceMachine machine, Camera hm) throws Exception {
+        // Assign virtual axes to cameras.
+        if (hm.getAxisZ() == null) {
+            ReferenceVirtualAxis axisZ = new ReferenceVirtualAxis();
+            axisZ.setType(Type.Z);
+            axisZ.setName("z"+hm.getName());
+            machine.addAxis(axisZ);
+            ((AbstractHeadMountable)hm).setAxisZ(axisZ);
+        }
+        if (hm.getAxisRotation() == null) {
+            ReferenceVirtualAxis axisRotation = new ReferenceVirtualAxis();
+            axisRotation.setType(Type.Rotation);
+            axisRotation.setName("rotation"+hm.getName());
+            machine.addAxis(axisRotation);
+            ((AbstractHeadMountable)hm).setAxisRotation(axisRotation);
+        }
+    }
+
     protected ReferenceControllerAxis migrateAxis(ReferenceMachine machine, Axis.Type type, String suffix)
             throws Exception {
         ReferenceControllerAxis axis;
         axis = new ReferenceControllerAxis();
         axis.setType(type);
-        axis.setName(type+suffix);
+        axis.setName(type.toString().toLowerCase()+suffix);
         axis.setDriver(this);
         machine.addAxis(axis);
         return axis;

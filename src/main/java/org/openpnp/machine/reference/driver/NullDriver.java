@@ -34,13 +34,11 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.MappedAxes;
 import org.openpnp.model.Motion;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Movable.MoveToOption;
-import org.openpnp.spi.base.AbstractControllerAxis;
 import org.openpnp.spi.base.AbstractDriver;
 import org.openpnp.util.NanosecondTime;
 import org.pmw.tinylog.Logger;
@@ -66,26 +64,38 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
     private AxesLocation homingOffsets = new AxesLocation();
 
     @Override
-    public void home(ReferenceMachine machine, MappedAxes mappedAxes) throws Exception {
+    public void home(ReferenceMachine machine) throws Exception {
         Logger.debug("home()");
         checkEnabled();
         if (machine instanceof SimulationModeMachine) {
             Location homingError = ((SimulationModeMachine) machine).getHomingError(); 
-            homingOffsets = mappedAxes.getTypedLocation(homingError);
+            homingOffsets = new AxesLocation(machine, this, (axis) 
+                    -> (axis.getType() == Axis.Type.X ? homingError.getLengthX() :
+                        axis.getType() == Axis.Type.Y ? homingError.getLengthY() : 
+                            null));
         }
         else {
             homingOffsets = new AxesLocation();
         }
-        mappedAxes.setDriverLocation(new AxesLocation());
+        // Store the new homing coordinates on the axes
+        AxesLocation homeLocation = new AxesLocation(machine, this, (axis) -> (axis.getHomeCoordinate()));
+        homeLocation.setToDriverCoordinates(this);
     }
 
 
     @Override
-    public void resetLocation(ReferenceMachine machine, MappedAxes mappedAxes, AxesLocation location)
+    public void setGlobalOffsets(ReferenceMachine machine, AxesLocation location)
             throws Exception {
-        Logger.debug("resetLocation("+location+")");
-        homingOffsets = mappedAxes.getMappedOnlyLocation(location.subtract(mappedAxes.getDriverLocation()).add(homingOffsets));
-        mappedAxes.setDriverLocation(location);
+        // Take only this driver's axes.
+        AxesLocation newDriverLocation = location.drivenBy(this);
+        // Take the current driver location of the given axes.
+        AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this), 
+                (axis) -> (axis.getDriverLengthCoordinate()));
+        Logger.debug("setGlobalOffsets("+oldDriverLocation+" -> "+newDriverLocation+")");
+        // Calculate the new machine to working coordinate system offset. 
+        homingOffsets = newDriverLocation.subtract(oldDriverLocation).add(homingOffsets);
+        // Store to axes
+        newDriverLocation.setToDriverCoordinates(this);
     }
 
     /**
@@ -94,25 +104,24 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
      * considerations when writing your own driver.
      */
     @Override
-    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, AxesLocation location, double speed, MoveToOption... options)
+    public void moveTo(ReferenceHeadMountable hm, AxesLocation location, double speed, MoveToOption... options)
             throws Exception {
         Logger.debug("moveTo({}, {}, {})", hm, location, speed);
         checkEnabled();
-        // Get the location of this driver's axes.
-        location = mappedAxes.getMappedOnlyLocation(location);
-
-        // Get the current location of the drivers. 
-        AxesLocation hl = mappedAxes.getDriverLocation();
-
-        if (!mappedAxes.locationsMatch(hl, location)) {
-            mappedAxes.setDriverLocation(location);
-            Logger.debug("Machine new location {}", new MappedAxes(Configuration.get().getMachine()).getDriverLocation());
+        // Take only this driver's axes.
+        AxesLocation newDriverLocation = location.drivenBy(this);
+        // Take the current driver location of the given axes.
+        AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this), 
+                (axis) -> (axis.getDriverLengthCoordinate()));
+        if (!oldDriverLocation.matches(newDriverLocation)) {
+            // Store to axes
+            newDriverLocation.setToDriverCoordinates(this);
+            Logger.debug("Machine new location {}", newDriverLocation);
         }
     }
 
     @Override
-    public void waitForCompletion(ReferenceHeadMountable hm, MappedAxes mappedAxes,
-            CompletionType completionType) throws Exception {
+    public void waitForCompletion(ReferenceHeadMountable hm, CompletionType completionType) throws Exception {
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
         while (! machine.getMotionPlanner()
                 .getMomentaryMotion(NanosecondTime.getRuntimeSeconds())
@@ -208,5 +217,11 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
         ReferenceHead head = (ReferenceHead) machine.getDefaultHead();
         // Use the lower left PCB fiducial as homing fiducial (but not enabling Visual Homing yet).
         head.setHomingFiducialLocation(new Location(LengthUnit.Millimeters, 5.736, 6.112, 0, 0));
+    }
+
+
+    @Override
+    public boolean isUsingLetterVariables() {
+        return false;
     }
 }

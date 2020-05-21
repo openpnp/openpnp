@@ -22,20 +22,15 @@
 package org.openpnp.machine.reference.axis;
 
 import java.util.Arrays;
-import java.util.List;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.axis.wizards.ReferenceCamCounterClockwiseAxisConfigurationWizard;
 import org.openpnp.machine.reference.axis.wizards.ReferenceLinearTransformAxisConfigurationWizard;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
-import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Axis;
-import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Movable.LocationOption;
 import org.openpnp.spi.base.AbstractAxis;
@@ -110,12 +105,12 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
     }
 
     @Override
-    public MappedAxes getControllerAxes(Machine machine) {
-        MappedAxes mappedAxes = new MappedAxes(machine,
-                AbstractAxis.getControllerAxes(inputAxisX, machine),
-                AbstractAxis.getControllerAxes(inputAxisY, machine),
-                AbstractAxis.getControllerAxes(inputAxisZ, machine),
-                AbstractAxis.getControllerAxes(inputAxisRotation, machine));
+    public AxesLocation getCoordinateAxes(Machine machine) {
+        AxesLocation mappedAxes = new AxesLocation((a, b) -> (a),
+                AbstractAxis.getCoordinateAxes(inputAxisX, machine),
+                AbstractAxis.getCoordinateAxes(inputAxisY, machine),
+                AbstractAxis.getCoordinateAxes(inputAxisZ, machine),
+                AbstractAxis.getCoordinateAxes(inputAxisRotation, machine));
         return mappedAxes;
     }
 

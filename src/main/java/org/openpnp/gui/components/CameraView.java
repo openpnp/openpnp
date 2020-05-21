@@ -1318,6 +1318,8 @@ public class CameraView extends JComponent implements CameraListener {
                 Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
                 // Add the offsets to the Camera's nozzle calibrated position.
                 Location location = camera.getLocation(nozzle).add(offsets);
+                // Only change X/Y. 
+                location = nozzle.getLocation().derive(location, true,  true,  false, false);
                 MovableUtils.moveToLocationAtSafeZ(nozzle, location);
             }
             else {

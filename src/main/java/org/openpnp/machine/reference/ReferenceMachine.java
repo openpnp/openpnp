@@ -37,6 +37,7 @@ import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceLinearTransformAxis;
 import org.openpnp.machine.reference.axis.ReferenceMappedAxis;
+import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.machine.reference.camera.OnvifIPCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
@@ -73,7 +74,6 @@ import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
@@ -252,6 +252,7 @@ public class ReferenceMachine extends AbstractMachine {
     public List<Class<? extends Axis>> getCompatibleAxisClasses() {
         List<Class<? extends Axis>> l = new ArrayList<>();
         l.add(ReferenceControllerAxis.class);
+        l.add(ReferenceVirtualAxis.class);
         l.add(ReferenceMappedAxis.class);
         l.add(ReferenceCamCounterClockwiseAxis.class);
         l.add(ReferenceCamClockwiseAxis.class);
@@ -338,7 +339,7 @@ public class ReferenceMachine extends AbstractMachine {
         // if one rehomes, the isHomed flag has to be removed
         this.setHomed(false);
         
-        getMotionPlanner().home(this);
+        getMotionPlanner().home();
         super.home();
 
         try {

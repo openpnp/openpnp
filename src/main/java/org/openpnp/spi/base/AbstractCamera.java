@@ -314,7 +314,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
             .setColor(new Color(0, 180, 0));
             // init the capture data
             settleGraph.getRow(BOOLEAN, CAPTURE)
-            .setColor(new Color(00, 0x5B, 0xD9)); // the OpenPNP color
+            .setColor(new Color(00, 0x5B, 0xD9)); // the OpenPNP blue
             return settleGraph;
         }
         else {

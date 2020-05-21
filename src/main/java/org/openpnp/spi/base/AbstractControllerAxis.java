@@ -1,17 +1,19 @@
 package org.openpnp.spi.base;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.MappedAxes;
+import org.openpnp.model.Location;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Movable.LocationOption;
+import org.openpnp.util.MovableUtils;
 import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
 
 public abstract class AbstractControllerAxis extends AbstractAxis implements ControllerAxis {
 
@@ -24,12 +26,15 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
     private String letter;
 
     /**
-     * The coordinate that will be reached when all pending motion has completed.
+     * The coordinate that will be reached when all pending motion has completed. 
+     * Always in driver units.
      */
     private double coordinate;
 
     /**
      * The coordinate that will be reached when the last motion sent by the driver has completed.
+     * Always in driver units.
+     * 
      */
     private double driverCoordinate;
 
@@ -48,7 +53,6 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
     public double getCoordinate() {
         return coordinate;
     }
-
     @Override
     public Length getLengthCoordinate() {
         return new Length(coordinate, getUnits());
@@ -61,15 +65,47 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
         firePropertyChange("coordinate", oldValue, coordinate);
         firePropertyChange("lengthCoordinate", null, getLengthCoordinate());
     }
-
     @Override
     public void setLengthCoordinate(Length coordinate) {
-        setCoordinate(coordinate.convertToUnits(getUnits()).getValue());
+        if (getType() == Type.Rotation) {
+            // Never convert rotation angles.
+            setCoordinate(coordinate.getValue());
+        }
+        else {
+            setCoordinate(coordinate.convertToUnits(AxesLocation.getUnits()).getValue());
+        }
     }
 
     @Override
-    public MappedAxes getControllerAxes(Machine machine) {
-        return new MappedAxes(this);
+    public AxesLocation getCoordinateAxes(Machine machine) {
+        return new AxesLocation(this);
+    }
+
+    @Override
+    public double getDriverCoordinate() {
+        return driverCoordinate;
+    }
+    @Override
+    public Length getDriverLengthCoordinate() {
+        return new Length(driverCoordinate, getUnits());
+    }
+
+    @Override
+    public void setDriverCoordinate(double driverCoordinate) {
+        Object oldValue = this.driverCoordinate;
+        this.driverCoordinate = driverCoordinate;
+        firePropertyChange("driverCoordinate", oldValue, driverCoordinate);
+        firePropertyChange("driverLengthCoordinate", null, getDriverLengthCoordinate());
+    }
+    @Override
+    public void setDriverLengthCoordinate(Length driverCoordinate) {
+        if (getType() == Type.Rotation) {
+            // Never convert rotation angles.
+            setDriverCoordinate(driverCoordinate.getValue());
+        }
+        else {
+            setDriverCoordinate(driverCoordinate.convertToUnits(getUnits()).getValue());
+        }
     }
 
     @Override
@@ -79,7 +115,7 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
 
     public void setDriver(Driver driver) {
         Object oldValue = this.driver;
-        this.driver = driver;
+        this.driver = (ReferenceDriver) driver;
         this.driverId = (driver == null) ? null : driver.getId();
         firePropertyChange("driver", oldValue, driver);
     }
@@ -118,10 +154,42 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
 
     @Override
     public boolean coordinatesMatch(Length coordinateA, Length coordinateB) {
-        double a = roundedToResolution(coordinateA.convertToUnits(getUnits()).getValue());
-        double b = roundedToResolution(coordinateB.convertToUnits(getUnits()).getValue());
+        return coordinatesMatch(
+                coordinateA.convertToUnits(getUnits()).getValue(),
+                coordinateB.convertToUnits(getUnits()).getValue());
+    }
+
+    @Override
+    public boolean coordinatesMatch(double coordinateA, double coordinateB) {
+        double a = roundedToResolution(coordinateA);
+        double b = roundedToResolution(coordinateB);
         return a == b;
     }
 
+    /**
+     * Tries to move the axis to the specified raw coordinate in a safe way. 
+     * 
+     * @param coordinate
+     * @throws Exception
+     */
+    public void moveAxis(Length coordinate) throws Exception {
+        // To be safe we need to go through a HeadMountable and the full motion stack.
+        // Find one that maps the axis.
+        HeadMountable axisMover = null;
+        for (HeadMountable hm : Configuration.get().getMachine().getDefaultHead().getHeadMountables()) {
+            if (hm.getMappedAxes(Configuration.get().getMachine()).contains(this)) {    
+                axisMover = hm;
+                break;
+            }
+        }
+        if (axisMover == null) {
+            throw new Exception("The axis "+getName()+" is not mapped to any HeadMountables. Can't move safely.");
+        }
+        axisMover.moveToSafeZ();
+        AxesLocation axesLocation = axisMover.toRaw(axisMover.toHeadLocation(axisMover.getLocation()))
+                .put(new AxesLocation(this, coordinate));
+        Location location = axisMover.toHeadMountableLocation(axisMover.toTransformed(axesLocation));
+        MovableUtils.moveToLocationAtSafeZ(axisMover, location);
+    }
 
 }

@@ -24,18 +24,31 @@ package org.openpnp.machine.reference.axis.wizards;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AxesComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.DriversComboBoxModel;
+import org.openpnp.gui.support.Helpers;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.machine.reference.feeder.BlindsFeeder;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
+import org.openpnp.model.Location;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.Axis.Type;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Driver;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.base.AbstractAxis;
+import org.openpnp.spi.base.AbstractControllerAxis;
 import org.openpnp.spi.base.AbstractMachine;
+import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -43,12 +56,18 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.JComboBox;
 import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
 import java.awt.event.ItemListener;
 import java.awt.event.ItemEvent;
 import java.awt.BorderLayout;
+import javax.swing.JCheckBox;
+import javax.swing.JButton;
+import javax.swing.AbstractAction;
+import java.awt.event.ActionEvent;
+import javax.swing.Action;
 
 @SuppressWarnings("serial")
 public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConfigurationWizard {
@@ -73,6 +92,88 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
     private JTextField accelerationPerSecond2;
     private JLabel lblJerks;
     private JTextField jerkPerSecond3;
+    private JLabel lblLimitRotation;
+    private JCheckBox limitRotation;
+    private JLabel lblWrapAroundRotation;
+    private JCheckBox wrapAroundRotation;
+    private JLabel lblSoftLimitLow;
+    private JLabel lblSoftLimitHigh;
+    private JTextField softLimitLow;
+    private JTextField softLimitHigh;
+    private JCheckBox softLimitLowEnabled;
+    private JCheckBox softLimitHighEnabled;
+    private JButton btnCaptureSoftLimitLow;
+    private JButton btnCaptureSoftLimitHigh;
+
+    private Action captureSoftLimitLowAction = new AbstractAction() {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Capture the current axis position as the low soft-limit.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.submitUiMachineTask(() -> {
+                Length position = ((AbstractControllerAxis) axis).getDriverLengthCoordinate();
+                SwingUtilities.invokeAndWait(() -> {
+                    LengthConverter lengthConverter = new LengthConverter();
+                    softLimitLow.setText(lengthConverter.convertForward(position));
+                });
+            });
+        }
+    };
+
+    private Action captureSoftLimitHighAction = new AbstractAction() {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Capture the current axis position as the high soft-limit.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.submitUiMachineTask(() -> {
+                Length position = ((AbstractControllerAxis) axis).getDriverLengthCoordinate();
+                SwingUtilities.invokeAndWait(() -> {
+                    LengthConverter lengthConverter = new LengthConverter();
+                    softLimitHigh.setText(lengthConverter.convertForward(position));
+                });
+            });
+        }
+    };
+    private JButton btnPositionsoftlimitlow;
+    private JButton btnPositionsoftlimithigh;
+
+    private Action positionSoftLimitLowAction = new AbstractAction() {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Position the axis to the low soft-limit coordinate.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            LengthConverter lengthConverter = new LengthConverter();
+            Length limit = lengthConverter.convertReverse(softLimitLow.getText());
+            UiUtils.submitUiMachineTask(() -> {
+                ((AbstractControllerAxis) axis).moveAxis(limit);
+            });
+        }
+    };
+
+    private Action positionSoftLimitHighAction = new AbstractAction() {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Position the axis to the high soft-limit coordinate.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            LengthConverter lengthConverter = new LengthConverter();
+            Length limit = lengthConverter.convertReverse(softLimitHigh.getText());
+            UiUtils.submitUiMachineTask(() -> {
+                ((AbstractControllerAxis) axis).moveAxis(limit);
+            });
+        }
+    };
 
     public ReferenceControllerAxisConfigurationWizard(ReferenceControllerAxis axis) {
         super(axis);
@@ -90,6 +191,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
@@ -146,11 +249,25 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         panelControllerSettings.add(resolution, "4, 10, fill, default");
         resolution.setColumns(10);
 
+        lblLimitRotation = new JLabel("Limit to ±180°");
+        lblLimitRotation.setToolTipText("Limit the rotation to -180° ... +180°. ");
+        panelControllerSettings.add(lblLimitRotation, "2, 12, right, default");
+
+        limitRotation = new JCheckBox("");
+        panelControllerSettings.add(limitRotation, "4, 12");
+
+        lblWrapAroundRotation = new JLabel("Wrap Around");
+        lblWrapAroundRotation.setToolTipText("<html>Always rotate the axis the shorter way around. E.g. if it is at 270° and is commanded <br/>\r\nto go to 0° it will instead go to 360°.<br/>\r\nIf this is combined with Limit to ±180°, the axis is reset to its wrap-around coordinate <br/>\r\nusing a driver Global Offset command. With the GcodeDriver you must configure the<br/> <code>SET_GLOBAL_OFFSETS_COMMAND</code> or this will not work.\r\n</html>\r\n");
+        panelControllerSettings.add(lblWrapAroundRotation, "2, 14, right, default");
+
+        wrapAroundRotation = new JCheckBox("");
+        panelControllerSettings.add(wrapAroundRotation, "4, 14");
+
         lblPremoveCommand = new JLabel("Pre-Move Command");
-        panelControllerSettings.add(lblPremoveCommand, "2, 14, right, top");
+        panelControllerSettings.add(lblPremoveCommand, "2, 16, right, top");
 
         scrollPane = new JScrollPane();
-        panelControllerSettings.add(scrollPane, "4, 14, 3, 1, fill, fill");
+        panelControllerSettings.add(scrollPane, "4, 16, 3, 1, fill, fill");
 
         preMoveCommand = new JTextArea();
         preMoveCommand.setRows(1);
@@ -163,6 +280,12 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {
                         FormSpecs.RELATED_GAP_ROWSPEC,
@@ -170,37 +293,98 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
+        lblSoftLimitLow = new JLabel("Soft Limit Low");
+        panelKinematics.add(lblSoftLimitLow, "2, 2, right, default");
+
+        softLimitLow = new JTextField();
+        panelKinematics.add(softLimitLow, "4, 2, fill, default");
+        softLimitLow.setColumns(10);
+
+        softLimitLowEnabled = new JCheckBox("Enabled?");
+        panelKinematics.add(softLimitLowEnabled, "6, 2");
+
+        btnCaptureSoftLimitLow = new JButton(captureSoftLimitLowAction);
+        btnCaptureSoftLimitLow.setText("<html><span style=\"color:#005BD9;\">┬</span></html>");
+        panelKinematics.add(btnCaptureSoftLimitLow, "8, 2");
+
+        btnPositionsoftlimitlow = new JButton(positionSoftLimitLowAction);
+        btnPositionsoftlimitlow.setText("<html><span style=\"color:red;\">┬</span></html>");
+        panelKinematics.add(btnPositionsoftlimitlow, "10, 2");
+
+        lblSoftLimitHigh = new JLabel("Soft Limit High");
+        panelKinematics.add(lblSoftLimitHigh, "2, 4, right, default");
+
+        softLimitHigh = new JTextField();
+        panelKinematics.add(softLimitHigh, "4, 4, fill, default");
+        softLimitHigh.setColumns(10);
+
+        softLimitHighEnabled = new JCheckBox("Enabled?");
+        panelKinematics.add(softLimitHighEnabled, "6, 4");
+
+        btnCaptureSoftLimitHigh = new JButton(captureSoftLimitHighAction);
+        btnCaptureSoftLimitHigh.setText("<html><span style=\"color:#005BD9;\">┴</span></html>");
+        panelKinematics.add(btnCaptureSoftLimitHigh, "8, 4");
+
+        btnPositionsoftlimithigh = new JButton(positionSoftLimitHighAction);
+        btnPositionsoftlimithigh.setText("<html><span style=\"color:red;\">┴</span></html>");
+        panelKinematics.add(btnPositionsoftlimithigh, "10, 4");
+
         lblFeedrates = new JLabel("Feedrate [/s]");
-        panelKinematics.add(lblFeedrates, "2, 2, right, default");
+        panelKinematics.add(lblFeedrates, "2, 6, right, default");
 
         feedratePerSecond = new JTextField();
-        panelKinematics.add(feedratePerSecond, "4, 2, fill, default");
+        panelKinematics.add(feedratePerSecond, "4, 6, fill, default");
         feedratePerSecond.setColumns(10);
 
         lblAccelerations = new JLabel("Acceleration [/s²]");
-        panelKinematics.add(lblAccelerations, "2, 4, right, default");
+        panelKinematics.add(lblAccelerations, "2, 8, right, default");
 
         accelerationPerSecond2 = new JTextField();
-        panelKinematics.add(accelerationPerSecond2, "4, 4, fill, default");
+        panelKinematics.add(accelerationPerSecond2, "4, 8, fill, default");
         accelerationPerSecond2.setColumns(10);
 
         lblJerks = new JLabel("Jerk [/s³]");
-        panelKinematics.add(lblJerks, "2, 6, right, default");
+        panelKinematics.add(lblJerks, "2, 10, right, default");
 
         jerkPerSecond3 = new JTextField();
-        panelKinematics.add(jerkPerSecond3, "4, 6, fill, default");
+        panelKinematics.add(jerkPerSecond3, "4, 10, fill, default");
         jerkPerSecond3.setColumns(10);
 
         driverConverter = new NamedConverter<>(Configuration.get().getMachine().getDrivers()); 
+        // Also adapt if the type of the axis changes
+        type.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                adaptDialog();
+            }
+        });
     }
 
     protected void adaptDialog() {
         Driver selectedDriver = driverConverter.convertReverse((String) driver.getSelectedItem());
         boolean showPreMove = (selectedDriver != null && selectedDriver.isSupportingPreMove());
+        boolean showRotationSettings = (Axis.Type)type.getSelectedItem() == Type.Rotation;
         lblPremoveCommand.setVisible(showPreMove);
         scrollPane.setVisible(showPreMove);
+
+        lblLimitRotation.setVisible(showRotationSettings);
+        limitRotation.setVisible(showRotationSettings);
+        lblWrapAroundRotation.setVisible(showRotationSettings);
+        wrapAroundRotation.setVisible(showRotationSettings);
+
+        lblSoftLimitLow.setVisible(!showRotationSettings);
+        lblSoftLimitHigh.setVisible(!showRotationSettings);
+        softLimitLow.setVisible(!showRotationSettings);
+        softLimitHigh.setVisible(!showRotationSettings);
+        softLimitLowEnabled.setVisible(!showRotationSettings);
+        softLimitHighEnabled.setVisible(!showRotationSettings);
+        btnCaptureSoftLimitLow.setVisible(!showRotationSettings);
+        btnCaptureSoftLimitHigh.setVisible(!showRotationSettings);
     }
 
     @Override
@@ -216,6 +400,14 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         addWrappedBinding(axis, "resolution", resolution, "text", doubleConverter);
         addWrappedBinding(axis, "preMoveCommand", preMoveCommand, "text");
 
+        addWrappedBinding(axis, "limitRotation", limitRotation, "selected");
+        addWrappedBinding(axis, "wrapAroundRotation", wrapAroundRotation, "selected");
+
+        addWrappedBinding(axis, "softLimitLow", softLimitLow, "text", lengthConverter);
+        addWrappedBinding(axis, "softLimitLowEnabled", softLimitLowEnabled, "selected");
+        addWrappedBinding(axis, "softLimitHigh", softLimitHigh, "text", lengthConverter);
+        addWrappedBinding(axis, "softLimitHighEnabled", softLimitHighEnabled, "selected");
+
         addWrappedBinding(axis, "feedratePerSecond", feedratePerSecond, "text", lengthConverter);
         addWrappedBinding(axis, "accelerationPerSecond2", accelerationPerSecond2, "text", lengthConverter);
         addWrappedBinding(axis, "jerkPerSecond3", jerkPerSecond3, "text", lengthConverter);
@@ -228,6 +420,17 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(jerkPerSecond3);
         ComponentDecorators.decorateWithAutoSelect(resolution);
 
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(softLimitLow);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(softLimitHigh);
+
         adaptDialog();
+    }
+    private class SwingAction extends AbstractAction {
+        public SwingAction() {
+            putValue(NAME, "SwingAction");
+            putValue(SHORT_DESCRIPTION, "Some short description");
+        }
+        public void actionPerformed(ActionEvent e) {
+        }
     }
 }

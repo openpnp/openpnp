@@ -21,28 +21,17 @@
 
 package org.openpnp.machine.reference.driver;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
-import org.openpnp.machine.reference.ReferenceDriver;
-import org.openpnp.machine.reference.ReferenceHeadMountable;
-import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.AxesLocation;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.AxesLocation.MotionLimits;
-import org.openpnp.model.MappedAxes;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Motion;
 import org.openpnp.model.Motion.Derivative;
 import org.openpnp.model.Motion.MotionOption;
-import org.openpnp.spi.Driver;
 import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.Machine;
-import org.openpnp.spi.MotionPlanner;
 import org.openpnp.spi.Movable.MoveToOption;
-import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.util.NanosecondTime;
-import org.pmw.tinylog.Logger;
 
 /**
  * Simplest possible implementation of the motion planner. Just plans constant velocity moves for NullDriver 
@@ -53,9 +42,9 @@ public abstract class AbstractSimpleMotionPlanner extends AbstractMotionPlanner 
 
 
     @Override
-    public synchronized void moveTo(HeadMountable hm, MappedAxes mappedAxes, AxesLocation axesLocation, double speed, MoveToOption... options) 
+    public void moveToPlanning(HeadMountable hm, AxesLocation axesLocation, double speed, MoveToOption... options) 
             throws Exception {
-        super.moveTo(hm, mappedAxes, axesLocation, speed, options);
+        super.moveToPlanning(hm, axesLocation, speed, options);
 
         // This guy is so primitive, we can plan right now.
 
@@ -83,8 +72,7 @@ public abstract class AbstractSimpleMotionPlanner extends AbstractMotionPlanner 
         else {
             // No lastMotion, create the previous waypoint from the axes. 
             // But take all the axes in the machine.
-            MappedAxes machineAxes = new MappedAxes(Configuration.get().getMachine());
-            AxesLocation previousLocation = machineAxes.getLocation(); 
+            AxesLocation previousLocation = new AxesLocation(Configuration.get().getMachine()); 
             lastMotion = new Motion(startTime, 
                     new AxesLocation [] { previousLocation }, 
                     MotionOption.FixedWaypoint, MotionOption.CoordinatedWaypoint);
@@ -97,7 +85,6 @@ public abstract class AbstractSimpleMotionPlanner extends AbstractMotionPlanner 
         axesLocation = lastLocation.put(axesLocation);
         AxesLocation delta = axesLocation
                 .subtract(lastLocation);
-        delta = mappedAxes.getMappedOnlyLocation(delta);
         MotionLimits limits = new MotionLimits(delta);
         if (limits.getLinearDistance() > 0 || limits.getRotationalDistance() > 0) {
             // @see NIST RS274NGC Interpreter - Version 3, Section 2.1.2.5 rule A
@@ -141,8 +128,7 @@ public abstract class AbstractSimpleMotionPlanner extends AbstractMotionPlanner 
         }
         else {
             // Nothing in the plan, just get the current axes location.
-            MappedAxes mappedAxes = new MappedAxes(Configuration.get().getMachine());
-            AxesLocation currentLocation = mappedAxes.getLocation(); 
+            AxesLocation currentLocation = new AxesLocation(Configuration.get().getMachine()); 
             return new Motion(time, 
                     new AxesLocation [] { currentLocation }, 
                     MotionOption.Stillstand);

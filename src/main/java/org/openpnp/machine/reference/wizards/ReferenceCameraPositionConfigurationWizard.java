@@ -54,6 +54,9 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
     private JComboBox axisZ;
     private JLabel lblAxis;
     private JLabel lblOffset;
+    private JComboBox axisRotation;
+    private JLabel lblRotation;
+    private JTextField textFieldOffRotation;
 
 
     public ReferenceCameraPositionConfigurationWizard(AbstractMachine machine, ReferenceCamera referenceCamera) {
@@ -91,6 +94,9 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         JLabel olblZ = new JLabel("Z");
         panelOffsets.add(olblZ, "8, 2");
         
+        lblRotation = new JLabel("Rotation");
+        panelOffsets.add(lblRotation, "10, 2");
+        
         lblAxis = new JLabel("Axis");
         panelOffsets.add(lblAxis, "2, 4, right, default");
         
@@ -102,6 +108,9 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         
         axisZ = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.Z, true));
         panelOffsets.add(axisZ, "8, 4, fill, default");
+        
+        axisRotation = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.Rotation, true));
+        panelOffsets.add(axisRotation, "10, 4, fill, default");
         
         lblOffset = new JLabel("Offset");
         panelOffsets.add(lblOffset, "2, 6, right, default");
@@ -118,6 +127,10 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         textFieldOffZ = new JTextField();
         panelOffsets.add(textFieldOffZ, "8, 6");
         textFieldOffZ.setColumns(8);
+        
+        textFieldOffRotation = new JTextField();
+        panelOffsets.add(textFieldOffRotation, "10, 6, fill, default");
+        textFieldOffRotation.setColumns(10);
 
         JPanel panelSafeZ = new JPanel();
         panelSafeZ.setBorder(new TitledBorder(null, "Safe Z", TitledBorder.LEADING,
@@ -228,6 +241,7 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
             addWrappedBinding(referenceCamera, "axisX", axisX, "selectedItem", axisConverter);
             addWrappedBinding(referenceCamera, "axisY", axisY, "selectedItem", axisConverter);
             addWrappedBinding(referenceCamera, "axisZ", axisZ, "selectedItem", axisConverter);
+            addWrappedBinding(referenceCamera, "axisRotation", axisRotation, "selectedItem", axisConverter);
 
             MutableLocationProxy headOffsets = new MutableLocationProxy();
             bind(UpdateStrategy.READ_WRITE, referenceCamera, "headOffsets", headOffsets,
@@ -235,12 +249,15 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
             addWrappedBinding(headOffsets, "lengthX", textFieldOffX, "text", lengthConverter);
             addWrappedBinding(headOffsets, "lengthY", textFieldOffY, "text", lengthConverter);
             addWrappedBinding(headOffsets, "lengthZ", textFieldOffZ, "text", lengthConverter);
+            addWrappedBinding(headOffsets, "rotation", textFieldOffRotation, "text", doubleConverter);
+            
             addWrappedBinding(referenceCamera, "safeZ", textFieldSafeZ, "text", lengthConverter);
         }
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffRotation);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationY);

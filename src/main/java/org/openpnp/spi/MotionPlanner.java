@@ -22,7 +22,6 @@
 package org.openpnp.spi;
 
 import org.openpnp.model.AxesLocation;
-import org.openpnp.model.MappedAxes;
 import org.openpnp.model.Motion;
 import org.openpnp.spi.Movable.MoveToOption;
 
@@ -32,8 +31,8 @@ import org.openpnp.spi.Movable.MoveToOption;
  * </p><ul>
  * <li>Accept/record a sequence of nominal moveTo() commands.</li>
  * <li>For advanced MotionPlanners, perform post-processing on the sequence. </li>
- * <li>Manage moments of coordinated completion with waitForCompletion().</li>
- * <li>In due time, commands the drivers/real controllers to execute the plan.</li>
+ * <li>Assert moments of coordinated completion with waitForCompletion().</li>
+ * <li>In due time, command the drivers to execute the plan.</li>
  * <li>Provide access to the planned motion over time for simulation, visualization etc. </li>
  * </ul>
  * <p>
@@ -53,14 +52,14 @@ import org.openpnp.spi.Movable.MoveToOption;
  * decelerate in time. 
  * </p><p>
  * Sometimes, motion might be recorded but no immediate waitForCompletion() is wanted. The most prominent
- * example is jogging, where the planner never knows if and when the user will press another button i.e.  
- * up-front (non-real-time) envelope motion planning is impossible, at least for the deceleration part. 
- * Motion control is mostly left to the hardware controller. All the MotionPlanner can do is setting more 
- * defensive deceleration parameters. 
+ * example is jogging, where the planner never knows if and when the user will press another button.  
+ * In this case up-front envelope motion planning is impossible, at least for the deceleration part. 
+ * Therefore motion control is mostly left to the hardware controller, perhaps with more conservative 
+ * deceleration parameters. 
  * </p><p>
  * The MotionPlanner must plan all the Axes of the machine, across all the Drivers. Therefore driver/controller
  * specific behavior must be modeled per Axis. The MotionPlanner should also try to approximate coordinated 
- * motion across controllers. A rough approximation should be enough for PnP purposes.  
+ * motion across controllers. A best-effort approximation should be enough for PnP purposes.  
  * </p><p>
  * Unless Length and Location are provided, units are Millimeters and Seconds.
  * </p>
@@ -69,44 +68,47 @@ import org.openpnp.spi.Movable.MoveToOption;
 public interface MotionPlanner {
 
     /**
-     * Performs the homing operation for the machine. This calls the home() methods of the underlying 
+     * Perform the homing operation. This calls the home() methods of the underlying 
      * drivers and resets any virtual axes.  
      * 
-     * @param machine
      * @throws Exception
      */
-    public void home(Machine machine) throws Exception;
+    public void home() throws Exception;
 
     /**
-     * Resets the current physical and virtual positions to the given coordinates. This is used after visual homing
-     * to make the homing fiducial's X, Y coordinates to be at their nominal location. In Gcode parlance this is 
-     * setting the Work Coordinate System. 
+     * Set the current physical or virtual axis positions to be reinterpreted as the specified coordinates. 
+     * Used after visual homing and to reset a rotation angle after it has wrapped around. 
+     * 
+     * In G-Code parlance this is setting a global offset:
+     * @see http://www.linuxcnc.org/docs/html/gcode/coordinates.html#_the_g92_commands
+     * @see http://smoothieware.org/g92-cnc
+     * @see https://github.com/synthetos/TinyG/wiki/Coordinate-Systems#offsets-to-the-offsets-g92  
      *  
      * @param machine
      * @param axesLocation 
      * @throws Exception
      */
-    public void resetLocation(Machine machine, AxesLocation axesLocation) throws Exception;
+    public void setGlobalOffsets(AxesLocation axesLocation) throws Exception;
 
 
     /**
      * Add a nominal moveTo() command to the motion sequence. Planner implementations are free to interpolate,
      * reorder, overlap and even slightly change the motion within the constraints of safe OpenPnP machine logic.
      *  
-     * Interpolation might include simulated Jerk control for constant acceleration controllers etc.
+     * - Interpolation might include simulated jerk control for constant acceleration controllers etc.
      * 
-     * Optimization might alter motion in the Safe Z Zone, like overlapping Nozzle rotations, Z<->XY motion blending, 
-     * allowing uncoordinated X/Y moves etc.  
+     * - Optimization might alter motion in the Safe Z Zone, like overlapping Nozzle rotations, Z<->XY motion blending, 
+     *   allowing uncoordinated X/Y moves for best acceleration etc.  
      * 
      * @param hm The HeadMountable having triggered the move. This is mostly for proprietary machine driver support  
      * and might only be a stand-in in some motion blending scenarios on the GcodeDriver.
-     * @param mappedAxes The axes mapped to the HeadMountable and wanted for this move.
      * @param axesLocation
      * @param speed
      * @param options
      * @throws Exception 
      */
-    void moveTo(HeadMountable hm, MappedAxes mappedAxes, AxesLocation axesLocation, double speed, MoveToOption... options) throws Exception;
+    void moveTo(HeadMountable hm, AxesLocation axesLocation, double speed, 
+            MoveToOption... options) throws Exception;
 
     public enum CompletionType {
         WaitForStillstand,
@@ -115,16 +117,14 @@ public interface MotionPlanner {
     /**
      * Perform a coordinated wait for completion. This will force planning and issuing of motion commands 
      * to the driver(s) and waiting for completion on all the drivers involved. This must be issued before 
-     * relying on a specific machine location e.g. before capturing camera frames.  
+     * relying on a specific machine positioning e.g. before capturing camera frames etc.  
      * 
-     * @param hm The HeadMountable we want to wait for. This is mostly for proprietary machine driver support  
-     * and might only be a stand-in in some motion blending scenarios on the GcodeDriver.
-     * @param mappedAxes If not null, wait only for the mappedAxes i.e. for the underlying drivers. In this
-     * case, no guarantees as to the coordination with other axes are given. 
+     * @param hm The HeadMountable to wait for. If a hm's axes map to only a sub-set of drivers, this will not
+     * wait for the other drivers and these are free to move on. If null, wait for all the drivers/machine axes. 
      * @param completionType The kind of completion wanted.
      * @throws Exception 
      */
-    void waitForCompletion(HeadMountable hm, MappedAxes mappedAxes, CompletionType completionType) throws Exception;
+    void waitForCompletion(HeadMountable hm, CompletionType completionType) throws Exception;
 
     /**
      * Get the planned motion at a certain time. It contains the nth order motion vector depending on the
@@ -136,7 +136,7 @@ public interface MotionPlanner {
     Motion getMomentaryMotion(double time);
 
     /**
-     * Get the momentary location at a certain time. Simpler shortcut for the getMomentaryMotion() call.
+     * Get the momentary location at a certain time. Simpler wrapper for the getMomentaryMotion() call.
      * 
      * @param time
      * @return
@@ -144,12 +144,26 @@ public interface MotionPlanner {
     AxesLocation getMomentaryLocation(double time);
 
     /**
-     * Clear the motion older than the given time from the memory of the motion planner. in addition to these 
-     * calls the MotionPlanner is free to do its own house-keeping and get rid of unreasonably antiquated 
-     * planning. 
+     * Clear the planning and recording older than the given time from the memory of the motion planner. The 
+     * MotionPlanner is free to do its own house-keeping and get rid of past planning data before this is called. 
      * 
      * @param time The start time of the motion to keep. This must be a time returned by waitForCompletion().
      * 
      */
     void clearMotionOlderThan(double time);
+    
+    Machine getMachine();
+
+    /**
+     * Limits the specified AxesLocation to nominal coordinates. Throws or returns null if a soft limit is 
+     * violated. Limits rotation axes to their limited or wrapped-around coordinates. 
+     * 
+     * @param hm
+     * @param axesLocation
+     * @param silent If true, returns null on soft limit violations rather than throwing Exceptions. 
+     * @return
+     * @throws Exception
+     */
+    AxesLocation limitAxesLocation(HeadMountable hm, AxesLocation axesLocation, boolean silent)
+            throws Exception;
 }

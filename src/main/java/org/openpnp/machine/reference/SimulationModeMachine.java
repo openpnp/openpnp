@@ -32,13 +32,11 @@ import org.openpnp.machine.reference.feeder.BlindsFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.wizards.SimulationModeMachineConfigurationWizard;
 import org.openpnp.model.AxesLocation;
-import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.MappedAxes;
 import org.openpnp.model.Motion;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
@@ -385,9 +383,9 @@ public class SimulationModeMachine extends ReferenceMachine {
                     .getMomentaryMotion(NanosecondTime.getRuntimeSeconds() - lag);
             AxesLocation axesLocation = momentary.getVector(Motion.Derivative.Location);
             //AxesLocation axesVelocity = momentary.getVector(Motion.Derivative.Velocity);
+            AxesLocation mappedAxes = hm.getMappedAxes(machine);
             try {
-                MappedAxes mappedAxes = hm.getMappedAxes(machine); 
-                for (Driver driver : mappedAxes.getMappedDrivers(machine)) {
+                for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
                     AxesLocation homingOffsets = null;
                     if (driver instanceof NullDriver) {
                         if (looking == Looking.Down) {

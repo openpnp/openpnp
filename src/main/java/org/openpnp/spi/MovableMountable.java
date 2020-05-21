@@ -2,7 +2,6 @@ package org.openpnp.spi;
 
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Location;
-import org.openpnp.model.MappedAxes;
 
 /**
  * Anything that can be mounted to the machine and is Movable has its mapped Axes.
@@ -22,19 +21,10 @@ public interface MovableMountable extends Movable {
     /**
      * Returns the set of motion-controller axes, mapped to the MovableMountable.
      * 
-     * @param machine The machine with the axes in proper order. 
+     * @param machine The machine giving the axes order. 
      * @return   
      */
-    MappedAxes getMappedAxes(Machine machine);
-
-    /**
-     * Same as getMappedAxes(Machine machine), but with the motion-controller axes filtered by one driver.
-     * 
-     * @param machine
-     * @param driver
-     * @return
-     */
-    MappedAxes getMappedAxes(Machine machine, Driver driver);
+    AxesLocation getMappedAxes(Machine machine);
 
     /**
      * Converts the specified raw motion-controller AxesLocation into a transformed Head Location. 

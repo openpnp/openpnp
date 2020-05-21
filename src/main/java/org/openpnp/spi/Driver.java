@@ -14,4 +14,6 @@ public interface Driver extends Identifiable, Named, Closeable, WizardConfigurab
     LengthUnit getUnits();
 
     boolean isSupportingPreMove();
+
+    boolean isUsingLetterVariables();
 }

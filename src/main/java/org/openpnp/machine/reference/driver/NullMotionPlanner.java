@@ -24,12 +24,15 @@ package org.openpnp.machine.reference.driver;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.MappedAxes;
+import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.Movable.MoveToOption;
+import org.openpnp.util.Utils2D;
 
 /**
  * Simplest possible implementation of the motion planner. Just proxies unmodified moveTo()s
@@ -39,28 +42,33 @@ import org.openpnp.spi.Movable.MoveToOption;
 public class NullMotionPlanner extends AbstractSimpleMotionPlanner {
 
     @Override
-    public void moveTo(HeadMountable hm, MappedAxes mappedAxes, AxesLocation axesLocation, double speed, MoveToOption... options) throws Exception {
-        super.moveTo(hm, mappedAxes, axesLocation, speed, options);
-        
+    public void moveToPlanning(HeadMountable hm, AxesLocation axesLocation, double speed, MoveToOption... options) throws Exception {
+        super.moveToPlanning(hm, axesLocation, speed, options);
+
         // The null motion planner is a pure proxy, so talk to the driver(s) immediately.
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
-        if (!mappedAxes.isEmpty()) {
-            for (Driver driver : mappedAxes.getMappedDrivers(machine)) {
-                ((ReferenceDriver) driver).moveTo((ReferenceHeadMountable) hm, new MappedAxes(mappedAxes, driver), axesLocation, speed, options);
-            }
+        boolean moved = false;
+        for (Driver driver : axesLocation.getAxesDrivers(machine)) {
+            ((ReferenceDriver) driver).moveTo((ReferenceHeadMountable) hm, axesLocation, speed, options);
+            moved = true;
+        }
+        if (moved) {
             machine.fireMachineHeadActivity(hm.getHead());
         }
     }
 
     @Override
-    public void waitForCompletion(HeadMountable hm, MappedAxes mappedAxes, CompletionType completionType) throws Exception {
-        // The null motion planner is a pure proxy, so talk to the driver(s) immediately.
+    public void waitForCompletion(HeadMountable hm, CompletionType completionType) throws Exception {
+        // The null motion planner is a pure proxy, so there is nothing left to do except wait for the driver(s).
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
+        AxesLocation mappedAxes = hm.getMappedAxes(machine);
         if (!mappedAxes.isEmpty()) {
-            for (Driver driver : mappedAxes.getMappedDrivers(machine)) {
-                ((ReferenceDriver) driver).waitForCompletion((ReferenceHeadMountable) hm, new MappedAxes(mappedAxes, driver), completionType);
+            for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
+                ((ReferenceDriver) driver).waitForCompletion((ReferenceHeadMountable) hm, completionType);
             }
             machine.fireMachineHeadActivity(hm.getHead());
         }
+        // Now the physical completion is done, go do the abstract stuff.
+        super.waitForCompletion(hm, completionType);
     }
 }

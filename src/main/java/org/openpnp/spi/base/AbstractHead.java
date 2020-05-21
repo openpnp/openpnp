@@ -41,14 +41,17 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     @Element(required = false)
     protected Location parkLocation = new Location(LengthUnit.Millimeters);
     
+    @Deprecated
     @Element(required=false)
     protected boolean softLimitsEnabled = false;
 
+    @Deprecated
     @Element(required = false)
-    protected Location minLocation = new Location(LengthUnit.Millimeters);
+    protected Location minLocation = null;
 
+    @Deprecated
     @Element(required = false)
-    protected Location maxLocation = new Location(LengthUnit.Millimeters);
+    protected Location maxLocation = null;
     
     @Element(required = false)
     protected String zProbeActuatorName;
@@ -302,30 +305,31 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
         return speed;
     }
 
+    @Deprecated
     public Location getMinLocation() {
         return minLocation;
     }
 
+    @Deprecated
     public void setMinLocation(Location minLocation) {
         this.minLocation = minLocation;
     }
 
+    @Deprecated
     public Location getMaxLocation() {
         return maxLocation;
     }
 
+    @Deprecated
     public void setMaxLocation(Location maxLocation) {
         this.maxLocation = maxLocation;
     }
 
+    @Deprecated
     public boolean isSoftLimitsEnabled() {
         return softLimitsEnabled;
     }
 
-    public void setSoftLimitsEnabled(boolean softLimitsEnabled) {
-        this.softLimitsEnabled = softLimitsEnabled;
-    }
-    
     @Override
     public Actuator getZProbe() {
         return getActuatorByName(zProbeActuatorName); 

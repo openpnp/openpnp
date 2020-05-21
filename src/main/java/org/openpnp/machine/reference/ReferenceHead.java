@@ -32,9 +32,8 @@ import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
-import org.openpnp.model.MappedAxes;
 import org.openpnp.model.Part;
-import org.openpnp.spi.Driver;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Movable.MoveToOption;
@@ -52,7 +51,7 @@ public class ReferenceHead extends AbstractHead {
         // Note, don't call super.home() yet, need to do the physical homing first.
         if (getVisualHomingMethod() != VisualHomingMethod.None) {
             /*
-             * The head camera should now be (if everything has homed correctly) directly
+             * The head default camera should now be (if everything has homed correctly) directly
              * above the homing pin in the machine bed, use the head camera scan for this and make sure
              * this is exactly central - otherwise we move the camera until it is, and then reset all
              * the axis back to the fiducial location as this is calibrated home.
@@ -70,18 +69,21 @@ public class ReferenceHead extends AbstractHead {
             }
 
             ReferenceMachine machine = getMachine();
-            MappedAxes mappedAxes = hm.getMappedAxes(machine); 
             AxesLocation axesHomingLocation;
             if (getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
-                // Convert to raw coordinates;  
+                // Convert fiducial location to raw coordinates
+                // TODO: are you sure the toHeadLocation() is needed?
                 axesHomingLocation = hm.toRaw(hm.toHeadLocation(getHomingFiducialLocation()));
             }
             else {
-                axesHomingLocation = mappedAxes.getHomeLocation(); 
+                // Use bare X, Y homing coordinates.
+                axesHomingLocation =  new AxesLocation(machine, 
+                        (axis) -> (axis.getHomeCoordinate())); 
             }
-            
-            // Reset the homing fiducial location as the new current location.
-            machine.getMotionPlanner().resetLocation(machine, axesHomingLocation);
+            // Just take the X and Y axes.
+            axesHomingLocation = axesHomingLocation.byType(Axis.Type.X, Axis.Type.Y); 
+            // Reset to the homing fiducial location as the new Working Coordinate System.
+            machine.getMotionPlanner().setGlobalOffsets(axesHomingLocation);
         }
         // Now that the machine is physically homed, do the logical homing.
         super.home();
@@ -126,20 +128,11 @@ public class ReferenceHead extends AbstractHead {
 
     @Override 
     public boolean isInsideSoftLimits(HeadMountable hm, Location location)  throws Exception {
-        if (isSoftLimitsEnabled()) {
-            /**
-             * Since minLocation and maxLocation are captured with the Camera's coordinates, we need
-             * to know where the Camera will land, not the HeadMountable.
-             */
-            if (hm instanceof ReferenceHeadMountable) {
-                Location cameraLocation = ((AbstractHeadMountable) hm).toHeadLocation(location);
-                cameraLocation = ((ReferenceCamera) getDefaultCamera()).toHeadMountableLocation(cameraLocation);
-                Location minLocation = this.minLocation.convertToUnits(cameraLocation.getUnits());
-                Location maxLocation = this.maxLocation.convertToUnits(cameraLocation.getUnits());
-                if (cameraLocation.getX() < minLocation.getX() || cameraLocation.getX() > maxLocation.getX() ||
-                        cameraLocation.getY() < minLocation.getY() || cameraLocation.getY() > maxLocation.getY()) {
-                    return false;
-                }
+        if (hm instanceof ReferenceHeadMountable) {
+            Location headLocation = ((AbstractHeadMountable) hm).toHeadLocation(location);
+            AxesLocation axesLocation = ((AbstractHeadMountable) hm).toRaw(headLocation);
+            if (getMachine().getMotionPlanner().limitAxesLocation(hm, axesLocation, true) == null) {
+                return false;
             }
         }
         return true;
@@ -148,17 +141,13 @@ public class ReferenceHead extends AbstractHead {
     @Override 
     public void moveTo(HeadMountable hm, Location location, double speed, MoveToOption... options) throws Exception {
         ReferenceMachine machine = getMachine();
-        MappedAxes mappedAxes = hm.getMappedAxes(machine);
+        AxesLocation mappedAxes = hm.getMappedAxes(machine);
         if (!mappedAxes.isEmpty()) {
-            if (! isInsideSoftLimits(hm, location)) {
-                throw new Exception(String.format("Can't move %s to %s, outside of soft limits on head %s.",
-                        hm.getName(), location, getName()));
-            }
             AxesLocation axesLocation = hm.toRaw(location);
-            machine.getMotionPlanner().moveTo(hm, mappedAxes, axesLocation, speed, options);
+            machine.getMotionPlanner().moveTo(hm, axesLocation, speed, options);
             // For now just do it immediately. TODO: implement smart wait for completion.
-            machine.getMotionPlanner().waitForCompletion(hm, mappedAxes, CompletionType.WaitForStillstand);
-            getMachine().fireMachineHeadActivity(this);
+            machine.getMotionPlanner().waitForCompletion(hm, CompletionType.WaitForStillstand);
+            machine.fireMachineHeadActivity(this);
         }
     }
 

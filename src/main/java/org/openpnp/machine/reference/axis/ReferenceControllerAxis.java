@@ -37,12 +37,39 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
 
     @Element(required = false)
     private Length backlashOffset = new Length(0.0, LengthUnit.Millimeters);
+    
+    /**
+     * If limitRotation is enabled the nozzle will reverse directions when commanded to rotate past
+     * 180 degrees. So, 190 degrees becomes -170 and -190 becomes 170.
+     */
+    @Attribute(required = false)
+    private boolean limitRotation = false;
+
+    /**
+     * If wrapAroundRotation is enabled the nozzle rotation will always wrap-arround the shorter way. If combined 
+     * with limitRotation the rotation angle will be reset on the controller to stay within +/-180° (if supported 
+     * by the driver setup i.e. needs special G-Code).
+     */
+    @Attribute(required = false)
+    private boolean wrapAroundRotation = false;
 
     @Element(required = false, data = true)
     private String preMoveCommand;
 
     @Element(required = false)
     private Length homeCoordinate = new Length(0.0, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Length softLimitLow = new Length(0.0, LengthUnit.Millimeters);
+    
+    @Attribute(required = false)
+    private boolean softLimitLowEnabled = false;
+
+    @Element(required = false)
+    private Length softLimitHigh = new Length(0.0, LengthUnit.Millimeters);
+
+    @Attribute(required = false)
+    private boolean softLimitHighEnabled = false;
 
     @Element(required = false)
     private Length feedratePerSecond = new Length(250, LengthUnit.Millimeters);
@@ -133,6 +160,54 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
 
     public void setBacklashOffset(Length backlashOffset) {
         this.backlashOffset = backlashOffset;
+    }
+
+    public boolean isLimitRotation() {
+        return limitRotation;
+    }
+
+    public void setLimitRotation(boolean limitRotation) {
+        this.limitRotation = limitRotation;
+    }
+
+    public boolean isWrapAroundRotation() {
+        return wrapAroundRotation;
+    }
+
+    public void setWrapAroundRotation(boolean wrapAroundRotation) {
+        this.wrapAroundRotation = wrapAroundRotation;
+    }
+
+    public Length getSoftLimitLow() {
+        return softLimitLow;
+    }
+
+    public void setSoftLimitLow(Length softLimitLow) {
+        this.softLimitLow = softLimitLow;
+    }
+
+    public boolean isSoftLimitLowEnabled() {
+        return softLimitLowEnabled;
+    }
+
+    public void setSoftLimitLowEnabled(boolean softLimitLowEnabled) {
+        this.softLimitLowEnabled = softLimitLowEnabled;
+    }
+
+    public Length getSoftLimitHigh() {
+        return softLimitHigh;
+    }
+
+    public void setSoftLimitHigh(Length softLimitHigh) {
+        this.softLimitHigh = softLimitHigh;
+    }
+
+    public boolean isSoftLimitHighEnabled() {
+        return softLimitHighEnabled;
+    }
+
+    public void setSoftLimitHighEnabled(boolean softLimitHighEnabled) {
+        this.softLimitHighEnabled = softLimitHighEnabled;
     }
 
     @Override

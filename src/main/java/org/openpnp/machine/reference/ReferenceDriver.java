@@ -22,14 +22,11 @@ package org.openpnp.machine.reference;
 import java.io.Closeable;
 
 import org.openpnp.model.AxesLocation;
-import org.openpnp.model.Location;
-import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.WizardConfigurable;
-import org.openpnp.spi.base.AbstractMachine;
 
 /**
  * Defines the interface for a simple driver that the ReferenceMachine can drive. All methods result
@@ -45,24 +42,30 @@ import org.openpnp.spi.base.AbstractMachine;
  */
 public interface ReferenceDriver extends Driver, WizardConfigurable, PropertySheetHolder, Closeable {
     /**
-     * Performing the hardware homing operation for the given machine mappedAxes. When this call completes 
-     * the axes should be at the given location.  
+     * Perform the hardware homing operation. When this completes the axes should be at their homing location. 
+     * The call might return before this physically happens, so a waitForCompletion() is needed if you need to be 
+     * sure.
      * 
+     * @param machine
+     * @param homeLocation
      * @throws Exception
      */
-    public void home(ReferenceMachine machine, MappedAxes mappedAxes) throws Exception;
+    public void home(ReferenceMachine machine) throws Exception;
 
     /**
-     * Resets the controller's current physical position to the given coordinates. This is used after visual homing
-     * to make the homing fiducial's X, Y coordinates to be at their nominal location. Other uses with other axes may 
-     * also be supported by the driver. 
+     * Set the current physical or virtual axis positions to be reinterpreted as the specified coordinates. 
+     * Used after visual homing and to reset a rotation angle after it has wrapped around. 
+     * 
+     * In G-Code parlance this is setting a global offset:
+     * @see http://www.linuxcnc.org/docs/html/gcode/coordinates.html#_the_g92_commands
+     * @see http://smoothieware.org/g92-cnc
+     * @see https://github.com/synthetos/TinyG/wiki/Coordinate-Systems#offsets-to-the-offsets-g92  
      *  
      * @param machine
-     * @param mappedAxes specifies the axes that should be reset
-     * @param location 
+     * @param axesLocation
      * @throws Exception
      */
-    public void resetLocation(ReferenceMachine machine, MappedAxes mappedAxes, AxesLocation location) throws Exception;
+    public void setGlobalOffsets(ReferenceMachine machine, AxesLocation axesLocation) throws Exception;
 
     /**
      * Moves the specified MappedAxes to the given location at a speed defined by (maximum feed
@@ -76,23 +79,18 @@ public interface ReferenceDriver extends Driver, WizardConfigurable, PropertyShe
      * @param options zero to n options from the MoveToOptions enum.
      * @throws Exception
      */
-    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, AxesLocation location, double speed, MoveToOption... options) throws Exception;
+    public void moveTo(ReferenceHeadMountable hm, AxesLocation axesLocation, double speed, MoveToOption... options) throws Exception;
 
     /**
      * Perform a coordinated wait for completion. This must be issued before capturing camera frames.
-     * @see org.openpnp.spi.MotionPlanner.waitForCompletion(HeadMountable, MappedAxes, CompletionType)  
+     * @see org.openpnp.spi.MotionPlanner.waitForCompletion(HeadMountable, CompletionType)  
      * 
-     * @param hm The HeadMountable we want to wait for. This is mostly for proprietary machine driver support  
-     * and might only be a stand-in in some motion blending scenarios on the GcodeDriver.
-     * @param mappedAxes If not null, wait only for the mappedAxes i.e. for the underlying drivers. In this
-     * case, no guarantees as to the coordination with other axes are given. 
+     * @param hm The HeadMountable to wait for. If null, wait for all the axes on the driver. Most drivers/controllers will probably 
+     * not be able to wait for just a sub-set of axes but the interface should allow for this. 
      * @param completionType The kind of completion wanted.
-     * @return The time when the MotionPlanner estimates this motion to complete. See the MotionPlanner 
-     * class description for more information about the internal time model. 
      * @throws Exception 
      */
-    public void waitForCompletion(ReferenceHeadMountable hm, MappedAxes mappedAxes,
-            CompletionType completionType) throws Exception;
+    public void waitForCompletion(ReferenceHeadMountable hm, CompletionType completionType) throws Exception;
 
     /**
      * Actuates a machine defined object with a boolean state.

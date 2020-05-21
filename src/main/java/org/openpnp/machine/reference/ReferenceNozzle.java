@@ -82,6 +82,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
      * If limitRotation is enabled the nozzle will reverse directions when commanded to rotate past
      * 180 degrees. So, 190 degrees becomes -170 and -190 becomes 170.
      */
+    @Deprecated
     @Attribute(required = false)
     private boolean limitRotation = true;
 
@@ -112,12 +113,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         this.id = id;
     }
     
+    @Deprecated
     public boolean isLimitRotation() {
         return limitRotation;
-    }
-
-    public void setLimitRotation(boolean limitRotation) {
-        this.limitRotation = limitRotation;
     }
 
     public boolean isEnableDynamicSafeZ() {
@@ -337,16 +335,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     @Override
     public Location toHeadLocation(Location location, Location currentLocation, LocationOption... options) {
         location = super.toHeadLocation(location, currentLocation);
-        // Nozzle rotation handling
-        if (limitRotation) {
-            //Set the rotation to be within the +/-180 degree range
-            location = location.derive(null, null, null,
-                    Utils2D.normalizeAngle180(location.getRotation()));
-        } else {
-            //Set the rotation to be the shortest way around from the current rotation
-            location = location.derive(null, null, null, currentLocation.getRotation() +
-                    Utils2D.normalizeAngle180(location.getRotation() - currentLocation.getRotation()));
-        }
         // Apply runout compensation.
         ReferenceNozzleTip calibrationNozzleTip = getCalibrationNozzleTip();
         // check if totally raw move, in that case disable nozzle calibration

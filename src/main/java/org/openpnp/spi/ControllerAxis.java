@@ -56,6 +56,9 @@ public interface ControllerAxis extends LinearInputAxis, CoordinateAxis {
 
     boolean coordinatesMatch(Length coordinateA, Length coordinateB);
 
+    boolean coordinatesMatch(double coordinateA, double coordinateB);
+
     int motionLimitsOrder = 3;
     double getMotionLimit(int order);
+
 }

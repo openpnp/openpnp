@@ -1,5 +1,7 @@
 package org.openpnp.spi.base;
 
+import java.util.Arrays;
+
 import org.openpnp.ConfigurationListener;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.model.AbstractModelObject;
@@ -8,10 +10,8 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
-import org.openpnp.spi.Driver;
 import org.openpnp.spi.Machine;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -146,19 +146,14 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     @Override
-    public MappedAxes getMappedAxes(Machine machine) {
-        return new MappedAxes(machine,
-                AbstractAxis.getControllerAxes(axisX, machine),
-                AbstractAxis.getControllerAxes(axisY, machine),
-                AbstractAxis.getControllerAxes(axisZ, machine),
-                AbstractAxis.getControllerAxes(axisRotation, machine));
+    public AxesLocation getMappedAxes(Machine machine) {
+        return new AxesLocation((a, b) -> (a),
+                AbstractAxis.getCoordinateAxes(axisX, machine),
+                AbstractAxis.getCoordinateAxes(axisY, machine),
+                AbstractAxis.getCoordinateAxes(axisZ, machine),
+                AbstractAxis.getCoordinateAxes(axisRotation, machine));
     }
 
-    @Override
-    public MappedAxes getMappedAxes(Machine machine, Driver driver) {
-        return new MappedAxes(getMappedAxes(machine), driver);
-    }
-    
     public Location toHeadLocation(Location location, Location currentLocation, LocationOption... options) {
         // Shortcut Double.NaN. Sending Double.NaN in a Location is an old API that should no
         // longer be used. It will be removed eventually:
@@ -240,8 +235,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
 
     @Override
     public Location getLocation() {
-        MappedAxes mappedAxes = getMappedAxes(Configuration.get().getMachine());
-        AxesLocation axesLocation = mappedAxes.getLocation();
+        AxesLocation axesLocation = getMappedAxes(Configuration.get().getMachine());
         Location location = toTransformed(axesLocation);
         // From head to HeadMountable.
         return toHeadMountableLocation(location);
@@ -250,43 +244,27 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     @Override
     public Location getApproximativeLocation(Location currentLocation, Location desiredLocation, LocationOption... options) 
             throws Exception {
-        // Convert the desired location to a raw location, applying the approximation options, 
-        // which means some extra motion for compensation effects is suppressed.
+        // Inverse-transform the desired location to a raw location, applying the approximation options, which means some 
+        // compensation effects are suppressed.
         Location desiredHeadLocation = toHeadLocation(desiredLocation, options);
         Location currentHeadLocation = toHeadLocation(currentLocation);
         AxesLocation desiredRawLocation = toRaw(desiredHeadLocation);
         AxesLocation currentRawLocation = toRaw(currentHeadLocation);
-        MappedAxes mappedAxes = getMappedAxes(getHead().getMachine());
         // Evaluate the Keep options. 
-        for (LocationOption option: options) {
-            ControllerAxis rawAxis;
-            switch (option) {
-                case KeepX:
-                    rawAxis = mappedAxes.getAxis(Axis.Type.X);
+        for (Axis axis : desiredRawLocation.getAxes()) {
+            if (axis instanceof ControllerAxis) {
+                ControllerAxis rawAxis = (ControllerAxis)axis;
+                if ((rawAxis.getType() == Axis.Type.X && Arrays.asList(options).contains(LocationOption.KeepX)) 
+                        && (rawAxis.getType() == Axis.Type.Y && Arrays.asList(options).contains(LocationOption.KeepY)) 
+                        && (rawAxis.getType() == Axis.Type.Z && Arrays.asList(options).contains(LocationOption.KeepZ)) 
+                        && (rawAxis.getType() == Axis.Type.Rotation && Arrays.asList(options).contains(LocationOption.KeepRotation))) {
                     desiredRawLocation = desiredRawLocation
                             .put(new AxesLocation(rawAxis, currentRawLocation.getCoordinate(rawAxis)));
-                    break;
-                case KeepY:
-                    rawAxis = mappedAxes.getAxis(Axis.Type.Y);
-                    desiredRawLocation = desiredRawLocation
-                            .put(new AxesLocation(rawAxis, currentRawLocation.getCoordinate(rawAxis)));
-                    break;
-                case KeepZ:
-                    rawAxis = mappedAxes.getAxis(Axis.Type.Z);
-                    desiredRawLocation = desiredRawLocation
-                            .put(new AxesLocation(rawAxis, currentRawLocation.getCoordinate(rawAxis)));
-                    break;
-                case KeepRotation:
-                    rawAxis = mappedAxes.getAxis(Axis.Type.Rotation);
-                    desiredRawLocation = desiredRawLocation
-                            .put(new AxesLocation(rawAxis, currentRawLocation.getCoordinate(rawAxis)));
-                    break;
-                default:
-                    break;
+                }
             }
         }    
-        // Now convert it back NOT applying any options, i.e. when a moveTo() is later made, 
-        // it will effectively reverse the option-less transformation and end up in the desired approximative location. 
+        // Now transform it forward, NOT applying any options, i.e. when a moveTo() is later made, it will effectively reverse 
+        // the option-less transformation and end up in the desired approximative location. 
         Location headApproximativeLocation = toTransformed(desiredRawLocation);
         Location approximativeLocation = toHeadMountableLocation(headApproximativeLocation);
         return approximativeLocation;

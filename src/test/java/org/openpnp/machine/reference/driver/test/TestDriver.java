@@ -12,7 +12,6 @@ import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.MappedAxes;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.PropertySheetHolder;
@@ -30,22 +29,29 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
     }
 
     @Override
-    public void home(ReferenceMachine machine, MappedAxes mappedAxes) throws Exception {
-        delegate.home(machine, mappedAxes);
+    public void home(ReferenceMachine machine) throws Exception {
+        delegate.home(machine);
     }
 
     @Override
-    public void resetLocation(ReferenceMachine machine, MappedAxes mappedAxes, AxesLocation location)
+    public void setGlobalOffsets(ReferenceMachine machine, AxesLocation location)
             throws Exception {
-        delegate.resetLocation(machine, mappedAxes, location);
+        delegate.setGlobalOffsets(machine, location);
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, AxesLocation location, double speed, MoveToOption... options)
+    public void moveTo(ReferenceHeadMountable hm, AxesLocation location, double speed, MoveToOption... options)
             throws Exception {
-        if (!mappedAxes.locationsMatch(mappedAxes.getDriverLocation(), location)) {
-            delegate.moveTo(hm, mappedAxes, location, speed);
-            mappedAxes.setDriverLocation(location);
+        
+        // Take only this driver's axes.
+        AxesLocation newDriverLocation = location.drivenBy(this);
+        // Take the current driver location of the given axes.
+        AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this), 
+                (axis) -> (axis.getDriverLengthCoordinate()));
+        if (!oldDriverLocation.matches(newDriverLocation)) {
+            delegate.moveTo(hm, location, speed);
+            // Store to axes
+            newDriverLocation.setToDriverCoordinates(this);
         }
     }
 
@@ -71,17 +77,17 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
         }
 
         @Override
-        public void home(ReferenceMachine machine, MappedAxes mappedAxes) throws Exception {
+        public void home(ReferenceMachine machine) throws Exception {
 
         }
 
         @Override
-        public void resetLocation(ReferenceMachine machine, MappedAxes mappedAxes, AxesLocation location)
+        public void setGlobalOffsets(ReferenceMachine machine, AxesLocation location)
                 throws Exception {
         }
  
         @Override
-        public void moveTo(ReferenceHeadMountable hm, MappedAxes mappedAxes, AxesLocation location, double speed, MoveToOption... options)
+        public void moveTo(ReferenceHeadMountable hm, AxesLocation location, double speed, MoveToOption... options)
                 throws Exception {
 
         }
@@ -156,13 +162,17 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
         }
 
         @Override
-        public void waitForCompletion(ReferenceHeadMountable hm, MappedAxes mappedAxes,
-                CompletionType completionType) throws Exception {
+        public void waitForCompletion(ReferenceHeadMountable hm, CompletionType completionType) throws Exception {
         }
 
         @Deprecated
         @Override
         public void migrateDriver(ReferenceMachine machine) throws Exception {
+        }
+
+        @Override
+        public boolean isUsingLetterVariables() {
+            return false;
         }
    }
 
@@ -207,8 +217,12 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
     }
 
     @Override
-    public void waitForCompletion(ReferenceHeadMountable hm, MappedAxes mappedAxes,
-            CompletionType completionType) throws Exception {
+    public void waitForCompletion(ReferenceHeadMountable hm, CompletionType completionType) throws Exception {
+    }
+
+    @Override
+    public boolean isUsingLetterVariables() {
+        return false;
     }
 
     @Deprecated
