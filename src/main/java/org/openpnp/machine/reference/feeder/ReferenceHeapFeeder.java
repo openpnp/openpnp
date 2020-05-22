@@ -76,7 +76,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      * To save time, store the depth of the last pick, so we did not need to start at the top every time.
      */
     @Attribute(required = false)
-    private double lastFeedDepth = 0;
+    private double lastFeedDepth = -5;
 
     /**
      * Three locations used to escape a "maze" of heaps.
@@ -758,8 +758,8 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             long  dropWait = System.currentTimeMillis() + Math.round(1.3 * (((ReferenceNozzle)nozzle).getPlaceDwellMilliseconds() + ((ReferenceNozzleTip)nozzle.getNozzleTip()).getPlaceDwellMilliseconds()));
             // move the nozzle a bit to help parts fall down
             while (System.currentTimeMillis() < dropWait) {
-                nozzle.moveTo(location.addWithRotation(new Location(LengthUnit.Millimeters, 1, 1, 0, 15)), 1, Movable.MoveToOption.SpeedOverPrecision);
-                nozzle.moveTo(location.addWithRotation(new Location(LengthUnit.Millimeters, -1, -1, 0, -15)), 1, Movable.MoveToOption.SpeedOverPrecision);
+                nozzle.moveTo(location.addWithRotation(new Location(LengthUnit.Millimeters, 0.5, 0.5, 0, 5)), 1, Movable.MoveToOption.SpeedOverPrecision);
+                nozzle.moveTo(location.addWithRotation(new Location(LengthUnit.Millimeters, -0.5, -0.5, 0, -5)), 1, Movable.MoveToOption.SpeedOverPrecision);
             }
             if (!nozzle.isPartOff()) {
                 throw new Exception("DropBox " + getName() + ": Dropping part failed, check nozzle tip");
