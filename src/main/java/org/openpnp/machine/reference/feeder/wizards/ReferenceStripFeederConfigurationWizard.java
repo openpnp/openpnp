@@ -52,15 +52,7 @@ import org.openpnp.gui.components.CameraViewActionListener;
 import org.openpnp.gui.components.CameraViewFilter;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
-import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.DoubleConverter;
-import org.openpnp.gui.support.Helpers;
-import org.openpnp.gui.support.IdentifiableListCellRenderer;
-import org.openpnp.gui.support.IntegerConverter;
-import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.support.MutableLocationProxy;
-import org.openpnp.gui.support.PartsComboBoxModel;
+import org.openpnp.gui.support.*;
 import org.openpnp.machine.reference.camera.BufferedImageCamera;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder.TapeType;
@@ -70,6 +62,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Pipeline;
 import org.openpnp.util.HslColor;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
@@ -96,7 +89,6 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JPanel panelPart;
 
     private JComboBox comboBoxPart;
-
     private JTextField textFieldFeedStartX;
     private JTextField textFieldFeedStartY;
     private JTextField textFieldFeedStartZ;
@@ -119,6 +111,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JTextField textFieldLocationRotation;
     private JButton btnAutoSetup;
     private JCheckBox chckbxUseVision;
+    private JLabel lblSelectPipeline;
+    private JComboBox<Pipeline> comboBoxPipeline;
     private JLabel lblUseVision;
     private JLabel lblPart;
     private JLabel lblRetryCount;
@@ -254,14 +248,25 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelVision.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                }));
 
         lblUseVision = new JLabel("Use Vision?");
         panelVision.add(lblUseVision, "2, 2");
 
         chckbxUseVision = new JCheckBox("");
         panelVision.add(chckbxUseVision, "4, 2");
+
+        lblSelectPipeline = new JLabel("Select Pipeline");
+        panelVision.add(lblSelectPipeline, "2, 4");
+
+        comboBoxPipeline = new JComboBox<>();
+        comboBoxPipeline.setModel(new PipelinesComboBoxModel());
+        comboBoxPipeline.setRenderer(new NamedListCellRenderer<Pipeline>());
+        panelVision.add(comboBoxPipeline, "4, 4, left, default");
 
         JButton btnEditPipeline = new JButton("Edit Pipeline");
         btnEditPipeline.addActionListener(new ActionListener() {
@@ -271,7 +276,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 });
             }
         });
-        panelVision.add(btnEditPipeline, "2, 4");
+        panelVision.add(btnEditPipeline, "2, 6");
 
         JButton btnResetPipeline = new JButton("Reset Pipeline");
         btnResetPipeline.addActionListener(new ActionListener() {
@@ -279,7 +284,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 resetPipeline();
             }
         });
-        panelVision.add(btnResetPipeline, "4, 4");
+        panelVision.add(btnResetPipeline, "4, 6");
 
         panelLocations = new JPanel();
         contentPanel.add(panelLocations);
@@ -383,6 +388,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         addWrappedBinding(feedEndLocation, "lengthY", textFieldFeedEndY, "text", lengthConverter);
         addWrappedBinding(feedEndLocation, "lengthZ", textFieldFeedEndZ, "text", lengthConverter);
 
+        addWrappedBinding(feeder, "pipeline", comboBoxPipeline, "selectedItem");
         addWrappedBinding(feeder, "visionEnabled", chckbxUseVision, "selected");
 
         ComponentDecorators.decorateWithAutoSelect(textFieldLocationRotation);
@@ -930,7 +936,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         Integer pxMaxDiameter = (int) VisionUtils.toPixels(feeder.getHoleDiameterMax(), camera);
 
         try {
-            CvPipeline pipeline = feeder.getPipeline();;
+            CvPipeline pipeline = feeder.getCvPipeline();;
             if (clone) {
                 pipeline = pipeline.clone();
             }

@@ -13,10 +13,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Point;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PartAlignment;
+import org.openpnp.spi.*;
 import org.openpnp.spi.PartAlignment.PartAlignmentOffset;
 import org.pmw.tinylog.Logger;
 
@@ -129,6 +126,18 @@ public class VisionUtils {
             }
         }
         throw new Exception("No up-looking camera found on the machine to use for bottom vision.");
+    }
+
+    public static Camera getTopVisionCamera() throws Exception {
+        for (Head head : Configuration.get().getMachine().getHeads()) {
+            for (Camera camera : head.getCameras()) {
+                if (camera.getLooking() == Camera.Looking.Down) {
+                    return camera;
+                }
+            }
+        }
+
+        throw new Exception("No down-looking camera found on the machine to use for top vision.");
     }
     
     public static double toPixels(Length length, Camera camera) {

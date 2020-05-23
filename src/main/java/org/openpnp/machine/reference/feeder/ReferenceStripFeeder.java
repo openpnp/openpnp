@@ -19,24 +19,18 @@
 
 package org.openpnp.machine.reference.feeder;
 
-
-
 import java.util.List;
 
 import javax.swing.Action;
 
 import org.apache.commons.io.IOUtils;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceStripFeederConfigurationWizard;
-import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
-import org.openpnp.model.Point;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.model.*;
+import org.openpnp.spi.*;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.Utils2D;
@@ -102,8 +96,10 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     @Attribute(required = false)
     private boolean visionEnabled = true;
 
-    @Element(required = false)
-    private CvPipeline pipeline = createDefaultPipeline();
+    @Attribute(required = false)
+    protected String pipelineId;
+
+    protected Pipeline pipeline;
 
     @Attribute
     private int feedCount = 0;
@@ -115,6 +111,18 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     private Length referenceHoleToPartLinear = new Length(2, LengthUnit.Millimeters);
 
     private Location visionLocation;
+
+    public ReferenceStripFeeder() {
+        super();
+
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationLoaded(Configuration configuration) throws Exception {
+                Machine machine = configuration.getMachine();
+                pipeline = machine.getPipeline(pipelineId);
+            }
+        });
+    }
 
     public Length getHoleDiameterMin() {
         return getHoleDiameter().multiply(0.9);
@@ -253,7 +261,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 
     private Location findClosestHole(Camera camera) throws Exception {
-        try (CvPipeline pipeline = getPipeline()) {
+        try (CvPipeline pipeline = getCvPipeline()) {
             Integer pxMinDistance = (int) VisionUtils.toPixels(getHolePitchMin(), camera);
             Integer pxMinDiameter = (int) VisionUtils.toPixels(getHoleDiameterMin(), camera);
             Integer pxMaxDiameter = (int) VisionUtils.toPixels(getHoleDiameterMax(), camera);
@@ -303,12 +311,27 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         }
     }
 
-    public CvPipeline getPipeline() {
-        return pipeline;
+    public CvPipeline getCvPipeline() throws NullPointerException {
+        return pipeline.getCvPipeline();
     }
 
     public void resetPipeline() {
-        pipeline = createDefaultPipeline();
+        try {
+            pipeline.resetCvPipeline();
+        } catch (Exception ignored) {
+            // TODO Handle no pipeline present
+        }
+    }
+
+    public Pipeline getPipeline() {
+        return pipeline;
+    }
+
+    public void setPipeline(Pipeline pipeline) {
+        Object oldValue = this.pipeline;
+        this.pipeline = pipeline;
+        firePropertyChange("pipeline", oldValue, pipeline);
+        this.pipelineId = pipeline.getId();
     }
 
     private Length getHoleToPartLateral() {

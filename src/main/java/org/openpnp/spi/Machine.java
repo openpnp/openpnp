@@ -75,6 +75,14 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public Camera getCamera(String id);
 
     /**
+     * Gets a global list of defined pipelines which can be reused in other places
+     * @return
+     */
+    public List<Pipeline> getPipelines();
+
+    public Pipeline getPipeline(String id);
+
+    /**
      * Get a list of Actuators that are attached to this Machine and not to a Head.
      * 
      * @return
@@ -147,6 +155,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public List<Class<? extends Signaler>> getCompatibleSignalerClasses();
 
+    public List<Class<? extends Pipeline>> getCompatiblePipelineClasses();
+
     public void addFeeder(Feeder feeder) throws Exception;
 
     public void removeFeeder(Feeder feeder);
@@ -162,6 +172,10 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public void addActuator(Actuator actuator) throws Exception;
 
     public void removeActuator(Actuator actuator);
+
+    public void addPipeline(Pipeline pipeline) throws Exception;
+
+    public void removePipeline(Pipeline pipeline);
 
     public PnpJobProcessor getPnpJobProcessor();
     

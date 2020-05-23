@@ -54,26 +54,16 @@ import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.machine.reference.feeder.SchultzFeeder;
 import org.openpnp.machine.reference.feeder.SlotSchultzFeeder;
-import org.openpnp.machine.reference.psh.ActuatorsPropertySheetHolder;
-import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
-import org.openpnp.machine.reference.psh.NozzleTipsPropertySheetHolder;
-import org.openpnp.machine.reference.psh.SignalersPropertySheetHolder;
+import org.openpnp.machine.reference.pipeline.ReferenceBottomPipeline;
+import org.openpnp.machine.reference.pipeline.ReferenceStripFeederPipeline;
+import org.openpnp.machine.reference.psh.*;
 import org.openpnp.machine.reference.signaler.ActuatorSignaler;
 import org.openpnp.machine.reference.signaler.SoundSignaler;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
 import org.openpnp.model.Configuration;
-import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.Feeder;
-import org.openpnp.spi.FiducialLocator;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PartAlignment;
-import org.openpnp.spi.PnpJobProcessor;
-import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.Signaler;
+import org.openpnp.spi.*;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.pmw.tinylog.Logger;
@@ -194,6 +184,7 @@ public class ReferenceMachine extends AbstractMachine {
             vision.add(alignment);
         }
         vision.add(getFiducialLocator());
+        vision.add(new PipelinesPropertySheetHolder(this, "Pipelines", getPipelines(), null));
         children.add(new SimplePropertySheetHolder("Vision", vision));
         return children.toArray(new PropertySheetHolder[] {});
     }
@@ -270,6 +261,14 @@ public class ReferenceMachine extends AbstractMachine {
         List<Class<? extends Signaler>> l = new ArrayList<>();
         l.add(SoundSignaler.class);
         l.add(ActuatorSignaler.class);
+        return l;
+    }
+
+    @Override
+    public List<Class<? extends Pipeline>> getCompatiblePipelineClasses() {
+        List<Class<? extends Pipeline>> l = new ArrayList<>();
+        l.add(ReferenceBottomPipeline.class);
+        l.add(ReferenceStripFeederPipeline.class);
         return l;
     }
 

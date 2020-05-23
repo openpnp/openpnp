@@ -17,15 +17,7 @@ import javax.swing.Icon;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.Feeder;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.Machine;
-import org.openpnp.spi.MachineListener;
-import org.openpnp.spi.NozzleTip;
-import org.openpnp.spi.Signaler;
-import org.openpnp.spi.PartAlignment;
+import org.openpnp.spi.*;
 import org.openpnp.util.IdentifiableList;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -64,6 +56,9 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     @ElementList(required = false)
     protected IdentifiableList<Actuator> actuators = new IdentifiableList<>();
+
+    @ElementList(required = false)
+    protected IdentifiableList<Pipeline> pipelines = new IdentifiableList<>();
 
     @ElementList(required = false)
     protected IdentifiableList<PartAlignment> partAlignments = new IdentifiableList<>();
@@ -142,6 +137,16 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @Override
     public Camera getCamera(String id) {
         return cameras.get(id);
+    }
+
+    @Override
+    public List<Pipeline> getPipelines() {
+        return Collections.unmodifiableList(pipelines);
+    }
+
+    @Override
+    public Pipeline getPipeline(String id) {
+        return pipelines.get(id);
     }
 
     @Override
@@ -225,6 +230,20 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         int index = cameras.indexOf(camera);
         if (cameras.remove(camera)) {
             fireIndexedPropertyChange("cameras", index, camera, null);
+        }
+    }
+
+    @Override
+    public void addPipeline(Pipeline pipeline) throws Exception {
+        pipelines.add(pipeline);
+        fireIndexedPropertyChange("pipelines", pipelines.size() - 1, null, pipeline);
+    }
+
+    @Override
+    public void removePipeline(Pipeline pipeline) {
+        int index = pipelines.indexOf(pipeline);
+        if (pipelines.remove(pipeline)) {
+            fireIndexedPropertyChange("pipelines", index, pipeline, null);
         }
     }
     
