@@ -11,6 +11,8 @@ import org.openpnp.machine.reference.driver.SerialPortCommunications.FlowControl
 import org.openpnp.machine.reference.driver.SerialPortCommunications.Parity;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.StopBits;
 import org.openpnp.machine.reference.driver.wizards.AbstractReferenceDriverConfigurationWizard;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.base.AbstractDriver;
 import org.openpnp.spi.base.AbstractMachine;
 import org.pmw.tinylog.Logger;

@@ -22,6 +22,7 @@ package org.openpnp.machine.reference;
 import java.io.Closeable;
 
 import org.openpnp.model.AxesLocation;
+import org.openpnp.model.Motion;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Movable.MoveToOption;
@@ -32,13 +33,18 @@ import org.openpnp.spi.WizardConfigurable;
  * Defines the interface for a simple driver that the ReferenceMachine can drive. All methods result
  * in machine operations and most methods should block until they are complete or throw an error.
  * 
- * This Driver interface is intended to model a machine with one or more Heads, and each Head having
- * one or more Nozzles and zero or more Cameras and Actuators.
+ * This Driver interface is intended to talk to one controller with Axes and Actuators attached.
  * 
  * In OpenPnP, the Head does not move on it's own. It is moved by the moving of attached objects:
- * Nozzles, Cameras, Actuators. For this reason, all movements on the driver are specified as
- * movements by one of these objects. This allows the driver to make decisions as to what axes
- * should be moved to accomplish a specific task.
+ * Nozzles, Cameras, Actuators, so-called HeadMountables. The HeadMountables specify with which axes 
+ * they are moved. The axes are in turn assigned to the Driver. When you move a HeadMountable the 
+ * MotionPlanner will determine which axes are involved and call the drivers accordingly. 
+ * 
+ * Drivers should only expose the functionality of the controller in a unified way. They should not add 
+ * any additional logic on top like axis mapping, transformations etc. other than what is needed to make
+ * the controller behave like any other controller. This is different from previous versions of OpenPnP 
+ * where the driver did much more.
+ * 
  */
 public interface ReferenceDriver extends Driver, WizardConfigurable, PropertySheetHolder, Closeable {
     /**
@@ -53,7 +59,7 @@ public interface ReferenceDriver extends Driver, WizardConfigurable, PropertyShe
     public void home(ReferenceMachine machine) throws Exception;
 
     /**
-     * Set the current physical or virtual axis positions to be reinterpreted as the specified coordinates. 
+     * Set the current physical axis positions to be reinterpreted as the specified coordinates. 
      * Used after visual homing and to reset a rotation angle after it has wrapped around. 
      * 
      * In G-Code parlance this is setting a global offset:
@@ -74,12 +80,11 @@ public interface ReferenceDriver extends Driver, WizardConfigurable, PropertyShe
      * 
      * @param hm The HeadMountable having triggered the move. This is mostly for proprietary machine driver support  
      * and might only be a stand-in in some motion blending scenarios on the GcodeDriver.
-     * @param location destination
-     * @param speed relative speed (0-1) of the move
+     * @param motion the moveTo Motion to execute, including location, feedrate, acceleration etc. as shaped by the MotionPlanner
      * @param options zero to n options from the MoveToOptions enum.
      * @throws Exception
      */
-    public void moveTo(ReferenceHeadMountable hm, AxesLocation axesLocation, double speed, MoveToOption... options) throws Exception;
+    public void moveTo(ReferenceHeadMountable hm, Motion motion, MoveToOption... options) throws Exception;
 
     /**
      * Perform a coordinated wait for completion. This must be issued before capturing camera frames.
@@ -143,6 +148,13 @@ public interface ReferenceDriver extends Driver, WizardConfigurable, PropertyShe
 
     public default void createDefaults() throws Exception  {}
 
+    /**
+     * Migrates the driver for the new global axes implementation. Is marked a deprecated as it can be removed
+     * along with the old GcodeDriver Axes implementation, if migration of users is expected to be complete.  
+     * 
+     * @param machine
+     * @throws Exception
+     */
     @Deprecated
     void migrateDriver(ReferenceMachine machine) throws Exception;
 

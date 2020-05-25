@@ -104,12 +104,11 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
      * considerations when writing your own driver.
      */
     @Override
-    public void moveTo(ReferenceHeadMountable hm, AxesLocation location, double speed, MoveToOption... options)
+    public void moveTo(ReferenceHeadMountable hm, Motion motion, MoveToOption... options)
             throws Exception {
-        Logger.debug("moveTo({}, {}, {})", hm, location, speed);
+        Logger.debug("moveTo({}, {}, {})", hm, motion.getLocation(), motion.getFeedRatePerSecond(getUnits()));
         checkEnabled();
-        // Take only this driver's axes.
-        AxesLocation newDriverLocation = location.drivenBy(this);
+        AxesLocation newDriverLocation = motion.getLocation();
         // Take the current driver location of the given axes.
         AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this), 
                 (axis) -> (axis.getDriverLengthCoordinate()));
@@ -173,6 +172,12 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
     public void setFeedRateMmPerMinute(double feedRateMmPerMinute) {
         this.feedRateMmPerMinute = feedRateMmPerMinute;
     }
+
+    @Override
+    public Length getFeedRatePerSecond() {
+        return new Length(feedRateMmPerMinute/60.0, getUnits());
+    }
+
 
     @Override
     public void close() throws IOException {

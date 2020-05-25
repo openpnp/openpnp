@@ -26,25 +26,19 @@ import org.openpnp.machine.reference.axis.wizards.ReferenceVirtualAxisConfigurat
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Movable.LocationOption;
 import org.openpnp.spi.base.AbstractAxis;
+import org.openpnp.spi.base.AbstractCoordinateAxis;
 import org.simpleframework.xml.Element;
 
 /**
  * The ReferenceVirtualAxis is a pseudo-axis used to track a coordinate virtually i.e. without
  * moving a physical axis.
  */
-public class ReferenceVirtualAxis extends AbstractAxis implements CoordinateAxis {
-    @Element(required = false)
-    private Length homeCoordinate = new Length(0.0, LengthUnit.Millimeters);
-
-    /**
-     * The coordinate stored here is the last commanded coordinate. If this virtual axis is moved along with physical axes, 
-     * there can be motion that is still ongoing. 
-     */
-    private double coordinate = 0;
+public class ReferenceVirtualAxis extends AbstractCoordinateAxis implements CoordinateAxis {
 
     @Override
     public Wizard getConfigurationWizard() {
@@ -52,60 +46,11 @@ public class ReferenceVirtualAxis extends AbstractAxis implements CoordinateAxis
     }
 
     @Override
-    public double getCoordinate() {
-        return coordinate;
-    }
-
-    @Override
-    public Length getLengthCoordinate() {
-        return new Length(coordinate, getUnits());
-    }
-
-    @Override
-    public void setCoordinate(double coordinate) {
-        Object oldValue = this.coordinate;
-        this.coordinate = coordinate;
-        firePropertyChange("coordinate", oldValue, coordinate);
-        firePropertyChange("lengthCoordinate", null, getLengthCoordinate());
-    }
-
-    @Override
-    public void setLengthCoordinate(Length coordinate) {
-        setCoordinate(coordinate.convertToUnits(getUnits()).getValue());
-    }
-
-    @Override
     public LengthUnit getUnits() {
         return LengthUnit.Millimeters;
     }
 
-    @Override
-    public Length getHomeCoordinate() {
-        return homeCoordinate;
-    }
-
-    @Override
-    public void setHomeCoordinate(Length homeCoordinate) {
-        Object oldValue = this.homeCoordinate;
-        this.homeCoordinate = homeCoordinate;
-        firePropertyChange("homeCoordinate", oldValue, homeCoordinate);
-    }
-
-    @Override
-    public AxesLocation getCoordinateAxes(Machine machine) {
-        // Yep, we're one.
-        return new AxesLocation(this);
-    }
-
-    @Override
-    public AxesLocation toTransformed(AxesLocation location, LocationOption... options) {
-        // No transformation, obviously
-        return location;
-    }
-
-    @Override
-    public AxesLocation toRaw(AxesLocation location, LocationOption... options) {
-        // No transformation, obviously
-        return location;
+    protected long getResolutionTicks(double coordinate) {
+        return Math.round(coordinate/0.0001);
     }
 }

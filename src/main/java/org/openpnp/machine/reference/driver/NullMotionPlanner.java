@@ -27,6 +27,7 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Motion;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.HeadMountable;
@@ -41,16 +42,26 @@ import org.openpnp.util.Utils2D;
  */
 public class NullMotionPlanner extends AbstractSimpleMotionPlanner {
 
+    private double planExecutedTime = 0;
+
     @Override
     public void moveToPlanning(HeadMountable hm, AxesLocation axesLocation, double speed, MoveToOption... options) throws Exception {
         super.moveToPlanning(hm, axesLocation, speed, options);
 
-        // The null motion planner is a pure proxy, so talk to the driver(s) immediately.
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
         boolean moved = false;
-        for (Driver driver : axesLocation.getAxesDrivers(machine)) {
-            ((ReferenceDriver) driver).moveTo((ReferenceHeadMountable) hm, axesLocation, speed, options);
-            moved = true;
+        // The null motion planner is a pure proxy, so spill the planned beans to the driver(s) immediately.
+        for (Motion plannedMotion : motionPlan.tailMap(planExecutedTime, false).values()) {
+            for (Driver driver : axesLocation.getAxesDrivers(machine)) {
+                AxesLocation previousLocation = new AxesLocation(axesLocation.getAxes(driver), 
+                        (axis) -> (axis.getDriverLengthCoordinate()));
+                // Derive the driver's motion from the planned motion.
+                Motion driverMotion = Motion.computeWithLimits(0.0, previousLocation, plannedMotion.getLocation(), 1.0, false, true,
+                        (axis, order) -> (plannedMotion.getVector(order).getCoordinate(axis)));
+                ((ReferenceDriver) driver).moveTo((ReferenceHeadMountable) hm, driverMotion, options);
+                moved = true;
+            }
+            planExecutedTime = plannedMotion.getTime();
         }
         if (moved) {
             machine.fireMachineHeadActivity(hm.getHead());

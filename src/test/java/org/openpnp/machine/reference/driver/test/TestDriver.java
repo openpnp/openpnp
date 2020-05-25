@@ -11,7 +11,9 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.AxesLocation;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Motion;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.PropertySheetHolder;
@@ -40,16 +42,16 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, AxesLocation location, double speed, MoveToOption... options)
+    public void moveTo(ReferenceHeadMountable hm, Motion motion, MoveToOption... options)
             throws Exception {
         
         // Take only this driver's axes.
-        AxesLocation newDriverLocation = location.drivenBy(this);
+        AxesLocation newDriverLocation = motion.getLocation();
         // Take the current driver location of the given axes.
         AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this), 
                 (axis) -> (axis.getDriverLengthCoordinate()));
         if (!oldDriverLocation.matches(newDriverLocation)) {
-            delegate.moveTo(hm, location, speed);
+            delegate.moveTo(hm, motion);
             // Store to axes
             newDriverLocation.setToDriverCoordinates(this);
         }
@@ -87,7 +89,7 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
         }
  
         @Override
-        public void moveTo(ReferenceHeadMountable hm, AxesLocation location, double speed, MoveToOption... options)
+        public void moveTo(ReferenceHeadMountable hm, Motion motion, MoveToOption... options)
                 throws Exception {
 
         }
@@ -173,6 +175,11 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
         @Override
         public boolean isUsingLetterVariables() {
             return false;
+        }
+
+        @Override
+        public Length getFeedRatePerSecond() {
+            return null;
         }
    }
 

@@ -3,11 +3,13 @@ package org.openpnp.machine.reference.driver;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.Map.Entry;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;

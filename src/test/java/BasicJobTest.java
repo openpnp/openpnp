@@ -18,6 +18,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Motion;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
@@ -157,8 +158,10 @@ public class BasicJobTest {
         }
 
         @Override
-        public void moveTo(ReferenceHeadMountable hm, AxesLocation location, double speed, MoveToOption... options)
+        public void moveTo(ReferenceHeadMountable hm, Motion motion, MoveToOption... options)
                 throws Exception {
+            AxesLocation location = motion.getLocation();
+            
             System.out.println(hm + " " + location);
             if (expectedOps.isEmpty()) {
                 throw new Exception("Unexpected Move " + hm + " " + location + ".");

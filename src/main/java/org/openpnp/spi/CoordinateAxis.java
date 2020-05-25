@@ -40,9 +40,10 @@ public interface CoordinateAxis extends Axis {
 
     public void setLengthCoordinate(Length coordinate);
 
-    /**
-     * @return the coordinate after doing the machine controller's homing.  
-     */
+    boolean coordinatesMatch(Length coordinateA, Length coordinateB);
+
+    boolean coordinatesMatch(double coordinateA, double coordinateB);
+
     public Length getHomeCoordinate();
 
     public void setHomeCoordinate(Length homeCoordinate);

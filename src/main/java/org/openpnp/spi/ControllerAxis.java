@@ -52,12 +52,6 @@ public interface ControllerAxis extends LinearInputAxis, CoordinateAxis {
     
     void setDriverLengthCoordinate(Length coordinate);
 
-    double roundedToResolution(double coordinate);
-
-    boolean coordinatesMatch(Length coordinateA, Length coordinateB);
-
-    boolean coordinatesMatch(double coordinateA, double coordinateB);
-
     int motionLimitsOrder = 3;
     double getMotionLimit(int order);
 

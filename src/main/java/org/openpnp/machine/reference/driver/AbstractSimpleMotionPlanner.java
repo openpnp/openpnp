@@ -24,11 +24,14 @@ package org.openpnp.machine.reference.driver;
 import java.util.Map;
 
 import org.openpnp.model.AxesLocation;
-import org.openpnp.model.AxesLocation.MotionLimits;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Motion;
 import org.openpnp.model.Motion.Derivative;
 import org.openpnp.model.Motion.MotionOption;
+import org.openpnp.spi.Axis;
+import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.util.NanosecondTime;
@@ -39,7 +42,6 @@ import org.openpnp.util.NanosecondTime;
  *
  */
 public abstract class AbstractSimpleMotionPlanner extends AbstractMotionPlanner {
-
 
     @Override
     public void moveToPlanning(HeadMountable hm, AxesLocation axesLocation, double speed, MoveToOption... options) 
@@ -71,35 +73,20 @@ public abstract class AbstractSimpleMotionPlanner extends AbstractMotionPlanner 
         }
         else {
             // No lastMotion, create the previous waypoint from the axes. 
-            // But take all the axes in the machine.
             AxesLocation previousLocation = new AxesLocation(Configuration.get().getMachine()); 
             lastMotion = new Motion(startTime, 
                     new AxesLocation [] { previousLocation }, 
                     MotionOption.FixedWaypoint, MotionOption.CoordinatedWaypoint);
             motionPlan.put(startTime, lastMotion);
         }
-        // Calculate the 1st order kinematics. Note this must include all the axes, not just the ones mapped to 
-        // this moveTo().
-        AxesLocation lastLocation = lastMotion.getVector(Motion.Derivative.Location);
-        // Update the given axes (keep the ones not given in this moveTo())
-        axesLocation = lastLocation.put(axesLocation);
-        AxesLocation delta = axesLocation
-                .subtract(lastLocation);
-        MotionLimits limits = new MotionLimits(delta);
-        if (limits.getLinearDistance() > 0 || limits.getRotationalDistance() > 0) {
-            // @see NIST RS274NGC Interpreter - Version 3, Section 2.1.2.5 rule A
-            double time = Math.max(limits.getLinearDistance()/limits.getLinearLimit(Motion.Derivative.Velocity),
-                    limits.getRotationalDistance()/limits.getRotationalLimit(Motion.Derivative.Velocity))
-                    /Math.max(0.01, speed);
-            if (!Double.isFinite(time)) {
-                throw new Exception("Feedrate(s) missing on (some) axes "+axesLocation.getAxes());
-            }
-            double endTime = startTime + time;
-            AxesLocation velocity = time <= 0.0 ? AxesLocation.zero : delta.multiply(1.0/time);
-            Motion endMotion = new Motion(endTime, new AxesLocation [] { axesLocation, velocity }, 
-                    MotionOption.FixedWaypoint, MotionOption.CoordinatedWaypoint);
-            motionPlan.put(endTime, endMotion);
-        }
+        // Calculate the 1st order kinematics. Note this must include all the machine axes, not just the ones 
+        // included in this moveTo().
+        AxesLocation lastLocation = 
+                new AxesLocation(Configuration.get().getMachine())
+                .put(lastMotion.getVector(Motion.Derivative.Location));
+
+        Motion endMotion = Motion.computeWithLimits(startTime, lastLocation, axesLocation, speed, true, false);
+        motionPlan.put(endMotion.getTime(), endMotion);
     }
 
     @Override

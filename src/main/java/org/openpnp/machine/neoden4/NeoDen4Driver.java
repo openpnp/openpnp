@@ -16,6 +16,7 @@ import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Motion;
 import org.openpnp.model.Named;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
@@ -487,8 +488,17 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, AxesLocation location, double speed, MoveToOption... options)
+    public void moveTo(ReferenceHeadMountable hm, Motion motion, MoveToOption... options)
             throws Exception {
+        AxesLocation location = motion.getVector(Motion.Derivative.Location);
+        double feedRate = motion.getFeedRatePerSecond(getUnits());
+        // Reconstruct speed factor from "virtual" feed-rate assuming the default 
+        // 250mm/s axes feedrate.
+        
+        // TODO: better solution. 
+        
+        double speed = Math.max(0.0, Math.min(1.0, feedRate/250.0));
+        
         double x = location.getCoordinate(location.getAxis(this, Axis.Type.X), units);
         double y = location.getCoordinate(location.getAxis(this, Axis.Type.Y), units);
         double z = location.getCoordinate(location.getAxis(this, Axis.Type.Z), units);

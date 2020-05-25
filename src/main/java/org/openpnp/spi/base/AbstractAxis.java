@@ -124,6 +124,11 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
     public abstract AxesLocation toRaw(AxesLocation location, LocationOption... options) throws Exception; 
 
     @Override
+    public String toString() {
+        return getName();
+    }
+
+    @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard()),

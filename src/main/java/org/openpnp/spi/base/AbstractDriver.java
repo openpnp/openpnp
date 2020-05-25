@@ -17,6 +17,7 @@ import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Driver;
@@ -59,6 +60,14 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
     public boolean isSupportingPreMove() {
         return false;
     }
+
+    @Override
+    public Length getFeedRatePerSecond() {
+        // Default implementation for feeders that don't implement an extra feed-rate. 
+        // The axes' fee-rate will be used.
+        return new Length(0, getUnits());
+    }
+
 
     protected void createAxisMappingDefaults(ReferenceMachine machine) throws Exception {
         if (machine.getAxes().size() == 0) {

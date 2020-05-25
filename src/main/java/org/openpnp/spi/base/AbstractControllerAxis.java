@@ -7,15 +7,17 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Movable.LocationOption;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
 
-public abstract class AbstractControllerAxis extends AbstractAxis implements ControllerAxis {
+public abstract class AbstractControllerAxis extends AbstractCoordinateAxis implements ControllerAxis {
 
     private Driver driver;
 
@@ -24,12 +26,6 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
 
     @Attribute(required = false)
     private String letter;
-
-    /**
-     * The coordinate that will be reached when all pending motion has completed. 
-     * Always in driver units.
-     */
-    private double coordinate;
 
     /**
      * The coordinate that will be reached when the last motion sent by the driver has completed.
@@ -50,38 +46,6 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
     }
 
     @Override
-    public double getCoordinate() {
-        return coordinate;
-    }
-    @Override
-    public Length getLengthCoordinate() {
-        return new Length(coordinate, getUnits());
-    }
-
-    @Override
-    public void setCoordinate(double coordinate) {
-        Object oldValue = this.coordinate;
-        this.coordinate = coordinate;
-        firePropertyChange("coordinate", oldValue, coordinate);
-        firePropertyChange("lengthCoordinate", null, getLengthCoordinate());
-    }
-    @Override
-    public void setLengthCoordinate(Length coordinate) {
-        if (getType() == Type.Rotation) {
-            // Never convert rotation angles.
-            setCoordinate(coordinate.getValue());
-        }
-        else {
-            setCoordinate(coordinate.convertToUnits(AxesLocation.getUnits()).getValue());
-        }
-    }
-
-    @Override
-    public AxesLocation getCoordinateAxes(Machine machine) {
-        return new AxesLocation(this);
-    }
-
-    @Override
     public double getDriverCoordinate() {
         return driverCoordinate;
     }
@@ -99,7 +63,7 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
     }
     @Override
     public void setDriverLengthCoordinate(Length driverCoordinate) {
-        if (getType() == Type.Rotation) {
+        if (type == Type.Rotation) {
             // Never convert rotation angles.
             setDriverCoordinate(driverCoordinate.getValue());
         }
@@ -138,32 +102,6 @@ public abstract class AbstractControllerAxis extends AbstractAxis implements Con
         Object oldValue = this.letter;
         this.letter = letter;
         firePropertyChange("letter", oldValue, letter);
-    }
-
-    @Override
-    public AxesLocation toTransformed(AxesLocation location, LocationOption... options) {
-        // No transformation, obviously
-        return location;
-    }
-
-    @Override
-    public AxesLocation toRaw(AxesLocation location, LocationOption... options) {
-        // No transformation, obviously
-        return location;
-    }
-
-    @Override
-    public boolean coordinatesMatch(Length coordinateA, Length coordinateB) {
-        return coordinatesMatch(
-                coordinateA.convertToUnits(getUnits()).getValue(),
-                coordinateB.convertToUnits(getUnits()).getValue());
-    }
-
-    @Override
-    public boolean coordinatesMatch(double coordinateA, double coordinateB) {
-        double a = roundedToResolution(coordinateA);
-        double b = roundedToResolution(coordinateB);
-        return a == b;
     }
 
     /**

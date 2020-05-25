@@ -32,11 +32,13 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Motion;
 import org.openpnp.model.Named;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.ControllerAxis;
+import org.openpnp.spi.Driver;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.MotionPlanner.CompletionType;
@@ -444,8 +446,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, AxesLocation location, double speed, MoveToOption...options)
+    public void moveTo(ReferenceHeadMountable hm, Motion motion, MoveToOption...options)
             throws Exception {
+        AxesLocation location = motion.getVector(Motion.Derivative.Location);
+        double feedRate = motion.getFeedRatePerMinute(getUnits());
+        double acceleration = motion.getFeedRatePerMinute(getUnits());
+        double jerk = motion.getFeedRatePerMinute(getUnits());
+          
         // Start composing the command, will decide later, whether we actually send it.
         String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
         if (command == null) {
@@ -463,9 +470,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
 
         command = substituteVariable(command, "Id", hm.getId());
         command = substituteVariable(command, "Name", hm.getName());
-        command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
-        command = substituteVariable(command, "BacklashFeedRate", maxFeedRate * speed * backlashFeedRateFactor);
-
+        command = substituteVariable(command, "FeedRate", feedRate);
+        command = substituteVariable(command, "BacklashFeedRate", feedRate * backlashFeedRateFactor);
+        command = substituteVariable(command, "Acceleration", acceleration);
+        command = substituteVariable(command, "Jerk", jerk);
+        
         // Go through all the axes and handle them.
         boolean doesMove = false;
         ReferenceMachine machine = (ReferenceMachine) hm.getHead().getMachine();
@@ -477,7 +486,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 // Compare the coordinates using the resolution of the axis to tolerate floating point errors
                 // from transformation etc. Also suppresses rounded-to-0 moves due to MOVE_TO_COMMANDs format 
                 // specifier (usually %.4f).
-                moveAxis = !axis.coordinatesMatch(location.getLengthCoordinate(axis), axis.getLengthCoordinate());
+                moveAxis = !axis.coordinatesMatch(location.getCoordinate(axis, getUnits()), axis.getDriverCoordinate());
                 if (moveAxis) {
                     includeAxis = true;
                 }
@@ -923,8 +932,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         return backlashFeedRateFactor;
     }
 
-    public void setBacklashFeedRateFactor(double BacklashFeedRateFactor) {
-        this.backlashFeedRateFactor = BacklashFeedRateFactor;
+    public void setBacklashFeedRateFactor(double backlashFeedRateFactor) {
+        this.backlashFeedRateFactor = backlashFeedRateFactor;
     }
 
     public int getMaxFeedRate() {
@@ -933,6 +942,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
 
     public void setMaxFeedRate(int maxFeedRate) {
         this.maxFeedRate = maxFeedRate;
+    }
+
+    @Override
+    public Length getFeedRatePerSecond() {
+        return new Length(maxFeedRate/60.0, getUnits());
     }
 
     public int getTimeoutMilliseconds() {

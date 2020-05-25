@@ -27,6 +27,7 @@ import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.Movable.LocationOption;
 import org.openpnp.spi.base.AbstractControllerAxis;
 import org.simpleframework.xml.Attribute;
@@ -55,9 +56,6 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
 
     @Element(required = false, data = true)
     private String preMoveCommand;
-
-    @Element(required = false)
-    private Length homeCoordinate = new Length(0.0, LengthUnit.Millimeters);
 
     @Element(required = false)
     private Length softLimitLow = new Length(0.0, LengthUnit.Millimeters);
@@ -90,36 +88,25 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     @Element(required = false)
     private double resolution = 0.0001; // 
 
-    @Override
-    public Length getHomeCoordinate() {
-        return homeCoordinate;
-    }
-
-    @Override
-    public void setHomeCoordinate(Length homeCoordinate) {
-        Object oldValue = this.homeCoordinate;
-        this.homeCoordinate = homeCoordinate;
-        firePropertyChange("homeCoordinate", oldValue, homeCoordinate);
-    }
-
     public double getResolution() {
+        if (resolution <= 0.0) {
+            resolution = 0.0001;
+        }
         return resolution;
     }
 
     public void setResolution(double resolution) {
         Object oldValue = this.resolution;
+        if (resolution <= 0.0) {
+            resolution = 0.0001;
+        }
         this.resolution = resolution;
         firePropertyChange("resolution", oldValue, resolution);
     }
 
     @Override
-    public double roundedToResolution(double coordinate) {
-        if (resolution != 0.0) {
-            return Math.round(coordinate/resolution)*resolution;
-        }
-        else {
-            return coordinate;
-        }
+    protected long getResolutionTicks(double coordinate) {
+        return Math.round(coordinate/getResolution());
     }
 
     public Length getFeedratePerSecond() {
@@ -218,13 +205,13 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     @Override
     public double getMotionLimit(int order) {
         if (order == 1) {
-            return getFeedratePerSecond().convertToUnits(LengthUnit.Millimeters).getValue();
+            return getFeedratePerSecond().convertToUnits(AxesLocation.getUnits()).getValue();
         }
         else if (order == 2) {
-            return getAccelerationPerSecond2().convertToUnits(LengthUnit.Millimeters).getValue();
+            return getAccelerationPerSecond2().convertToUnits(AxesLocation.getUnits()).getValue();
         }
         else if (order == 3) {
-            return getJerkPerSecond3().convertToUnits(LengthUnit.Millimeters).getValue();
+            return getJerkPerSecond3().convertToUnits(AxesLocation.getUnits()).getValue();
         }
         return 0;
     }
