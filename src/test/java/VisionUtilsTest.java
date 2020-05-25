@@ -15,6 +15,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.util.VisionUtils;
 
 
@@ -51,7 +52,7 @@ public class VisionUtilsTest {
         }
 
         @Override
-        public void moveTo(Location location, double speed) throws Exception {
+        public void moveTo(Location location, double speed, MoveToOption... options) throws Exception {
 
         }
 
@@ -210,8 +211,8 @@ public class VisionUtilsTest {
         }
 
         @Override
-        public void moveTo(Location location) throws Exception {
-            moveTo(location, getHead().getMachine().getSpeed());
+        public void moveTo(Location location, MoveToOption... options) throws Exception {
+            moveTo(location, getHead().getMachine().getSpeed(), options);
         }
 
         @Override

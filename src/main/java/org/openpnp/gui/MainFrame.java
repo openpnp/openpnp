@@ -843,12 +843,12 @@ public class MainFrame extends JFrame {
                 // this,
                 // getClass().getDeclaredMethod("loadImageFile",
                 // new Class[] { String.class }));
+                return true;
             }
             catch (Exception e) {
                 System.err.println("Error while loading the OSXAdapter:"); //$NON-NLS-1$
                 e.printStackTrace();
             }
-            return true;
         }
         return false;
     }

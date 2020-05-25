@@ -6,18 +6,15 @@ Be sure to review the [Developers Guide](https://github.com/openpnp/openpnp/wiki
 and the [Contributing Guidelines](https://github.com/openpnp/openpnp/blob/develop/CONTRIBUTING.md).
 
 Make your Pull Request as small as possible. Only include one bug or feature.
-Large pull requests that change dozens of files or add multiple features are unlikely to be accepted.
-
-Fill out all the details below. All sections below are required. If they are not included your Pull Request
-will not be accepted.
-
-## 2020-04-16 Update
 
 If you would like to add a new feature to OpenPnP that changes core or reference functionality,
 please create a topic on the [discussion group](http://groups.google.com/group/openpnp) to discuss
 the feature first. Also consider if your feature can be implemented as a new subclass of
 a Reference class, or an entirely new class, instead of changing or adding to the Reference
 class.
+
+Fill out all the details below. All sections below are required. If they are not included your Pull Request
+will not be accepted.
 
 -----------------------------------------------------------------------
 

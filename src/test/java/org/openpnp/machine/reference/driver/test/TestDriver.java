@@ -10,9 +10,9 @@ import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
-import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 
@@ -35,7 +35,7 @@ public class TestDriver implements ReferenceDriver {
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOption...options)
             throws Exception {
         // Subtract the offsets from the incoming Location. This converts the
         // offset coordinates to driver / absolute coordinates.
@@ -91,7 +91,7 @@ public class TestDriver implements ReferenceDriver {
         }
 
         @Override
-        public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+        public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOption...options)
                 throws Exception {
 
         }
