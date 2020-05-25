@@ -377,6 +377,9 @@ public class ReferenceHeapFeederConfigurationWizard
         
         btnResetTemplatePipeline = new JButton(actionPipelineResetTraining);
         whateverPanel.add(btnResetTemplatePipeline, "6, 24");
+        
+        btnGetSamples = new JButton(actionGetSamples);
+        whateverPanel.add(btnGetSamples, "10, 24");
     }
 
     @Override
@@ -468,7 +471,7 @@ public class ReferenceHeapFeederConfigurationWizard
         bind(UpdateStrategy.READ_WRITE, dropBoxWrapper, "value.dummyPartForUnknown", cbDummyPartForUnknownParts, "selectedItem");
 
         MutableLocationProxy dropBoxLocation = new MutableLocationProxy();
-        addWrappedBinding(feeder.getDropBox(), "centerBottomLocation", dropBoxLocation, "location");
+        addWrappedBinding(feeder, "dropBoxLocation", dropBoxLocation, "location");
         bind(UpdateStrategy.READ_WRITE, dropBoxLocation, "lengthX", tfCenterBottomLocation_x, "text", lengthConverter);
         bind(UpdateStrategy.READ_WRITE, dropBoxLocation, "lengthY", tfCenterBottomLocation_y, "text", lengthConverter);
         bind(UpdateStrategy.READ_WRITE, dropBoxLocation, "lengthZ", tfCenterBottomLocation_z, "text", lengthConverter);
@@ -585,6 +588,16 @@ public class ReferenceHeapFeederConfigurationWizard
         }
     };
 
+    private Action actionGetSamples = new AbstractAction("GetSamples") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.submitUiMachineTask(() -> {
+                //Feeder feeder = getSelection();
+                feeder.getSamples(Configuration.get().getMachine().getHeads().get(0).getDefaultNozzle());
+                });
+        }
+    };
+
     
     private Action newDropBoxAction = new AbstractAction("New") {
         @Override
@@ -661,4 +674,5 @@ public class ReferenceHeapFeederConfigurationWizard
     private JButton btnNewDropBox;
     private JButton btnDeleteDropBox;
     private JButton btnCleanDropbox;
+    private JButton btnGetSamples;
 }

@@ -219,6 +219,23 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             }
         }
     }
+    
+    /**
+     * Get a few sample parts for reference image
+     * @param nozzle used nozzle
+     * @throws Exception something goes wrong
+     */
+    public void getSamples(Nozzle nozzle) throws Exception {       
+        // clenaup
+        dropBox.clean(nozzle);
+
+        // now claim the dropBox
+        dropBox.setLastHeap(this);
+        
+        // get  parts
+        fetchParts(nozzle);
+    }
+
 
     /**
      * Moves the nozzle to this Heap.
@@ -566,6 +583,19 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         this.dropBox = dropBox;
     }
 
+    // Workaround that in the Wizzard te old feeder is cached otherwise
+    public Location getDropBoxLocation() {
+        return dropBox.getCenterBottomLocation();
+    }
+    // Workaround that in the Wizzard te old feeder is cached otherwise
+    public void setDropBoxLocation(Location dropBox) throws Exception {
+        if (dropBox == null) {
+            throw new Exception("Location is required.");
+        }
+        this.dropBox.setCenterBottomLocation(dropBox);
+    }
+
+    
 
     @Root
     public static class DropBox extends AbstractModelObject implements Identifiable, Named {
