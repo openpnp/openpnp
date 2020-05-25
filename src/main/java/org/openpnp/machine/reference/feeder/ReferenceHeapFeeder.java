@@ -197,6 +197,11 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         // now claim the dropBox
         dropBox.setLastHeap(this);
 
+        // just to be sure it's the right nozzle for the job
+        if ( getPart().getPackage().getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
+            nozzle.loadNozzleTip(getPart().getPackage().getCompatibleNozzleTips().toArray(new NozzleTip[0])[0]);
+        }
+
         // no part found => no pick location
         pickLocation = null;
 
@@ -231,6 +236,11 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
 
         // now claim the dropBox
         dropBox.setLastHeap(this);
+        
+        // just to be sure it's the right nozzle for the job
+        if ( getPart().getPackage().getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
+            nozzle.loadNozzleTip(getPart().getPackage().getCompatibleNozzleTips().toArray(new NozzleTip[0])[0]);
+        }
         
         // get  parts
         fetchParts(nozzle);
@@ -301,6 +311,11 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      * @throws Exception something unexpected happend.
      */
     private void fetchParts(Nozzle nozzle) throws Exception {
+        // just to be sure it's the right nozzle for the job
+        if ( getPart().getPackage().getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
+            nozzle.loadNozzleTip(getPart().getPackage().getCompatibleNozzleTips().toArray(new NozzleTip[0])[0]);
+        }
+        // prepare
         nozzle.moveToSafeZ();
         nozzle.getHead().getActuatorByName(((ReferenceNozzle)nozzle).getVacuumActuatorName()).actuate(true);
         long vacuumOn = System.currentTimeMillis();
