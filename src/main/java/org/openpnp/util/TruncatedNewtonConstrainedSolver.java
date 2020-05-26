@@ -108,19 +108,16 @@ public abstract class TruncatedNewtonConstrainedSolver {
     protected final static int LS_OK        = 0; /* Suitable point found */
     protected final static int LS_MAXFUN    = 1; /* Max. number of function evaluations reach */
     protected final static int LS_FAIL      = 2; /* No suitable point found */
-    protected final static int LS_USERABORT = 3; /* User requested end of minimization */
-    protected final static int LS_ENOMEM    = 4;  /* Memory allocation failed */
 
     public enum SolverState
     {
-        TNC_LOCALMINIMUM,  /* Local minima reach (|pg| ~= 0) */
-        TNC_FCONVERGED,    /* Converged (|f_n-f_(n-1)| ~= 0) */
-        TNC_XCONVERGED,    /* Converged (|x_n-x_(n-1)| ~= 0) */
-        TNC_MAXFUN,        /* Max. number of function evaluations reach */
-        TNC_LSFAIL,        /* Linear search failed */
-        TNC_CONSTANT,      /* All lower bounds are equal to the upper bounds */
-        TNC_NOPROGRESS;    /* Unable to progress */
-
+        LocalMinimum,       /* Local minima reach (|pg| ~= 0) */
+        Converged,          /* Converged (|f_n-f_(n-1)| ~= 0) */
+        ConvergedX,         /* Converged (|x_n-x_(n-1)| ~= 0) */
+        MaxFunctionEvals,   /* Max. number of function evaluations reach */
+        LinearSearchFailed, /* Linear search failed */
+        ConstantProblem,    /* All lower bounds are equal to the upper bounds */
+        NoProgress;         /* Unable to progress */
     }
 
     private double epsmch;
@@ -262,7 +259,7 @@ public abstract class TruncatedNewtonConstrainedSolver {
         }
 
         if (nc == n) {
-            solverState = SolverState.TNC_CONSTANT;
+            solverState = SolverState.ConstantProblem;
             throw new IllegalArgumentException("All upper bounds equal to lower bounds, or scale == 0. Constant problem.");
         }
 
@@ -341,7 +338,7 @@ public abstract class TruncatedNewtonConstrainedSolver {
     /**
      * Simpler access to the solver.
      * 
-     * @see solve() 
+     * @see the full solve() for param descriptions. 
      * 
      * @param x
      * @param low
@@ -359,8 +356,8 @@ public abstract class TruncatedNewtonConstrainedSolver {
             int messages, 
             int maxnfeval, 
             double accuracy,
-            double ftol,
-            double fmin) throws Exception {
+            double fmin,
+            double ftol) throws Exception {
         return solve(x, low, up, null, null, null, messages, -1, maxnfeval, -1, -1, accuracy, fmin, ftol, -1, -1, -1);
     }
 
@@ -516,13 +513,13 @@ public abstract class TruncatedNewtonConstrainedSolver {
                 if ((messages & TNC_MSG_INFO) != 0) {
                     log(String.format("tnc: |pg| = %g -> local minimum\n", dnrm21(n, g) / fscale));
                 }
-                solverState = SolverState.TNC_LOCALMINIMUM;
+                solverState = SolverState.LocalMinimum;
                 break;
             }
 
             /* Terminate if more than maxnfeval evaluations have been made */
             if (nfeval >= maxnfeval) {
-                solverState = SolverState.TNC_MAXFUN;
+                solverState = SolverState.MaxFunctionEvals;
                 break;
             }
 
@@ -600,7 +597,7 @@ public abstract class TruncatedNewtonConstrainedSolver {
                         eta, ftol, spe, pk, x, gfull, maxnfeval);
                 
                 if (lsrc.returnCode == LS_FAIL) {
-                    solverState  = SolverState.TNC_LSFAIL;
+                    solverState  = SolverState.LinearSearchFailed;
                     break;
                 }
             
@@ -621,10 +618,10 @@ public abstract class TruncatedNewtonConstrainedSolver {
                     /* Break if the linear search has failed to find a lower point */
                     if (lsrc.returnCode != LS_OK) {
                         if (lsrc.returnCode == LS_MAXFUN) {
-                            solverState = SolverState.TNC_MAXFUN;
+                            solverState = SolverState.MaxFunctionEvals;
                         }
                         else { 
-                            solverState= SolverState.TNC_LSFAIL;
+                            solverState= SolverState.LinearSearchFailed;
                         }
                         break;
                     }
@@ -639,7 +636,7 @@ public abstract class TruncatedNewtonConstrainedSolver {
             if (newcon) {
                 if (!addConstraint(n, x, pk, pivot, low, up, xscale, xoffset)) {
                     if(nfeval == oldnfeval) {
-                        solverState = SolverState.TNC_NOPROGRESS;
+                        solverState = SolverState.NoProgress;
                         break;
                     }
                 }
@@ -690,14 +687,14 @@ public abstract class TruncatedNewtonConstrainedSolver {
                     if ((messages & TNC_MSG_INFO) != 0) {
                         log(String.format("tnc: |fn-fn-1] = %g -> convergence\n", Math.abs(difnew) / fscale));
                     }
-                    solverState = SolverState.TNC_FCONVERGED;
+                    solverState = SolverState.Converged;
                     break;
                 }
                 if (alpha * dnrm21(n, pk) <= xtol) {
                     if ((messages & TNC_MSG_INFO) != 0) {
                         log(String.format("tnc: |xn-xn-1] = %g -> convergence\n", alpha * dnrm21(n, pk)));
                     }
-                    solverState = SolverState.TNC_XCONVERGED;
+                    solverState = SolverState.ConvergedX;
                     break;
                 }
             }
