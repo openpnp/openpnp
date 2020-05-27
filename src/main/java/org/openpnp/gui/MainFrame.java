@@ -662,7 +662,7 @@ public class MainFrame extends JFrame {
 	                            + configuration.getConfigurationDirectory().getAbsolutePath()
 	                            + "<br/><br/>" //$NON-NLS-1$
 	                            + "If you would like to start with a fresh configuration, just delete the entire directory at the location above.<br/><br/>" //$NON-NLS-1$
-	                            + "Retry loading?")) //$NON-NLS-1$
+	                            + "Retry loading (else openpnp will exit) ?")) //$NON-NLS-1$
 	            	System.exit(1);
 	        }
 	    }
