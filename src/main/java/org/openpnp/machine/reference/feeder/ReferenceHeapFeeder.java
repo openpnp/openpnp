@@ -198,7 +198,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         dropBox.setLastHeap(this);
 
         // just to be sure it's the right nozzle for the job
-        if ( getPart().getPackage().getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
+        if ( !getPart().getPackage().getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
             nozzle.loadNozzleTip(getPart().getPackage().getCompatibleNozzleTips().toArray(new NozzleTip[0])[0]);
         }
 
@@ -238,7 +238,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         dropBox.setLastHeap(this);
         
         // just to be sure it's the right nozzle for the job
-        if ( getPart().getPackage().getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
+        if ( !getPart().getPackage().getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
             nozzle.loadNozzleTip(getPart().getPackage().getCompatibleNozzleTips().toArray(new NozzleTip[0])[0]);
         }
         
@@ -312,7 +312,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      */
     private void fetchParts(Nozzle nozzle) throws Exception {
         // just to be sure it's the right nozzle for the job
-        if ( getPart().getPackage().getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
+        if ( !getPart().getPackage().getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
             nozzle.loadNozzleTip(getPart().getPackage().getCompatibleNozzleTips().toArray(new NozzleTip[0])[0]);
         }
         // prepare
@@ -334,7 +334,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         nozzle.moveTo(location.add(new Location(LengthUnit.Millimeters, 0, 0, lastFeedDepth, 0)), Movable.MoveToOption.SpeedOverPrecision);
         // while vacuum difference is not reached, slowly stir in the heap
         double currentDepth = lastFeedDepth;
-        for (int i = 0; ! stableVacuumDifferenceReached(nozzle, vacuumLevel, requiredVacuumDifference) && currentDepth >= (boxDepth + part.getHeight().getValue()); i++) {
+        for (int i = 0; ! stableVacuumDifferenceReached(nozzle, vacuumLevel, requiredVacuumDifference) && currentDepth > (boxDepth + part.getHeight().getValue()); i++) {
             switch (i % 8) {
                 case 0: {
                     moveToHeapCorner(nozzle, currentDepth, 0); 
@@ -686,7 +686,11 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
          */
         @Persist
         public void persist() {
-            dummyPartIdForUnknown = dummyPartForUnknown.getId();
+            if (dummyPartForUnknown == null) {
+                dummyPartIdForUnknown = "HeapFedder-Dummy";
+            } else {
+                dummyPartIdForUnknown = dummyPartForUnknown.getId();
+            }
         }
 
         /**
