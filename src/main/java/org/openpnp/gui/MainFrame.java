@@ -637,31 +637,35 @@ public class MainFrame extends JFrame {
 
         addComponentListener(componentListener);
         
-        try {
-            configuration.load();
-            configuration.getScripting().setMenu(mnScripts);
-            
-            if (Configuration.get().getMachine().getProperty("Welcome2_0_Dialog_Shown") == null) {
-                Welcome2_0Dialog dialog = new Welcome2_0Dialog(this);
-                dialog.setSize(750, 550);
-                dialog.setLocationRelativeTo(null);
-                dialog.setModal(true);
-                dialog.setVisible(true);
-                Configuration.get().getMachine().setProperty("Welcome2_0_Dialog_Shown", true);
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            MessageBoxes.errorBox(this, "Configuration Load Error", //$NON-NLS-1$
-                    "There was a problem loading the configuration. The reason was:<br/><br/>" //$NON-NLS-1$
-                            + e.getMessage() + "<br/><br/>" //$NON-NLS-1$
-                            + "Please check your configuration files and try again. They are located at: " //$NON-NLS-1$
-                            + configuration.getConfigurationDirectory().getAbsolutePath()
-                            + "<br/><br/>" //$NON-NLS-1$
-                            + "If you would like to start with a fresh configuration, just delete the entire directory at the location above.<br/><br/>" //$NON-NLS-1$
-                            + "OpenPnP will now exit."); //$NON-NLS-1$
-            System.exit(1);
-        }
+        boolean configurationLoaded = false;
+        while (!configurationLoaded) {
+	        try {
+	            configuration.load();
+	            configuration.getScripting().setMenu(mnScripts);
+	            
+	            if (Configuration.get().getMachine().getProperty("Welcome2_0_Dialog_Shown") == null) {
+	                Welcome2_0Dialog dialog = new Welcome2_0Dialog(this);
+	                dialog.setSize(750, 550);
+	                dialog.setLocationRelativeTo(null);
+	                dialog.setModal(true);
+	                dialog.setVisible(true);
+	                Configuration.get().getMachine().setProperty("Welcome2_0_Dialog_Shown", true);
+	            }
+	            configurationLoaded = true;    
+	        }
+	        catch (Exception e) {
+	            e.printStackTrace();
+	            if (!MessageBoxes.errorBoxWithRetry(this, "Configuration Load Error", //$NON-NLS-1$
+	                    "There was a problem loading the configuration. The reason was:<br/><br/>" //$NON-NLS-1$
+	                            + e.getMessage() + "<br/><br/>" //$NON-NLS-1$
+	                            + "Please check your configuration files and try again. They are located at: " //$NON-NLS-1$
+	                            + configuration.getConfigurationDirectory().getAbsolutePath()
+	                            + "<br/><br/>" //$NON-NLS-1$
+	                            + "If you would like to start with a fresh configuration, just delete the entire directory at the location above.<br/><br/>" //$NON-NLS-1$
+	                            + "Retry loading?")) //$NON-NLS-1$
+	            	System.exit(1);
+	        }
+	    }
         splitWindows();
     }
 
