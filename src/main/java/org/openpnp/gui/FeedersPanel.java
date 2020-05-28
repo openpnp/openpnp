@@ -279,8 +279,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 				    int j = 0;
 				    while ((j<configurationPanel.getComponentCount())) {
 				    	AbstractConfigurationWizard wizard = ((AbstractConfigurationWizard) configurationPanel.getComponent(j));
-				        if (wizard.isDirty())
+				        if (wizard.isDirty()) {
 							wizard.apply();
+				        }
 				        j++;
 				    }
 				    return false;
