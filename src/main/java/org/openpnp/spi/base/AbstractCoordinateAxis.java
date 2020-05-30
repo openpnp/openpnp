@@ -96,7 +96,8 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
             long a = getResolutionTicks(coordinateA);
             long b = getResolutionTicks(coordinateB);
             long wraparound = getResolutionTicks(360.0);
-            return (Math.abs(a - b) % wraparound) == 0;
+            boolean ret =  (Math.abs(a - b) % wraparound) == 0;
+            return ret;
         }
         else {
             long a = getResolutionTicks(coordinateA);

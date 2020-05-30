@@ -1,5 +1,3 @@
-package org.openpnp.util;
-
 /* TruncatedNewtonConstrainedSolver : truncated newton bound constrained 
  * minimization using gradient information, in Java.
  * 
@@ -47,24 +45,30 @@ package org.openpnp.util;
  *
  */
 
+package org.openpnp.util;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * The TruncatedNewtonConstrainedSolver solves the optimization problem
-     *
-     *   minimize   f(x)
-     *     x
-     *   subject to   low <= x <= up
-     *
-     * where x is a vector of n double variables. The method used is
-     * a truncated-newton algorithm (see "newton-type minimization via
-     * the lanczos algorithm" by s.g. nash (technical report 378, math.
-     * the lanczos method" by s.g. nash (siam j. numer. anal. 21 (1984),
-     * pp. 770-778). This algorithm finds a local minimum of f(x). It does
-     * not assume that the function f is convex (and so cannot guarantee a
-     * global solution), but does assume that the function is bounded below.
-     * It can solve problems having any number of variables, but it is
-     * especially useful when the number of variables (n) is large.
-     * 
-     * 
+ *
+ *   minimize   f(x)
+ *     x
+ *   subject to   low <= x <= up
+ *
+ * where x is a vector of n double variables. The method used is
+ * a truncated-newton algorithm (see "newton-type minimization via
+ * the lanczos algorithm" by s.g. nash (technical report 378, math.
+ * the lanczos method" by s.g. nash (siam j. numer. anal. 21 (1984),
+ * pp. 770-778). This algorithm finds a local minimum of f(x). It does
+ * not assume that the function f is convex (and so cannot guarantee a
+ * global solution), but does assume that the function is bounded below.
+ * It can solve problems having any number of variables, but it is
+ * especially useful when the number of variables (n) is large.
+ * 
+ * 
  *
  */
 public abstract class TruncatedNewtonConstrainedSolver {
@@ -127,7 +131,7 @@ public abstract class TruncatedNewtonConstrainedSolver {
     private int n;
     private int nfeval;
     private double alpha;
-    
+
     public SolverState getSolverState() {
         return solverState;
     }
@@ -216,15 +220,11 @@ public abstract class TruncatedNewtonConstrainedSolver {
         /* Check bounds arrays */
         if (low == null) {
             low = new double[n];
-            for (int i = 0 ; i < n ; i++) {
-                low[i] = Double.NEGATIVE_INFINITY;
-            }
+            Arrays.fill(low, Double.NEGATIVE_INFINITY);
         }
         if (up == null) {
             up = new double[n];
-            for (int i = 0 ; i < n ; i++) {
-                up[i] = Double.POSITIVE_INFINITY;
-            }
+            Arrays.fill(up, Double.POSITIVE_INFINITY);
         }
 
         /* Coherency check */
@@ -334,7 +334,7 @@ public abstract class TruncatedNewtonConstrainedSolver {
 
         return fvalue;
     }
-    
+
     /**
      * Simpler access to the solver.
      * 
@@ -425,7 +425,7 @@ public abstract class TruncatedNewtonConstrainedSolver {
     private double fscale; 
     private double fvalue; 
 
-    
+
     /*
      * This routine is a bounds-constrained truncated-newton method.
      * the truncated-newton method is preconditioned by a limited-memory
@@ -586,7 +586,7 @@ public abstract class TruncatedNewtonConstrainedSolver {
 
             /* Maximum constrained step length */
             double spe = stepMax(ustpmax, n, x, pk, pivot, low, up, xscale, xoffset);
-            
+
             if (spe > 0.0) {
                 /* Set the initial step length */
                 alpha = initialStep(fvalue, fmin / fscale, oldgtp, spe);
@@ -595,12 +595,12 @@ public abstract class TruncatedNewtonConstrainedSolver {
                 LinearSearch lsrc = new LinearSearch(n, low, up,
                         xscale, xoffset, fscale, pivot,
                         eta, ftol, spe, pk, x, gfull, maxnfeval);
-                
+
                 if (lsrc.returnCode == LS_FAIL) {
                     solverState  = SolverState.LinearSearchFailed;
                     break;
                 }
-            
+
                 /* If we went up to the maximum unconstrained step, increase it */
                 if (alpha >= 0.9 * ustpmax) {
                     stepmx *= 1e2;
@@ -876,7 +876,7 @@ public abstract class TruncatedNewtonConstrainedSolver {
          * modified to incorporate tolerances for zero.
          */
     }
-    
+
     /*
      * This routine performs a preconditioned conjugate-gradient
      * iteration in order to solve the newton equations for a search
@@ -1337,7 +1337,7 @@ public abstract class TruncatedNewtonConstrainedSolver {
                 }
             }
 
-            
+
             if (itest == GETPTC_OK) { 
                 /* A successful search has been made */
                 fvalue = fmin;
