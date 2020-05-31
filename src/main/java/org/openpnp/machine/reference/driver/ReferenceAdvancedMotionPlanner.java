@@ -91,10 +91,11 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
             }
 
             AdvancedMotionSolver solver = new AdvancedMotionSolver();
-            solver.createModel(motionPath);
-            solver.solve(1000, 0.01);
+            solver.elaborateMotionPath(motionPath, solver.new ConstraintsModeller());
+            solver.solve(1000, precision.convertToUnits(AxesLocation.getUnits()).getValue());
+            solver.elaborateMotionPath(motionPath, solver.new CoordinatedMoveMaterializer());
             // Remove the old plan
-            while (true) {
+            while (motionPlan.size() > 0) {
                 double last = motionPlan.lastKey();
                 if (planExecutedTime >= last) {
                     break;

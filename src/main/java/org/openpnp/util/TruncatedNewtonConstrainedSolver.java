@@ -47,9 +47,7 @@
 
 package org.openpnp.util;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * The TruncatedNewtonConstrainedSolver solves the optimization problem
@@ -214,7 +212,8 @@ public abstract class TruncatedNewtonConstrainedSolver {
 
         /* Check for errors in the input parameters */
         if (n <= 0) {
-            throw new IllegalArgumentException("Variable count n <= 0");
+            solverState = SolverState.ConstantProblem;
+            return 0.0;
         }
 
         /* Check bounds arrays */
@@ -254,13 +253,14 @@ public abstract class TruncatedNewtonConstrainedSolver {
         int nc = 0;
         for (int i = 0 ; i < n ; i++) {
             if ((low[i] == up[i]) || (scale != null && scale[i] == 0.0)) {
+                x[i] = low[i];
                 nc ++;
             }
         }
 
         if (nc == n) {
             solverState = SolverState.ConstantProblem;
-            throw new IllegalArgumentException("All upper bounds equal to lower bounds, or scale == 0. Constant problem.");
+            return 0.0;
         }
 
         /* Scaling parameters */

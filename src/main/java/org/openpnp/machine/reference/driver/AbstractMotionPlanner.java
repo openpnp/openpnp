@@ -12,6 +12,7 @@ import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Motion;
 import org.openpnp.model.Motion.Derivative;
 import org.openpnp.model.Motion.MotionOption;
@@ -26,7 +27,7 @@ import org.openpnp.spi.MotionPlanner;
 import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.Utils2D;
-import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 
 /**
  * The AbstractMotionPlanner provides a basic framework for sub-classing. 
@@ -34,8 +35,8 @@ import org.simpleframework.xml.Attribute;
  */
 public abstract class AbstractMotionPlanner implements MotionPlanner {
 
-    @Attribute (required=false)
-    boolean dummy;
+    @Element(required=false)
+    Length precision = new Length(0.0001, LengthUnit.Millimeters); 
 
     private ReferenceMachine machine;
 

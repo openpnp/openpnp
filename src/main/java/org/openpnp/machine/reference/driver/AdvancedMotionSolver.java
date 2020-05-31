@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.model.AxesLocation;
+import org.openpnp.model.Length;
 import org.openpnp.model.Motion;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
@@ -39,11 +40,16 @@ public class AdvancedMotionSolver extends TruncatedNewtonConstrainedSolver {
     public abstract class Var {
         final private int index;
         final private String name;
+        final private double lowerLimit; 
+        final private double upperLimit;
 
-        protected Var(String name) {
+        protected Var(String name, double lowerLimit, double upperLimit) {
             this.index = variables.size();
             variables.add(this);
             this.name = name;
+            this.lowerLimit = lowerLimit;
+            this.upperLimit = upperLimit;
+
         }
         public abstract double get();
         protected abstract void set(double value);
@@ -52,6 +58,12 @@ public class AdvancedMotionSolver extends TruncatedNewtonConstrainedSolver {
         }
         public String getName() {
             return name;
+        }
+        public double getLowerLimit() {
+            return lowerLimit;
+        }
+        public double getUpperLimit() {
+            return upperLimit;
         }
     }
     /**
@@ -74,8 +86,8 @@ public class AdvancedMotionSolver extends TruncatedNewtonConstrainedSolver {
     private List<TimeVar> timeVariables = new ArrayList<>();
     public class TimeVar extends Var { 
         final private Motion motion;
-        protected TimeVar(Motion motion, String name) {
-            super(name);
+        protected TimeVar(Motion motion, String name, double lowerLimit, double upperLimit) {
+            super(name, lowerLimit, upperLimit);
             this.motion = motion;
             timeVariables.add(this);
         }
@@ -97,9 +109,10 @@ public class AdvancedMotionSolver extends TruncatedNewtonConstrainedSolver {
     public class AxisVar extends Var {
         final private Motion motion;
         final private CoordinateAxis axis;
-        final int order;
-        protected AxisVar(Motion motion, CoordinateAxis axis, String name) throws Exception {
-            super(name);
+        final private int order;
+
+        protected AxisVar(Motion motion, CoordinateAxis axis, String name, double lowerLimit, double upperLimit) throws Exception {
+            super(name, lowerLimit, upperLimit);
             this.motion = motion;
             this.axis = axis;
             // The variable name gives us the derivative order. 
@@ -121,6 +134,7 @@ public class AdvancedMotionSolver extends TruncatedNewtonConstrainedSolver {
             }
             axisVariables.put(new Triplet<>(motion, axis, name), this);
         }
+
         @Override
         public double get() {
             return motion.getVector(order).getCoordinate(axis);
@@ -139,16 +153,17 @@ public class AdvancedMotionSolver extends TruncatedNewtonConstrainedSolver {
             return order;
         }
     }
-    protected AxisVar getAxisVar(Motion motion, CoordinateAxis axis, String name) throws Exception {
-        // Try get an existing one (this might be from aprevious motion or from a previous solver iteration).
+    protected AxisVar getAxisVar(Motion motion, CoordinateAxis axis, String name, double lowerLimit, double upperLimit) throws Exception {
         AxisVar axisVar = axisVariables.get(new Triplet<>(motion, axis, name));
         if (axisVar == null) {
             // Not there yet, create it.
-            axisVar = new AxisVar(motion, axis, name);
+            axisVar = new AxisVar(motion, axis, name, lowerLimit, upperLimit);
         }
         return axisVar;
     }
-
+    protected AxisVar getAxisVar(Motion motion, CoordinateAxis axis, String name) throws Exception {
+        return getAxisVar(motion, axis, name, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
+    }
     /**
      * Control model: Constant Jerk between two points.
      * 
@@ -180,7 +195,8 @@ public class AdvancedMotionSolver extends TruncatedNewtonConstrainedSolver {
      * 
      * ______________
      * 
-     * Sage math: https://www.sagemath.org/
+     * Recreate the math with Sage Math: https://www.sagemath.org/ by copying & pasting the following script. 
+     * Note: Sage math is Python based so we can't indent this.
      * 
 t = var ('t')
 s0 = var ('s0')
@@ -235,7 +251,7 @@ g[j] +=
 
      * 
      */
-    protected void createModel(List<Motion> motionPath) throws Exception {
+    protected void elaborateMotionPath(List<Motion> motionPath, SolverStep step) throws Exception {
         if (motionPath.size() < 2) {
             return;
         }
@@ -248,6 +264,7 @@ g[j] +=
         Iterable<? extends CoordinateAxis> axes = null;
         double[] weight0 = null;
         double[] weight1 = null;
+        Motion coordinatedMotionLimits = null;
         for (int i = 0; i < motionPath.size(); i++) {
             final Motion motion = motionPath.get(i);
             // Make sure we got the previous and next fixed Waypoint
@@ -270,6 +287,9 @@ g[j] +=
                         // No fixed Waypoint found and not at end of path.
                         throw new Exception("Motion path must end with fixed waypoint");
                     }
+                    coordinatedMotionLimits = Motion.computeWithLimits(nextFixed.getMotionCommand(), 
+                            prevFixed.getLocation().multiply(0), nextFixed.getLocation().subtract(prevFixed.getLocation()), 1.0, true, false);
+
                     // If this is a coordinated move, the motion is not modeled on the individual axes
                     // but over the Euclidean distance along the motion unit vector.
                     // This adds the difficulty that we might transition from a coordinated move to an uncoordinated
@@ -280,20 +300,22 @@ g[j] +=
                         // Both sides coordinated: just the Euclidean axis needed
                         axes = axesEuclidean;
                         // Both have simply weight 1.0
-                        weight0[0] = 1.0;
-                        weight1[0] = 1.0;
+                        weight0 = new double [] { 1.0 };
+                        weight1 = new double [] { 1.0 };
                     }
                     else {
-                        // Uncoordinated moves: all the axes needed
+                        // Uncoordinated moves involved: all the axes needed
                         axes = axesIndividual;
                         // Calculate the weights for coordinated<->uncoordinated transitions.
                         weight0 = new double [axesIndividual.size()];
                         weight1 = new double [axesIndividual.size()];
                         int indexAxis = 0;
                         for (CoordinateAxis axis : axes) {
-                            // Weight is the ratio of this axis vs. the whole Euclidean metric.  
-                            double w = nextFixed.getVector(Motion.Derivative.Velocity).getCoordinate(axis)
-                                    /nextFixed.getVector(Motion.Derivative.Velocity).getCoordinate(Motion.Euclidean);
+                            // Weight is the ratio of this axis vs. the whole Euclidean metric.
+                            double euclideanMetric = coordinatedMotionLimits.getLocation().getCoordinate(Motion.Euclidean);
+                            double w = (euclideanMetric > 0 ? 
+                                    coordinatedMotionLimits.getLocation().getCoordinate(axis)/euclideanMetric
+                                    : 1.0);
                             // Set the weight if this is a transition from/to an uncoordinated motion, otherwise 1.0
                             weight0[indexAxis] = prevFixed.hasOption(Motion.MotionOption.CoordinatedWaypoint) ? w : 1.0;
                             weight1[indexAxis] = nextFixed.hasOption(Motion.MotionOption.CoordinatedWaypoint) ? w : 1.0;
@@ -301,74 +323,11 @@ g[j] +=
                         }
                     }
                 }
-                // Now allocate the solver variables.
-                int _t = new TimeVar(motion, "t").i();
-                int indexAxis = 0;
-                for (CoordinateAxis axis : axes) {
-                    // Note, all these parameters are materialized so the Constraints inner class takes them
-                    // as final captured locals i.e. no further processing is needed in the solver iteration.
 
-                    // Get motion axis variables. 
-                    // From...
-                    CoordinateAxis axis0 = prevFixed.hasOption(Motion.MotionOption.CoordinatedWaypoint) ? 
-                            Motion.Euclidean : axis;
-                    final int _s0 = getAxisVar(prevMotion, axis0, "s").i();
-                    final int _V0 = getAxisVar(prevMotion, axis0, "V").i();
-                    final int _a0 = getAxisVar(prevMotion, axis0, "a").i();
-                    final double w0 = weight0[indexAxis];
-                    // ... to.
-                    CoordinateAxis axis1 = nextFixed.hasOption(Motion.MotionOption.CoordinatedWaypoint) ? 
-                            Motion.Euclidean : axis;
-                    final int _s1 = getAxisVar(motion, axis1, "s").i();
-                    final int _V1 = getAxisVar(motion, axis1, "V").i();
-                    final int _a1 = getAxisVar(motion, axis1, "a").i();
-                    final int _j = getAxisVar(motion, axis1, "j").i();
-                    final double w1 = weight1[indexAxis];
-
-                    // Formulate the per-motion-per-axis constraints.
-                    addConstraints(new Constraints() {
-                        @Override
-                        public 
-                        double function(double [] x, double [] g) {
-                            // Read the variables.
-                            // Axis from ...
-                            double s0 = x[_s0]*w0;
-                            double V0 = x[_V0]*w0;
-                            double a0 = x[_a0]*w0;
-                            // .. to.
-                            double s1 = x[_s1]*w1;
-                            double V1 = x[_V1]*w1;
-                            double a1 = x[_a1]*w1;
-                            double j = x[_j]*w1;
-                            // Powers of time t.
-                            double t = x[_t];
-                            double t2 = t*t;
-                            double t3 = t2*t;
-                            // Calculate the constraints.
-                            double s1t = s0 + V0*t + 1./2*a0*t2 + 1./6*j*t3;
-                            double V1t = V0 + a0*t + 1./2*j*t2;
-                            double a1t = a0 + j*t;
-                            // Error against the constraints.
-                            double error = Math.pow(s1-s1t, 2) + Math.pow(V1-V1t, 2) + Math.pow(a1 - a1t, 2);
-                            // The gradients. 
-                            // TODO: handle more common subexpressions and cascade multiplications with powers of t.  
-                            g[_t] += w1*(1./6*(j*t3 + 3*a0*t2 + 6*V0*t + 6*s0 - 6*s1)*(j*t2 + 2*a0*t + 2*V0) + (j*t2 + 2*a0*t + 2*V0 - 2*V1)*(j*t + a0) + 2*(j*t + a0 - a1)*j);
-                            double gs = 1./3*j*t3 + a0*t2 + 2*V0*t + 2*s0 - 2*s1;
-                            g[_s0] += w0*gs;
-                            double gV = j*t2 + 2*a0*t + 2*V0 - 2*V1;
-                            g[_V0] += w0*(gV + 1./3*(j*t3 + 3*a0*t2 + 6*V0*t + 6*s0 - 6*s1)*t);
-                            double ga =  2*j*t + 2*a0 - 2*a1;   
-                            g[_a0] += w0*(ga + 1./6*(j*t3 + 3*a0*t2 + 6*V0*t + 6*s0 - 6*s1)*t2 + (j*t2 + 2*a0*t + 2*V0 - 2*V1)*t);
-                            g[_s1] += w1*(-gs);
-                            g[_V1] += w1*(-gV);
-                            g[_a1] += w1*(-ga);
-                            g[_j] += w1*(1./18*(j*t3 + 3*a0*t2 + 6*V0*t + 6*s0 - 6*s1)*t3 + 1./2*(j*t2 + 2*a0*t + 2*V0 - 2*V1)*t2 + 2*(j*t + a0 - a1)*t);
-
-                            return error;
-                        }
-                    });
-
-                    indexAxis++;
+                if (coordinatedMotionLimits != null) {
+                    // Move is not empty.
+                    step.handleSingleMotion(motion, prevMotion, prevFixed, nextFixed, axes, weight0,
+                            weight1, coordinatedMotionLimits);
                 }
                 // Prepare for next motion.
                 if (nextFixed == motion) { 
@@ -379,6 +338,203 @@ g[j] +=
                 }
             }
             prevMotion = motion;
+        }
+    }
+
+    protected interface SolverStep {
+        void handleSingleMotion(final Motion motion, Motion prevMotion, Motion prevFixed,
+                Motion nextFixed, Iterable<? extends CoordinateAxis> axes, double[] weight0,
+                double[] weight1, Motion coordinatedMotionLimits) throws Exception;
+
+    }
+    /**
+     * Model the constraints of one motion.
+     *
+     */
+    protected class ConstraintsModeller implements SolverStep {
+        @Override
+        public void handleSingleMotion(final Motion motion, Motion prevMotion, Motion prevFixed,
+                Motion nextFixed, Iterable<? extends CoordinateAxis> axes, double[] weight0,
+                double[] weight1, Motion coordinatedMotionLimits) throws Exception {
+            // Allocate the solver variables. 
+            // No time travel allowed, t must be positive.
+            int _t = new TimeVar(motion, "t", 0, Double.POSITIVE_INFINITY).i();
+            // Allocation for all the axes.
+            int indexAxis = 0;
+            for (CoordinateAxis axis : axes) {
+                // Note, all these parameters are materialized so the Constraints inner class takes them
+                // as final captured locals i.e. no further processing is needed in the many solver iterations.
+                final CoordinateAxis axis0 = prevFixed.hasOption(Motion.MotionOption.CoordinatedWaypoint) ? 
+                        Motion.Euclidean : axis;
+                final CoordinateAxis axis1 = nextFixed.hasOption(Motion.MotionOption.CoordinatedWaypoint) ? 
+                        Motion.Euclidean : axis;
+
+                // Determine the motion limits.
+                final double sMin;
+                final double sMax;
+                if (motion.hasOption(Motion.MotionOption.FixedWaypoint)) {
+
+                    // Location is fixed.
+                    sMin = sMax = motion.getLocation().getCoordinate(axis1);
+                }
+                else if (motion.hasOption(Motion.MotionOption.LimitToSafeZZone) 
+                        && axis1.getType() == Axis.Type.Z) {
+                    // Limit to safe Z Zone
+                    // TODO: implement
+                    sMin = -15;
+                    sMax = 0;
+                }
+                else if (axis1 instanceof ReferenceControllerAxis) {
+                    ReferenceControllerAxis refAxis = (ReferenceControllerAxis)axis1;
+                    // Apply soft limits, if any.
+                    if (refAxis.isSoftLimitLowEnabled()) {
+                        sMin = refAxis.getSoftLimitLow()
+                                .convertToUnits(AxesLocation.getUnits()).getValue();
+                    }
+                    else {
+                        sMin = Double.NEGATIVE_INFINITY;
+                    }
+                    if (refAxis.isSoftLimitHighEnabled()) {
+                        sMax = refAxis.getSoftLimitHigh()
+                                .convertToUnits(AxesLocation.getUnits()).getValue();
+                    }
+                    else {
+                        sMax = Double.POSITIVE_INFINITY;
+                    }
+                }
+                else {
+                    sMin = Double.NEGATIVE_INFINITY;
+                    sMax = Double.POSITIVE_INFINITY;
+                }
+                final double speed;
+                if (motion.getMotionCommand() != null) {
+                    speed = motion.getMotionCommand().getSpeed();
+                }
+                else {
+                    speed = 1.0;
+                }
+                final double VMax;
+                final double aMax;
+                final double jMax;
+                if (axis1 instanceof ControllerAxis) {
+                    // Uncoordinated motion. Take the limits from the axis.
+                    if (motion.hasOption(Motion.MotionOption.Stillstand)) {
+                        // Velocity must be zero
+                        VMax = 0;
+                    }
+                    else {
+                        VMax = ((ControllerAxis) axis1).getMotionLimit(Motion.Derivative.Velocity.ordinal())
+                                *speed;
+                    }
+
+                    aMax = ((ControllerAxis) axis1).getMotionLimit(Motion.Derivative.Acceleration.ordinal())
+                            *Math.pow(speed, 2);
+                    jMax = ((ControllerAxis) axis1).getMotionLimit(Motion.Derivative.Jerk.ordinal())
+                            *Math.pow(speed, 3);
+                }
+                else {
+                    // Coordinated motion. Take the limits from the euclidean motion.
+                    if (motion.hasOption(Motion.MotionOption.Stillstand)) {
+                        // Velocity must be zero
+                        VMax = 0;
+                    }
+                    else {
+                        VMax = coordinatedMotionLimits.getFeedRatePerSecond(AxesLocation.getUnits())
+                                *speed;
+                    }
+                    aMax = coordinatedMotionLimits.getAccelerationPerSecond2(AxesLocation.getUnits())
+                            *Math.pow(speed, 2);
+                    jMax = coordinatedMotionLimits.getJerkPerSecond3(AxesLocation.getUnits())
+                            *Math.pow(speed, 3);
+                }
+
+                // Get motion axis variables. 
+                // From...
+                final int _s0 = getAxisVar(prevMotion, axis0, "s").i();
+                final int _V0 = getAxisVar(prevMotion, axis0, "V").i();
+                final int _a0 = getAxisVar(prevMotion, axis0, "a").i();
+                final double w0 = weight0[indexAxis];
+                // ... to. Apply limits.
+                final int _s1 = getAxisVar(motion, axis1, "s", sMin, sMax).i();
+                final int _V1 = getAxisVar(motion, axis1, "V", -VMax, VMax).i();
+                final int _a1 = getAxisVar(motion, axis1, "a", -aMax, aMax).i();
+                final int _j = getAxisVar(motion, axis1, "j", -jMax, jMax).i();
+                final double w1 = weight1[indexAxis];
+
+                // Formulate the per-motion-per-axis constraints.
+                addConstraints(new Constraints() {
+                    @Override
+                    public 
+                    double function(double [] x, double [] g) {
+                        // Read the variables.
+                        // Axis from ...
+                        double s0 = x[_s0]*w0;
+                        double V0 = x[_V0]*w0;
+                        double a0 = x[_a0]*w0;
+                        // .. to.
+                        double s1 = x[_s1]*w1;
+                        double V1 = x[_V1]*w1;
+                        double a1 = x[_a1]*w1;
+                        double j = x[_j]*w1;
+                        // Powers of time t.
+                        double t = x[_t];
+                        double t2 = t*t;
+                        double t3 = t2*t;
+                        // Calculate the constraints.
+                        double s1t = s0 + V0*t + 1./2*a0*t2 + 1./6*j*t3;
+                        double V1t = V0 + a0*t + 1./2*j*t2;
+                        double a1t = a0 + j*t;
+                        // Error against the constraints.
+                        double error = Math.pow(s1-s1t, 2) + Math.pow(V1-V1t, 2) + Math.pow(a1 - a1t, 2);
+                        // The gradients. 
+                        // TODO: handle more common subexpressions and cascade multiplications with powers of t.  
+                        g[_t] += w1*(1./6*(j*t3 + 3*a0*t2 + 6*V0*t + 6*s0 - 6*s1)*(j*t2 + 2*a0*t + 2*V0) + (j*t2 + 2*a0*t + 2*V0 - 2*V1)*(j*t + a0) + 2*(j*t + a0 - a1)*j);
+                        double gs = 1./3*j*t3 + a0*t2 + 2*V0*t + 2*s0 - 2*s1;
+                        g[_s0] += w0*gs;
+                        double gV = j*t2 + 2*a0*t + 2*V0 - 2*V1;
+                        g[_V0] += w0*(gV + 1./3*(j*t3 + 3*a0*t2 + 6*V0*t + 6*s0 - 6*s1)*t);
+                        double ga =  2*j*t + 2*a0 - 2*a1;   
+                        g[_a0] += w0*(ga + 1./6*(j*t3 + 3*a0*t2 + 6*V0*t + 6*s0 - 6*s1)*t2 + (j*t2 + 2*a0*t + 2*V0 - 2*V1)*t);
+                        g[_s1] += w1*(-gs);
+                        g[_V1] += w1*(-gV);
+                        g[_a1] += w1*(-ga);
+                        g[_j] += w1*(1./18*(j*t3 + 3*a0*t2 + 6*V0*t + 6*s0 - 6*s1)*t3 + 1./2*(j*t2 + 2*a0*t + 2*V0 - 2*V1)*t2 + 2*(j*t + a0 - a1)*t);
+
+                        return error;
+                    }
+                });
+
+                indexAxis++;
+            }
+        }
+    }
+    /**
+     * Convert solved coordinated moves into n-dimensional axis motion.  
+     *
+     */
+    protected class CoordinatedMoveMaterializer implements SolverStep {
+        @Override
+        public 
+        void handleSingleMotion(final Motion motion, Motion prevMotion, Motion prevFixed,
+                Motion nextFixed, Iterable<? extends CoordinateAxis> axes, double[] weight0,
+                double[] weight1, Motion coordinatedMotionLimits) throws Exception {
+            if (motion.hasOption(Motion.MotionOption.CoordinatedWaypoint)) {
+                // Only the Euclidean distance along the coordinated trajectory has been planned in 1D.
+                // Now materialize the axes vector components in N dimensions. 
+                double coordinatedOverall = coordinatedMotionLimits.getLocation().getCoordinate(Motion.Euclidean);
+                for (int order = 0; order <= Motion.Derivative.Jerk.ordinal(); order++) {
+                    AxesLocation derivativeVector = motion.getVector(order);
+                    // Get the Euclidean distance coordinate.
+                    double coordinate = derivativeVector.getCoordinate(Motion.Euclidean);
+                    // Compose the new dimensional vector according to the overall vector.   
+                    AxesLocation newDerivativeVector = new AxesLocation(motion.getLocation().getControllerAxes(),
+                            (axis) -> new Length(coordinate
+                                    *coordinatedMotionLimits.getLocation().getCoordinate(axis)/coordinatedOverall, 
+                                    AxesLocation.getUnits()));
+                    // Replace it in the motion, add the Euclidean back.
+                    motion.setVector(order, newDerivativeVector.put(new AxesLocation(Motion.Euclidean, coordinate)));
+                }
+            }
         }
     }
 
@@ -401,41 +557,6 @@ g[j] +=
         for (AxisVar var : axisVariables.values()) {
             // Read the variable 
             var.get();
-            // Add bounds to way-points as flags indicate.
-            if (var.getOrder() == Motion.Derivative.Location.ordinal()) {
-                if (var.getMotion().hasOption(Motion.MotionOption.FixedWaypoint)) {
-
-                    // Location is fixed.
-                    lower[var.i()] = x[var.i()];
-                    upper[var.i()] = x[var.i()];
-                }
-                else if (var.getMotion().hasOption(Motion.MotionOption.LimitToSafeZZone) 
-                        && var.getAxis().getType() == Axis.Type.Z) {
-                    // Limit to safe Z Zone
-                    // TODO: implement
-                    lower[var.i()] = -15;
-                    upper[var.i()] = 0;
-                }
-                else if (var.getAxis() instanceof ReferenceControllerAxis) {
-                    // Apply soft limits, if any.
-                    if (((ReferenceControllerAxis)var.getAxis()).isSoftLimitLowEnabled()) {
-                        lower[var.i()] = ((ReferenceControllerAxis)var.getAxis()).getSoftLimitLow()
-                                .convertToUnits(AxesLocation.getUnits()).getValue();
-                    }
-                    if (((ReferenceControllerAxis)var.getAxis()).isSoftLimitHighEnabled()) {
-                        lower[var.i()] = ((ReferenceControllerAxis)var.getAxis()).getSoftLimitHigh()
-                                .convertToUnits(AxesLocation.getUnits()).getValue();
-                    }
-                }
-            }
-            else if (var.getOrder() == Motion.Derivative.Velocity.ordinal()) {
-                if (var.getMotion().hasOption(Motion.MotionOption.Stillstand)) {
-                    // Velocity must be zero
-                    lower[var.i()] = 0.0;
-                    upper[var.i()] = 0.0;
-                    x[var.i()] = 0.0;
-                }
-            }
         }
         // Solve it.
         lastError = solve(x, lower, upper, TNC_MSG_NONE, maxfneval, tolerance, tolerance*tolerance, tolerance*tolerance);
@@ -443,5 +564,6 @@ g[j] +=
         for (Var var : variables) {
             var.set(x[var.i()]);
         }
+        // Transform coordinated motion into individual axis motion
     }
 }

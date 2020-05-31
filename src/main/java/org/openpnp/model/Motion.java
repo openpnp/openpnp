@@ -21,23 +21,12 @@
 
 package org.openpnp.model;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
-import org.apache.bcel.generic.NEW;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
-import org.openpnp.machine.reference.driver.AbstractMotionPlanner;
 import org.openpnp.machine.reference.driver.AbstractMotionPlanner.MotionCommand;
-import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
-import org.openpnp.spi.Driver;
-import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.Movable.MoveToOption;
-import org.openpnp.util.NanosecondTime;
-import org.python.bouncycastle.util.Arrays;
 
 /**
  * The Motion represents one segment/waypoint in a motion sequence. It contains the point in time
@@ -210,7 +199,7 @@ public class Motion {
             BiFunction<ControllerAxis, Integer, Double> limitProvider) throws Exception {
         // Create a distance vector that has only axes mentioned in location1 that at the same time 
         // do not match coordinates with location0.
-        AxesLocation distance = motionVectorDistance(location0, location1);
+        AxesLocation distance = location0.motionSegmentTo(location1);
         if (distance.isEmpty()) {
             return null;
         }
@@ -292,8 +281,9 @@ public class Motion {
             }
             else  {
                 // Limit the rotational axes limit by the driver feed-rate?
-                // NOPE: it is non-sense to apply a mm/s feedrate to a rotational axis. So this is a change in behavior. 
-                // rotationalLimits[1] = Math.min(rotationalLimits[1], minDriverFeedrate); 
+                // NOPE: it is non-sense to apply a mm/s feedrate to a rotational axis. 
+                // We depart from former OpenPnP behavior here. 
+                //   rotationalLimits[1] = Math.min(rotationalLimits[1], minDriverFeedrate); 
             }
         }
         // Note: inside the MotionPlanner, everything is calculated using the overall Euclidean distance
@@ -345,24 +335,6 @@ public class Motion {
                 motionCommand, 
                 motionDerivatives, 
                 MotionOption.FixedWaypoint, MotionOption.CoordinatedWaypoint);
-    }
-
-    /**
-     * Create a distance vector that has only axes mentioned in location1
-     * and that are at the same time not matching with location 0.
-     * 
-     * @param location0
-     * @param location1
-     * @return
-     */
-    public static AxesLocation motionVectorDistance(AxesLocation location0, AxesLocation location1) {
-        AxesLocation distance = new AxesLocation(location0.getControllerAxes(), 
-                (a) -> ( location1.contains(a) ? 
-                        (!a.coordinatesMatch(location0.getCoordinate(a), location1.getCoordinate(a)) ? 
-                                new Length(location1.getCoordinate(a) - location0.getCoordinate(a), AxesLocation.getUnits())
-                                :null)
-                        :null));
-        return distance;
     }
 
     public AxesLocation getLocation() {

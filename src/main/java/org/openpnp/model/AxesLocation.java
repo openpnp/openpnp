@@ -351,4 +351,30 @@ public class AxesLocation {
         return found;
     }
 
+    /**
+     * Create a distance vector over ControllerAxes that are both contained in this and location1
+     * and that are not matching in coordinates.
+     * 
+     * @param location1
+     * @return
+     */
+    public AxesLocation motionSegmentTo(AxesLocation location1) {
+        AxesLocation distance = new AxesLocation(getControllerAxes(), 
+                (a) -> ( location1.contains(a) ? 
+                        (!a.coordinatesMatch(getCoordinate(a), location1.getCoordinate(a)) ? 
+                                new Length(location1.getCoordinate(a) - getCoordinate(a), AxesLocation.getUnits())
+                                :null)
+                        :null));
+        return distance;
+    }
+    public double getEuclideanMetric() {
+        double sumSq = 0;
+        for (Entry<Axis, Double> entry : location.entrySet()) {
+            if (entry.getKey() instanceof ControllerAxis) {
+                sumSq += Math.pow(entry.getValue(), 2);
+            }
+        }
+        return Math.sqrt(sumSq);
+    }
+
 }
