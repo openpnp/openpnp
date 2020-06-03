@@ -188,4 +188,8 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
     public Boolean isDirty() {
         return btnApply.isEnabled();
     }
+
+    public void apply() {
+        applyAction.actionPerformed(null);
+    }
 }
