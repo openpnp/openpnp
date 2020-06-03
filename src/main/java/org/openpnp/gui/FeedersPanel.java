@@ -109,6 +109,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     private int priorRowIndex = -1;
     private String priorFeederId;
     
+    private JMenu setParentMenu;
+    
     public FeedersPanel(Configuration configuration, MainFrame mainFrame) {
         this.configuration = configuration;
         this.mainFrame = mainFrame;
