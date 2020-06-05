@@ -87,6 +87,10 @@ public class Configuration extends AbstractModelObject {
     private Scripting scripting;
     private EventBus bus = new EventBus();
 
+    public static boolean isInstanceInitialized() {
+        return (instance != null);
+    }
+
     public static Configuration get() {
         if (instance == null) {
             throw new Error("Configuration instance not yet initialized.");

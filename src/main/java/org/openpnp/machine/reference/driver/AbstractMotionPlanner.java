@@ -3,6 +3,7 @@ package org.openpnp.machine.reference.driver;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.openpnp.machine.reference.ReferenceDriver;
@@ -18,6 +19,7 @@ import org.openpnp.model.Motion.Derivative;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Axis.Type;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Driver;
@@ -186,13 +188,14 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
 
     protected double planExecutedTime = 0;
 
-    public void executeMotionPlan() throws Exception {
+    public void executeMotionPlan(CompletionType completionType) throws Exception {
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
         List<Head> movedHeads = new ArrayList<>();
-        for (Motion plannedMotion : motionPlan.tailMap(planExecutedTime, false).values()) {
+        for (Entry<Double, Motion> plannedMotionEntry : motionPlan.tailMap(planExecutedTime, false).entrySet()) {
             // Remember this motion was executed up-front, so an exception in the execution will not matter i.e. we 
             // are not stuck with this motion again and again.
-            planExecutedTime = plannedMotion.getTime();
+            planExecutedTime = plannedMotionEntry.getKey();
+            Motion plannedMotion = plannedMotionEntry.getValue();
             if (!plannedMotion.hasOption(MotionOption.Stillstand)) {
                 for (Driver driver : plannedMotion.getLocation().getAxesDrivers(machine)) {
                     AxesLocation previousLocation = new AxesLocation(plannedMotion.getLocation().getAxes(driver), 
@@ -237,7 +240,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
         Motion lastMotion = null;
         Map.Entry<Double, Motion> lastEntry = motionPlan.lastEntry();
         double startTime = now;
-        if (lastEntry != null) {
+        if (lastEntry != null && lastEntry.getKey() >= planExecutedTime) {
             lastMotionTime = lastEntry.getKey();
             lastMotion = lastEntry.getValue();
             if (lastMotionTime > now) {
@@ -247,7 +250,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
             else {
                 // Pause between the moves.
                 lastMotion = new Motion(0, null, 
-                        new AxesLocation [] { lastMotion.getVector(Motion.Derivative.Location) },
+                        new AxesLocation [] { lastMotion.getLocation() },
                         MotionOption.FixedWaypoint, MotionOption.CoordinatedWaypoint, MotionOption.Stillstand);
                 motionPlan.put(startTime, lastMotion);
             }
@@ -263,7 +266,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
         // Note this must include all the machine axes, not just the ones included in this moveTo().
         AxesLocation lastLocation = 
                 new AxesLocation(Configuration.get().getMachine())
-                .put(lastMotion.getVector(Motion.Derivative.Location));
+                .put(lastMotion.getLocation());
         Motion plannedMotion = Motion.computeWithLimits(motionCommand, lastLocation, 
                 motionCommand.getAxesLocation(), 
                 motionCommand.getSpeed(), true, false);
@@ -273,9 +276,10 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
     }
 
     @Override
-    public Motion getMomentaryMotion(double time) {
+    public synchronized Motion getMomentaryMotion(double time) {
+        time = Math.min(planExecutedTime, time);
         Map.Entry<Double, Motion> entry0 = motionPlan.floorEntry(time);
-        Map.Entry<Double, Motion> entry1 = motionPlan.ceilingEntry(time);
+        Map.Entry<Double, Motion> entry1 = motionPlan.higherEntry(time);
         if (entry0 != null && entry1 != null) {
             // We're between two way-points, interpolate linearly by time.
             double dt = entry1.getKey() - entry0.getKey();

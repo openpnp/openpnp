@@ -358,7 +358,7 @@ public abstract class TruncatedNewtonConstrainedSolver {
             double accuracy,
             double fmin,
             double ftol) throws Exception {
-        return solve(x, low, up, null, null, null, messages, -1, maxnfeval, -1, -1, accuracy, fmin, ftol, -1, -1, -1);
+        return solve(x, null, low, up, null, null, messages, -1, maxnfeval, -1, -1, accuracy, fmin, ftol, -1, -1, -1);
     }
 
     /* Coerce x into bounds */
@@ -743,6 +743,13 @@ public abstract class TruncatedNewtonConstrainedSolver {
         unscalex(n, x, xscale, xoffset);
         coercex(n, x, low, up);
         fvalue /= fscale;
+        
+        if (solverState == SolverState.LinearSearchFailed) {
+            throw new Exception(getClass().getSimpleName()+" linear search failed");
+        }
+        else if (solverState == SolverState.NoProgress) {
+            throw new Exception(getClass().getSimpleName()+" no progress");
+        }
     }
 
     /* Print the results of the current iteration */
@@ -1230,7 +1237,6 @@ public abstract class TruncatedNewtonConstrainedSolver {
         double big;
         int itcnt;
 
-        /* Set the estimated relative precision in f(x). */
         double fpresn;
 
         double u;

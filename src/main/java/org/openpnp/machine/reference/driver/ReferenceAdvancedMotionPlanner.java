@@ -27,10 +27,12 @@ import java.util.Collection;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Motion;
 import org.openpnp.spi.Axis;
+import org.openpnp.model.Length;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.util.NanosecondTime;
+import org.pmw.tinylog.Logger;
 
 /**
  * Advanced Motion Planner panning 3rd order (Jerk controller) Motion Control. Supports uncoordinated motion.  
@@ -48,9 +50,9 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
     @Override
     public void waitForCompletion(HeadMountable hm, CompletionType completionType) throws Exception {
         // Plan the queued motion.
-        planMotionPath();
+        planMotion(completionType);
         // Execute.
-        executeMotionPlan();
+        executeMotionPlan(completionType);
         // Wait for drivers.
         waitForDriverCompletion(hm, completionType);
         // Now the physical completion is done, do the abstract stuff.
@@ -58,7 +60,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
     }
 
 
-    public void planMotionPath() throws Exception {
+    public void planMotion(CompletionType completionType) throws Exception {
         // Plan the tail of the queued motions.
         ArrayList<Motion> motionPath = new ArrayList<>();
         Motion prevMotion = null; 
@@ -66,23 +68,36 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
         Collection<Motion> tail = motionPlan.tailMap(planExecutedTime, true).values();
         if (tail.size() >= 2) {
             for (Motion queuedMotion : tail) {
-                if (prevMotion != null) {
+                if (prevMotion != null 
+                        && !prevMotion.getLocation().motionSegmentTo(queuedMotion.getLocation()).isEmpty()) {
                     // The queued motion are the fixed way-points. We need to insert segments for 3rd order motion control.
                     // The simplest general form is a four-segment "mirror-S" curve. A co-linear motion sequence could be even simpler, 
-                    // but we ignore this case here. 
+                    // but we ignore this case here.
+                    AxesLocation zeroVectorAxes = new AxesLocation(queuedMotion.getLocation().getControllerAxes(), 
+                            (a) -> new Length(0, AxesLocation.getUnits()));
+                            
+                    // Kill current "solution", we only interpolate the location.
+                    AxesLocation delta = prevMotion.getLocation().motionSegmentTo(queuedMotion.getLocation());
                     // TODO: better heuristics 
-                    // TODO: remove test with 7 segments.
-                    final int segments = 7;
+                    final int segments = 4;
                     for (int interpolate = 1; interpolate < segments; interpolate++) {
                         Motion interpolateMotion = prevMotion.interpolate(queuedMotion, interpolate*1.0/segments);
-                        interpolateMotion.setTime(1.0/segments);
+                        interpolateMotion.setTime(queuedMotion.getTime()/segments);
                         interpolateMotion.clearOption(Motion.MotionOption.FixedWaypoint);
                         if (isInSaveZZone(prevMotion) && isInSaveZZone(queuedMotion)) {
                             interpolateMotion.clearOption(Motion.MotionOption.CoordinatedWaypoint);
-                            interpolateMotion.clearOption(Motion.MotionOption.LimitToSafeZZone);
+                            interpolateMotion.setOption(Motion.MotionOption.LimitToSafeZZone);
                         }
+                        interpolateMotion.setVector(Motion.Derivative.Velocity, delta.multiply(1./(queuedMotion.getTime()+0.01)));
+                        interpolateMotion.setVector(Motion.Derivative.Acceleration, zeroVectorAxes);
+                        interpolateMotion.setVector(Motion.Derivative.Jerk, zeroVectorAxes);
                         motionPath.add(interpolateMotion);
                     }
+                    queuedMotion.setTime(queuedMotion.getTime()/segments);
+                    queuedMotion.setVector(Motion.Derivative.Velocity, delta.multiply(1./(queuedMotion.getTime()+0.01)));
+                    queuedMotion.setVector(Motion.Derivative.Acceleration, zeroVectorAxes);
+                    queuedMotion.setVector(Motion.Derivative.Jerk, zeroVectorAxes);
+                    
                 }
                 // Add to list.
                 motionPath.add(queuedMotion);
@@ -90,10 +105,15 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                 prevMotion = queuedMotion;
             }
 
+            if (completionType == CompletionType.WaitForStillstand) {
+                prevMotion.setOption(Motion.MotionOption.Stillstand);
+            }
             AdvancedMotionSolver solver = new AdvancedMotionSolver();
+            solver.outputMotionPath("before", motionPath);
             solver.elaborateMotionPath(motionPath, solver.new ConstraintsModeller());
-            solver.solve(1000, precision.convertToUnits(AxesLocation.getUnits()).getValue());
-            solver.elaborateMotionPath(motionPath, solver.new CoordinatedMoveMaterializer());
+            solver.solve(1000000, precision.convertToUnits(AxesLocation.getUnits()).getValue()*0.00000001);
+            Logger.debug("solver state: {}, iterations: {}, error: {}", solver.getSolverState(), solver.getFunctionEvalCount(), solver.getLastError());
+            solver.outputMotionPath("after", motionPath);
             // Remove the old plan
             while (motionPlan.size() > 0) {
                 double last = motionPlan.lastKey();
@@ -103,13 +123,15 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                 motionPlan.remove(last);
             }
             // Add the new plan.
-            double time = NanosecondTime.getRuntimeSeconds();
+            double time = Math.max(planExecutedTime+1e-9, NanosecondTime.getRuntimeSeconds());
             for (Motion motion : motionPath) {
                 motionPlan.put(time, motion);
                 time += motion.getTime();
             }
         }
     }
+
+
 
     private boolean isInSaveZZone(Motion motion) {
         for (ControllerAxis axis : motion.getLocation().byType(Axis.Type.Z).getControllerAxes()) {

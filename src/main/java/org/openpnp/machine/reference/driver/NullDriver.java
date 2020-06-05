@@ -125,7 +125,7 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
         while (! machine.getMotionPlanner()
                 .getMomentaryMotion(NanosecondTime.getRuntimeSeconds())
                 .hasOption(Motion.MotionOption.Stillstand)) {
-            Thread.sleep(100);
+            Thread.sleep(1);
         }
     }
 

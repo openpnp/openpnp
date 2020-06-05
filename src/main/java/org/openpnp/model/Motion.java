@@ -58,6 +58,7 @@ public class Motion {
     public Motion(double time, MotionCommand motionCommand, AxesLocation[] vector, MotionOption... options) {
         super();
         this.time = time;
+        this.motionCommand = motionCommand;
         this.vector = vector.clone();
         for (MotionOption option : options) {
             this.options |= option.flag();
@@ -89,8 +90,6 @@ public class Motion {
     public void setTime(double time) {
         this.time = time;
     }
-
-    
 
     public MotionCommand getMotionCommand() {
         return motionCommand;
@@ -132,7 +131,7 @@ public class Motion {
     }
 
     public String toString() {
-        return "{ t="+time+"s, l="+
+        return "{ t="+time+"s, o="+String.format("x%X", options)+", l="+
                 getVector(Derivative.Location)+", V="+
                 getVector(Derivative.Velocity)+", a="+
                 getVector(Derivative.Acceleration)+", j="+
@@ -141,6 +140,7 @@ public class Motion {
 
     protected Motion applyFunction(
             double time, 
+            MotionCommand motionCommand, 
             BiFunction<Double, Double, Double> locationFunction, 
             BiFunction<Double, Double, Double> derivativeFunction,
             Motion other,
@@ -160,30 +160,35 @@ public class Motion {
     }
     public Motion average(Motion other) {
         return applyFunction(other.getTime(),
+                other.getMotionCommand(),
                 (a, b) -> ((a+b)/2.0), 
                 (a, b) -> ((a+b)/2.0), 
                 other, other.options);
     }
     public Motion max(Motion other) {
         return applyFunction(other.getTime(),
+                other.getMotionCommand(),
                 (a, b) -> (Math.max(a, b)), 
                 (a, b) -> (Math.max(a, b)), 
                 other, other.options);
     }
     public Motion min(Motion other) {
         return applyFunction(other.getTime(),
+                other.getMotionCommand(),
                 (a, b) -> (Math.min(a, b)), 
                 (a, b) -> (Math.min(a, b)), 
                 other, other.options);
     }
     public Motion envelope(Motion other) {
         return applyFunction(other.getTime(),
+                other.getMotionCommand(),
                 (a, b) -> (b), 
                 (a, b) -> (Math.min(a, b)), 
                 other, other.options);
     }
     public Motion interpolate(Motion other, double ratio) {
         return applyFunction(ratio*other.getTime(),
+                other.getMotionCommand(),
                 (a, b) -> ((1.0-ratio)*a+ratio*b), 
                 (a, b) -> ((1.0-ratio)*a+ratio*b), 
                 other, other.options);
@@ -310,7 +315,7 @@ public class Motion {
             throw new Exception("Feedrate(s) missing on (some) axes: "+distance.getControllerAxes());
         }
         double euclideanTime = euclideanLimits[0]/euclideanLimits[1];
-        // We convert from the NIST feedrate limit to the Euclidean limit by relating the motion time. 
+        // We convert from the NIST feed-rate limit to the Euclidean limit by relating the motion time. 
         // Also include the given speed factor.
         double speedEffective = (time > 0 ? euclideanTime/time : 1.0) * Math.max(0.01, speed);
         // Add a virtual Distance axis to store the limits in the motion, as these are applicable per overall distance.

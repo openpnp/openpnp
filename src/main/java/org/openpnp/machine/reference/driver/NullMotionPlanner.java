@@ -27,26 +27,18 @@ import org.openpnp.spi.Movable.MoveToOption;
 
 /**
  * Simplest possible implementation of the motion planner. Just sends unmodified moveTo()s
- * to the drivers directly. 
+ * to the drivers. 
  *
  */
 public class NullMotionPlanner extends AbstractMotionPlanner {
 
     @Override
-    public void moveToPlanning(HeadMountable hm, AxesLocation axesLocation, double speed, MoveToOption... options) throws Exception {
-        super.moveToPlanning(hm, axesLocation, speed, options);
-
-        // The motion plan is in no way refined in the NullMotionPlanner. Immediately execute the moves one by one. 
-        executeMotionPlan();
-    }
-
-
-    @Override
     public void waitForCompletion(HeadMountable hm, CompletionType completionType) throws Exception {
+        // The motion plan is in no way refined in the NullMotionPlanner. Execute the moves 1:1. 
+        executeMotionPlan(completionType);
+        // Wait for drivers.
         waitForDriverCompletion(hm, completionType);
         // Now the physical completion is done, do the abstract stuff.
         super.waitForCompletion(hm, completionType);
     }
-
-
 }
