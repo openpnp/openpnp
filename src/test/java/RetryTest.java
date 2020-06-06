@@ -9,6 +9,7 @@ import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.machine.reference.ReferenceNozzleTip.VacuumMeasurementMethod;
 import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.model.Board;
@@ -111,7 +112,11 @@ public class RetryTest {
 //        Assert.assertFalse("R2 should not be placed.", boardLocation.getPlaced("R2"));
 //        Assert.assertEquals("Feed count should be 4.", 4, feeder.feedCount);
 //    }
-    
+
+    /**
+     * 
+     * @throws Exception
+     */
     @Test
     public void pickRetryTest() throws Exception {
         Configurator.currentConfig()
@@ -145,6 +150,8 @@ public class RetryTest {
         nt.setVacuumLevelPartOffHigh(100);
         nt.setVacuumLevelPartOnLow(1000);
         nt.setVacuumLevelPartOnHigh(2000);
+        nt.setMethodPartOn(VacuumMeasurementMethod.Absolute);
+        nt.setMethodPartOff(VacuumMeasurementMethod.Absolute);
         machine.addNozzleTip(nt);
         nozzle.addCompatibleNozzleTip(nt);
         
@@ -154,6 +161,7 @@ public class RetryTest {
         Part part = new Part("R-10k-0402");
         part.setPackage(packag);
         part.setHeight(new Length(1, LengthUnit.Millimeters));
+        part.setPickRetryCount(3);
         
         Board board = new Board();
 
@@ -173,7 +181,6 @@ public class RetryTest {
         feeder.setPart(part);
         feeder.setEnabled(true);
         feeder.setFeedRetryCount(3);
-        feeder.setPickRetryCount(3);
         feeder.maxFeedCount = 3;
         machine.addFeeder(feeder);
         
@@ -181,6 +188,9 @@ public class RetryTest {
         machine.home();
         PnpJobProcessor jobProcessor = machine.getPnpJobProcessor();
         jobProcessor.initialize(job);
+        jobProcessor.addTextStatusListener(s -> {
+            System.out.println("Status: " + s);
+        });
         
         try {
             while (jobProcessor.next());
@@ -203,6 +213,7 @@ public class RetryTest {
 
         @Override
         public void feed(Nozzle nozzle) throws Exception {
+            System.out.format("feed(%s) -> %s %s\n", nozzle.getName(), getName(), getPart().getId());
             if (++feedCount > maxFeedCount) {
                 throw new Exception("No parts.");
             }
@@ -236,6 +247,7 @@ public class RetryTest {
 
         @Override
         public String read() throws Exception {
+            System.out.format("read() -> %s\n", getName());
             return "0";
         }
     }

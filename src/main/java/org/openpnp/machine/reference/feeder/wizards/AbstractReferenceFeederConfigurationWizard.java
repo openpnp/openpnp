@@ -70,8 +70,6 @@ public abstract class AbstractReferenceFeederConfigurationWizard
     private JComboBox comboBoxPart;
     private LocationButtonsPanel locationButtonsPanel;
     private JTextField feedRetryCount;
-    private JLabel lblPickRetryCount;
-    private JTextField pickRetryCount;
 
     /**
      * @wbp.parser.constructor
@@ -100,8 +98,6 @@ public abstract class AbstractReferenceFeederConfigurationWizard
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         comboBoxPart = new JComboBox();
@@ -125,14 +121,6 @@ public abstract class AbstractReferenceFeederConfigurationWizard
         feedRetryCount.setText("3");
         panelPart.add(feedRetryCount, "4, 4");
         feedRetryCount.setColumns(3);
-        
-        lblPickRetryCount = new JLabel("Pick Retry Count");
-        panelPart.add(lblPickRetryCount, "2, 6, right, default");
-        
-        pickRetryCount = new JTextField();
-        pickRetryCount.setText("3");
-        pickRetryCount.setColumns(3);
-        panelPart.add(pickRetryCount, "4, 6");
 
         if (includePickLocation) {
             panelLocation = new JPanel();
@@ -198,7 +186,6 @@ public abstract class AbstractReferenceFeederConfigurationWizard
 
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
         addWrappedBinding(feeder, "feedRetryCount", feedRetryCount, "text", intConverter);
-        addWrappedBinding(feeder, "pickRetryCount", pickRetryCount, "text", intConverter);
 
         if (includePickLocation) {
             MutableLocationProxy location = new MutableLocationProxy();
@@ -214,6 +201,5 @@ public abstract class AbstractReferenceFeederConfigurationWizard
         }
 
         ComponentDecorators.decorateWithAutoSelect(feedRetryCount);
-        ComponentDecorators.decorateWithAutoSelect(pickRetryCount);
     }
 }

@@ -150,8 +150,6 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         try {
         }
@@ -182,14 +180,6 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         retryCountTf.setText("3");
         panelPart.add(retryCountTf, "4, 6, fill, default");
         retryCountTf.setColumns(3);
-        
-        lblPickRetryCount = new JLabel("Pick Retry Count");
-        panelPart.add(lblPickRetryCount, "2, 8, right, default");
-        
-        pickRetryCount = new JTextField();
-        pickRetryCount.setText("3");
-        pickRetryCount.setColumns(3);
-        panelPart.add(pickRetryCount, "4, 8, fill, default");
 
         panelTapeSettings = new JPanel();
         contentPanel.add(panelTapeSettings);
@@ -360,7 +350,6 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
         addWrappedBinding(feeder, "feedRetryCount", retryCountTf, "text", intConverter);
-        addWrappedBinding(feeder, "pickRetryCount", pickRetryCount, "text", intConverter);
         addWrappedBinding(feeder, "tapeType", comboBoxTapeType, "selectedItem");
 
         addWrappedBinding(feeder, "tapeWidth", textFieldTapeWidth, "text", lengthConverter);
@@ -388,7 +377,6 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         ComponentDecorators.decorateWithAutoSelect(textFieldLocationRotation);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldTapeWidth);
         ComponentDecorators.decorateWithAutoSelect(retryCountTf);
-        ComponentDecorators.decorateWithAutoSelect(pickRetryCount);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPartPitch);
         ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartX);
@@ -589,8 +577,6 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                          });
         }
     };
-    private JLabel lblPickRetryCount;
-    private JTextField pickRetryCount;
 
     private List<Location> findHoles(Camera camera) throws Exception {
         // Process the pipeline to clean up the image and detect the tape holes

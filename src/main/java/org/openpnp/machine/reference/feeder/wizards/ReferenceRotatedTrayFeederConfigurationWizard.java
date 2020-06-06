@@ -96,8 +96,6 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 	private LocationButtonsPanel locationButtonsPanel;
 	private LocationButtonsPanel lastLocationButtonsPanel;
 	private JTextField retryCountTf;
-	private JLabel lblPickRetryCount;
-	private JTextField pickRetryCount;
 
 	/**
 	 * @wbp.parser.constructor
@@ -124,8 +122,6 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		        FormSpecs.RELATED_GAP_COLSPEC,
 		        ColumnSpec.decode("default:grow"),},
 		    new RowSpec[] {
-		        FormSpecs.RELATED_GAP_ROWSPEC,
-		        FormSpecs.DEFAULT_ROWSPEC,
 		        FormSpecs.RELATED_GAP_ROWSPEC,
 		        FormSpecs.DEFAULT_ROWSPEC,
 		        FormSpecs.RELATED_GAP_ROWSPEC,
@@ -162,14 +158,6 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		retryCountTf.setText("3");
 		panelPart.add(retryCountTf, "4, 4");
 		retryCountTf.setColumns(3);
-		
-		lblPickRetryCount = new JLabel("Pick Retry Count");
-		panelPart.add(lblPickRetryCount, "2, 6, right, default");
-		
-		pickRetryCount = new JTextField();
-		pickRetryCount.setText("3");
-		pickRetryCount.setColumns(3);
-		panelPart.add(pickRetryCount, "4, 6, fill, default");
 
 		if (includePickLocation) {
 			panelLocation = new JPanel();
@@ -410,7 +398,6 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 
 		addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
         addWrappedBinding(feeder, "feedRetryCount", retryCountTf, "text", intConverter);
-        addWrappedBinding(feeder, "pickRetryCount", pickRetryCount, "text", intConverter);
 
 		if (includePickLocation) {
 			MutableLocationProxy location = new MutableLocationProxy();
@@ -457,7 +444,6 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsY);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldTrayRotation);
         ComponentDecorators.decorateWithAutoSelect(retryCountTf);
-        ComponentDecorators.decorateWithAutoSelect(pickRetryCount);
 		ComponentDecorators.decorateWithAutoSelect(textFieldTrayCountRows);
 		ComponentDecorators.decorateWithAutoSelect(textFieldTrayCountCols);
 		ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);

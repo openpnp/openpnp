@@ -11,6 +11,7 @@ import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.core.Commit;
 
 public abstract class AbstractFeeder extends AbstractModelObject implements Feeder {
     @Attribute
@@ -24,17 +25,14 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
     @Attribute
     protected String partId;
-    
-    /**
-     * Note: This is feedRetryCount in reality. It was left as retryCount for backwards
-     * compatibility when pickRetryCount was added. 
-     */
-    @Attribute(required=false)
-    protected int retryCount = 3;
-    
-    @Attribute(required = false)
-    protected int pickRetryCount = 3;
 
+    @Deprecated
+    @Attribute(required=false)
+    protected Integer retryCount = 3;
+    
+    @Attribute(required=false)
+    protected int feedRetryCount = 3;
+    
     protected Part part;
 
     public AbstractFeeder() {
@@ -46,6 +44,14 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
                 part = configuration.getPart(partId);
             }
         });
+    }
+    
+    @Commit
+    public void commit() {
+        if (retryCount != null) {
+            feedRetryCount = retryCount;
+            retryCount = null;
+        }
     }
 
     @Override
@@ -94,21 +100,13 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     }
 
     public int getFeedRetryCount() {
-        return retryCount;
+        return feedRetryCount;
     }
 
-    public void setFeedRetryCount(int retryCount) {
-        this.retryCount = retryCount;
+    public void setFeedRetryCount(int feedRetryCount) {
+        this.feedRetryCount = feedRetryCount;
     }
     
-    public int getPickRetryCount() {
-        return pickRetryCount;
-    }
-
-    public void setPickRetryCount(int pickRetryCount) {
-        this.pickRetryCount = pickRetryCount;
-    }
-
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration")};

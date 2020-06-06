@@ -26,11 +26,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -557,6 +557,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         
         @Override
         public Step stepImpl(PlannedPlacement plannedPlacement) throws JobProcessorException {
+            System.out.println("Pick " + plannedPlacement);
             if (plannedPlacement == null) {
                 return new Align(plannedPlacements);
             }
@@ -607,13 +608,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 checkPartOn(nozzle);
             }
             catch (JobProcessorException e) {
-                if (retryIncrementAndGet(plannedPlacement) >= feeder.getPickRetryCount()) {
+                if (retryIncrementAndGet(plannedPlacement) >= part.getPickRetryCount()) {
                     // Clear the retry count because we're about to show the error. If the user
                     // decides to try again we want to do the full retry cycle.
                     retries.remove(plannedPlacement);
                     throw e;
                 }
                 else {
+                    fireTextStatus("Discard due to error.");
                     discard(nozzle);
                     /**
                      * TODO STOPSHIP So, the bug is that we return, essentially normally from here
@@ -639,6 +641,58 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                      *           align
                      *       place
                      * 
+                     * Let's think about the different expected behaviors, ignoring alignRetry and
+                     * repickRetry for now.
+                     * 
+                     *   alertOrDeferIfError
+                     *       pickRetry(part.pickRetryCount)
+                     *           feedRetry(feeder.feedRetryCount)
+                     *               feed
+                     *       align
+                     *   place
+                     *   
+                     * The process as coded right now:
+                     * 
+                     * 1. feed
+                     * 2. checkPartOff
+                     * 3. pick
+                     * 4. postPick
+                     * 5. checkPartOn
+                     * 
+                     * The Alert / Defer stuff. Is it stupid? If you are set to Alert then
+                     * how do you fix a problem? You have to disable the feeder? From the email,
+                     * it seems like I intended you to have to mark the placement defer if you are
+                     * giving up on it.
+                     *   
+                     * So, scenarios:
+                     * 
+                     * 1. Everything works:
+                     *      Return this. We'll get called again by the step implementation of
+                     *      PlannedPlacementStep. If there's another planned placement we'll
+                     *      get it, otherwise we get null and then we return the align step.
+                     *      
+                     * 2. The feed fails:
+                     *      The feed() call retries internally and it fails all tries it throws
+                     *      the last exception. This results in a throw from this step which
+                     *      triggers the defer or alert code. That, in turn, cause this step
+                     *      to get called again if the user continues. This basically works,
+                     *      even though it kind of sucks.
+                     *      
+                     * 3. pick or checkPartOn fails:
+                     *      The big one. Currently this performs a discard and then returns
+                     *      this. I think the idea was that that would let an Alert come back
+                     *      in, but I think that code only gets called if this throws.
+                     *      
+                     *      Well, no. Sort of. If we throw that triggers Alert or Defer, neither
+                     *      of which are going to result in a retry. So that's why we originally
+                     *      set it up to to return this if there were retries available. The idea
+                     *      was to come back in here and try again. So why doesn't that happen?
+                     *      
+                     *      PlannedPlacementStep keeps a list of completed placements and if a
+                     *      step completes it gets added to it. That code checks both
+                     *      status = Processing and !completed.contains(p), and I am not sure why.
+                     *      
+                     * So, basically, this seems like a real fucking mess.
                      */
                     return this;
                 }
@@ -646,7 +700,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             return this;
         }
-        
+                
         private int retryIncrementAndGet(PlannedPlacement plannedPlacement) {
             Integer retry = retries.get(plannedPlacement);
             if (retry == null) {
@@ -678,6 +732,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 return;
             }
             try {
+                fireTextStatus("Check if nozzle is clear.", nozzle.getName());
+                
                 if (!nozzle.isPartOff()) {
                     throw new JobProcessorException(nozzle, "Part detected on nozzle before pick.");
                 }
@@ -711,6 +767,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         
         private void postPick(Feeder feeder, Nozzle nozzle) throws JobProcessorException {
             try {
+                fireTextStatus("Post pick %s.", feeder.getName());
+                
                 feeder.postPick(nozzle);
             }
             catch (Exception e) {
@@ -723,6 +781,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 return;
             }
             try {
+                fireTextStatus("Check if part is detected on nozzle %s.", nozzle.getName());
+                
                 if(!nozzle.isPartOn()) {
                     throw new JobProcessorException(nozzle, "No part detected after pick.");
                 }

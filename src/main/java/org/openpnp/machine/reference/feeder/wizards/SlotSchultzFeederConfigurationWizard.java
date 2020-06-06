@@ -168,8 +168,6 @@ public class SlotSchultzFeederConfigurationWizard
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,});
         fl_whateverPanel.setColumnGroups(new int[][]{new int[]{4, 6, 8, 10}});
         whateverPanel.setLayout(fl_whateverPanel);
@@ -189,18 +187,11 @@ public class SlotSchultzFeederConfigurationWizard
         JButton deleteFeederBtn = new JButton(deleteFeederAction);
         panel_1.add(deleteFeederBtn);
         
-        JLabel lblPickRetryCount = new JLabel("Pick Retry Count");
-        whateverPanel.add(lblPickRetryCount, "2, 12, right, default");
-        
-        pickRetryCount = new JTextField();
-        pickRetryCount.setColumns(10);
-        whateverPanel.add(pickRetryCount, "4, 12, fill, default");
-        
         JLabel lblBank = new JLabel("Bank");
-        whateverPanel.add(lblBank, "2, 14, right, default");
+        whateverPanel.add(lblBank, "2, 12, right, default");
         
         bankCb = new JComboBox();
-        whateverPanel.add(bankCb, "4, 14, 3, 1");
+        whateverPanel.add(bankCb, "4, 12, 3, 1");
         bankCb.addActionListener(e -> {
             feederCb.removeAllItems();
             Bank bank = (Bank) bankCb.getSelectedItem();
@@ -501,13 +492,13 @@ public class SlotSchultzFeederConfigurationWizard
         feedRetryCount.setColumns(10);
         
         bankNameTf = new JTextField();
-        whateverPanel.add(bankNameTf, "8, 14, 3, 1");
+        whateverPanel.add(bankNameTf, "8, 12, 3, 1");
         bankNameTf.setColumns(10);
         
         JPanel panel = new JPanel();
         FlowLayout flowLayout = (FlowLayout) panel.getLayout();
         flowLayout.setAlignment(FlowLayout.LEFT);
-        whateverPanel.add(panel, "12, 14");
+        whateverPanel.add(panel, "12, 12");
         
         JButton newBankBtn = new JButton(newBankAction);
         panel.add(newBankBtn);
@@ -530,7 +521,6 @@ public class SlotSchultzFeederConfigurationWizard
 
         addWrappedBinding(feeder, "fiducialPart", fiducialPartTf, "text");
         addWrappedBinding(feeder, "feedRetryCount", feedRetryCount, "text", intConverter);
-        addWrappedBinding(feeder, "pickRetryCount", pickRetryCount, "text", intConverter);
 
         addWrappedBinding(feeder, "actuatorName", comboBoxFeedActuator, "selectedItem");
         addWrappedBinding(feeder, "actuatorType", actuatorType, "selectedItem");
@@ -636,7 +626,6 @@ public class SlotSchultzFeederConfigurationWizard
         ComponentDecorators.decorateWithAutoSelect(fiducialPartTf);
 
         ComponentDecorators.decorateWithAutoSelect(feedRetryCount);
-        ComponentDecorators.decorateWithAutoSelect(pickRetryCount);
         
         feederPartCb.addActionListener(e -> {
             notifyChange();
@@ -922,5 +911,4 @@ public class SlotSchultzFeederConfigurationWizard
     private LocationButtonsPanel offsetLocButtons;
     private LocationButtonsPanel pickLocButtons;
     private JTextField feedRetryCount;
-    private JTextField pickRetryCount;
 }
