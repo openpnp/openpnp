@@ -333,7 +333,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         // last pick location
         nozzle.moveTo(location.add(new Location(LengthUnit.Millimeters, 0, 0, lastFeedDepth, 0)), Movable.MoveToOption.SpeedOverPrecision);
         // while vacuum difference is not reached, slowly stir in the heap
-        double currentDepth = lastFeedDepth;
+        double currentDepth = lastFeedDepth + part.getHeight().getValue(); // start always a bit higher than last time, bu be sure that level is empty
         for (int i = 0; ! stableVacuumDifferenceReached(nozzle, vacuumLevel, requiredVacuumDifference) && currentDepth > (boxDepth + part.getHeight().getValue()); i++) {
             switch (i % 8) {
                 case 0: {
@@ -609,14 +609,22 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         }
         this.dropBox.setCenterBottomLocation(dropBox);
     }
+    
+    public Location getDropBoxDropLocation() {
+        return dropBox.getDropLocation();
+    }
+    // Workaround that in the Wizzard te old feeder is cached otherwise
+    public void setDropBoxDropLocation(Location dropBox) throws Exception {
+        if (dropBox == null) {
+            throw new Exception("Location is required.");
+        }
+        this.dropBox.setDropLocation(dropBox);
+    }
 
     
 
     @Root
     public static class DropBox extends AbstractModelObject implements Identifiable, Named {
-        // some settings that I might expose later
-        final static int dropHeight = 20;   // too high and they might jump out of the DropBox
-
         @Attribute(name = "id")
         final private String id;
 
@@ -634,7 +642,14 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
          */
         @Element
         private Location centerBottomLocation = new Location(LengthUnit.Millimeters);
+        
+        /**
+         * Location where to drop parts
+         */
+        @Element(required = false)
+        private Location dropLocation = new Location(LengthUnit.Millimeters);
 
+        
         /**
          * "Fake" Part that is used to move unknown parts.
          * Used for partHeight, nozzleTip selection and so on.
@@ -699,10 +714,6 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
          * @throws Exception something went wrong.
          */
         public void dropInto(Nozzle nozzle) throws Exception {
-            Location dropLocation = centerBottomLocation.add(new Location(LengthUnit.Millimeters, 0d, 0d, dropHeight, 0d));
-            if (dropLocation.getZ() > 0) {
-                dropLocation = dropLocation.derive(null, null, 0d, null);
-            }
             dropPart(nozzle, dropLocation);
         }
 
@@ -715,7 +726,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         public boolean tryToFlipSomePart(Nozzle nozzle) throws Exception {
             // is there a part
             Location partLocation = getPartPickLocation(nozzle);
-            if (partLocation == null) {
+            if (partLocation == null || lastHeap == null) {
                 return false; // is empty
             } else {
                 // pick part, move up, drop ist
@@ -804,11 +815,15 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             nozzle.moveTo(location);
             // discard the part
             nozzle.place();
-            long  dropWait = System.currentTimeMillis() + Math.round(1.3 * (((ReferenceNozzle)nozzle).getPlaceDwellMilliseconds() + ((ReferenceNozzleTip)nozzle.getNozzleTip()).getPlaceDwellMilliseconds()));
+            // blow off the part
+            Actuator blowOffValve = nozzle.getHead().getActuatorByName(((ReferenceNozzle) nozzle).getBlowOffActuatorName()); 
+            if (blowOffValve != null) {
+                blowOffValve.actuate(true);
+            }
+            Thread.sleep(Math.round(1.1 * (((ReferenceNozzle)nozzle).getPlaceDwellMilliseconds() + ((ReferenceNozzleTip)nozzle.getNozzleTip()).getPlaceDwellMilliseconds())));
             // move the nozzle a bit to help parts fall down
-            while (System.currentTimeMillis() < dropWait) {
-                nozzle.moveTo(location.addWithRotation(new Location(LengthUnit.Millimeters, 0.5, 0.5, 0, 5)), 1, Movable.MoveToOption.SpeedOverPrecision);
-                nozzle.moveTo(location.addWithRotation(new Location(LengthUnit.Millimeters, -0.5, -0.5, 0, -5)), 1, Movable.MoveToOption.SpeedOverPrecision);
+            if (blowOffValve != null) {
+                blowOffValve.actuate(false);
             }
             if (!nozzle.isPartOff()) {
                 throw new Exception("DropBox " + getName() + ": Dropping part failed, check nozzle tip");
@@ -931,6 +946,14 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
 
         public void setDummyPartForUnknown(Part dummyPartForUnknown) {
             this.dummyPartForUnknown = dummyPartForUnknown;
+        }
+        
+        public Location getDropLocation() {
+            return dropLocation;
+        }
+
+        public void setDropLocation(Location dropLocation) {
+            this.dropLocation = dropLocation;
         }
 
         public ReferenceHeapFeeder getLastHeap() {

@@ -22,10 +22,15 @@ package org.openpnp.machine.reference.feeder.wizards;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.Collections;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -44,13 +49,13 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
+import org.openpnp.gui.support.IdentifiableComparator;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.JBindings.Wrapper;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
-import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.feeder.ReferenceHeapFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceHeapFeeder.DropBox;
 import org.openpnp.model.Configuration;
@@ -66,11 +71,40 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
+@SuppressWarnings("serial")
 public class ReferenceHeapFeederConfigurationWizard
         extends AbstractConfigurationWizard {
     private final ReferenceHeapFeeder feeder;
     private JTextField dropBoxNameTf;
 
+    @SuppressWarnings("rawtypes")
+    public class PartsComboBoxModel extends DefaultComboBoxModel implements PropertyChangeListener {
+        private IdentifiableComparator<Part> comparator = new IdentifiableComparator<>();
+
+        public PartsComboBoxModel() {
+            addAllElements();
+            Configuration.get().addPropertyChangeListener("parts", this);
+        }
+
+        @SuppressWarnings("unchecked")
+        private void addAllElements() {
+            ArrayList<Part> parts = new ArrayList<>(Configuration.get().getParts());
+            Collections.sort(parts, comparator);
+            for (Part part : parts) {
+                addElement(part);
+            }
+        }
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            Object selected = getSelectedItem();
+            removeAllElements();
+            addAllElements();
+            setSelectedItem(selected);
+        }
+    }
+
+    
     public ReferenceHeapFeederConfigurationWizard(ReferenceHeapFeeder feeder) {
         this.feeder = feeder;
         
@@ -151,13 +185,13 @@ public class ReferenceHeapFeederConfigurationWizard
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.MIN_COLSPEC,
+                ColumnSpec.decode("min:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.MIN_COLSPEC,
+                ColumnSpec.decode("min:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.MIN_COLSPEC,
+                ColumnSpec.decode("min:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.MIN_COLSPEC,
+                ColumnSpec.decode("min:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
@@ -165,6 +199,8 @@ public class ReferenceHeapFeederConfigurationWizard
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -207,27 +243,47 @@ public class ReferenceHeapFeederConfigurationWizard
         flowLayout_5.setAlignment(FlowLayout.LEFT);
         dropBoxPanel.add(dropBoxLocButtons, "10, 4, fill, fill");
         
+        lblDropLocation = new JLabel("Drop Location");
+        dropBoxPanel.add(lblDropLocation, "2, 6");
+        
+        tfDropLocation_x = new JTextField();
+        dropBoxPanel.add(tfDropLocation_x, "4, 6, fill, default");
+        tfDropLocation_x.setColumns(10);
+        
+        tfDropLocation_y = new JTextField();
+        dropBoxPanel.add(tfDropLocation_y, "6, 6, fill, default");
+        tfDropLocation_y.setColumns(10);
+        
+        tfDropLocation_z = new JTextField();
+        dropBoxPanel.add(tfDropLocation_z, "8, 6, fill, default");
+        tfDropLocation_z.setColumns(10);
+        
+        dropBoxDropLocButtons = new LocationButtonsPanel(tfDropLocation_x, tfDropLocation_y, tfDropLocation_z, (JTextField) null);
+        FlowLayout fl_dropBoxDropLocButtons = (FlowLayout) dropBoxDropLocButtons.getLayout();
+        fl_dropBoxDropLocButtons.setAlignment(FlowLayout.LEFT);
+        dropBoxPanel.add(dropBoxDropLocButtons, "10, 6, left, fill");
+        
         lblPartsPipeline = new JLabel("Parts Pipeline");
-        dropBoxPanel.add(lblPartsPipeline, "2, 6, right, default");
+        dropBoxPanel.add(lblPartsPipeline, "2, 8, right, default");
         
         btnEditPartsPipeline = new JButton(actionPipelineEditDropBox);
-        dropBoxPanel.add(btnEditPartsPipeline, "4, 6");
+        dropBoxPanel.add(btnEditPartsPipeline, "4, 8");
         
         btnResetPartsPipeline = new JButton(actionPipelineResetDropBox);
-        dropBoxPanel.add(btnResetPartsPipeline, "6, 6");
+        dropBoxPanel.add(btnResetPartsPipeline, "6, 8");
         
         lblDummyPart = new JLabel("Dummy Part");
         lblDummyPart.setToolTipText("");
-        dropBoxPanel.add(lblDummyPart, "2, 8, right, default");
+        dropBoxPanel.add(lblDummyPart, "2, 10, right, default");
         
         cbDummyPartForUnknownParts = new JComboBox<Part>();
         cbDummyPartForUnknownParts.setModel(new PartsComboBoxModel());
         cbDummyPartForUnknownParts.setRenderer(new IdentifiableListCellRenderer<Part>());
         cbDummyPartForUnknownParts.setToolTipText("Dummy part for moving unknown parts (e.g. to the trash). Is also used to determine the used nozzle.");
-        dropBoxPanel.add(cbDummyPartForUnknownParts, "4, 8, fill, default");
+        dropBoxPanel.add(cbDummyPartForUnknownParts, "4, 10, fill, default");
         
         btnCleanDropbox = new JButton(actionCleanDropbox);
-        dropBoxPanel.add(btnCleanDropbox, "10, 8");
+        dropBoxPanel.add(btnCleanDropbox, "10, 10");
                 
         JLabel lblX = new JLabel("X");
         whateverPanel.add(lblX, "4, 4, center, default");
@@ -475,12 +531,21 @@ public class ReferenceHeapFeederConfigurationWizard
         bind(UpdateStrategy.READ_WRITE, dropBoxLocation, "lengthX", tfCenterBottomLocation_x, "text", lengthConverter);
         bind(UpdateStrategy.READ_WRITE, dropBoxLocation, "lengthY", tfCenterBottomLocation_y, "text", lengthConverter);
         bind(UpdateStrategy.READ_WRITE, dropBoxLocation, "lengthZ", tfCenterBottomLocation_z, "text", lengthConverter);
-        //bind(UpdateStrategy.READ, dropBoxLocation, "location", dropBoxLocButtons, "baseLocation");
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfCenterBottomLocation_x);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfCenterBottomLocation_y);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfCenterBottomLocation_z);
-        bind(UpdateStrategy.READ_WRITE, dropBoxWrapper, "value.centerBottomLocation", dropBoxLocation, "location");
+        //bind(UpdateStrategy.READ_WRITE, dropBoxWrapper, "value.centerBottomLocation", dropBoxLocation, "location");
         
+        MutableLocationProxy dropBoxDropLocation = new MutableLocationProxy();
+        addWrappedBinding(feeder, "dropBoxDropLocation", dropBoxDropLocation, "location");
+        bind(UpdateStrategy.READ_WRITE, dropBoxDropLocation, "lengthX", tfDropLocation_x, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, dropBoxDropLocation, "lengthY", tfDropLocation_y, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, dropBoxDropLocation, "lengthZ", tfDropLocation_z, "text", lengthConverter);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfDropLocation_x);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfDropLocation_y);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfDropLocation_z);
+        //bind(UpdateStrategy.READ_WRITE, dropBoxWrapper, "value.dropLocation", dropBoxDropLocation, "location");
+
         
         dropBoxCb.addActionListener(e -> {
             notifyChange();
@@ -675,4 +740,9 @@ public class ReferenceHeapFeederConfigurationWizard
     private JButton btnDeleteDropBox;
     private JButton btnCleanDropbox;
     private JButton btnGetSamples;
+    private JTextField tfDropLocation_x;
+    private JTextField tfDropLocation_y;
+    private JTextField tfDropLocation_z;
+    private JLabel lblDropLocation;
+    private LocationButtonsPanel dropBoxDropLocButtons;
 }
