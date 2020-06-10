@@ -94,7 +94,7 @@ This command is useful in systems that use multiple controllers where it is desi
 
 ### PICK_COMMAND
 
-**NOTE: **This command is deprecated in OpenPnP 2.0. See the [Vacuum Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup).
+**NOTE** This command is deprecated in OpenPnP 2.0. See the [Vacuum Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup).
 
 Sent to indicate that the machine should pick a part. Typically turns on a vacuum pump or solenoid.
 
@@ -111,7 +111,7 @@ M800 ; Turn on nozzle 1 vacuum solenoid
 
 ### PLACE_COMMAND
 
-**NOTE: **This command is deprecated in OpenPnP 2.0. See the [Vacuum Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup).
+**NOTE** This command is deprecated in OpenPnP 2.0. See the [Vacuum Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup).
 
 Sent to indicate that the machine should place a part. Typically turns off a vacuum pump or solenoid. May also trigger an exhaust solenoid or blow off valve.
 
