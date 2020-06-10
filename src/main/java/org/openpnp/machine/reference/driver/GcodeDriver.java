@@ -910,8 +910,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
              * If the command or regex is null we'll query the subdrivers. The first to respond
              * with a non-null value wins.
              */
+        	String val;
             for (ReferenceDriver driver : subDrivers) {
-                String val = driver.actuatorRead(actuator);
+                if (parameter == null) {
+                    val = driver.actuatorRead(actuator);
+                }
+                else {
+                    val = driver.actuatorRead(actuator, parameter);
+                }
                 if (val != null) {
                     return val;
                 }
@@ -921,7 +927,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
              * we've exhausted all the options to service the command, so throw an error.
              */
             if (parent == null) {
-                throw new Exception(String.format("Actuator \"%s\" read error: Driver configuration is missing ACTUATOR_READ_COMMAND or ACTUATOR_READ_REGEX.", actuator.getName()));
+                throw new Exception(String.format("Actuator \"%s\" read error: Driver configuration is missing ACTUATOR_READ_COMMAND or ACTUATOR_READ_WITH_DOUBLE_COMMAND or ACTUATOR_READ_REGEX.", actuator.getName()));
             }
             else {
                 return null;
