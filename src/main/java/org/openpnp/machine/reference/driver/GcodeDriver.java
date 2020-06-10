@@ -927,7 +927,12 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
              * we've exhausted all the options to service the command, so throw an error.
              */
             if (parent == null) {
-                throw new Exception(String.format("Actuator \"%s\" read error: Driver configuration is missing ACTUATOR_READ_COMMAND or ACTUATOR_READ_WITH_DOUBLE_COMMAND or ACTUATOR_READ_REGEX.", actuator.getName()));
+                if (parameter == null) {
+                	throw new Exception(String.format("Actuator \"%s\" read error: Driver configuration is missing ACTUATOR_READ_COMMAND or ACTUATOR_READ_REGEX.", actuator.getName()));
+                }
+                else {
+                	throw new Exception(String.format("Actuator \"%s\" read error: Driver configuration is missing ACTUATOR_READ_WITH_DOUBLE_COMMAND or ACTUATOR_READ_REGEX.", actuator.getName()));
+                }
             }
             else {
                 return null;
