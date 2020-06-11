@@ -41,7 +41,7 @@ public class TruncatedNewtonSolverTest extends TruncatedNewtonConstrainedSolver{
         double dx = armPosition[0] - target[0];
         double dy = armPosition[1] - target[1];
         double precision = Math.sqrt(Math.pow(dx, 2)+Math.pow(dy, 2));
-        Logger.info(String.format("Robot arm commanded to %.3f, %.3f moved to %.3f, %.3f, precision %f, target %f, solved in %.3fms, %d evals, state %s.",
+        log(String.format("Robot arm commanded to %.3f, %.3f moved to %.3f, %.3f, precision %f, target %f, solved in %.3fms, %d evals, state %s.",
                 target[0], target[1], armPosition[0], armPosition[1], precision, wantedPrecision,
                 (NanosecondTime.getRuntimeSeconds()-t0)*1000, getFunctionEvalCount(), getSolverState()));
         if (precision > wantedPrecision) {

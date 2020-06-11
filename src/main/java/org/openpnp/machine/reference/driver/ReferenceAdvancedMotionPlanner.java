@@ -59,7 +59,6 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
         super.waitForCompletion(hm, completionType);
     }
 
-
     public void planMotion(CompletionType completionType) throws Exception {
         // Plan the tail of the queued motions.
         ArrayList<Motion> motionPath = new ArrayList<>();
@@ -71,36 +70,11 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                 if (prevMotion != null 
                         && !prevMotion.getLocation().motionSegmentTo(queuedMotion.getLocation()).isEmpty()) {
                     // The queued motion are the fixed way-points. We need to insert segments for 3rd order motion control.
-                    // The simplest general form is a four-segment "mirror-S" curve. A co-linear motion sequence could be even simpler, 
-                    // but we ignore this case here.
-                    AxesLocation zeroVectorAxes = new AxesLocation(queuedMotion.getLocation().getControllerAxes(), 
-                            (a) -> new Length(0, AxesLocation.getUnits()));
-                            
-                    // Kill current "solution", we only interpolate the location.
-                    AxesLocation delta = prevMotion.getLocation().motionSegmentTo(queuedMotion.getLocation());
-                    // TODO: better heuristics 
-                    final int segments = 4;
-                    for (int interpolate = 1; interpolate < segments; interpolate++) {
-                        Motion interpolateMotion = prevMotion.interpolate(queuedMotion, interpolate*1.0/segments);
-                        interpolateMotion.setTime(queuedMotion.getTime()/segments);
-                        interpolateMotion.clearOption(Motion.MotionOption.FixedWaypoint);
-                        if (isInSaveZZone(prevMotion) && isInSaveZZone(queuedMotion)) {
-                            interpolateMotion.clearOption(Motion.MotionOption.CoordinatedWaypoint);
-                            interpolateMotion.setOption(Motion.MotionOption.LimitToSafeZZone);
-                        }
-                        interpolateMotion.setVector(Motion.Derivative.Velocity, delta.multiply(1./(queuedMotion.getTime()+0.01)));
-                        interpolateMotion.setVector(Motion.Derivative.Acceleration, zeroVectorAxes);
-                        interpolateMotion.setVector(Motion.Derivative.Jerk, zeroVectorAxes);
-                        motionPath.add(interpolateMotion);
+                    if (isInSaveZZone(queuedMotion)) {
+                        
                     }
-                    queuedMotion.setTime(queuedMotion.getTime()/segments);
-                    queuedMotion.setVector(Motion.Derivative.Velocity, delta.multiply(1./(queuedMotion.getTime()+0.01)));
-                    queuedMotion.setVector(Motion.Derivative.Acceleration, zeroVectorAxes);
-                    queuedMotion.setVector(Motion.Derivative.Jerk, zeroVectorAxes);
                     
                 }
-                // Add to list.
-                motionPath.add(queuedMotion);
                 // Next, please.
                 prevMotion = queuedMotion;
             }
@@ -108,12 +82,9 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
             if (completionType == CompletionType.WaitForStillstand) {
                 prevMotion.setOption(Motion.MotionOption.Stillstand);
             }
-            AdvancedMotionSolver solver = new AdvancedMotionSolver();
-            solver.outputMotionPath("before", motionPath);
-            solver.elaborateMotionPath(motionPath, solver.new ConstraintsModeller());
-            solver.solve(1000000, precision.convertToUnits(AxesLocation.getUnits()).getValue()*0.00000001);
-            Logger.debug("solver state: {}, iterations: {}, error: {}", solver.getSolverState(), solver.getFunctionEvalCount(), solver.getLastError());
-            solver.outputMotionPath("after", motionPath);
+            
+            
+            
             // Remove the old plan
             while (motionPlan.size() > 0) {
                 double last = motionPlan.lastKey();

@@ -246,7 +246,7 @@ public class AdvancedMotionSolver extends TruncatedNewtonConstrainedSolver {
                         if (coordinatedMotionLimits != null) {
                             AxesLocation vector = coordinatedMotionLimits.getVector(Motion.Derivative.Velocity);
                             for (ControllerAxis axis : axes) {
-                                double weight = vector.getCoordinate(axis)/vector.getCoordinate(Motion.Euclidean);
+                                double weight = vector.getCoordinate(axis)/vector.getCoordinate(Motion.EuclideanAxis);
                                 if (weight > coordinatedLeadAxisWeight) {
                                     coordinatedLeadAxis = axis;
                                     coordinatedLeadAxisWeight = weight;
@@ -545,14 +545,15 @@ g[_jLead] +=
 
                 final double leadFactor;
                 if (coordinatedLeadAxis != null) {
-                    leadFactor = coordinatedVector.getCoordinate(axis)/coordinatedVector.getCoordinate(Motion.Euclidean)
+                    leadFactor = coordinatedVector.getCoordinate(axis)/coordinatedVector.getCoordinate(Motion.EuclideanAxis)
                             /coordinatedLeadAxisWeight;
                 }
                 else {
                     leadFactor = 0.0;
                 }
                 final double softError =  1/(1+Math.sqrt(getFunctionEvalCount()));
-
+                final int segmentPhase = motion.getSegmentPhase();
+                final double signumPhase = Math.signum(leadFactor);
 
                 // Formulate the per-motion-per-axis constraints.
                 addConstraints(new Constraints() {
@@ -572,47 +573,72 @@ g[_jLead] +=
                         // Powers of time t.
                         double t = x[t_];
                         double t2 = t*t;
-                        double t3 = t2*t;
-                        double t4 = t3*t;
-                        double t5 = t4*t;
 
-                        // These are the motion equations, half period, supposed to meet in the middle.
-                        double a0eq =
-                                1./2*j*t + a0;
-                        double v0eq =
-                                1./8*j*t2 + 1./2*a0*t + v0;
-                        double s0eq =
-                                1./48*j*t3 + 1./8*a0*t2 + 1./2*v0*t + s0;
-                        double a1eq =
-                                -1./2*j*t + a1;
-                        double v1eq =
-                                1./8*j*t2 - 1./2*a1*t + v1;
-                        double s1eq =
-                                -1./48*j*t3 + 1./8*a1*t2 - 1./2*v1*t + s1;
+                        double teq = t;
+                        double seq = s1;
+                        double veq = v1;
+                        double aeq = a1;
+                        double jeq = j;
+                        int hardness = 0;
 
-                        // Errors meeting in the middle.
-                        double error = Math.pow(s0eq - s1eq, 2) + Math.pow((v0eq - v1eq)*t, 2) + Math.pow((a0eq - a1eq)*t2, 2);
+                        switch (segmentPhase) {
+                            case 1:
+                                // Jerk phase to accelerate.
+                                jeq = signumPhase*jMax;
+                                teq = (aMax - signumPhase*a0)/jMax;
+                                hardness = 5;
+                                break;
+                            case 2:
+                                // Constant acceleration phase.
+                                jeq = 0;
+                                aeq = signumPhase*aMax;
+                                // Jerk time to 0 acceleration.
+                                double t3 = signumPhase*aMax/jMax;
+                                double v3 = signumPhase*(vMax - 1./2*jMax*Math.pow(t3,2));
+                                teq = (v3 - v0)/aMax;
+                                hardness = 4;
+                                break;
+                            case 3:
+                                // Negative jerk phase to constant velocity.
+                                jeq = -signumPhase*jMax;
+                                teq = signumPhase*a0/jMax;
+                                hardness = 5;
+                                break;
+                            case 4:
+                                // Constant velocity phase.
+                                jeq = 0;
+                                aeq = 0;
+                                hardness = 3;
+                                break;
+                            case 5:
+                                // Negative jerk phase to decelerate.
+                                jeq = -signumPhase*jMax;
+                                teq = -signumPhase*a1/jMax;
+                                hardness = 5;
+                                break;
+                            case 6:
+                                // Constant deceleration phase.
+                                jeq = 0;
+                                aeq = -signumPhase*aMax;
+                                // Jerk time to 0 acceleration.
+                                double t5 = signumPhase*aMax/jMax;
+                                double v5 = signumPhase*(vMax - 1./2*jMax*Math.pow(t5,2));
+                                teq = (v5 - v1)/aMax;
+                                hardness = 4;
+                                break;
+                            case 7:
+                                // Jerk phase to target acceleration.
+                                jeq = signumPhase*jMax;
+                                teq = -signumPhase*a0/jMax;
+                                hardness = 5;
+                                break;
+                        }
 
-                        // No optimization yet. Trust the JIT compiler and/or do optimization once the math works.
-                        
-                        //g[_t] +=
-                        //        2*(j*t + a0 - a1)*j*t4 + 4*Math.pow(j*t + a0 - a1, 2)*t3 + 1./2*(a0*t + a1*t + 2*V0 - 2*V1)*(a0 + a1)*t2 + 1./2*Math.pow(a0*t + a1*t + 2*V0 - 2*V1, 2)*t + 1./96*(j*t3 + 3*a0*t2 - 3*a1*t2 + 12*V0*t + 12*V1*t + 24*s0 - 24*s1)*(j*t2 + 2*a0*t - 2*a1*t + 4*V0 + 4*V1);
-                        g[s0_] +=
-                                1./12*j*t3 + 1./4*a0*t2 - 1./4*a1*t2 + v0*t + v1*t + 2*s0 - 2*s1;
-                        g[v0_] +=
-                                (a0*t + a1*t + 2*v0 - 2*v1)*t2 + 1./24*(j*t3 + 3*a0*t2 - 3*a1*t2 + 12*v0*t + 12*v1*t + 24*s0 - 24*s1)*t;
-                        g[a0_] +=
-                                2*(j*t + a0 - a1)*t4 + 1./2*(a0*t + a1*t + 2*v0 - 2*v1)*t3 + 1./96*(j*t3 + 3*a0*t2 - 3*a1*t2 + 12*v0*t + 12*v1*t + 24*s0 - 24*s1)*t2;
-                        g[s1_] +=
-                                -1./12*j*t3 - 1./4*a0*t2 + 1/4*a1*t2 - v0*t - v1*t - 2*s0 + 2*s1;
-                        g[v1_] +=
-                                -(a0*t + a1*t + 2*v0 - 2*v1)*t2 + 1./24*(j*t3 + 3*a0*t2 - 3*a1*t2 + 12*v0*t + 12*v1*t + 24*s0 - 24*s1)*t;
-                        g[a1_] +=
-                                -2*(j*t + a0 - a1)*t4 + 1/2*(a0*t + a1*t + 2*v0 - 2*v1)*t3 - 1./96*(j*t3 + 3*a0*t2 - 3*a1*t2 + 12*v0*t + 12*v1*t + 24*s0 - 24*s1)*t2;
-                        g[j_] +=
-                                2*(j*t + a0 - a1)*t5 + 1./288*(j*t3 + 3*a0*t2 - 3*a1*t2 + 12*v0*t + 12*v1*t + 24*s0 - 24*s1)*t3;
-
-
+                        if (t < 0) {
+                            hardness = 7;
+                            
+                        }
+                        double error = 0.0;
                         // Coordinated moves.
                         if (coordinatedLeadAxis != null
                                 && coordinatedLeadAxis != axis) {
@@ -634,7 +660,7 @@ g[_jLead] +=
 
                         // Soft time error
                         //error += softError*t2;
-                       // g[_t] += 2*softError*t;
+                        // g[_t] += 2*softError*t;
                         return error;
                     }
                 });
@@ -665,7 +691,7 @@ g[_jLead] +=
             upper[var.i()] = var.getUpperLimit();
         }
         // Solve it.
-        lastError = solve(x, lower, upper, TNC_MSG_NONE, maxfneval, tolerance*tolerance*tolerance, 0, tolerance*tolerance*tolerance);
+        lastError = solve(x, lower, upper, TNC_MSG_NONE, maxfneval, tolerance*tolerance, 0, tolerance*tolerance);
         // Write back the variables to the motion.
         for (Var var : variables) {
             var.set(x[var.i()]);

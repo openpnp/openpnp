@@ -53,6 +53,7 @@ public class Motion {
     private double time;
     private AxesLocation [] vector;
     private int options;
+    private int segmentPhase;
     private MotionCommand motionCommand;
 
     public Motion(double time, MotionCommand motionCommand, AxesLocation[] vector, MotionOption... options) {
@@ -100,6 +101,14 @@ public class Motion {
     }
 
 
+    public int getSegmentPhase() {
+        return segmentPhase;
+    }
+    public void setSegmentPhase(int segmentPhase) {
+        this.segmentPhase = segmentPhase;
+    }
+
+
     public enum Derivative {
         Location,
         Velocity,
@@ -107,7 +116,7 @@ public class Motion {
         Jerk
     }
 
-    static public final ReferenceVirtualAxis Euclidean = new ReferenceVirtualAxis() {
+    static public final ReferenceVirtualAxis EuclideanAxis = new ReferenceVirtualAxis() {
         { this.setName("Euclidean"); }
     };
 
@@ -319,8 +328,8 @@ public class Motion {
         // Also include the given speed factor.
         double speedEffective = (time > 0 ? euclideanTime/time : 1.0) * Math.max(0.01, speed);
         // Add a virtual Distance axis to store the limits in the motion, as these are applicable per overall distance.
-        AxesLocation motionLocation = location1.put(new AxesLocation(Motion.Euclidean, euclideanLimits[0]));
-        AxesLocation motionDistance = distance.put(new AxesLocation(Motion.Euclidean, euclideanLimits[0]));
+        AxesLocation motionLocation = location1.put(new AxesLocation(Motion.EuclideanAxis, euclideanLimits[0]));
+        AxesLocation motionDistance = distance.put(new AxesLocation(Motion.EuclideanAxis, euclideanLimits[0]));
         AxesLocation [] motionDerivatives = new AxesLocation [ControllerAxis.motionLimitsOrder+1];
         // The 0th derivative is the location itself. 
         motionDerivatives[0] = motionLocation;
@@ -345,16 +354,25 @@ public class Motion {
     public AxesLocation getLocation() {
         return getVector(Derivative.Location);
     }
+    public AxesLocation getVelocity() {
+        return getVector(Derivative.Velocity);
+    }
+    public AxesLocation getAcceleration() {
+        return getVector(Derivative.Acceleration);
+    }
+    public AxesLocation getJerk() {
+        return getVector(Derivative.Jerk);
+    }
     public double getFeedRatePerSecond(LengthUnit units) {
-        return getVector(Derivative.Velocity).getCoordinate(Euclidean, units);
+        return getVector(Derivative.Velocity).getCoordinate(EuclideanAxis, units);
     }
     public double getFeedRatePerMinute(LengthUnit units) {
-        return getVector(Derivative.Velocity).getCoordinate(Euclidean, units)*60.0;
+        return getVector(Derivative.Velocity).getCoordinate(EuclideanAxis, units)*60.0;
     }
     public double getAccelerationPerSecond2(LengthUnit units) {
-        return getVector(Derivative.Acceleration).getCoordinate(Euclidean, units);
+        return getVector(Derivative.Acceleration).getCoordinate(EuclideanAxis, units);
     }
     public double getJerkPerSecond3(LengthUnit units) {
-        return getVector(Derivative.Jerk).getCoordinate(Euclidean, units);
+        return getVector(Derivative.Jerk).getCoordinate(EuclideanAxis, units);
     }
 }

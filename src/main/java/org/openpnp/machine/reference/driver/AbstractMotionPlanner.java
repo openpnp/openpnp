@@ -10,6 +10,7 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -83,7 +84,6 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
     protected List<MotionCommand> commandSequence = new ArrayList<>();
 
     protected TreeMap<Double, Motion> motionPlan = new TreeMap<Double, Motion>(); 
-
 
     @Override
     public synchronized void home() throws Exception {
@@ -192,8 +192,8 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
         List<Head> movedHeads = new ArrayList<>();
         for (Entry<Double, Motion> plannedMotionEntry : motionPlan.tailMap(planExecutedTime, false).entrySet()) {
-            // Remember this motion was executed up-front, so an exception in the execution will not matter i.e. we 
-            // are not stuck with this motion again and again.
+            // Advance the planExecutedTime up-front, so an exception in the execution will not mean we 
+            // are stuck with this motion again and again.
             planExecutedTime = plannedMotionEntry.getKey();
             Motion plannedMotion = plannedMotionEntry.getValue();
             if (!plannedMotion.hasOption(MotionOption.Stillstand)) {
@@ -358,6 +358,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
         }
     }
 
+    
 
     @Override
     public ReferenceMachine getMachine() {

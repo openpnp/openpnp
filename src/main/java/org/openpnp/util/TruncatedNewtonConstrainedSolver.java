@@ -358,7 +358,7 @@ public abstract class TruncatedNewtonConstrainedSolver {
             double accuracy,
             double fmin,
             double ftol) throws Exception {
-        return solve(x, null, low, up, null, null, messages, -1, maxnfeval, -1, -1, accuracy, fmin, ftol, -1, -1, -1);
+        return solve(x, null, low, up, null, null, messages, -1, maxnfeval, 0, -1, accuracy, fmin, ftol, -1, -1, -1);
     }
 
     /* Coerce x into bounds */
@@ -1225,8 +1225,6 @@ public abstract class TruncatedNewtonConstrainedSolver {
         double [] newgfull;
         double gu;
         double xnorm;
-        double epsmch;
-        double rteps;
         double pe;
         double reltol;
         double abstol;
