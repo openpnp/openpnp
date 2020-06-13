@@ -21,12 +21,18 @@
 
 package org.openpnp.model;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
 import java.util.function.BiFunction;
 
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.machine.reference.driver.AbstractMotionPlanner.MotionCommand;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
+import org.openpnp.spi.Driver;
+import org.openpnp.util.Triplet;
 
 /**
  * The Motion represents one segment/waypoint in a motion sequence. It contains the point in time
@@ -40,7 +46,8 @@ import org.openpnp.spi.ControllerAxis;
 public class Motion {
     public enum MotionOption {
         FixedWaypoint,
-        CoordinatedWaypoint,
+        CoordinatedMotion,
+        ApplyDriverLimit,
         LimitToSafeZZone,
         Completion, 
         Stillstand;
@@ -50,29 +57,47 @@ public class Motion {
         }
     }
 
-    private double time;
-    private AxesLocation [] vector;
-    private int options;
-    private int segmentPhase;
     private MotionCommand motionCommand;
+    private AxesLocation location0;
+    private AxesLocation location1;
+    private MotionProfile [] axesProfiles;
+    private HashMap<ControllerAxis, Integer> axisIndex = new HashMap<>(); 
 
-    public Motion(double time, MotionCommand motionCommand, AxesLocation[] vector, MotionOption... options) {
-        super();
-        this.time = time;
-        this.motionCommand = motionCommand;
-        this.vector = vector.clone();
+    private int options;
+    private double effectiveSpeed;
+    private double euclideanDistance;
+    private double nistDistance;
+    private double plannedTime1;
+
+    public static int optionFlags(MotionOption... options) {
+        int optionFlags = 0;
         for (MotionOption option : options) {
-            this.options |= option.flag();
+            optionFlags |= option.flag();
         }
+        return optionFlags;
     }
-    protected Motion(double time, MotionCommand motionCommand, AxesLocation[] vector, int options) {
+
+    protected Motion(MotionCommand motionCommand, AxesLocation location0, AxesLocation location1, 
+            double plannedTime1, int options) {
         super();
-        this.time = time;
-        this.vector = vector.clone();
+        this.motionCommand = motionCommand;
+        this.location0 = location0;
+        this.location1 = location1;
+        this.plannedTime1 = plannedTime1;
         this.options = options;
+        int count = 0;
+        for (ControllerAxis axis : location0.getControllerAxes()) {
+            axisIndex.put(axis, count++);
+        }
+        axesProfiles = new MotionProfile[count];
+        computeLimits();
     }
-    public Motion(double time, MotionCommand motionCommand, Motion motion) {
-        this(time, motion.motionCommand, motion.vector, motion.options);
+    public Motion(MotionCommand motionCommand, AxesLocation location0, AxesLocation location1, 
+            double plannedTime1, MotionOption... options) {
+        this(motionCommand, location0, location1, plannedTime1, optionFlags(options));
+    }
+    public Motion(Motion motion, double plannedTime1) {
+        this(motion.motionCommand, motion.location0, motion.location1, plannedTime1, motion.options);
     }
 
     public boolean hasOption(MotionOption option) {
@@ -86,28 +111,24 @@ public class Motion {
     }
 
     public double getTime() {
-        return time;
+        return axesProfiles[0].getTime();
     }
-    public void setTime(double time) {
-        this.time = time;
+
+    public double getPlannedTime0() {
+        return plannedTime1 - getTime();
+    }
+
+    public double getPlannedTime1() {
+        return plannedTime1;
+    }
+
+    public void setPlannedTime1(double plannedTime1) {
+        this.plannedTime1 = plannedTime1;
     }
 
     public MotionCommand getMotionCommand() {
         return motionCommand;
     }
-
-    int getOrder() {
-        return vector.length-1;
-    }
-
-
-    public int getSegmentPhase() {
-        return segmentPhase;
-    }
-    public void setSegmentPhase(int segmentPhase) {
-        this.segmentPhase = segmentPhase;
-    }
-
 
     public enum Derivative {
         Location,
@@ -120,34 +141,26 @@ public class Motion {
         { this.setName("Euclidean"); }
     };
 
-    public AxesLocation getVector(int order) {
-        if (order >= 0 && order < vector.length) { 
-            return vector[order];
-        }
-        return AxesLocation.zero;
-    }
-    public AxesLocation getVector(Derivative order) {
-        return getVector(order.ordinal());
-    }
-    public void setVector(int order, AxesLocation derivativeVector) {
-        if (order >= 0 && order < vector.length) { 
-            vector[order] = derivativeVector;
-        }
-        // TODO: else throw?
-    }
-    public void setVector(Derivative order, AxesLocation derivativeVector) {
-        setVector(order.ordinal(), derivativeVector);
+    private MotionProfile getAxisProfile(ControllerAxis axis) {
+        return axesProfiles[axisIndex.get(axis)];
     }
 
+    @Override
     public String toString() {
-        return "{ t="+time+"s, o="+String.format("x%X", options)+", l="+
-                getVector(Derivative.Location)+", V="+
-                getVector(Derivative.Velocity)+", a="+
-                getVector(Derivative.Acceleration)+", j="+
-                getVector(Derivative.Jerk)+" }";
+        StringBuilder str = new StringBuilder(); 
+        str.append("{ t=");
+        str.append(getTime());
+        str.append("s, o=");
+        str.append(String.format("x%X", options));
+        for (MotionProfile profile : axesProfiles) {
+            str.append("\n");
+            str.append(profile);
+        }
+        str.append("}");
+        return str.toString();
     }
 
-    protected Motion applyFunction(
+    /*protected Motion applyFunction(
             double time, 
             MotionCommand motionCommand, 
             BiFunction<Double, Double, Double> locationFunction, 
@@ -201,156 +214,252 @@ public class Motion {
                 (a, b) -> ((1.0-ratio)*a+ratio*b), 
                 (a, b) -> ((1.0-ratio)*a+ratio*b), 
                 other, other.options);
+    }*/
+
+    public double getNominalSpeed() {
+        if (getMotionCommand() == null) {
+            return 1.0;
+        }
+        else {
+            return getMotionCommand().getSpeed();
+        }
     }
 
-    public static Motion computeWithLimits(MotionCommand motionCommand, AxesLocation location0, AxesLocation location1, double speed,
-            boolean applyDriverLimit, boolean nistMode) throws Exception {
-        return computeWithLimits(motionCommand, location0, location1, speed, applyDriverLimit, nistMode,
-                (axis, order) -> (axis.getMotionLimit(order)));
+    public double getEffectiveSpeed() {
+        return effectiveSpeed;
     }
-    public static Motion computeWithLimits(MotionCommand motionCommand, AxesLocation location0, AxesLocation location1, double speed, 
-            boolean applyDriverLimit, boolean nistMode, 
-            BiFunction<ControllerAxis, Integer, Double> limitProvider) throws Exception {
+
+    public boolean isEmpty() {
+        return euclideanDistance == 0 && getTime() == 0;
+    }
+
+    protected void computeLimits() {
         // Create a distance vector that has only axes mentioned in location1 that at the same time 
         // do not match coordinates with location0.
         AxesLocation distance = location0.motionSegmentTo(location1);
-        if (distance.isEmpty()) {
-            return null;
-        }
-        // Find the euclidean distance of linear/rotational and all axes.
-        // Find the most limiting axis feed-rate/acceleration/etc. limit per distance.
-        // Find the most limiting driver feed-rate limit.
-        double [] linearLimits = new double [ControllerAxis.motionLimitsOrder+1];
-        double [] rotationalLimits = new double [ControllerAxis.motionLimitsOrder+1];
-        double [] overallLimits = new double [ControllerAxis.motionLimitsOrder+1];
-        for (int order = 1; order <= ControllerAxis.motionLimitsOrder; order++) {
-            linearLimits[order] = Double.POSITIVE_INFINITY;
-            rotationalLimits[order] = Double.POSITIVE_INFINITY;
-            overallLimits[order] = Double.POSITIVE_INFINITY;
-        }
-        double minDriverFeedrate =  Double.POSITIVE_INFINITY;
-        for (ControllerAxis axis : distance.getControllerAxes()) {
-            if (applyDriverLimit && axis.getDriver() != null) {
-                double driverFeedrate = axis.getDriver().getFeedRatePerSecond()
-                        .convertToUnits(AxesLocation.getUnits()).getValue();
-                if (driverFeedrate != 0.0) {
-                    minDriverFeedrate = Math.min(minDriverFeedrate, driverFeedrate);
+        if (distance.isEmpty() || !hasOption(MotionOption.CoordinatedMotion)) {
+            // Zero distance or uncoordinated motion. Axes constraints simply apply directly.
+            for (Entry<ControllerAxis, Integer> entry : axisIndex.entrySet()) {
+                ControllerAxis axis = entry.getKey();
+                double sMin = Double.NEGATIVE_INFINITY;
+                double sMax = Double.POSITIVE_INFINITY;
+                if (axis instanceof ReferenceControllerAxis) {
+                    if (((ReferenceControllerAxis) axis).isSoftLimitLowEnabled()) {
+                        sMin = ((ReferenceControllerAxis) axis).getSoftLimitLow().convertToUnits(AxesLocation.getUnits()).getValue();
+                    }
+                    if (((ReferenceControllerAxis) axis).isSoftLimitHighEnabled()) {
+                        sMax = ((ReferenceControllerAxis) axis).getSoftLimitHigh().convertToUnits(AxesLocation.getUnits()).getValue();
+                    }
                 }
+                double vMax = axis.getMotionLimit(1);  
+
+                double aMax = axis.getMotionLimit(2);  
+
+                double jMax = axis.getMotionLimit(3);
+
+                axesProfiles[entry.getValue()] = new MotionProfile(
+                        location0.getCoordinate(axis), location1.getCoordinate(axis), 
+                        0, 0, 0, 0, // initialize with still-stand
+                        sMin, sMax, 
+                        vMax, aMax, aMax, jMax, 
+                        0, Double.POSITIVE_INFINITY,
+                        options);
             }
-            double d = Math.abs(distance.getCoordinate(axis));
-            double dSq = d*d;  
-            if (dSq > 0) {
-                for (int order = 1; order <= ControllerAxis.motionLimitsOrder; order++) {
-                    double limit = limitProvider.apply((ControllerAxis) axis, order);
-                    if (limit > 0) {
-                        // In the following section we find the limiting i.e minimum limits.
-                        // But why divide by d?
-                        // This is due to the fact that the limits are applied to the overall motion, but one axis 
-                        // will in general only contribute a fraction to the overall motion i.e. the limit is only applicable 
-                        // at the rate at which the axis contributes. This is per unit of length i.e. divided by the axis' motion unit 
-                        // vector component. The division by d takes care of the first step of that. As the second step the result 
-                        // will be normed to the overall motion unit after the loop, by multiplying by the overall motion distance.
-                        if (axis.getType() == Axis.Type.Rotation) {
-                            rotationalLimits[0] += dSq;
-                            rotationalLimits[order] = Math.min(rotationalLimits[order],
+            // As these profiles are uncoordinated, they need to be synchronized, i.e. made sure they take the same amount of time.
+            MotionProfile.synchronizeProfiles(axesProfiles);
+            euclideanDistance = distance.getEuclideanMetric();
+            nistDistance = 0;
+            effectiveSpeed = getNominalSpeed();
+        }
+        else {
+            // Coordinated non-zero motion.
+            // Find the euclidean distance of linear/rotational and all axes.
+            // Find the most limiting axis feed-rate/acceleration/etc. limit per distance.
+            // Find the most limiting driver feed-rate limit.
+            double [] linearLimits = new double [ControllerAxis.motionLimitsOrder+1];
+            double [] rotationalLimits = new double [ControllerAxis.motionLimitsOrder+1];
+            double [] overallLimits = new double [ControllerAxis.motionLimitsOrder+1];
+            for (int order = 1; order <= ControllerAxis.motionLimitsOrder; order++) {
+                linearLimits[order] = Double.POSITIVE_INFINITY;
+                rotationalLimits[order] = Double.POSITIVE_INFINITY;
+                overallLimits[order] = Double.POSITIVE_INFINITY;
+            }
+            double minDriverFeedrate =  Double.POSITIVE_INFINITY;
+            for (ControllerAxis axis : distance.getControllerAxes()) {
+                if (hasOption(MotionOption.ApplyDriverLimit) && axis.getDriver() != null) {
+                    double driverFeedrate = axis.getDriver().getFeedRatePerSecond()
+                            .convertToUnits(AxesLocation.getUnits()).getValue();
+                    if (driverFeedrate != 0.0) {
+                        minDriverFeedrate = Math.min(minDriverFeedrate, driverFeedrate);
+                    }
+                }
+                double d = Math.abs(distance.getCoordinate(axis));
+                double dSq = d*d;  
+                if (dSq > 0) {
+                    for (int order = 1; order <= ControllerAxis.motionLimitsOrder; order++) {
+                        double limit = axis.getMotionLimit(order);
+                        if (limit > 0) {
+                            // In the following section we find the limiting i.e minimum limits.
+                            // But why divide by d?
+                            // This is due to the fact that the limits are applied to the overall motion, but one axis 
+                            // will in general only contribute a fraction to the overall motion i.e. the limit is only applicable 
+                            // at the rate at which the axis contributes. This is per unit of length i.e. divided by the axis' motion unit 
+                            // vector component. The division by d takes care of the first step of that. The second step i.e. norming the 
+                            // result to the overall motion unit, will take place  after the loop, by multiplying by the overall motion 
+                            // distance.
+                            if (axis.getType() == Axis.Type.Rotation) {
+                                rotationalLimits[0] += dSq;
+                                rotationalLimits[order] = Math.min(rotationalLimits[order],
+                                        limit/d);
+                            }
+                            else {
+                                linearLimits[0] += dSq;
+                                linearLimits[order] = Math.min(linearLimits[order],
+                                        limit/d);
+                            }
+                            overallLimits[0] += dSq;
+                            overallLimits[order] = Math.min(overallLimits[order],
                                     limit/d);
                         }
-                        else {
-                            linearLimits[0] += dSq;
-                            linearLimits[order] = Math.min(linearLimits[order],
-                                    limit/d);
-                        }
-                        overallLimits[0] += dSq;
-                        overallLimits[order] = Math.min(overallLimits[order],
-                                limit/d);
                     }
                 }
             }
-        }
-        // From the sum of squares calculate the Euclidean metric. 
-        linearLimits[0] = Math.sqrt(linearLimits[0]);
-        rotationalLimits[0] = Math.sqrt(rotationalLimits[0]);
-        overallLimits[0] = Math.sqrt(overallLimits[0]);
-        // Norm the fractional axes limits to the overall motion distances.
-        for (int order = 1; order <= ControllerAxis.motionLimitsOrder; order++) {
-            if (linearLimits[0] > 0) {
-                linearLimits[order] = linearLimits[order] * linearLimits[0];
+            // From the sum of squares calculate the Euclidean metric. 
+            linearLimits[0] = Math.sqrt(linearLimits[0]);
+            rotationalLimits[0] = Math.sqrt(rotationalLimits[0]);
+            overallLimits[0] = Math.sqrt(overallLimits[0]);
+            // Norm the fractional axes limits to the overall motion distances.
+            for (int order = 1; order <= ControllerAxis.motionLimitsOrder; order++) {
+                if (linearLimits[0] > 0) {
+                    linearLimits[order] = linearLimits[order] * linearLimits[0];
+                }
+                if (rotationalLimits[0] > 0) {
+                    rotationalLimits[order] = rotationalLimits[order] * rotationalLimits[0];
+                }
+                if (overallLimits[0] > 0) {
+                    overallLimits[order] = overallLimits[order] * overallLimits[0];
+                }
             }
-            if (rotationalLimits[0] > 0) {
-                rotationalLimits[order] = rotationalLimits[order] * rotationalLimits[0];
+            if (hasOption(MotionOption.ApplyDriverLimit)) {
+                // According to NIST RS274NGC Interpreter - Version 3, Section 2.1.2.5 (p. 7)
+                // the F feed-rate is to be interpreted over the Euclidean linear axis distance of a move 
+                // and in the absence of any linear axes, over the Euclidean rotational distance 
+                // of the move.
+                // https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=823374
+                if (linearLimits[0] > 0) {
+                    // Limit the linear axes limit by the driver feed-rate. 
+                    linearLimits[1] = Math.min(linearLimits[1], minDriverFeedrate); 
+                }
+                else  {
+                    // Limit the rotational axes limit by the driver feed-rate?
+                    // NOPE: it is non-sense to apply a mm/s feedrate to a rotational axis. 
+                    // We depart from former OpenPnP behavior here. 
+                    //   rotationalLimits[1] = Math.min(rotationalLimits[1], minDriverFeedrate); 
+                }
             }
-            if (overallLimits[0] > 0) {
-                overallLimits[order] = overallLimits[order] * overallLimits[0];
+            double time = Math.max(
+                    linearLimits[0]/linearLimits[1],
+                    rotationalLimits[0]/rotationalLimits[1]);
+            if (!Double.isFinite(time)) {
+                // TODO: what?
+                //throw new Exception("Feedrate(s) missing on (some) axes: "+distance.getControllerAxes());
+
             }
-        }
-        if (applyDriverLimit) {
-            // According to NIST RS274NGC Interpreter - Version 3, Section 2.1.2.5 (p. 7)
-            // the feed-rate is to be interpreted over the Euclidean linear axis distance of a move 
-            // and in the absence of any linear axes, over the Euclidean rotational distance 
-            // of the move.
-            // https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=823374
-            if (linearLimits[0] > 0) {
-                // Limit the linear axes limit by the driver feed-rate. 
-                linearLimits[1] = Math.min(linearLimits[1], minDriverFeedrate); 
-            }
-            else  {
-                // Limit the rotational axes limit by the driver feed-rate?
-                // NOPE: it is non-sense to apply a mm/s feedrate to a rotational axis. 
-                // We depart from former OpenPnP behavior here. 
-                //   rotationalLimits[1] = Math.min(rotationalLimits[1], minDriverFeedrate); 
-            }
-        }
-        // Note: inside the MotionPlanner, everything is calculated using the overall Euclidean distance
-        // not the NIST distance. So we get no problems with motion across multiple drivers where the sub-set 
-        // of per-driver axes might or might not include linear axes. However, the GcodeDriver needs the calculations in
-        // NIST mode therefore we have these two modes switched by nistMode.
-        double [] euclideanLimits;
-        if (nistMode) {
-            if (linearLimits[0] > 0) {
-                euclideanLimits = linearLimits;
+            double euclideanTime = overallLimits[0]/overallLimits[1];
+            // We convert from the (optionally) driver-limited NIST feed-rate to Euclidean limit by relating the motion time. 
+            // Also include the given speed factor.
+            effectiveSpeed = (time > 0 ? euclideanTime/time : 1.0) * Math.max(0.01, getNominalSpeed());
+            euclideanDistance = overallLimits[0];
+            // Note: inside the MotionPlanner, everything is calculated using the overall Euclidean distance
+            // not the NIST distance. So we get no problems with motion across multiple drivers where the sub-set 
+            // of per-driver axes might or might not include linear axes. However, the GcodeDriver needs the calculations in
+            // NIST mode therefore we store these too.
+            if (linearLimits[0] > 0) { 
+                nistDistance = linearLimits[0];
             }
             else {
-                euclideanLimits = rotationalLimits;
+                nistDistance = rotationalLimits[0];
+            }
+
+            for (Entry<ControllerAxis, Integer> entry : axisIndex.entrySet()) {
+                ControllerAxis axis = entry.getKey();
+                double axisFraction = Math.abs(distance.getCoordinate(axis)) // fractional axis distance
+                        /euclideanDistance;
+                double sMin = Double.NEGATIVE_INFINITY;
+                double sMax = Double.POSITIVE_INFINITY;
+                if (axis instanceof ReferenceControllerAxis) {
+                    if (((ReferenceControllerAxis) axis).isSoftLimitLowEnabled()) {
+                        sMin = ((ReferenceControllerAxis) axis).getSoftLimitLow().convertToUnits(AxesLocation.getUnits()).getValue();
+                    }
+                    if (((ReferenceControllerAxis) axis).isSoftLimitHighEnabled()) {
+                        sMax = ((ReferenceControllerAxis) axis).getSoftLimitHigh().convertToUnits(AxesLocation.getUnits()).getValue();
+                    }
+                }
+                double vMax = 
+                        effectiveSpeed 
+                        *overallLimits[1]*axisFraction;  
+
+                double aMax = 
+                        Math.pow(effectiveSpeed, 2) // speed factor must be to the power of the order of the derivative
+                        *overallLimits[2]*axisFraction;  
+
+                double jMax = 
+                        Math.pow(effectiveSpeed, 3) // speed factor must be to the power of the order of the derivative
+                        *overallLimits[3]*axisFraction;
+
+                axesProfiles[entry.getValue()] = new MotionProfile(
+                        location0.getCoordinate(axis), location1.getCoordinate(axis), 
+                        0, 0, 0, 0, // initialize with still-stand
+                        sMin, sMax, 
+                        vMax, aMax, aMax, jMax, 
+                        0, Double.POSITIVE_INFINITY,
+                        options);
             }
         }
-        else {
-            euclideanLimits = overallLimits;
-        }
-        // Calculate the time it would take at constant velocity.
-        double time = Math.max(
-                linearLimits[0]/linearLimits[1],
-                rotationalLimits[0]/rotationalLimits[1]);
-        if (!Double.isFinite(time)) {
-            throw new Exception("Feedrate(s) missing on (some) axes: "+distance.getControllerAxes());
-        }
-        double euclideanTime = euclideanLimits[0]/euclideanLimits[1];
-        // We convert from the NIST feed-rate limit to the Euclidean limit by relating the motion time. 
-        // Also include the given speed factor.
-        double speedEffective = (time > 0 ? euclideanTime/time : 1.0) * Math.max(0.01, speed);
-        // Add a virtual Distance axis to store the limits in the motion, as these are applicable per overall distance.
-        AxesLocation motionLocation = location1.put(new AxesLocation(Motion.EuclideanAxis, euclideanLimits[0]));
-        AxesLocation motionDistance = distance.put(new AxesLocation(Motion.EuclideanAxis, euclideanLimits[0]));
-        AxesLocation [] motionDerivatives = new AxesLocation [ControllerAxis.motionLimitsOrder+1];
-        // The 0th derivative is the location itself. 
-        motionDerivatives[0] = motionLocation;
-        // Now calculate the axis specific limits for all derivatives. 
-        for (int order = 1; order <= ControllerAxis.motionLimitsOrder; order++) {
-            final int derivative = order;
-            motionDerivatives[order] = new AxesLocation(motionDistance.getAxes(), 
-                    (a) -> (new Length(
-                            // The speed factor must be to the power of the derivative order.
-                            Math.pow(speedEffective, derivative)* 
-                            euclideanLimits[derivative]*Math.abs(motionDistance.getCoordinate(a)) // fractional axis distance
-                            /euclideanLimits[0],  
-                            AxesLocation.getUnits())));
-        }
-        // Save all that in a Motion. 
-        return  new Motion(euclideanTime/speedEffective, 
-                motionCommand, 
-                motionDerivatives, 
-                MotionOption.FixedWaypoint, MotionOption.CoordinatedWaypoint);
     }
 
+    public AxesLocation getLocation0() {
+        return location0;
+    }
+
+    public AxesLocation getLocation1() {
+        return location1;
+    }
+
+    public MotionProfile[] getAxesProfiles() {
+        return axesProfiles;
+    }
+
+    public HashMap<ControllerAxis, Integer> getAxisIndex() {
+        return axisIndex;
+    }
+
+    public double getEuclideanDistance() {
+        return euclideanDistance;
+    }
+
+    public double getNistDistance() {
+        return nistDistance;
+    }
+
+    public AxesLocation getMomentaryLocation(double time) {
+        return new AxesLocation(axisIndex.keySet(),
+                (axis) -> new Length(getAxisProfile(axis).getMomentaryLocation(time), AxesLocation.getUnits()));
+    }
+    public AxesLocation getMomentaryVelocity(double time) {
+        return new AxesLocation(axisIndex.keySet(),
+                (axis) -> new Length(getAxisProfile(axis).getMomentaryVelocity(time), AxesLocation.getUnits()));
+    }
+    public AxesLocation getMomentaryAcceleration(double time) {
+        return new AxesLocation(axisIndex.keySet(),
+                (axis) -> new Length(getAxisProfile(axis).getMomentaryAcceleration(time), AxesLocation.getUnits()));
+    }
+    public AxesLocation getMomentaryJerk(double time) {
+        return new AxesLocation(axisIndex.keySet(),
+                (axis) -> new Length(getAxisProfile(axis).getMomentaryJerk(time), AxesLocation.getUnits()));
+    }
+
+    /*
     public AxesLocation getLocation() {
         return getVector(Derivative.Location);
     }
@@ -362,17 +471,97 @@ public class Motion {
     }
     public AxesLocation getJerk() {
         return getVector(Derivative.Jerk);
+    }*/
+
+    /**
+     * Get the rate of a motion from the planned profile. 
+     * 
+     * @param driver The driver for which the rate is calculated i.e. for the axes mapped to it.
+     * @param f The function to be applied to the motion profile to obtain the rate.
+     * @return
+     */
+    public Triplet<Double, Double, Double> getRate(Driver driver, BiFunction<ControllerAxis, MotionProfile, Double> f) {
+        double linearRate = 0;
+        double rotationalRate = 0;
+        double euclideanRate = 0;
+        for (Entry<ControllerAxis, Integer> entry : axisIndex.entrySet()) {
+            ControllerAxis axis = entry.getKey();
+            if (axis.getDriver() == driver || driver == null) {
+                MotionProfile profile = axesProfiles[entry.getValue()];
+                double val =  f.apply(axis, profile);
+                if (axis.getType() == Axis.Type.Rotation) {
+                    rotationalRate += Math.pow(val, 2);
+                }
+                else {
+                    linearRate += Math.pow(val, 2);
+                }
+                euclideanRate += Math.pow(val, 2);
+            }
+        }
+        linearRate = Math.sqrt(linearRate);
+        rotationalRate = Math.sqrt(rotationalRate);
+        euclideanRate = Math.sqrt(euclideanRate);
+        return new Triplet<Double, Double, Double>(linearRate, rotationalRate, euclideanRate);
     }
-    public double getFeedRatePerSecond(LengthUnit units) {
-        return getVector(Derivative.Velocity).getCoordinate(EuclideanAxis, units);
+
+    /**
+     * Get the rate according to NIST RS274NGC Interpreter - Version 3, Section 2.1.2.5 (p. 7).
+     * The rate is to be interpreted over the Euclidean linear axis distance of a move 
+     * and in the absence of any linear axes, over the Euclidean angular distance of the move.
+     * @see https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=823374
+     * 
+     * @param driver The driver for which the rate is calculated i.e. for the axes mapped to it.
+     * @param f The function to be applied to the motion profile to obtain the rate.
+     * @param defaultRate
+     * @return The rate in driver units per second^x
+     */
+    public Double getNistRate(Driver driver, BiFunction<ControllerAxis, MotionProfile, Double> f, Double defaultRate) {
+        Triplet<Double, Double, Double> rate = getRate(driver, f);
+        if (rate.first != 0.0) {
+            return Length.convertToUnits(rate.first, 
+                    AxesLocation.getUnits(), driver == null ? AxesLocation.getUnits() : driver.getUnits());
+        }
+        else if (rate.second != 0.0) {
+            return Length.convertToUnits(rate.second, 
+                    AxesLocation.getUnits(), driver == null ? AxesLocation.getUnits() : driver.getUnits());
+        }
+        return defaultRate;
     }
-    public double getFeedRatePerMinute(LengthUnit units) {
-        return getVector(Derivative.Velocity).getCoordinate(EuclideanAxis, units)*60.0;
+
+    /**
+     * @param driver The driver for which the rate is calculated i.e. for the axes mapped to it.
+     * @return The driver specific feed-rate according to NIST RS274NGC Interpreter - Version 3, Section 2.1.2.5 (p. 7)
+     * in driver units per second. 
+     */
+    public Double getFeedRatePerSecond(Driver driver) {
+        return getNistRate(driver,
+                (axis, profile) -> (profile.getProfileVelocity()),
+                driver == null ? null : driver.getFeedRatePerSecond().convertToUnits(driver.getUnits()).getValue()); 
     }
-    public double getAccelerationPerSecond2(LengthUnit units) {
-        return getVector(Derivative.Acceleration).getCoordinate(EuclideanAxis, units);
+    /**
+     * @param driver The driver for which the rate is calculated i.e. for the axes mapped to it.
+     * @return The driver specific feed-rate according to NIST RS274NGC Interpreter - Version 3, Section 2.1.2.5 (p. 7)
+     * in driver units per minute. 
+     */
+    public Double getFeedRatePerMinute(Driver driver) {
+        return getFeedRatePerSecond(driver)*60.0;
     }
-    public double getJerkPerSecond3(LengthUnit units) {
-        return getVector(Derivative.Jerk).getCoordinate(EuclideanAxis, units);
+    /**
+     * @param driver The driver for which the rate is calculated i.e. for the axes mapped to it.
+     * @return The driver specific acceleration limit in driver units per second squared. 
+     */
+    public Double getAccelerationPerSecond2(Driver driver) {
+        return getNistRate(driver,
+                (axis, profile) -> (0.5*(profile.getProfileEntryAcceleration()+profile.getProfileExitAcceleration())),
+                null);
+    }
+    /**
+     * @param driver The driver for which the rate is calculated i.e. for the axes mapped to it.
+     * @return The driver specific jerk limit in driver units per second cubed.
+     */
+    public Double getJerkPerSecond3(Driver driver) {
+        return getNistRate(driver,
+                (axis, profile) -> (profile.getProfileJerk()),
+                null);
     }
 }

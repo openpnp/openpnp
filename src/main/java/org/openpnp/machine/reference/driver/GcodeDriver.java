@@ -448,10 +448,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     @Override
     public void moveTo(ReferenceHeadMountable hm, Motion motion, MoveToOption...options)
             throws Exception {
-        AxesLocation location = motion.getVector(Motion.Derivative.Location);
-        double feedRate = motion.getFeedRatePerMinute(getUnits());
-        double acceleration = motion.getFeedRatePerMinute(getUnits());
-        double jerk = motion.getFeedRatePerMinute(getUnits());
+        AxesLocation location = motion.getLocation1();
+        double feedRate = motion.getFeedRatePerMinute(this);
+        double acceleration = motion.getFeedRatePerMinute(this);
+        double jerk = motion.getFeedRatePerMinute(this);
           
         // Start composing the command, will decide later, whether we actually send it.
         String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);

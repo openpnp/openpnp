@@ -27,12 +27,10 @@ import java.util.Collection;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Motion;
 import org.openpnp.spi.Axis;
-import org.openpnp.model.Length;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.util.NanosecondTime;
-import org.pmw.tinylog.Logger;
 
 /**
  * Advanced Motion Planner panning 3rd order (Jerk controller) Motion Control. Supports uncoordinated motion.  
@@ -68,7 +66,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
         if (tail.size() >= 2) {
             for (Motion queuedMotion : tail) {
                 if (prevMotion != null 
-                        && !prevMotion.getLocation().motionSegmentTo(queuedMotion.getLocation()).isEmpty()) {
+                        && !prevMotion.getLocation1().motionSegmentTo(queuedMotion.getLocation1()).isEmpty()) {
                     // The queued motion are the fixed way-points. We need to insert segments for 3rd order motion control.
                     if (isInSaveZZone(queuedMotion)) {
                         
@@ -105,8 +103,8 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
 
 
     private boolean isInSaveZZone(Motion motion) {
-        for (ControllerAxis axis : motion.getLocation().byType(Axis.Type.Z).getControllerAxes()) {
-            double z = motion.getLocation().getCoordinate(axis);
+        for (ControllerAxis axis : motion.getLocation1().byType(Axis.Type.Z).getControllerAxes()) {
+            double z = motion.getLocation1().getCoordinate(axis);
             // TODO: implement 
             if (z < -15.0 || z > 0.0) {
                 return false;

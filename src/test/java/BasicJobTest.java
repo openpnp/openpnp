@@ -160,7 +160,7 @@ public class BasicJobTest {
         @Override
         public void moveTo(ReferenceHeadMountable hm, Motion motion, MoveToOption... options)
                 throws Exception {
-            AxesLocation location = motion.getLocation();
+            AxesLocation location = motion.getLocation1();
             
             System.out.println(hm + " " + location);
             if (expectedOps.isEmpty()) {

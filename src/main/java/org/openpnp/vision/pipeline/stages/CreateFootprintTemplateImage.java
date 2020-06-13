@@ -38,6 +38,11 @@ public class CreateFootprintTemplateImage extends CvStage {
     @Property(description = "Color of the body.")
     private Color bodyColor = Color.black; 
 
+    @Element(required=false)
+    @Convert(ColorConverter.class)
+    @Property(description = "Color of the background.")
+    private Color backgroundColor = Color.black; 
+
     public FootprintView getFootprintView() {
         return footprintView;
     }
@@ -62,6 +67,14 @@ public class CreateFootprintTemplateImage extends CvStage {
         this.bodyColor = bodyColor;
     }
 
+    public Color getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    public void setBackgroundColor(Color backgroundColor) {
+        this.backgroundColor = backgroundColor;
+    }
+
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         Camera camera = (Camera) pipeline.getProperty("camera");
@@ -77,8 +90,8 @@ public class CreateFootprintTemplateImage extends CvStage {
         BufferedImage template = OpenCvUtils.createFootprintTemplate(camera, footprint, 0.0,
                 footprintView == FootprintView.TopView, 
                 padsColor, 
-                footprintView == FootprintView.Fiducial ? null : bodyColor, 
-                null, 1.5, 3);
+                (footprintView == FootprintView.Fiducial ? null : bodyColor), 
+                backgroundColor, 1.5, 3);
 
         return new Result(OpenCvUtils.toMat(template));
     }

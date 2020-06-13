@@ -1,5 +1,12 @@
 package org.openpnp.model;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
+import org.openpnp.model.Motion.MotionOption;
+import org.openpnp.spi.Axis;
 import org.openpnp.util.NanosecondTime;
 
 public class MotionProfile {
@@ -20,11 +27,11 @@ public class MotionProfile {
     double tMin;
     double tMax;
 
-    final int iterations = 1000;
-    final double atol = 1.0; // mm/s^2
-    final double vtol = 1.0; // mm/s
-    final double ttol = 0.001; // s 
-    final double teps = ttol*ttol; // s 
+    static final int iterations = 250;
+    static final double atol = 1.0; // mm/s^2
+    static final double vtol = 1.0; // mm/s
+    static final double ttol = 0.00001; // s 
+    static final double teps = 0; // s epsilon (can be 0) 
 
     private int iter;
 
@@ -32,8 +39,22 @@ public class MotionProfile {
 
     private double solvingTime;
 
+    private double sBound0;
+
+    private double sBound1;
+
+    private double tBound0;
+
+    private double tBound1;
+
+    private int motionOptions;
+    public boolean hasOption(MotionOption option) {
+        return (this.motionOptions & option.flag()) != 0;
+    }
+
     public MotionProfile(double s0, double s1, double v0, double v1, double a0, double a1,
-            double sMin, double sMax, double vMax, double aMaxEntry, double aMaxExit, double jMax, double tMin, double tMax) {
+            double sMin, double sMax, double vMax, double aMaxEntry, double aMaxExit, double jMax, double tMin, double tMax,
+            int motionOptions) {
         s[0] = s0;
         s[segments] = s1;
         v[0] = v0;
@@ -48,8 +69,8 @@ public class MotionProfile {
         this.jMax = jMax;
         this.tMin = tMin;
         this.tMax = tMax;
-
-        solveProfile(iterations, vtol, atol, ttol);
+        this.motionOptions = motionOptions;
+        solveProfile();
     }
 
     double getLocation(int segment) {
@@ -64,11 +85,41 @@ public class MotionProfile {
     double getJerk(int segment) {
         return a[segment];
     }
+    
+    protected double getMomentary(double time, BiFunction<Integer, Double, Double> f) {
+        if (time < 0) {
+            return s[0];
+        }
+        double tSeg = 0;
+        for (int i = 1; i <=segments; i++) {
+            if (time >= tSeg && time <= t[i]) {
+                return f.apply(i, time - t[i-1]);
+            }
+            tSeg += t[i];
+        }
+        return s[segments];
+    }
+
+    double getMomentaryLocation(double time) { // s0 + V0*t + 1/2*a0*t^2 + 1/6*j*t^3
+        return getMomentary(time, (i, ts) -> (s[i-1] + v[i-1]*ts + 1./2*a[i-1]*Math.pow(ts, 2) + 1./6*j[i]*Math.pow(ts, 3)));
+    }
+
+    double getMomentaryVelocity(double time) { // V0 + a0*t + 1/2*j*t^2
+        return getMomentary(time, (i, ts) -> (v[i-1] + a[i-1]*ts + 1./2*j[i]*Math.pow(ts, 2)));
+    }
+
+    double getMomentaryAcceleration(double time) { // a0 + j*t
+        return getMomentary(time, (i, ts) -> (a[i-1] + j[i]*ts));
+    }
+
+    double getMomentaryJerk(double time) { 
+        return getMomentary(time, (i, ts) -> (j[i]));
+    }
 
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
-        str.append("(s =");
+        str.append("{s =");
         for (double s : this.s) {
             str.append(String.format(" %.2f", s));
         }
@@ -86,18 +137,23 @@ public class MotionProfile {
         }
         str.append(", t =");
         for (double t : this.t) {
-            str.append(String.format(" %.6f", t));
+            str.append(String.format(" %.4f", t));
         }
         str.append(", time = ");
         str.append(String.format("%.6f", time));
+        str.append("s, bound = ");
+        str.append(String.format("%.2f@%.4f, %.2f@%.4f", sBound0, tBound0, sBound1, tBound1));
         str.append(", iter = ");
         str.append(iter);
         str.append(", ms = ");
         str.append(String.format("%.3f", solvingTime*1000));
-        str.append(")");
+        str.append("}");
         return str.toString();
     }
 
+    public void solveProfile() {
+        solveProfile(iterations, vtol, atol, ttol);
+    }
     public void solveProfile(final int iterations, final double vtol, final double atol, final double ttol) {
         double tStart = NanosecondTime.getRuntimeSeconds();
 
@@ -111,7 +167,12 @@ public class MotionProfile {
                 v[i] = v[0];
                 a[i] = a[0];
                 j[i] = 0;
+                t[i] = 0;
             }
+            time = 0;
+            iter = 0;
+            sBound0 = sBound1 = s[0];
+            tBound0 = tBound1 = 0;
             return; // -----------------> 
         }
 
@@ -132,9 +193,9 @@ public class MotionProfile {
             double vPeak = vMax; 
             double vPeak0 = flipSignum ? 0 : vMin;
             double vPeak1 = vMax;
-
+            
             // Perform simple bi-section solving.
-            for (iter = 0; iter < iterations; iter++) {
+            for (iter = 1; iter < iterations; iter++) {
                 // Compute the profile with the given acceleration and velocity limits.
                 computeProfile(vPeak, vEntry, vExit, aEntry, aExit, jMax, tMin, flipSignum);
                 boolean aSettled = true;
@@ -168,11 +229,7 @@ public class MotionProfile {
                     aSettled = false;
                 }
                 if (aSettled) {
-                    if (vPeak == 0) {
-                        // Assume it's solved.
-                        break;
-                    }
-                    else if (t[4] < -teps || (v[4] != 0 && time < tMin - ttol)) {
+                    if (t[4] < -teps || (v[4] != 0 && time < tMin - ttol)) {
                         // Uh-oh, negative constant velocity time
                         // or minimum segment time not reached
                         // --> decrease velocity limit
@@ -191,9 +248,12 @@ public class MotionProfile {
                         aExit1 = aMaxExit;
                     }
                     else {
-                        // done
+                        // Profile is valid -> test against external constraints
                         // TODO: limit v[0]/a[0] by sMin/sMax/tMax
                         break;
+                    }
+                    if (Math.abs(vPeak) <= vtol) {
+                        vPeak = vtol*Math.signum(vPeak);
                     }
                 }
             }
@@ -204,8 +264,10 @@ public class MotionProfile {
                 break;
             }
             // Try again by reversing the direction of the move. This is necessary when entry velocities/accelerations
-            // cause overshoot or when tMin is larger than can be accomodated.
+            // cause overshoot or when tMin is larger than can be accommodated.
+            // TODO: calc flipped signum in parallel? 
             flipSignum = true;
+            
         }
 
         // The time was approximated to ttol, scale it to match perfectly.
@@ -235,25 +297,70 @@ public class MotionProfile {
         return time;
     }
 
-    private void retimeProfile(double tMin) {
-        if (tMin != time && tMin > 0.0 && time > 0) {
-            double factor = time/tMin;
-            double factor2 = factor*factor;
-            double factor3 = factor2*factor;
+    /**
+     * Recalculate the profile to make sure it takes the given amount of time.
+     * @param newTime
+     */
+    private void retimeProfile(double newTime) {
+        if (newTime != time && newTime > 0.0 && time > 0) {
+            // The derivatives need to be scaled to the power of the order of the derivative.
+            double vFactor = time/newTime; 
+            double aFactor = vFactor*vFactor;
+            double jFactor = aFactor*vFactor;
             for (int i = 0; i <= segments; i++) {
-                t[i] /= factor;
-                v[i] *= factor;
-                a[i] *= factor2;
-                j[i] *= factor3;
+                t[i] /= vFactor;
+                v[i] *= vFactor;
+                a[i] *= aFactor;
+                j[i] *= jFactor;
             }
-            time /= factor;
+            time = newTime;
         }
     }
 
+    public void coordinateProfile(MotionProfile leadProfile) {
+        double dist = leadProfile.s[segments]-leadProfile.s[0];
+        double factor; 
+        if (dist == 0) {
+            factor = 0;
+        }
+        else {
+            factor = (s[segments]-s[0])/dist;
+        }
+        for (int i = 0; i <= segments; i++) {
+            t[i] = leadProfile.t[i];
+            s[i] = (leadProfile.s[i] - leadProfile.s[0])*factor + s[0];
+            v[i] = leadProfile.v[i]*factor;
+            a[i] = leadProfile.a[i]*factor;
+            j[i] = leadProfile.j[i]*factor;
+        }
+        time = leadProfile.time;
+        computeBounds();
+    }
+
+    public static void synchronizeProfiles(MotionProfile [] profiles) {
+        double maxTime = 0;
+        for (MotionProfile profile : profiles) {
+            if (profile.time > maxTime) {
+                maxTime = profile.time;
+            }
+        }
+        for (MotionProfile profile : profiles) {
+            profile.tMin = maxTime;
+            if (profile.time != maxTime) {
+                profile.solveProfile();
+            }
+        }
+    }
+        
+    
+    public static void solvePath(List<MotionProfile []> path) {
+        // Coordinate uncoordinated moves to min-time
+        
+    }
+    
     public void computeProfile(double vMax, double vEntry, double vExit, double aEntry, double aExit, double jMax, double tMin, boolean flipSignum) {
 
         // Then compare these to vMax to know whether we need to accelerate or decelerate on entry/exit.
-
         double signum = Math.signum(s[segments]-s[0]);
         if (signum == 0) {
             // Zero displacement, take entry/exit velocity balance as criterion. 
@@ -336,9 +443,66 @@ public class MotionProfile {
         }
         if (tMin > time && v[4] == 0) {
             // Zero velocity profile -> can adapt minimum time directly 
-            // (important for moveToLocationAtSafeZ() scenario).
+            // (important for moveToLocationAtSafeZ() "dome" scenario).
             t[4] = tMin - time;
             time = tMin;
+        }
+        
+        computeBounds();
+    }
+
+    public void computeBounds() {
+        // Calculate the bounds
+        if (s[0] <= s[segments]) {
+            sBound0 = s[0];
+            tBound0 = 0.0;
+            sBound1 = s[segments];
+            tBound1 = time;
+        }
+        else {
+            sBound0 = s[segments];
+            tBound0 = time;
+            sBound1 = s[0];
+            tBound1 = 0.0;
+        }
+        double tSeg = 0;
+        for (int i = 1; i <= segments; i++) {
+            // Find the velocity crossing zero, that my be an extreme for s.
+            if (j[i] != 0) {
+                // 3rd order segment.
+                double dt = Math.sqrt(Math.pow(a[i-1], 2) - 2*v[i-1]*j[i]);
+                for (double tCross : new double[] { -(a[i-1] + dt)/j[i], -(a[i-1] - dt)/j[i] }) { 
+                    if (tCross >= 0 && tCross <= t[i]) {
+                        // Zero-crossing inside the period, maybe an extreme.
+                        double sExtreme = s[i-1] + v[i-1]*tCross + 1./2*a[i-1]*Math.pow(tCross, 2) + 1./6*j[i]*Math.pow(tCross, 3);
+                        if (sExtreme < sBound0) {
+                            sBound0 = sExtreme;
+                            tBound0 = tSeg + tCross;
+                        }
+                        if (sExtreme > sBound1) {
+                            sBound1 = sExtreme;
+                            tBound1 = tSeg + tCross;
+                        }
+                    }
+                }
+            }
+            else if (a[i] != 0) {
+                // 2nd order segment.
+                double tCross = -v[i-1]/a[i];
+                if (tCross >= 0 && tCross <= t[i]) {
+                    // Zero-crossing inside the period, maybe an extreme.
+                    double sExtreme = s[i-1] + v[i-1]*tCross + 1./2*a[i-1]*Math.pow(tCross, 2);
+                    if (sExtreme < sBound0) {
+                        sBound0 = sExtreme;
+                        tBound0 = tSeg + tCross;
+                    }
+                    if (sExtreme > sBound1) {
+                        sBound1 = sExtreme;
+                        tBound1 = tSeg + tCross;
+                    }
+                }
+            }
+            tSeg += t[i];
         }
     }
 

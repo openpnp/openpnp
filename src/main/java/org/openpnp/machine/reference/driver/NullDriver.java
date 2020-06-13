@@ -106,9 +106,9 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
     @Override
     public void moveTo(ReferenceHeadMountable hm, Motion motion, MoveToOption... options)
             throws Exception {
-        Logger.debug("moveTo({}, {}, {})", hm, motion.getLocation(), motion.getFeedRatePerSecond(getUnits()));
+        Logger.debug("moveTo({}, {}, {})", hm, motion.getLocation1(), motion.getFeedRatePerSecond(this));
         checkEnabled();
-        AxesLocation newDriverLocation = motion.getLocation();
+        AxesLocation newDriverLocation = motion.getLocation1();
         // Take the current driver location of the given axes.
         AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this), 
                 (axis) -> (axis.getDriverLengthCoordinate()));

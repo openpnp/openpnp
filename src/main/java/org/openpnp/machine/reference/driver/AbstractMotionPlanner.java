@@ -197,21 +197,17 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
             planExecutedTime = plannedMotionEntry.getKey();
             Motion plannedMotion = plannedMotionEntry.getValue();
             if (!plannedMotion.hasOption(MotionOption.Stillstand)) {
-                for (Driver driver : plannedMotion.getLocation().getAxesDrivers(machine)) {
-                    AxesLocation previousLocation = new AxesLocation(plannedMotion.getLocation().getAxes(driver), 
-                            (axis) -> (axis.getDriverLengthCoordinate()));
+                for (Driver driver : plannedMotion.getLocation1().getAxesDrivers(machine)) {
                     // Derive the driver's motion from the planned motion.
-                    Motion driverMotion = Motion.computeWithLimits(plannedMotion.getMotionCommand(), 
-                            previousLocation, plannedMotion.getLocation(), 1.0, false, true,
-                            (axis, order) -> (plannedMotion.getVector(order).getCoordinate(axis)));
-                    if (driverMotion != null) {
+                    AxesLocation driverMove = plannedMotion.getLocation0().motionSegmentTo(plannedMotion.getLocation1());
+                    if (!driverMove.isEmpty()) {
                         ReferenceHeadMountable hm = null;
                         MoveToOption [] options = null;
                         if (plannedMotion.getMotionCommand() != null) {
                             options = plannedMotion.getMotionCommand().getOptions();
                             hm = (ReferenceHeadMountable) plannedMotion.getMotionCommand().getHeadMountable();
                         }
-                        ((ReferenceDriver) driver).moveTo(hm, driverMotion, options);
+                        ((ReferenceDriver) driver).moveTo(hm, plannedMotion, options);
                         if (hm != null) {
                             movedHeads.add(hm.getHead());
                         }
@@ -249,65 +245,76 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
             }
             else {
                 // Pause between the moves.
-                lastMotion = new Motion(0, null, 
-                        new AxesLocation [] { lastMotion.getLocation() },
-                        MotionOption.FixedWaypoint, MotionOption.CoordinatedWaypoint, MotionOption.Stillstand);
+                lastMotion = new Motion(null, 
+                        lastMotion.getLocation1(),
+                        lastMotion.getLocation1(),
+                        now,
+                        MotionOption.FixedWaypoint, MotionOption.CoordinatedMotion, MotionOption.Stillstand);
                 motionPlan.put(startTime, lastMotion);
             }
         }
         else {
             // No lastMotion, create the previous waypoint from the axes. 
             AxesLocation previousLocation = new AxesLocation(Configuration.get().getMachine()); 
-            lastMotion = new Motion(0, null, 
-                    new AxesLocation [] { previousLocation }, 
-                    MotionOption.FixedWaypoint, MotionOption.CoordinatedWaypoint, MotionOption.Stillstand);
+            lastMotion = new Motion(null, 
+                    previousLocation, 
+                    previousLocation,
+                    now,
+                    MotionOption.FixedWaypoint, MotionOption.CoordinatedMotion, MotionOption.Stillstand);
             motionPlan.put(startTime, lastMotion);
         }
         // Note this must include all the machine axes, not just the ones included in this moveTo().
         AxesLocation lastLocation = 
                 new AxesLocation(Configuration.get().getMachine())
-                .put(lastMotion.getLocation());
-        Motion plannedMotion = Motion.computeWithLimits(motionCommand, lastLocation, 
+                .put(lastMotion.getLocation1());
+        Motion plannedMotion = new Motion(
+                motionCommand, 
+                lastLocation, 
                 motionCommand.getAxesLocation(), 
-                motionCommand.getSpeed(), true, false);
-        if (plannedMotion != null) {
+                0,
+                MotionOption.FixedWaypoint, MotionOption.CoordinatedMotion);
+        if (!plannedMotion.isEmpty()) {
             motionPlan.put(startTime + plannedMotion.getTime(), plannedMotion);
         }
     }
 
     @Override
     public synchronized Motion getMomentaryMotion(double time) {
-        time = Math.min(planExecutedTime, time);
-        Map.Entry<Double, Motion> entry0 = motionPlan.floorEntry(time);
-        Map.Entry<Double, Motion> entry1 = motionPlan.higherEntry(time);
+        double planTime = Math.min(planExecutedTime, time);
+        Map.Entry<Double, Motion> entry0 = motionPlan.floorEntry(planTime);
+        Map.Entry<Double, Motion> entry1 = motionPlan.higherEntry(planTime);
         if (entry0 != null && entry1 != null) {
-            // We're between two way-points, interpolate linearly by time.
-            double dt = entry1.getKey() - entry0.getKey();
-            double ratio = (time - entry0.getKey())/dt;
-            Motion interpolatedMotion = entry0.getValue().interpolate(entry1.getValue(), ratio);
-            //Logger.trace("time = "+time+", ratio "+ratio+" motion="+interpolatedMotion);
-            return interpolatedMotion;
+            // We're between two way-points. Return the right motion.  
+            return new Motion(
+                    entry1.getValue(), 
+                    entry1.getKey());
         }
         else if (entry0 != null){
             // Machine stopped before this time. Just return the last location. 
-            return new Motion(0.0, 
+            return new Motion( 
                     null, 
-                    new AxesLocation [] { entry0.getValue().getVector(Derivative.Location) }, 
+                    entry0.getValue().getLocation1(),
+                    entry0.getValue().getLocation1(), 
+                    time,
                     MotionOption.Stillstand);
         }
         else if (entry1 != null){
             // Planning starts after this time. Return the first known location. 
-            return new Motion(0.0, 
+            return new Motion(
                     null,
-                    new AxesLocation [] { entry1.getValue().getVector(Derivative.Location) }, 
+                    entry1.getValue().getLocation0(),
+                    entry1.getValue().getLocation0(),
+                    entry1.getKey(),
                     MotionOption.Stillstand);
         }
         else {
             // Nothing in the plan, just get the current axes location.
             AxesLocation currentLocation = new AxesLocation(Configuration.get().getMachine()); 
-            return new Motion(0.0, 
+            return new Motion( 
                     null, 
-                    new AxesLocation [] { currentLocation }, 
+                    currentLocation,
+                    currentLocation,
+                    time,
                     MotionOption.Stillstand);
         }
     }
@@ -371,7 +378,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
     @Override
     public synchronized AxesLocation getMomentaryLocation(double time) {
         Motion motion = getMomentaryMotion(time);
-        return motion.getVector(Derivative.Location);
+        return motion.getMomentaryLocation(time - motion.getPlannedTime0());
     }
 
     @Override

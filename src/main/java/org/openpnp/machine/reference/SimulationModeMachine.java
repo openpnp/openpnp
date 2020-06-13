@@ -379,9 +379,10 @@ public class SimulationModeMachine extends ReferenceMachine {
                     && machine.getSimulationMode().isDynamicallyImperfectMachine()) {
                 lag = machine.getSimulatedCameraLag();
             }
+            double cameraTime = NanosecondTime.getRuntimeSeconds() - lag;
             Motion momentary = machine.getMotionPlanner()
-                    .getMomentaryMotion(NanosecondTime.getRuntimeSeconds() - lag);
-            AxesLocation axesLocation = momentary.getVector(Motion.Derivative.Location);
+                    .getMomentaryMotion(cameraTime);
+            AxesLocation axesLocation = momentary.getMomentaryLocation(cameraTime - momentary.getPlannedTime0());
             //AxesLocation axesVelocity = momentary.getVector(Motion.Derivative.Velocity);
             AxesLocation mappedAxes = hm.getMappedAxes(machine);
             try {
