@@ -415,6 +415,7 @@ public class Motion {
                         0, Double.POSITIVE_INFINITY,
                         options);
             }
+            MotionProfile.coordinateProfiles(axesProfiles);
         }
     }
 
