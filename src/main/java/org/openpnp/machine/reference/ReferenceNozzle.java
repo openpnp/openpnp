@@ -216,7 +216,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         double pickVacuumThreshold = part.getPackage().getPickVacuumLevel();
         if (Double.compare(pickVacuumThreshold, Double.valueOf(0.0)) != 0) {
             actuateVacuumValve(pickVacuumThreshold);
-        } else {
+        } 
+        else {
             actuateVacuumValve(true);
         }
 
@@ -255,12 +256,19 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         // if the method needs it, store one measurement up front
         storeBeforePlaceVacuumLevel();
 
-        double placeBlowLevel = part.getPackage().getPlaceBlowOffLevel();
-        if (Double.compare(placeBlowLevel, Double.valueOf(0.0)) != 0) {
-            actuateBlowValve(placeBlowLevel);
-        } else {
+        if (part != null) {
+            double placeBlowLevel = part.getPackage().getPlaceBlowOffLevel();
+            if (Double.compare(placeBlowLevel, Double.valueOf(0.0)) != 0) {
+                actuateBlowValve(placeBlowLevel);
+            } 
+            else {
+                actuateVacuumValve(false);
+            }
+        }
+        else {
             actuateVacuumValve(false);
         }
+        
 
         // wait for the Dwell Time and/or make sure the vacuum level decays to the desired range (with timeout)
         establishPlaceVacuumLevel(this.getPlaceDwellMilliseconds() + nozzleTip.getPlaceDwellMilliseconds());
