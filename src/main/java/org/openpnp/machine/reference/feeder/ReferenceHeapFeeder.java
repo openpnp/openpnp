@@ -333,8 +333,9 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         // last pick location
         nozzle.moveTo(location.add(new Location(LengthUnit.Millimeters, 0, 0, lastFeedDepth, 0)), Movable.MoveToOption.SpeedOverPrecision);
         // while vacuum difference is not reached, slowly stir in the heap
-        double currentDepth = lastFeedDepth + part.getHeight().getValue() / 2; // start always a bit higher than last time, to be sure that level is empty
+        double currentDepth = lastFeedDepth + part.getHeight().getValue() / 1.5; // start always a bit higher than last time, to be sure that level is empty
         for (int i = 0; ! stableVacuumDifferenceReached(nozzle, vacuumLevel, requiredVacuumDifference) && currentDepth > (boxDepth + part.getHeight().getValue()); i++) {
+            currentDepth -= Math.max(0.1, (part.getHeight().getValue() / 10.0));
             switch (i % 8) {
                 case 0: {
                     moveToHeapCorner(nozzle, currentDepth, 0); 
@@ -368,9 +369,6 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
                     moveToHeapCorner(nozzle, currentDepth, 2); 
                     break;
                 }
-            }
-            if (i % 4 == 3) {
-                currentDepth -= Math.max(0.1, (part.getHeight().getValue() / 2.0));
             }
         }
         // if at the bottom => failed
