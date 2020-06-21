@@ -29,6 +29,7 @@ The actuator signaler can be configured in the machine.xml:
     <signaler class="org.openpnp.machine.reference.signaler.ActuatorSignaler" id="446118b2-991d-11e6-9f33-a24fc0d9649c" name="Actuator Signaler" actuator-id="5b8a8cbd-d6c1-4324-af8b-eba5f0444622" job-state="ERROR" machine-state="ERROR"/>
 </signalers>
 ```
+Note that you if you create the signaller in the UI, you will need to edit the machine.xml to add the appropriate actuator-id, job-state and machine-state, as the signaler and it's actuator are not automatically connected via the UI.
 
 The valid options for job-state are:
 * STOPPED
