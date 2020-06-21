@@ -48,7 +48,7 @@ class KicadPosImporterDialog extends JDialog {
     private final Action cancelAction = new SwingAction_3();
     private JCheckBox chckbxCreateMissingParts;
     private JCheckBox chckbxUseValueOnlyAsPartId;
-
+    private JCheckBox chckbxAssignParts;
     public KicadPosImporterDialog(KicadPosImporter kicadPosImporter, Frame parent) {
         super(parent, KicadPosImporter.DESCRIPTION, true);
         importer = kicadPosImporter;
@@ -94,21 +94,27 @@ class KicadPosImporterDialog extends JDialog {
         panel_1.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-                
-                        chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
-                        chckbxCreateMissingParts.setSelected(false);
-                        chckbxCreateMissingParts.setToolTipText("PartId = 'Package'-'Value'");
-                        panel_1.add(chckbxCreateMissingParts, "2, 2");
-        
-                chckbxUseValueOnlyAsPartId = new JCheckBox("Use only Value as PartId");
-                chckbxUseValueOnlyAsPartId.setSelected(false);
-                chckbxUseValueOnlyAsPartId.setToolTipText("Check this, if Value is unique (e.g. company internal part number)");
-                panel_1.add(chckbxUseValueOnlyAsPartId, "2, 4");
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+
+        chckbxAssignParts = new JCheckBox("Assign Parts");
+        chckbxAssignParts.setSelected(true);
+        panel_1.add(chckbxAssignParts, "2, 2");
+
+        chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
+        chckbxCreateMissingParts.setSelected(false);
+        chckbxCreateMissingParts.setToolTipText("PartId = 'Package'-'Value'");
+        panel_1.add(chckbxCreateMissingParts, "2, 4");
+
+        chckbxUseValueOnlyAsPartId = new JCheckBox("Use only Value as PartId");
+        chckbxUseValueOnlyAsPartId.setSelected(false);
+        chckbxUseValueOnlyAsPartId.setToolTipText("Check this, if Value is unique (e.g. company internal part number)");
+        panel_1.add(chckbxUseValueOnlyAsPartId, "2, 6");
 
         JSeparator separator = new JSeparator();
         getContentPane().add(separator);
@@ -196,11 +202,13 @@ class KicadPosImporterDialog extends JDialog {
             try {
                 if (KicadPosImporterDialog.this.importer.topFile.exists()) {
                     placements.addAll(KicadPosImporter.parseFile(KicadPosImporterDialog.this.importer.topFile, Side.Top,
+                            chckbxAssignParts.isSelected(),
                             chckbxCreateMissingParts.isSelected(), 
                             chckbxUseValueOnlyAsPartId.isSelected()));
                 }
                 if (KicadPosImporterDialog.this.importer.bottomFile.exists()) {
                     placements.addAll(KicadPosImporter.parseFile(KicadPosImporterDialog.this.importer.bottomFile, Side.Bottom,
+                            chckbxAssignParts.isSelected(),
                             chckbxCreateMissingParts.isSelected(), 
                             chckbxUseValueOnlyAsPartId.isSelected()));
                 }
