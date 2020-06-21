@@ -219,10 +219,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 }
 
                 if (table.getSelectedRow() != priorRowIndex) {
-                    if (keepUnAppliedFeederConfigurationChanges()) {
+                	if (keepUnAppliedFeederConfigurationChanges()) {
                         table.setRowSelectionInterval(priorRowIndex, priorRowIndex);
                         return;
-                    }
+					}
                     priorRowIndex = table.getSelectedRow();
                     
                     Feeder feeder = getSelection();
@@ -267,19 +267,33 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             i++;
         }
         if (feederConfigurationIsDirty && (priorFeeder != null)) {
-            int selection = JOptionPane.showOptionDialog(null,
-                    "Configuration changes to '" + priorFeeder.getName() + "' will be lost.  Do you want to proceed?",
+            int selection = JOptionPane.showConfirmDialog(null,
+                    priorFeeder.getName() + " changed.  Apply changes?",
                     "Warning!",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.WARNING_MESSAGE,
-                    null,
-                    new String[]{"Yes", "No"},
-                    "No");
-            return (selection != JOptionPane.YES_OPTION);
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null
+                    );
+            switch (selection) {
+				case JOptionPane.YES_OPTION:
+				    int j = 0;
+				    while ((j<configurationPanel.getComponentCount())) {
+				    	AbstractConfigurationWizard wizard = ((AbstractConfigurationWizard) configurationPanel.getComponent(j));
+				        if (wizard.isDirty()) {
+							wizard.apply();
+				        }
+				        j++;
+				    }
+				    return false;
+				case JOptionPane.NO_OPTION:
+					return false;
+				case JOptionPane.CANCEL_OPTION:
+				default:
+					return true;
+			}
         } else {
             return false;
         }
-        
     }
     
     @Subscribe
