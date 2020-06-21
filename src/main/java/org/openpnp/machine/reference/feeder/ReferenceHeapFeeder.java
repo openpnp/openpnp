@@ -105,7 +105,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      * partOn() not used, since the chance is high, that there are larger leakages.
      */
     @Attribute(required = false)
-    private int requiredVacuumDifference = 500;
+    private int requiredVacuumDifference = 300;
 
     /**
      * Pipeline to detect parts (correct laying).
@@ -333,7 +333,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         // last pick location
         nozzle.moveTo(location.add(new Location(LengthUnit.Millimeters, 0, 0, lastFeedDepth, 0)), Movable.MoveToOption.SpeedOverPrecision);
         // while vacuum difference is not reached, slowly stir in the heap
-        double currentDepth = lastFeedDepth + part.getHeight().getValue(); // start always a bit higher than last time, bu be sure that level is empty
+        double currentDepth = lastFeedDepth + part.getHeight().getValue() / 2; // start always a bit higher than last time, to be sure that level is empty
         for (int i = 0; ! stableVacuumDifferenceReached(nozzle, vacuumLevel, requiredVacuumDifference) && currentDepth > (boxDepth + part.getHeight().getValue()); i++) {
             switch (i % 8) {
                 case 0: {
@@ -399,19 +399,19 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         Location destination = location.add(new Location(LengthUnit.Millimeters, 0, 0, currentDepth, 0));
         switch (corner) {
             case 0: {
-                destination = destination.add(new Location(LengthUnit.Millimeters, +0.75, -0.75, 0, 0));
+                destination = destination.add(new Location(LengthUnit.Millimeters, +1.00, -1.00, 0, 0));
                 break;
             }
             case 1: {
-                destination = destination.add(new Location(LengthUnit.Millimeters, +0.75, +0.75, 0, 0));
+                destination = destination.add(new Location(LengthUnit.Millimeters, +1.00, +1.00, 0, 0));
                 break;
             }
             case 2: {
-                destination = destination.add(new Location(LengthUnit.Millimeters, -0.75, +0.75, 0, 0));
+                destination = destination.add(new Location(LengthUnit.Millimeters, -1.00, +1.00, 0, 0));
                 break;
             }
             case 3: {
-                destination = destination.add(new Location(LengthUnit.Millimeters, -0.75, -0.75, 0, 0));
+                destination = destination.add(new Location(LengthUnit.Millimeters, -1.00, -1.00, 0, 0));
                 break;
             }
         }
