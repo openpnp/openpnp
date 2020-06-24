@@ -99,6 +99,13 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     }
     
     @Override
+    public void actuate(String value) throws Exception {
+        Logger.debug("{}.actuate({})", getName(), value);
+        getDriver().actuate(this, value);
+        getMachine().fireMachineHeadActivity(head);
+    }
+    
+    @Override
     public String read() throws Exception {
         String value = getDriver().actuatorRead(this);
         Logger.debug("{}.read(): {}", getName(), value);
