@@ -76,6 +76,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         PLACE_COMMAND(true, "Id", "Name"),
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
+        ACTUATE_STRING_COMMAND(true, "Id", "Name", "Index", "StringValue"),
         ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index"),
         ACTUATOR_READ_WITH_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
         ACTUATOR_READ_REGEX(true);
@@ -838,6 +839,20 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         command = substituteVariable(command, "Index", actuator.getIndex());
         command = substituteVariable(command, "DoubleValue", value);
         command = substituteVariable(command, "IntegerValue", (int) value);
+        sendGcode(command);
+
+        for (ReferenceDriver driver : subDrivers) {
+            driver.actuate(actuator, value);
+        }
+    }
+    
+    @Override
+    public void actuate(ReferenceActuator actuator, String value) throws Exception {
+        String command = getCommand(actuator, CommandType.ACTUATE_STRING_COMMAND);
+        command = substituteVariable(command, "Id", actuator.getId());
+        command = substituteVariable(command, "Name", actuator.getName());
+        command = substituteVariable(command, "Index", actuator.getIndex());
+        command = substituteVariable(command, "StringValue", value);
         sendGcode(command);
 
         for (ReferenceDriver driver : subDrivers) {
