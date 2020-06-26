@@ -155,15 +155,9 @@ public interface MotionPlanner {
     Machine getMachine();
 
     /**
-     * Limits the specified AxesLocation to nominal coordinates. Throws or returns null if a soft limit is 
-     * violated. Limits rotation axes to their limited or wrapped-around coordinates. 
-     * 
-     * @param hm
      * @param axesLocation
-     * @param silent If true, returns null on soft limit violations rather than throwing Exceptions. 
-     * @return
-     * @throws Exception
+     * @return true if the location is valid, i.e. inside soft limits etc.
      */
-    AxesLocation limitAxesLocation(HeadMountable hm, AxesLocation axesLocation, boolean silent)
-            throws Exception;
+    public boolean isValidLocation(AxesLocation axesLocation);
+
 }

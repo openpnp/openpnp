@@ -57,7 +57,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
         super.waitForCompletion(hm, completionType);
     }
 
-    public void planMotion(CompletionType completionType) throws Exception {
+    public synchronized void planMotion(CompletionType completionType) throws Exception {
         // Plan the tail of the queued motions.
         ArrayList<Motion> motionPath = new ArrayList<>();
         Motion prevMotion = null; 
@@ -80,8 +80,6 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
             if (completionType == CompletionType.WaitForStillstand) {
                 prevMotion.setOption(Motion.MotionOption.Stillstand);
             }
-            
-            
             
             // Remove the old plan
             while (motionPlan.size() > 0) {

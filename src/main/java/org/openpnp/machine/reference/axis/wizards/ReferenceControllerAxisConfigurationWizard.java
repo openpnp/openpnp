@@ -140,8 +140,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
             });
         }
     };
-    private JButton btnPositionsoftlimitlow;
-    private JButton btnPositionsoftlimithigh;
+    private JButton btnPositionSoftLimitLow;
+    private JButton btnPositionSoftLimitHigh;
 
     private Action positionSoftLimitLowAction = new AbstractAction() {
         {
@@ -313,9 +313,9 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         btnCaptureSoftLimitLow.setText("<html><span style=\"color:#005BD9;\">┬</span></html>");
         panelKinematics.add(btnCaptureSoftLimitLow, "8, 2");
 
-        btnPositionsoftlimitlow = new JButton(positionSoftLimitLowAction);
-        btnPositionsoftlimitlow.setText("<html><span style=\"color:red;\">┬</span></html>");
-        panelKinematics.add(btnPositionsoftlimitlow, "10, 2");
+        btnPositionSoftLimitLow = new JButton(positionSoftLimitLowAction);
+        btnPositionSoftLimitLow.setText("<html><span style=\"color:red;\">┬</span></html>");
+        panelKinematics.add(btnPositionSoftLimitLow, "10, 2");
 
         lblSoftLimitHigh = new JLabel("Soft Limit High");
         panelKinematics.add(lblSoftLimitHigh, "2, 4, right, default");
@@ -331,9 +331,9 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         btnCaptureSoftLimitHigh.setText("<html><span style=\"color:#005BD9;\">┴</span></html>");
         panelKinematics.add(btnCaptureSoftLimitHigh, "8, 4");
 
-        btnPositionsoftlimithigh = new JButton(positionSoftLimitHighAction);
-        btnPositionsoftlimithigh.setText("<html><span style=\"color:red;\">┴</span></html>");
-        panelKinematics.add(btnPositionsoftlimithigh, "10, 4");
+        btnPositionSoftLimitHigh = new JButton(positionSoftLimitHighAction);
+        btnPositionSoftLimitHigh.setText("<html><span style=\"color:red;\">┴</span></html>");
+        panelKinematics.add(btnPositionSoftLimitHigh, "10, 4");
 
         lblFeedrates = new JLabel("Feedrate [/s]");
         panelKinematics.add(lblFeedrates, "2, 6, right, default");
@@ -385,6 +385,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         softLimitHighEnabled.setVisible(!showRotationSettings);
         btnCaptureSoftLimitLow.setVisible(!showRotationSettings);
         btnCaptureSoftLimitHigh.setVisible(!showRotationSettings);
+        btnPositionSoftLimitLow.setVisible(!showRotationSettings);
+        btnPositionSoftLimitHigh.setVisible(!showRotationSettings);
     }
 
     @Override
@@ -424,13 +426,5 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(softLimitHigh);
 
         adaptDialog();
-    }
-    private class SwingAction extends AbstractAction {
-        public SwingAction() {
-            putValue(NAME, "SwingAction");
-            putValue(SHORT_DESCRIPTION, "Some short description");
-        }
-        public void actionPerformed(ActionEvent e) {
-        }
     }
 }

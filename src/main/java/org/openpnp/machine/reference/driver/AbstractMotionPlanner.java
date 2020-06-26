@@ -87,6 +87,8 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
 
     @Override
     public synchronized void home() throws Exception {
+        // Just to make sure we're on the same page in the planner.
+        waitForCompletion(null, CompletionType.WaitForStillstand);
         // Home all the drivers with their respective mapped axes (can be an empty map). 
         for (Driver driver : getMachine().getDrivers()) {
             ((ReferenceDriver) driver).home(getMachine());
@@ -101,7 +103,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
 
     @Override
     public synchronized void setGlobalOffsets(AxesLocation axesLocation) throws Exception {
-        // Offset all the mapped axes on the respective drivers. 
+        // Offset all the specified axes on the respective drivers. 
         for (Driver driver : axesLocation.getAxesDrivers(getMachine())) {
             ((ReferenceDriver) driver).setGlobalOffsets(getMachine(), axesLocation);
         }
@@ -116,7 +118,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
     @Override
     public synchronized void moveTo(HeadMountable hm, AxesLocation axesLocation, double speed, MoveToOption... options) throws Exception {
         // Handle soft limits and rotation axes limiting and wrap-around.
-        axesLocation = limitAxesLocation(hm, axesLocation, false);
+        axesLocation = limitAxesLocation(axesLocation, false);
 
         // Do the internal planning etc.  
         moveToPlanning(hm, axesLocation, speed, options);
@@ -129,8 +131,16 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
         }
     }
 
-    @Override
-    public AxesLocation limitAxesLocation(HeadMountable hm, AxesLocation axesLocation, boolean silent)
+    /**
+     * Limits the specified AxesLocation to nominal coordinates. Throws or returns null if a soft limit is 
+     * violated. Limits rotation axes to their limited or wrapped-around coordinates. 
+     * 
+     * @param axesLocation
+     * @param silent If true, returns null on soft limit violations rather than throwing Exceptions. 
+     * @return
+     * @throws Exception
+     */
+    protected AxesLocation limitAxesLocation(AxesLocation axesLocation, boolean silent)
             throws Exception {
         for (ControllerAxis axis : axesLocation.getControllerAxes()) {
             if (axis instanceof ReferenceControllerAxis) {
@@ -164,8 +174,8 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
                             if (silent) {
                                 return null;    
                             }
-                            throw new Exception(String.format("Can't move %s to %s=%s, lower than soft limit %s.",
-                                    hm.getName(), refAxis.getName(), coordinate, limit));
+                            throw new Exception(String.format("Can't move %s to %s, lower than soft limit %s.",
+                                    refAxis.getName(), coordinate, limit));
                         }
                     }
                     if (refAxis.isSoftLimitHighEnabled()) {
@@ -176,8 +186,8 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
                             if (silent) {
                                 return null;    
                             }
-                            throw new Exception(String.format("Can't move %s to %s=%s, higher than soft limit %s.",
-                                    hm.getName(), refAxis.getName(), coordinate, limit));
+                            throw new Exception(String.format("Can't move %s to %s, higher than soft limit %s.",
+                                    refAxis.getName(), coordinate, limit));
                         }
                     }
                 }
@@ -186,9 +196,20 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
         return axesLocation;
     }
 
+    @Override
+    public boolean isValidLocation(AxesLocation axesLocation) {
+        try {
+            return limitAxesLocation(axesLocation, true) != null;
+        }
+        catch (Exception e) {
+            // Note this will never happen, as we pass silent=true.
+            return false;
+        }
+    }
+
     protected double planExecutedTime = 0;
 
-    public void executeMotionPlan(CompletionType completionType) throws Exception {
+    protected synchronized void executeMotionPlan(CompletionType completionType) throws Exception {
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
         List<Head> movedHeads = new ArrayList<>();
         for (Entry<Double, Motion> plannedMotionEntry : motionPlan.tailMap(planExecutedTime, false).entrySet()) {
@@ -220,7 +241,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
         }
     }
 
-    protected void moveToPlanning(HeadMountable hm, AxesLocation axesLocation,
+    protected synchronized void moveToPlanning(HeadMountable hm, AxesLocation axesLocation,
             double speed, MoveToOption... options) throws Exception {
         // Add the command
         MotionCommand motionCommand = new MotionCommand(hm, axesLocation, speed, options);
@@ -228,7 +249,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
         queueMotion(motionCommand);
     }
 
-    protected void queueMotion(MotionCommand motionCommand) throws Exception {
+    protected synchronized void queueMotion(MotionCommand motionCommand) throws Exception {
         // Get real-time.
         double now = NanosecondTime.getRuntimeSeconds();
         // Get the last entry.
@@ -245,9 +266,22 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
             }
             else {
                 // Pause between the moves.
+                /*
+                 * NOPE: don't take the last location from the plan, as it may have changed due to resetting (visual homing)
+                 * or rotation axis wrap-around etc. 
+                 
                 lastMotion = new Motion(null, 
                         lastMotion.getLocation1(),
                         lastMotion.getLocation1(),
+                        now,
+                        MotionOption.FixedWaypoint, MotionOption.CoordinatedMotion, MotionOption.Stillstand);
+                motionPlan.put(startTime, lastMotion);
+                */
+                // Create the previous waypoint from the axes. 
+                AxesLocation previousLocation = new AxesLocation(Configuration.get().getMachine()); 
+                lastMotion = new Motion(null, 
+                        previousLocation, 
+                        previousLocation,
                         now,
                         MotionOption.FixedWaypoint, MotionOption.CoordinatedMotion, MotionOption.Stillstand);
                 motionPlan.put(startTime, lastMotion);
@@ -263,14 +297,19 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
                     MotionOption.FixedWaypoint, MotionOption.CoordinatedMotion, MotionOption.Stillstand);
             motionPlan.put(startTime, lastMotion);
         }
-        // Note this must include all the machine axes, not just the ones included in this moveTo().
+        // Note the locations must include all the machine axes, not just the ones included in this moveTo().
+        AxesLocation currentPlannerLocation = new AxesLocation(Configuration.get().getMachine()); 
         AxesLocation lastLocation = 
-                new AxesLocation(Configuration.get().getMachine())
+                currentPlannerLocation
                 .put(lastMotion.getLocation1());
+        AxesLocation newLocation = 
+                currentPlannerLocation
+                .put(motionCommand.getAxesLocation());
+        
         Motion plannedMotion = new Motion(
                 motionCommand, 
                 lastLocation, 
-                motionCommand.getAxesLocation(), 
+                newLocation, 
                 0,
                 MotionOption.FixedWaypoint, MotionOption.CoordinatedMotion);
         if (!plannedMotion.isEmpty()) {
@@ -284,11 +323,14 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
         Map.Entry<Double, Motion> entry0 = motionPlan.floorEntry(planTime);
         Map.Entry<Double, Motion> entry1 = motionPlan.higherEntry(planTime);
         if (entry0 != null && entry1 != null) {
-            // We're between two way-points. Return the right motion.  
-            return new Motion(
-                    entry1.getValue(), 
-                    entry1.getKey());
+            // We're between two way-points. Return the current motion.
+            Motion motion = entry1.getValue();
+            // Anchor it in real-time.
+            motion.setPlannedTime1(entry1.getKey());
+            return motion;
         }
+        /* NOPE: don't take the last location from the plan, as it may have changed due to resetting (visual homing)
+                 * or rotation axis wrap-around etc. 
         else if (entry0 != null){
             // Machine stopped before this time. Just return the last location. 
             return new Motion( 
@@ -297,7 +339,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
                     entry0.getValue().getLocation1(), 
                     time,
                     MotionOption.Stillstand);
-        }
+        }*/
         else if (entry1 != null){
             // Planning starts after this time. Return the first known location. 
             return new Motion(
@@ -308,7 +350,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
                     MotionOption.Stillstand);
         }
         else {
-            // Nothing in the plan, just get the current axes location.
+            // Nothing in the plan or machine stopped before this time, just get the current axes location.
             AxesLocation currentLocation = new AxesLocation(Configuration.get().getMachine()); 
             return new Motion( 
                     null, 
@@ -320,7 +362,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
     }
 
     @Override
-    public void waitForCompletion(HeadMountable hm, CompletionType completionType)
+    public synchronized void waitForCompletion(HeadMountable hm, CompletionType completionType)
             throws Exception {
         // Rotation axes wrap-around handling.
         AxesLocation mappedAxes = new AxesLocation(getMachine()).byType(Type.Rotation);
@@ -343,13 +385,12 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
 
     protected void waitForDriverCompletion(HeadMountable hm, CompletionType completionType)
             throws Exception {
-        // The null motion planner is a pure proxy, so there is nothing left to do except wait for the driver(s).
+        // Wait for the driver(s).
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
         // If the hm is given, we just wait for the drivers of that hm, otherwise we wait for all drivers of the machine axes.
         AxesLocation mappedAxes = (hm != null ? 
                 hm.getMappedAxes(machine) 
                 : new AxesLocation(machine));
-
         if (!mappedAxes.isEmpty()) {
             for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
                 ((ReferenceDriver) driver).waitForCompletion((ReferenceHeadMountable) hm, completionType);

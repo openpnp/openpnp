@@ -29,6 +29,7 @@ import java.util.function.BiFunction;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.machine.reference.driver.AbstractMotionPlanner.MotionCommand;
+import org.openpnp.model.MotionProfile.ProfileOption;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
@@ -251,19 +252,27 @@ public class Motion {
                         sMax = ((ReferenceControllerAxis) axis).getSoftLimitHigh().convertToUnits(AxesLocation.getUnits()).getValue();
                     }
                 }
-                double vMax = axis.getMotionLimit(1);  
+                effectiveSpeed = getNominalSpeed();
+                
+                double vMax = effectiveSpeed 
+                        *axis.getMotionLimit(1);  
 
-                double aMax = axis.getMotionLimit(2);  
+                double aMax = Math.pow(effectiveSpeed, 2) // speed factor must be to the power of the order of the derivative
+                        *axis.getMotionLimit(2);  
 
-                double jMax = axis.getMotionLimit(3);
+                double jMax = Math.pow(effectiveSpeed, 3) // speed factor must be to the power of the order of the derivative
+                        *axis.getMotionLimit(3);
 
+                // Compute s0 by distance rather than taking location0, because some axes may have been omitted in location1. 
+                double s1 = location1.getCoordinate(axis); 
+                double s0 = s1 - distance.getCoordinate(axis);
                 axesProfiles[entry.getValue()] = new MotionProfile(
-                        location0.getCoordinate(axis), location1.getCoordinate(axis), 
+                        s0, s1,
                         0, 0, 0, 0, // initialize with still-stand
                         sMin, sMax, 
                         vMax, aMax, aMax, jMax, 
                         0, Double.POSITIVE_INFINITY,
-                        options);
+                        profileOptions());
             }
             // As these profiles are uncoordinated, they need to be synchronized, i.e. made sure they take the same amount of time.
             MotionProfile.synchronizeProfiles(axesProfiles);
@@ -407,16 +416,31 @@ public class Motion {
                         Math.pow(effectiveSpeed, 3) // speed factor must be to the power of the order of the derivative
                         *overallLimits[3]*axisFraction;
 
+                // Compute s0 by distance rather than taking location0, because some axes may have been omitted in location1. 
+                double s1 = location1.getCoordinate(axis); 
+                double s0 = s1 - distance.getCoordinate(axis);
+                
                 axesProfiles[entry.getValue()] = new MotionProfile(
-                        location0.getCoordinate(axis), location1.getCoordinate(axis), 
+                        s0, s1, 
                         0, 0, 0, 0, // initialize with still-stand
                         sMin, sMax, 
                         vMax, aMax, aMax, jMax, 
                         0, Double.POSITIVE_INFINITY,
-                        options);
+                        profileOptions());
             }
             MotionProfile.coordinateProfiles(axesProfiles);
         }
+    }
+
+    private int profileOptions() {
+        int profileOptions = 0;
+        if (hasOption(MotionOption.CoordinatedMotion)) {
+            profileOptions |= ProfileOption.Coordinated.flag(); 
+        }
+        if (hasOption(MotionOption.Stillstand)) {
+            profileOptions |= ProfileOption.StillstandExit.flag(); 
+        }
+        return profileOptions;
     }
 
     public AxesLocation getLocation0() {
