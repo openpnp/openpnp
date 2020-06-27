@@ -32,11 +32,11 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
-import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.PropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -99,7 +99,7 @@ public class NullDriver implements ReferenceDriver {
      * considerations when writing your own driver.
      */
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOption... options)
             throws Exception {
         Logger.debug("moveTo({}, {}, {})", hm, location, speed);
         checkEnabled();
@@ -232,6 +232,15 @@ public class NullDriver implements ReferenceDriver {
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
         Logger.debug("actuate({}, {})", actuator, on);
+        checkEnabled();
+        if (feedRateMmPerMinute > 0) {
+            Thread.sleep(500);
+        }
+    }
+    
+    @Override
+    public void actuate(ReferenceActuator actuator, String value) throws Exception {
+        Logger.debug("actuate({}, {})", actuator, value);
         checkEnabled();
         if (feedRateMmPerMinute > 0) {
             Thread.sleep(500);

@@ -76,6 +76,8 @@ import org.pmw.tinylog.Logger;
 @SuppressWarnings("serial")
 public class CameraView extends JComponent implements CameraListener {
     private static final String PREF_RETICLE = "CamerView.reticle";
+    private static final String PREF_ZOOM_INCREMENT = "CamerView.zoomIncrement";
+    private static final double DEFAULT_ZOOM_INCREMENT = 0.01;
 
     private static final String DEFAULT_RETICLE_KEY = "DEFAULT_RETICLE_KEY";
 
@@ -189,6 +191,7 @@ public class CameraView extends JComponent implements CameraListener {
     private boolean showName = false;
     
     private double zoom = 1d;
+    private double zoomIncPerMouseWheelTick = DEFAULT_ZOOM_INCREMENT;
     
     private boolean dragJogging = false;
     
@@ -234,6 +237,10 @@ public class CameraView extends JComponent implements CameraListener {
         return PREF_RETICLE + "." + camera.getId();
     }
 
+    private String getZoomIncrementPrefKey() {
+        return PREF_ZOOM_INCREMENT + "." + camera.getId();
+    }
+
     public void addActionListener(CameraViewActionListener listener) {
         if (!actionListeners.contains(listener)) {
             actionListeners.add(listener);
@@ -271,6 +278,9 @@ public class CameraView extends JComponent implements CameraListener {
                 Logger.debug("No reticle preference found.");
             }
         }
+
+        // load the zoom increment pref, if any
+        zoomIncPerMouseWheelTick = prefs.getDouble(getZoomIncrementPrefKey(), DEFAULT_ZOOM_INCREMENT);
 
     }
 
@@ -335,6 +345,15 @@ public class CameraView extends JComponent implements CameraListener {
         this.text = text;
     }
 
+    public double getZoomIncPerMouseWheelTick() {
+        return zoomIncPerMouseWheelTick;
+    }
+
+    public void setZoomIncPerMouseWheelTick(double zoomIncPerMouseWheelTick) {
+        prefs.putDouble(getZoomIncrementPrefKey(), zoomIncPerMouseWheelTick);
+        this.zoomIncPerMouseWheelTick = zoomIncPerMouseWheelTick;
+    }
+    
     /**
      * Causes a short flash in the CameraView to get the user's attention.
      */
@@ -400,6 +419,8 @@ public class CameraView extends JComponent implements CameraListener {
                 }
             }
         });
+        // Make sure the filtered image is shown immediately and also counted as fps (for 0 or low fps cameras). 
+        frameReceived(null);
     }
 
     public BufferedImage captureSelectionImage() {
@@ -629,6 +650,11 @@ public class CameraView extends JComponent implements CameraListener {
     private void drawCircle(Graphics2D g2d, int centerX, int centerY, int radius) {
         g2d.drawArc(centerX - radius, centerY - radius, radius * 2, radius * 2, 0, 360);
     }
+
+    private double snapRotationAngleToTypicalAngles(double angle) {
+        // Round to typical pcb placing angles
+        return ((int) Math.round(angle / 45)) * 45.0;
+    }
     
     private void paintDragJogRotationHandle(Graphics2D g2d, boolean active) {
         if (camera.getHead() == null) {
@@ -660,6 +686,12 @@ public class CameraView extends JComponent implements CameraListener {
             // Now draw the circular handle at it's target position in the active color
             double rotTargetHandleAngle = Math.toDegrees(Math.atan2(targetY - (height / 2), targetX - (width / 2)));
             rotTargetHandleAngle = Utils2D.normalizeAngle(rotTargetHandleAngle);
+
+            // If the alt button is pressed snap to certain angles
+            if(dragJoggingTarget.isAltDown()) {
+                rotTargetHandleAngle = snapRotationAngleToTypicalAngles(rotTargetHandleAngle);
+            }
+
             double rotTargetHandleX = rotHandleRadius * Math.cos(Math.toRadians(rotTargetHandleAngle)) + (width / 2.);
             double rotTargetHandleY = rotHandleRadius * Math.sin(Math.toRadians(rotTargetHandleAngle)) + (height / 2.);
             g2d.setColor(dragJogHandleActiveColor);
@@ -703,12 +735,16 @@ public class CameraView extends JComponent implements CameraListener {
                     xyTargetHandleX0 + dragJogHandleSize / 2, xyTargetHandleY0 + dragJogHandleSize);
             g2d.drawLine(xyTargetHandleX0, xyTargetHandleY0 + dragJogHandleSize / 2,
                     xyTargetHandleX0 + dragJogHandleSize, xyTargetHandleY0 + dragJogHandleSize / 2);
+            
+            g2d.drawLine(xyHandleX0 + dragJogHandleSize / 2, 
+                    xyHandleY0 + dragJogHandleSize / 2,
+                    targetX, targetY);
         }
     }
     
     private void paintDragJogging(Graphics2D g2d) {
         paintDragJogXyHandle(g2d, isDragJogging() 
-                && isPointInsideDragJogXyHandle(dragJoggingStart.getX(), dragJoggingStart.getY()));
+                && !isPointInsideDragJogRotationHandle(dragJoggingStart.getX(), dragJoggingStart.getY()));
         paintDragJogRotationHandle(g2d, isDragJogging() 
                 && isPointInsideDragJogRotationHandle(dragJoggingStart.getX(), dragJoggingStart.getY()));
     }
@@ -1265,10 +1301,7 @@ public class CameraView extends JComponent implements CameraListener {
         }
     }
 
-    private void moveToClick(MouseEvent e) {
-        int x = e.getX();
-        int y = e.getY();
-
+    public Location getCameraViewCenterOffsetsFromXy(int x, int y) {
         // Find the difference in X and Y from the center of the image
         // to the mouse click.
         double offsetX = (scaledWidth / 2.0D) - (x - imageX);
@@ -1282,12 +1315,17 @@ public class CameraView extends JComponent implements CameraListener {
         offsetX *= scaledUnitsPerPixelX;
         offsetY *= scaledUnitsPerPixelY;
 
-        // The offsets now represent the distance to move the camera
-        // in the Camera's units per pixel's units.
+        // The offsets now represent the distance in the Camera's units per pixel's units.
 
         // Create a location in the Camera's units per pixel's units
         // and with the values of the offsets.
         Location offsets = camera.getUnitsPerPixel().derive(offsetX, offsetY, 0.0, 0.0);
+        return offsets;
+    }
+
+    private void moveToClick(MouseEvent e) {
+        // Get the offset from the Camera view center in Camera's units.
+        Location offsets = getCameraViewCenterOffsetsFromXy(e.getX(), e.getY());
         // And move there.
         UiUtils.submitUiMachineTask(() -> {
             if (camera.getHead() == null) {
@@ -1313,6 +1351,12 @@ public class CameraView extends JComponent implements CameraListener {
 
         double rotTargetHandleAngle = Math.toDegrees(Math.atan2(e.getY() - (height / 2), e.getX() - (width / 2)));
         rotTargetHandleAngle = Utils2D.normalizeAngle(rotTargetHandleAngle);
+
+        // If the alt button is pressed snap to certain angles
+        if(e.isAltDown()) {
+            rotTargetHandleAngle = snapRotationAngleToTypicalAngles(rotTargetHandleAngle);
+        }
+
         double targetAngle = Utils2D.normalizeAngle(-(rotTargetHandleAngle + 90));
         UiUtils.submitUiMachineTask(() -> {
             if (camera.getHead() == null) {
@@ -1413,12 +1457,10 @@ public class CameraView extends JComponent implements CameraListener {
     }
     
     private void dragJoggingBegin(MouseEvent e) {
-        if (isPointInsideDragJogHandle(e.getX(), e.getY())) {
-            this.dragJogging = true;
-            this.dragJoggingStart = e;
-            this.dragJoggingTarget = e;
-            repaint();
-        }
+        this.dragJogging = true;
+        this.dragJoggingStart = e;
+        this.dragJoggingTarget = e;
+        repaint();
     }
     
     private void dragJoggingContinue(MouseEvent e) {
@@ -1435,11 +1477,11 @@ public class CameraView extends JComponent implements CameraListener {
         this.dragJoggingTarget = null;
         repaint();
         
-        if (isPointInsideDragJogXyHandle(startX, startY)) {
-            moveToClick(e);
-        }
-        else if (isPointInsideDragJogRotationHandle(startX, startY)) {
+        if (isPointInsideDragJogRotationHandle(startX, startY)) {
             rotateToClick(e);
+        }
+        else {
+            moveToClick(e);
         }
     }
     
@@ -1467,6 +1509,9 @@ public class CameraView extends JComponent implements CameraListener {
             if (e.isPopupTrigger()) {
                 new CameraViewPopupMenu(CameraView.this).show(e.getComponent(), e.getX(), e.getY());
                 return;
+            }
+            else if (e.isShiftDown()) {
+                moveToClick(e);
             }
             else if (selectionEnabled) {
                 beginSelection(e);
@@ -1518,7 +1563,7 @@ public class CameraView extends JComponent implements CameraListener {
     private MouseWheelListener mouseWheelListener = new MouseWheelListener() {
         @Override
         public void mouseWheelMoved(MouseWheelEvent e) {
-            zoom -= e.getPreciseWheelRotation() * 0.01d;
+            zoom -= e.getPreciseWheelRotation() * zoomIncPerMouseWheelTick;
             zoom = Math.max(zoom, 1.0d);
             zoom = Math.min(zoom, 100d);
             calculateScalingData();

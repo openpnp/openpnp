@@ -40,7 +40,6 @@ import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.LongConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.spi.Camera;
 
@@ -54,11 +53,6 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     private final Camera camera;
     
     private static String uppFormat = "%.8f";
-
-    private JPanel panelUpp;
-    private JButton btnMeasure;
-    private JButton btnCancelMeasure;
-    private JLabel lblUppInstructions;
 
     public CameraConfigurationWizard(Camera camera) {
         this.camera = camera;
@@ -147,29 +141,12 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         lblUppInstructions = new JLabel(
                 "<html>\n<ol>\n<li>Place an object with a known width and length on the table. Graphing paper is a good, easy choice for this.\n<li>Enter the width and length of the object into the Width and Length fields.\n<li>Jog the camera to where it is centered over the object and in focus.\n<li>Press Measure and use the camera selection rectangle to measure the object. Press Confirm when finished.\n<li>The calculated units per pixel values will be inserted into the X and Y fields.\n</ol>\n</html>");
         panelUpp.add(lblUppInstructions, "2, 6, 10, 1, default, fill");
-
-        panelVision = new JPanel();
-        panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
-        contentPanel.add(panelVision);
-        panelVision.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
-
-        lblSettleTimems = new JLabel("Settle Time (ms)");
-        panelVision.add(lblSettleTimems, "2, 2, right, default");
-
-        textFieldSettleTime = new JTextField();
-        panelVision.add(textFieldSettleTime, "4, 2, fill, default");
-        textFieldSettleTime.setColumns(10);
     }
 
     @Override
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter(uppFormat);
-        LongConverter longConverter = new LongConverter();
-
+        
         addWrappedBinding(camera, "name", nameTf, "text");
         addWrappedBinding(camera, "looking", lookingCb, "selectedItem");
         
@@ -177,8 +154,6 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         bind(UpdateStrategy.READ_WRITE, camera, "unitsPerPixel", unitsPerPixel, "location");
         addWrappedBinding(unitsPerPixel, "lengthX", textFieldUppX, "text", lengthConverter);
         addWrappedBinding(unitsPerPixel, "lengthY", textFieldUppY, "text", lengthConverter);
-
-        addWrappedBinding(camera, "settleTimeMs", textFieldSettleTime, "text", longConverter);
 
         ComponentDecorators.decorateWithAutoSelect(textFieldUppX);
         ComponentDecorators.decorateWithAutoSelect(textFieldUppY);
@@ -188,7 +163,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         ComponentDecorators.decorateWithAutoSelect(nameTf);
         ComponentDecorators.decorateWithAutoSelect(textFieldWidth);
         ComponentDecorators.decorateWithAutoSelect(textFieldHeight);
-        ComponentDecorators.decorateWithAutoSelect(textFieldSettleTime);
+        
     }
 
     private Action measureAction = new AbstractAction("Measure") {
@@ -212,8 +187,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
             Rectangle selection = cameraView.getSelection();
             double width = Double.parseDouble(textFieldWidth.getText());
             double height = Double.parseDouble(textFieldHeight.getText());
-            textFieldUppX.setText(String.format(Locale.US, uppFormat, (width / selection.width)));
-            textFieldUppY.setText(String.format(Locale.US, uppFormat, (height / selection.height)));
+            textFieldUppX.setText(String.format(Locale.US, uppFormat, (width / Math.abs(selection.width))));
+            textFieldUppY.setText(String.format(Locale.US, uppFormat, (height / Math.abs(selection.height))));
         }
     };
 
@@ -226,6 +201,11 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
             cameraView.setSelectionEnabled(false);
         }
     };
+
+    private JPanel panelUpp;
+    private JButton btnMeasure;
+    private JButton btnCancelMeasure;
+    private JLabel lblUppInstructions;
     private JTextField textFieldWidth;
     private JTextField textFieldHeight;
     private JTextField textFieldUppX;
@@ -234,9 +214,6 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     private JLabel lblHeight;
     private JLabel lblX;
     private JLabel lblY;
-    private JPanel panelVision;
-    private JLabel lblSettleTimems;
-    private JTextField textFieldSettleTime;
     private JPanel panel;
     private JLabel lblName;
     private JLabel lblLooking;

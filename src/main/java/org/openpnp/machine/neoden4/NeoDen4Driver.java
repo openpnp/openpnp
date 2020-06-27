@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
+import org.openpnp.machine.neoden4.wizards.Neoden4DriverConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
@@ -15,6 +16,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Named;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.Nozzle;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -77,6 +79,15 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
             (short) 0x4E55, (short) 0x5E74, (short) 0x2E93, (short) 0x3EB2, (short) 0x0ED1,
             (short) 0x1EF0};
 
+    public static final String ACT_N1_VACUUM = "N1-Vacuum";
+    public static final String ACT_N2_VACUUM = "N2-Vacuum";
+    public static final String ACT_N3_VACUUM = "N3-Vacuum";
+    public static final String ACT_N4_VACUUM = "N4-Vacuum";
+    public static final String ACT_N1_BLOW = "N1-Blow";
+    public static final String ACT_N2_BLOW = "N2-Blow";
+    public static final String ACT_N3_BLOW = "N3-Blow";
+    public static final String ACT_N4_BLOW = "N4-Blow";
+
     @Attribute(required = false)
     protected LengthUnit units = LengthUnit.Millimeters;
 
@@ -88,148 +99,88 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     
     @Attribute(required = false)
     protected String name = "NeoDen4Driver";
+    
+    @Attribute(required = false)
+    protected double homeCoordinateX = -437.;
+    
+    @Attribute(required = false)
+    protected double homeCoordinateY = 437.; /* Maybe this needs to be 400. - needs more testing  */
+
+    @Attribute(required = false)
+    protected double scaleFactorX = 1.0501;   // slightly bigger, might be between +.0001 and +.0009
+    
+    @Attribute(required = false)
+    protected double scaleFactorY = 1.04947526;
 
     private boolean connected;
     private Set<Nozzle> pickedNozzles = new HashSet<>();
-    
+
+
     double x = 0, y = 0;
     double z1 = 0, z2 = 0, z3 = 0, z4 = 0;
     double c1 = 0, c2 = 0, c3 = 0, c4 = 0;
     
 
+    private ReferenceActuator getOrCreateActuatorInHead(ReferenceHead head, String actuatorName) throws Exception {
+        ReferenceActuator a = (ReferenceActuator) head.getActuatorByName(actuatorName);
+        if (a == null) {
+            a = new ReferenceActuator();
+            a.setName(actuatorName);
+            head.addActuator(a);
+        }
+        return a;
+    }
+
     public void createMachineObjects() throws Exception {
         // Make sure required objects exist
         ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
-        
-//        ReferenceActuator a = (ReferenceActuator) machine.getActuatorByName("CameraUpLamp");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("CameraUpLamp");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("CameraDownLamp");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("CameraDownLamp");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("CameraSelectUp");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("CameraSelectUp");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("DragPin");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("DragPin");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("FilmPull");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("FilmPull");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("Pump");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("Pump");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("Nozzle1Vacuum");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("Nozzle1Vacuum");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("Nozzle2Vacuum");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("Nozzle2Vacuum");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("Nozzle1Down");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("Nozzle1Down");
-//            machine.addActuator(a);
-//        }
-//        
-//        a = (ReferenceActuator) machine.getActuatorByName("Nozzle2Down");
-//        if (a == null) {
-//            a = new ReferenceActuator();
-//            a.setName("Nozzle2Down");
-//            machine.addActuator(a);
-//        }
-        
+
         ReferenceNozzle n;
-        n = (ReferenceNozzle) machine.getDefaultHead().getNozzle("N1");
+        ReferenceActuator a;
+        ReferenceHead head = (ReferenceHead) machine.getDefaultHead();
+        n = (ReferenceNozzle) head.getNozzle("N1");
         if (n == null) {
             n = new ReferenceNozzle("N1");
             n.setName("N1");
-            machine.getDefaultHead().addNozzle(n);
+            head.addNozzle(n);
+            getOrCreateActuatorInHead(head, ACT_N1_VACUUM);
+            getOrCreateActuatorInHead(head, ACT_N1_BLOW);
+            n.setBlowOffActuatorName(ACT_N1_BLOW);
+            n.setVacuumActuatorName(ACT_N1_VACUUM);
         }
         
-        n = (ReferenceNozzle) machine.getDefaultHead().getNozzle("N2");
+        n = (ReferenceNozzle) head.getNozzle("N2");
         if (n == null) {
             n = new ReferenceNozzle("N2");
             n.setName("N2");
-            machine.getDefaultHead().addNozzle(n);
+            head.addNozzle(n);
+            getOrCreateActuatorInHead(head, ACT_N2_VACUUM);
+            getOrCreateActuatorInHead(head, ACT_N2_BLOW);
+            n.setBlowOffActuatorName(ACT_N2_BLOW);
+            n.setVacuumActuatorName(ACT_N2_VACUUM);
         }
         
-        n = (ReferenceNozzle) machine.getDefaultHead().getNozzle("N3");
+        n = (ReferenceNozzle) head.getNozzle("N3");
         if (n == null) {
             n = new ReferenceNozzle("N3");
             n.setName("N3");
-            machine.getDefaultHead().addNozzle(n);
-        }
+            head.addNozzle(n);
+            getOrCreateActuatorInHead(head, ACT_N3_VACUUM);
+            getOrCreateActuatorInHead(head, ACT_N3_BLOW);
+            n.setBlowOffActuatorName(ACT_N3_BLOW);
+            n.setVacuumActuatorName(ACT_N3_VACUUM);
+       }
         
-        n = (ReferenceNozzle) machine.getDefaultHead().getNozzle("N4");
+        n = (ReferenceNozzle) head.getNozzle("N4");
         if (n == null) {
             n = new ReferenceNozzle("N4");
             n.setName("N4");
-            machine.getDefaultHead().addNozzle(n);
+            head.addNozzle(n);
+            getOrCreateActuatorInHead(head, ACT_N4_VACUUM);
+            getOrCreateActuatorInHead(head, ACT_N4_BLOW);
+            n.setBlowOffActuatorName(ACT_N4_BLOW);
+            n.setVacuumActuatorName(ACT_N4_VACUUM);
         }
-        
-
-        ReferenceActuator a;
-        a = (ReferenceActuator) machine.getActuatorByName("N1-Air");
-        if (a == null) {
-            a = new ReferenceActuator();
-            a.setName("N1-Air");
-            machine.addActuator(a);
-        }
-        
-        a = (ReferenceActuator) machine.getActuatorByName("N2-Air");
-        if (a == null) {
-            a = new ReferenceActuator();
-            a.setName("N2-Air");
-            machine.addActuator(a);
-        }
-        
-        a = (ReferenceActuator) machine.getActuatorByName("N3-Air");
-        if (a == null) {
-            a = new ReferenceActuator();
-            a.setName("N3-Air");
-            machine.addActuator(a);
-        }
-        
-        a = (ReferenceActuator) machine.getActuatorByName("N4-Air");
-        if (a == null) {
-            a = new ReferenceActuator();
-            a.setName("N4-Air");
-            machine.addActuator(a);
-        }
-
         
         a = (ReferenceActuator) machine.getActuatorByName("Lights-Down");
         if (a == null) {
@@ -245,6 +196,12 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
             machine.addActuator(a);
         }
         
+        a = (ReferenceActuator) machine.getActuatorByName("Rails");
+        if (a == null) {
+            a = new ReferenceActuator();
+            a.setName("Rails");
+            machine.addActuator(a);
+        }
     }
     
     public synchronized void connect() throws Exception {
@@ -381,6 +338,13 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     
     @Override
     public void home(ReferenceHead head) throws Exception {
+        /* Make sure *all* nozzles are up before moving */ 
+        moveZ(1, 0);
+        moveZ(2, 0);
+        moveZ(3, 0);
+        moveZ(4, 0);
+
+        /* Now, send home command */
         write(0x47);
         expect(0x0b);
         
@@ -394,8 +358,14 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         
         pollFor(0x07, 0x43);
         
-        this.x = -437.;
-        this.y = 437.;
+        if (! waitForStatusReady(100, 30000)) {
+            throw new Exception("home timeout while waiting for status==ready");
+        }
+
+        /* Initialize coordinates correctly after home is completed */
+        this.x = this.homeCoordinateX;
+        this.y = this.homeCoordinateY;
+
         ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
         machine.fireMachineHeadActivity(head);
     }
@@ -416,24 +386,59 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
     
     private void moveXy(double x, double y) throws Exception {
-      write(0x48);
-      expect(0x05);
+        write(0x48);
+        expect(0x05);
       
-      write(0xc8);
-      expect(0x0d);
+        write(0xc8);
+        expect(0x0d);
 
-      byte[] b = new byte[8];
-      putInt32((int) (x * 100), b, 0);
-      putInt32((int) (y * 100), b, 4);
-      writeWithChecksum(b);
+        byte[] b = new byte[8];
+        putInt32((int) (x*scaleFactorX * 100), b, 0);
+        putInt32((int) (y*scaleFactorY * 100), b, 4);
+        writeWithChecksum(b);
       
-      pollFor(0x08, 0x4d);
+        pollFor(0x08, 0x4d);
+
+        if (! waitForStatusReady(100, 30000)) {
+            throw new Exception("moveXy timeout while waiting for status==ready");
+        }
     }
-    
+
+    private Boolean isStatusReady() throws Exception {
+        pollFor(0x45, 0x09);
+        pollFor(0x05, 0x14);
+
+        write(0x85);
+        expect(0x1c);
+        byte[] b = readWithChecksum(8);
+
+        int readyStatus = b[0];
+
+        if (readyStatus == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private Boolean waitForStatusReady(int sleepMilliS, int maxMilliS) throws Exception {
+        int totalWaitMilliS = 0;
+        do {
+            Thread.sleep(sleepMilliS);
+            totalWaitMilliS += sleepMilliS;
+
+            if (totalWaitMilliS >= maxMilliS) {
+                return false;
+            }
+        } while (! isStatusReady());
+        return true;
+    }
+
     private void moveZ(int nozzle, double z) throws Exception {
-        // In our world, 0 is max up and -12 is max down. So 0 = 0 and -12 = e02e (which is 12000)
+        // Neoden thinks 13.0 is max retracted into the head, 0 is max out.
+        // In our world, 0 is max up and -13 is max down.
       
-        z = -z;
+        z = Math.abs(z) * 1000.;
         
         write(0x42);
         expect(0x0e);
@@ -442,8 +447,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         expect(0x06);
 
         byte[] b = new byte[8];
-        putInt16((int) (z * 1000.), b, 0);
-        b[2] = 0x32;
+        putInt16((int) (z), b, 0);
+        b[2] = 0x64;
         b[3] = (byte) nozzle;
         writeWithChecksum(b);
         
@@ -466,8 +471,25 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         pollFor(0x01, 0x45);
     }
 
+    private void setMoveSpeed(double speed) throws Exception {
+        write(0x46);
+        expect(0x0a);
+        
+        write(0xc6);
+        expect(0x02);
+
+        byte[] b = new byte[8];
+        // Speed is percentage of max speed.  Speed is really 10-130
+        putInt16((int) ((120. * speed)+10), b, 0);
+        b[2] = 0x09;
+        b[4] = (byte) 0xc8;
+        writeWithChecksum(b);
+        
+        pollFor(0x06, 0x42);
+    }
+
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOption...options)
             throws Exception {
         location = location.convertToUnits(units);
         location = location.subtract(hm.getHeadOffsets());
@@ -482,17 +504,21 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         x = Double.isNaN(x) ? this.x : x;
         y = Double.isNaN(y) ? this.y : y;
         if (x != this.x || y != this.y) {
+            setMoveSpeed(speed);
             moveXy(x, y);
             
             this.x = x;
             this.y = y;
         }
 
+        double minZ = 0.;
+        double maxZ = -13.;
+
         switch (hm.getId()) {
             case "N1":
                 z = Double.isNaN(z) ? this.z1 : z;
-                z = Math.min(z, 0.);
-                z = Math.max(z, -12.);
+                z = Math.min(z, minZ);
+                z = Math.max(z, maxZ);
                 if (z != this.z1) {
                     moveZ(1, z);
                     this.z1 = z;
@@ -508,8 +534,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
                 break;
             case "N2":
                 z = Double.isNaN(z) ? this.z2 : z;
-                z = Math.min(z, 0.);
-                z = Math.max(z, -12.);
+                z = Math.min(z, minZ);
+                z = Math.max(z, maxZ);
                 if (z != this.z2) {
                     moveZ(2, z);
                     this.z2 = z;
@@ -525,8 +551,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
                 break;
             case "N3":
                 z = Double.isNaN(z) ? this.z3 : z;
-                z = Math.min(z, 0.);
-                z = Math.max(z, -12.);
+                z = Math.min(z, minZ);
+                z = Math.max(z, maxZ);
                 if (z != this.z3) {
                     moveZ(3, z);
                     this.z3 = z;
@@ -542,8 +568,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
                 break;
             case "N4":
                 z = Double.isNaN(z) ? this.z4 : z;
-                z = Math.min(z, 0.);
-                z = Math.max(z, -12.);
+                z = Math.min(z, minZ);
+                z = Math.max(z, maxZ);
                 if (z != this.z4) {
                     moveZ(4, z);
                     this.z4 = z;
@@ -562,70 +588,178 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
 
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
-        // TODO STOPSHIP actuate
+        switch (actuator.getName()) {
+            case ACT_N1_VACUUM:
+            case ACT_N2_VACUUM:
+            case ACT_N3_VACUUM:
+            case ACT_N4_VACUUM: {
+                if (on) {
+                    actuate(actuator, -128.0);
+                } else {
+                    actuate(actuator, 20.0);
+                    actuate(actuator, 0.0);
+                }
+                break;
+            }
+            case ACT_N1_BLOW:
+            case ACT_N2_BLOW:
+            case ACT_N3_BLOW:
+            case ACT_N4_BLOW: {
+                if (on) {
+                    actuate(actuator, 127.0);
+                } else {
+                    actuate(actuator, 0.0);
+                }
+                break;
+            }
+            case "Lights-Down": {
+                if (on) {
+                    actuate(actuator, 3.0);
+                } else {
+                    actuate(actuator, 0.0);
+                }
+              break;
+            }
+            case "Lights-Up": {
+                if (on) {
+                    actuate(actuator, 2.0);
+                } else {
+                    actuate(actuator, 0.0);
+                }
+                break;
+            }
+            case "Rails": {
+                if (on) {
+                    actuate(actuator, 25.0);
+                } else {
+                    actuate(actuator, 0.0);
+                }
+                break;
+            }
+        }
+    }
+
+    private void stopRail() throws Exception {
+        byte[] b = new byte[8];
+        write(0x47);
+        expect(0x0b);
+        write(0xc7);
+        expect(0x03);
+
+        b[0] = (byte)0x00;
+        b[1] = (byte)0x02;
+        b[2] = (byte)0x00;
+        b[3] = (byte)0x00;
+        b[4] = (byte)0x00;
+        b[5] = (byte)0x00;
+        b[6] = (byte)0x00;
+        b[7] = (byte)0x00;
+
+        writeWithChecksum(b);
+        pollFor(0x07,  0x43);
+    }
+
+    private void forwardRail() throws Exception {
+        byte[] b = new byte[8];
+        write(0x49);
+        expect(0x04);
+        write(0xc9);
+        expect(0x0c);
+
+        b[0] = (byte)0x00;
+        b[1] = (byte)0x00;
+        b[2] = (byte)0x00;
+        b[3] = (byte)0x00;
+        b[4] = (byte)0xc9;
+        b[5] = (byte)0x03;
+        b[6] = (byte)0x0c;
+        b[7] = (byte)0x00;
+        writeWithChecksum(b);
+        pollFor(0x09,  0x4c);
+    }
+
+    private void reverseRail()  throws Exception {
+        byte[] b = new byte[8];
+        write(0x49);
+        expect(0x04);
+        write(0xc9);
+        expect(0x0c);
+
+        b[0] = (byte)0x00;
+        b[1] = (byte)0x00;
+        b[2] = (byte)0x00;
+        b[3] = (byte)0x00;
+        b[4] = (byte)0x37;
+        b[5] = (byte)0xfc;
+        b[6] = (byte)0xf3;
+        b[7] = (byte)0xff;
+        writeWithChecksum(b);
+        pollFor(0x09,  0x4c);
+    }
+
+    private void setRailSpeed(byte speed)  throws Exception {
+        speed = (byte)Math.abs(speed);
+        if (speed < 20) {
+            speed = (byte)20;
+        }
+        else if (speed > 200) {
+            speed = (byte)200;
+        }
+
+        byte[] b = new byte[8];
+        write(0x46);
+        expect(0x0a);
+        write(0xc6);
+        expect(0x02);
+
+        b[0] = (byte)0x32;
+        b[1] = (byte)0x09;
+        b[2] = (byte)0x00;
+        b[3] = speed;
+        b[4] = (byte)0x00;
+        b[5] = (byte)0x00;
+        b[6] = (byte)0x00;
+        b[7] = (byte)0x00;
+        writeWithChecksum(b);
+        pollFor(0x06,  0x42);
+    }
+
+    private void setAirParameters(int nozzleNum, double value) throws Exception {
+        write(0x43);
+        expect(0x0f);
+
+        write(0xc3);
+        expect(0x07);
+
+        byte[] b = new byte[8];
+        b[0] = (byte) value;
+        b[1] = (byte) nozzleNum;
+        writeWithChecksum(b);
+
+        pollFor(0x03,  0x47);
     }
 
     @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
         switch (actuator.getName()) {
-            case "N1-Air": {
-                write(0x43);
-                expect(0x0f);
-                
-                write(0xc3);
-                expect(0x07);
-                
-                byte[] b = new byte[8];
-                b[0] = (byte) value;
-                b[1] = 1;
-                writeWithChecksum(b);
-                
-                pollFor(0x03,  0x47);
+            case ACT_N1_BLOW:
+            case ACT_N1_VACUUM: {
+                setAirParameters(1, value);
                 break;
             }
-            case "N2-Air": {
-                write(0x43);
-                expect(0x0f);
-                
-                write(0xc3);
-                expect(0x07);
-                
-                byte[] b = new byte[8];
-                b[0] = (byte) value;
-                b[1] = 2;
-                writeWithChecksum(b);
-                
-                pollFor(0x03,  0x47);
+            case ACT_N2_BLOW:
+            case ACT_N2_VACUUM: {
+                setAirParameters(2, value);
                 break;
             }
-            case "N3-Air": {
-                write(0x43);
-                expect(0x0f);
-                
-                write(0xc3);
-                expect(0x07);
-                
-                byte[] b = new byte[8];
-                b[0] = (byte) value;
-                b[1] = 3;
-                writeWithChecksum(b);
-                
-                pollFor(0x03,  0x47);
+            case ACT_N3_BLOW:
+            case ACT_N3_VACUUM: {
+                setAirParameters(3, value);
                 break;
             }
-            case "N4-Air": {
-                write(0x43);
-                expect(0x0f);
-                
-                write(0xc3);
-                expect(0x07);
-                
-                byte[] b = new byte[8];
-                b[0] = (byte) value;
-                b[1] = 4;
-                writeWithChecksum(b);
-                
-                pollFor(0x03,  0x47);
+            case ACT_N4_BLOW:
+            case ACT_N4_VACUUM: {
+                setAirParameters(4, value);
                 break;
             }
             case "Lights-Down": {
@@ -656,63 +790,60 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
                 pollFor(0x07,  0x43);
                 break;
             }
+            case "Rails": {
+                if ((int)value == 0) {
+                  stopRail();
+                } else if (value > 0) {
+                    stopRail();
+                    setRailSpeed((byte)value);
+                    forwardRail();
+                }
+                else {
+                    stopRail();
+                    setRailSpeed((byte)value);
+                    reverseRail();
+                }
+                
+              break;
+            }
         }
     }
     
+    private int getNozzleAirValue(int nozzleNum) throws Exception {
+        assert(nozzleNum >= 0);
+        assert(nozzleNum <= 3);
+
+        write(0x40);
+        expect(0x0c);
+
+        write(0x00);
+        expect(0x11);
+
+        write(0x80);
+        expect(0x19);
+
+        byte[] payload = readWithChecksum(8);
+        return payload[nozzleNum];
+    }
+
     @Override
     public String actuatorRead(ReferenceActuator actuator) throws Exception {
         switch (actuator.getName()) {
-            case "N1-Air": {
-                write(0x40);
-                expect(0x0c);
-                
-                write(0x00);
-                expect(0x11);
-                
-                write(0x80);
-                expect(0x19);
-                
-                byte[] payload = readWithChecksum(8);
-                return Integer.toString(payload[0]);
+            case ACT_N1_BLOW:
+            case ACT_N1_VACUUM: {
+                return Integer.toString(getNozzleAirValue(0));
             }
-            case "N2-Air": {
-                write(0x40);
-                expect(0x0c);
-                
-                write(0x00);
-                expect(0x11);
-                
-                write(0x80);
-                expect(0x19);
-                
-                byte[] payload = readWithChecksum(8);
-                return Integer.toString(payload[1]);
+            case ACT_N2_BLOW:
+            case ACT_N2_VACUUM:  {
+                return Integer.toString(getNozzleAirValue(1));
             }
-            case "N3-Air": {
-                write(0x40);
-                expect(0x0c);
-                
-                write(0x00);
-                expect(0x11);
-                
-                write(0x80);
-                expect(0x19);
-                
-                byte[] payload = readWithChecksum(8);
-                return Integer.toString(payload[2]);
+            case ACT_N3_BLOW:
+            case ACT_N3_VACUUM:  {
+                return Integer.toString(getNozzleAirValue(2));
             }
-            case "N4-Air": {
-                write(0x40);
-                expect(0x0c);
-                
-                write(0x00);
-                expect(0x11);
-                
-                write(0x80);
-                expect(0x19);
-                
-                byte[] payload = readWithChecksum(8);
-                return Integer.toString(payload[3]);
+            case ACT_N4_BLOW:
+            case ACT_N4_VACUUM:  {
+                return Integer.toString(getNozzleAirValue(3));
             }
         }
         return null;
@@ -732,7 +863,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
-                new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Communications")
+            new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Communications"),
+            new PropertySheetWizardAdapter(new Neoden4DriverConfigurationWizard(this), "Machine")
         };
     }
     
@@ -767,5 +899,37 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
 
     public void setConnectWaitTimeMilliseconds(int connectWaitTimeMilliseconds) {
         this.connectWaitTimeMilliseconds = connectWaitTimeMilliseconds;
+    }
+
+    public double getHomeCoordinateX() {
+        return this.homeCoordinateX;
+    }
+
+    public void setHomeCoordinateX(double homeX) {
+        this.homeCoordinateX = homeX;
+    }
+
+    public double getHomeCoordinateY() {
+        return this.homeCoordinateY;
+    }
+
+    public void setHomeCoordinateY(double homeY) {
+        this.homeCoordinateY = homeY;
+    }
+
+    public double getScaleFactorX() {
+        return this.scaleFactorX;
+    }
+
+    public void setScaleFactorX(double scaleFactorX) {
+        this.scaleFactorX = scaleFactorX;
+    }
+
+    public double getScaleFactorY() {
+        return this.scaleFactorY;
+    }
+
+    public void setScaleFactorY(double scaleFactorY) {
+        this.scaleFactorY = scaleFactorY;
     }
 }

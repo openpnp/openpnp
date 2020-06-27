@@ -23,8 +23,8 @@ public class QuickHull {
         
         // find extremals
         int minPoint = -1, maxPoint = -1;
-        double minX = Double.MAX_VALUE;
-        double maxX = Double.MIN_VALUE;
+        double minX = Double.POSITIVE_INFINITY;
+        double maxX = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < points.size(); i++) {
             if (points.get(i).x < minX) {
                 minX = points.get(i).x;

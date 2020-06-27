@@ -66,6 +66,17 @@ public class MessageBoxes {
         JOptionPane.showMessageDialog(parent, message, title, JOptionPane.ERROR_MESSAGE);
     }
 
+    public static boolean errorBoxWithRetry(Component parent, String title, String message) {
+        if (message == null) {
+            message = "";
+        }
+        Logger.debug("{}: {}", title, message);
+        message = message.replaceAll("\n", "<br/>");
+        message = message.replaceAll("\r", "");
+        message = "<html><body width=\"400\">" + message + "</body></html>";
+        return JOptionPane.showConfirmDialog(parent, message, title, JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+    }
+
     public static void infoBox(String title, String message) {
         if (message == null) {
             message = "";

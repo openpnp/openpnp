@@ -29,6 +29,10 @@ public class MatView extends JComponent {
         repaint();
     }
 
+    public BufferedImage getImage() {
+        return image;
+    }
+
     public Point scalePoint(Point p) {
         if (image == null) {
             return new Point(0, 0);

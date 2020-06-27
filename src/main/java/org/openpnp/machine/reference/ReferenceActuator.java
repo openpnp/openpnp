@@ -99,6 +99,13 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     }
     
     @Override
+    public void actuate(String value) throws Exception {
+        Logger.debug("{}.actuate({})", getName(), value);
+        getDriver().actuate(this, value);
+        getMachine().fireMachineHeadActivity(head);
+    }
+    
+    @Override
     public String read() throws Exception {
         String value = getDriver().actuatorRead(this);
         Logger.debug("{}.read(): {}", getName(), value);
@@ -107,7 +114,15 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     }
 
     @Override
-    public void moveTo(Location location, double speed) throws Exception {
+    public String read(double parameter) throws Exception {
+        String value = getDriver().actuatorRead(this, parameter);
+        Logger.debug("{}.readWithDouble({}): {}", getName(), parameter, value);
+        getMachine().fireMachineHeadActivity(head);
+        return value;
+    }
+
+    @Override
+    public void moveTo(Location location, double speed, MoveToOption... options) throws Exception {
         Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
         ((ReferenceHead) getHead()).moveTo(this, location, getHead().getMaxPartSpeed() * speed);
         getMachine().fireMachineHeadActivity(head);

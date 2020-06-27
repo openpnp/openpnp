@@ -16,14 +16,18 @@ import javax.swing.Icon;
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.KeyPoint;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.CameraView;
+import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceFiducialLocatorConfigurationWizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceFiducialLocatorPartConfigurationWizard;
 import org.openpnp.model.Board;
+import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
@@ -31,13 +35,14 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.model.Point;
-import org.openpnp.model.Board.Side;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.QuickHull;
+import org.openpnp.util.TravellingSalesman;
 import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -67,6 +72,15 @@ public class ReferenceFiducialLocator implements FiducialLocator {
     @Attribute(required = false)
     protected int repeatFiducialRecognition = 3;
     
+    @Element(required = false)
+    protected FiducialLocatorTolerances tolerances = new FiducialLocatorTolerances();
+    
+    public static class FiducialLocatorTolerances {
+        protected double scalingTolerance = 0.05; //unitless
+        protected double shearingTolerance = 0.05; //unitless
+        protected Length boardLocationTolerance = new Length(5.0, LengthUnit.Millimeters);
+    }
+    
     public Location locateBoard(BoardLocation boardLocation) throws Exception {
         return locateBoard(boardLocation, false);
     }
@@ -75,6 +89,8 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         List<Placement> fiducials;
 
         Side boardSide = boardLocation.getSide();  // save for later
+        Location savedBoardLocation = boardLocation.getLocation();
+        AffineTransform savedPlacementTransform = boardLocation.getPlacementTransform();
        
         if (checkPanel) {
             Panel panel = MainFrame.get().getJobTab().getJob().getPanels()
@@ -93,116 +109,102 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                     fiducials.size()));
         }
 
-        // Get the best two or three fiducials from the total list of fiducials. If we can find
-        // three good ones we can calculate translation, rotation, scale, and shear. If we only
-        // find two we can calculate translation and rotation only.
-        fiducials = getBestFiducials(fiducials);
-
         // Clear the current transform so it doesn't potentially send us to the wrong spot
         // to find the fiducials.
         boardLocation.setPlacementTransform(null);
 
-        // Sort the fiducials by distance so that we don't make unoptimized moves while finding
-        // them.
-        fiducials.sort(new Comparator<Placement>() {
-            @Override
-            public int compare(Placement o1, Placement o2) {
-                Location base = new Location(LengthUnit.Millimeters);
-                double delta = base.getLinearDistanceTo(o1.getLocation()) - base.getLinearDistanceTo(o2.getLocation());
-                return (int) Math.signum(delta);
-            }
-        });
-        
-        // Find each fiducial and store it's location
-        Map<Placement, Location> locations = new HashMap<>();
-        for (Placement fiducial : fiducials) {
-            Location location = getFiducialLocation(boardLocation, fiducial);
-            if (location == null) {
-                throw new Exception("Unable to locate " + fiducial.getId());
-            }
-            locations.put(fiducial, location);
-            Logger.debug("Found {} at {}", fiducial, location);
+        //Define where the fiducial trip will begin
+        Location currentCameraLocation = new Location(LengthUnit.Millimeters);
+        try {
+            currentCameraLocation = MainFrame.get().getMachineControls().getSelectedTool().getHead().getDefaultCamera().getLocation();
+        } catch (Exception e) {
+            currentCameraLocation = boardLocation.getLocation();
         }
         
-        // Convert everything to mm.
-        List<Location> sourceLocations = new ArrayList<>();
-        List<Location> destLocations = new ArrayList<>();
-        for (Placement placement : locations.keySet()) {
-            sourceLocations.add(placement.getLocation().convertToUnits(LengthUnit.Millimeters));
-            destLocations.add(locations.get(placement).convertToUnits(LengthUnit.Millimeters));
+        // Use a traveling salesman algorithm to optimize the path to visit the fiducials
+        TravellingSalesman<Placement> tsm = new TravellingSalesman<>(
+                fiducials, 
+                new TravellingSalesman.Locator<Placement>() { 
+                    @Override
+                    public Location getLocation(Placement locatable) {
+                        return Utils2D.calculateBoardPlacementLocation(boardLocation, locatable.getLocation());
+                    }
+                }, 
+                // start from current camera location
+                currentCameraLocation,
+                // and end at the board origin
+                boardLocation.getLocation());
+
+        // Solve it using the default heuristics.
+        tsm.solve();
+
+        // Visit each fiducial and store its expected and measured location
+        List<Location> expectedLocations = new ArrayList<>();
+        List<Location> measuredLocations = new ArrayList<>();
+        for (Placement fiducial : tsm.getTravel()) {
+            Location measuredLocation = getFiducialLocation(boardLocation, fiducial);
+            if (measuredLocation == null) {
+                throw new Exception("Unable to locate " + fiducial.getId());
+            }
+            expectedLocations.add(fiducial.getLocation().invert(boardSide==Side.Bottom, false, false, false));
+            measuredLocations.add(measuredLocation);
+            
+            Logger.debug("Found {} at {}", fiducial.getId(), measuredLocation);
         }
         
         // Calculate the transform.
-        AffineTransform tx = null;
-        if (destLocations.size() == 2) {
-            Location source0 = sourceLocations.get(0);
-            Location source1 = sourceLocations.get(1);
-			if (boardLocation.getSide() == Side.Bottom) {
-			    /**
-			     * Here, and in the block below, if the side is bottom we need to invert the
-			     * source fiducial locations. This is because it was done by getFiducialLocation
-			     * when calling calculateBoardPlacementLocation. Further, they are inverted because
-			     * we calculate board bottom placements as if X is mirrored to account for the
-			     * board being flipped over.
-			     */
-				source0 = source0.invert(true,false,false,false);
-				source1 = source1.invert(true,false,false,false);
-			}
-            Location dest0 = destLocations.get(0);
-            Location dest1 = destLocations.get(1);
-            tx = Utils2D.deriveAffineTransform(
-                    source0.getX(), source0.getY(), 
-                    source1.getX(), source1.getY(), 
-                    dest0.getX(), dest0.getY(),
-                    dest1.getX(), dest1.getY());
-        }
-        else if (destLocations.size() == 3) {
-            Location source0 = sourceLocations.get(0);
-            Location source1 = sourceLocations.get(1);
-            Location source2 = sourceLocations.get(2);
-			if (boardLocation.getSide() == Side.Bottom) {
-				source0 = source0.invert(true,false,false,false);
-				source1 = source1.invert(true,false,false,false);
-				source2 = source2.invert(true,false,false,false);
-			}
-            Location dest0 = destLocations.get(0);
-            Location dest1 = destLocations.get(1);
-            Location dest2 = destLocations.get(2);
-            tx = Utils2D.deriveAffineTransform(
-                    source0.getX(), source0.getY(), 
-                    source1.getX(), source1.getY(), 
-                    source2.getX(), source2.getY(),
-                    dest0.getX(), dest0.getY(),
-                    dest1.getX(), dest1.getY(),
-                    dest2.getX(), dest2.getY());
-        }
-        else {
-            throw new Exception(String.format("Expected 2 or 3 fiducial results, not %d. This is a programmer error. Please tell a programmer.",
-                    destLocations.size()));
-        }
+        AffineTransform tx = Utils2D.deriveAffineTransform(expectedLocations, measuredLocations);
         
         // Set the transform.
         boardLocation.setPlacementTransform(tx);
-        Logger.info("Fiducial results: scale ({}, {}), translate ({}, {}), shear ({}, {})",
-                tx.getScaleX(), tx.getScaleY(),
-                tx.getTranslateX(), tx.getTranslateY(),
-                tx.getShearX(), tx.getShearY());
-        
-        // TODO STOPSHIP Check if the results make sense and throw an error if they don't.
-        // Probably need to let the user specify some limits.
         
         // Return the compensated board location
         Location origin = new Location(LengthUnit.Millimeters);
         if (boardLocation.getSide() == Side.Bottom) {
             origin = origin.add(boardLocation.getBoard().getDimensions().derive(null, 0., 0., 0.));
         }
-        Location result = Utils2D.calculateBoardPlacementLocation(boardLocation, origin);
-        result = result.convertToUnits(boardLocation.getLocation().getUnits());
-        result = result.derive(null, null, boardLocation.getLocation().getZ(), null);
+        Location newBoardLocation = Utils2D.calculateBoardPlacementLocation(boardLocation, origin);
+        newBoardLocation = newBoardLocation.convertToUnits(boardLocation.getLocation().getUnits());
+        newBoardLocation = newBoardLocation.derive(null, null, boardLocation.getLocation().getZ(), null);
+
         if (checkPanel) {
             boardLocation.setSide(boardSide);	// restore side
         }
-        return result;
+        
+        Utils2D.AffineInfo ai = Utils2D.affineInfo(tx);
+        Logger.info("Fiducial results: " + ai);
+        
+        double boardOffset = newBoardLocation.getLinearLengthTo(savedBoardLocation).convertToUnits(LengthUnit.Millimeters).getValue();
+        Logger.info("Board origin offset distance: " + boardOffset + "mm");
+        
+        //Check for out-of-nominal conditions
+        String errString = "";
+        if (Math.abs(ai.xScale-1) > tolerances.scalingTolerance) {
+            errString += "x scaling = " + String.format("%.5f", ai.xScale) + " which is outside the expected range of [" +
+                    String.format("%.5f", 1-tolerances.scalingTolerance) + ", " + String.format("%.5f", 1+tolerances.scalingTolerance) + "], ";
+        }
+        if (Math.abs(ai.yScale-1) > tolerances.scalingTolerance) {
+            errString += "the y scaling = " + String.format("%.5f", ai.yScale) + " which is outside the expected range of [" +
+                    String.format("%.5f", 1-tolerances.scalingTolerance) + ", " + String.format("%.5f", 1+tolerances.scalingTolerance) + "], ";
+        }
+        if (Math.abs(ai.xShear) > tolerances.shearingTolerance) {
+            errString += "the x shearing = " + String.format("%.5f", ai.xShear) + " which is outside the expected range of [" +
+                    String.format("%.5f", -tolerances.shearingTolerance) + ", " + String.format("%.5f", tolerances.shearingTolerance) + "], ";
+        }
+        if (boardOffset > tolerances.boardLocationTolerance.convertToUnits(LengthUnit.Millimeters).getValue()) {
+            errString += "the board origin moved " + String.format("%.4f", boardOffset) +
+                    "mm which is greater than the allowed amount of " +
+                    String.format("%.4f", tolerances.boardLocationTolerance.convertToUnits(LengthUnit.Millimeters).getValue()) + "mm, ";
+        }
+        if (errString.length() > 0) {
+            errString = errString.substring(0, errString.length()-2); //strip off the last comma and space
+            boardLocation.setPlacementTransform(savedPlacementTransform);
+            throw new Exception("Fiducial locator results are invalid because: " + errString + ".  Potential remidies include " +
+                    "setting the initial board X, Y, Z, and Rotation in the Boards panel; using a different set of fiducials; " +
+                    "or changing the allowable tolerances in the <tolerances> section of the fiducial-locator section in machine.xml.");
+        }
+
+        return newBoardLocation;
     }
     
     /**
@@ -398,7 +400,20 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                 
                 // And use the closest result
                 location = locations.get(0);
-                
+
+                MainFrame frame = MainFrame.get(); 
+                if (frame != null) {
+                    CameraView cameraView = frame.getCameraViews().getCameraView(camera);
+                    if (cameraView != null) {    
+                        LengthConverter lengthConverter = new LengthConverter();
+                        cameraView.showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 
+                                lengthConverter.convertForward(location.getLengthX())+", "
+                                        +lengthConverter.convertForward(location.getLengthY())+" "
+                                        +location.getUnits().getShortName(),
+                                1500);
+                    }
+                }
+
                 Logger.debug("{} located at {}", part.getId(), location);
                 // Move to where we actually found the fid
                 camera.moveTo(location);

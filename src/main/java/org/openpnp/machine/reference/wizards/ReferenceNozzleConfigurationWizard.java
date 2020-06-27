@@ -41,6 +41,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.SwingConstants;
 
 @SuppressWarnings("serial")
 public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWizard {
@@ -62,6 +63,8 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
     private JTextField pickDwellTf;
     private JTextField placeDwellTf;
     private JLabel lblLimitRota;
+    private JLabel lblDynamicSafeZ;
+    private JCheckBox chckbxDynamicsafez;
 
     public ReferenceNozzleConfigurationWizard(ReferenceNozzle nozzle) {
         this.nozzle = nozzle;
@@ -107,15 +110,15 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
 
         locationX = new JTextField();
         panelOffsets.add(locationX, "2, 4");
-        locationX.setColumns(5);
+        locationX.setColumns(10);
 
         locationY = new JTextField();
         panelOffsets.add(locationY, "4, 4");
-        locationY.setColumns(5);
+        locationY.setColumns(10);
 
         locationZ = new JTextField();
         panelOffsets.add(locationZ, "6, 4");
-        locationZ.setColumns(5);
+        locationZ.setColumns(10);
 
         contentPanel.add(panelOffsets);
 
@@ -123,17 +126,31 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         panelSafeZ.setBorder(new TitledBorder(null, "Safe Z", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelSafeZ);
-        panelSafeZ.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
-
-        JLabel lblSafeZ = new JLabel("Safe Z");
-        panelSafeZ.add(lblSafeZ, "2, 2, right, default");
-
-        textFieldSafeZ = new JTextField();
-        panelSafeZ.add(textFieldSafeZ, "4, 2, fill, default");
-        textFieldSafeZ.setColumns(10);
+        panelSafeZ.setLayout(new FormLayout(new ColumnSpec[] {
+                ColumnSpec.decode("max(81dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("114px"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                RowSpec.decode("24px"),
+                RowSpec.decode("19px"),}));
+        
+                JLabel lblSafeZ = new JLabel("Safe Z");
+                panelSafeZ.add(lblSafeZ, "1, 1, right, center");
+        
+                textFieldSafeZ = new JTextField();
+                panelSafeZ.add(textFieldSafeZ, "3, 1, fill, top");
+                textFieldSafeZ.setColumns(10);
+                
+                lblDynamicSafeZ = new JLabel("Dynamic Safe Z");
+                lblDynamicSafeZ.setToolTipText("");
+                lblDynamicSafeZ.setHorizontalAlignment(SwingConstants.TRAILING);
+                panelSafeZ.add(lblDynamicSafeZ, "1, 2");
+                
+                chckbxDynamicsafez = new JCheckBox("");
+                chckbxDynamicsafez.setToolTipText("dynamicaly adjust the safeZ, so the bottom of a loaded part is at safeZ if possible");
+                panelSafeZ.add(chckbxDynamicsafez, "3, 2");
 
 
         panelChanger = new JPanel();
@@ -163,7 +180,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblLimitRota = new JLabel("Limit Rotation to 180º");
+        lblLimitRota = new JLabel("Limit Rotation to +-180º");
         panelChanger.add(lblLimitRota, "2, 2, right, default");
 
         chckbxLimitRotationTo = new JCheckBox("");
@@ -201,6 +218,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         addWrappedBinding(headOffsets, "lengthZ", locationZ, "text", lengthConverter);
 
         addWrappedBinding(nozzle, "limitRotation", chckbxLimitRotationTo, "selected");
+        addWrappedBinding(nozzle, "enableDynamicSafeZ", chckbxDynamicsafez, "selected");
         addWrappedBinding(nozzle, "safeZ", textFieldSafeZ, "text", lengthConverter);
         addWrappedBinding(nozzle, "pickDwellMilliseconds", pickDwellTf, "text", intConverter);
         addWrappedBinding(nozzle, "placeDwellMilliseconds", placeDwellTf, "text", intConverter);

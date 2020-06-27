@@ -31,6 +31,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
+import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -43,6 +44,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
+import org.openpnp.gui.wizards.CameraVisionConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraCalibrationConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraPositionConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraTransformsConfigurationWizard;
@@ -51,7 +53,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.base.AbstractCamera;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.LensCalibration;
@@ -231,9 +233,9 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     }
 
     @Override
-    public void moveTo(Location location, double speed) throws Exception {
+    public void moveTo(Location location, double speed, MoveToOption... options) throws Exception {
         Logger.debug("moveTo({}, {})", location, speed);
-        ((ReferenceHead) getHead()).moveTo(this, location, getHead().getMaxPartSpeed() * speed);
+        ((ReferenceHead) getHead()).moveTo(this, location, getHead().getMaxPartSpeed() * speed, options);
         getMachine().fireMachineHeadActivity(head);
     }
 
@@ -486,7 +488,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             undistortionMap1 = new Mat();
             undistortionMap2 = new Mat();
             Mat rectification = Mat.eye(3, 3, CvType.CV_32F);
-            Imgproc.initUndistortRectifyMap(calibration.getCameraMatrixMat(),
+            Calib3d.initUndistortRectifyMap(calibration.getCameraMatrixMat(),
                     calibration.getDistortionCoefficientsMat(), rectification,
                     calibration.getCameraMatrixMat(), mat.size(), CvType.CV_32FC1, undistortionMap1,
                     undistortionMap2);
@@ -525,15 +527,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
                 calibration.setCameraMatrixMat(lensCalibration.getCameraMatrix());
                 calibration
                         .setDistortionCoefficientsMat(lensCalibration.getDistortionCoefficients());
-                // Clear the calibration cache
-                if (undistortionMap1 != null) {
-                    undistortionMap1.release();
-                    undistortionMap1 = null;
-                }
-                if (undistortionMap2 != null) {
-                    undistortionMap2.release();
-                    undistortionMap2 = null;
-                }
+                clearCalibrationCache();
                 calibration.setEnabled(true);
 
                 lensCalibration.close();
@@ -548,6 +542,18 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         }
 
         return appliedMat;
+    }
+
+    protected void clearCalibrationCache() {
+        // Clear the calibration cache
+        if (undistortionMap1 != null) {
+            undistortionMap1.release();
+            undistortionMap1 = null;
+        }
+        if (undistortionMap2 != null) {
+            undistortionMap2.release();
+            undistortionMap2 = null;
+        }
     }
 
     public void startCalibration(CalibrationCallback callback) {
@@ -594,6 +600,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(new CameraConfigurationWizard(this), "General Configuration"),
+                new PropertySheetWizardAdapter(new CameraVisionConfigurationWizard(this), "Vision"),
                 new PropertySheetWizardAdapter(getConfigurationWizard(), "Device Settings"),
                 new PropertySheetWizardAdapter(new ReferenceCameraPositionConfigurationWizard(this), "Position"),
                 new PropertySheetWizardAdapter(new ReferenceCameraCalibrationConfigurationWizard(this), "Lens Calibration"),

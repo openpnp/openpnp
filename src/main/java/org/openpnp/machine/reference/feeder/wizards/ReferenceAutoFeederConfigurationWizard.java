@@ -25,6 +25,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -58,6 +59,8 @@ public class ReferenceAutoFeederConfigurationWizard
     private JComboBox postPickActuatorType;
     private JButton btnTestFeedActuator;
     private JButton btnTestPostPickActuator;
+    private JCheckBox ckBoxMoveBeforeFeed;
+    
 
     public ReferenceAutoFeederConfigurationWizard(ReferenceAutoFeeder feeder) {
         super(feeder);
@@ -81,6 +84,8 @@ public class ReferenceAutoFeederConfigurationWizard
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -136,6 +141,13 @@ public class ReferenceAutoFeederConfigurationWizard
 
         btnTestPostPickActuator = new JButton(testPostPickActuatorAction);
         panelActuator.add(btnTestPostPickActuator, "12, 6");
+
+        JLabel lblMoveBeforeFeed = new JLabel("Move before feed");
+        panelActuator.add(lblMoveBeforeFeed, "2, 8, right, default");
+        lblMoveBeforeFeed.setToolTipText("Move nozzle to pick location before actuating feed actuator");
+        
+        ckBoxMoveBeforeFeed = new JCheckBox();
+        panelActuator.add(ckBoxMoveBeforeFeed, "4, 8, left, default");
     }
 
     @Override
@@ -152,6 +164,8 @@ public class ReferenceAutoFeederConfigurationWizard
         addWrappedBinding(feeder, "postPickActuatorName", comboBoxPostPickActuator, "selectedItem");
         addWrappedBinding(feeder, "postPickActuatorType", postPickActuatorType, "selectedItem");
         addWrappedBinding(feeder, "postPickActuatorValue", postPickActuatorValue, "text", doubleConverter);
+        
+        addWrappedBinding(feeder, "moveBeforeFeed", ckBoxMoveBeforeFeed, "selected");
         
         ComponentDecorators.decorateWithAutoSelect(actuatorValue);
         ComponentDecorators.decorateWithAutoSelect(postPickActuatorValue);

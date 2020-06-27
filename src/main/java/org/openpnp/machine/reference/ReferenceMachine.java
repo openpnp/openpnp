@@ -30,6 +30,9 @@ import javax.swing.Action;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.marek.MarekNozzle;
+import org.openpnp.machine.neoden4.Neoden4Camera;
+import org.openpnp.machine.rapidplacer.RapidFeeder;
 import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.machine.reference.camera.OnvifIPCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
@@ -44,11 +47,14 @@ import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceDragFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceLeverFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceLoosePartFeeder;
+import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceRotatedTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceSlotAutoFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
+import org.openpnp.machine.reference.feeder.SchultzFeeder;
+import org.openpnp.machine.reference.feeder.SlotSchultzFeeder;
 import org.openpnp.machine.reference.psh.ActuatorsPropertySheetHolder;
 import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
 import org.openpnp.machine.reference.psh.NozzleTipsPropertySheetHolder;
@@ -215,12 +221,16 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(ReferenceRotatedTrayFeeder.class);
         l.add(ReferenceDragFeeder.class);
         l.add(ReferenceLeverFeeder.class);
+        l.add(ReferencePushPullFeeder.class);
         l.add(ReferenceTubeFeeder.class);
         l.add(ReferenceAutoFeeder.class);
         l.add(ReferenceSlotAutoFeeder.class);
         l.add(ReferenceLoosePartFeeder.class);
         l.add(AdvancedLoosePartFeeder.class);
         l.add(BlindsFeeder.class);
+        l.add(SchultzFeeder.class);
+        l.add(SlotSchultzFeeder.class);
+        l.add(RapidFeeder.class);
         l.addAll(registeredFeederClasses);
         return l;
     }
@@ -230,6 +240,7 @@ public class ReferenceMachine extends AbstractMachine {
         List<Class<? extends Camera>> l = new ArrayList<>();
         l.add(OpenPnpCaptureCamera.class);
         l.add(OpenCvCamera.class);
+        l.add(Neoden4Camera.class);
         l.add(Webcams.class);
         l.add(OnvifIPCamera.class);
         l.add(ImageCamera.class);
@@ -243,6 +254,7 @@ public class ReferenceMachine extends AbstractMachine {
         List<Class<? extends Nozzle>> l = new ArrayList<>();
         l.add(ReferenceNozzle.class);
         l.add(ContactProbeNozzle.class);
+        l.add(MarekNozzle.class);
         return l;
     }
 
@@ -251,6 +263,7 @@ public class ReferenceMachine extends AbstractMachine {
         List<Class<? extends Actuator>> l = new ArrayList<>();
         l.add(ReferenceActuator.class);
         l.add(HttpActuator.class);
+        l.add(ScriptActuator.class);
         return l;
     }
 

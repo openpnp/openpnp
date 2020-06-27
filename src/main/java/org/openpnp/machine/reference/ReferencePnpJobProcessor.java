@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -52,6 +53,7 @@ import org.openpnp.spi.PnpJobProcessor.JobPlacement.Status;
 import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.TravellingSalesman;
 import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.pmw.tinylog.Logger;
@@ -72,6 +74,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     @Attribute(required = false)
     protected JobOrderHint jobOrder = JobOrderHint.PartHeight;
+
+    @Attribute(required = false)
+    protected int maxVisionRetries = 3;
 
     @Element(required = false)
     public PnpJobPlanner planner = new SimplePnpJobPlanner();
@@ -298,21 +303,62 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // Everything still looks good, so prepare the feeders.
             fireTextStatus("Preparing feeders.");
             Machine machine = Configuration.get().getMachine();
-            List<Feeder> feederList = new ArrayList<>();
+            List<Feeder> feederVisitList = new ArrayList<>();
+            List<Feeder> feederNoVisitList = new ArrayList<>();
             // Get all the feeders that are used in the pending placements.
             for (Feeder feeder : machine.getFeeders()) {
                 if (feeder.isEnabled() && feeder.getPart() != null) {
                     for (JobPlacement placement : getPendingJobPlacements()) {
-                        if (placement.getPartId() == feeder.getPart().getId()) {
-                            feederList.add(feeder);
+                        if (placement.getPartId().equals(feeder.getPart().getId())) {
+                            if (feeder.getJobPreparationLocation() != null) {
+                                // only feeders with location added to the visit list
+                                feederVisitList.add(feeder);
+                            }
+                            // always also add them to the general (second pass) prep list
+                            feederNoVisitList.add(feeder);
                         }
                     }
                 }
             }
-            for (Feeder feeder : feederList) {
+            
+            Location startLocation = null;
+            try {
+                startLocation = head.getDefaultCamera().getLocation();
+            }
+            catch (Exception e) {
+                Logger.error(e);
+            }                
+
+            // Use a Travelling Salesman algorithm to optimize the path to actuate all the feeder covers.
+            TravellingSalesman<Feeder> tsm = new TravellingSalesman<>(
+                    feederVisitList, 
+                    new TravellingSalesman.Locator<Feeder>() { 
+                        @Override
+                        public Location getLocation(Feeder locatable) {
+                            return locatable.getJobPreparationLocation();
+                        }
+                    }, 
+                    // start from current location
+                    startLocation, 
+                    // no particular end location
+                    null);
+
+            // Solve it using the default heuristics.
+            tsm.solve();
+
+            // Prepare feeders along the visit travel path.
+            for (Feeder feeder : tsm.getTravel()) {
                 try {
-                    // feeder is used in this job, prep it.
-                    feeder.prepareForJob(feederList);
+                    feeder.prepareForJob(true);
+                }
+                catch (Exception e) {
+                    throw new JobProcessorException(feeder, e);
+                }
+            }
+            // Prepare feeders in general (second pass for visited feeders).
+            for (Feeder feeder : feederNoVisitList) {
+                try {
+                    feeder.prepareForJob(false);
                 }
                 catch (Exception e) {
                     throw new JobProcessorException(feeder, e);
@@ -406,7 +452,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             else {
                 // Get the list of unfinished placements and sort them by part height.
                     jobPlacements = getPendingJobPlacements().stream()
-                            .sorted(Comparator.comparing(JobPlacement::getPartHeight))
+                            .sorted(Comparator
+                                .comparing(JobPlacement::getPartHeight)
+                                .thenComparing(JobPlacement::getPartId))
                             .collect(Collectors.toList());
             }
 
@@ -538,7 +586,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
 
             feed(feeder, nozzle);
-            
+
+            // TODO: move over the pick location first to let more time pass? 
+            // What happens if feeders already position the nozzle in feed()? 
+            // (there are several, e.g. drag, lever, push-pull, blinds feeder with push cover)
+            // it did not work in my tests, as the previous check already built up some underpressure
+            checkPartOff(nozzle, part);
+
             pick(nozzle, feeder, placement, part);
 
             /** 
@@ -594,6 +648,23 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             throw new JobProcessorException(feeder, lastException);
         }
         
+        private void checkPartOff(Nozzle nozzle, Part part) throws JobProcessorException {
+            if (!nozzle.isPartOffEnabled(Nozzle.PartOffStep.BeforePick)) {
+                return;
+            }
+            try {
+                if (!nozzle.isPartOff()) {
+                    throw new JobProcessorException(nozzle, "Part detected on nozzle before pick.");
+                }
+            }
+            catch (JobProcessorException e) {
+                throw e;
+            }
+            catch (Exception e) {
+                throw new JobProcessorException(nozzle, e);
+            }
+        }
+        
         private void pick(Nozzle nozzle, Feeder feeder, Placement placement, Part part) throws JobProcessorException {
             try {
                 fireTextStatus("Pick %s from %s for %s.", part.getId(), feeder.getName(),
@@ -601,7 +672,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 
                 // Move to pick location.
                 MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
-
 
                 // Pick
                 nozzle.pick(part);
@@ -624,7 +694,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         private void checkPartOn(Nozzle nozzle) throws JobProcessorException {
-            if (!nozzle.isPartOnEnabled()) {
+            if (!nozzle.isPartOnEnabled(Nozzle.PartOnStep.AfterPick)) {
                 return;
             }
             try {
@@ -680,8 +750,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             final Part part = placement.getPart();
 
             Exception lastException = null;
-            // TODO make retry count configurable.
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < ReferencePnpJobProcessor.this.getMaxVisionRetries(); i++) {
                 fireTextStatus("Aligning %s for %s.", part.getId(), placement.getId());
                 try {
                     plannedPlacement.alignmentOffsets = VisionUtils.findPartAlignmentOffsets(
@@ -700,7 +769,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         private void checkPartOn(Nozzle nozzle) throws JobProcessorException {
-            if (!nozzle.isPartOnEnabled()) {
+            if (!nozzle.isPartOnEnabled(Nozzle.PartOnStep.Align)) {
                 return;
             }
             try {
@@ -776,7 +845,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         private void checkPartOn(Nozzle nozzle) throws JobProcessorException {
-            if (!nozzle.isPartOnEnabled()) {
+            if (!nozzle.isPartOnEnabled(Nozzle.PartOnStep.BeforePlace)) {
                 return;
             }
             try {
@@ -793,7 +862,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         private void checkPartOff(Nozzle nozzle, Part part) throws JobProcessorException {
-            if (!nozzle.isPartOffEnabled()) {
+            if (!nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace)) {
                 return;
             }
             try {
@@ -1033,6 +1102,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     public void setJobOrder(JobOrderHint newJobOrder) {
         this.jobOrder = newJobOrder;
     }    
+
+    public int getMaxVisionRetries() {
+        return maxVisionRetries;
+    }
+
+    public void setMaxVisionRetries(int maxVisionRetries) {
+        this.maxVisionRetries = maxVisionRetries;
+    }
 
     protected abstract class PlannedPlacementStep implements Step {
         protected final List<PlannedPlacement> plannedPlacements;

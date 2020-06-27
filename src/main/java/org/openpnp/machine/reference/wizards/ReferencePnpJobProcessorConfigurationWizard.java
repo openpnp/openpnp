@@ -23,10 +23,13 @@ import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.Translations;
+import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor.JobOrderHint;
 
@@ -39,6 +42,7 @@ import com.jgoodies.forms.layout.RowSpec;
 public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferencePnpJobProcessor jobProcessor;
     private JComboBox comboBoxJobOrder;
+    private JTextField maxVisionRetriesTextField;
 
     public ReferencePnpJobProcessorConfigurationWizard(ReferencePnpJobProcessor jobProcessor) {
         this.jobProcessor = jobProcessor;
@@ -55,6 +59,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblJobOrder = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.JobOrder"));
@@ -62,10 +67,22 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
 
         comboBoxJobOrder = new JComboBox(JobOrderHint.values());
         panelGeneral.add(comboBoxJobOrder, "4, 2");
+
+        JLabel lblMaxVisionRetries = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.MaxVisionRetries"));
+        panelGeneral.add(lblMaxVisionRetries, "2, 3, right, default");
+
+        maxVisionRetriesTextField = new JTextField();
+        panelGeneral.add(maxVisionRetriesTextField, "4, 3");
+        maxVisionRetriesTextField.setColumns(10);
     }
 
     @Override
     public void createBindings() {
+        IntegerConverter intConverter = new IntegerConverter();
+
         addWrappedBinding(jobProcessor, "jobOrder", comboBoxJobOrder, "selectedItem");
+        addWrappedBinding(jobProcessor, "maxVisionRetries", maxVisionRetriesTextField, "text", intConverter);
+
+        ComponentDecorators.decorateWithAutoSelect(maxVisionRetriesTextField);
     }
 }

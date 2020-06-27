@@ -77,6 +77,8 @@ import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.NozzleTip;
+import org.openpnp.spi.JobProcessor.JobProcessorException;
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
@@ -217,10 +219,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 }
 
                 if (table.getSelectedRow() != priorRowIndex) {
-                    if (keepUnAppliedFeederConfigurationChanges()) {
+                	if (keepUnAppliedFeederConfigurationChanges()) {
                         table.setRowSelectionInterval(priorRowIndex, priorRowIndex);
                         return;
-                    }
+					}
                     priorRowIndex = table.getSelectedRow();
                     
                     Feeder feeder = getSelection();
@@ -265,19 +267,33 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             i++;
         }
         if (feederConfigurationIsDirty && (priorFeeder != null)) {
-            int selection = JOptionPane.showOptionDialog(null,
-                    "Configuration changes to '" + priorFeeder.getName() + "' will be lost.  Do you want to proceed?",
+            int selection = JOptionPane.showConfirmDialog(null,
+                    priorFeeder.getName() + " changed.  Apply changes?",
                     "Warning!",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.WARNING_MESSAGE,
-                    null,
-                    new String[]{"Yes", "No"},
-                    "No");
-            return (selection != JOptionPane.YES_OPTION);
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null
+                    );
+            switch (selection) {
+				case JOptionPane.YES_OPTION:
+				    int j = 0;
+				    while ((j<configurationPanel.getComponentCount())) {
+				    	AbstractConfigurationWizard wizard = ((AbstractConfigurationWizard) configurationPanel.getComponent(j));
+				        if (wizard.isDirty()) {
+							wizard.apply();
+				        }
+				        j++;
+				    }
+				    return false;
+				case JOptionPane.NO_OPTION:
+					return false;
+				case JOptionPane.CANCEL_OPTION:
+				default:
+					return true;
+			}
         } else {
             return false;
         }
-        
     }
     
     @Subscribe
@@ -506,15 +522,60 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Feeder feeder = getSelection();
-                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
 
+                // Simulate a "one feeder" job, prepare the feeder.
+                if (feeder.getJobPreparationLocation() != null) {
+                    feeder.prepareForJob(true);
+                }
+                feeder.prepareForJob(false);
+
+                // Check the nozzle tip package compatibility.
+                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                org.openpnp.model.Package packag = feeder.getPart().getPackage();
+                if (nozzle.getNozzleTip() == null || 
+                        !packag.getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
+                    // Wrong nozzle tip, try find one that works.
+                    boolean resolved = false;
+                    if (nozzle.isNozzleTipChangedOnManualFeed()) {
+                        for (NozzleTip nozzleTip : packag.getCompatibleNozzleTips()) {
+                            if (nozzle.getCompatibleNozzleTips().contains(nozzleTip)) {
+                                // Found a compatible one.
+                                nozzle.loadNozzleTip(nozzleTip);
+                                resolved = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (nozzle.getNozzleTip() == null) {
+                        throw new Exception("Can't pick, no nozzle tip loaded on nozzle "+nozzle.getName()+". "
+                                +"You may want to enable automatic nozzle tip change on manual feed on the Nozzle / Tool Changer.");
+                    }
+                    else if (! resolved) {
+                        throw new Exception("Can't pick, loaded nozzle tip "+
+                                nozzle.getNozzleTip().getName()+" is not compatible with package "+packag.getId()+". "
+                                +"You may want to enable automatic nozzle tip change on manual feed on the Nozzle / Tool Changer.");
+                    }
+                }
+
+                // Perform the feed.
                 nozzle.moveToSafeZ();
                 feeder.feed(nozzle);
+
+                // Go to the pick location and pick.
                 Location pickLocation = feeder.getPickLocation();
                 MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
                 nozzle.pick(feeder.getPart());
                 nozzle.moveToSafeZ();
+
+                // After the pick. 
                 feeder.postPick(nozzle);
+
+                // Perform the vacuum check, if enabled.
+                if (nozzle.isPartOnEnabled(Nozzle.PartOnStep.AfterPick)) {
+                    if(!nozzle.isPartOn()) {
+                        throw new JobProcessorException(nozzle, "No part detected.");
+                    }
+                }
             });
         }
     };
