@@ -67,7 +67,7 @@ public class KicadPosImporter implements BoardImporter {
         return board;
     }
 
-    static List<Placement> parseFile(File file, Side side, boolean createMissingParts, 
+    static List<Placement> parseFile(File file, Side side, boolean assignParts,  boolean createMissingParts, 
     		boolean useOnlyValueAsPartId)
             throws Exception {
         BufferedReader reader =
@@ -129,7 +129,7 @@ public class KicadPosImporter implements BoardImporter {
             placement.setLocation(new Location(LengthUnit.Millimeters, placementX, placementY, 0,
                     placementRotation));
             Configuration cfg = Configuration.get();
-            if (cfg != null && createMissingParts) {
+            if (cfg != null && assignParts) {
                 String partId;
                 if(useOnlyValueAsPartId == true) {
                 	partId = partValue;
@@ -137,7 +137,9 @@ public class KicadPosImporter implements BoardImporter {
                 	partId = pkgName + "-" + partValue;
                 }
                 Part part = cfg.getPart(partId);
-                if (part == null) {
+                if (part != null) {
+                    placement.setPart(part);
+                } else if (createMissingParts) {
                     part = new Part(partId);
                     Package pkg = cfg.getPackage(pkgName);
                     if (pkg == null) {
@@ -145,11 +147,9 @@ public class KicadPosImporter implements BoardImporter {
                         cfg.addPackage(pkg);
                     }
                     part.setPackage(pkg);
-
                     cfg.addPart(part);
+                    placement.setPart(part);
                 }
-                placement.setPart(part);
-
             }
 
             placement.setSide(side);

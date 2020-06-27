@@ -1,6 +1,14 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2020-06-23
+
+## Actuator API Change (Non-Breaking)
+
+- Actuator.actuate(String) has been added, along with support in GcodeDriver. This makes it
+  easy to send completely custom commands from machine object implementations. This is an
+  optional, non-breaking API change.
+
 # 2020-05-18
 
 ## Camera Jogging Revert
