@@ -176,10 +176,15 @@ public class AdvancedMotionTest {
     @Test 
     public void testMotionPaths() throws Exception {
         moveTo(0, 0, safeZ);
+        // pick & place
         moveTo(0, 0, -15);
         moveTo(0, 0, safeZ);
         moveTo(0, 100, safeZ);
         moveTo(0, 100, -15);
+        // move to push/pull feeder
+        moveTo(0, 100, safeZ);
+        moveTo(200, 50, safeZ);
+        moveTo(220, 50, safeZ-5);
 
         MotionProfile.solvePath(path);
     }
