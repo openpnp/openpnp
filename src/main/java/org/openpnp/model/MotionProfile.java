@@ -461,19 +461,17 @@ public class MotionProfile {
         // Solver loop.
         clearOption(ProfileOption.Twisted);
         iter = 1;
+        double mttol = Math.max(tMin*0.0001, ttol);
         while(true) {
 
             // If entry velocity != exit velocity, the continuity solvers's gradient reverses in between.
             // We need to do the search in sections.
-            double vMin = hasOption(ProfileOption.Twisted) ? 0 : Math.min(Math.abs(vEntry), Math.abs(vExit));
-            double vCross = hasOption(ProfileOption.Twisted) ? 0 : Math.max(Math.abs(vEntry), Math.abs(vExit));
-            if (s[0] == s[segments] || Math.abs(vMin - vCross) < vtol) {
-                // If they are the same, disregard.
-                vMin = vCross = 0;
-            }
-            double vPeak = vMax; 
+            double vMin = 0;//hasOption(ProfileOption.Twisted) ? 0 : Math.min(Math.abs(vEntry), Math.abs(vExit));
+            double vCross = 0;//hasOption(ProfileOption.Twisted) ? 0 : Math.max(Math.abs(vEntry), Math.abs(vExit));
             double vPeak0 = vMin;
             double vPeak1 = vMax;
+            double vPeak = vMax; 
+            
 
             // Perform simple bi-section solving.
             boolean degenerate = false;
@@ -481,70 +479,65 @@ public class MotionProfile {
             for (; iter <= iterations; iter++) {
                 // Compute the profile with the given acceleration and velocity limits.
                 computeProfile(vPeak, vEntry, vExit, tMin);
-                //System.out.println("--- profile "+this+" min-time="+tMin+" time = "+time+" err = "+error);
-                if (t[4] < 0 || (tMin > 0 && v[4] != 0 && time < tMin - ttol)) {
-                    // Uh-oh, negative constant velocity time
-                    // or minimum segment time not reached
-                    // --> decrease velocity limit
-                    if (t[4] < 0 && vPeak > vMin && vPeak < vCross) {
-                        // We have gradient reversal between entry/exit velocity.
-                        vPeak0 = vPeak;
+                boolean guessed = false;
+                if (initialGuesses > 0 && t[4] < 0 && t[2] > (-t[4]*0.25) && t[5] > (-t[4]*0.25) && tMin < time) {
+                    // Initial guess of a long move, try solving it analytically, by trying to reduce the constant acceleration segment.
+                    // Note: currently, this is implemented left side only. TODO: implement right side too, e.g. for backward unconstrained 
+                    // planning.
+                    double s3 = (s[4] + s[3])*0.5 - s[1];
+                    double signum = Math.signum(s3);
+                    // -1/6*(3*a^2 + 2*sqrt(3*a^4 + 18*a*j^2*s3 + 9*j^2*v1^2))/j,
+                    // -1/6*(3*a^2 - 2*sqrt(3*a^4 + 18*a*j^2*s3 + 9*j^2*v1^2))/j,
+                    // We just trust the (just in time) compiler to eliminate common sub-expressions.
+                    double v3_1 = signum*(-1./6*(3*Math.pow(a[1], 2) 
+                            - 2*Math.sqrt(3*Math.pow(a[1], 4) + 18*a[1]*Math.pow(j[1], 2)*s3 + 9*Math.pow(j[1], 2)*Math.pow(v[1], 2)))/j[1]);
+                    /* For some reason that is beyond my mathematical grasp, solution 2 never works. 
+                    double v3_2 = signum*(-1./6*(3*Math.pow(a[1], 2) 
+                            + 2*Math.sqrt(3*Math.pow(a[1], 4) + 18*a[1]*Math.pow(j[1], 2)*s3 + 9*Math.pow(j[1], 2)*Math.pow(v[1], 2)))/j[1]);
+                    */
+                    if (v3_1 < vPeak1 && v3_1 > vPeak0) {
+                        vPeak = v3_1;
+                        System.out.println("Analytical solution with constant acceleration segment (1) = "+v3_1);
+                        guessed = true;
                     }
-                    else {
-                        vPeak1 = vPeak;
-                    }
-                    boolean guessed = false;
-                    if (initialGuesses > 0 && t[4] < 0 && t[2] > (-t[4]*0.5) && t[5] > (-t[4]*0.5) && tMin < time) {
-                        // Initial guess, try solving it analytically, by trying to reduce the constant acceleration segment.
-                        // Note: currently, this is implemented left side only. TODO: implement right side too, e.g. for backward unconstrained 
-                        // planning.
-                        double s3 = (s[4] + s[3])*0.5 - s[1];
-                        double signum = Math.signum(s3);
-                        // -1/6*(3*a^2 + 2*sqrt(3*a^4 + 18*a*j^2*s3 + 9*j^2*v1^2))/j,
-                        // -1/6*(3*a^2 - 2*sqrt(3*a^4 + 18*a*j^2*s3 + 9*j^2*v1^2))/j,
-                        // We just trust the (just in time) compiler to eliminate common sub-expressions.
-                        double v3_1 = signum*(-1./6*(3*Math.pow(a[1], 2) 
-                                - 2*Math.sqrt(3*Math.pow(a[1], 4) + 18*a[1]*Math.pow(j[1], 2)*s3 + 9*Math.pow(j[1], 2)*Math.pow(v[1], 2)))/j[1]);
-                        double v3_2 = signum*(-1./6*(3*Math.pow(a[1], 2) 
-                                + 2*Math.sqrt(3*Math.pow(a[1], 4) + 18*a[1]*Math.pow(j[1], 2)*s3 + 9*Math.pow(j[1], 2)*Math.pow(v[1], 2)))/j[1]);
-                        if (v3_1 < vPeak1 && v3_1 > vPeak0) {
-                            vPeak = v3_1;
-                            System.out.println("Analytical constant acceleration solution (1) = "+v3_1);
-                            guessed = true;
-                        }
-                        else if (v3_2 < vPeak1 && v3_2 > vPeak0) {
-                            vPeak = v3_2;
-                            System.out.println("Analytical constant acceleration solution (2) = "+v3_2);
-                            guessed = true;
-                        }
-                    }
-                    if (!guessed) {
-                        /*FAIL: Trying some sort of Newton-Raphson approx.
-                        // Guestimate if (t[4] < 0) {
-                            vPeak = Math.max(vPeak0, Math.min(vPeak1, 
-                                    vPeak - Math.pow(Math.min(-t[4]*0.5, t[3]), 2)*jMax
-                                    - Math.max(-t[4]*0.5 - t[3], 0)*aMaxEntry));
-                        }
-                        else if (true) {
-                            double ds = Math.min(t[4], time - tMin)*Math.abs(v[4]);
-                            vPeak = Math.max(vPeak0, Math.min(vPeak1, 
-                                    vPeak + ds/(t[3]+Math.max(t[4], 0)+t[5])));
-                        }*/
-                        // Just use bisection
-                        vPeak = (vPeak1 + vPeak0)*0.5;
-                    }
+                    /* For some reason that is beyond my mathematical grasp, solution 2 never works. 
+                    else if (v3_2 < vPeak1 && v3_2 > vPeak0) {
+                        vPeak = v3_2;
+                        System.out.println("Analytical solution with constant acceleration segment (2) = "+v3_2);
+                        guessed = true;
+                    }*/
                     initialGuesses--;
-                    double magnitude = Math.sqrt(Math.max(eps, Math.min(1.0, Math.abs(s[3]-s[0])+Math.abs(s[segments]-s[4]))));
-                    if (vPeak - vMin < vtol*magnitude) {
-                        // No progress
-                        if (vMin > 0) {
+                }
+                if (!guessed) {
+                    double terr0 = Math.max(0, -t[4]);
+                    double mterr0 = Math.max(0, tMin - time - mttol);
+                    double tterr0 = Math.max(0, time - tMin);
+                    System.out.println("vPeak = "+vPeak+" terr="+terr0+" mterr="+mterr0+" tterr="+tterr0+" tMin="+tMin+" "+this);
+                    if (terr0 == 0 && mterr0 == 0 && (tMin == 0 || tterr0 == 0) && (t[4] < ttol || vPeak1-vPeak < vtol || vPeak-vPeak0 < vtol)) {
+                        // That's a solution
+                        System.out.println("taken");
+                        break;
+                    }
+                    double magnitude = Math.sqrt(Math.max(eps, Math.min(1.0, 0.000001*(Math.abs(s[3]-s[0])+Math.abs(s[segments]-s[4])))));
+                    if ((terr0 > ttol || mterr0 > ttol) && vPeak1 - vPeak0 < vtol*magnitude) {
+                        // Local minimum but not OK 
+                        if (vCross > 0) {
+                            // try letting it go below V min
+                            vPeak1 = vCross;
+                            vCross = 0;
+                            vPeak0 = vMin;
+                            vPeak = (vPeak1 + vPeak0)*0.5;
+                            initialGuesses = 1;
+                            System.out.println("*** search segment 2");
+                        }
+                        else if (vMin > 0) {
                             // try letting it go below V min
                             vPeak1 = vMin;
                             vMin = 0;
                             vPeak0 = vMin;
                             vPeak = (vPeak1 + vPeak0)*0.5;
-                            initialGuesses = 2;
-                            System.out.println("*** search lower velocity");
+                            initialGuesses = 1;
+                            System.out.println("*** search segment 3");
                         }
                         else {
                             degenerate = true;
@@ -557,30 +550,23 @@ public class MotionProfile {
                             break;
                         }
                     }
-                    System.out.println("vPeak = "+vPeak);
-                }
-                else if ((t[4] > ttol && vPeak < vPeak1 - vtol) || (t[4] > 0 && tMin > 0.0 && v[4] != 0 && time > tMin)) {
-                    // --> increase velocity limit
-                    if (time <= tMin && vPeak > vMin && vPeak < vCross) {
-                        // We have gradient reversal between entry/exit velocity.
-                        vPeak1 = vPeak;
-                    }
                     else {
-                        vPeak0 = vPeak;
+                        // Ok, numerically then.
+                        double vPeakSecant = Math.max(vPeak*0.9999, vPeak*0.9 + vPeak0*0.1);  
+                        computeProfile(vPeakSecant, vEntry, vExit, tMin);
+                        double terr1 = Math.max(0, -t[4]);
+                        double mterr1 = Math.max(0, tMin - time - mttol);
+                        double tterr1 = Math.max(0, time - tMin);
+                        if (terr1 > terr0 || (terr1 == terr0 && mterr1 > mterr0) || (terr1 == terr0 && mterr1 == mterr0 && tterr1 > tterr0)) {
+                            // Error increases with vPeak 
+                            vPeak0 = vPeak;
+                        }
+                        else {
+                            vPeak1 = vPeak;
+                        }
+                        vPeak = (vPeak1 + vPeak0)*0.5;
                     }
-                    /*FAIL: Trying some sort of Newton-Raphson approx. 
-                    // Guestimate
-                    double ds = Math.min(t[4], time - tMin)*Math.abs(v[4]);
-                    vPeak = Math.max(vPeak0, Math.min(vPeak1, 
-                            vPeak + ds/(t[3]+t[4]+t[5])));
-                     */
-                    // Just use bisection
-                    vPeak = (vPeak1 + vPeak0)*0.5;
-                    System.out.println("vPeak = "+vPeak);
-                }
-                else {
-                    // Profile is valid.
-                    break;
+                    vCross = Math.min(vPeak, vCross);
                 }
             }
             if (hasOption(ProfileOption.Twisted)
@@ -755,8 +741,13 @@ public class MotionProfile {
                     profiles[lead].v[0] = unitVector[i][lead]*vUnitMin;
                     profiles[lead].a[0] = unitVector[i][lead]*aUnitMin;
                 }
-                if ((i == last && ! profiles[lead].hasOption(ProfileOption.Jog)) 
-                        || (i < last && isCoordinated(path.get(i+1)) && !colinearWithPrev[i+1])) {
+                if (i == last) { 
+                    if (! profiles[lead].hasOption(ProfileOption.Jog)) {    
+                        // Must stop at the end, clear the option.
+                        profiles[lead].clearOption(ProfileOption.UnconstrainedExit);
+                    }   
+                }
+                else if (isCoordinated(path.get(i+1)) && !colinearWithPrev[i+1]) {
                     // Must stop at the end, clear the option.
                     profiles[lead].clearOption(ProfileOption.UnconstrainedExit);
                 }
@@ -774,9 +765,20 @@ public class MotionProfile {
                         profiles[axis].v[0] =  Math.max(-profiles[axis].vMax, Math.min(profiles[axis].vMax, prevProfiles[axis].v[segments]));
                         profiles[axis].a[0] =  Math.max(-profiles[axis].aMaxEntry, Math.min(profiles[axis].aMaxEntry, prevProfiles[axis].a[segments]));
                     } 
-                    if ((i == last && ! profiles[axis].hasOption(ProfileOption.Jog))
-                            || (i < last && isCoordinated(path.get(i+1)) && unitVector[i+1][axis] == 0)) {
+                    if (i == last) {
+                        if (! profiles[axis].hasOption(ProfileOption.Jog)) {
+                            // Must stop at the end, clear the option.
+                            profiles[axis].clearOption(ProfileOption.UnconstrainedExit);
+                        }
+                    }
+                    else if (isCoordinated(path.get(i+1)) && unitVector[i+1][axis] == 0) {
                         // Must stop at the end, clear the option.
+                        profiles[axis].clearOption(ProfileOption.UnconstrainedExit);
+                    }
+                    else if (profiles[axis].s[0] == profiles[axis].s[segments]) {
+                        // No displacement. We want reflection.
+                        profiles[axis].v[segments] = -profiles[axis].v[0];
+                        profiles[axis].a[segments] = profiles[axis].a[0];
                         profiles[axis].clearOption(ProfileOption.UnconstrainedExit);
                     }
                     else {
@@ -787,7 +789,7 @@ public class MotionProfile {
                     // clear the option for synchronize
                     profiles[axis].clearOption(ProfileOption.UnconstrainedExit);
                 }
-                synchronizeProfiles(profiles);
+                //synchronizeProfiles(profiles);
             }
             validateProfiles(profiles);
             prevProfiles = profiles;
@@ -957,13 +959,13 @@ public class MotionProfile {
         double signum = Math.signum(s[segments]-s[0]);
         if (signum == 0) {
             // Zero displacement.
-            if (! (hasOption(ProfileOption.UnconstrainedEntry) || hasOption(ProfileOption.UnconstrainedExit))) {
+            //if (! (hasOption(ProfileOption.UnconstrainedEntry) || hasOption(ProfileOption.UnconstrainedExit))) {
                 // Take entry/exit velocity balance as criterion. 
                 signum = Math.signum(Math.round(vEffExit/vtol) + Math.round(vEffEntry/vtol));
                 // TODO: if this is still zero we just assume it's completely symmetric, but this might not be true
                 // if the a vs. V mix are not the same on entry/exit and by chance still cancel out in the effective speed. 
                 // We would need to calculate the displacement to still-stand and compare.
-            }
+            //}
         } 
         if (hasOption(ProfileOption.Twisted)) {
             signum = -signum;
