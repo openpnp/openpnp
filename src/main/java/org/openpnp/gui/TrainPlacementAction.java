@@ -293,7 +293,7 @@ public class TrainPlacementAction extends AbstractAction {
     }
 
     // https://stackoverflow.com/questions/2687926/how-can-i-rotate-an-image-using-java-swing-and-then-set-its-origin-to-0-0
-    public static BufferedImage rotate(BufferedImage image, double _thetaInDegrees) {
+    public static BufferedImage rotate(BufferedImage image, double thetaInDegrees) {
         /*
          * Affline transform only works with perfect squares. The following code is used to take any
          * rectangle image and rotate it correctly. To do this it chooses a center point that is
@@ -308,21 +308,21 @@ public class TrainPlacementAction extends AbstractAction {
          * 
          */
         AffineTransform xform = new AffineTransform();
-        double _theta = Math.toRadians(_thetaInDegrees);
+        double theta = Math.toRadians(thetaInDegrees);
 
         if (image.getWidth() > image.getHeight()) {
             xform.setToTranslation(0.5 * image.getWidth(), 0.5 * image.getWidth());
-            xform.rotate(_theta);
+            xform.rotate(theta);
             xform.translate(-0.5 * image.getWidth(), -0.5 * image.getWidth());
         }
         else if (image.getHeight() > image.getWidth()) {
             xform.setToTranslation(0.5 * image.getHeight(), 0.5 * image.getHeight());
-            xform.rotate(_theta);
+            xform.rotate(theta);
             xform.translate(-0.5 * image.getHeight(), -0.5 * image.getHeight());
         }
         else {
             xform.setToTranslation(0.5 * image.getWidth(), 0.5 * image.getHeight());
-            xform.rotate(_theta);
+            xform.rotate(theta);
             xform.translate(-0.5 * image.getHeight(), -0.5 * image.getWidth());
         }
 
