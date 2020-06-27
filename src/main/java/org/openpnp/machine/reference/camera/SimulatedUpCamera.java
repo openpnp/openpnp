@@ -39,6 +39,8 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
     
     @Element(required=false)
     private Location errorOffsets = new Location(LengthUnit.Millimeters);
+    
+    private boolean drawNozzle = true;
 
     public SimulatedUpCamera() {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.0234375D, 0.0234375D, 0, 0));
@@ -101,8 +103,10 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
                 .convertToUnits(units)
                 .subtractWithRotation(getLocation());
         
-        // Create a nozzle shape
-        fillShape(g, new Ellipse2D.Double(-0.5, -0.5, 1, 1), Color.green, unitsPerPixel, offsets, false);
+        if (drawNozzle) {
+            // Create a nozzle shape
+            fillShape(g, new Ellipse2D.Double(-0.5, -0.5, 1, 1), Color.green, unitsPerPixel, offsets, false);
+        }
 
         // Draw the part
         Part part = nozzle.getPart();
@@ -214,5 +218,13 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         return null;
+    }
+
+    public boolean isDrawNozzle() {
+        return drawNozzle;
+    }
+
+    public void setDrawNozzle(boolean drawNozzle) {
+        this.drawNozzle = drawNozzle;
     }
 }
