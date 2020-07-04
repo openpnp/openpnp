@@ -140,6 +140,18 @@ public class AdvancedMotionTest {
         }
     }
 
+    @Test
+    public void testTransients() { 
+        MotionProfile profile;
+        for (double t = 0.26556040749325327; t <= 0.2661880215351785; t += 0.0001) {
+            // Move with entry/exit velocity and min time
+            profile = new MotionProfile(
+                    0, 110, 500, 300, 0, 0,
+                    0, 1000, 700, 2000, 2000, 15000, t, Double.POSITIVE_INFINITY, 0);
+            testProfile("Transient move with entry/exit velocity and min time", profile);
+        }
+    }
+
     private void testProfile(String message, MotionProfile profile) {
         MotionProfile profileRev = new MotionProfile(
                 profile.getLocation(MotionProfile.segments), profile.getLocation(0), 
@@ -185,6 +197,10 @@ public class AdvancedMotionTest {
         moveTo(0, 100, safeZ);
         moveTo(200, 50, safeZ);
         moveTo(220, 50, safeZ-5);
+        moveTo(220, 50, safeZ);
+        moveTo(200, 50, safeZ);
+        moveTo(400, 100, safeZ);
+        moveTo(0, 0, -15);
 
         MotionProfile.solvePath(path);
     }

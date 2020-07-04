@@ -1,5 +1,9 @@
 package org.openpnp.model;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -461,13 +465,12 @@ public class MotionProfile {
         // Solver loop.
         double vPeakSecant = Double.NEGATIVE_INFINITY;  
         double terrSecant = Double.POSITIVE_INFINITY;
-        double mterrSecant = Double.POSITIVE_INFINITY;
-        double tterrSecant = Double.POSITIVE_INFINITY;
 
         clearOption(ProfileOption.Twisted);
         iter = 1;
         double vttol = Math.sqrt(ttol);
-        double mttol = Math.max(tMin*0.001, vttol);
+        boolean complex = (v[0] != 0 && !hasOption(ProfileOption.UnconstrainedEntry)) 
+                || (v[segments] != 0 && !hasOption(ProfileOption.UnconstrainedExit)); 
         while(true) {
 
             // If entry velocity != exit velocity, the continuity solvers's gradient reverses in between.
@@ -489,16 +492,79 @@ public class MotionProfile {
             }
 
 
+            System.out.println("DUMP ------------------------------------------");
+            double d = 0.6;
+            double sy = (vPeak1-vPeak0)/-2.4*3/4;
+            double ssy = sy*0.01;
+            StringBuilder svg = new StringBuilder();
+            svg.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + 
+                    "<svg xmlns=\"http://www.w3.org/2000/svg\"\n" + 
+                    "  xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n" + 
+                    "  version=\"1.1\" baseProfile=\"full\"\n" + 
+                    "  width=\"100%\" height=\"100%\" preserveAspectRatio=\"none\"\n"+
+                    "  viewBox=\""+vPeak0+" "+1.2*sy+" "+(vPeak1-vPeak0)+" "+(-2.4*sy)+"\">\r\n");
+            svg.append("<title>Profile"+(hasOption(ProfileOption.Twisted)?" twisted:":":")+" s[0]="+s[0]+" s[7]="+s[7]+" v[0]="+v[0]+" v[7]="+v[7]+" tMin="+tMin);
+            svg.append("</title>\n");
+            double vPrev = vPeak1;
+            double t4Prev= 0;
+            double timePrev = 0;
+            double s3_4Prev = 0;
+            double s3mtPrev = 0;
+            svg.append("<line x1=\""+vPeak0+"\" y1=\""+(tMin*sy)+"\" x2=\""+vPeak1+"\" y2=\""+(tMin*sy)+"\" style=\"stroke-width: "+d*0.5+"; stroke:orange;\"/>\n");
+            svg.append("<line x1=\""+vPeak0+"\" y1=\""+(1*sy)+"\" x2=\""+vPeak1+"\" y2=\""+(1*sy)+"\" style=\"stroke-width: "+d*0.5+"; stroke:lightgrey;\"/>\\n");
+            svg.append("<line x1=\""+vPeak0+"\" y1=\"0\" x2=\""+vPeak1+"\" y2=\"0\" style=\"stroke-width: "+d+"; stroke:grey;\"/>\\n");
+            svg.append("<line x1=\""+vPeak0+"\" y1=\""+(-1*sy)+"\" x2=\""+vPeak1+"\" y2=\""+(-1*sy)+"\" style=\"stroke-width: "+d*0.5+"; stroke:lightgrey;\"/>\\n");
+            svg.append("<line x1=\""+Math.abs(v[0])+"\" y1=\""+(-2*sy)+"\" x2=\""+Math.abs(v[0])+"\" y2=\""+(2*sy)+"\" stroke-dasharray=\"5,5\" style=\"stroke-width: "+d+"; stroke:grey;\"/>\\n");
+            svg.append("<line x1=\""+Math.abs(v[7])+"\" y1=\""+(-2*sy)+"\" x2=\""+Math.abs(v[7])+"\" y2=\""+(2*sy)+"\" stroke-dasharray=\"5,5\" style=\"stroke-width: "+d+"; stroke:grey;\"/>\\n");
+            //double dv0p = (v[0]+aMaxEntry)*aMaxEntry/jMax;
+            //double dv0n = (v[0]-aMaxEntry)*aMaxEntry/jMax;
+            //svg.append("<line x1=\""+Math.abs(v[0]+dv0p)+"\" y1=\""+(-2*sy)+"\" x2=\""+Math.abs(v[0]+dv0p)+"\" y2=\""+(2*sy)+"\" stroke-dasharray=\"3,3\" style=\"stroke-width: "+d+"; stroke:grey;\"/>\\n");
+            //svg.append("<line x1=\""+Math.abs(v[0]+dv0n)+"\" y1=\""+(-2*sy)+"\" x2=\""+Math.abs(v[0]+dv0n)+"\" y2=\""+(2*sy)+"\" stroke-dasharray=\"3,3\" style=\"stroke-width: "+d+"; stroke:grey;\"/>\\n");
+            //svg.append("<line x1=\""+Math.abs(v[7]+dv)+"\" y1=\""+(-2*sy)+"\" x2=\""+Math.abs(v[7]+dv)+"\" y2=\""+(2*sy)+"\" stroke-dasharray=\"3,3\" style=\"stroke-width: "+d+"; stroke:grey;\"/>\\n");
+            //svg.append("<line x1=\""+Math.abs(v[7]-dv)+"\" y1=\""+(-2*sy)+"\" x2=\""+Math.abs(v[7]-dv)+"\" y2=\""+(2*sy)+"\" stroke-dasharray=\"3,3\" style=\"stroke-width: "+d+"; stroke:grey;\"/>\\n");
+            for (double v = vPeak1; v > vPeak0; v = Math.round(v*10-1)*0.1) {
+                computeProfile(v, vEntry, vExit, tMin);
+                double s3_4 = Math.signum(this.v[4])*(s[4]-s[3]);
+                double s3mt = (time-tMin)*v;
+                if (v != vPrev) {
+                    svg.append("<line x1=\""+v+"\" y1=\""+t[4]*sy+"\" x2=\""+vPrev+"\" y2=\""+t4Prev*sy+"\" style=\"stroke-width: "+d+"; stroke:green;\"/>\n");
+                    svg.append("<line x1=\""+v+"\" y1=\""+time*sy+"\" x2=\""+vPrev+"\" y2=\""+timePrev*sy+"\" style=\"stroke-width: "+d+"; stroke:red;\"/>\n");
+                    //svg.append("<line x1=\""+v+"\" y1=\""+Math.min(t[4], Math.min(0, t[4]*2)+time-tMin)*sy+"\" x2=\""+vPrev+"\" y2=\""+Math.min(t4Prev, Math.min(0, t4Prev*2)+timePrev-tMin)*sy+"\" style=\"stroke-width: "+d+"; stroke:blue;\"/>\n");
+                    svg.append("<line x1=\""+v+"\" y1=\""+s3_4*ssy+"\" x2=\""+vPrev+"\" y2=\""+s3_4Prev*ssy+"\" style=\"stroke-width: "+d+"; stroke:pink;\"/>\n");
+                    svg.append("<line x1=\""+v+"\" y1=\""+s3mt*ssy+"\" x2=\""+vPrev+"\" y2=\""+s3mtPrev*ssy+"\" style=\"stroke-width: "+d+"; stroke:violet;\"/>\n");
+                }
+                vPrev = v;
+                t4Prev = t[4];
+                s3_4Prev = s3_4;
+                s3mtPrev = s3mt;
+                timePrev = time;
+            }
+            svg.append("</svg>\n");
+            try {
+                File file = File.createTempFile("profile-solver-", ".svg");
+                try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
+                    out.println(svg.toString());
+                }
+                catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }            
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }            
+            System.out.println("DUMP ------------------------------------------");
+
             // Perform simple bi-section solving.
             boolean degenerate = false;
             int initialGuesses = 1;
+            int converging = 0;
             for (; iter <= iterations; iter++) {
-                
-                
+
+
                 // Compute the profile with the given acceleration and velocity limits.
                 computeProfile(vPeak, vEntry, vExit, tMin);
-                
-                
+
+
                 boolean guessed = false;
                 if (initialGuesses > 0 && t[4] < 0 && tMin < time)  {
                     // Initial guess of a long move, try solving it analytically, by trying to reduce the constant acceleration segment.
@@ -551,22 +617,21 @@ public class MotionProfile {
                     initialGuesses--;
                 }
                 if (!guessed) {
-                    double terr0 = Math.max(0, -t[4]);
-                    double mterr0 = Math.max(0, tMin - time - mttol);
-                    double tterr0 = Math.max(0, tMin == 0 ? t[4] : time - tMin);
-                    System.out.println("vPeak = "+vPeak+" terr="+terr0+" mterr="+mterr0+" tterr="+tterr0+" tMin="+tMin+" "+this);
-                    if (terr0 == 0 && mterr0 == 0 && (tMin == 0 || tterr0 == 0) && (t[4] < vttol || Math.abs(vPeak - vPeakSecant) < vtol)) {
+                    double terr = Math.max(tMin - time, -t[4]);
+                    System.out.println("vPeak = "+vPeak+" terr="+terr+" tMin="+tMin+" "+this);
+                    double magnitude = Math.max(eps, Math.min(1.0, 0.001*(Math.abs(s[3]-s[0])+Math.abs(s[segments]-s[4]))));
+                    if (Math.abs(vPeak - vPeakSecant) < magnitude*vtol) {
+                        converging++;
+                    }
+                    else {
+                        converging = 0;
+                    }
+                    if (terr <= ttol && (terr > -vttol || converging >= 2)) {
                         // That's a solution
                         System.out.println("taken");
                         break;
                     }
-                    double magnitude = Math.max(eps, Math.min(1.0, 0.00001*(Math.abs(s[3]-s[0])+Math.abs(s[segments]-s[4]))));
-                    if ((terr0 == 0 && mterr0 == 0) && Math.abs(vPeak - vPeakSecant) < vtol*magnitude) {
-                        // That's a solution
-                        System.out.println("taken with possible time error");
-                        break;
-                    }
-                    else if (Math.abs(vPeak - vPeakSecant) < vtol*magnitude) {
+                    if (converging > 3) {
                         // Local minimum but not OK 
                         degenerate = true;
                         if (hasOption(ProfileOption.Twisted)) { 
@@ -578,73 +643,55 @@ public class MotionProfile {
                         break;
                     }
                     else {
-                        double vPeakPrev = vPeak;
                         // Ok, numerically then.
-                        if (vPeak == vPeakSecant || Math.abs(vPeak - vPeakSecant) > vtol*8) {
+                        double vPeakPrev = vPeak;
+
+                        if (vPeak == vPeakSecant || Math.abs(vPeak - vPeakSecant) > vtol) {
                             vPeakSecant = Math.max(vPeak*0.99999, vPeak*0.9 + vPeak0*0.1);  
                             computeProfile(vPeakSecant, vEntry, vExit, tMin);
-                            terrSecant = Math.max(0, -t[4]);
-                            mterrSecant = Math.max(0, tMin - time - mttol);
-                            tterrSecant = Math.max(0, tMin == 0 ? t[4] : time - tMin);
+                            terrSecant = Math.max(tMin - time, -t[4]);
                         }
-                        if (terrSecant > terr0 
-                                || (terrSecant == terr0 && mterrSecant > mterr0) 
-                                || (terrSecant == terr0 && mterrSecant == mterr0 && tterrSecant > tterr0)) {
-                            // Error was lowered. But the true solution can still lay in between.
-                            if (vPeak > vPeakSecant) {
-                                vPeak0 = vPeakSecant;
-                                // Bisection, trended.
-                                vPeak = (vPeak1 + vPeak)*0.5;
+                        if (complex || iter < 4 || converging > 0) {
+                            // Bisection method.
+                            if (Math.abs(terrSecant) > Math.abs(terr)) {
+                                // Error was lowered. But the true solution can still lay in between.
+                                if (vPeak > vPeakSecant) {
+                                    vPeak0 = vPeakSecant;
+                                    // Bisection, trended.
+                                    vPeak = (vPeak1 + vPeak)*0.5;
+                                }
+                                else {
+                                    vPeak1 = vPeakSecant;
+                                    // Bisection, trended.
+                                    vPeak = (vPeak + vPeak0)*0.5;
+                                }
                             }
                             else {
-                                vPeak1 = vPeakSecant;
-                                // Bisection, trended.
-                                vPeak = (vPeak + vPeak0)*0.5;
+                                // Error has increased
+                                if (vPeak > vPeakSecant) {
+                                    vPeak1 = vPeak;
+                                }
+                                else {
+                                    vPeak0 = vPeak;
+                                }
+                                // Bisection
+                                vPeak = (vPeak1 + vPeak0)*0.5;
                             }
                         }
                         else {
-                            // Error has increased
-                            if (vPeak > vPeakSecant) {
-                                vPeak1 = vPeak;
+                            // Secant method (modified).
+                            double gradient = (terr-terrSecant)/(vPeak-vPeakSecant);
+                            double delta = -terr/gradient;
+                            if (Math.abs(delta) > vMax/4) {
+                                delta = Math.signum(delta)*vMax/4;
                             }
-                            else {
-                                vPeak0 = vPeak;
-                            }
-                            // Bisection
-                            vPeak = (vPeak1 + vPeak0)*0.5;
-                        }
-                        /* FAIL: Turns out instable and not faster.
-                        if (terr0 == 0 && mterr0 == 0 && tterr0 < 0.01) {
-                            // Near-miss. Use gradient.
-                            double gradient = (tterr0-tterrSecant)/(vPeak-vPeakSecant);
-                            double delta = -terr0/gradient;
-                            System.out.println("secant tterr method: gradient="+gradient+" delta="+delta+" vPeak="+(vPeak + delta));
+                            System.out.println("secant terr method: gradient="+gradient+" delta="+-terr/gradient+" vPeak="+(vPeak - terr/gradient));
                             vPeak += delta;
                             vPeak = Math.max(vPeak0+eps,  Math.min(vPeak1, vPeak));
                         }
-                        else ...
-
-                        // Secant method (simplified)
-                        if (iter/4 == 1 && terrSecant != terr0) {
-                            double gradient = (terr0-terrSecant)/(vPeak-vPeakSecant);
-                            System.out.println("secant terr method: gradient="+gradient+" delta="+-terr0/gradient+" vPeak="+(vPeak - terr0/gradient));
-                            vPeak -= terr0/gradient;
-                            vPeak = Math.max(vPeak0+eps,  Math.min(vPeak1, vPeak));
-                        }
-                        else if (iter/4 == 1 && mterrSecant != mterr0) {
-                            double gradient = (mterr0-mterrSecant)/(vPeak-vPeakSecant);
-                            System.out.println("secant mterr method: gradient="+gradient+" delta="+-mterr0/gradient+" vPeak="+(vPeak - mterr0/gradient));
-                            vPeak -= mterr0/gradient;
-                            vPeak = Math.max(vPeak0+eps,  Math.min(vPeak1, vPeak));
-                        }
-                        else {*/
-                        
-                        /*}*/
                         // Remember the last data.
                         vPeakSecant = vPeakPrev;
-                        terrSecant = terr0;
-                        mterrSecant = mterr0;
-                        tterrSecant = tterr0;
+                        terrSecant = terr;
                         /*
                         if (Math.abs(vPeak) < vtol) {
                             // Prevent zero value.
@@ -662,7 +709,9 @@ public class MotionProfile {
             setOption(ProfileOption.Twisted);
         }
         // The time was approximated to ttol, scale it to match perfectly.
-        retimeProfile(tMin);
+        if (time < tMin) {
+            retimeProfile(tMin);
+        }
         // Result is now stored in the profile i.e. you can get v[4], a[2], a[6] to get the (signed) solution.
         solvingTime = NanosecondTime.getRuntimeSeconds() - tStart;
         setOption(ProfileOption.Solved);
@@ -772,12 +821,27 @@ public class MotionProfile {
             }
         }
         // Re-time the others.
+        double maxTime2 = maxTime;
         for (MotionProfile profile : profiles) {
             profile.tMin = maxTime;
             if (profile.time != maxTime) {
                 // TODO: remove. This cumbersome way is for tracing.
                 profile.clearOption(ProfileOption.Solved); 
                 profile.assertSolved();
+                if (profile.time > maxTime2) {
+                    // sometimes the solving with larger time cannot be done.
+                    maxTime2 = profile.time;
+                }
+            }
+        }
+        if (maxTime2 > maxTime) {
+            for (MotionProfile profile : profiles) {
+                profile.tMin = maxTime2;
+                if (profile.time != maxTime2) {
+                    // TODO: remove. This cumbersome way is for tracing.
+                    profile.clearOption(ProfileOption.Solved); 
+                    profile.assertSolved();
+                }
             }
         }
     }
@@ -1237,11 +1301,30 @@ public class MotionProfile {
         }
 
         // finally t[4] calculation
+        
         if (v[4] == 0.0 && Math.abs(s[3] - s[4]) < eps) {
             t[4] = 0;
         }
         else {
             t[4] = (s[4] - s[3])/v[4];
+            /*
+            if (t[4] < 0 && j[3] == -j[5]) {
+            
+                // We have a twisted profile (transition between two velocities), so it can be fused in the middle, 
+                // i.e. the acceleration need not reach zero.
+                double tFuse = Math.min(-t[4], 2*Math.min(t[3],  t[5]));
+                t[3] -= tFuse*0.5;
+                t[5] -= tFuse*0.5;
+                t[4] += tFuse;
+                // Entry side
+                s[3] = s[2] + v[2]*t[3] + 1./2*a[2]*Math.pow(t[3], 2) + 1./6*j[3]*Math.pow(t[3], 3);
+                v[3] = v[2] + a[2]*t[3] + 1./2*j[3]*Math.pow(t[3], 2);
+                a[3] = a[2] + j[2]*t[3];
+                // Exit side
+                s[4] = s[5] - v[5]*t[5] + 1./2*a[5]*Math.pow(t[5], 2) - 1./6*j[5]*Math.pow(t[5], 3);
+                v[4] = v[3];
+                a[4] = a[4];
+            }*/
         }
         time = 0;
         for (double ti : this.t) {
