@@ -129,6 +129,12 @@ public class AdvancedMotionTest {
                 0.0, Double.POSITIVE_INFINITY, 0);
         testProfile("recheck solution", profile2);
 
+        // Impossible move.
+        profile = new MotionProfile(
+                20, 0, 0, -181.71043395996094, 0, 0,
+                0, 1000, 700, 2000, 2000, 15000, 0.277342, Double.POSITIVE_INFINITY, 0);
+        testProfile("Impossible move", profile);
+
         for (int s = -1; s <= 401; s++) {
             Double tf = profile.getForwardCrossingTime(s, true);
             Double tb = profile.getBackwardCrossingTime(s, true);

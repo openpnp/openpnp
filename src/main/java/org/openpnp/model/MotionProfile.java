@@ -491,6 +491,7 @@ public class MotionProfile {
             System.out.println("Vmax symmetrical move, immediate solution");
             return;
         }
+        
         // Need to solve this numerically. Because the solution can have many roots and local minimae, we need to split it into multiple
         // regions with known qualities.
 
@@ -656,7 +657,7 @@ public class MotionProfile {
             if (sValid0 && sValid1 &&
                     Math.min(vEffEntry, vEffExit) <= vPeak0 
                     && Math.max(vEffEntry, vEffExit) >= vPeak1
-                    && vPeak0 != 0 && vPeak1 != 0) {
+                    /*&& vPeak0 != 0 && vPeak1 != 0*/) {
                 // We're between two valid entry/exit velocities. There may be an invalid region in the middle.
                 // --> Find it!
                 // Work hypothesis (from observing many curves empirically): 
@@ -680,16 +681,19 @@ public class MotionProfile {
                     tResult = time;
                     if (sResult < 0) {
                         // Great, we found it.
+                        System.out.println("    found invalid mid area "+vSearch+" s "+sResult+" t "+tResult);
                         break;
                     }
                     if (sResult > sSecant) {
                         // Raising result -> overshoot, this means there is no invalid section. 
+                        System.out.println("    overshot invalid mid area "+vSearch+" s "+sResult+" t "+tResult);
                         break;
                     }
                     // Apply secant method. 
                     double gradient = (sResult-sSecant)/(vSecant-vSearch);
                     if (Math.abs(gradient) < vttol) {
                         // Stuck in a local minimum. This must be a near miss situation (otherwise we should see overshoot).
+                        System.out.println("    stuck local minimum invalid mid area "+vSearch+" s "+sResult+" t "+tResult);
                         break;
                     }
                     double delta = -sResult/gradient;
@@ -744,6 +748,10 @@ public class MotionProfile {
             // re-establish best solution
             System.out.println("  re-establish");
             computeProfile(bestVelocity, vEffEntry, vEffExit, tMin);
+        }
+        if (tMin > time - ttol) {
+            // The solver may have slightly approximated. Stretch the profile into the exact minimum time. 
+            retimeProfile(tMin);
         }
         // Result is now stored in the profile i.e. you can get v[4], a[2], a[6] to get the (signed) solution.
         solvingTime = NanosecondTime.getRuntimeSeconds() - tStart;
@@ -1316,9 +1324,6 @@ public class MotionProfile {
     }
 
     public void computeProfile(double vPeak, double vEffEntry, double vEffExit, double tMin) {
-
-        // Determine the direction of travel.
-        double signum = Math.signum(vPeak);
 
         // Compare effective entry/exit velocities to vMax to know whether we need to accelerate or decelerate on entry/exit.
         double signumEntry, signumExit;
