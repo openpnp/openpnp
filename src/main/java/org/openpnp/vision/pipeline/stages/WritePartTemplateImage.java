@@ -23,6 +23,7 @@ import java.io.File;
 
 import org.opencv.imgcodecs.Imgcodecs;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
@@ -46,6 +47,10 @@ public class WritePartTemplateImage extends CvStage {
     private String extension = ".png";
 
     @Attribute(required = false)
+    @Property(description = "Prefix of the filename. Used for automatic filename generation to distinguish between different uses (e.g. up/down camera). Default empty.")
+    private String prefix = "";
+
+        @Attribute(required = false)
     @Property(description = "Write image as a package template.")
     private boolean asPackage = false;
 
@@ -73,6 +78,15 @@ public class WritePartTemplateImage extends CvStage {
         this.asPackage = asPackage;
     }
 
+    public String getPrefix() {
+        return prefix;
+    }
+
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
+    }
+
+    
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         /**
@@ -113,11 +127,15 @@ public class WritePartTemplateImage extends CvStage {
             // path is assumed to be a directory containing template images
             // check if a part ID can be found from the feeder this pipeline may belong to
             Feeder feeder = (Feeder) pipeline.getProperty("feeder");
-            if (feeder == null || feeder.getPart() == null) {
-
+            Part part = (Part) pipeline.getProperty("part");
+            // path is assumed to be a directory containing template images
+            if (part == null && (feeder == null || feeder.getPart() == null) ) {
                 throw new Exception(
-                        "No part in feeder. Please provide create template image file path.");
+                            "No feeder, part, or useable templateFile found. Cannot figure out part name.");
+            } else if (part == null) {
+                part = feeder.getPart();
             }
+
             // make sure the specified dir exists, otherwise create it
             new File(filepath).mkdirs();
 
@@ -126,14 +144,14 @@ public class WritePartTemplateImage extends CvStage {
                 filepath += File.separator;
             }
             if (asPackage) {
-                filepath += feeder.getPart()
-                                  .getPackage()
+                filepath += prefix 
+                        + part.getPackage()
                                   .getId()
                         + extension;
             }
             else {
-                filepath += feeder.getPart()
-                                  .getId()
+                filepath += prefix 
+                        + part.getId()
                         + extension;
             }
             file = new File(filepath);

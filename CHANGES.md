@@ -1,6 +1,42 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2020-06-23
+
+## Actuator API Change (Non-Breaking)
+
+- Actuator.actuate(String) has been added, along with support in GcodeDriver. This makes it
+  easy to send completely custom commands from machine object implementations. This is an
+  optional, non-breaking API change.
+
+# 2020-05-18
+
+## Camera Jogging Revert
+
+- The old method of camera jogging by clicking and dragging anywhere has been restored. This
+  was removed when camera rotation jogging was adding because it seemed necessary with the
+  new drag handles, but it turns out it's not necessary and the new version was far less
+  convenient.
+
+# 2020-05-17
+
+## Sponsors and About Dialog
+
+- The About dialog now includes a Credits tab to thank sponsors of the project. A SPONSORS.md
+  file is also included, which is shown in the dialog.  
+
+- The About menu item is now correctly added to the Help menu on MacOS when the MacOS integrations
+  are not available.
+  
+## Installer Improvements
+
+- Sample files are now installed by the installer in the user's Documents/OpenPnP directory,
+  instead of in the installation directory. This fixes an issue #836 where users loading the
+  sample files on Windows would experience a write error.
+
+- Install4J has been updated from version 6 to 8. 
+  
+
 # 2020-04-29
 
 ## Advanced Camera Settle

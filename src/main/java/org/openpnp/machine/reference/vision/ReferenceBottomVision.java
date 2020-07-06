@@ -236,6 +236,7 @@ public class ReferenceBottomVision implements PartAlignment {
     private static RotatedRect processPipelineAndGetResult(CvPipeline pipeline, Camera camera, Part part,
             Nozzle nozzle) throws Exception {
         pipeline.setProperty("camera", camera);
+        pipeline.setProperty("part", part);
         pipeline.setProperty("nozzle", nozzle);
         pipeline.process();
 

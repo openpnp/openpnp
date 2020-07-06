@@ -29,6 +29,7 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -52,6 +53,10 @@ public class ReadPartTemplateImage extends CvStage {
     @Property(description = "Extension of image file. Defaults to '.png'.")
     private String extension = ".png";
 
+    @Attribute(required = false)
+    @Property(description = "Prefix of the filename. Used for automatic filename generation to distinguish between different uses (e.g. up/down camera). Default empty.")
+    private String prefix = "";
+    
     @Attribute(required = false)
     @Property(description = "Enable logging.")
     private boolean log = false;
@@ -78,6 +83,14 @@ public class ReadPartTemplateImage extends CvStage {
 
     public void setLog(boolean log) {
         this.log = log;
+    }
+    
+    public String getPrefix() {
+        return prefix;
+    }
+
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
     }
 
     @Override
@@ -121,26 +134,31 @@ public class ReadPartTemplateImage extends CvStage {
         }
         else {
             Feeder feeder = (Feeder) pipeline.getProperty("feeder");
+            Part part = (Part) pipeline.getProperty("part");
             // path is assumed to be a directory containing template images
-            if (feeder == null || feeder.getPart() == null) {
+            if (part == null && (feeder == null || feeder.getPart() == null) ) {
                 if (log) {
                     Logger.info(
                             "No feeder, part, or useable templateFile found. Cannot figure out part name.");
                 }
                 return null;
+            } else if (part == null) {
+                part = feeder.getPart();
             }
+            
             if (!filepath.endsWith(File.separator)) {
                 filepath += File.separator;
             }
-            filename = filepath + feeder.getPart()
-                                        .getId()
+            filename = filepath 
+                    + prefix 
+                    + part.getId()
                     + extension;
             file = new File(filename);
             if (!file.exists()) {
                 // try the package id
-                filename = filepath + feeder.getPart()
-                                            .getPackage()
-                                            .getId()
+                filename = filepath 
+                        + prefix 
+                        + part.getPackage().getId()
                         + extension;
                 file = new File(filename);
                 if (!file.exists()) {
@@ -149,15 +167,12 @@ public class ReadPartTemplateImage extends CvStage {
                     // TODO: it would be best if we could define a package outline, e.g. as a
                     // polygon
                     // and use that to draw the part and match templates
-                    if (feeder.getPart()
-                              .getPackage()
+                    if (part.getPackage()
                               .getFootprint() != null) {
-                        width = feeder.getPart()
-                                      .getPackage()
+                        width = part.getPackage()
                                       .getFootprint()
                                       .getBodyWidth();
-                        height = feeder.getPart()
-                                       .getPackage()
+                        height = part.getPackage()
                                        .getFootprint()
                                        .getBodyHeight();
                         if (width == 0 || height == 0) {

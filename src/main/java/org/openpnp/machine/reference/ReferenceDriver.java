@@ -116,6 +116,16 @@ public interface ReferenceDriver extends Driver, WizardConfigurable, PropertyShe
     public void actuate(ReferenceActuator actuator, double value) throws Exception;
 
     /**
+     * Actuates a machine defined object with a String value.
+     * 
+     * @param actuator
+     * @param on
+     * @throws Exception
+     */
+    public default void actuate(ReferenceActuator actuator, String value) throws Exception {
+    }
+
+    /**
      * Read a String value from the given Actuator.
      * 
      * @param actuator

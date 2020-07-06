@@ -899,8 +899,12 @@ public class SlotSchultzFeederConfigurationWizard
 						return;
 					}
 					Location newLocation = feeder.getFiducialLocation(feeder.getLocation(), feeder.getFiducialPart());
-					xPickLocTf.setText(newLocation.getLengthX().toString());
-					yPickLocTf.setText(newLocation.getLengthY().toString());
+		            if (newLocation == null) {
+		                throw new Exception("Unable to locate fiducial");
+		            } else {
+		            	xPickLocTf.setText(newLocation.getLengthX().toString());
+		            	yPickLocTf.setText(newLocation.getLengthY().toString());
+		            }
 				}
 			});
     	}

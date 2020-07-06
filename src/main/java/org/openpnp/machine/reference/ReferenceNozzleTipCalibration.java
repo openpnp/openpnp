@@ -186,8 +186,10 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             
             //The expected locations were generated with a deliberate 1 mm runout so the affine scale is a direct 
             //measure of the true runout in millimeters.  However, since the affine transform gives both an x and y
-            //scaling, their geometric mean is used to compute the radius.
-            this.radius = new Length( Math.sqrt(Math.abs(ai.xScale * ai.yScale)),
+            //scaling, their geometric mean is used to compute the radius.  Note that if measurement noise
+            //dominates the actual runout, it is possible for the scale factors to become negative.  In
+            //that case, the radius will be set to zero.
+            this.radius = new Length( Math.sqrt(Math.max(0, ai.xScale) * Math.max(0, ai.yScale)),
                     LengthUnit.Millimeters).convertToUnits(this.units).getValue();
             
             //The phase shift is just the rotation of the affine transform (negated because of the subtraction in getRunout)

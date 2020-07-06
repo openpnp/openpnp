@@ -32,6 +32,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.marek.MarekNozzle;
 import org.openpnp.machine.neoden4.NeoDen4Driver;
 import org.openpnp.machine.neoden4.Neoden4Camera;
+import org.openpnp.machine.rapidplacer.RapidFeeder;
 import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
@@ -277,6 +278,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(BlindsFeeder.class);
         l.add(SchultzFeeder.class);
         l.add(SlotSchultzFeeder.class);
+        l.add(RapidFeeder.class);
         l.addAll(registeredFeederClasses);
         return l;
     }
