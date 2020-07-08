@@ -113,11 +113,18 @@ public class AdvancedMotionTest {
                 0, 1000, 700, 2000, 2000, 15000, 4.0, Double.POSITIVE_INFINITY, 0);
         testProfile("Twisted curve (min-time) with delta", profile);
 
+        // Impossible move?.
+        profile = new MotionProfile(
+                20, 0, 0, -181/*-181.71043395996094*/, 0, 0,
+                0, 1000, 700, 2000, 2000, 15000, 0.277342, Double.POSITIVE_INFINITY, 0);
+        testProfile("Impossible move?", profile);
+
         // Complex move with min-time
         profile = new MotionProfile(
                 0, 400, 0, -20, 0, -100,
                 0, 1000, 700, 2000, 2000, 15000, 4.0, Double.POSITIVE_INFINITY, 0);
         testProfile("Complex move with min-time", profile);
+
         // Recalc a new profile with the solution params (but no min-time) to check if it results in the same profile. 
         MotionProfile profile2 = new MotionProfile(
                 0, 400, 0, -20, 0, -100,
@@ -128,12 +135,6 @@ public class AdvancedMotionTest {
                 profile.getProfileJerk(),
                 0.0, Double.POSITIVE_INFINITY, 0);
         testProfile("recheck solution", profile2);
-
-        // Impossible move.
-        profile = new MotionProfile(
-                20, 0, 0, -181.71043395996094, 0, 0,
-                0, 1000, 700, 2000, 2000, 15000, 0.277342, Double.POSITIVE_INFINITY, 0);
-        testProfile("Impossible move", profile);
 
         for (int s = -1; s <= 401; s++) {
             Double tf = profile.getForwardCrossingTime(s, true);
@@ -173,14 +174,14 @@ public class AdvancedMotionTest {
 
         MotionProfile.ErrorState error;
         System.out.println(message);
-        profile.solveProfile();
+        profile.solve();
         System.out.println(profile);
         error = profile.assertValidity();
         if (error != null) {
             Logger.error(message+" has error "+error);
         }
         // To make sure we got all the signs right, test the reverse.
-        profileRev.solveProfile();
+        profileRev.solve();
         System.out.println(profileRev+" (reverse)");
         error = profileRev.assertValidity();
         if (error != null) {
@@ -193,22 +194,34 @@ public class AdvancedMotionTest {
 
     @Test 
     public void testMotionPaths() throws Exception {
-        moveTo(0, 0, safeZ);
-        // pick & place
-        moveTo(0, 0, -15);
-        moveTo(0, 0, safeZ);
-        moveTo(0, 100, safeZ);
-        moveTo(0, 100, -15);
-        // move to push/pull feeder
-        moveTo(0, 100, safeZ);
-        moveTo(200, 50, safeZ);
-        moveTo(220, 50, safeZ-5);
-        moveTo(220, 50, safeZ);
-        moveTo(200, 50, safeZ);
-        moveTo(400, 100, safeZ);
-        moveTo(0, 0, -15);
-
-        MotionProfile.solvePath(path);
+        for (int warmup = 0; warmup < 1; warmup++) {
+            path = new ArrayList<>();
+            moveTo(0, 0, safeZ);
+            // pick & place
+            moveTo(0, 0, -15);
+            moveTo(0, 0, safeZ);
+            moveTo(0, 100, safeZ);
+            moveTo(0, 100, -15);
+            // move to push/pull feeder
+            moveTo(0, 100, safeZ);
+            moveTo(200, 50, safeZ);
+            moveTo(220, 50, safeZ-5);
+            moveTo(220, 50, safeZ);
+            moveTo(200, 50, safeZ);
+            moveTo(400, 100, safeZ);
+            moveTo(0, 0, -15);
+    
+            MotionProfile.solvePath(path);
+        }
+        double solvingTime = 0;
+        for (MotionProfile [] profiles : path) {
+            System.out.println("X:"+profiles[0]);
+            System.out.println("Y:"+profiles[1]);
+            System.out.println("Z:"+profiles[2]);
+            System.out.println(" ");
+            solvingTime += profiles[0].getSolvingTime() +profiles[1].getSolvingTime() + profiles[2].getSolvingTime();  
+        }
+        System.out.println("Total solving time: "+String.format("%.4f", solvingTime*1000)+" ms");
     }
 
     List<MotionProfile []> path = new ArrayList<>();
