@@ -200,16 +200,16 @@ public class AdvancedMotionTest {
             // pick & place
             moveTo(0, 0, -15);
             moveTo(0, 0, safeZ);
-            moveTo(0, 100, safeZ);
-            moveTo(0, 100, -15);
+            moveTo(100, 0, safeZ);
+            moveTo(100, 0, -15);
             // move to push/pull feeder
-            moveTo(0, 100, safeZ);
+            moveTo(100, 0, safeZ);
             moveTo(200, 50, safeZ);
             moveTo(220, 50, safeZ-5);
             moveTo(220, 50, safeZ);
-            moveTo(200, 50, safeZ);
-            moveTo(400, 100, safeZ);
-            moveTo(0, 0, -15);
+            moveTo(200, 80, safeZ);
+            moveTo(150, 120, safeZ);
+            moveTo(300, 150, -15);
     
             MotionProfile.solvePath(path);
         }
