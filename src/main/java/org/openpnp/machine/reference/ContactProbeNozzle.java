@@ -48,6 +48,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
     @Element(required = false)
     private String contactProbeActuatorName = "";
+    private boolean isDisabled;
 
     @Override
     public PropertySheet[] getPropertySheets() {
@@ -68,7 +69,9 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
         // First probe down from current position above the part until the probe sensor
         // is triggered.
-        actuateContactProbe(true);
+		if (!isDisabled) {
+			actuateContactProbe(true);
+		}
         // Now call the default pick() which usually just turns on the vacuum.
         super.pick(part);
         // Retract from probing i.e. until the probe sensor is released.
@@ -97,7 +100,9 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
         // First probe down from current position above the PCB until the probe sensor
         // is triggered.
-        actuateContactProbe(true);
+		if (!isDisabled) {
+			actuateContactProbe(true);
+		}
         // Now call the default place() which usually just turns off the vacuum.
         super.place();
         // Retract from probing i.e. until the probe sensor is released.
@@ -124,6 +129,10 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     protected void actuateContactProbe(boolean on) throws Exception {
         getContactProbeActuator().actuate(on);
     }
+    
+	public void disableContactProbeActuator(boolean set) {
+		isDisabled = set;
+	}
 
     public String getContactProbeActuatorName() {
         return contactProbeActuatorName;
