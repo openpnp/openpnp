@@ -14,7 +14,6 @@ import javax.swing.border.TitledBorder;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
 import org.openpnp.model.LengthUnit;
@@ -42,7 +41,8 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     private JCheckBox enabledCheckbox;
     private JCheckBox chckbxCenterAfterTest;
     private JComboBox comboBoxPreRotate;
-
+    private JComboBox comboBoxMaxRotation;
+    
     public ReferenceBottomVisionPartConfigurationWizard(ReferenceBottomVision bottomVision,
             Part part) {
         this.bottomVision = bottomVision;
@@ -61,6 +61,8 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -124,6 +126,13 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
             }
         });
         panel.add(btnLoadDefault, "6, 8");
+        
+        JLabel lblMaxRotation = new JLabel("Rotation");
+        panel.add(lblMaxRotation, "2, 10, right, top");
+        
+        comboBoxMaxRotation = new JComboBox(ReferenceBottomVision.MaxRotation.values());
+        comboBoxMaxRotation.setToolTipText("Adjust for all parts, where only some minor offset is expected. Full for parts, where bottom vision detects pin 1");
+        panel.add(comboBoxMaxRotation, "4, 10, fill, default");
     }
 
     private void testAlignment() throws Exception {
@@ -212,5 +221,6 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     public void createBindings() {
         addWrappedBinding(partSettings, "enabled", enabledCheckbox, "selected");
         addWrappedBinding(partSettings, "preRotateUsage", comboBoxPreRotate, "selectedItem");
+        addWrappedBinding(partSettings, "maxRotation", comboBoxMaxRotation, "selectedItem");
     }
 }
