@@ -1047,7 +1047,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 command = unescape(command);
             }
             Logger.trace("[{}] >> {}", getCommunications().getConnectionName(), command);
-            getCommunications().writeLine(command);
+            try {
+                getCommunications().writeLine(command);
+            }
+            catch (IOException ex) {
+                Logger.error("Failed to write command: ", command);
+                disconnect();
+                Configuration.get().getMachine().setEnabled(false);
+            }
         }
 
         // Collect responses till we find one with the confirmation or we timeout. Return
