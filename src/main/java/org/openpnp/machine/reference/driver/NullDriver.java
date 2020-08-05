@@ -149,7 +149,7 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
         Logger.debug("actuate({}, {})", actuator, value);
         checkEnabled();
         if (feedRateMmPerMinute > 0) {
-            Thread.sleep(500);
+            Thread.sleep(10);
         }
     }
     

@@ -149,7 +149,7 @@ public class OpenCvVisionProvider implements VisionProvider {
     @Override
     public Point[] locateTemplateMatches(int roiX, int roiY, int roiWidth, int roiHeight, int coiX,
             int coiY, BufferedImage templateImage_) throws Exception {
-        BufferedImage cameraImage_ = camera.capture();
+        BufferedImage cameraImage_ = camera.settleAndCapture();
 
         // Convert the camera image and template image to the same type. This
         // is required by the cvMatchTemplate call.

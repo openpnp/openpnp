@@ -1053,17 +1053,17 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         totalPartsPlaced,
                         df.format(dtSec), 
                         df.format(totalPartsPlaced / (dtSec / 3600.0)));
+
+                Logger.info("Errored Placements:");
+                for (JobPlacement jobPlacement : erroredPlacements) {
+                    Logger.info("{}: {}", jobPlacement, jobPlacement.getError().getMessage());
+                }
             }
             else {
                 fireTextStatus("Job finished without error, placed %s parts in %s sec. (%s CPH)", 
                         totalPartsPlaced,
                         df.format(dtSec), 
                         df.format(totalPartsPlaced / (dtSec / 3600.0)));
-            }
-            
-            Logger.info("Errored Placements:");
-            for (JobPlacement jobPlacement : erroredPlacements) {
-                Logger.info("{}: {}", jobPlacement, jobPlacement.getError().getMessage());
             }
 
             return null;

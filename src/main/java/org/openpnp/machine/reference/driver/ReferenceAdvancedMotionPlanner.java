@@ -21,93 +21,20 @@
 
 package org.openpnp.machine.reference.driver;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
-import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Motion;
-import org.openpnp.spi.Axis;
-import org.openpnp.spi.ControllerAxis;
-import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.Movable.MoveToOption;
-import org.openpnp.util.NanosecondTime;
 
 /**
- * Advanced Motion Planner panning 3rd order (Jerk controller) Motion Control. Supports uncoordinated motion.  
+ * Advanced Motion Planner. TODO: 
  *
  */
 public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
 
     @Override
-    public void moveToPlanning(HeadMountable hm, AxesLocation axesLocation, double speed, MoveToOption... options) 
-            throws Exception {
-        super.moveToPlanning(hm, axesLocation, speed, options);
-    }
+    protected void optimizeExecutionPlan(List<Motion> executionPlan,
+            CompletionType completionType) {
+        // TODO: implement!
 
-
-    @Override
-    public void waitForCompletion(HeadMountable hm, CompletionType completionType) throws Exception {
-        // Plan the queued motion.
-        planMotion(completionType);
-        // Execute.
-        executeMotionPlan(completionType);
-        // Wait for drivers.
-        waitForDriverCompletion(hm, completionType);
-        // Now the physical completion is done, do the abstract stuff.
-        super.waitForCompletion(hm, completionType);
-    }
-
-    public synchronized void planMotion(CompletionType completionType) throws Exception {
-        // Plan the tail of the queued motions.
-        ArrayList<Motion> motionPath = new ArrayList<>();
-        Motion prevMotion = null; 
-        // Note the tail includes the already executed last move. This is the starting point for the plan. 
-        Collection<Motion> tail = motionPlan.tailMap(planExecutedTime, true).values();
-        if (tail.size() >= 2) {
-            for (Motion queuedMotion : tail) {
-                if (prevMotion != null 
-                        && !prevMotion.getLocation1().motionSegmentTo(queuedMotion.getLocation1()).isEmpty()) {
-                    // The queued motion are the fixed way-points. We need to insert segments for 3rd order motion control.
-                    if (isInSaveZZone(queuedMotion)) {
-                        
-                    }
-                    
-                }
-                // Next, please.
-                prevMotion = queuedMotion;
-            }
-
-            if (completionType == CompletionType.WaitForStillstand) {
-                prevMotion.setOption(Motion.MotionOption.Stillstand);
-            }
-            
-            // Remove the old plan
-            while (motionPlan.size() > 0) {
-                double last = motionPlan.lastKey();
-                if (planExecutedTime >= last) {
-                    break;
-                }
-                motionPlan.remove(last);
-            }
-            // Add the new plan.
-            double time = Math.max(planExecutedTime+1e-9, NanosecondTime.getRuntimeSeconds());
-            for (Motion motion : motionPath) {
-                motionPlan.put(time, motion);
-                time += motion.getTime();
-            }
-        }
-    }
-
-
-
-    private boolean isInSaveZZone(Motion motion) {
-        for (ControllerAxis axis : motion.getLocation1().byType(Axis.Type.Z).getControllerAxes()) {
-            double z = motion.getLocation1().getCoordinate(axis);
-            // TODO: implement 
-            if (z < -15.0 || z > 0.0) {
-                return false;
-            }
-        }
-        return true;
     }
 }

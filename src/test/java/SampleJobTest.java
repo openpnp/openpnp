@@ -8,10 +8,15 @@ import org.junit.Test;
 import org.openpnp.CameraListener;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.base.AbstractCamera;
 
 import com.google.common.io.Files;
 
@@ -38,10 +43,20 @@ public class SampleJobTest {
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
 
         NullDriver driver = (NullDriver) machine.getDefaultDriver();
+        // Make it super-fast for the test.
         driver.setFeedRateMmPerMinute(0);
+        for (Axis axis : machine.getAxes()) {
+            if (axis instanceof ReferenceControllerAxis) {
+                ((ReferenceControllerAxis) axis).setFeedratePerSecond(new Length(100000, LengthUnit.Millimeters));
+                ((ReferenceControllerAxis) axis).setAccelerationPerSecond2(new Length(100000, LengthUnit.Millimeters));
+                ((ReferenceControllerAxis) axis).setJerkPerSecond3(new Length(1000000, LengthUnit.Millimeters));
+            }
+        }
 
-        Camera camera = machine.getDefaultHead().getDefaultCamera();
+        AbstractCamera camera = (AbstractCamera)machine.getDefaultHead().getDefaultCamera();
+        camera.setSettleMethod(AbstractCamera.SettleMethod.FixedTime);
         camera.setSettleTimeMs(0);
+        
         // File videoFile = new File("target");
         // videoFile = new File(videoFile, "SampleJobTest.mp4");
         // MpegEncodingCameraListener encoder = new MpegEncodingCameraListener(videoFile);

@@ -138,8 +138,14 @@ public class SimulationModeMachine extends ReferenceMachine {
     /**
      * Simulated vibration to test camera settle. Initial max. amplitude.
      */
-    @Element(required = false)
-    private Length simulatedVibrationAmplitude = new Length(0, LengthUnit.Millimeters);
+    @Attribute(required = false)
+    private double simulatedVibrationAmplitude = 0;
+
+    /**
+     * Simulated vibration to test camera settle. Duration in seconds to ~1%.
+     */
+    @Attribute(required = false)
+    private double simulatedVibrationDuration = 0.2;
 
     /**
      * Simulated homing error. Introduces an initial location error that Visual Homing needs to correct.
@@ -154,9 +160,6 @@ public class SimulationModeMachine extends ReferenceMachine {
      */
     @Element(required = false)
     private boolean pickAndPlaceChecking = false;
-
-    private double vibrationToggle = 1.0;
-
 
     @Override
     public void setEnabled(boolean enabled) throws Exception {
@@ -218,12 +221,20 @@ public class SimulationModeMachine extends ReferenceMachine {
         this.simulatedCameraLag = simulatedCameraLag;
     }
 
-    public Length getSimulatedVibrationAmplitude() {
+    public double getSimulatedVibrationAmplitude() {
         return simulatedVibrationAmplitude;
     }
 
-    public void setSimulatedVibrationAmplitude(Length simulatedVibrationAmplitude) {
+    public void setSimulatedVibrationAmplitude(double simulatedVibrationAmplitude) {
         this.simulatedVibrationAmplitude = simulatedVibrationAmplitude;
+    }
+
+    public double getSimulatedVibrationDuration() {
+        return simulatedVibrationDuration;
+    }
+
+    public void setSimulatedVibrationDuration(double simulatedVibrationDuration) {
+        this.simulatedVibrationDuration = simulatedVibrationDuration;
     }
 
     public Location getHomingError() {
@@ -396,19 +407,42 @@ public class SimulationModeMachine extends ReferenceMachine {
                         }
                     }
                 }
-                /* TODO: reimplement using a velocity? 
-                 * if (machine.getSimulationMode().isDynamicallyImperfectMachine()
-
-                        && vibrationVector != null) {
+                if (machine.getSimulationMode().isDynamicallyImperfectMachine()) {
                     // Add vibrations
-                    double t = (System.currentTimeMillis()-vibrationTime)*0.001;
-                    double amplitude = machine.getSimulatedVibrationAmplitude().convertToUnits(LengthUnit.Millimeters).getValue() 
-                 *Math.exp(-t/0.005);
-                    double scale = machine.vibrationToggle*amplitude;
-                    machine.vibrationToggle = -machine.vibrationToggle;
-                    axesLocation = axesLocation.add(vibrationVector.multiply(scale));
+                    double amplitude = machine.getSimulatedVibrationAmplitude();
+                    if (amplitude != 0) {
+                        double vibrationDuration = machine.getSimulatedVibrationDuration(); // s (practical, down to ~1%)
+                        double vibrationEigen = 13.313; // Hz
+                        double xIntegral = 0, yIntegral = 0;
+                        double dt = 1/vibrationEigen/10;
+                        Axis xAxis = mappedAxes.getAxis(Axis.Type.X);
+                        Axis yAxis = mappedAxes.getAxis(Axis.Type.Y);
+                        double t;
+                        for (t = 0; t < vibrationDuration; t += dt) {
+                            Motion vibration = machine.getMotionPlanner()
+                                    .getMomentaryMotion(cameraTime - t);
+                            AxesLocation a = vibration.getMomentaryAcceleration(cameraTime - t - vibration.getPlannedTime0());
+                            double x = a.getCoordinate(xAxis);
+                            double y = a.getCoordinate(yAxis);
+                            if (x != 0 || y != 0) {
+                                double amp = Math.exp(-t*4/vibrationDuration)*amplitude*dt;
+                                double ph = t*2*Math.PI*vibrationEigen;
+                                //Logger.trace("t="+(cameraTime - t)+" ax="+x+" ay="+y+" damp="+Math.exp(-t*3/vibrationDuration)+" cos(ph)="+Math.cos(ph));
+                                xIntegral += Math.cos(ph)*x*amp;
+                                yIntegral += Math.cos(ph)*y*amp;
+                            }
+                        }
+    
+                        if (xIntegral != 0 || yIntegral != 0) {
+                            //Logger.trace("vibration t="+(cameraTime - t)+" x="+xIntegral+" y="+yIntegral);
+                            axesLocation = axesLocation.add(new AxesLocation((a, b) -> (b),
+                                new AxesLocation(xAxis, -xIntegral), 
+                                new AxesLocation(yAxis, -yIntegral)));
+                        }
+                        
+                    }
                 }
-                 */
+
                 if (hm instanceof Nozzle
                         && machine.getSimulationMode().isDynamicallyImperfectMachine()) {
                     // Add Runout.
@@ -457,13 +491,6 @@ public class SimulationModeMachine extends ReferenceMachine {
                     int y = (int) (Math.random()*height) - 1;
                     gFrame.setColor(new Color(255, 255, 255, (int)(Math.random()*16)));
                     gFrame.drawLine(x, y, x+(int)(Math.random()*3-1.0), y+(int)(Math.random()*3-1.0));
-                }
-                if (machine.getSimulatedCameraNoise() > 500) {
-                    try {
-                        Thread.sleep(3);
-                    }
-                    catch (InterruptedException e) {
-                    }
                 }
             }
         }

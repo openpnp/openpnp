@@ -41,9 +41,8 @@ import org.openpnp.spi.WizardConfigurable;
  * MotionPlanner will determine which axes are involved and call the drivers accordingly. 
  * 
  * Drivers should only expose the functionality of the controller in a unified way. They should not add 
- * any additional logic on top like axis mapping, transformations etc. other than what is needed to make
- * the controller behave like any other controller. This is different from previous versions of OpenPnP 
- * where the driver did much more.
+ * additional logic on top other than what is needed to make the controller behave like any other 
+ * controller. This is different from previous versions of OpenPnP where the driver did much more.
  * 
  */
 public interface ReferenceDriver extends Driver, WizardConfigurable, PropertySheetHolder, Closeable {
@@ -80,14 +79,14 @@ public interface ReferenceDriver extends Driver, WizardConfigurable, PropertyShe
      * 
      * @param hm The HeadMountable having triggered the move. This is mostly for proprietary machine driver support  
      * and might only be a stand-in in some motion blending scenarios on the GcodeDriver.
-     * @param motion the moveTo Motion to execute, including location, feedrate, acceleration etc. as shaped by the MotionPlanner
-     * @param options zero to n options from the MoveToOptions enum.
+     * @param motion The moveTo Motion to execute, including location, feedrate, acceleration etc. as shaped by the MotionPlanner
+     * @param options Zero to n options from the MoveToOptions enum.
      * @throws Exception
      */
     public void moveTo(ReferenceHeadMountable hm, Motion motion, MoveToOption... options) throws Exception;
 
     /**
-     * Perform a coordinated wait for completion. This must be issued before capturing camera frames.
+     * Perform a coordinated wait for completion. This must be issued before capturing camera frames etc.
      * @see org.openpnp.spi.MotionPlanner.waitForCompletion(HeadMountable, CompletionType)  
      * 
      * @param hm The HeadMountable to wait for. If null, wait for all the axes on the driver. Most drivers/controllers will probably 

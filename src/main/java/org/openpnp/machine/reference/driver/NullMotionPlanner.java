@@ -21,24 +21,20 @@
 
 package org.openpnp.machine.reference.driver;
 
-import org.openpnp.model.AxesLocation;
-import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.Movable.MoveToOption;
+import java.util.List;
+
+import org.openpnp.model.Motion;
 
 /**
- * Simplest possible implementation of the motion planner. Just sends unmodified moveTo()s
- * to the drivers. 
+ * Simplest possible implementation of the motion planner. Just executes the unmodified motion commands 1:1. 
  *
  */
 public class NullMotionPlanner extends AbstractMotionPlanner {
 
     @Override
-    public void waitForCompletion(HeadMountable hm, CompletionType completionType) throws Exception {
-        // The motion plan is in no way refined in the NullMotionPlanner. Execute the moves 1:1. 
-        executeMotionPlan(completionType);
-        // Wait for drivers.
-        waitForDriverCompletion(hm, completionType);
-        // Now the physical completion is done, do the abstract stuff.
-        super.waitForCompletion(hm, completionType);
+    protected void optimizeExecutionPlan(List<Motion> executionPlan,
+            CompletionType completionType) {
+        // The NullMotionPLanner does nothing to the plan.
     }
+
 }

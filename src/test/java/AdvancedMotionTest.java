@@ -1,13 +1,9 @@
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.Test;
 import org.openpnp.model.MotionProfile;
 import org.openpnp.model.MotionProfile.ProfileOption;
 import org.pmw.tinylog.Logger;
 
 public class AdvancedMotionTest {
-
 
     @Test 
     public void testMotionProfiles() throws Exception {
@@ -136,27 +132,15 @@ public class AdvancedMotionTest {
                 0.0, Double.POSITIVE_INFINITY, 0);
         testProfile("recheck solution", profile2);
 
-        for (int s = -1; s <= 401; s++) {
-            Double tf = profile.getForwardCrossingTime(s, true);
-            Double tb = profile.getBackwardCrossingTime(s, true);
-            System.out.println("t cross "+s+" t fw = "+tf+" tb = "+tb
-                    +" V fw = "+(tf == null ? null : profile.getMomentaryVelocity(tf))
-                    +" V bw = "+(tb == null ? null : profile.getMomentaryVelocity(tb))
-                    +" s fw = "+(tf  == null ? null : profile.getMomentaryLocation(tf))
-                    +" s bw = "+(tb == null ? null : profile.getMomentaryLocation(tb)));
-        }
-    }
-
-    @Test
-    public void testTransients() { 
-        MotionProfile profile;
-        for (double t = 0.26556040749325327; t <= 0.2661880215351785; t += 0.0001) {
-            // Move with entry/exit velocity and min time
-            profile = new MotionProfile(
-                    0, 110, 500, 300, 0, 0,
-                    0, 1000, 700, 2000, 2000, 15000, t, Double.POSITIVE_INFINITY, 0);
-            testProfile("Transient move with entry/exit velocity and min time", profile);
-        }
+//        for (int s = -1; s <= 401; s++) {
+//            Double tf = profile.getForwardCrossingTime(s, true);
+//            Double tb = profile.getBackwardCrossingTime(s, true);
+//            System.out.println("t cross "+s+" t fw = "+tf+" tb = "+tb
+//                    +" V fw = "+(tf == null ? null : profile.getMomentaryVelocity(tf))
+//                    +" V bw = "+(tb == null ? null : profile.getMomentaryVelocity(tb))
+//                    +" s fw = "+(tf  == null ? null : profile.getMomentaryLocation(tf))
+//                    +" s bw = "+(tb == null ? null : profile.getMomentaryLocation(tb)));
+//        }
     }
 
     private void testProfile(String message, MotionProfile profile) {
@@ -176,75 +160,90 @@ public class AdvancedMotionTest {
         System.out.println(message);
         profile.solve();
         System.out.println(profile);
-        error = profile.assertValidity();
+        error = profile.checkValidity();
         if (error != null) {
             Logger.error(message+" has error "+error);
         }
         // To make sure we got all the signs right, test the reverse.
         profileRev.solve();
         System.out.println(profileRev+" (reverse)");
-        error = profileRev.assertValidity();
+        error = profileRev.checkValidity();
         if (error != null) {
             Logger.error(message+" (reverse) has error: "+error);
         }
         System.out.println(" ");
     }
 
-
-
-    @Test 
-    public void testMotionPaths() throws Exception {
-        for (int warmup = 0; warmup < 1; warmup++) {
-            path = new ArrayList<>();
-            moveTo(0, 0, safeZ);
-            // pick & place
-            moveTo(0, 0, -15);
-            moveTo(0, 0, safeZ);
-            moveTo(100, 0, safeZ);
-            moveTo(100, 0, -15);
-            // move to push/pull feeder
-            moveTo(100, 0, safeZ);
-            moveTo(200, 50, safeZ);
-            moveTo(220, 50, safeZ-5);
-            moveTo(220, 50, safeZ);
-            moveTo(200, 80, safeZ);
-            moveTo(150, 120, safeZ);
-            moveTo(300, 150, -15);
-    
-            MotionProfile.solvePath(path);
-        }
-        double solvingTime = 0;
-        for (MotionProfile [] profiles : path) {
-            System.out.println("X:"+profiles[0]);
-            System.out.println("Y:"+profiles[1]);
-            System.out.println("Z:"+profiles[2]);
-            System.out.println(" ");
-            solvingTime += profiles[0].getSolvingTime() +profiles[1].getSolvingTime() + profiles[2].getSolvingTime();  
-        }
-        System.out.println("Total solving time: "+String.format("%.4f", solvingTime*1000)+" ms");
-    }
-
-    List<MotionProfile []> path = new ArrayList<>();
-    double x0 = 0;
-    double y0 = 0;
-    double z0 = 0;
-    final double safeZ = -5;
-
-    private void moveTo(double x, double y, double z) {
-        MotionProfile [] profiles = new MotionProfile[3];
-        profiles[0] = new MotionProfile(
-                x0, x, 0, 0, 0, 0,
-                0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, (z0 >= safeZ && z >= safeZ) ? 0 : ProfileOption.Coordinated.flag());
-        profiles[1] = new MotionProfile(
-                y0, y, 0, 0, 0, 0,
-                0, 500, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, (z0 >= safeZ && z >= safeZ) ? 0 : ProfileOption.Coordinated.flag());
-        profiles[2] = new MotionProfile(
-                z0, z, 0, 0, 0, 0,
-                -20, 5, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, (z0 >= safeZ && z >= safeZ) ? 0 : ProfileOption.Coordinated.flag());
-        path.add(profiles);
-        x0 = x;
-        y0 = y;
-        z0 = z;
-    }
+//  TODO: ADVANCED MOTION PLANNER 
+//    @Test 
+//    public void testMotionPaths() throws Exception {
+//        for (int warmup = 0; warmup < 1; warmup++) {
+//            path = new ArrayList<>();
+//            moveTo(0, 0, safeZ);
+//            // pick & place
+//            moveTo(0, 0, -15);
+//            moveTo(0, 0, safeZ);
+//            moveTo(100, 0, safeZ);
+//            moveTo(100, 0, -15);
+//            moveTo(100, 0, safeZ);
+//            moveTo(120, 0, safeZ);
+//            moveTo(120, 0, -15);
+//            moveTo(120, 0, safeZ);
+//            moveTo(124, 0, safeZ);
+//            moveTo(124, 0, -15);
+//            moveTo(124, 0, safeZ);
+//            moveTo(125, 0, safeZ);
+//            moveTo(125, 0, -15);
+//            moveTo(125, 0, safeZ);
+//            // move to push/pull feeder
+//            moveTo(200, 50, safeZ);
+//            moveTo(220, 50, safeZ-5);
+//            moveTo(220, 50, safeZ);
+//            moveTo(200, 80, safeZ);
+//            moveTo(150, 100, safeZ);
+//            moveTo(150, 120, safeZ);
+//            moveTo(300, 120, -15);
+//            moveTo(300, 150, -15);
+//            moveTo(280, 150, -15);
+//            moveTo(279, 150, -15);
+//            //moveTo(279, 150, -15);
+//            moveTo(275, 150, -15);
+//            moveTo(275, 150, safeZ);
+//    
+//            MotionProfile.solvePath(path);
+//        }
+//        double solvingTime = 0;
+//        for (MotionProfile [] profiles : path) {
+//            System.out.println("X:"+profiles[0]);
+//            System.out.println("Y:"+profiles[1]);
+//            System.out.println("Z:"+profiles[2]);
+//            System.out.println(" ");
+//            solvingTime += profiles[0].getSolvingTime() +profiles[1].getSolvingTime() + profiles[2].getSolvingTime();  
+//        }
+//        System.out.println("Total solving time: "+String.format("%.4f", solvingTime*1000)+" ms");
+//    }
+//
+//    List<MotionProfile []> path = new ArrayList<>();
+//    double x0 = 0;
+//    double y0 = 0;
+//    double z0 = 0;
+//    final double safeZ = -5;
+//
+//    private void moveTo(double x, double y, double z) {
+//        MotionProfile [] profiles = new MotionProfile[3];
+//        profiles[0] = new MotionProfile(
+//                x0, x, 0, 0, 0, 0,
+//                0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, (z0 >= safeZ && z >= safeZ) ? 0 : ProfileOption.Coordinated.flag());
+//        profiles[1] = new MotionProfile(
+//                y0, y, 0, 0, 0, 0,
+//                0, 500, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, (z0 >= safeZ && z >= safeZ) ? 0 : ProfileOption.Coordinated.flag());
+//        profiles[2] = new MotionProfile(
+//                z0, z, 0, 0, 0, 0,
+//                -20, 5, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, (z0 >= safeZ && z >= safeZ) ? 0 : ProfileOption.Coordinated.flag());
+//        path.add(profiles);
+//        x0 = x;
+//        y0 = y;
+//        z0 = z;
+//    }
 
 }

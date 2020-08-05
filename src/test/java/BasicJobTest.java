@@ -175,7 +175,7 @@ public class BasicJobTest {
 
                 ExpectedMove move = (ExpectedMove) op;
 
-                if (!location.matches(move.location) || hm != move.headMountable) {
+                if (!move.location.matches(location) || hm != move.headMountable) {
                     throw new Exception("Unexpected Move " + hm + " " + location + ". Expected " + op);
                 }
             }
@@ -222,7 +222,7 @@ public class BasicJobTest {
                     double speed) throws Exception {
                 this.headMountable = headMountable;
                 // The expected location must be converted into raw coordinates, but it is already a head location.  
-                // DO NOT DO THIS: Location headLocation = headMountable.toHeadLocation(location);
+                // Therefore, don't do this:  Location headLocation = headMountable.toHeadLocation(location);
                 this.location = headMountable.toRaw(location);
                 this.speed = speed;
                 this.description = description;

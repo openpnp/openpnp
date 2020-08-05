@@ -187,16 +187,6 @@ public class VisionUtilsTest {
         }
 
         @Override
-        public long getSettleTimeMs() {
-            return 0;
-        }
-
-        @Override
-        public void setSettleTimeMs(long settleTimeMs) {
-
-        }
-
-        @Override
         public Length getSafeZ() {
             return null;
         }

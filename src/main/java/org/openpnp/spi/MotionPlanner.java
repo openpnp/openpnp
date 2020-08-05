@@ -27,12 +27,19 @@ import org.openpnp.spi.Movable.MoveToOption;
 
 /**
  * <p>
- * The MotionPlanner is used for the following tasks:
- * </p><ul>
- * <li>Accept/record a sequence of nominal moveTo() commands.</li>
- * <li>For advanced MotionPlanners, perform post-processing on the sequence. </li>
- * <li>Assert moments of coordinated completion with waitForCompletion().</li>
- * <li>In due time, command the drivers to execute the plan.</li>
+ * The MotionPlanner coordinates motion, homing etc. across multiple drivers. It has a similar interface as the 
+ * drivers themselves and acts as a black box to abstract from the complexities of multiple, mixed drivers.</p>
+ * 
+ * <p>The Motion planner may also perform advanced motion planning i.e. it might reorder, blend and refine the raw 
+ * moveTo() commands sent to it in order to improve performance, reduce machine vibrations etc.</p>
+ * 
+ * <p>These are the most important tasks:</p>  
+ * <ul>
+ * <li>Perform home() commands across drivers.</li>
+ * <li>Accept a sequence of raw moveTo() commands.</li>
+ * <li>Coordinate motion across multiple drivers.</li>
+ * <li>For advanced MotionPlanners, perform optimization on the sequence. </li>
+ * <li>As soon as the motion is commited ie. when waiting for completion, command the drivers to plan and execute the plan.</li>
  * <li>Provide access to the planned motion over time for simulation, visualization etc. </li>
  * </ul>
  * <p>
@@ -40,11 +47,11 @@ import org.openpnp.spi.Movable.MoveToOption;
  * NullMotionPlanner. Future advanced MotionPlanners can do nth order Kinematics control, motion blending
  * etc. 
  * </p><p>
- * All that is guaranteed is that the MotionPlanner is an envelope planner i.e. it will only plan the 
- * maximum velocity, acceleration, jerk allowed to the controller and its real-time planner. The real 
- * physical motion might be more constrained i.e. take more time. Having said that, it remains a goal 
- * to anticipate the controller's motion as good as possible so that simulation and reality will be very 
- * similar and optimizations are purposeful. 
+ * The MotionPlanner is an envelope planner i.e. it will only plan the maximum velocity, acceleration, jerk 
+ * allowed to the controller. It is not a real-time planner, therefore the real physical motion that is later executed 
+ * by the controller, might be more constrained i.e. take more time. Having said that, it remains a goal to anticipate 
+ * the controller's motion as good as possible, so that simulation and reality will be very similar and optimizations 
+ * are purposeful. 
  * </p><p>
  * An advanced Planner will first record the commands and it may (or may not yet) plan the moves. 
  * A waitForCompletion() will force the planning and generate the needed output commands. Note that proper
@@ -61,7 +68,7 @@ import org.openpnp.spi.Movable.MoveToOption;
  * specific behavior must be modeled per Axis. The MotionPlanner should also try to approximate coordinated 
  * motion across controllers. A best-effort approximation should be enough for PnP purposes.  
  * </p><p>
- * Unless Length and Location are provided, units are Millimeters and Seconds.
+ * Unless Length and Location are used, units are Millimeters and Seconds.
  * </p>
  * 
  */
@@ -127,37 +134,27 @@ public interface MotionPlanner {
     void waitForCompletion(HeadMountable hm, CompletionType completionType) throws Exception;
 
     /**
-     * Get the planned motion at a certain time. It contains the nth order motion vector depending on the
-     * planner at hand. 
+     * Get the planned motion at a certain time. Works into the future as far as planned and into the past
+     * as far as retained. This is used to simulate Camera Views (with lag), to analyze excitation by 
+     * acceleration to predict vibrations etc.   
      * 
      * @param time
      * @return
      */
     Motion getMomentaryMotion(double time);
 
-    /**
-     * Get the momentary location at a certain time. Simpler wrapper for the getMomentaryMotion() call.
-     * 
-     * @param time
-     * @return
-     */
-    AxesLocation getMomentaryLocation(double time);
-
-    /**
-     * Clear the planning and recording older than the given time from the memory of the motion planner. The 
+     /**
+     * Clear the motion planning older than the given real-time from the history of the motion planner. The 
      * MotionPlanner is free to do its own house-keeping and get rid of past planning data before this is called. 
      * 
      * @param time The start time of the motion to keep. This must be a time returned by waitForCompletion().
      * 
      */
-    void clearMotionOlderThan(double time);
-    
-    Machine getMachine();
+    void clearMotionPlanOlderThan(double time);
 
     /**
      * @param axesLocation
      * @return true if the location is valid, i.e. inside soft limits etc.
      */
     public boolean isValidLocation(AxesLocation axesLocation);
-
 }
