@@ -45,15 +45,11 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
-import org.openpnp.machine.reference.ReferenceMachine;
-import org.openpnp.machine.reference.ReferenceNozzleTip;
-import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.feeder.wizards.BlindsFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
 import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
@@ -1292,28 +1288,6 @@ public class BlindsFeeder extends ReferenceFeeder {
                 throw new Exception("Feeder " + getName() + ": current nozzle tip "+nozzleTip.getId()+
                         " has push diameter not set. Check the nozzle tip configuration.");
             }
-            
-            // HACK: get backlash compensation from GcodeDriver. No point in adding a general interface as this 
-            // should not be on the driver in the first place.
-            Length backlashOffset = new Length(0.0, getFiducial2Location().getUnits());
-            double backlashOpen = 0.0;
-            double backlashClose = 0.0;
-            ReferenceMachine referenceMachine;
-            if (Configuration.get().getMachine() instanceof ReferenceMachine) {
-                referenceMachine = (ReferenceMachine)Configuration.get().getMachine();
-                if (referenceMachine.getDriver() instanceof GcodeDriver) {
-                    GcodeDriver gcodeDriver = (GcodeDriver)referenceMachine.getDriver();
-                    Location backlashVector = new Location(gcodeDriver.getUnits(), 
-                            gcodeDriver.getBacklashOffsetX(), 
-                            gcodeDriver.getBacklashOffsetY(), 
-                            0.0, 0.0);
-                    Location unitVectorX =  getFiducial1Location().unitVectorTo(getFiducial2Location());
-                    // dot product is backlash offset perpendicularly projected onto the feeder X axis 
-                    backlashOffset = unitVectorX.dotProduct(backlashVector);
-                    backlashOpen = backlashOffset.getValue() > 0.0 ? 1.0 : 0.0;
-                    backlashClose = backlashOffset.getValue() < 0.0 ? 1.0 : 0.0;
-                }
-            }
 
             assertCalibration();
 
@@ -1323,23 +1297,19 @@ public class BlindsFeeder extends ReferenceFeeder {
                         edgeOpenDistance.multiply(-1.0)
                         .subtract(sprocketPitch.multiply(0.5)) // go half sprocket too far back
                         .subtract(nozzleTipDiameter.multiply(0.5))
-                        .subtract(backlashOffset.multiply(backlashOpen))
                         : 
                             edgeClosedDistance
                             .add(tapeLength) 
                             .add(sprocketPitch.multiply(0.5)) // go half sprocket too far
                             .add(nozzleTipDiameter.multiply(0.5)))
-                            .subtract(backlashOffset.multiply(backlashClose))
                         .convertToUnits(location.getUnits());
                 Length feederX1 = (openState ? 
                         edgeOpenDistance.multiply(-1.0)
-                        .subtract(nozzleTipDiameter.multiply(0.5)) 
-                        .subtract(backlashOffset.multiply(backlashOpen))
+                        .subtract(nozzleTipDiameter.multiply(0.5))
                         : 
                             edgeClosedDistance
                             .add(tapeLength)
                             .add(nozzleTipDiameter.multiply(0.5)))
-                            .subtract(backlashOffset.multiply(backlashClose))
                         .convertToUnits(location.getUnits());
                 Length feederY = pocketCenterline
                         .convertToUnits(location.getUnits());
