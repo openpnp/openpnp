@@ -36,6 +36,7 @@ public class ReferenceBottomVisionTest {
 
         Configuration.initialize(workingDirectory);
         Configuration.get().load();
+        // Save migrated.
         Configuration.get().save();
 
         Machine machine = Configuration.get().getMachine();

@@ -149,8 +149,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             expectedLocations.add(fiducial.getLocation().invert(boardSide==Side.Bottom, false, false, false));
             measuredLocations.add(measuredLocation);
             
-            Logger.debug("Found {} nominal {} at {}", fiducial.getId(),
-                    Utils2D.calculateBoardPlacementLocation(boardLocation, fiducial.getLocation()), measuredLocation);
+            Logger.debug("Found {} at {}", fiducial.getId(), measuredLocation);
         }
         
         // Calculate the transform.

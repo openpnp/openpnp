@@ -43,7 +43,7 @@ public class SampleJobTest {
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
 
         NullDriver driver = (NullDriver) machine.getDefaultDriver();
-        // Make it super-fast for the test.
+        // Make it super-fast for the test (now with axes).
         driver.setFeedRateMmPerMinute(0);
         for (Axis axis : machine.getAxes()) {
             if (axis instanceof ReferenceControllerAxis) {
@@ -56,7 +56,7 @@ public class SampleJobTest {
         AbstractCamera camera = (AbstractCamera)machine.getDefaultHead().getDefaultCamera();
         camera.setSettleMethod(AbstractCamera.SettleMethod.FixedTime);
         camera.setSettleTimeMs(0);
-        
+
         // File videoFile = new File("target");
         // videoFile = new File(videoFile, "SampleJobTest.mp4");
         // MpegEncodingCameraListener encoder = new MpegEncodingCameraListener(videoFile);

@@ -52,7 +52,7 @@ public class ReferenceHead extends AbstractHead {
         if (getVisualHomingMethod() != VisualHomingMethod.None) {
             /*
              * The head default camera should now be (if everything has homed correctly) directly
-             * above the homing pin in the machine bed, use the head camera scan for this and make sure
+             * above the homing fiducial on the machine bed, use the head camera scan for this and make sure
              * this is exactly central - otherwise we move the camera until it is, and then reset all
              * the axis back to the fiducial location as this is calibrated home.
              */
@@ -76,7 +76,7 @@ public class ReferenceHead extends AbstractHead {
                 axesHomingLocation = hm.toRaw(hm.toHeadLocation(getHomingFiducialLocation()));
             }
             else {
-                // Use bare X, Y homing coordinates.
+                // Use bare X, Y homing coordinates (legacy mode).
                 axesHomingLocation =  new AxesLocation(machine, 
                         (axis) -> (axis.getHomeCoordinate())); 
             }
@@ -145,7 +145,7 @@ public class ReferenceHead extends AbstractHead {
         if (!mappedAxes.isEmpty()) {
             AxesLocation axesLocation = hm.toRaw(location);
             machine.getMotionPlanner().moveTo(hm, axesLocation, speed, options);
-            // For now just do it immediately. TODO: implement smart wait for completion.
+            // For now just do it immediately. TODO: wait only where necessary, e.g. in vision and (perhaps) vacuum sensing.
             machine.getMotionPlanner().waitForCompletion(hm, CompletionType.WaitForStillstand);
             machine.fireMachineHeadActivity(this);
         }

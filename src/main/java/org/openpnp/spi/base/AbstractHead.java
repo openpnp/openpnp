@@ -95,14 +95,8 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     @SuppressWarnings("unused")
     @Commit
     private void commit() {
-        for (Nozzle nozzle : nozzles) {
-            nozzle.setHead(this);
-        }
-        for (Camera camera : cameras) {
-            camera.setHead(this);
-        }
-        for (Actuator actuator : actuators) {
-            actuator.setHead(this);
+        for (HeadMountable hm : getHeadMountables()) {
+            hm.setHead(this);
         }
     }
 
@@ -202,15 +196,9 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     @Override
     public List<HeadMountable> getHeadMountables() {
         List<HeadMountable> list = new ArrayList<>();
-        for (Nozzle nozzle : nozzles) {
-            list.add(nozzle);
-        }
-        for (Camera camera : cameras) {
-            list.add(camera);
-        }
-        for (Actuator actuator : actuators) {
-            list.add(actuator);
-        }
+        list.addAll(nozzles);
+        list.addAll(cameras);
+        list.addAll(actuators);
         return list;
     }
 

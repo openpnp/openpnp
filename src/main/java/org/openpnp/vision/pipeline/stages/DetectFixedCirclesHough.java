@@ -89,8 +89,8 @@ public class DetectFixedCirclesHough extends CvStage {
         Imgproc.HoughCircles(mat, output, Imgproc.CV_HOUGH_GRADIENT, dp,
                 minDistance,
                 param1, param2,
-                minDiameter / 2-2,
-                maxDiameter / 2+2);
+                minDiameter / 2,
+                maxDiameter / 2);
         List<Result.Circle> circles = new ArrayList<>();
         for (int i = 0; i < output.cols(); i++) {
             double[] circle = output.get(0, i);

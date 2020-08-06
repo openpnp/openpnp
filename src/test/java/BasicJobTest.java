@@ -58,6 +58,7 @@ public class BasicJobTest {
 
         Configuration.initialize(workingDirectory);
         Configuration.get().load();
+        // Save back migrated.
         Configuration.get().save();
 
         Machine machine = Configuration.get().getMachine();

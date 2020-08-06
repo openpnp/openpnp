@@ -46,7 +46,6 @@ import com.jgoodies.forms.layout.RowSpec;
 
 public class GcodeDriverSettings extends AbstractConfigurationWizard {
     private final GcodeDriver driver;
-    private JCheckBox backslashEscapedCharacters;
 
     public GcodeDriverSettings(GcodeDriver driver) {
         this.driver = driver;
@@ -288,9 +287,9 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
     private JTextField commandTimeoutTf;
     private JTextField connectWaitTimeTf;
     private JComboBox unitsCb;
-    private JCheckBox backslashEscapedChar;
     private JCheckBox supportingPreMove;
     private JCheckBox letterVariables;
+    private JCheckBox backslashEscapedCharacters;
 
     static class HeadMountableItem {
         private HeadMountable hm;

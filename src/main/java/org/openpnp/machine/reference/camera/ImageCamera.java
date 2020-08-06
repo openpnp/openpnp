@@ -58,7 +58,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
     private PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
     @Attribute(required = false)
-    private int fps = 24;
+    private int fps = 30;
 
     @Element
     private String sourceUri = "classpath://samples/pnp-test/pnp-test.png";

@@ -544,7 +544,6 @@ public class Configuration extends AbstractModelObject {
         return serializer;
     }
 
-    
     public static String createId(String prefix) {
         // NanosecondTime guarantees unique Ids, even if created in rapid succession such as in migration code.
         return prefix + NanosecondTime.get().toString(16);

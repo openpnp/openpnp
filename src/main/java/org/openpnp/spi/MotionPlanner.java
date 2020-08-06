@@ -39,7 +39,7 @@ import org.openpnp.spi.Movable.MoveToOption;
  * <li>Accept a sequence of raw moveTo() commands.</li>
  * <li>Coordinate motion across multiple drivers.</li>
  * <li>For advanced MotionPlanners, perform optimization on the sequence. </li>
- * <li>As soon as the motion is commited ie. when waiting for completion, command the drivers to plan and execute the plan.</li>
+ * <li>As soon as the motion is commited i.e. when waiting for completion, command the drivers to plan and execute the plan.</li>
  * <li>Provide access to the planned motion over time for simulation, visualization etc. </li>
  * </ul>
  * <p>

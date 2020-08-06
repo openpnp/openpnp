@@ -36,7 +36,7 @@ import org.openpnp.spi.WizardConfigurable;
  * This Driver interface is intended to talk to one controller with Axes and Actuators attached.
  * 
  * In OpenPnP, the Head does not move on it's own. It is moved by the moving of attached objects:
- * Nozzles, Cameras, Actuators, so-called HeadMountables. The HeadMountables specify with which axes 
+ * Nozzles, Cameras, Actuators, so-called HeadMountables. The HeadMountables specify by which axes 
  * they are moved. The axes are in turn assigned to the Driver. When you move a HeadMountable the 
  * MotionPlanner will determine which axes are involved and call the drivers accordingly. 
  * 
@@ -159,7 +159,7 @@ public interface ReferenceDriver extends Driver, WizardConfigurable, PropertyShe
 
     /**
      * Migrates the driver for the new global axes implementation. Is marked a deprecated as it can be removed
-     * along with the old GcodeDriver Axes implementation, if migration of users is expected to be complete.  
+     * along with the old GcodeDriver Axes implementation, once migration of users is expected to be complete.  
      * 
      * @param machine
      * @throws Exception
