@@ -26,14 +26,15 @@ import org.openpnp.spi.Movable.LocationOption;
 import org.openpnp.spi.TransformedAxis;
 
 public abstract class AbstractTransformedAxis extends AbstractAxis implements TransformedAxis {
-    // Convenience functions for null checking.
     public static AxesLocation toTransformed(AbstractAxis axis, AxesLocation location, LocationOption... options) {
+        // Convenience functions for null checking.
         if (axis != null) {
             return axis.toTransformed(location, options);
         }
         return location;
     }
     public static AxesLocation toRaw(AbstractAxis axis, AxesLocation location, LocationOption... options) throws Exception {
+        // Convenience functions for null checking.
         if (axis != null) {
             return axis.toRaw(location, options);
         }

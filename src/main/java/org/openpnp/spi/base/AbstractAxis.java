@@ -1,4 +1,24 @@
-package org.openpnp.spi.base;
+/* Copyright (C) 2020 <mark@makr.zone>
+ * inspired and based on work
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
+ */
+
+ package org.openpnp.spi.base;
 
 import java.awt.event.ActionEvent;
 
@@ -13,7 +33,6 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Location;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Movable.LocationOption;
@@ -21,7 +40,7 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 
 /**
- * @author Markus
+ * The Abstract Axis implements the common denominator of all the sub-classes. 
  *
  */
 public abstract class AbstractAxis extends AbstractModelObject implements Axis {
@@ -65,22 +84,6 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
     @Override
     public void setType(Axis.Type type) {
         this.type = type;
-    }
-
-    @Override
-    public double getLocationAxisCoordinate(Location location) {
-        switch (type) { 
-            case X:
-                return location.getX();
-            case Y:
-                return location.getY();
-            case Z:
-                return location.getZ();
-            case Rotation:
-                return location.getRotation();
-            default:
-                return 0.0;
-        }
     }
 
     /**

@@ -1,3 +1,24 @@
+/*
+ * Copyright (C) 2020 <mark@makr.zone>
+ * inspired and based on work
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
+ */
+
 package org.openpnp.spi.base;
 
 import org.openpnp.ConfigurationListener;
@@ -11,10 +32,7 @@ import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.Machine;
-import org.openpnp.spi.Movable.LocationOption;
 import org.openpnp.util.MovableUtils;
-import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
 
 public abstract class AbstractControllerAxis extends AbstractCoordinateAxis implements ControllerAxis {
@@ -30,7 +48,6 @@ public abstract class AbstractControllerAxis extends AbstractCoordinateAxis impl
     /**
      * The coordinate that will be reached when the last motion sent by the driver has completed.
      * Always in driver units.
-     * 
      */
     private double driverCoordinate;
 
@@ -74,6 +91,21 @@ public abstract class AbstractControllerAxis extends AbstractCoordinateAxis impl
         }
         else {
             setDriverCoordinate(driverCoordinate.convertToUnits(getUnits()).getValue());
+        }
+    }
+
+    @Override
+    public boolean coordinatesMatch(Length coordinateA, Length coordinateB) {
+        if (type == Axis.Type.Rotation) {
+            // Never convert rotation
+            return coordinatesMatch(
+                    coordinateA.getValue(),
+                    coordinateB.getValue());
+        }
+        else {
+            return coordinatesMatch(
+                coordinateA.convertToUnits(getUnits()).getValue(),
+                coordinateB.convertToUnits(getUnits()).getValue());
         }
     }
 

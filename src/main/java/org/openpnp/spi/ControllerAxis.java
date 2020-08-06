@@ -27,7 +27,7 @@ import org.openpnp.model.Location;
 
 /**
  * A ControllerAxis is an axis coordinate dimension as exposed by the machine's controller/driver.
- * These can already be Cartesian-coordinate or rotary axes, or raw actuator axes to be transformed by a TransformedAxis. 
+ * These can already be Cartesian linear or rotary axed, or raw actuator axes to be transformed by a TransformedAxis. 
  */
 public interface ControllerAxis extends LinearInputAxis, CoordinateAxis {
     /**
@@ -43,7 +43,14 @@ public interface ControllerAxis extends LinearInputAxis, CoordinateAxis {
     public String getLetter();
 
     public void setLetter(String designator);
-    
+
+    public LengthUnit getUnits();
+
+    /**
+     * @return The driver coordinate in length units as determined by getUnits(). This is the coordinate
+     * that was last sent to the controller. It may not yet reflect the physical machine position. Only
+     * after a MotionController.waitForCompletion() can you be sure that the machine is in sync.    
+     */
     double getDriverCoordinate();
     
     void setDriverCoordinate(double coordinate);

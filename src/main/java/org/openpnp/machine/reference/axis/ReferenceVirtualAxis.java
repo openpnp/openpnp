@@ -46,8 +46,18 @@ public class ReferenceVirtualAxis extends AbstractCoordinateAxis implements Coor
     }
 
     @Override
-    public LengthUnit getUnits() {
-        return LengthUnit.Millimeters;
+    public boolean coordinatesMatch(Length coordinateA, Length coordinateB) {
+        if (type == Axis.Type.Rotation) {
+            // Never convert rotation
+            return coordinatesMatch(
+                    coordinateA.getValue(),
+                    coordinateB.getValue());
+        }
+        else {
+            return coordinatesMatch(
+                coordinateA.convertToUnits(AxesLocation.getUnits()).getValue(),
+                coordinateB.convertToUnits(AxesLocation.getUnits()).getValue());
+        }
     }
 
     protected long getResolutionTicks(double coordinate) {

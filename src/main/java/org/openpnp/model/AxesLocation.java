@@ -40,43 +40,100 @@ import org.openpnp.spi.Machine;
 
 /**
  * Like the classic OpenPnP Location, the AxesLocation stores a set of coordinates. However AxesLocation 
- * can store an arbitrary number of axes and their coordinates including multiple times the same type. 
+ * can store an arbitrary number of axes and their coordinates, including multiple times the same Axis.Type
+ * e.g. multiple Z or C axes. 
  * 
  * All coordinates are handled as Millimeters to speed up calculations and allow for multi-axis transforms 
  * across drivers with different units. This unit-less handling also avoids problems with rotational axis 
  * coordinates that should obviously never be length unit converted.
  * 
- * Like Location, the AxesLoction is sometimes also used as a (relative) Vector. Furthermore, it is also used
- * as an axis map, i.e. only the included axes are important, not the coordinates.  
+ * Like Location, the AxesLoction is sometimes used as a Vector, thought as a distance to the origin. 
+ * Furthermore, it is sometimes used as an axis map, i.e. only the included axes are important, not the 
+ * coordinates.
+ * 
+ * Coordinates of axes not present in the AxesLocation are sometimes treated as 0.0, in other cases however a
+ * missing axis means that it should not be included in an operation such as moveTo(), etc. Be careful to
+ * determine which meaning applies. 
+ * 
+ * AxesLocations preserve the order of the axes. In particular the Configuration order of axis definitions is 
+ * sometimes used to treat axes in their "natural" order, where it may matter.  
  * 
  */
 public class AxesLocation {
     final private LinkedHashMap<Axis, Double> location;
     final public static AxesLocation zero = new AxesLocation();
 
+    /**
+     * All coordinates of AxesLoactions are handled as Millimeters to speed up calculations and allow for 
+     * multi-axis transforms across drivers with different units and other universal vector math. This unit-less 
+     * handling also avoids problems with rotational axis coordinates that should obviously never be length unit 
+     * converted.
+     * 
+     * @return
+     */
+    final public static LengthUnit getUnits() {
+        return LengthUnit.Millimeters;
+    }
+
+    /**
+     * Create an empty AxesLocation. Because coordinates often default to 0.0, this can also be used as the
+     * origin or zero AxesLocation. See also org.openpnp.model.AxesLocation.zero.   
+     * 
+     */
     public AxesLocation() {
-        // Empty
+        // Empty.
         location = new LinkedHashMap<>(0);
     }
+    /**
+     * Create a single Axis/coordinate pair AxesLocation.  
+     * 
+     * @param axis
+     * @param coordinate
+     */
     public AxesLocation(Axis axis, double coordinate) {
         location = new LinkedHashMap<>(1);
         if (axis != null) {
             location.put(axis, coordinate);
         }
     }
+    /**
+     * Create a single Axis/Length coordinate pair AxesLocation.  
+     * 
+     * @param axis
+     * @param coordinate
+     */
     public AxesLocation(Axis axis, Length coordinate) {
         this(axis, coordinate
                 .convertToUnits(getUnits()).getValue());
     }
+    /**
+     * Create an AxesLocation with the given CoordinateAxis argument list and initialize to the current 
+     * coordinates (i.e. planned coordinates). 
+     * 
+     * @param axes
+     */
     public AxesLocation(CoordinateAxis... axis) {
         location = new LinkedHashMap<>(axis.length);
         for (CoordinateAxis oneAxis : axis) {
             location.put(oneAxis, oneAxis.getLengthCoordinate().convertToUnits(getUnits()).getValue());
         }
     }
+    /**
+     * Create an AxesLocation with the given Axis List and initialize to the current 
+     * coordinates (i.e. planned coordinates). 
+     * 
+     * @param axes
+     */
     public AxesLocation(List<CoordinateAxis> axes) {
         this(axes, (axis) -> axis.getLengthCoordinate());
     }
+    /**
+     * Create an AxesLocation with the given typed Axis Iterable and initialize coordinates with the given function.
+     * 
+     * @param <T>
+     * @param axes
+     * @param initializer
+     */
     public <T extends Axis> AxesLocation(Iterable<T> axes, Function<T, Length> initializer) {
         location = new LinkedHashMap<>();
         for (T axis : axes) {
@@ -86,9 +143,22 @@ public class AxesLocation {
             }
         }
     }
+    /**
+     * Create an AxesLoaction over all the ControllerAxes of the machine and initialize to the current 
+     * coordinates (i.e. planned coordinates). 
+     * 
+     * @param machine
+     */
     public AxesLocation(Machine machine) {
         this(machine, (axis) -> (axis.getLengthCoordinate()));
     }
+    /**
+     * Create an AxesLoaction over all the CoordinateAxes of the machine (in Machine Setup order).
+     * Apply the given function to initialize the coordinates.  
+     * 
+     * @param machine
+     * @param initializer
+     */
     public AxesLocation(Machine machine, Function<CoordinateAxis, Length> initializer) {
         location = new LinkedHashMap<>();
         for (Axis axis : machine.getAxes()) {
@@ -100,6 +170,14 @@ public class AxesLocation {
             }
         }
     }
+    /**
+     * Create an AxesLoaction over all the ControllerAxes of the machine (in Machine Setup order) and with the given driver.
+     * Apply the given function to initialize the coordinates.  
+     * 
+     * @param machine
+     * @param driver
+     * @param initializer
+     */
     public AxesLocation(Machine machine, Driver driver, Function<ControllerAxis, Length> initializer) {
         location = new LinkedHashMap<>();
         for (Axis axis : machine.getAxes()) {
@@ -113,6 +191,12 @@ public class AxesLocation {
             }
         }
     }
+    /**
+     * Using the given binary function, aggregate the given axesLocation argument list.  
+     * 
+     * @param function
+     * @param axesLocation
+     */
     public AxesLocation(BiFunction<Double, Double, Double> function, AxesLocation... axesLocation) {
         location = new LinkedHashMap<>();
         for (AxesLocation oneAxesLocation : axesLocation) {
@@ -121,15 +205,17 @@ public class AxesLocation {
             }
         }
     }
+    /**
+     * Create a new AxesLocation with the given function applied to the coordinates of axesLocation.
+     *  
+     * @param function
+     * @param axesLocation
+     */
     public AxesLocation(Function<Double, Double> function, AxesLocation axesLocation) {
         location = new LinkedHashMap<>();
         for (Axis axis : axesLocation.getAxes()) {
             location.put(axis, function.apply(axesLocation.getCoordinate(axis)));
         }
-    }
-
-    final public static LengthUnit getUnits() {
-        return LengthUnit.Millimeters;
     }
 
     public AxesLocation add(AxesLocation other) {
@@ -159,7 +245,7 @@ public class AxesLocation {
     }
 
     /**
-     * Filter those axes from the AxesLocation that have one of the given types.
+     * Filter those axes from the AxesLocation that have one of the given Axis.Types.
      * 
      * @param types
      * @return
@@ -329,7 +415,7 @@ public class AxesLocation {
     }
 
     /**
-     * Based on the mapped axes in this, substitute coordinates by type to convert a Location to 
+     * Based on the mapped axes in this, substitute coordinates by Axis.Type to convert a Location to 
      * an AxisLocation. Used together with org.openpnp.spi.MovableMountable.getMappedAxes(Machine).
      * 
      * @param location
@@ -444,7 +530,8 @@ public class AxesLocation {
     }
 
     /**
-     * Returns the Euclidean metric i.e. the distance in N-dimensional space of the AxesLocation from the origin.
+     * Returns the Euclidean metric i.e. the distance in N-dimensional space of the AxesLocation from the origin
+     * i.e. treated as a vector. 
      * 
      * @return
      */

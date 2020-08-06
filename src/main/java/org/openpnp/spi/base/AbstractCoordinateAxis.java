@@ -1,3 +1,24 @@
+/*
+ * Copyright (C) 2020 <mark@makr.zone>
+ * inspired and based on work
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
+ */
+
 package org.openpnp.spi.base;
 
 import org.openpnp.model.AxesLocation;
@@ -9,13 +30,24 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.Movable.LocationOption;
 import org.simpleframework.xml.Element;
 
+/**
+ * An AbstractCoordinateAxis is an axis which can store a coordinate either physically or virtually. 
+ *
+ */
 public abstract class AbstractCoordinateAxis extends AbstractAxis implements CoordinateAxis {
     @Element(required = false)
     private Length homeCoordinate = new Length(0.0, LengthUnit.Millimeters);
 
     /**
-     * The coordinate that will be reached when all pending motion has completed. 
-     * Always in driver units.
+     * The coordinate that was last sent to the MotionPlanner either through a moveTo() or other
+     * operations, such as homing. 
+     * 
+     * This coordinate may not yet be sent to the driver and even less likely reflect the 
+     * physical machine position. Only after a waitForCompletion() on the MotionPlanner, can you be sure that 
+     * the coordinate is in sync with the machine. 
+     * 
+     * The coordinate is always in AxesLocation.getUnits() i.e. in Millimeters.
+     * 
      */
     private double coordinate;
 
@@ -25,7 +57,7 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
     }
     @Override
     public Length getLengthCoordinate() {
-        return new Length(coordinate, getUnits());
+        return new Length(coordinate, AxesLocation.getUnits());
     }
 
     @Override
@@ -35,6 +67,7 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
         firePropertyChange("coordinate", oldValue, coordinate);
         firePropertyChange("lengthCoordinate", null, getLengthCoordinate());
     }
+
     @Override
     public void setLengthCoordinate(Length coordinate) {
         if (type == Type.Rotation) {
@@ -75,21 +108,6 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
         return location;
     }
 
-    @Override
-    public boolean coordinatesMatch(Length coordinateA, Length coordinateB) {
-        if (type == Axis.Type.Rotation) {
-            // Never convert rotation
-            return coordinatesMatch(
-                    coordinateA.getValue(),
-                    coordinateB.getValue());
-        }
-        else {
-            return coordinatesMatch(
-                coordinateA.convertToUnits(getUnits()).getValue(),
-                coordinateB.convertToUnits(getUnits()).getValue());
-        }
-    }
-    
     @Override
     public boolean coordinatesMatch(double coordinateA, double coordinateB) {
         if (type == Axis.Type.Rotation) {
