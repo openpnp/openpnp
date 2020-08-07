@@ -12,6 +12,7 @@ import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.base.AbstractCamera;
 
 import com.google.common.io.Files;
 
@@ -40,8 +41,10 @@ public class SampleJobTest {
         NullDriver driver = (NullDriver) machine.getDriver();
         driver.setFeedRateMmPerMinute(0);
 
-        Camera camera = machine.getDefaultHead().getDefaultCamera();
+        AbstractCamera camera = (AbstractCamera)machine.getDefaultHead().getDefaultCamera();
+        camera.setSettleMethod(AbstractCamera.SettleMethod.FixedTime);
         camera.setSettleTimeMs(0);
+
         // File videoFile = new File("target");
         // videoFile = new File(videoFile, "SampleJobTest.mp4");
         // MpegEncodingCameraListener encoder = new MpegEncodingCameraListener(videoFile);

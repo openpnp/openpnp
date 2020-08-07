@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.prefs.Preferences;
 
@@ -90,7 +91,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
      */
     private boolean disableLastSelectedListener = false;
     private Object lastSelectedNode = null;
-    private int lastSelectedTabIndex = 0;
+    private HashMap<Class, Integer> lastSelectedTabIndex = new HashMap<>();
 
     public MachineSetupPanel() {
         setLayout(new BorderLayout(0, 0));
@@ -159,10 +160,12 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
         
         tabbedPane.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
-                if (disableLastSelectedListener) {
-                    return;
+                if (lastSelectedNode != null) {
+                    if (disableLastSelectedListener) {
+                        return;
+                    }
+                    lastSelectedTabIndex.put(lastSelectedNode.getClass(), tabbedPane.getSelectedIndex());
                 }
-                lastSelectedTabIndex = tabbedPane.getSelectedIndex();
             }
         });
 
@@ -203,9 +206,11 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
                                 }
                             }
                             
-                            if (lastSelectedNode != null) {
-                                if (lastSelectedNode.getClass().equals(node.obj.getClass())) {
-                                    tabbedPane.setSelectedIndex(lastSelectedTabIndex);
+                            if (node.obj != null) {
+                                if (lastSelectedTabIndex.get(node.obj.getClass()) != null) {
+                                    // Sometimes when clicking around quickly, the lastSelectedTabIndex update seems to be wrong, 
+                                    // resulting in an IndexOutOfBoundsException. Therefore we check the tab count too. This covers variable per class Wizards too. 
+                                    tabbedPane.setSelectedIndex(Math.min(tabbedPane.getTabCount()-1, lastSelectedTabIndex.get(node.obj.getClass())));
                                 }
                             }
                             
