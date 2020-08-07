@@ -82,7 +82,7 @@ public class OpenCvVisionProvider implements VisionProvider {
      * @return
      */
     public List<TemplateMatch> getTemplateMatches(BufferedImage template) {
-        BufferedImage image = camera.capture();
+        BufferedImage image = camera.settleAndCapture();
 
         // Convert the camera image and template image to the same type. This
         // is required by the cvMatchTemplate call.
