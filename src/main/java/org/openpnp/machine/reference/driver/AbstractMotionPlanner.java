@@ -235,7 +235,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
         List<Head> movedHeads = new ArrayList<>();
         for (Motion plannedMotion : executionPlan) {
             if (plannedMotion != null && !plannedMotion.hasOption(MotionOption.Stillstand)) {
-                // Put into plan.
+                // Put into timed plan.
                 t += plannedMotion.getTime();
                 motionPlan.put(t, plannedMotion);
                 plannedMotion.setPlannedTime1(t);

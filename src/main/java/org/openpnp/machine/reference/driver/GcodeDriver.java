@@ -474,7 +474,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         command = substituteVariable(command, "FeedRate", feedRate);
         command = substituteVariable(command, "BacklashFeedRate", feedRate * backlashFeedRateFactor);
         command = substituteVariable(command, "Acceleration", acceleration);
-        command = substituteVariable(command, "Jerk", jerk);
+        command = substituteVariable(command, "Jerk", jerk == 0 ? null : jerk);
         
         // Go through all the axes and handle them.
         boolean doesMove = false;
@@ -1083,10 +1083,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         axis.setDriver(this);
         // Migrate the feedrate to the axes but change to mm/s.
         axis.setFeedratePerSecond(new Length(maxFeedRate/60.0, getUnits()));
-        // Assume 0.5s average acceleration to reach top speed. With jerk control that is 4 x feedrate/s.
-        axis.setAccelerationPerSecond2(new Length(maxFeedRate*4/60.0, getUnits()));
-        // Assume full time +1/-1 jerk time.
-        axis.setJerkPerSecond3(new Length(maxFeedRate*8/60.0, getUnits()));
+        // Assume 0.5s average acceleration to reach top speed. v = a*t => a = v/t
+        axis.setAccelerationPerSecond2(new Length(maxFeedRate/60/0.5, getUnits()));
+        // Switch off jerk by default.
+        axis.setJerkPerSecond3(new Length(0, getUnits()));
         machine.addAxis(axis);
         return axis;
     }

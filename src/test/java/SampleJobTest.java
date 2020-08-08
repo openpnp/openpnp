@@ -3,6 +3,7 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
+import org.apache.commons.io.FileUtils;
 import org.jcodec.api.awt.SequenceEncoder;
 import org.junit.Test;
 import org.openpnp.CameraListener;
@@ -22,6 +23,22 @@ import com.google.common.io.Files;
 
 public class SampleJobTest {
 
+    /**
+     * Enable imperfectMachine for a full "imperfect machine" test. The poor machine has bad non-squareness,
+     * huge nozzle runout, is off from home, the camera has lag and bad vibration realistically simulated from motion.
+     * Unlike the default machine, it also uses the Z axis.
+     * 
+     * This tests non-squareness compensation (axis transforms), runout compensation, visual homing, camera settling,
+     * Z motion, 3rd order (jerk controlled) motion planning and prediction, as well as its benefit against vibration.
+     * 
+     * It also uses "intelligent" pick and place location detection based on the ImageCamera's machine table image.
+     * So if the simulation tries to pick or place at the wrong location, the test fails.
+     * 
+     * Unfortunately, it is terribly slow as some aspects (camera settling/vibration) need to be simulated in 
+     * real-time to be purposeful as a test.  
+     * 
+     */
+    final public static boolean imperfectMachine = false; 
 
     /**
      * Loads the pnp-test job that is included in the samples and attempts to run it within a test
@@ -37,25 +54,34 @@ public class SampleJobTest {
         workingDirectory = new File(workingDirectory, ".openpnp");
         System.out.println("Configuration directory: " + workingDirectory);
 
+        if (imperfectMachine) {
+            // Take the imperfect machine as a test case.
+            FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/SampleJobTest/machine.xml"),
+                new File(workingDirectory, "machine.xml"));
+        }
+
         Configuration.initialize(workingDirectory);
         Configuration.get().load();
 
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
 
-        NullDriver driver = (NullDriver) machine.getDefaultDriver();
-        // Make it super-fast for the test (now with axes).
-        driver.setFeedRateMmPerMinute(0);
-        for (Axis axis : machine.getAxes()) {
-            if (axis instanceof ReferenceControllerAxis) {
-                ((ReferenceControllerAxis) axis).setFeedratePerSecond(new Length(100000, LengthUnit.Millimeters));
-                ((ReferenceControllerAxis) axis).setAccelerationPerSecond2(new Length(100000, LengthUnit.Millimeters));
-                ((ReferenceControllerAxis) axis).setJerkPerSecond3(new Length(1000000, LengthUnit.Millimeters));
+        if (!imperfectMachine) {
+            NullDriver driver = (NullDriver) machine.getDefaultDriver();
+            // Make it faster for the test (now including axes).
+            driver.setFeedRateMmPerMinute(0);
+            for (Axis axis : machine.getAxes()) {
+                if (axis instanceof ReferenceControllerAxis) {
+                    ((ReferenceControllerAxis) axis).setFeedratePerSecond(new Length(1000000, LengthUnit.Millimeters));
+                    ((ReferenceControllerAxis) axis).setAccelerationPerSecond2(new Length(2000000, LengthUnit.Millimeters));
+                    ((ReferenceControllerAxis) axis).setJerkPerSecond3(new Length(0, LengthUnit.Millimeters));
+                }
             }
+
+            AbstractCamera camera = (AbstractCamera)machine.getDefaultHead().getDefaultCamera();
+            camera.setSettleMethod(AbstractCamera.SettleMethod.FixedTime);
+            camera.setSettleTimeMs(0);
         }
 
-        AbstractCamera camera = (AbstractCamera)machine.getDefaultHead().getDefaultCamera();
-        camera.setSettleMethod(AbstractCamera.SettleMethod.FixedTime);
-        camera.setSettleTimeMs(0);
 
         // File videoFile = new File("target");
         // videoFile = new File(videoFile, "SampleJobTest.mp4");

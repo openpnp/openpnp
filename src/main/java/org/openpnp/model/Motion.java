@@ -469,7 +469,7 @@ public class Motion {
      */
     public Double getAccelerationPerSecond2(Driver driver) {
         return getNistRate(driver,
-                (axis, profile) -> (0.5*(profile.getProfileEntryAcceleration()+profile.getProfileExitAcceleration())),
+                (axis, profile) -> (Math.max(profile.getProfileEntryAcceleration(), profile.getProfileExitAcceleration())),
                 null);
     }
     /**

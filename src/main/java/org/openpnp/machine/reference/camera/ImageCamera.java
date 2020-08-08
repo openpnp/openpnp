@@ -248,7 +248,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
      * @throws Exception
      */
     public boolean isPlaceLocation(Location physicalLocation, Nozzle nozzle) throws Exception {
-        // TODO: we should adjust for the offset that aligment found here. But that seems sot accessible outside
+        // TODO: we should adjust for the offset that Alignment found here. But that seems not accessible outside
         // the JobProcessor.
         return isPartLocation(physicalLocation, nozzle.getPart(), false, Color.white, Color.black, null,
                 placeLocationMinimumScore, placeLocationToleranceMm);

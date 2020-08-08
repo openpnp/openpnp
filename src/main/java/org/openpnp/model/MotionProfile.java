@@ -240,10 +240,12 @@ public class MotionProfile {
     }
 
     public double getProfileVelocity() {
+        // TODO: for advanced motion planning: calculate the real maximum over the profile, for cases with entry/exit conditions and/or tMin != 0
         return Math.abs(v[4]);
     }
 
     public double getProfileEntryAcceleration() {
+        // TODO: for advanced motion planning: calculate the real maximum over the profile, for cases with entry/exit conditions. 
         return Math.abs(a[2]);
     }
 
@@ -252,7 +254,7 @@ public class MotionProfile {
     }
 
     public double getProfileJerk() {
-        return Math.abs(j[1]);
+        return Math.max(Math.abs(j[0]), Math.abs(j[6]));
     }
 
     public double getTime() {
@@ -276,19 +278,19 @@ public class MotionProfile {
     }
 
     public double getMomentaryLocation(double time) { // s0 + V0*t + 1/2*a0*t^2 + 1/6*j*t^3
-        return getMomentary(time, s[0], s[segments], (i, ts) -> (s[i-1] + v[i-1]*ts + 1./2*a[i-1]*Math.pow(ts, 2) + 1./6*j[i]*Math.pow(ts, 3)));
+        return getMomentary(time, s[0], s[segments], (i, ts) -> (s[i-1] + v[i-1]*ts + 1./2*a[i-1]*Math.pow(ts, 2) + 1./6*j[i-1]*Math.pow(ts, 3)));
     }
 
     public double getMomentaryVelocity(double time) { // V0 + a0*t + 1/2*j*t^2
-        return getMomentary(time, v[0], v[segments], (i, ts) -> (v[i-1] + a[i-1]*ts + 1./2*j[i]*Math.pow(ts, 2)));
+        return getMomentary(time, v[0], v[segments], (i, ts) -> (v[i-1] + a[i-1]*ts + 1./2*j[i-1]*Math.pow(ts, 2)));
     }
 
     public double getMomentaryAcceleration(double time) { // a0 + j*t
-        return getMomentary(time, a[0], a[segments], (i, ts) -> (a[i-1] + j[i]*ts));
+        return getMomentary(time, a[0], a[segments], (i, ts) -> (a[i-1] + j[i-1]*ts));
     }
 
     public double getMomentaryJerk(double time) { 
-        return getMomentary(time, j[0], j[segments], (i, ts) -> (j[i]));
+        return getMomentary(time, 0, 0, (i, ts) -> (j[i-1]));
     }
 
     public enum ErrorState {
@@ -327,8 +329,8 @@ public class MotionProfile {
         // Assert hard constraints
         // Assert continuity.
         double tSum = 0;
-        for (int i = 1; i <= segments; i++) {
-            // Check timing.
+        for (int i = 0; i <= segments; i++) {
+            // Check numeric stability
             if (!(Double.isFinite(t[i]) 
                     && Double.isFinite(s[i])
                     && Double.isFinite(v[i])
@@ -336,19 +338,27 @@ public class MotionProfile {
                     && Double.isFinite(j[i]))) {
                 return ErrorState.SolutionNotFinite;
             }
-            if (t[i] < -eps) {
-                return ErrorState.NegativeSegmentTime;
+            if (i == 0) {
+                if (t[i] != 0) {
+                    return ErrorState.NegativeSegmentTime;
+                }
             }
-            tSum += t[i];
-            // Check continuity.
-            if (mismatch(s[i], s[i-1] + v[i-1]*t[i] + 1./2*a[i-1]*Math.pow(t[i], 2) + 1./6*j[i]*Math.pow(t[i], 3))) {
-                return ErrorState.LocationDiscontinuity;
-            }
-            if (mismatch(v[i], v[i-1] + a[i-1]*t[i] + 1./2*j[i]*Math.pow(t[i], 2))) {
-                return ErrorState.VelocityDiscontinuity;
-            }
-            if (mismatch(a[i], a[i-1] + j[i]*t[i])) {
-                return ErrorState.AccelerationDiscontinuity;
+            else {
+                // Check timing.
+                if (t[i] < -eps) {
+                    return ErrorState.NegativeSegmentTime;
+                }
+                tSum += t[i];
+                // Check continuity.
+                if (mismatch(s[i], s[i-1] + v[i-1]*t[i] + 1./2*a[i-1]*Math.pow(t[i], 2) + 1./6*j[i-1]*Math.pow(t[i], 3))) {
+                    return ErrorState.LocationDiscontinuity;
+                }
+                if (mismatch(v[i], v[i-1] + a[i-1]*t[i] + 1./2*j[i-1]*Math.pow(t[i], 2))) {
+                    return ErrorState.VelocityDiscontinuity;
+                }
+                if (mismatch(a[i], a[i-1] + j[i-1]*t[i]) && !isConstantAcceleration()) {
+                    return ErrorState.AccelerationDiscontinuity;
+                }
             }
         }
         // Check time sum constraints-.
@@ -369,7 +379,7 @@ public class MotionProfile {
             return ErrorState.MaxLocationViolated;
         }
         // Assert lesser constraints
-        for (int i = 1; i <= segments; i++) {
+        for (int i = 0; i <= segments; i++) {
             // Check constraints. 
             if (i < segments && s[i] < sMin - eps) { // With the bounds check this is redundant, but we want to double check.
                 return ErrorState.MinLocationViolated;
@@ -465,7 +475,7 @@ public class MotionProfile {
     }
     public void solve(final int iterations, final double vtol, final double ttol) {
         double tStart = NanosecondTime.getRuntimeSeconds();
-        solveProfile(iterations, vtol, ttol);
+        solveByVelocity(iterations, vtol, ttol);
         // Result is now stored in the profile i.e. you can get v[4], a[2], a[6] to get the (signed) solution.
         solvingTime = NanosecondTime.getRuntimeSeconds() - tStart;
         setOption(ProfileOption.Solved);
@@ -475,18 +485,23 @@ public class MotionProfile {
             traceProfile.toSvg();
         }
     }
-    public boolean solveProfile(final int iterations, final double vtol, final double ttol) {
+
+    boolean isConstantAcceleration() {
+        return jMax == 0 || Double.isInfinite(jMax);
+    }
+    public boolean solveByVelocity(final int iterations, final double vtol, final double ttol) {
         // Check for a null move. As we always handle all axes of the machine, we want to be fast with those.
         if (s[0] == s[segments]
                 && v[0] == v[segments]
-                        && a[0] == a[segments]
+                        && (isConstantAcceleration() || a[0] == a[segments])
                                 && (tMin == 0 || (v[0] == 0 && a[0] == 0))) {
             // Null move
+            j[0] = 0;
             for (int i = 1; i < segments; i++) {
                 s[i] = s[0];
                 v[i] = v[0];
                 a[i] = a[0];
-                j[i] = 0;
+                j[i] = j[0];
                 t[i] = 0;
             }
             t[4] = tMin;
@@ -506,9 +521,10 @@ public class MotionProfile {
         // Determine the direction of travel.
         double signum = profileSignum(vEffEntry, vEffExit); 
 
-        // Compute the profile with signed vMax first, this will give us the first indications and may directly solve unconstrained profiles. 
+        // Compute the profile with directional vMax first, this will give us the first indications and may directly solve unconstrained long moves. 
         computeProfile(signum*vMax, vEffEntry, vEffExit, tMin);
-        // Immediately return right here if this is a valid solution (this happens if it is a very long move and it reaches vMax).
+
+        // Immediately return right here if this is a valid solution (this happens if it is a very long move that reaches vMax).
         if (tMin == 0 && t[4] >= 0 && v[0] == v[segments] && a[0] == 0 && a[segments] == 0) {
             trace("Vmax symmetrical move, immediate solution");
             return true;
@@ -580,9 +596,9 @@ public class MotionProfile {
                 double s3 = ((halfProfile ? (s[4] + s[3])*0.5 : s[4]) - s[1]);
                 // We just trust the (just in time) compiler to eliminate common sub-expressions.
                 vInitialGuess = -1./6*(3*Math.pow(a[1], 2) 
-                        - 2*Math.sqrt(3*Math.pow(a[1], 4) + 18*a[1]*Math.pow(j[1], 2)*s3 + 9*Math.pow(j[1], 2)*Math.pow(v[1], 2)))/j[1];
+                        - 2*Math.sqrt(3*Math.pow(a[1], 4) + 18*a[1]*Math.pow(j[0], 2)*s3 + 9*Math.pow(j[0], 2)*Math.pow(v[1], 2)))/j[0];
                 double v3_2 = -1./6*(3*Math.pow(a[1], 2) 
-                        + 2*Math.sqrt(3*Math.pow(a[1], 4) + 18*a[1]*Math.pow(j[1], 2)*s3 + 9*Math.pow(j[1], 2)*Math.pow(v[1], 2)))/j[1];
+                        + 2*Math.sqrt(3*Math.pow(a[1], 4) + 18*a[1]*Math.pow(j[0], 2)*s3 + 9*Math.pow(j[0], 2)*Math.pow(v[1], 2)))/j[0];
                 trace("Analytical solution with constant acceleration segment (1) = "+vInitialGuess+" (2) = "+v3_2);
             }
             else if (t[5] > (-t[4]*0.25)) { 
@@ -590,9 +606,9 @@ public class MotionProfile {
                 double s4 = (s[6] - (halfProfile ? (s[4] + s[3])*0.5 : s[3]));
                 // We just trust the (just in time) compiler to eliminate common sub-expressions.
                 vInitialGuess = (-1./6*(3*Math.pow(a[6], 2) 
-                        - 2*Math.sqrt(3*Math.pow(a[6], 4) - 18*a[6]*Math.pow(j[segments], 2)*s4 + 9*Math.pow(j[segments], 2)*Math.pow(v[6], 2)))/j[segments]);
+                        - 2*Math.sqrt(3*Math.pow(a[6], 4) - 18*a[6]*Math.pow(j[6], 2)*s4 + 9*Math.pow(j[6], 2)*Math.pow(v[6], 2)))/j[6]);
                 double v3_2 = (-1./6*(3*Math.pow(a[6], 2) 
-                        + 2*Math.sqrt(3*Math.pow(a[6], 4) - 18*a[6]*Math.pow(j[segments], 2)*s4 + 9*Math.pow(j[segments], 2)*Math.pow(v[6], 2)))/j[segments]);
+                        + 2*Math.sqrt(3*Math.pow(a[6], 4) - 18*a[6]*Math.pow(j[6], 2)*s4 + 9*Math.pow(j[6], 2)*Math.pow(v[6], 2)))/j[6]);
                 trace("Analytical solution with constant deceleration segment (1) = "+vInitialGuess+" (2) = "+v3_2);
             }
             if (Double.isFinite(vInitialGuess) && Math.abs(vInitialGuess) > 0 && Math.abs(vInitialGuess) <= vMax) {
@@ -1691,6 +1707,7 @@ public class MotionProfile {
             // Extract a partial profile. 
             double v0 = solvedProfile.getMomentaryVelocity(t0);
             double a0 = solvedProfile.getMomentaryAcceleration(t0);
+            double j0 = solvedProfile.getMomentaryJerk(t0);
             double v7 = solvedProfile.getMomentaryVelocity(t7);
             double a7 = solvedProfile.getMomentaryAcceleration(t7);
             double j7 = solvedProfile.getMomentaryJerk(t7);
@@ -1704,7 +1721,7 @@ public class MotionProfile {
                     s[seg] = s[0];
                     v[seg] = v0;
                     a[seg] = a0;
-                    j[seg] = 0;
+                    j[seg] = j0;
                     t[seg] = 0;
                     if (seg == 4) {
                         tEntrySlack += solvedProfile.t[seg];
@@ -1717,7 +1734,7 @@ public class MotionProfile {
                     a[seg] = a7;
                     // The beginning of the segment may overlap.
                     t[seg] = Math.max(0, t7 - tSeg);
-                    j[seg] = t[seg] > 0 ? j7 : 0;
+                    j[seg] = 0;
                     if (seg == 4) {
                         tExitSlack += solvedProfile.t[seg] - t[seg];
                     }
@@ -1858,107 +1875,149 @@ public class MotionProfile {
         if (signumExit == 0) {
             signumExit = signumEntry;
         }
-
-        if (!hasOption(ProfileOption.UnconstrainedEntry)) {
-            // Need to determine, if this profile has a constant acceleration segment or not. The latter happens
-            // if the velocity is too low to reach the acceleration limit. In this case the profile will switch 
-            // directly from positive to negative jerk, a.k.a. "S-curve" and it will not reach aMax.   
-            // In order to calculate this, we need to get rid of entry/exit acceleration.
-
-            // On entry: pretend to accelerate from a = 0, move t[1] backward/forward in time.
-            double j1 = signumEntry*jMax;
-            double t0early = a[0]/j1;
-            // What is the velocity at that point?
-            double v0early = v[0] - a[0]*t0early + 1./2*j1*Math.pow(t0early, 2);
-            // Half time to reach velocity with S-curve
-            double t1 = Math.sqrt(Math.max(0, (vPeak - v0early)/j1));
-            // Acceleration at S-Curve inflection point.
-            double a1 = t1*j1;
-            // If the acceleration is smaller than the limit, we have an S-curve.
-            double aMaxEntry = this.aMaxEntry;
-            if (Math.abs(a1) < aMaxEntry) {
-                // This is an S curve. 
-                aMaxEntry = Math.abs(a1);
-            }
-
-
-            // Phase 1: Jerk to acceleration.
-            j[1] = j1;
-            t[1] = Math.max(0, signumEntry*aMaxEntry/j[1] - t0early); // can be cropped by tearly
-            a[1] = a[0] + j[1]*t[1];
-            s[1] = s[0] + v[0]*t[1] + 1./2*a[0]*Math.pow(t[1], 2) + 1./6*j[1]*Math.pow(t[1], 3); 
-            v[1] = v[0] + a[0]*t[1]+ 1./2*j[1]*Math.pow(t[1], 2);
-
-            // Phase 2: Constant acceleration. 
-            a[2] = a[1];
+        
+        if (isConstantAcceleration()) {
+            // Use a simple constant acceleration profile.
+            j[0] = 0;
+            // Acceleration jumps right up so we need to change a[0]
+            a[0] = signumEntry*aMaxEntry;
+            double tAccelEntry = (vPeak - v[0])/a[0];
+            t[1] = tAccelEntry*0.5;
+            v[1] = v[0] + a[0]*t[1];
+            s[1] = s[0] + v[0]*t[1] + 1./2*a[0]*Math.pow(t[1], 2); 
+            
+            t[2] = 0;
             j[2] = 0;
-            j[3] = -j1;              // Phase 3 look-ahead
-            t[3] = (0 - a[2])/j[3];  // Phase 3 look-ahead
-            v[2] = vPeak + 1./2*j[3]*Math.pow(t[3], 2);
-            t[2] = (a[2] == 0 ? 0.0 : (v[2] - v[1])/a[2]);
-            s[2] =  s[1] + v[1]*t[2] + 1./2*a[1]*Math.pow(t[2], 2);
-
-            // Phase 3: Negative jerk to constant velocity/zero acceleration.
+            a[1] = a[0];
+            v[2] = v[1];
+            s[2] = s[1];
+            
+            t[3] = tAccelEntry*0.5;
+            j[3] = 0;
+            a[2] = a[1];
             v[3] = vPeak;
+            s[3] = s[2] + v[2]*t[1] + 1./2*a[2]*Math.pow(t[1], 2); 
             a[3] = 0;
-            s[3] = s[2] + v[2]*t[3] + 1./2*a[2]*Math.pow(t[3], 2) + 1./6*j[3]*Math.pow(t[3], 3); 
-
-        }
-
-        // Phase 4: Constant velocity
-        j[4] = 0;
-        // s and t ... needs to be postponed
-
-        if (!hasOption(ProfileOption.UnconstrainedExit)) {
+            
+            // Reverse exit ramp.
+            j[6] = 0;
+            a[6] = -signumExit*aMaxExit;
+            double tAccelExit = (v[7] - vPeak)/a[6];
+            t[7] = tAccelExit*0.5;
+            v[6] = v[7] - a[6]*t[7];
+            s[6] = s[7] - v[7]*t[7] + 1./2*a[6]*Math.pow(t[7], 2); 
+            
+            t[6] = 0;
+            j[5] = 0;
+            a[5] = a[6];
+            v[5] = v[6];
+            s[5] = s[6];
+            
+            t[5] = tAccelExit*0.5;
+            j[4] = 0;
+            a[4] = a[5];
             v[4] = vPeak;
-            a[4] = 0;
+            s[4] = s[5] - v[5]*t[5] + 1./2*a[4]*Math.pow(t[5], 2);
+        }
+        else {
+            // 3rd order profile.
+            if (!hasOption(ProfileOption.UnconstrainedEntry)) {
+                // Need to determine, if this profile has a constant acceleration segment or not. The latter happens
+                // if the velocity is too low to reach the acceleration limit. In this case the profile will switch 
+                // directly from positive to negative jerk, a.k.a. "S-curve" and it will not reach aMax.   
+                // In order to calculate this, we need to get rid of entry/exit acceleration.
 
-            // Need to determine, if this profile has a constant acceleration segment or not (see analogous above). 
-            // On exit: pretend to decelerate to a = 0, move t[7] forward/backward in time.
-            double j7 = signumExit*jMax;
-            double t7late = -a[7]/j7;
-            // What is the velocity at that point?
-            double v7late = v[7] + a[7]*t7late + 1./2*j7*Math.pow(t7late, 2);
-            // Half time to reach velocity with S-curve
-            double t6 = Math.sqrt(Math.max(0, (vPeak - v7late)/j7));
-            // Acceleration at S-Curve inflection point.
-            double a6 = -t6*j7;
-            // If the acceleration is smaller than the limit, we have an S-curve.
-            double aMaxExit = this.aMaxExit;
-            if (Math.abs(a6) < aMaxExit) {
-                // This is an S curve. 
-                aMaxExit = Math.abs(a6);
+                // On entry: pretend to accelerate from a = 0, move t[1] backward/forward in time.
+                double j0 = signumEntry*jMax;
+                double t0early = a[0]/j0;
+                // What is the velocity at that point?
+                double v0early = v[0] - a[0]*t0early + 1./2*j0*Math.pow(t0early, 2);
+                // Half time to reach velocity with S-curve
+                double t1 = Math.sqrt(Math.max(0, (vPeak - v0early)/j0));
+                // Acceleration at S-Curve inflection point.
+                double a1 = t1*j0;
+                // If the acceleration is smaller than the limit, we have an S-curve.
+                double aMaxEntry = this.aMaxEntry;
+                if (Math.abs(a1) < aMaxEntry) {
+                    // This is an S curve. 
+                    aMaxEntry = Math.abs(a1);
+                }
+
+                // Phase 1: Jerk to acceleration.
+                j[0] = j0;
+                t[1] = Math.max(0, signumEntry*aMaxEntry/j0 - t0early); // can be cropped by tearly
+                a[1] = a[0] + j[0]*t[1];
+                s[1] = s[0] + v[0]*t[1] + 1./2*a[0]*Math.pow(t[1], 2) + 1./6*j[0]*Math.pow(t[1], 3); 
+                v[1] = v[0] + a[0]*t[1]+ 1./2*j[0]*Math.pow(t[1], 2);
+
+                // Phase 2: Constant acceleration. 
+                a[2] = a[1];
+                j[1] = 0;
+                j[2] = -j0;              // Phase 3 look-ahead
+                t[3] = (0 - a[2])/j[2];  // Phase 3 look-ahead
+                v[2] = vPeak + 1./2*j[2]*Math.pow(t[3], 2);
+                t[2] = (a[2] == 0 ? 0.0 : (v[2] - v[1])/a[2]);
+                s[2] =  s[1] + v[1]*t[2] + 1./2*a[1]*Math.pow(t[2], 2);
+
+                // Phase 3: Negative jerk to constant velocity/zero acceleration.
+                v[3] = vPeak;
+                a[3] = 0;
+                s[3] = s[2] + v[2]*t[3] + 1./2*a[2]*Math.pow(t[3], 2) + 1./6*j[2]*Math.pow(t[3], 3); 
+
             }
 
-            // Phase 5: Negative jerk to deceleration.
-            j[5] = -j7;
+            // Phase 4: Constant velocity
+            j[3] = 0;
+            // s and t ... needs to be postponed
 
-            j[7] = j7;                  // Phase 7 look-ahead
-            t[7] = Math.max(0, signumExit*aMaxExit/j[7] - t7late); // can be cropped by tlate
-            a[6] = a[7] - j[7]*t[7];    // Phase 6 look-ahead
+            if (!hasOption(ProfileOption.UnconstrainedExit)) {
+                v[4] = vPeak;
+                a[4] = 0;
 
-            a[5] = a[6];
-            t[5] = a[5]/j[5];
-            v[5] = v[4] + 1./2*j[5]*Math.pow(t[5], 2);
-            // s ... needs to be postponed
+                // Need to determine, if this profile has a constant acceleration segment or not (see analogous above). 
+                // On exit: pretend to decelerate to a = 0, move t[7] forward/backward in time.
+                double j6 = signumExit*jMax;
+                double t7late = -a[7]/j6;
+                // What is the velocity at that point?
+                double v7late = v[7] + a[7]*t7late + 1./2*j6*Math.pow(t7late, 2);
+                // Half time to reach velocity with S-curve
+                double t6 = Math.sqrt(Math.max(0, (vPeak - v7late)/j6));
+                // Acceleration at S-Curve inflection point.
+                double a6 = -t6*j6;
+                // If the acceleration is smaller than the limit, we have an S-curve.
+                double aMaxExit = this.aMaxExit;
+                if (Math.abs(a6) < aMaxExit) {
+                    // This is an S curve. 
+                    aMaxExit = Math.abs(a6);
+                }
 
-            // Phase 6: Constant deceleration. 
-            j[6] = 0;
-            v[6] = v[7] - a[7]*t[7] + 1./2*j[7]*Math.pow(t[7], 2);  
-            t[6] = (a[6] == 0 ? 0.0 : (v[6] - v[5])/a[6]);
-            // s ... needs to be postponed
+                // Phase 5: Negative jerk to deceleration.
+                j[4] = -j6;
 
-            // Phase 7: Jerk to exit acceleration.
-            // ... already looked ahead.
+                j[6] = j6;                  // Phase 7 look-ahead
+                t[7] = Math.max(0, signumExit*aMaxExit/j[6] - t7late); // can be cropped by tlate
+                a[6] = a[7] - j[6]*t[7];    // Phase 6 look-ahead
 
-            // reverse s calculation
-            s[6] = s[7] - v[7]*t[7] + 1./2*a[7]*Math.pow(t[7], 2) - 1./6*j[7]*Math.pow(t[7], 3); 
-            s[5] = s[6] - v[6]*t[6] + 1./2*a[6]*Math.pow(t[6], 2); 
-            s[4] = s[5] - v[5]*t[5] + 1./2*a[5]*Math.pow(t[5], 2) - 1./6*j[5]*Math.pow(t[5], 3);
+                a[5] = a[6];
+                t[5] = a[5]/j[4];
+                v[5] = v[4] + 1./2*j[4]*Math.pow(t[5], 2);
+                // s ... needs to be postponed
 
+                // Phase 6: Constant deceleration. 
+                j[5] = 0;
+                v[6] = v[7] - a[7]*t[7] + 1./2*j[6]*Math.pow(t[7], 2);  
+                t[6] = (a[6] == 0 ? 0.0 : (v[6] - v[5])/a[6]);
+                // s ... needs to be postponed
+
+                // Phase 7: Jerk to exit acceleration.
+                // ... already looked ahead.
+
+                // reverse s calculation
+                s[6] = s[7] - v[7]*t[7] + 1./2*a[7]*Math.pow(t[7], 2) - 1./6*j[6]*Math.pow(t[7], 3); 
+                s[5] = s[6] - v[6]*t[6] + 1./2*a[6]*Math.pow(t[6], 2); 
+                s[4] = s[5] - v[5]*t[5] + 1./2*a[5]*Math.pow(t[5], 2) - 1./6*j[4]*Math.pow(t[5], 3);
+            }
         }
-
-
         // Unconstrained half-sided profile, i.e. it will accelerate towards the opposite location
         // and cruise freely through it, only constrained by distance.
         if (hasOption(ProfileOption.UnconstrainedEntry)) {
@@ -1983,12 +2042,14 @@ public class MotionProfile {
 
             v[0] = v[4];
             a[0] = 0;
+            j[0] = 0;
         }
         if (hasOption(ProfileOption.UnconstrainedExit)) {
 
             s[4] = s[7];
             v[4] = v[3];
             a[4] = 0;
+            j[4] = 0;
 
             s[5] = s[7];
             v[5] = v[3];
@@ -2007,7 +2068,6 @@ public class MotionProfile {
             j[7] = 0;
             t[7] = 0;
         }
-
         computeTime(tMin);
         computeBounds();
         eval++;
@@ -2078,7 +2138,7 @@ public class MotionProfile {
 
     protected Double getSegmentCrossingTime(double sCross, double tSeg, int i, boolean forward) {
         double ti = t[i];
-        double j = this.j[i];
+        double j = this.j[i-1];
 
         if (Math.abs(s[i-1] - sCross) < eps) {
             // Match, make sure to return the exactly 0.0, if first segment. 
@@ -2248,13 +2308,13 @@ public class MotionProfile {
         double tSeg = 0;
         for (int i = 1; i <= segments; i++) {
             // Find the velocity crossing zero, that my be an extreme for s.
-            if (j[i] != 0) {
+            if (j[i-1] != 0) {
                 // 3rd order segment.
-                double dt = Math.sqrt(Math.pow(a[i-1], 2) - 2*v[i-1]*j[i]);
-                for (double tCross : new double[] { -(a[i-1] + dt)/j[i], -(a[i-1] - dt)/j[i] }) { 
+                double dt = Math.sqrt(Math.pow(a[i-1], 2) - 2*v[i-1]*j[i-1]);
+                for (double tCross : new double[] { -(a[i-1] + dt)/j[i-1], -(a[i-1] - dt)/j[i-1] }) { 
                     if (tCross >= 0 && tCross <= t[i]) {
                         // Zero-crossing inside the period, maybe an extreme.
-                        double sExtreme = s[i-1] + v[i-1]*tCross + 1./2*a[i-1]*Math.pow(tCross, 2) + 1./6*j[i]*Math.pow(tCross, 3);
+                        double sExtreme = s[i-1] + v[i-1]*tCross + 1./2*a[i-1]*Math.pow(tCross, 2) + 1./6*j[i-1]*Math.pow(tCross, 3);
                         if (sExtreme < sBound0) {
                             sBound0 = sExtreme;
                             tBound0 = tSeg + tCross;
@@ -2291,6 +2351,9 @@ public class MotionProfile {
         if (hasOption(ProfileOption.UnconstrainedEntry)) {
             return 0.0;
         }
+        else if (isConstantAcceleration()) {
+            return v[0];
+        }
         else {
             double jEntry = (a[0] == 0 ? 1.0 : -Math.signum(a[0]))*jMax;
             double tEntry = -a[0]/jEntry;  
@@ -2302,6 +2365,9 @@ public class MotionProfile {
     public double getEffectiveExitVelocity(double jMax) {
         if (hasOption(ProfileOption.UnconstrainedExit)) {
             return 0.0;
+        }
+        else if (isConstantAcceleration()) {
+            return v[segments];
         }
         else {
             double jExit = (a[segments] == 0 ? 1.0 : Math.signum(a[segments]))*jMax;

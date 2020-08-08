@@ -102,7 +102,7 @@ public class SimulationModeMachine extends ReferenceMachine {
         }
     }
     @Attribute(required = false)
-    private SimulationMode simulationMode = SimulationMode.IdealMachine;
+    private SimulationMode simulationMode = SimulationMode.Off;
 
     /**
      * The simulated non-squareness is applied to what the simulated cameras see.
@@ -383,8 +383,19 @@ public class SimulationModeMachine extends ReferenceMachine {
         Location location = hm.getLocation().convertToUnits(AxesLocation.getUnits()); 
         // Try to get a simulated physical location.
         SimulationModeMachine machine = getSimulationModeMachine();
-        if (machine != null 
-                && machine.getSimulationMode() != SimulationMode.Off) {
+        if (machine == null || machine.getSimulationMode() == SimulationMode.Off) {
+            // Not a simulation machine. Just take the nominal location.
+            double cameraTime = NanosecondTime.getRuntimeSeconds();
+            Motion momentary = ((ReferenceMachine) Configuration.get()
+                    .getMachine()).getMotionPlanner()
+                    .getMomentaryMotion(cameraTime);
+            AxesLocation axesLocation = momentary.getMomentaryLocation(cameraTime - momentary.getPlannedTime0());
+            // NOTE this specifically makes the assumption that the axes transform from raw 1:1
+            location = hm.toTransformed(axesLocation);
+            // Transform back. This bypasses any compensations, such as runout compensation.
+            location = hm.toHeadMountableLocation(location);
+        } 
+        else {
             double lag = 0;
             if (looking != null
                     && machine.getSimulationMode().isDynamicallyImperfectMachine()) {
@@ -449,8 +460,8 @@ public class SimulationModeMachine extends ReferenceMachine {
                     double runout = machine.getSimulatedRunout()
                             .convertToUnits(AxesLocation.getUnits()).getValue();
                     // Note, positive  phase shift is the positive shift of the curve which means the angle is subtracted,
-                    // see https://en.wikipedia.org/wiki/Phase_(waves)#General_definition  
-                    // ReferenceNozzleTipCalibration.ModelBasedRunoutCompensation.getRunout(double)
+                    // see: https://en.wikipedia.org/wiki/Phase_(waves)#General_definition  
+                    //      ReferenceNozzleTipCalibration.ModelBasedRunoutCompensation.getRunout(double)
                     double rotation = axesLocation.getCoordinate(mappedAxes.getAxis(Axis.Type.Rotation));
                     Location runoutVector = new Location(AxesLocation.getUnits(),
                             runout, 0, 0, 0)

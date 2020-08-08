@@ -145,22 +145,34 @@ public class AdvancedMotionTest {
                 profile.getTimeMin(), profile.getTimeMax(), 
                 profile.getOptions());
 
+        MotionProfile profileConstantAcc = new MotionProfile(
+                profile.getLocation(0), profile.getLocation(MotionProfile.segments), 
+                profile.getVelocity(0), profile.getVelocity(MotionProfile.segments),  
+                0, 0,
+                profile.getLocationMin(), profile.getLocationMax(),
+                profile.getVelocityMax(), 
+                profile.getEntryAccelerationMax(), 
+                profile.getExitAccelerationMax(),
+                0,
+                profile.getTimeMin(), profile.getTimeMax(), 
+                profile.getOptions());
+
+        testProfileCase(message, profile, expectedError);
+        testProfileCase(message+" (reverse)", profileRev, expectedError);
+        testProfileCase(message+" (constant aceleration)", profileConstantAcc, expectedError);
+        System.out.println(" ");
+    }
+
+    public void testProfileCase(String message, MotionProfile profile, ErrorState expectedError)
+            throws Exception {
         MotionProfile.ErrorState error;
         System.out.println(message);
         profile.solve();
         System.out.println(profile);
         error = profile.checkValidity();
-        if (error != expectedError) {
+        if (error != null && error != expectedError) {
             throw new Exception(message+" has error "+error);
         }
-        // To make sure we got all the signs right, test the reverse.
-        profileRev.solve();
-        System.out.println(profileRev+" (reverse)");
-        error = profileRev.checkValidity();
-        if (error != expectedError) {
-            throw new Exception(message+" (reverse) has error: "+error);
-        }
-        System.out.println(" ");
     }
 
 //  TODO: ADVANCED MOTION PLANNER 

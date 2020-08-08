@@ -140,10 +140,10 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
         Logger.debug("actuate({}, {})", actuator, on);
         checkEnabled();
-        
+
         SimulationModeMachine.simulateActuate(actuator, on, feedRateMmPerMinute > 0);
     }
-    
+
     @Override
     public void actuate(ReferenceActuator actuator, String value) throws Exception {
         Logger.debug("actuate({}, {})", actuator, value);
@@ -152,7 +152,7 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
             Thread.sleep(10);
         }
     }
-    
+
     @Override
     public String actuatorRead(ReferenceActuator actuator) throws Exception {
         return Math.random() + "";
@@ -222,10 +222,10 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
                 }
                 // Migrate the feedrate to the axes but change to mm/s.
                 ((ReferenceControllerAxis) axis).setFeedratePerSecond(new Length(feedRateMmPerMinute/60.0, getUnits()));
-                // Assume 0.5s average acceleration to reach top speed. With jerk control that is 4 x feedrate/s.
-                ((ReferenceControllerAxis) axis).setAccelerationPerSecond2(new Length(feedRateMmPerMinute*4/60.0, getUnits()));
-                // Assume full time +1/-1 jerk time.
-                ((ReferenceControllerAxis) axis).setJerkPerSecond3(new Length(feedRateMmPerMinute*8/60.0, getUnits()));
+                // Assume 0.5s average acceleration to reach top speed. v = a*t => a = v/t
+                ((ReferenceControllerAxis) axis).setAccelerationPerSecond2(new Length(feedRateMmPerMinute/60/0.5, getUnits()));
+                // Switch off jerk by default.
+                ((ReferenceControllerAxis) axis).setJerkPerSecond3(new Length(0, getUnits()));
             }
         }
         ReferenceHead head = (ReferenceHead) machine.getDefaultHead();
