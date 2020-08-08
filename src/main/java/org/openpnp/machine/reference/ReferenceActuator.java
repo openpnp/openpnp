@@ -44,7 +44,7 @@ import org.simpleframework.xml.Element;
 
 public class ReferenceActuator extends AbstractActuator implements ReferenceHeadMountable {
 
-    
+
     @Element
     private Location headOffsets = new Location(LengthUnit.Millimeters);
 

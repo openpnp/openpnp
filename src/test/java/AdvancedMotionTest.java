@@ -1,5 +1,9 @@
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
 import org.openpnp.model.MotionProfile;
+import org.openpnp.model.MotionProfile.ErrorState;
 import org.openpnp.model.MotionProfile.ProfileOption;
 import org.pmw.tinylog.Logger;
 
@@ -13,115 +17,110 @@ public class AdvancedMotionTest {
         profile = new MotionProfile(
                 0, 600, 0, 0, 0, 0,
                 0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, 0);
-        testProfile("Long move from/to still-stand", profile);
+        testProfile("Long move from/to still-stand", profile, null);
         // Short move from/to still-stand
         profile = new MotionProfile(
                 0, 200, 0, 0, 0, 0,
                 0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, 0);
-        testProfile("Short move from/to still-stand", profile);
+        testProfile("Short move from/to still-stand", profile, null);
         // Low feed-rate from/to still-stand
         profile = new MotionProfile(
                 0, 200, 0, 0, 0, 0,
                 0, 1000, 100, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, 0);
-        testProfile("Low feed-rate from/to still-stand", profile);
+        testProfile("Low feed-rate from/to still-stand", profile, null);
         // Tiny move from/to still-stand
         profile = new MotionProfile(
                 0, 10, 0, 0, 0, 0,
                 0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, 0);
-        testProfile("Tiny move from/to still-stand", profile);
+        testProfile("Tiny move from/to still-stand", profile, null);
         // Micro move from/to still-stand
         profile = new MotionProfile(
                 0, 0.0001, 0, 0, 0, 0,
                 0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, 0);
-        testProfile("Micro move from/to still-stand", profile);
+        testProfile("Micro move from/to still-stand", profile, null);
         // Short move with unconstrained exit 
         profile = new MotionProfile(
                 0, 100, 0, 0, 0, 0,
                 0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, ProfileOption.UnconstrainedExit.flag());
-        testProfile("Short move with unconstrained exit", profile);
+        testProfile("Short move with unconstrained exit", profile, null);
         // Short move with unconstrained entry 
         profile = new MotionProfile(
                 0, 100, 0, 0, 0, 0,
                 0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, ProfileOption.UnconstrainedEntry.flag());
-        testProfile("Short move with unconstrained entry", profile);
+        testProfile("Short move with unconstrained entry", profile, null);
         // Tiny move with unconstrained exit 
         profile = new MotionProfile(
                 0, 10, 0, 0, 0, 0,
                 0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, ProfileOption.UnconstrainedExit.flag());
-        testProfile("Tiny move with unconstrained exit", profile);
+        testProfile("Tiny move with unconstrained exit", profile, null);
         // Tiny move with unconstrained entry 
         profile = new MotionProfile(
                 0, 10, 0, 0, 0, 0,
                 0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, ProfileOption.UnconstrainedEntry.flag());
-        testProfile("Tiny move with unconstrained entry", profile);
+        testProfile("Tiny move with unconstrained entry", profile, null);
         // Move with entry/exit velocity
         profile = new MotionProfile(
                 0, 100, 700, 700, 0, 0,
                 0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, 0);
-        testProfile("Move with max entry/exit velocity", profile);
+        testProfile("Move with max entry/exit velocity", profile, null);
         // Move with lower entry/exit velocity
         profile = new MotionProfile(
                 0, 100, 200, 200, 0, 0,
                 0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, 0);
-        testProfile("Move with lower entry/exit velocity", profile);
+        testProfile("Move with lower entry/exit velocity", profile, null);
         // Move with entry/exit velocity and min time
         profile = new MotionProfile(
                 0, 400, 500, 300, 0, 0,
                 0, 1000, 700, 2000, 2000, 15000, 2, Double.POSITIVE_INFINITY, 0);
-        testProfile("Move with entry/exit velocity and min time", profile);
-        // Move with entry/exit velocity/acceleration
+        testProfile("Move with entry/exit velocity and min time", profile, null);
+        // Move with entry/exit velocity/acceleration (expect MaxVelocityViolated)
         profile = new MotionProfile(
                 0, 400, 700, -700, 2000, 2000,
                 0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, 0);
-        testProfile("Move with entry/exit velocity/acceleration", profile);
+        testProfile("Move with entry/exit velocity/acceleration", profile, MotionProfile.ErrorState.MaxVelocityViolated);
         // Null moves
         profile = new MotionProfile(
                 0, 0, 0, 0, 0, 0,
                 0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, 0);
-        testProfile("Still-stand", profile);
+        testProfile("Still-stand", profile, null);
         profile = new MotionProfile(
                 0, 0, 0, 0, 0, 0,
                 0, 1000, 700, 2000, 2000, 15000, 4.0, Double.POSITIVE_INFINITY, 0);
-        testProfile("Still-stand with min-time", profile);
+        testProfile("Still-stand with min-time", profile, null);
         profile = new MotionProfile(
                 0, 0, 700, 700, 2000, 2000,
                 0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, 0);
-        testProfile("Zero displacement move with entry/exit velocity/acceleration", profile);
+        testProfile("Zero displacement move with entry/exit velocity/acceleration", profile, null);
 
         // Pure overshoot
         profile = new MotionProfile(
                 0, 0, 700, -700, 2000, 2000,
                 0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, 0);
-        testProfile("Overshoot", profile);
+        testProfile("Overshoot", profile, null);
         // moveToLoactionAtSafeZ() with min time (given by other axes move time) 
         profile = new MotionProfile(
                 0, 0, 700, -700, 2000, 2000,
                 0, 1000, 700, 2000, 2000, 15000, 4.0, Double.POSITIVE_INFINITY, 0);
-        testProfile("Z axis in moveToLoactionAtSafeZ() with min time", profile);
-        // Twisted curve
+        testProfile("Z axis in moveToLoactionAtSafeZ() with min time", profile, null);
+        // Twisted curve (expect MinLocationViolated)
         profile = new MotionProfile(
                 0, 0, 500, 500, 0, 0,
                 0, 1000, 700, 2000, 2000, 15000, 4.0, Double.POSITIVE_INFINITY, 0);
-        testProfile("Twisted curve (min-time)", profile);
-        // Twisted curve with delta
+        testProfile("Twisted curve (min-time)", profile, MotionProfile.ErrorState.MinLocationViolated);
+        // Twisted curve with delta  (expect MinLocationViolated)
         profile = new MotionProfile(
                 0, 10, 500, 500, 0, 0,
                 0, 1000, 700, 2000, 2000, 15000, 4.0, Double.POSITIVE_INFINITY, 0);
-        testProfile("Twisted curve (min-time) with delta", profile);
-
-        // Impossible move?.
-        profile = new MotionProfile(
-                20, 0, 0, -181/*-181.71043395996094*/, 0, 0,
-                0, 1000, 700, 2000, 2000, 15000, 0.277342, Double.POSITIVE_INFINITY, 0);
-        testProfile("Impossible move?", profile);
+        testProfile("Twisted curve (min-time) with delta", profile, MotionProfile.ErrorState.MinLocationViolated);
 
         // Complex move with min-time
         profile = new MotionProfile(
                 0, 400, 0, -20, 0, -100,
                 0, 1000, 700, 2000, 2000, 15000, 4.0, Double.POSITIVE_INFINITY, 0);
-        testProfile("Complex move with min-time", profile);
+        testProfile("Complex move with min-time", profile, null);
 
         // Recalc a new profile with the solution params (but no min-time) to check if it results in the same profile. 
+        // TODO: compare as a Unit Test (now only human tested).
         MotionProfile profile2 = new MotionProfile(
                 0, 400, 0, -20, 0, -100,
                 0, 1000, 
@@ -130,20 +129,10 @@ public class AdvancedMotionTest {
                 profile.getProfileExitAcceleration(),
                 profile.getProfileJerk(),
                 0.0, Double.POSITIVE_INFINITY, 0);
-        testProfile("recheck solution", profile2);
-
-//        for (int s = -1; s <= 401; s++) {
-//            Double tf = profile.getForwardCrossingTime(s, true);
-//            Double tb = profile.getBackwardCrossingTime(s, true);
-//            System.out.println("t cross "+s+" t fw = "+tf+" tb = "+tb
-//                    +" V fw = "+(tf == null ? null : profile.getMomentaryVelocity(tf))
-//                    +" V bw = "+(tb == null ? null : profile.getMomentaryVelocity(tb))
-//                    +" s fw = "+(tf  == null ? null : profile.getMomentaryLocation(tf))
-//                    +" s bw = "+(tb == null ? null : profile.getMomentaryLocation(tb)));
-//        }
+        testProfile("recheck solution", profile2, null);
     }
 
-    private void testProfile(String message, MotionProfile profile) {
+    private void testProfile(String message, MotionProfile profile, ErrorState expectedError) throws Exception {
         MotionProfile profileRev = new MotionProfile(
                 profile.getLocation(MotionProfile.segments), profile.getLocation(0), 
                 -profile.getVelocity(MotionProfile.segments), -profile.getVelocity(0), 
@@ -161,23 +150,24 @@ public class AdvancedMotionTest {
         profile.solve();
         System.out.println(profile);
         error = profile.checkValidity();
-        if (error != null) {
-            Logger.error(message+" has error "+error);
+        if (error != expectedError) {
+            throw new Exception(message+" has error "+error);
         }
         // To make sure we got all the signs right, test the reverse.
         profileRev.solve();
         System.out.println(profileRev+" (reverse)");
         error = profileRev.checkValidity();
-        if (error != null) {
-            Logger.error(message+" (reverse) has error: "+error);
+        if (error != expectedError) {
+            throw new Exception(message+" (reverse) has error: "+error);
         }
         System.out.println(" ");
     }
 
 //  TODO: ADVANCED MOTION PLANNER 
+
 //    @Test 
 //    public void testMotionPaths() throws Exception {
-//        for (int warmup = 0; warmup < 1; warmup++) {
+//        for (int warmup = 0; warmup < 4; warmup++) {
 //            path = new ArrayList<>();
 //            moveTo(0, 0, safeZ);
 //            // pick & place
@@ -206,7 +196,6 @@ public class AdvancedMotionTest {
 //            moveTo(300, 150, -15);
 //            moveTo(280, 150, -15);
 //            moveTo(279, 150, -15);
-//            //moveTo(279, 150, -15);
 //            moveTo(275, 150, -15);
 //            moveTo(275, 150, safeZ);
 //    

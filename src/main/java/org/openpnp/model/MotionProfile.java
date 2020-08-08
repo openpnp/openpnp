@@ -1642,7 +1642,7 @@ public class MotionProfile {
         //            validateProfiles(profiles);
         //        }
 
-        if (traceEnabled) {
+        if (svgEnabled) {
             pathToSvg(path);
         }
     }

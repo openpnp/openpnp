@@ -451,8 +451,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             throws Exception {
         AxesLocation location = motion.getLocation1();
         double feedRate = motion.getFeedRatePerMinute(this);
-        double acceleration = motion.getFeedRatePerMinute(this);
-        double jerk = motion.getFeedRatePerMinute(this);
+        double acceleration = motion.getAccelerationPerSecond2(this);
+        double jerk = motion.getJerkPerSecond3(this);
           
         // Start composing the command, will decide later, whether we actually send it.
         String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
