@@ -35,6 +35,7 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.VisionProvider;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.SimpleGraph;
@@ -671,6 +672,14 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         }
         catch (Exception e) {
             Logger.warn(e);
+        }
+        
+        // Make sure the camera (or its subject) stands still.
+        try {
+            waitForCompletion(CompletionType.WaitForStillstand);
+        }
+        catch (Exception e1) {
+            Logger.warn("waitForCompletion() failed. Continuing anyway.");
         }
         
         if (settleMethod == null) {

@@ -449,9 +449,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             throws Exception {
         AxesLocation location = motion.getLocation1();
         double feedRate = motion.getFeedRatePerMinute(this);
-        double acceleration = motion.getAccelerationPerSecond2(this);
-        double jerk = motion.getJerkPerSecond3(this);
-          
+        Double acceleration = motion.getAccelerationPerSecond2(this);
+        Double jerk = motion.getJerkPerSecond3(this);
+
         // Start composing the command, will decide later, whether we actually send it.
         String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
         if (command == null) {
@@ -468,10 +468,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         command = substituteVariable(command, "Id", hm.getId());
         command = substituteVariable(command, "Name", hm.getName());
         command = substituteVariable(command, "FeedRate", feedRate);
-        command = substituteVariable(command, "BacklashFeedRate", feedRate * backlashFeedRateFactor);
+        command = substituteVariable(command, "BacklashFeedRate", enableBacklash ? feedRate * backlashFeedRateFactor : feedRate);
         command = substituteVariable(command, "Acceleration", acceleration);
-        command = substituteVariable(command, "Jerk", jerk == 0 ? null : jerk);
-        
+        command = substituteVariable(command, "Jerk", jerk);
+
         // Go through all the axes and handle them.
         boolean doesMove = false;
         ReferenceMachine machine = (ReferenceMachine) hm.getHead().getMachine();
@@ -512,22 +512,22 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 command = substituteVariable(command, variable+"F", coordinate);
                 command = substituteVariable(command, variable+"L", axis.getLetter());
                 // Apply backlash offset.
-                double backlashOffset = enableBacklash ? 
+                double backlashOffset = (enableBacklash ?
                         ((ReferenceControllerAxis) axis).getBacklashOffset().convertToUnits(getUnits()).getValue()
-                        : 0.0;
-                        command = substituteVariable(command, "BacklashOffset"+variable, coordinate + backlashOffset); 
-                        command = substituteVariable(command, variable+"Decreasing", direction < 0 ? true : null);
-                        command = substituteVariable(command, variable+"Increasing", direction > 0 ? true : null);
-                        if (isSupportingPreMove() && axis instanceof ReferenceControllerAxis) {
-                            // Check for a pre-move command.
-                            String preMoveCommand = ((ReferenceControllerAxis) axis).getPreMoveCommand();
-                            if (preMoveCommand != null && !preMoveCommand.isEmpty()) {
-                                preMoveCommand = substituteVariable(preMoveCommand, "Coordinate", previousCoordinate);
-                                sendGcode(preMoveCommand);
-                            }
-                        }
-                        // Store the new driver coordinate on the axis.
-                        axis.setDriverCoordinate(coordinate);
+                        : 0);
+                command = substituteVariable(command, "BacklashOffset"+variable,  coordinate + backlashOffset); 
+                command = substituteVariable(command, variable+"Decreasing", direction < 0 ? true : null);
+                command = substituteVariable(command, variable+"Increasing", direction > 0 ? true : null);
+                if (isSupportingPreMove() && axis instanceof ReferenceControllerAxis) {
+                    // Check for a pre-move command.
+                    String preMoveCommand = ((ReferenceControllerAxis) axis).getPreMoveCommand();
+                    if (preMoveCommand != null && !preMoveCommand.isEmpty()) {
+                        preMoveCommand = substituteVariable(preMoveCommand, "Coordinate", previousCoordinate);
+                        sendGcode(preMoveCommand);
+                    }
+                }
+                // Store the new driver coordinate on the axis.
+                axis.setDriverCoordinate(coordinate);
             }
             else {
                 // Delete the unused axis variables.
@@ -625,7 +625,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         command = substituteVariable(command, "StringValue", value);
         sendGcode(command);
     }
-    
+
     private String actuatorRead(ReferenceActuator actuator, Double parameter) throws Exception {
         /**
          * The logic here is a little complicated. This is the only driver method that is
@@ -1053,8 +1053,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         AbstractCamera camera = (AbstractCamera) head.getDefaultCamera();
         Location minLocation = head.getMinLocation().subtract(camera.getHeadOffsets());
         Location maxLocation = head.getMaxLocation().subtract(camera.getHeadOffsets());
-        head.setMinLocation(null);
-        head.setMaxLocation(null);
+        double maxFeedRate = this.maxFeedRate;
         switch (axis.getType()) {
             case X:
                 axis.setBacklashOffset(new Length(backlashOffsetX, getUnits()));
@@ -1079,6 +1078,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 break;
             case Rotation:
                 axis.setBacklashOffset(new Length(backlashOffsetR, getUnits()));
+                maxFeedRate *= 10;
                 break;
         }
         axis.setDriver(this);
@@ -1255,6 +1255,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             }
             // lose them!
             subDrivers = null;
+        }
+        // Cleanup unneeded locations.
+        for (Head head : machine.getHeads()) {
+            ((AbstractHead) head).setMinLocation(null);
+            ((AbstractHead) head).setMaxLocation(null);
         }
     }
 

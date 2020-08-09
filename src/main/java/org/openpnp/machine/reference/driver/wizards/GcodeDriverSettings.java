@@ -80,7 +80,8 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         unitsCb = new JComboBox(LengthUnit.values());
         settingsPanel.add(unitsCb, "8, 2, fill, default");
         
-        JLabel lblMaxFeedRate = new JLabel("Max Feed Rate [Units/Min]");
+        JLabel lblMaxFeedRate = new JLabel("Max Feed Rate [/min]");
+        lblMaxFeedRate.setToolTipText("<html><p>Maximum tool-path feed-rate in driver units per minute. </p>\r\n<p>Set to 0 to disable and only use axis feed-rate limits. Diagonal moves will then be faster. </p>\r\n</html>");
         settingsPanel.add(lblMaxFeedRate, "6, 4, right, default");
         
         maxFeedRateTf = new JTextField();

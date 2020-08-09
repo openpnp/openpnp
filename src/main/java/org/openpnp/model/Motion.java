@@ -78,7 +78,7 @@ public class Motion {
         }
 
         public boolean isSetIn(int options) {
-            return (ordinal() & options) != 0;
+            return (flag() & options) != 0;
         }
     }
 

@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
+import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
@@ -14,6 +15,7 @@ import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Machine;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
@@ -145,6 +147,15 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     public void moveToSafeZ() throws Exception {
         moveToSafeZ(getHead().getMachine().getSpeed());
     }
+
+    @Override
+    public void waitForCompletion(CompletionType completionType) throws Exception {
+        if (getHead().getMachine().isEnabled()) {
+            ((ReferenceMachine) getHead().getMachine())
+                .getMotionPlanner().waitForCompletion(getHead() == null ? null : this, completionType);
+        }
+    }
+
 
     @Override
     public AxesLocation getMappedAxes(Machine machine) {

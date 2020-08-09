@@ -20,6 +20,7 @@
 package org.openpnp.machine.reference;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.swing.Action;
 
@@ -145,8 +146,10 @@ public class ReferenceHead extends AbstractHead {
         if (!mappedAxes.isEmpty()) {
             AxesLocation axesLocation = hm.toRaw(location);
             machine.getMotionPlanner().moveTo(hm, axesLocation, speed, options);
-            // For now just do it immediately. TODO: wait only where necessary, e.g. in vision and (perhaps) vacuum sensing.
-            machine.getMotionPlanner().waitForCompletion(hm, CompletionType.WaitForStillstand);
+            // TODO: wait only where necessary, e.g. in vision and (perhaps) vacuum sensing.
+            machine.getMotionPlanner().waitForCompletion(hm, 
+                    Arrays.asList(options).contains(MotionOption.JogMotion) ? 
+                            CompletionType.CommandJog : CompletionType.WaitForStillstand);
             machine.fireMachineHeadActivity(this);
         }
     }

@@ -120,7 +120,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
                 currentLocation, 
                 newLocation, 
                 speed,
-                0);
+                options);
         // Add to the recorded motion commands. 
         motionCommands.addLast(motionCommand);
 
@@ -313,11 +313,11 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
         if (completionType.isEnforcingStillstand()) {
             // Tell the drivers.
             waitForDriverCompletion(hm, completionType);
-            // Apply the rotation axes wrap-around handling.
-            wrapUpCoordinates();
-            // Remove old stuff.
-            clearMotionPlanOlderThan(NanosecondTime.getRuntimeSeconds() - maximumPlanHistory);
         }
+        // Apply the rotation axes wrap-around handling.
+        wrapUpCoordinates();
+        // Remove old stuff.
+        clearMotionPlanOlderThan(NanosecondTime.getRuntimeSeconds() - maximumPlanHistory);
     }
 
     /**

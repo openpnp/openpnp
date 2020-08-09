@@ -3,6 +3,7 @@ package org.openpnp.spi;
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 import org.openpnp.model.Named;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 
 public interface HeadMountable extends MovableMountable, Identifiable, Named {
     /**
@@ -48,4 +49,14 @@ public interface HeadMountable extends MovableMountable, Identifiable, Named {
      * @return
      */
     Location toHeadMountableLocation(Location location, LocationOption... options);
+
+    /**
+     * Wait for any motion of this HeadMountable to be completed according to the completionType. 
+     * If this is not mounted to any Head (e.g. the bottom camera), the wait must encompass the whole 
+     * machine, as any HeadMountable could then be the camera's subject. 
+     * 
+     * @param completionType
+     * @throws Exception
+     */
+    void waitForCompletion(CompletionType completionType) throws Exception;
 }

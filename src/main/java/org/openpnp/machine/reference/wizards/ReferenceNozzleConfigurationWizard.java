@@ -61,7 +61,6 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
     private JTextField locationZ;
     private JPanel panelOffsets;
     private JPanel panelChanger;
-    private JCheckBox chckbxLimitRotationTo;
     private JTextField textFieldSafeZ;
     private JPanel panelProperties;
     private JLabel lblName;
@@ -71,7 +70,6 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
     private JLabel lblPlaceDwellTime;
     private JTextField pickDwellTf;
     private JTextField placeDwellTf;
-    private JLabel lblLimitRota;
     private JLabel lblDynamicSafeZ;
     private JCheckBox chckbxDynamicsafez;
     private JComboBox axisX;
@@ -231,33 +229,25 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblLimitRota = new JLabel("Limit Rotation to +-180º");
-        panelChanger.add(lblLimitRota, "2, 2, right, default");
-
-        chckbxLimitRotationTo = new JCheckBox("");
-        panelChanger.add(chckbxLimitRotationTo, "4, 2");
-        
         lblPickDwellTime = new JLabel("Pick Dwell Time (ms)");
-        panelChanger.add(lblPickDwellTime, "2, 4, right, default");
+        panelChanger.add(lblPickDwellTime, "2, 2, right, default");
         
         pickDwellTf = new JTextField();
-        panelChanger.add(pickDwellTf, "4, 4, fill, default");
+        panelChanger.add(pickDwellTf, "4, 2, fill, default");
         pickDwellTf.setColumns(10);
         
         lblPlaceDwellTime = new JLabel("Place Dwell Time (ms)");
-        panelChanger.add(lblPlaceDwellTime, "2, 6, right, default");
+        panelChanger.add(lblPlaceDwellTime, "2, 4, right, default");
         
         placeDwellTf = new JTextField();
-        panelChanger.add(placeDwellTf, "4, 6, fill, default");
+        panelChanger.add(placeDwellTf, "4, 4, fill, default");
         placeDwellTf.setColumns(10);
         
         CellConstraints cc = new CellConstraints();
         lblDwellTime = new JLabel("Note: Total Dwell Time is the sum of Nozzle Dwell Time plus the Nozzle Tip Dwell Time.");
-        panelChanger.add(lblDwellTime, "2, 8, 7, 1");
+        panelChanger.add(lblDwellTime, "2, 6, 7, 1");
     }
 
     @Override
@@ -268,7 +258,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         NamedConverter<Axis> axisConverter = new NamedConverter<>(machine.getAxes()); 
 
-        addWrappedBinding(nozzle, "name", nameTf, "text");
+        addWrappedBinding(nozzle, "name", nameTf, "text"); 
 
         addWrappedBinding(nozzle, "axisX", axisX, "selectedItem", axisConverter);
         addWrappedBinding(nozzle, "axisY", axisY, "selectedItem", axisConverter);
@@ -282,7 +272,6 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         addWrappedBinding(headOffsets, "lengthZ", locationZ, "text", lengthConverter);
         addWrappedBinding(headOffsets, "rotation", locationRotation, "text", doubleConverter);
 
-        addWrappedBinding(nozzle, "limitRotation", chckbxLimitRotationTo, "selected");
         addWrappedBinding(nozzle, "enableDynamicSafeZ", chckbxDynamicsafez, "selected");
         addWrappedBinding(nozzle, "safeZ", textFieldSafeZ, "text", lengthConverter);
         addWrappedBinding(nozzle, "pickDwellMilliseconds", pickDwellTf, "text", intConverter);
