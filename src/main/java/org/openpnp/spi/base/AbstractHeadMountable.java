@@ -150,8 +150,9 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
 
     @Override
     public void waitForCompletion(CompletionType completionType) throws Exception {
-        if (getHead().getMachine().isEnabled()) {
-            ((ReferenceMachine) getHead().getMachine())
+        Machine machine = Configuration.get().getMachine();
+        if (machine.isEnabled() && machine instanceof ReferenceMachine) {
+            ((ReferenceMachine) machine)
                 .getMotionPlanner().waitForCompletion(getHead() == null ? null : this, completionType);
         }
     }

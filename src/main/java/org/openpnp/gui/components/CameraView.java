@@ -1361,7 +1361,7 @@ public class CameraView extends JComponent implements CameraListener {
 
         double targetAngle = Utils2D.normalizeAngle(-(rotTargetHandleAngle + 90));
         HeadMountable selectedTool = MainFrame.get().getMachineControls().getSelectedTool();
-        
+
         UiUtils.submitUiMachineTask(() -> {
             Location location = selectedTool.getLocation();
             location = location.derive(null, null, null, targetAngle);

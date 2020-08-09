@@ -375,7 +375,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         machine.fireMachineHeadActivity(machine.getDefaultHead());
     }
 
-
     @Override
     public void setGlobalOffsets(ReferenceMachine machine, AxesLocation location)
             throws Exception {

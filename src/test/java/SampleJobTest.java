@@ -35,7 +35,7 @@ public class SampleJobTest {
      * So if the simulation tries to pick or place at the wrong location, the test fails.
      * 
      * Unfortunately, it is terribly slow as some aspects (camera settling/vibration) need to be simulated in 
-     * quasi real-time to be conclusive as a test. 
+     * quasi real-time to be conclusive as a test. Takes about 2 min.
      * 
      */
     final public static boolean imperfectMachine = false; 
