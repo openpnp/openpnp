@@ -134,6 +134,18 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Attribute(required = false)
     private boolean isPushAndDragAllowed = false;
+    
+    // berts stuff start
+    @Element(required = false)
+    protected String changerActuatorPostStepOne;
+
+    @Element(required = false)
+    protected String changerActuatorPostStepTwo;
+    
+    @Element(required = false)
+    protected String changerActuatorPostStepThree;
+    
+    //end bert
 
     public ReferenceNozzleTip() {
     }
@@ -285,6 +297,32 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public void setChangerMid2ToEndSpeed(double changerMid2ToEndSpeed) {
         this.changerMid2ToEndSpeed = changerMid2ToEndSpeed;
     }
+    
+    //bert start
+    public String getchangerActuatorPostStepOne() {
+        return changerActuatorPostStepOne;
+    }
+
+    public void setChangerActuatorPostStepOne(String changerActuatorPostStepOne) {
+        this.changerActuatorPostStepOne = changerActuatorPostStepOne;
+    }
+
+    public String getChangerActuatorPostStepTwo() {
+        return changerActuatorPostStepTwo;
+    }
+
+    public void setChangerActuatorPostStepTwo(String changerActuatorPostStepTwo) {
+        this.changerActuatorPostStepTwo = changerActuatorPostStepTwo;
+    }
+    
+    public String getChangerActuatorPostStepThree() {
+        return changerActuatorPostStepThree;
+    }
+
+    public void setChangerActuatorPostStepThree(String changerActuatorPostStepThree) {
+        this.changerActuatorPostStepThree = changerActuatorPostStepThree;
+    }
+    // bert stop
 
     public ReferenceNozzle getNozzleAttachedTo() {
         for (Head head : Configuration.get().getMachine().getHeads()) {

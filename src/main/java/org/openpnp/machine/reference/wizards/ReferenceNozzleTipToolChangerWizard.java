@@ -22,6 +22,7 @@ package org.openpnp.machine.reference.wizards;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -31,11 +32,18 @@ import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
+//bert start
+import org.openpnp.machine.reference.ReferenceHead;
+//bert end
+import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.Head;
+import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -77,7 +85,13 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
     private JLabel lblSpeed1_2;
     private JLabel lblSpeed2_3;
     private JLabel lblSpeed3_4;
-
+    // bert added
+    private JLabel label;
+    private JPanel panel;
+    private JComboBox tcPostOneComboBoxActuator;
+    private JComboBox tcPostTwoComboBoxActuator;
+    private JComboBox tcPostThreeComboBoxActuator;
+    // end of add
 
     public ReferenceNozzleTipToolChangerWizard(ReferenceNozzleTip nozzleTip) {
         this.nozzleTip = nozzleTip;
@@ -110,6 +124,37 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         		FormSpecs.DEFAULT_ROWSPEC,
         		FormSpecs.DEFAULT_ROWSPEC,
         		FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        
+        // Bert added this to put actuator combo box into changer
+        label = new JLabel("Post 1 Actuator");
+        panelChanger.add(label, "2, 5, right, center");
+        label = new JLabel("Post 2 Actuator");
+        panelChanger.add(label, "2, 7, right, center");
+        label = new JLabel("Post 3 Actuator");
+        panelChanger.add(label, "2, 9, right, center");
+        
+        Head head = null;
+        try {
+            head = Configuration.get().getMachine().getDefaultHead();
+        }
+        catch (Exception e) {
+            Logger.error(e, "Cannot determine default head of machine.");
+        }
+        
+        tcPostOneComboBoxActuator = new JComboBox();
+        tcPostOneComboBoxActuator.setModel(new ActuatorsComboBoxModel(head));
+        panelChanger.add(tcPostOneComboBoxActuator, "4, 5,");
+        
+        tcPostTwoComboBoxActuator = new JComboBox();
+        tcPostTwoComboBoxActuator.setModel(new ActuatorsComboBoxModel(head));
+        panelChanger.add(tcPostTwoComboBoxActuator, "4, 7");
+        
+        tcPostThreeComboBoxActuator = new JComboBox();
+        tcPostThreeComboBoxActuator.setModel(new ActuatorsComboBoxModel(head));
+        panelChanger.add(tcPostThreeComboBoxActuator, "4, 9");
+        
+        // end of bert added stuff
         
         lblX = new JLabel("X");
         panelChanger.add(lblX, "4, 2");
@@ -277,6 +322,12 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
                 lengthConverter);
         addWrappedBinding(changerEndLocation, "lengthZ", textFieldChangerEndZ, "text",
                 lengthConverter);
+        
+        // start bert
+        addWrappedBinding(nozzleTip, "changerActuatorPostStepOne", tcPostOneComboBoxActuator, "selectedItem");
+        addWrappedBinding(nozzleTip, "changerActuatorPostStepTwo", tcPostTwoComboBoxActuator, "selectedItem");
+        addWrappedBinding(nozzleTip, "changerActuatorPostStepThree", tcPostThreeComboBoxActuator, "selectedItem");
+        // end bert
         
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartY);
