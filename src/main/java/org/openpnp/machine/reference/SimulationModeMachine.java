@@ -46,7 +46,7 @@ import org.openpnp.spi.Driver;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
-import org.openpnp.spi.Movable.LocationOption;
+import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.NanosecondTime;
 import org.pmw.tinylog.Logger;

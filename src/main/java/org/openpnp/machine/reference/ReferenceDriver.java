@@ -25,12 +25,11 @@ import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Motion;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.MotionPlanner.CompletionType;
-import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.WizardConfigurable;
 
 /**
- * Defines the interface for a simple driver that the ReferenceMachine can drive. All methods result
+ * Defines the interface for a simple driver that the MotionPlanner can drive. All methods result
  * in machine operations and most methods should block until they are complete or throw an error.
  * 
  * This Driver interface is intended to talk to one controller with Axes and Actuators attached.
@@ -41,8 +40,8 @@ import org.openpnp.spi.WizardConfigurable;
  * MotionPlanner will determine which axes are involved and call the drivers accordingly. 
  * 
  * Drivers should only expose the functionality of the controller in a unified way. They should not add 
- * additional logic on top other than what is needed to make the controller behave like any other 
- * controller. This is different from previous versions of OpenPnP where the driver did much more.
+ * additional logic other than what is needed to make an attached controller behave like any other. This is 
+ * different from previous versions of OpenPnP where the driver did much more. 
  * 
  */
 public interface ReferenceDriver extends Driver, WizardConfigurable, PropertySheetHolder, Closeable {
@@ -73,24 +72,21 @@ public interface ReferenceDriver extends Driver, WizardConfigurable, PropertyShe
     public void setGlobalOffsets(ReferenceMachine machine, AxesLocation axesLocation) throws Exception;
 
     /**
-     * Moves the specified MappedAxes to the given location at a speed defined by (maximum feed
-     * rate * speed) where speed is greater than 0 and typically less than or equal to 1. A speed of
-     * 0 means to move at the minimum possible speed.
+     * Executes the given Motion.
      * 
      * @param hm The HeadMountable having triggered the move. This is mostly for proprietary machine driver support  
-     * and might only be a stand-in in some motion blending scenarios on the GcodeDriver.
-     * @param motion The moveTo Motion to execute, including location, feedrate, acceleration etc. as shaped by the MotionPlanner
-     * @param options Zero to n options from the MoveToOptions enum.
+     * and might only be a stand-in in some motion blending scenarios.
+     * @param motion The moveTo Motion to execute, including target location, feedrate, acceleration etc. as shaped by 
+     * the MotionPlanner
      * @throws Exception
      */
-    public void moveTo(ReferenceHeadMountable hm, Motion motion, MoveToOption... options) throws Exception;
+    public void moveTo(ReferenceHeadMountable hm, Motion motion) throws Exception;
 
     /**
      * Perform a coordinated wait for completion. This must be issued before capturing camera frames etc.
-     * @see org.openpnp.spi.MotionPlanner.waitForCompletion(HeadMountable, CompletionType)  
      * 
      * @param hm The HeadMountable to wait for. If null, wait for all the axes on the driver. Most drivers/controllers will probably 
-     * not be able to wait for just a sub-set of axes but the interface should allow for this. 
+     * not be able to wait for just a sub-set of axes, so the'll wait for all the axes anyway. 
      * @param completionType The kind of completion wanted.
      * @throws Exception 
      */

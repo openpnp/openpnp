@@ -25,7 +25,7 @@ public class SampleJobTest {
 
     /**
      * Enable imperfectMachine for a full "imperfect machine" test. The poor machine has bad non-squareness,
-     * huge nozzle runout, is off from home, the camera has lag and bad vibration realistically simulated from motion.
+     * huge nozzle runout, is off from home, the camera has lag and bad vibration simulated from effective motion.
      * Unlike the default machine, it also uses the Z axis.
      * 
      * This tests non-squareness compensation (axis transforms), runout compensation, visual homing, camera settling,
@@ -35,7 +35,7 @@ public class SampleJobTest {
      * So if the simulation tries to pick or place at the wrong location, the test fails.
      * 
      * Unfortunately, it is terribly slow as some aspects (camera settling/vibration) need to be simulated in 
-     * real-time to be purposeful as a test.  
+     * quasi real-time to be conclusive as a test. 
      * 
      */
     final public static boolean imperfectMachine = false; 

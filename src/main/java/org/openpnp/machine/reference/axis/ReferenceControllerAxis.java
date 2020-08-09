@@ -26,9 +26,6 @@ import org.openpnp.machine.reference.axis.wizards.ReferenceControllerAxisConfigu
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
-import org.openpnp.spi.Axis;
-import org.openpnp.spi.Movable.LocationOption;
 import org.openpnp.spi.base.AbstractControllerAxis;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;

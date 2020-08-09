@@ -44,7 +44,6 @@ import org.openpnp.spi.Driver;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.MotionPlanner;
-import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
@@ -71,59 +70,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
 
     private ReferenceMachine machine;
 
-    public static class MotionCommand {
-        final double timeRecorded;
-        final HeadMountable headMountable;
-        final AxesLocation axesLocation;
-        final double speed;
-        final MoveToOption [] options;
-        private Motion plannedMotion;
-
-        public MotionCommand(HeadMountable headMountable, AxesLocation axesLocation, double speed,
-                MoveToOption[] options) {
-            super();
-            this.headMountable = headMountable;
-            this.timeRecorded = NanosecondTime.getRuntimeSeconds();
-            this.axesLocation = axesLocation;
-            this.speed = speed;
-            this.options = options;
-        }
-
-        public double getTimeRecorded() {
-            return timeRecorded;
-        }
-
-        public AxesLocation getAxesLocation() {
-            return axesLocation;
-        }
-
-        public HeadMountable getHeadMountable() {
-            return headMountable;
-        }
-
-        public double getSpeed() {
-            return speed;
-        }
-
-        public MoveToOption[] getOptions() {
-            return options;
-        }
-
-        public boolean isPending() {
-            // The command's motion is empty or not yet executed i.e. timed.
-            return plannedMotion == null || plannedMotion.getTime() == 0;
-        }
-
-        public void setPlannedMotion(Motion plannedMotion) {
-            this.plannedMotion = plannedMotion;
-        }
-
-        public Motion getPlannedMotion() {
-            return plannedMotion;
-        }
-    }
-
-    protected LinkedList<MotionCommand> commandSequence = new LinkedList<>();
+    protected LinkedList<Motion> motionCommands = new LinkedList<>();
     protected TreeMap<Double, Motion> motionPlan = new TreeMap<Double, Motion>();
 
     @Override
@@ -157,16 +104,25 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
     }
 
     @Override
-    public synchronized void moveTo(HeadMountable hm, AxesLocation axesLocation, double speed, MoveToOption... options) throws Exception {
+    public synchronized void moveTo(HeadMountable hm, AxesLocation axesLocation, double speed, MotionOption... options) throws Exception {
         // Handle soft limits and rotation axes limiting and wrap-around.
         axesLocation = limitAxesLocation(axesLocation, false);
 
-        // Add the command to the queue.
-        MotionCommand motionCommand = new MotionCommand(hm, axesLocation, speed, options);
-        // Compute the motion of this command, in relation to the previous location.
-        computeCommandMotion(motionCommand);
-        // Add to sequence. 
-        commandSequence.addLast(motionCommand);
+        // Get current location of all the axes.
+        AxesLocation currentLocation = new AxesLocation(getMachine()); 
+        // The new locations must include all the machine axes, so put them into the whole set.
+        AxesLocation newLocation = 
+                currentLocation
+                .put(axesLocation);
+        // Define the motion.
+        Motion motionCommand = new Motion(
+                hm, 
+                currentLocation, 
+                newLocation, 
+                speed,
+                0);
+        // Add to the recorded motion commands. 
+        motionCommands.addLast(motionCommand);
 
         // Set all the axes (including virtual ones) to their new coordinates.
         for (Axis axis : axesLocation.getAxes()) {
@@ -177,77 +133,41 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
     }
 
     /**
-     * Compute the motion as a straight move from the previous location. This creates the raw motion 
-     * that may later be optimized by an advanced planner.   
-     * 
-     * @param motionCommand
-     * @throws Exception
-     */
-    protected void computeCommandMotion(MotionCommand motionCommand) throws Exception {
-        // Get current Location of all the axes.
-        AxesLocation currentLocation = new AxesLocation(getMachine()); 
-        // The new locations must include all the machine axes, so put them into the whole set.
-        AxesLocation newLocation = 
-                currentLocation
-                .put(motionCommand.getAxesLocation());
-        // Define the motion.
-        Motion plannedMotion = new Motion(
-                motionCommand, 
-                currentLocation, 
-                newLocation, 
-                // TODO: options from motion command.
-                MotionOption.CoordinatedMotion);
-        if (!plannedMotion.isEmpty()) {
-            motionCommand.setPlannedMotion(plannedMotion);
-        }
-    }
-
-    /**
      * Plan and then execute the pending motion commands. 
      * 
      * @param completionType
      * @throws Exception
      */
     protected synchronized void executeMotionPlan(CompletionType completionType) throws Exception {
-        // Record the command motion into an execution plan. 
-        List<Motion> executionPlan = new ArrayList<>();
-        while (! commandSequence.isEmpty()) {
-            MotionCommand motionCommand = commandSequence.getFirst(); 
-            // Remove the command from the sequence, so in case of exception, we're not stuck.
-            commandSequence.removeFirst();
-            // Get the motion and add it to the execution plan. 
-            Motion plannedMotion = motionCommand.getPlannedMotion();
-            if (plannedMotion != null && !plannedMotion.hasOption(MotionOption.Stillstand)) {
-                executionPlan.add(plannedMotion);
-            }
-        }
+        // Put the recorded motion commands into an execution plan. 
+        List<Motion> executionPlan = motionCommands;
 
-        // Apply any optimization to the execution plan. This is where advanced MotionPlanners will shine.
+        // The motion commands are reset.
+        motionCommands = new LinkedList<>();
+
+        // Apply any optimization to the execution plan. This is where advanced MotionPlanner sub-classes will shine.
         optimizeExecutionPlan(executionPlan, completionType);
 
-        // Now execute the plan, we also time it to enable simulation. 
+        // Now execute the plan against the drivers.
+        // We also record it into the real-time motionPlan to enable motion prediction and simulation. 
         double t = NanosecondTime.getRuntimeSeconds();
         if (motionPlan.isEmpty() == false && motionPlan.lastKey() > t) {
-            // Continue a plan that still runs.
+            // Append to a plan that is still running. 
             t = motionPlan.lastKey();
         }
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
         List<Head> movedHeads = new ArrayList<>();
         for (Motion plannedMotion : executionPlan) {
-            if (plannedMotion != null && !plannedMotion.hasOption(MotionOption.Stillstand)) {
+            if (!plannedMotion.hasOption(MotionOption.Stillstand)) {
                 // Put into timed plan.
                 t += plannedMotion.getTime();
                 motionPlan.put(t, plannedMotion);
                 plannedMotion.setPlannedTime1(t);
                 // Execute across drivers.
-                ReferenceHeadMountable  hm = (ReferenceHeadMountable) plannedMotion.getMotionCommand().getHeadMountable();
-                MoveToOption[] options = plannedMotion.getMotionCommand().getOptions();
-                AxesLocation motionSegment = plannedMotion.getLocation0().motionSegmentTo(plannedMotion.getLocation1());
-                for (Driver driver : motionSegment.getAxesDrivers(machine)) {
-                    ((ReferenceDriver) driver).moveTo(hm, plannedMotion, options);
-                    if (hm != null) {
-                        movedHeads.add(hm.getHead());
-                    }
+                ReferenceHeadMountable  hm = (ReferenceHeadMountable) plannedMotion.getHeadMountable();
+                if (hm != null) {
+                    movedHeads.add(hm.getHead());
+                    executeMoveTo(machine, hm, plannedMotion);
                 }
             }
         }
@@ -264,6 +184,24 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
      * @param completionType
      */
     protected abstract void optimizeExecutionPlan(List<Motion> executionPlan, CompletionType completionType);
+
+    /**
+     * Sub-classes may override this in order to execute/interpolate more complex MotionProfiles with simulated jerk control, 
+     * and/or curved trajectories from motion blending, etc. 
+     * 
+     * @param machine
+     * @param hm
+     * @param plannedMotion
+     * @throws Exception
+     */
+    protected void executeMoveTo(ReferenceMachine machine, ReferenceHeadMountable hm,
+            Motion plannedMotion) throws Exception {
+        AxesLocation motionSegment = plannedMotion.getLocation0().motionSegmentTo(plannedMotion.getLocation1());
+        // Note, this will be empty if the motion is empty.
+        for (Driver driver : motionSegment.getAxesDrivers(machine)) {
+            ((ReferenceDriver) driver).moveTo(hm, plannedMotion);
+        }
+    }
 
     /**
      * Limits the specified AxesLocation to nominal coordinates. Throws or returns null if a soft limit is 
@@ -358,6 +296,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
                     null, 
                     currentLocation,
                     currentLocation,
+                    1.0,
                     MotionOption.Stillstand);
             // Anchor it in real-time.
             motion.setPlannedTime1(time);
@@ -371,14 +310,22 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
         // Now is high time to plan and execute the queued motion commands. 
         executeMotionPlan(completionType);
 
-        // Wait for drivers to complete.
-        waitForDriverCompletion(hm, completionType);
-
-        wrapUpCoordinates();
+        if (completionType.isEnforcingStillstand()) {
+            // Tell the drivers.
+            waitForDriverCompletion(hm, completionType);
+            // Apply the rotation axes wrap-around handling.
+            wrapUpCoordinates();
+            // Remove old stuff.
+            clearMotionPlanOlderThan(NanosecondTime.getRuntimeSeconds() - maximumPlanHistory);
+        }
     }
 
+    /**
+     * Apply the rotation axes wrap-around handling.
+     * 
+     * @throws Exception
+     */
     protected synchronized void wrapUpCoordinates() throws Exception {
-        // Apply the rotation axes wrap-around handling.
         AxesLocation mappedAxes = new AxesLocation(getMachine()).byType(Type.Rotation);
         for (ControllerAxis axis : mappedAxes.getControllerAxes()) {
             if (axis instanceof ReferenceControllerAxis) {
@@ -418,8 +365,6 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
                 }
             }
         }
-        // Remove old stuff.
-        clearMotionPlanOlderThan(NanosecondTime.getRuntimeSeconds() - maximumPlanHistory);
     }
 
     public ReferenceMachine getMachine() {

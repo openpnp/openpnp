@@ -32,11 +32,11 @@ import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
+import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.MotionPlanner.CompletionType;
-import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractHead;
 import org.openpnp.spi.base.AbstractHeadMountable;
@@ -139,7 +139,7 @@ public class ReferenceHead extends AbstractHead {
     }
 
     @Override 
-    public void moveTo(HeadMountable hm, Location location, double speed, MoveToOption... options) throws Exception {
+    public void moveTo(HeadMountable hm, Location location, double speed, MotionOption... options) throws Exception {
         ReferenceMachine machine = getMachine();
         AxesLocation mappedAxes = hm.getMappedAxes(machine);
         if (!mappedAxes.isEmpty()) {

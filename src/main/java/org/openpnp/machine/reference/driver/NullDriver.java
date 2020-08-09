@@ -38,7 +38,6 @@ import org.openpnp.model.Motion;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.MotionPlanner.CompletionType;
-import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.base.AbstractDriver;
 import org.openpnp.util.NanosecondTime;
 import org.pmw.tinylog.Logger;
@@ -104,7 +103,7 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
      * considerations when writing your own driver.
      */
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Motion motion, MoveToOption... options)
+    public void moveTo(ReferenceHeadMountable hm, Motion motion)
             throws Exception {
         Logger.debug("moveTo({}, {}, {})", hm, motion.getLocation1(), motion.getFeedRatePerSecond(this));
         checkEnabled();
@@ -228,6 +227,8 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
                 ((ReferenceControllerAxis) axis).setJerkPerSecond3(new Length(0, getUnits()));
             }
         }
+        // Switch the driver limit off, only the axes' limits remains.
+        this.feedRateMmPerMinute = 0;
         ReferenceHead head = (ReferenceHead) machine.getDefaultHead();
         // Use the lower left PCB fiducial as homing fiducial (but not enabling Visual Homing yet).
         head.setHomingFiducialLocation(new Location(LengthUnit.Millimeters, 5.736, 6.112, 0, 0));

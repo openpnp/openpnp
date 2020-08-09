@@ -23,8 +23,8 @@ import java.util.List;
 
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
+import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.Named;
-import org.openpnp.spi.Movable.MoveToOption;
 
 
 /**
@@ -136,7 +136,7 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
      * @param speed
      * @throws Exception
      */
-    public void moveTo(HeadMountable hm, Location location, double speed, MoveToOption... options) throws Exception;
+    public void moveTo(HeadMountable hm, Location location, double speed, MotionOption... options) throws Exception;
 
     /**
      * Returns true if any nozzle on the Head is currently carrying a part.

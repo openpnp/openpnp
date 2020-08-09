@@ -23,7 +23,7 @@ package org.openpnp.spi;
 
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Motion;
-import org.openpnp.spi.Movable.MoveToOption;
+import org.openpnp.model.Motion.MotionOption;
 
 /**
  * <p>
@@ -108,18 +108,43 @@ public interface MotionPlanner {
      *   allowing uncoordinated X/Y moves for best acceleration etc.  
      * 
      * @param hm The HeadMountable having triggered the move. This is mostly for proprietary machine driver support  
-     * and might only be a stand-in in some motion blending scenarios on the GcodeDriver.
+     * and might only be a stand-in in some motion blending scenarios. 
      * @param axesLocation
      * @param speed
      * @param options
      * @throws Exception 
      */
     void moveTo(HeadMountable hm, AxesLocation axesLocation, double speed, 
-            MoveToOption... options) throws Exception;
+            MotionOption... options) throws Exception;
 
     public enum CompletionType {
-        WaitForStillstand,
-        Jog
+        /**
+         * The motion plan is sent to the drivers, assuming an unfinished motion sequence (e.g. when Jogging). 
+         * More specifically, the motion planner's deceleration to still-stand will not be enforced, it is entirely 
+         * up to the controller. If a subsequent motion command arrives soon enough, there might be no (or less) deceleration
+         * between the moves.<br/>
+         * If the driver supports asynchronous execution, this does not wait for the driver to physically complete. 
+         */
+        CommandJog,
+        /**
+         * The motion plan is sent to the drivers, finishing in still-stand.<br/>
+         * If the driver supports asynchronous execution, this does not wait for the driver to physically complete.
+         */
+        CommandStillstand,
+        /**
+         * The motion plan is executed with the drivers, finishing in still-stand.<br/>
+         * This does always wait for the driver to complete i.e. the caller can be sure the machine has physically arrived 
+         * at the final location.  
+         */
+        WaitForStillstand;
+
+        public boolean isEnforcingStillstand() {
+            return this == WaitForStillstand || this == CommandStillstand;
+        }
+
+        public boolean isWaitingForDrivers() {
+            return this == WaitForStillstand;
+        }
     }
     /**
      * Perform a coordinated wait for completion. This will force planning and issuing of motion commands 

@@ -27,15 +27,9 @@ import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
-import org.openpnp.spi.Axis;
-import org.openpnp.spi.Movable.LocationOption;
-import org.openpnp.spi.base.AbstractAxis;
-import org.openpnp.spi.base.AbstractControllerAxis;
+import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.base.AbstractMachine;
-import org.openpnp.spi.base.AbstractTransformedAxis;
 import org.openpnp.spi.base.AbstractSingleTransformedAxis;
-import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
 /**

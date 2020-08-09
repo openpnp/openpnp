@@ -10,6 +10,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Machine;
@@ -120,7 +121,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     @Override
-    public void moveTo(Location location, double speed, MoveToOption... options) throws Exception {
+    public void moveTo(Location location, double speed, MotionOption... options) throws Exception {
         Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
         Location headLocation = toHeadLocation(location, getLocation());
         getHead().moveTo(this, headLocation, getHead().getMaxPartSpeed() * speed, options);
@@ -136,7 +137,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     @Override
-    public void moveTo(Location location, MoveToOption... options) throws Exception {
+    public void moveTo(Location location, MotionOption... options) throws Exception {
         moveTo(location, getHead().getMachine().getSpeed(), options);
     }
 

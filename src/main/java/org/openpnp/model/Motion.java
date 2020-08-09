@@ -26,12 +26,11 @@ import java.util.Map.Entry;
 import java.util.function.BiFunction;
 
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
-import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
-import org.openpnp.machine.reference.driver.AbstractMotionPlanner.MotionCommand;
 import org.openpnp.model.MotionProfile.ProfileOption;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.util.Triplet;
 
 /**
@@ -43,20 +42,50 @@ import org.openpnp.util.Triplet;
  *
  */
 public class Motion {
+
+    /**
+     * Contains all possible options for a motion.
+     */
     public enum MotionOption {
-        CoordinatedMotion,
+        /**
+         * Disable backslash compensation or anything else, that causes additional moves.
+         */
+        SpeedOverPrecision,
+        /**
+         * The move does not have to be a straight line and profile segments do not need to 
+         * coincide in time.
+         */
+        UncoordinatedMotion,
+        /**
+         * The driver's tool-path feed-rate limit is not applied, only the axes' feed-rate limits are.
+         */
         NoDriverLimit,
+        /**
+         * The motion is limited to the SafeZ zone, usually required to allow uncoordinated motion.
+         */
         LimitToSafeZZone,
+        /**
+         * The motion is open to continue, let the controller handle the real-time deceleration planning.
+         */
+        JogMotion,
+        /**
+         * A pseudo-Motion that signals still-stand of the machine. 
+         */
         Stillstand;
 
-        protected int flag(){
+        public int flag() {
             return 1 << this.ordinal();
+        }
+
+        public boolean isSetIn(int options) {
+            return (ordinal() & options) != 0;
         }
     }
 
-    private MotionCommand motionCommand;
-    private AxesLocation location0;
-    private AxesLocation location1;
+    final private HeadMountable headMountable;
+    final private double nominalSpeed;
+    final private AxesLocation location0;
+    final private AxesLocation location1;
     private MotionProfile [] axesProfiles;
     private HashMap<ControllerAxis, Integer> axisIndex = new HashMap<>(); 
 
@@ -73,24 +102,29 @@ public class Motion {
         return optionFlags;
     }
 
-    protected Motion(MotionCommand motionCommand, AxesLocation location0, AxesLocation location1, int options) {
+    public Motion(HeadMountable headMountable, AxesLocation location0, AxesLocation location1, double nominalSpeed, int options) {
         super();
-        this.motionCommand = motionCommand;
+        this.headMountable = headMountable;
         this.location0 = location0;
         this.location1 = location1;
+        this.nominalSpeed = nominalSpeed;
         this.options = options;
         int count = 0;
-        for (ControllerAxis axis : location0.getControllerAxes()) {
+        for (ControllerAxis axis : location1.getControllerAxes()) {
             axisIndex.put(axis, count++);
         }
         axesProfiles = new MotionProfile[count];
         computeLimitsAndProfile();
     }
-    public Motion(MotionCommand motionCommand, AxesLocation location0, AxesLocation location1, MotionOption... options) {
-        this(motionCommand, location0, location1, optionFlags(options));
+    public Motion(HeadMountable headMountable, AxesLocation location0, AxesLocation location1, double nominalSpeed, MotionOption... options) {
+        this(headMountable, location0, location1, nominalSpeed, optionFlags(options));
     }
     public Motion(Motion motion) {
-        this(motion.motionCommand, motion.location0, motion.location1, motion.options);
+        this(motion.headMountable, motion.location0, motion.location1, motion.nominalSpeed, motion.options);
+    }
+
+    public HeadMountable getHeadMountable() {
+        return headMountable;
     }
 
     public boolean hasOption(MotionOption option) {
@@ -101,6 +135,9 @@ public class Motion {
     }
     public void clearOption(MotionOption option) {
         this.options &=  ~option.flag();
+    }
+    public int getOptions() {
+        return options;
     }
 
     public double getTime() {
@@ -117,10 +154,6 @@ public class Motion {
 
     public void setPlannedTime1(double plannedTime1) {
         this.plannedTime1 = plannedTime1;
-    }
-
-    public MotionCommand getMotionCommand() {
-        return motionCommand;
     }
 
     private MotionProfile getAxisProfile(ControllerAxis axis) {
@@ -143,12 +176,7 @@ public class Motion {
     }
 
     public double getNominalSpeed() {
-        if (getMotionCommand() == null) {
-            return 1.0;
-        }
-        else {
-            return getMotionCommand().getSpeed();
-        }
+        return nominalSpeed;
     }
 
     public double getEffectiveSpeed() {
@@ -167,7 +195,7 @@ public class Motion {
         // Create a distance vector that has only axes mentioned in location1 that at the same time 
         // do not match coordinates with location0.
         AxesLocation distance = location0.motionSegmentTo(location1);
-        if (distance.isEmpty() || !hasOption(MotionOption.CoordinatedMotion)) {
+        if (distance.isEmpty() || hasOption(MotionOption.UncoordinatedMotion)) {
             // Zero distance or uncoordinated motion. Axes constraints simply apply directly.
             for (Entry<ControllerAxis, Integer> entry : axisIndex.entrySet()) {
                 ControllerAxis axis = entry.getKey();
@@ -300,7 +328,7 @@ public class Motion {
             double euclideanTime = overallLimits[0]/overallLimits[1];
             // We convert from the (optionally) driver-limited NIST feed-rate to Euclidean limit by relating the motion time. 
             // Also include the given speed factor.
-            effectiveSpeed = (time > 0 ? euclideanTime/time : 1.0) * Math.max(0.01, getNominalSpeed());
+            effectiveSpeed = (time > 0 ? euclideanTime/time : 1.0) * Math.max(0.01, nominalSpeed);
             euclideanDistance = overallLimits[0];
             
             for (Entry<ControllerAxis, Integer> entry : axisIndex.entrySet()) {
@@ -347,7 +375,7 @@ public class Motion {
 
     private int profileOptions() {
         int profileOptions = 0;
-        if (hasOption(MotionOption.CoordinatedMotion)) {
+        if (!hasOption(MotionOption.UncoordinatedMotion)) {
             profileOptions |= ProfileOption.Coordinated.flag(); 
         }
         return profileOptions;

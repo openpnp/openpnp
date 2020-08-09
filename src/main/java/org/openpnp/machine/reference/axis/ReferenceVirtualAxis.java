@@ -25,14 +25,9 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.axis.wizards.ReferenceVirtualAxisConfigurationWizard;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.CoordinateAxis;
-import org.openpnp.spi.Machine;
-import org.openpnp.spi.Movable.LocationOption;
-import org.openpnp.spi.base.AbstractAxis;
 import org.openpnp.spi.base.AbstractCoordinateAxis;
-import org.simpleframework.xml.Element;
 
 /**
  * The ReferenceVirtualAxis is a pseudo-axis used to track a coordinate virtually i.e. without

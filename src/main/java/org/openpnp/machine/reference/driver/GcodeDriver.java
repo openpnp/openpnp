@@ -33,22 +33,20 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Motion;
+import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.Named;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.ControllerAxis;
-import org.openpnp.spi.Driver;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.MotionPlanner.CompletionType;
-import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.base.AbstractAxis;
 import org.openpnp.spi.base.AbstractCamera;
 import org.openpnp.spi.base.AbstractHead;
 import org.openpnp.spi.base.AbstractHead.VisualHomingMethod;
-import org.openpnp.util.Utils2D;
 import org.openpnp.spi.base.AbstractHeadMountable;
 import org.openpnp.spi.base.AbstractSingleTransformedAxis;
 import org.openpnp.spi.base.AbstractTransformedAxis;
@@ -447,7 +445,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Motion motion, MoveToOption...options)
+    public void moveTo(ReferenceHeadMountable hm, Motion motion)
             throws Exception {
         AxesLocation location = motion.getLocation1();
         double feedRate = motion.getFeedRatePerMinute(this);
@@ -461,12 +459,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         }
 
         boolean enableBacklash = true;
-        for (MoveToOption currentOption: options) {
-            switch (currentOption) {
-                case SpeedOverPrecision:        // for this move backslash is zero
-                    enableBacklash = false;
-                    break;
-            }
+        int options = motion.getOptions();
+        if (MotionOption.SpeedOverPrecision.isSetIn(options)) {
+            // for this move backslash is zero
+            enableBacklash = false;
         }
 
         command = substituteVariable(command, "Id", hm.getId());
@@ -580,6 +576,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         String command = getCommand(hm, CommandType.MOVE_TO_COMPLETE_COMMAND);
         if (command != null) {
             sendGcode(command);
+        }
+        if (completionType.isWaitingForDrivers()) {
+            // TODO: as soon as the async writer/hand-shaking is implemented, we must explicitly
+            // wait for the controller's acknowledgment here. 
+            // This distinction does not works yet, as we always implicitly wait in sendGcode();
         }
     }
 

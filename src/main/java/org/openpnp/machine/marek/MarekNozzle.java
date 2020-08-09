@@ -5,8 +5,8 @@ import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Movable.MoveToOption;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
 
@@ -23,7 +23,7 @@ public class MarekNozzle extends ReferenceNozzle {
     }
     
     @Override
-    public void moveTo(Location location, double speed, MoveToOption... options) throws Exception {
+    public void moveTo(Location location, double speed, MotionOption... options) throws Exception {
         Location currentLocation = getLocation().convertToUnits(location.getUnits());
         location = toHeadLocation(location, currentLocation);
 

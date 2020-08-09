@@ -5,7 +5,6 @@ import org.junit.Test;
 import org.openpnp.model.MotionProfile;
 import org.openpnp.model.MotionProfile.ErrorState;
 import org.openpnp.model.MotionProfile.ProfileOption;
-import org.pmw.tinylog.Logger;
 
 public class AdvancedMotionTest {
 

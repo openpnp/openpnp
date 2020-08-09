@@ -1,5 +1,5 @@
 <openpnp-machine>
-   <machine class="org.openpnp.machine.reference.SimulationModeMachine" speed="1.0" simulation-mode="DynamicImperfectionsMachine" simulated-non-squareness-factor="0.02" simulated-runout-phase="60.0" simulated-camera-noise="100" simulated-camera-lag="0.01" simulated-vibration-amplitude="0.02" simulated-vibration-duration="0.1">
+   <machine class="org.openpnp.machine.reference.SimulationModeMachine" speed="1.0" simulation-mode="DynamicImperfectionsMachine" simulated-non-squareness-factor="0.02" simulated-runout-phase="60.0" simulated-camera-noise="100" simulated-camera-lag="0.01" simulated-vibration-amplitude="0.06" simulated-vibration-duration="0.1">
       <axes>
          <axis class="org.openpnp.machine.reference.axis.ReferenceControllerAxis" id="AXS160eec8a16c57c98" name="X-non-square" type="X" driver-id="DRV160eec8a15990f38" limit-rotation="true" wrap-around-rotation="true" soft-limit-low-enabled="true" soft-limit-high-enabled="true">
             <home-coordinate value="1.0" units="Millimeters"/>
@@ -527,7 +527,7 @@
          </part-alignment>
       </part-alignments>
       <drivers>
-         <driver class="org.openpnp.machine.reference.driver.NullDriver" id="DRV160eec8a15990f38" name="NullDriver" feed-rate-mm-per-minute="20000.0"/>
+         <driver class="org.openpnp.machine.reference.driver.NullDriver" id="DRV160eec8a15990f38" name="NullDriver" feed-rate-mm-per-minute="0.0"/>
       </drivers>
       <discard-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
       <properties>

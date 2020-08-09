@@ -2,33 +2,9 @@ package org.openpnp.spi;
 
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
+import org.openpnp.model.Motion.MotionOption;
 
 public interface Movable extends Locatable {
-    /**
-     * Contains all possible options for the moveTo command.
-     * SpeedOverPrecision: disable backslash compensation or anything else, that causes additional moves
-     */
-    public enum MoveToOption { SpeedOverPrecision }
-
-    /**
-     * Contains all possible options for getting approximative locations.
-     * KeepX, KeepY, KeepZ, KeepRotation: keep these raw coordinates the same. 
-     * SuppressStaticCompensation: suppress static compensation, such as non-squareness compensation.
-     * SuppressDynamicCompensation: suppress dynamic (i.e. runtime calibrated) compensation, such as
-     * nozzle tip runout compensation.
-     */
-    public enum LocationOption { KeepX, KeepY, KeepZ, KeepRotation, SuppressStaticCompensation, SuppressDynamicCompensation }
-
-    /**
-     * Get an approximative Location in order to avoid extra compensation moves. 
-     * 
-     * @param currentLocation The current location, usually obtained using Headmountable.getLocation()
-     * @param desiredLocation The desired location to approximate. 
-     * @param options Options for the approximation.
-     * @return
-     * @throws Exception 
-     */
-    Location getApproximativeLocation(Location currentLocation, Location desiredLocation, LocationOption... options) throws Exception;
 
     /**
      * Move the object to the Location at the feedRate.
@@ -40,9 +16,9 @@ public interface Movable extends Locatable {
      *        minimum feed rate while still moving.
      * @throws Exception
      */
-    void moveTo(Location location, double speed, MoveToOption... options) throws Exception;
+    void moveTo(Location location, double speed, MotionOption... options) throws Exception;
 
-    void moveTo(Location location, MoveToOption... options) throws Exception;
+    void moveTo(Location location, MotionOption... options) throws Exception;
 
     Length getSafeZ();
 
@@ -51,7 +27,7 @@ public interface Movable extends Locatable {
     void moveToSafeZ(double speed) throws Exception;
 
     void moveToSafeZ() throws Exception;
-    
+
     /**
      * Perform any homing operation on each movable. The head and driver have already been homed
      * at this time. 

@@ -15,7 +15,6 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Motion;
 import org.openpnp.spi.MotionPlanner.CompletionType;
-import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractDriver;
 import org.simpleframework.xml.Attribute;
@@ -42,7 +41,7 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Motion motion, MoveToOption... options)
+    public void moveTo(ReferenceHeadMountable hm, Motion motion)
             throws Exception {
         
         // Take only this driver's axes.
@@ -89,7 +88,7 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
         }
  
         @Override
-        public void moveTo(ReferenceHeadMountable hm, Motion motion, MoveToOption... options)
+        public void moveTo(ReferenceHeadMountable hm, Motion motion)
                 throws Exception {
 
         }

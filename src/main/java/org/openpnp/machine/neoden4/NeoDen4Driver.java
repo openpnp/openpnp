@@ -21,7 +21,6 @@ import org.openpnp.model.Named;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.MotionPlanner.CompletionType;
-import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.Nozzle;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -488,7 +487,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Motion motion, MoveToOption... options)
+    public void moveTo(ReferenceHeadMountable hm, Motion motion)
             throws Exception {
         AxesLocation location = motion.getLocation1();
         double feedRate = motion.getFeedRatePerSecond(this);

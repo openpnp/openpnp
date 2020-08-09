@@ -574,42 +574,61 @@ public class MotionProfile {
         // Still based on the initial calculation, try obtaining an analytical solution.
         double vInitialGuess = Double.NaN;
         if (tMin == 0 && s[0] != s[segments]) {
-            // If the move is long enough to reach aMax we can try solving for vPeak analytically.
-            // Obtained from Sage Math:
-            //
-            //            # V max calc with constant acceleration segment
-            //
-            //            var('s3 v1 v3 a j')
-            //            t3 = a/j
-            //            v2 = v3 - 1/2*j*t3^2
-            //            t2 = (v2-v1)/a
-            //            s1 = 0
-            //            s2 = s1 + v1*t2 + 1/2*a*t2^2
-            //            eq=(s3 == s2 + v2*t3 + 1/2*a*t3^2 - 1/6*j*t3^3)
-            //            solve(eq, v3)
-            //
-            // [v3 == -1/6*(3*a^2 + 2*sqrt(3*a^4 + 18*a*j^2*s3 + 9*j^2*v1^2))/j, 
-            //  v3 == -1/6*(3*a^2 - 2*sqrt(3*a^4 + 18*a*j^2*s3 + 9*j^2*v1^2))/j]
-            boolean halfProfile = !(hasOption(ProfileOption.UnconstrainedEntry) || hasOption(ProfileOption.UnconstrainedExit));
-            if (t[2] > (-t[4]*0.25)) { 
-                // Acceleration segment is long enough.
-                double s3 = ((halfProfile ? (s[4] + s[3])*0.5 : s[4]) - s[1]);
-                // We just trust the (just in time) compiler to eliminate common sub-expressions.
-                vInitialGuess = -1./6*(3*Math.pow(a[1], 2) 
-                        - 2*Math.sqrt(3*Math.pow(a[1], 4) + 18*a[1]*Math.pow(j[0], 2)*s3 + 9*Math.pow(j[0], 2)*Math.pow(v[1], 2)))/j[0];
-                double v3_2 = -1./6*(3*Math.pow(a[1], 2) 
-                        + 2*Math.sqrt(3*Math.pow(a[1], 4) + 18*a[1]*Math.pow(j[0], 2)*s3 + 9*Math.pow(j[0], 2)*Math.pow(v[1], 2)))/j[0];
-                trace("Analytical solution with constant acceleration segment (1) = "+vInitialGuess+" (2) = "+v3_2);
+            if (isConstantAcceleration()) {
+                // Obtained from Sage Math:
+                // var ('v v0 v7 a s')
+                // tEntry=(v-v0)/a
+                // tExit=(v-v7)/a 
+                // sEntry=v0*tEntry + 1/2*a*tEntry^2
+                // sExit=v7*tEntry + 1/2*a*tExit^2
+                // eq=(s==sEntry + sExit)
+                // solve(eq, v)
+                // [v == -sqrt(a*s + 1/2*v0^2 + v0*v7 - 1/2*v7^2), v == sqrt(a*s + 1/2*v0^2 + v0*v7 - 1/2*v7^2)]
+
+                if (aMaxEntry == aMaxExit) {
+                    double sd = signum*(s[segments]-s[0]);
+                    vInitialGuess = signum*Math.sqrt(aMaxEntry*sd + 1./2*Math.pow(v[0], 2) + v[0]*v[7] - 1./2*Math.pow(v[7], 2));
+                    trace("Analytical solution with constant acceleration profile = "+vInitialGuess);
+                }
             }
-            else if (t[5] > (-t[4]*0.25)) { 
-                // Deceleration segment is long enough.
-                double s4 = (s[6] - (halfProfile ? (s[4] + s[3])*0.5 : s[3]));
-                // We just trust the (just in time) compiler to eliminate common sub-expressions.
-                vInitialGuess = (-1./6*(3*Math.pow(a[6], 2) 
-                        - 2*Math.sqrt(3*Math.pow(a[6], 4) - 18*a[6]*Math.pow(j[6], 2)*s4 + 9*Math.pow(j[6], 2)*Math.pow(v[6], 2)))/j[6]);
-                double v3_2 = (-1./6*(3*Math.pow(a[6], 2) 
-                        + 2*Math.sqrt(3*Math.pow(a[6], 4) - 18*a[6]*Math.pow(j[6], 2)*s4 + 9*Math.pow(j[6], 2)*Math.pow(v[6], 2)))/j[6]);
-                trace("Analytical solution with constant deceleration segment (1) = "+vInitialGuess+" (2) = "+v3_2);
+            else {
+                // If the move is long enough to reach aMax we can try solving for vPeak analytically.
+                // Obtained from Sage Math:
+                //
+                //            # V max calc with constant acceleration segment
+                //
+                //            var('s3 v1 v3 a j')
+                //            t3 = a/j
+                //            v2 = v3 - 1/2*j*t3^2
+                //            t2 = (v2-v1)/a
+                //            s1 = 0
+                //            s2 = s1 + v1*t2 + 1/2*a*t2^2
+                //            eq=(s3 == s2 + v2*t3 + 1/2*a*t3^2 - 1/6*j*t3^3)
+                //            solve(eq, v3)
+                //
+                // [v3 == -1/6*(3*a^2 + 2*sqrt(3*a^4 + 18*a*j^2*s3 + 9*j^2*v1^2))/j, 
+                //  v3 == -1/6*(3*a^2 - 2*sqrt(3*a^4 + 18*a*j^2*s3 + 9*j^2*v1^2))/j]
+                boolean halfProfile = !(hasOption(ProfileOption.UnconstrainedEntry) || hasOption(ProfileOption.UnconstrainedExit));
+                if (t[2] > (-t[4]*0.25)) { 
+                    // Acceleration segment is long enough.
+                    double s3 = ((halfProfile ? (s[4] + s[3])*0.5 : s[4]) - s[1]);
+                    // We just trust the (just in time) compiler to eliminate common sub-expressions.
+                    vInitialGuess = -1./6*(3*Math.pow(a[1], 2) 
+                            - 2*Math.sqrt(3*Math.pow(a[1], 4) + 18*a[1]*Math.pow(j[0], 2)*s3 + 9*Math.pow(j[0], 2)*Math.pow(v[1], 2)))/j[0];
+                    double v3_2 = -1./6*(3*Math.pow(a[1], 2) 
+                            + 2*Math.sqrt(3*Math.pow(a[1], 4) + 18*a[1]*Math.pow(j[0], 2)*s3 + 9*Math.pow(j[0], 2)*Math.pow(v[1], 2)))/j[0];
+                    trace("Analytical solution with constant acceleration segment (1) = "+vInitialGuess+" (2) = "+v3_2);
+                }
+                else if (t[5] > (-t[4]*0.25)) { 
+                    // Deceleration segment is long enough.
+                    double s4 = (s[6] - (halfProfile ? (s[4] + s[3])*0.5 : s[3]));
+                    // We just trust the (just in time) compiler to eliminate common sub-expressions.
+                    vInitialGuess = (-1./6*(3*Math.pow(a[6], 2) 
+                            - 2*Math.sqrt(3*Math.pow(a[6], 4) - 18*a[6]*Math.pow(j[6], 2)*s4 + 9*Math.pow(j[6], 2)*Math.pow(v[6], 2)))/j[6]);
+                    double v3_2 = (-1./6*(3*Math.pow(a[6], 2) 
+                            + 2*Math.sqrt(3*Math.pow(a[6], 4) - 18*a[6]*Math.pow(j[6], 2)*s4 + 9*Math.pow(j[6], 2)*Math.pow(v[6], 2)))/j[6]);
+                    trace("Analytical solution with constant deceleration segment (1) = "+vInitialGuess+" (2) = "+v3_2);
+                }
             }
             if (Double.isFinite(vInitialGuess) && Math.abs(vInitialGuess) > 0 && Math.abs(vInitialGuess) <= vMax) {
                 computeProfile(vInitialGuess, vEffEntry, vEffExit, tMin);

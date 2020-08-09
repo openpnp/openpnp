@@ -22,7 +22,7 @@
 package org.openpnp.spi.base;
 
 import org.openpnp.model.AxesLocation;
-import org.openpnp.spi.Movable.LocationOption;
+import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.TransformedAxis;
 
 public abstract class AbstractTransformedAxis extends AbstractAxis implements TransformedAxis {
