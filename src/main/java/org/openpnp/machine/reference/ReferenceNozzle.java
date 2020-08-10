@@ -552,8 +552,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerEndLocation(), speed);
 
             if (changerEnabled) {
-                Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location 2", getName());
+                Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location 2000", getName());
                 moveTo(nt.getChangerMidLocation2(), nt.getChangerMid2ToEndSpeed() * speed);
+                
+                //changerActuatorPostStepOne(true);
+                Logger.debug("{}",nt.getChangerActuatorPostStepOne());
+                nt.setChangerActuatorPostStepOne(true);
 
                 Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location", getName());
                 moveTo(nt.getChangerMidLocation(), nt.getChangerMidToMid2Speed() * speed);
@@ -724,7 +728,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
         return false;
     }
-
+   
+    
     protected Actuator getVacuumActuator() throws Exception {
         Actuator actuator = getHead().getActuatorByName(vacuumActuatorName);
         if (actuator == null) {

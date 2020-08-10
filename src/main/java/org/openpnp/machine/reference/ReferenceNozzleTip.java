@@ -299,7 +299,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
     
     //bert start
-    public String getchangerActuatorPostStepOne() {
+    public String getChangerActuatorPostStepOne() {
         return changerActuatorPostStepOne;
     }
 
