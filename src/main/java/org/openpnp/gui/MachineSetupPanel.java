@@ -172,60 +172,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
         tree.getSelectionModel().addTreeSelectionListener(new TreeSelectionListener() {
             @Override
             public void valueChanged(TreeSelectionEvent e) {
-                disableLastSelectedListener = true;
-                tabbedPane.removeAll();
-                toolBar.removeAll();
-
-                TreePath path = tree.getSelectionPath();
-                if (path != null) {
-                    List<Object> pathsReverse = Arrays.asList(path.getPath());
-                    Collections.reverse(pathsReverse);
-                    for (Object o : pathsReverse) {
-                        PropertySheetHolderTreeNode node = (PropertySheetHolderTreeNode) o;
-                        Action[] actions = node.obj.getPropertySheetHolderActions();
-                        if (actions != null) {
-                            for (Action action : actions) {
-                                toolBar.add(action);
-                            }
-                        }
-                    }
-
-                    PropertySheetHolderTreeNode node =
-                            (PropertySheetHolderTreeNode) path.getLastPathComponent();
-                    if (node != null) {
-                        PropertySheet[] propertySheets = node.obj.getPropertySheets();
-                        if (propertySheets != null) {
-                            for (PropertySheet propertySheet : propertySheets) {
-                                String title = propertySheet.getPropertySheetTitle();
-                                JPanel panel = propertySheet.getPropertySheetPanel();
-                                if (title == null) {
-                                    title = "Configuration";
-                                }
-                                if (panel != null) {
-                                    tabbedPane.add(title, panel);
-                                }
-                            }
-                            
-                            if (node.obj != null) {
-                                if (lastSelectedTabIndex.get(node.obj.getClass()) != null) {
-                                    // Sometimes when clicking around quickly, the lastSelectedTabIndex update seems to be wrong, 
-                                    // resulting in an IndexOutOfBoundsException. Therefore we check the tab count too. This covers variable per class Wizards too. 
-                                    tabbedPane.setSelectedIndex(Math.min(tabbedPane.getTabCount()-1, lastSelectedTabIndex.get(node.obj.getClass())));
-                                }
-                            }
-                            
-                            lastSelectedNode = node.obj;
-                        }
-                        else {
-                            lastSelectedNode = null;
-                        }
-                    }
-                }
-                
-                disableLastSelectedListener = false;
-
-                revalidate();
-                repaint();
+                selectCurrentTreePath();
             }
         });
 
@@ -256,6 +203,63 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
 
     @Override
     public void wizardCancelled(Wizard wizard) {}
+
+    public void selectCurrentTreePath() {
+        disableLastSelectedListener = true;
+        tabbedPane.removeAll();
+        toolBar.removeAll();
+
+        TreePath path = tree.getSelectionPath();
+        if (path != null) {
+            List<Object> pathsReverse = Arrays.asList(path.getPath());
+            Collections.reverse(pathsReverse);
+            for (Object o : pathsReverse) {
+                PropertySheetHolderTreeNode node = (PropertySheetHolderTreeNode) o;
+                Action[] actions = node.obj.getPropertySheetHolderActions();
+                if (actions != null) {
+                    for (Action action : actions) {
+                        toolBar.add(action);
+                    }
+                }
+            }
+
+            PropertySheetHolderTreeNode node =
+                    (PropertySheetHolderTreeNode) path.getLastPathComponent();
+            if (node != null) {
+                PropertySheet[] propertySheets = node.obj.getPropertySheets();
+                if (propertySheets != null) {
+                    for (PropertySheet propertySheet : propertySheets) {
+                        String title = propertySheet.getPropertySheetTitle();
+                        JPanel panel = propertySheet.getPropertySheetPanel();
+                        if (title == null) {
+                            title = "Configuration";
+                        }
+                        if (panel != null) {
+                            tabbedPane.add(title, panel);
+                        }
+                    }
+                    
+                    if (node.obj != null) {
+                        if (lastSelectedTabIndex.get(node.obj.getClass()) != null) {
+                            // Sometimes when clicking around quickly, the lastSelectedTabIndex update seems to be wrong, 
+                            // resulting in an IndexOutOfBoundsException. Therefore we check the tab count too. This covers variable per class Wizards too. 
+                            tabbedPane.setSelectedIndex(Math.min(tabbedPane.getTabCount()-1, lastSelectedTabIndex.get(node.obj.getClass())));
+                        }
+                    }
+                    
+                    lastSelectedNode = node.obj;
+                }
+                else {
+                    lastSelectedNode = null;
+                }
+            }
+        }
+        
+        disableLastSelectedListener = false;
+
+        revalidate();
+        repaint();
+    }
 
     public class PropertySheetHolderTreeNode implements TreeNode {
         private final PropertySheetHolder obj;

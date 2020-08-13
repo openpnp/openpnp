@@ -14,18 +14,24 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.Icon;
 
+import org.openpnp.machine.reference.axis.ReferenceLinearTransformAxis;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Solutions;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Driver;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.NozzleTip;
-import org.openpnp.spi.Signaler;
 import org.openpnp.spi.PartAlignment;
+import org.openpnp.spi.Signaler;
 import org.openpnp.util.IdentifiableList;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -50,6 +56,9 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         ERROR
     }
 
+    @ElementList(required = false)
+    protected IdentifiableList<Axis> axes = new IdentifiableList<>();
+
     @ElementList
     protected IdentifiableList<Head> heads = new IdentifiableList<>();
 
@@ -67,6 +76,9 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     @ElementList(required = false)
     protected IdentifiableList<PartAlignment> partAlignments = new IdentifiableList<>();
+
+    @ElementList(required = false)
+    protected IdentifiableList<Driver> drivers = new IdentifiableList<>();
 
     @Element(required = false)
     protected Location discardLocation = new Location(LengthUnit.Millimeters);
@@ -92,6 +104,55 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         for (Head head : heads) {
             head.setMachine(this);
         }
+    }
+
+    @Override
+    public List<Axis> getAxes() {
+        return Collections.unmodifiableList(axes);
+    }
+
+    @Override
+    public Axis getAxis(String id) {
+        return axes.get(id);
+    }
+
+    /**
+     * Find a default machine axis by type. This is just an educated guess that is good as a default assignment
+     * to be reviewed by the user.
+     * 
+     * @param type
+     * @return
+     */
+    public AbstractAxis getDefaultAxis(Axis.Type type) {
+        // Look for a controller axis.
+        AbstractAxis defaultAxis = null;
+        for (Axis axis : getAxes()) {
+            if (axis.getType() == type && axis instanceof AbstractControllerAxis) {
+                defaultAxis = (AbstractAxis) axis;
+                break;
+            }
+        }
+        if (defaultAxis != null) {
+            if (type != Axis.Type.Z) {
+                // Unless it's Z, we look for transforms on top.
+                for (Axis axis : getAxes()) {
+                    if (axis instanceof AbstractSingleTransformedAxis 
+                            && ((AbstractSingleTransformedAxis)axis).getInputAxis() == defaultAxis) {
+                        defaultAxis = (AbstractAxis) axis;
+                        break;
+                    }
+                }
+            }
+            // Look for linear transforms on top-
+            for (Axis axis : getAxes()) {
+                if (axis instanceof ReferenceLinearTransformAxis 
+                        && ((ReferenceLinearTransformAxis)axis).getPrimaryInputAxis() == defaultAxis) {
+                    defaultAxis = (AbstractAxis) axis;
+                    break;
+                }
+            }
+        }
+        return defaultAxis;
     }
 
     @Override
@@ -142,6 +203,16 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @Override
     public Camera getCamera(String id) {
         return cameras.get(id);
+    }
+
+    @Override
+    public List<Driver> getDrivers() {
+        return Collections.unmodifiableList(drivers);
+    }
+
+    @Override
+    public Driver getDriver(String id) {
+        return drivers.get(id);
     }
 
     @Override
@@ -200,6 +271,40 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     }
 
     @Override
+    public void addAxis(Axis axis) throws Exception {
+        axes.add(axis);
+        fireIndexedPropertyChange("axes", axes.size() - 1, null, axis);
+    }
+
+    @Override
+    public void removeAxis(Axis axis) {
+        int index = axes.indexOf(axis);
+        if (axes.remove(axis)) {
+            fireIndexedPropertyChange("axes", index, axis, null);
+            // Purge it out of Head-Mountables.
+            for (Head head : getHeads()) {
+                for (HeadMountable hm : head.getHeadMountables()) {
+                    if (hm.getAxis(axis.getType()) == axis) {
+                        ((AbstractHeadMountable)hm).setAxis(null, axis.getType());
+                    }
+                }
+            }
+        }
+    }
+
+    @Override 
+    public void permutateAxis(Axis axis, int direction) {
+        int index0 = axes.indexOf(axis);
+        int index1 = direction > 0 ? index0+1 : index0-1;
+        if (0 <= index1 && axes.size() > index1) {
+            axes.remove(axis);
+            axes.add(index1, axis);
+            fireIndexedPropertyChange("axes", index0, axis, axes.get(index0));
+            fireIndexedPropertyChange("axes", index1, axes.get(index0), axis);
+        }
+    }
+
+    @Override
     public void addFeeder(Feeder feeder) throws Exception {
         feeders.add(feeder);
         fireIndexedPropertyChange("feeders", feeders.size() - 1, null, feeder);
@@ -240,6 +345,32 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         int index = actuators.indexOf(actuator);
         if (actuators.remove(actuator)) {
             fireIndexedPropertyChange("actuators", index, actuator, null);
+        }
+    }
+
+    @Override
+    public void addDriver(Driver driver) throws Exception {
+        drivers.add(driver);
+        fireIndexedPropertyChange("drivers", drivers.size() - 1, null, drivers);
+    }
+
+    @Override
+    public void removeDriver(Driver driver) {
+        int index = drivers.indexOf(driver);
+        if (drivers.remove(driver)) {
+            fireIndexedPropertyChange("drivers", index, driver, null);
+        }
+    }
+
+    @Override 
+    public void permutateDriver(Driver driver, int direction) {
+        int index0 = drivers.indexOf(driver);
+        int index1 = direction > 0 ? index0+1 : index0-1;
+        if (0 <= index1 && drivers.size() > index1) {
+            drivers.remove(driver);
+            drivers.add(index1, driver);
+            fireIndexedPropertyChange("drivers", index0, driver, drivers.get(index0));
+            fireIndexedPropertyChange("drivers", index1, drivers.get(index0), driver);
         }
     }
 
@@ -338,6 +469,10 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
                         throw new Exception("Machine has not been started.");
                     }
                     result = callable.call();
+                    // Make sure all pending motion commands are planned and sent to the controllers. 
+                    // This does not necessarily wait for the motion to be complete physically, as this would 
+                    // be undesirable for continuous Jog commands.  
+                    getMotionPlanner().waitForCompletion(null, CompletionType.CommandJog);
                 }
                 catch (Exception e) {
                     exception = e;
@@ -447,5 +582,35 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
             }
         }
         return null;
+    }
+
+    @Override
+    public void findIssues(List<Solutions.Issue> issues) {
+        // MotionPlanner.
+        getMotionPlanner().findIssues(issues);
+        // Recurse into axes.
+        for (Axis axis : getAxes()) {
+            axis.findIssues(issues);
+        }
+        // Recurse into heads
+        for (Head head : getHeads()) {
+            head.findIssues(issues);
+        }
+        // Recurse into machine cameras.  
+        for (Camera camera : getCameras()) {
+            camera.findIssues(issues);
+        }
+        // Recurse into machine actuators.  
+        for (Actuator actuator : getActuators()) {
+            actuator.findIssues(issues);
+        }
+        // Recurse into drivers.  
+        for (Driver driver : getDrivers()) {
+            driver.findIssues(issues);
+        }
+        // Recurse into feeders.  
+        for (Feeder feeder : getFeeders()) {
+            feeder.findIssues(issues);
+        }
     }
 }

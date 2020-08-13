@@ -12,11 +12,16 @@ import java.awt.event.*;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -41,6 +46,8 @@ public class LogPanel extends JPanel {
     private LogEntryListModel.LogEntryFilter logLevelFilter = new LogEntryListModel.LogEntryFilter();
     private LogEntryListModel.LogEntryFilter searchBarFilter = new LogEntryListModel.LogEntryFilter();
     private LogEntryListModel.LogEntryFilter systemOutFilter = new LogEntryListModel.LogEntryFilter();
+
+    private ScheduledExecutorService scheduledExecutor;
 
     public LogPanel() {
 
@@ -134,6 +141,21 @@ public class LogPanel extends JPanel {
                 copyStringToClipboard(sb.toString());
             }
         });
+
+        scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutor.scheduleAtFixedRate(new Runnable() {
+            public void run() {
+                refreshLogIfOnTop();
+            }
+        }, 0, 500, TimeUnit.MILLISECONDS);
+
+        MainFrame.get().getTabs().addChangeListener(new ChangeListener() {
+
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                refreshLogIfOnTop();
+            }
+        });
     }
 
     private JCheckBox createSystemOutputCheckbox() {
@@ -186,9 +208,11 @@ public class LogPanel extends JPanel {
         searchTextField.getDocument().addDocumentListener(new DocumentListener() {
 
             private void updateSearchBarFilter() {
+                LogEntry entry = getSelectedEntry();
                 String searchText = searchTextField.getText();
                 searchBarFilter.setFilter((logEntry -> logEntry.getRenderedLogEntry().toLowerCase().contains(searchText.toLowerCase())));
                 logEntries.filter();
+                setSelectedEntry(entry);
             }
 
             @Override
@@ -218,9 +242,11 @@ public class LogPanel extends JPanel {
         JComboBox<Level> logLevelFilterComboBox = new JComboBox<>(Level.values());
         logLevelFilterComboBox.setSelectedItem(filterLogLevel);
         logLevelFilterComboBox.addActionListener(e -> {
+            LogEntry entry = getSelectedEntry();
             Level logLevel = (Level) logLevelFilterComboBox.getSelectedItem();
             logLevelFilter.setFilter(logEntry -> logEntry.getLevel().compareTo(logLevel) >= 0);
             logEntries.filter();
+            setSelectedEntry(entry);
         });
         filterLogLevelPanel.add(logLevelFilterComboBox);
         return filterLogLevelPanel;
@@ -247,6 +273,31 @@ public class LogPanel extends JPanel {
         StringSelection selection = new StringSelection(s);
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(selection, selection);
+    }
+
+    protected void refreshLogIfOnTop() {
+        if (MainFrame.get().getTabs().getSelectedComponent() == LogPanel.this) {
+            if (logEntries.isRefreshNeeded()) {
+                logEntries.refresh();
+            }
+        }
+    }
+
+    protected LogEntry getSelectedEntry() {
+        int index = logEntryJList.getSelectedIndex();
+        if (index >= 0) {
+            return logEntries.getElementAt(index);
+        }
+        return null;
+    }
+
+    protected void setSelectedEntry(LogEntry entry) {
+        if (entry != null) {
+            int index = logEntries.getFilteredLogEntries().indexOf(entry);
+            if (index >= 0) {
+                logEntryJList.setSelectedIndex(index);
+            }
+        }
     }
 
 }
