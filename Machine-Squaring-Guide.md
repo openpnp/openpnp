@@ -19,7 +19,7 @@ This guide covers mechanical squaring of a machine that has a double belt driven
 7. Jog as far right as your machine and paper allow.
 8. Unless your machine is perfect from scratch, you will now have an offset from the chosen horizontal line. 
 9. Keep your motors powered (for holding torque).
-10. Make sure your down camera view can be seen from where you stand, while you can access the rear right side Y drive pulley of the machine.
+10. Make sure your down camera view can be seen from where you stand, while you can access the rear right side Y drive pulley of the machine. The camera view can be enlarged and zoomed. 
 11. Loosen the drive pulley on the drive shaft, while holding everything in place (not easy). 
 12. Look at the down camera while slowly adjusting the squareness by gently moving the belt (in the Liteplacer you can nicely roll it over the idler pulley that is mounted behind and above the drive pulley).
 13. Be shocked, how easy it is to skew the machine axes! 
