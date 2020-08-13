@@ -2,6 +2,7 @@ package org.openpnp.vision.pipeline.stages;
 
 import java.awt.Color;
 import java.util.List;
+import java.util.Locale;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
@@ -65,7 +66,7 @@ public class DrawTemplateMatches extends CvStage {
             Scalar color = FluentCv.colorToScalar(color_);
             Imgproc.rectangle(mat, new org.opencv.core.Point(x, y),
                     new org.opencv.core.Point(x + width, y + height), color);
-            Imgproc.putText(mat, "" + score, new org.opencv.core.Point(x + width, y + height),
+            Imgproc.putText(mat, String.format(Locale.US, "%.3f", score), new org.opencv.core.Point(x + width, y + height),
                     Imgproc.FONT_HERSHEY_PLAIN, 1.0, color);
         }
 

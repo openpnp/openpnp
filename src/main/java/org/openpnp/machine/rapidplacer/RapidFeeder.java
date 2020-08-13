@@ -65,7 +65,7 @@ public class RapidFeeder extends ReferenceFeeder {
         if (actuator == null) {
             throw new Exception("Feed failed. Unable to find an actuator named " + actuatorName);
         }
-        actuator.actuate(String.format("%s FEED %d", address, pitch));
+        actuator.actuate(String.format("%s %d", address, pitch));
     }
     
 	@Override

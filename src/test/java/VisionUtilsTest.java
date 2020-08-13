@@ -201,16 +201,6 @@ public class VisionUtilsTest {
         }
 
         @Override
-        public long getSettleTimeMs() {
-            return 0;
-        }
-
-        @Override
-        public void setSettleTimeMs(long settleTimeMs) {
-
-        }
-
-        @Override
         public void moveTo(Location location, MoveToOption... options) throws Exception {
             moveTo(location, getHead().getMachine().getSpeed(), options);
         }
