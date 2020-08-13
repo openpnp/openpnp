@@ -12,7 +12,7 @@ This guide covers mechanical squaring of a machine that has a double belt driven
 
 1. Make sure to remove the non-squareness factor in OpenPNP if you had one.
 2. Move the machine to the left X limit, somewhere in the middle of Y.
-3. Align the camera center (crosshairs enabled) to a chosen vertical line precisely (might mark it on the paper).
+3. Put a millimeter paper under the camera and align the camera center (crosshairs enabled) to a chosen vertical line precisely (might mark it on the paper).
 4. Try to rotate the paper carefully so that the vertical line stays in the camera center precisely while jogging up and down Y in 100mm steps.
 5. Fixate the millimeter paper to the desk (e.g. with magnets). 
 6. Align the camera center to a chosen horizontal line precisely (might mark it on the paper).
