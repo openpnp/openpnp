@@ -17,6 +17,8 @@ org.openpnp.machine.neoden4
 org.openpnp.machine.neoden4.wizards
 org.openpnp.machine.rapidplacer
 org.openpnp.machine.reference
+org.openpnp.machine.reference.axis
+org.openpnp.machine.reference.axis.wizards
 org.openpnp.machine.reference.camera
 org.openpnp.machine.reference.camera.wizards
 org.openpnp.machine.reference.driver
