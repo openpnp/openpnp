@@ -114,3 +114,20 @@ To use one of these packages in your system just copy the definition to your cli
    </footprint>
 </package>
 ```
+
+## SOIC-8
+```
+<package version="1.1" id="SOIC-8" description="SOIC-8 IC" pick-vacuum-level="0.0" place-blow-off-level="0.0">
+   <footprint units="Millimeters" body-width="3.0" body-height="1.1">
+      <pad name="1" x="-2.1496" y="0.975" width="1.4709" height="0.4815" rotation="0.0" roundness="0.0"/>
+      <pad name="2" x="-2.1496" y="0.325" width="1.4709" height="0.4815" rotation="0.0" roundness="0.0"/>
+      <pad name="3" x="-2.1496" y="-0.325" width="1.4709" height="0.4815" rotation="0.0" roundness="0.0"/>
+      <pad name="4" x="-2.1496" y="-0.975" width="1.4709" height="0.4815" rotation="0.0" roundness="0.0"/>
+      <pad name="5" x="2.1496" y="-0.975" width="1.4709" height="0.4815" rotation="0.0" roundness="0.0"/>
+      <pad name="6" x="2.1496" y="-0.325" width="1.4709" height="0.4815" rotation="0.0" roundness="0.0"/>
+      <pad name="7" x="2.1496" y="0.325" width="1.4709" height="0.4815" rotation="0.0" roundness="0.0"/>
+      <pad name="8" x="2.1496" y="0.975" width="1.4709" height="0.4815" rotation="0.0" roundness="0.0"/>
+   </footprint>
+   <compatible-nozzle-tip-ids class="java.util.ArrayList"/>
+</package>
+```
