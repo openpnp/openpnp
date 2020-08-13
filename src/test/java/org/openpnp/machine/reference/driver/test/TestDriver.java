@@ -8,19 +8,20 @@ import javax.swing.Icon;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
-import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
+import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.model.AxesLocation;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
-import org.openpnp.spi.Movable.MoveToOption;
+import org.openpnp.model.Motion;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.base.AbstractDriver;
 import org.simpleframework.xml.Attribute;
 
-public class TestDriver implements ReferenceDriver {
+public class TestDriver extends AbstractDriver implements ReferenceDriver {
     @Attribute(required = false)
     private String dummy;
-
-    private Location location = new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
 
     private ReferenceDriver delegate = new TestDriverDelegate();
 
@@ -29,41 +30,32 @@ public class TestDriver implements ReferenceDriver {
     }
 
     @Override
-    public void home(ReferenceHead head) throws Exception {
-        location = new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
-        delegate.home(head);
+    public void home(ReferenceMachine machine) throws Exception {
+        delegate.home(machine);
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOption...options)
+    public void setGlobalOffsets(ReferenceMachine machine, AxesLocation location)
             throws Exception {
-        // Subtract the offsets from the incoming Location. This converts the
-        // offset coordinates to driver / absolute coordinates.
-        location = location.subtract(hm.getHeadOffsets());
+        delegate.setGlobalOffsets(machine, location);
+    }
 
-        // Convert the Location to millimeters, since that's the unit that
-        // this driver works in natively.
-        location = location.convertToUnits(LengthUnit.Millimeters);
-
-        // Get the current location of the Head that we'll move
-        Location hl = this.location;
-
-        hl = hl.derive(Double.isNaN(location.getX()) ? null : location.getX(),
-                Double.isNaN(location.getY()) ? null : location.getY(),
-                Double.isNaN(location.getZ()) ? null : location.getZ(),
-                Double.isNaN(location.getRotation()) ? null : location.getRotation());
-
-        if (!this.location.equals(hl)) {
-            this.location = hl;
-            delegate.moveTo(hm, this.location, speed);
+    @Override
+    public void moveTo(ReferenceHeadMountable hm, Motion motion)
+            throws Exception {
+        
+        // Take only this driver's axes.
+        AxesLocation newDriverLocation = motion.getLocation1();
+        // Take the current driver location of the given axes.
+        AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this), 
+                (axis) -> (axis.getDriverLengthCoordinate()));
+        if (!oldDriverLocation.matches(newDriverLocation)) {
+            delegate.moveTo(hm, motion);
+            // Store to axes
+            newDriverLocation.setToDriverCoordinates(this);
         }
     }
 
-    @Override
-    public Location getLocation(ReferenceHeadMountable hm) {
-        return location.add(hm.getHeadOffsets());
-    }
-    
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
         delegate.actuate(actuator, on);
@@ -86,19 +78,19 @@ public class TestDriver implements ReferenceDriver {
         }
 
         @Override
-        public void home(ReferenceHead head) throws Exception {
+        public void home(ReferenceMachine machine) throws Exception {
 
         }
 
         @Override
-        public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOption...options)
+        public void setGlobalOffsets(ReferenceMachine machine, AxesLocation location)
+                throws Exception {
+        }
+ 
+        @Override
+        public void moveTo(ReferenceHeadMountable hm, Motion motion)
                 throws Exception {
 
-        }
-
-        @Override
-        public Location getLocation(ReferenceHeadMountable hm) {
-            return null;
         }
 
         @Override
@@ -145,7 +137,56 @@ public class TestDriver implements ReferenceDriver {
         public void close() throws IOException {
 
         }
+
+        @Override
+        public String getName() {
+            return null;
+        }
+
+        @Override
+        public void setName(String name) {
+        }
+
+        @Override
+        public String getId() {
+            return null;
+        }
+
+        @Override
+        public LengthUnit getUnits() {
+            return LengthUnit.Millimeters;
+        }
+
+        @Override
+        public boolean isSupportingPreMove() {
+            return false;
+        }
+
+        @Override
+        public void waitForCompletion(ReferenceHeadMountable hm, CompletionType completionType) throws Exception {
+        }
+
+        @Deprecated
+        @Override
+        public void migrateDriver(ReferenceMachine machine) throws Exception {
+        }
+
+        @Override
+        public boolean isUsingLetterVariables() {
+            return false;
+        }
+
+        @Override
+        public Length getFeedRatePerSecond() {
+            return null;
+        }
+   }
+
+    @Override
+    public LengthUnit getUnits() {
+        return LengthUnit.Millimeters;
     }
+
 
     @Override
     public String getPropertySheetHolderTitle() {
@@ -179,5 +220,21 @@ public class TestDriver implements ReferenceDriver {
     @Override
     public Wizard getConfigurationWizard() {
         return null;
+    }
+
+    @Override
+    public void waitForCompletion(ReferenceHeadMountable hm, CompletionType completionType) throws Exception {
+    }
+
+    @Override
+    public boolean isUsingLetterVariables() {
+        return false;
+    }
+
+    @Deprecated
+    @Override
+    public void migrateDriver(ReferenceMachine machine) throws Exception {
+        machine.addDriver(this);
+        createAxisMappingDefaults(machine);
     }
 }

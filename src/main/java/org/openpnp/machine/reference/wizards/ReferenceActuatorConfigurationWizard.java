@@ -31,15 +31,25 @@ import javax.swing.border.TitledBorder;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.AxesComboBoxModel;
+import org.openpnp.gui.support.DoubleConverter;
+import org.openpnp.gui.support.DriversComboBoxModel;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.ReferenceActuator;
+import org.openpnp.model.Configuration;
+import org.openpnp.spi.Axis;
+import org.openpnp.spi.Driver;
+import org.openpnp.spi.base.AbstractAxis;
+import org.openpnp.spi.base.AbstractMachine;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.JComboBox;
 
 @SuppressWarnings("serial")
 public class ReferenceActuatorConfigurationWizard extends AbstractConfigurationWizard {
@@ -59,8 +69,18 @@ public class ReferenceActuatorConfigurationWizard extends AbstractConfigurationW
     private JPanel panelProperties;
     private JLabel lblName;
     private JTextField nameTf;
+    private JLabel lblDriver;
+    private JComboBox driver;
+    private JComboBox axisX;
+    private JComboBox axisY;
+    private JComboBox axisZ;
+    private JLabel lblRotation;
+    private JComboBox axisRotation;
+    private JTextField locationRotation;
+    private JLabel lblAxis;
+    private JLabel lblOffset;
 
-    public ReferenceActuatorConfigurationWizard(ReferenceActuator actuator) {
+    public ReferenceActuatorConfigurationWizard(AbstractMachine machine, ReferenceActuator actuator) {
         this.actuator = actuator;
         
         panelProperties = new JPanel();
@@ -73,13 +93,21 @@ public class ReferenceActuatorConfigurationWizard extends AbstractConfigurationW
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
+        lblDriver = new JLabel("Driver");
+        panelProperties.add(lblDriver, "2, 2, right, default");
+        
+        driver = new JComboBox(new DriversComboBoxModel(machine, true));
+        panelProperties.add(driver, "4, 2, fill, default");
+        
         lblName = new JLabel("Name");
-        panelProperties.add(lblName, "2, 2, right, default");
+        panelProperties.add(lblName, "2, 4, right, default");
         
         nameTf = new JTextField();
-        panelProperties.add(nameTf, "4, 2, fill, default");
+        panelProperties.add(nameTf, "4, 4, fill, default");
         nameTf.setColumns(20);
 
         headMountablePanel = new JPanel();
@@ -88,36 +116,72 @@ public class ReferenceActuatorConfigurationWizard extends AbstractConfigurationW
 
         panelOffsets = new JPanel();
         headMountablePanel.add(panelOffsets);
-        panelOffsets.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Offsets", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-        panelOffsets.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelOffsets.setBorder(new TitledBorder(null,
+                "Coordinate System", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        panelOffsets.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblX = new JLabel("X");
-        panelOffsets.add(lblX, "2, 2");
+        panelOffsets.add(lblX, "4, 2");
 
         JLabel lblY = new JLabel("Y");
-        panelOffsets.add(lblY, "4, 2");
+        panelOffsets.add(lblY, "6, 2");
 
         JLabel lblZ = new JLabel("Z");
-        panelOffsets.add(lblZ, "6, 2");
+        panelOffsets.add(lblZ, "8, 2");
+
+        lblRotation = new JLabel("Rotation");
+        panelOffsets.add(lblRotation, "10, 2, left, default");
+
+        lblAxis = new JLabel("Axis");
+        panelOffsets.add(lblAxis, "2, 4, right, default");
+
+        axisX = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.X, true));
+        panelOffsets.add(axisX, "4, 4, fill, default");
+
+        axisY = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.Y, true));
+        panelOffsets.add(axisY, "6, 4, fill, default");
+
+        axisZ = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.Z, true));
+        panelOffsets.add(axisZ, "8, 4, fill, default");
+
+        axisRotation = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.Rotation, true));
+        panelOffsets.add(axisRotation, "10, 4, fill, default");
+
+        lblOffset = new JLabel("Offset");
+        panelOffsets.add(lblOffset, "2, 6, right, default");
 
         locationX = new JTextField();
-        panelOffsets.add(locationX, "2, 4");
-        locationX.setColumns(5);
+        panelOffsets.add(locationX, "4, 6");
+        locationX.setColumns(10);
 
         locationY = new JTextField();
-        panelOffsets.add(locationY, "4, 4");
-        locationY.setColumns(5);
+        panelOffsets.add(locationY, "6, 6");
+        locationY.setColumns(10);
 
         locationZ = new JTextField();
-        panelOffsets.add(locationZ, "6, 4");
-        locationZ.setColumns(5);
+        panelOffsets.add(locationZ, "8, 6");
+        locationZ.setColumns(10);
+        
+        locationRotation = new JTextField();
+        panelOffsets.add(locationRotation, "10, 6, fill, default");
+        locationRotation.setColumns(10);
 
         panelSafeZ = new JPanel();
         headMountablePanel.add(panelSafeZ);
@@ -160,15 +224,28 @@ public class ReferenceActuatorConfigurationWizard extends AbstractConfigurationW
 
     @Override
     public void createBindings() {
+        AbstractMachine machine = (AbstractMachine) Configuration.get().getMachine();
         LengthConverter lengthConverter = new LengthConverter();
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         IntegerConverter intConverter = new IntegerConverter();
+        NamedConverter<Driver> driverConverter = new NamedConverter<>(machine.getDrivers()); 
+        NamedConverter<Axis> axisConverter = new NamedConverter<>(machine.getAxes()); 
 
+        addWrappedBinding(actuator, "driver", driver, "selectedItem", driverConverter);
         addWrappedBinding(actuator, "name", nameTf, "text");
+
+        addWrappedBinding(actuator, "axisX", axisX, "selectedItem", axisConverter);
+        addWrappedBinding(actuator, "axisY", axisY, "selectedItem", axisConverter);
+        addWrappedBinding(actuator, "axisZ", axisZ, "selectedItem", axisConverter);
+        addWrappedBinding(actuator, "axisRotation", axisRotation, "selectedItem", axisConverter);
+
         MutableLocationProxy headOffsets = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, actuator, "headOffsets", headOffsets, "location");
         addWrappedBinding(headOffsets, "lengthX", locationX, "text", lengthConverter);
         addWrappedBinding(headOffsets, "lengthY", locationY, "text", lengthConverter);
         addWrappedBinding(headOffsets, "lengthZ", locationZ, "text", lengthConverter);
+        addWrappedBinding(headOffsets, "rotation", locationRotation, "text", doubleConverter);
+
         addWrappedBinding(actuator, "safeZ", textFieldSafeZ, "text", lengthConverter);
         addWrappedBinding(actuator, "index", indexTextField, "text", intConverter);
 
@@ -177,6 +254,7 @@ public class ReferenceActuatorConfigurationWizard extends AbstractConfigurationW
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationZ);
+        ComponentDecorators.decorateWithAutoSelect(locationRotation);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
     }
 }

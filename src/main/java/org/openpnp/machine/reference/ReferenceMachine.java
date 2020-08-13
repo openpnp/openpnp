@@ -22,7 +22,6 @@ package org.openpnp.machine.reference;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import javax.swing.Action;
@@ -31,9 +30,16 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.marek.MarekNozzle;
+import org.openpnp.machine.neoden4.NeoDen4Driver;
 import org.openpnp.machine.neoden4.Neoden4Camera;
 import org.openpnp.machine.rapidplacer.RapidFeeder;
 import org.openpnp.machine.reference.camera.GstreamerCamera;
+import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
+import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.machine.reference.axis.ReferenceLinearTransformAxis;
+import org.openpnp.machine.reference.axis.ReferenceMappedAxis;
+import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.machine.reference.camera.OnvifIPCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
@@ -41,7 +47,9 @@ import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.camera.SwitcherCamera;
 import org.openpnp.machine.reference.camera.Webcams;
+import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.NullDriver;
+import org.openpnp.machine.reference.driver.NullMotionPlanner;
 import org.openpnp.machine.reference.feeder.AdvancedLoosePartFeeder;
 import org.openpnp.machine.reference.feeder.BlindsFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
@@ -57,7 +65,9 @@ import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.machine.reference.feeder.SchultzFeeder;
 import org.openpnp.machine.reference.feeder.SlotSchultzFeeder;
 import org.openpnp.machine.reference.psh.ActuatorsPropertySheetHolder;
+import org.openpnp.machine.reference.psh.AxesPropertySheetHolder;
 import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
+import org.openpnp.machine.reference.psh.DriversPropertySheetHolder;
 import org.openpnp.machine.reference.psh.NozzleTipsPropertySheetHolder;
 import org.openpnp.machine.reference.psh.SignalersPropertySheetHolder;
 import org.openpnp.machine.reference.signaler.ActuatorSignaler;
@@ -67,10 +77,13 @@ import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Driver;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.MotionPlanner;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PnpJobProcessor;
@@ -83,8 +96,9 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
 public class ReferenceMachine extends AbstractMachine {
+    @Deprecated
     @Element(required = false)
-    private ReferenceDriver driver = new NullDriver();
+    private ReferenceDriver driver = null;
 
     @Element(required = false)
     protected PnpJobProcessor pnpJobProcessor = new ReferencePnpJobProcessor();
@@ -93,29 +107,32 @@ public class ReferenceMachine extends AbstractMachine {
     protected FiducialLocator fiducialLocator = new ReferenceFiducialLocator();
 
     @Element(required = false)
+    protected MotionPlanner motionPlanner = new NullMotionPlanner();
+
+    @Element(required = false)
     private boolean homeAfterEnabled = false;
 
     private boolean enabled;
 
     private boolean isHomed = false;
 
+    private List<Class<? extends Axis>> registeredAxisClasses = new ArrayList<>();
+
     private List<Class<? extends Feeder>> registeredFeederClasses = new ArrayList<>();
+
+    private List<Class<? extends Driver>> registeredDriverClasses = new ArrayList<>();
 
     @Commit
     protected void commit() {
         super.commit();
     }
 
-    public ReferenceDriver getDriver() {
-        return driver;
-    }
-
-    public void setDriver(ReferenceDriver driver) throws Exception {
-        if (driver != this.driver) {
-            setEnabled(false);
-            close();
+    public ReferenceDriver getDefaultDriver() {
+        // If this is a brand new Machine, create a NullDriver.
+        if (drivers.isEmpty()) {
+            drivers.add(new NullDriver());
         }
-        this.driver = driver;
+        return (ReferenceDriver) drivers.get(0);
     }
 
     public ReferenceMachine() {
@@ -127,6 +144,13 @@ public class ReferenceMachine extends AbstractMachine {
                                  throws Exception {
                              if (partAlignments.isEmpty()) {
                                  partAlignments.add(new ReferenceBottomVision());
+                             }
+                             // Migrate the driver.
+                             if (driver != null) {
+                                 // Note, the migrated driver will add itself to the machine driver list 
+                                 // and for GcodeDrivers it will recurse into the sub-drivers.
+                                 driver.migrateDriver(ReferenceMachine.this);
+                                 driver = null;
                              }
                          }
                      });
@@ -142,7 +166,9 @@ public class ReferenceMachine extends AbstractMachine {
         Logger.debug("setEnabled({})", enabled);
         if (enabled) {
             try {
-                driver.setEnabled(true);
+                for (Driver driver : getDrivers()) {
+                    ((ReferenceDriver)driver).setEnabled(true);
+                }
                 this.enabled = true;
             }
             catch (Exception e) {
@@ -153,7 +179,9 @@ public class ReferenceMachine extends AbstractMachine {
         }
         else {
             try {
-                driver.setEnabled(false);
+                for (Driver driver : getDrivers()) {
+                    ((ReferenceDriver)driver).setEnabled(false);
+                }
                 this.enabled = false;
             }
             catch (Exception e) {
@@ -165,6 +193,14 @@ public class ReferenceMachine extends AbstractMachine {
             // remove homed-flag if machine is disabled
             this.setHomed(false);
         }
+    }
+
+    public MotionPlanner getMotionPlanner() {
+        return motionPlanner;
+    }
+
+    public void setMotionPlanner(MotionPlanner motionPlanner) {
+        this.motionPlanner = motionPlanner;
     }
 
     @Override
@@ -180,14 +216,14 @@ public class ReferenceMachine extends AbstractMachine {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
+        children.add(new AxesPropertySheetHolder(this, "Axes", getAxes(), null));
         children.add(new SignalersPropertySheetHolder(this, "Signalers", getSignalers(), null));
         children.add(new SimplePropertySheetHolder("Feeders", getFeeders()));
         children.add(new SimplePropertySheetHolder("Heads", getHeads()));
         children.add(new NozzleTipsPropertySheetHolder("Nozzle Tips", getNozzleTips(), null));
         children.add(new CamerasPropertySheetHolder(null, "Cameras", getCameras(), null));
         children.add(new ActuatorsPropertySheetHolder(null, "Actuators", getActuators(), null));
-        children.add(
-                new SimplePropertySheetHolder("Driver", Collections.singletonList(getDriver())));
+        children.add(new DriversPropertySheetHolder(this, "Drivers", getDrivers(), null));
         children.add(new SimplePropertySheetHolder("Job Processors",
                 Arrays.asList(getPnpJobProcessor())));
 
@@ -212,6 +248,18 @@ public class ReferenceMachine extends AbstractMachine {
 
     public void registerFeederClass(Class<? extends Feeder> cls) {
         registeredFeederClasses.add(cls);
+    }
+
+    @Override
+    public List<Class<? extends Axis>> getCompatibleAxisClasses() {
+        List<Class<? extends Axis>> l = new ArrayList<>();
+        l.add(ReferenceControllerAxis.class);
+        l.add(ReferenceVirtualAxis.class);
+        l.add(ReferenceMappedAxis.class);
+        l.add(ReferenceCamCounterClockwiseAxis.class);
+        l.add(ReferenceCamClockwiseAxis.class);
+        l.add(ReferenceLinearTransformAxis.class);
+        return l;
     }
 
     @Override
@@ -277,6 +325,15 @@ public class ReferenceMachine extends AbstractMachine {
         return l;
     }
 
+    @Override
+    public List<Class<? extends Driver>> getCompatibleDriverClasses() {
+        List<Class<? extends Driver>> l = new ArrayList<>();
+        l.add(NullDriver.class);
+        l.add(GcodeDriver.class);
+        l.add(NeoDen4Driver.class);
+        return l;
+    }
+
     private List<Class<? extends PartAlignment>> registeredAlignmentClasses = new ArrayList<>();
 
     @Override
@@ -286,6 +343,7 @@ public class ReferenceMachine extends AbstractMachine {
         // if one rehomes, the isHomed flag has to be removed
         this.setHomed(false);
         
+        getMotionPlanner().home();
         super.home();
 
         try {
@@ -301,11 +359,13 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Override
     public void close() throws IOException {
-        try {
-            driver.close();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+        for (Driver driver : getDrivers()) {
+            try {
+                driver.close();
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         for (Camera camera : getCameras()) {
             try {

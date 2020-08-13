@@ -5,6 +5,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
+import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.driver.AbstractReferenceDriver;
@@ -37,38 +38,52 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
     private JPanel panelTcp;
     private JTextField commsMethod;
     private JCheckBox connectionKeepAlive;
+    private JPanel panelController;
+    private JLabel lblName;
+    private JTextField driverName;
   
     public AbstractReferenceDriverConfigurationWizard(AbstractReferenceDriver driver) {
         this.driver = driver;
 
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        
+        panelController = new JPanel();
+        panelController.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panelController);
+        panelController.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblName = new JLabel("Name");
+        panelController.add(lblName, "2, 2, right, default");
+        
+        driverName = new JTextField();
+        panelController.add(driverName, "4, 2, fill, default");
+        driverName.setColumns(20);
 
         //Selector code
         JPanel panelComms = new JPanel();
         panelComms.setBorder(new TitledBorder(null, "Communications method", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelComms);
-        panelComms.setLayout(new FormLayout(new ColumnSpec[]{
+        panelComms.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:default"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[]{
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JRadioButton radioSerial = new JRadioButton("Serial");
         radioSerial.setMnemonic(KeyEvent.VK_S);
@@ -214,28 +229,16 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         panelTcp = new JPanel();
         panelTcp.setBorder(new TitledBorder(null, "TCP", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelTcp);
-        panelTcp.setLayout(new FormLayout(new ColumnSpec[]{
+        panelTcp.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:default"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[]{
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblIpAddress = new JLabel("IP Address");
         panelTcp.add(lblIpAddress, "2, 2, right, default");
@@ -297,6 +300,8 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
     public void createBindings() {
         IntegerConverter integerConverter = new IntegerConverter();
 
+        addWrappedBinding(driver, "name", driverName, "text");
+
         addWrappedBinding(driver, "communicationsType", commsMethod, "text");
         addWrappedBinding(driver, "connectionKeepAlive", connectionKeepAlive, "selected");
         
@@ -311,5 +316,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         
         addWrappedBinding(driver, "ipAddress", ipAddressTextField, "text");
         addWrappedBinding(driver, "port", portTextField, "text", integerConverter);
+
+        ComponentDecorators.decorateWithAutoSelect(driverName);
     }
 }

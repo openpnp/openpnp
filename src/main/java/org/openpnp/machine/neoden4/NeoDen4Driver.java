@@ -12,11 +12,15 @@ import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.driver.AbstractReferenceDriver;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
+import org.openpnp.model.Motion;
 import org.openpnp.model.Named;
-import org.openpnp.spi.Movable.MoveToOption;
+import org.openpnp.spi.Axis;
+import org.openpnp.spi.ControllerAxis;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -96,13 +100,12 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
 
     @Attribute(required = false)
     protected int connectWaitTimeMilliseconds = 3000;
-    
-    @Attribute(required = false)
-    protected String name = "NeoDen4Driver";
-    
+
+    @Deprecated
     @Attribute(required = false)
     protected double homeCoordinateX = -437.;
     
+    @Deprecated
     @Attribute(required = false)
     protected double homeCoordinateY = 437.; /* Maybe this needs to be 400. - needs more testing  */
 
@@ -337,7 +340,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
     
     @Override
-    public void home(ReferenceHead head) throws Exception {
+    public void home(ReferenceMachine machine) throws Exception {
         /* Make sure *all* nozzles are up before moving */ 
         moveZ(1, 0);
         moveZ(2, 0);
@@ -363,28 +366,22 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         }
 
         /* Initialize coordinates correctly after home is completed */
-        this.x = this.homeCoordinateX;
-        this.y = this.homeCoordinateY;
+        AxesLocation homeLocation = new AxesLocation(machine, this, (axis) -> (axis.getHomeCoordinate()));
+        homeLocation.setToDriverCoordinates(this);
+        
+        this.x = homeLocation.getCoordinate(homeLocation.getAxis(this, Axis.Type.X), units);
+        this.y = homeLocation.getCoordinate(homeLocation.getAxis(this, Axis.Type.Y), units);
 
-        ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
-        machine.fireMachineHeadActivity(head);
+        machine.fireMachineHeadActivity(machine.getDefaultHead());
     }
 
     @Override
-    public Location getLocation(ReferenceHeadMountable hm) {
-        switch (hm.getId()) {
-            case "N1":
-                return new Location(units, x, y, z1, c1).add(hm.getHeadOffsets());
-            case "N2":
-                return new Location(units, x, y, z2, c2).add(hm.getHeadOffsets());
-            case "N3":
-                return new Location(units, x, y, z3, c3).add(hm.getHeadOffsets());
-            case "N4":
-                return new Location(units, x, y, z4, c4).add(hm.getHeadOffsets());
-        }
-        return new Location(units, x, y, 0, 0).add(hm.getHeadOffsets());
+    public void setGlobalOffsets(ReferenceMachine machine, AxesLocation location)
+            throws Exception {
+        // TODO: if the driver can do it, please implement to support visual homing. 
+        throw new Exception("Not supported in this driver");
     }
-    
+
     private void moveXy(double x, double y) throws Exception {
         write(0x48);
         expect(0x05);
@@ -489,16 +486,24 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOption...options)
+    public void moveTo(ReferenceHeadMountable hm, Motion motion)
             throws Exception {
-        location = location.convertToUnits(units);
-        location = location.subtract(hm.getHeadOffsets());
+        AxesLocation location = motion.getLocation1();
+        double feedRate = motion.getFeedRatePerSecond(this);
+        // Reconstruct speed factor from "virtual" feed-rate assuming the default 
+        // 250mm/s axes feedrate.
+        
+        // TODO: better solution. 
+        
+        double speed = Math.max(0.0, Math.min(1.0, feedRate/250.0));
+        
+        double x = location.getCoordinate(location.getAxis(this, Axis.Type.X), units);
+        double y = location.getCoordinate(location.getAxis(this, Axis.Type.Y), units);
+        double z = location.getCoordinate(location.getAxis(this, Axis.Type.Z), units);
+        double c = location.getCoordinate(location.getAxis(this, Axis.Type.Rotation), units);
 
-        double x = location.getX();
-        double y = location.getY();
-        double z = location.getZ();
-        double c = location.getRotation();
-
+        // TODO: remove NaN handling. It is already done outside of the driver.
+        
         // Handle NaNs, which means don't move this axis for this move. We just copy the existing
         // coordinate.
         x = Double.isNaN(x) ? this.x : x;
@@ -584,6 +589,15 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
                 }
                 break;
         }
+        
+        // Store the new location to the axes.
+        location.setToDriverCoordinates(this);
+    }
+
+    @Override
+    public void waitForCompletion(ReferenceHeadMountable hm, 
+            CompletionType completionType) throws Exception {
+        // TODO Auto-generated method stub
     }
 
     @Override
@@ -863,20 +877,11 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
-            new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Communications"),
+            new PropertySheetWizardAdapter(super.getConfigurationWizard()),
             new PropertySheetWizardAdapter(new Neoden4DriverConfigurationWizard(this), "Machine")
         };
     }
-    
-    public String getName() {
-        return name;
-    }
 
-    public void setName(String name) {
-        this.name = name;
-        firePropertyChange("name", null, getName());
-    }
-    
     public LengthUnit getUnits() {
         return units;
     }
@@ -901,22 +906,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         this.connectWaitTimeMilliseconds = connectWaitTimeMilliseconds;
     }
 
-    public double getHomeCoordinateX() {
-        return this.homeCoordinateX;
-    }
-
-    public void setHomeCoordinateX(double homeX) {
-        this.homeCoordinateX = homeX;
-    }
-
-    public double getHomeCoordinateY() {
-        return this.homeCoordinateY;
-    }
-
-    public void setHomeCoordinateY(double homeY) {
-        this.homeCoordinateY = homeY;
-    }
-
     public double getScaleFactorX() {
         return this.scaleFactorX;
     }
@@ -931,5 +920,26 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
 
     public void setScaleFactorY(double scaleFactorY) {
         this.scaleFactorY = scaleFactorY;
+    }
+
+    @Deprecated
+    @Override
+    public void migrateDriver(ReferenceMachine machine) throws Exception {
+        machine.addDriver(this);
+        createAxisMappingDefaults(machine);
+        AxesLocation homeLocation = new AxesLocation(machine, this, (axis) -> ( axis.getHomeCoordinate() ));
+        for (ControllerAxis axis : homeLocation.getAxes(this)) {
+            if (axis.getType() == Axis.Type.X) {
+                ((ControllerAxis) axis).setHomeCoordinate(new Length(homeCoordinateX, getUnits()));
+            }
+            else if (axis.getType() == Axis.Type.Y) {
+                ((ControllerAxis) axis).setHomeCoordinate(new Length(homeCoordinateY, getUnits()));
+            }
+        }
+    }
+
+    @Override
+    public boolean isUsingLetterVariables() {
+        return false;
     }
 }

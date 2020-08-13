@@ -21,55 +21,76 @@ package org.openpnp.machine.reference;
 
 import java.io.Closeable;
 
-import org.openpnp.model.Location;
-import org.openpnp.spi.Movable.MoveToOption;
+import org.openpnp.model.AxesLocation;
+import org.openpnp.model.Motion;
+import org.openpnp.spi.Driver;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.WizardConfigurable;
 
 /**
- * Defines the interface for a simple driver that the ReferenceMachine can drive. All methods result
- * in machine operations and all methods should block until they are complete or throw an error.
+ * Defines the interface for a simple driver that the MotionPlanner can drive. All methods result
+ * in machine operations and most methods should block until they are complete or throw an error.
  * 
- * This Driver interface is intended to model a machine with one or more Heads, and each Head having
- * one or more Nozzles and zero or more Cameras and Actuators.
+ * This Driver interface is intended to talk to one controller with Axes and Actuators attached.
  * 
  * In OpenPnP, the Head does not move on it's own. It is moved by the moving of attached objects:
- * Nozzles, Cameras, Actuators. For this reason, all movements on the driver are specified as
- * movements by one of these objects. This allows the driver to make decisions as to what axes
- * should be moved to accomplish a specific task.
+ * Nozzles, Cameras, Actuators, so-called HeadMountables. The HeadMountables specify by which axes 
+ * they are moved. The axes are in turn assigned to the Driver. When you move a HeadMountable the 
+ * MotionPlanner will determine which axes are involved and call the drivers accordingly. 
+ * 
+ * Drivers should only expose the functionality of the controller in a unified way. They should not add 
+ * additional logic other than what is needed to make an attached controller behave like any other. This is 
+ * different from previous versions of OpenPnP where the driver did much more. 
+ * 
  */
-public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder, Closeable {
+public interface ReferenceDriver extends Driver, WizardConfigurable, PropertySheetHolder, Closeable {
     /**
-     * Performing the hardware homing operation for the given Head. When this call completes the
-     * Head should be at it's 0,0,0,0 position.
+     * Perform the hardware homing operation. When this completes the axes should be at their homing location. 
+     * The call might return before this physically happens, so a waitForCompletion() is needed if you need to be 
+     * sure.
      * 
+     * @param machine
+     * @param homeLocation
      * @throws Exception
      */
-    public void home(ReferenceHead head) throws Exception;    
+    public void home(ReferenceMachine machine) throws Exception;
 
     /**
-     * Moves the specified HeadMountable to the given location at a speed defined by (maximum feed
-     * rate * speed) where speed is greater than 0 and typically less than or equal to 1. A speed of
-     * 0 means to move at the minimum possible speed.
+     * Set the current physical axis positions to be reinterpreted as the specified coordinates. 
+     * Used after visual homing and to reset a rotation angle after it has wrapped around. 
      * 
-     * HeadMountable object types include Nozzle, Camera and Actuator.
-     * 
-     * @param hm
-     * @param location destination
-     * @param speed relative speed (0-1) of the move
-     * @param options zero to n options from the MoveToOptions enum.
+     * In G-Code parlance this is setting a global offset:
+     * @see http://www.linuxcnc.org/docs/html/gcode/coordinates.html#_the_g92_commands
+     * @see http://smoothieware.org/g92-cnc
+     * @see https://github.com/synthetos/TinyG/wiki/Coordinate-Systems#offsets-to-the-offsets-g92  
+     *  
+     * @param machine
+     * @param axesLocation
      * @throws Exception
      */
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOption... options) throws Exception;
+    public void setGlobalOffsets(ReferenceMachine machine, AxesLocation axesLocation) throws Exception;
 
     /**
-     * Returns a clone of the HeadMountable's current location. It's important that the returned
-     * object is a clone, since the caller may modify the returned Location.
+     * Executes the given Motion.
      * 
-     * @param hm
-     * @return
+     * @param hm The HeadMountable having triggered the move. This is mostly for proprietary machine driver support  
+     * and might only be a stand-in in some motion blending scenarios.
+     * @param motion The moveTo Motion to execute, including target location, feedrate, acceleration etc. as shaped by 
+     * the MotionPlanner
+     * @throws Exception
      */
-    public Location getLocation(ReferenceHeadMountable hm);
+    public void moveTo(ReferenceHeadMountable hm, Motion motion) throws Exception;
+
+    /**
+     * Perform a coordinated wait for completion. This must be issued before capturing camera frames etc.
+     * 
+     * @param hm The HeadMountable to wait for. If null, wait for all the axes on the driver. Most drivers/controllers will probably 
+     * not be able to wait for just a sub-set of axes, so the'll wait for all the axes anyway. 
+     * @param completionType The kind of completion wanted.
+     * @throws Exception 
+     */
+    public void waitForCompletion(ReferenceHeadMountable hm, CompletionType completionType) throws Exception;
 
     /**
      * Actuates a machine defined object with a boolean state.
@@ -130,5 +151,16 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
      */
     public void setEnabled(boolean enabled) throws Exception;
 
-    public default void createDefaults() {};
+    public default void createDefaults() throws Exception  {}
+
+    /**
+     * Migrates the driver for the new global axes implementation. Is marked a deprecated as it can be removed
+     * along with the old GcodeDriver Axes implementation, once migration of users is expected to be complete.  
+     * 
+     * @param machine
+     * @throws Exception
+     */
+    @Deprecated
+    void migrateDriver(ReferenceMachine machine) throws Exception;
+
 }

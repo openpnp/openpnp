@@ -7,10 +7,10 @@ import org.junit.Test;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
-import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.machine.reference.driver.test.TestDriver;
 import org.openpnp.machine.reference.driver.test.TestDriver.TestDriverDelegate;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -18,12 +18,12 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Motion;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
-import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.Nozzle;
 
 import com.google.common.io.Files;
@@ -57,10 +57,12 @@ public class BasicJobTest {
 
         Configuration.initialize(workingDirectory);
         Configuration.get().load();
+        // Save back migrated.
+        Configuration.get().save();
 
         Machine machine = Configuration.get().getMachine();
         ReferenceMachine referenceMachine = (ReferenceMachine) machine;
-        TestDriver testDriver = (TestDriver) referenceMachine.getDriver();
+        TestDriver testDriver = (TestDriver) referenceMachine.getDefaultDriver();
         BasicJobTestDriverDelegate delegate = new BasicJobTestDriverDelegate();
         testDriver.setDelegate(delegate);
 
@@ -71,7 +73,7 @@ public class BasicJobTest {
         Nozzle n2 = h1.getNozzle("N2");
         Camera c1 = h1.getCamera("C1");
 
-        delegate.expectMove("Move N1 Nozzle Change Unload", n1,
+        delegate.expectMove("Move N1 Nozzle Change Load", n1,
                 new Location(LengthUnit.Millimeters, 40, 0, 0, 0), 1.0);
         delegate.expectMove("Move N2 Nozzle Change Load", n2,
                 new Location(LengthUnit.Millimeters, 50, 0, 0, 0), 1.0);
@@ -146,7 +148,7 @@ public class BasicJobTest {
         private Queue<ExpectedOp> expectedOps = new LinkedList<>();
 
         public void expectMove(String description, HeadMountable hm, Location location,
-                double speed) {
+                double speed) throws Exception {
             ExpectedMove o = new ExpectedMove(description, hm, location, speed);
             expectedOps.add(o);
         }
@@ -156,23 +158,25 @@ public class BasicJobTest {
         }
 
         @Override
-        public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOption...options)
+        public void moveTo(ReferenceHeadMountable hm, Motion motion)
                 throws Exception {
+            AxesLocation location = motion.getLocation1();
+            
             System.out.println(hm + " " + location);
             if (expectedOps.isEmpty()) {
-                throw new Exception("Unexpected Move " + location + ".");
+                throw new Exception("Unexpected Move " + hm + " " + location + ".");
             }
             else {
                 ExpectedOp op = expectedOps.remove();
 
                 if (!(op instanceof ExpectedMove)) {
-                    throw new Exception("Unexpected Move " + location + ". Expected " + op);
+                    throw new Exception("Unexpected Move " + hm + " " + location + ". Expected " + op);
                 }
 
                 ExpectedMove move = (ExpectedMove) op;
 
-                if (!move.location.equals(location) || hm != move.headMountable) {
-                    throw new Exception("Unexpected Move " + location + ". Expected " + op);
+                if (!move.location.matches(location) || hm != move.headMountable) {
+                    throw new Exception("Unexpected Move " + hm + " " + location + ". Expected " + op);
                 }
             }
         }
@@ -210,14 +214,16 @@ public class BasicJobTest {
 
         class ExpectedMove extends ExpectedOp {
             public HeadMountable headMountable;
-            public Location location;
+            public AxesLocation location;
             public double speed;
             public String description;
 
             public ExpectedMove(String description, HeadMountable headMountable, Location location,
-                    double speed) {
+                    double speed) throws Exception {
                 this.headMountable = headMountable;
-                this.location = location;
+                // The expected location must be converted into raw coordinates, but it is already a head location.  
+                // Therefore, don't do this:  Location headLocation = headMountable.toHeadLocation(location);
+                this.location = headMountable.toRaw(location);
                 this.speed = speed;
                 this.description = description;
             }

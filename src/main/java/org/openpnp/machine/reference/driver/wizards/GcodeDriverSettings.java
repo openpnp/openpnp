@@ -72,10 +72,6 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         JLabel lblUnits = new JLabel("Units");
@@ -84,7 +80,8 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         unitsCb = new JComboBox(LengthUnit.values());
         settingsPanel.add(unitsCb, "8, 2, fill, default");
         
-        JLabel lblMaxFeedRate = new JLabel("Max Feed Rate [Units/Min]");
+        JLabel lblMaxFeedRate = new JLabel("Max Feed Rate [/min]");
+        lblMaxFeedRate.setToolTipText("<html><p>Maximum tool-path feed-rate in driver units per minute. </p>\r\n<p>Set to 0 to disable and only use axis feed-rate limits. Diagonal moves will then be faster. </p>\r\n</html>");
         settingsPanel.add(lblMaxFeedRate, "6, 4, right, default");
         
         maxFeedRateTf = new JTextField();
@@ -96,83 +93,46 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         
         commandTimeoutTf = new JTextField();
         settingsPanel.add(commandTimeoutTf, "4, 2, fill, default");
-        commandTimeoutTf.setColumns(5);
+        commandTimeoutTf.setColumns(10);
         
         JLabel lblConnectWaitTime = new JLabel("Connect Wait Time [ms]");
         settingsPanel.add(lblConnectWaitTime, "2, 4, right, default");
         
         connectWaitTimeTf = new JTextField();
         settingsPanel.add(connectWaitTimeTf, "4, 4, fill, default");
-        connectWaitTimeTf.setColumns(5);
-        
-        JLabel lblBacklashOffsetX = new JLabel("Backlash Offset X [Units]");
-        settingsPanel.add(lblBacklashOffsetX, "2, 6, right, default");
-        
-        backlashOffsetXTf = new JTextField();
-        settingsPanel.add(backlashOffsetXTf, "4, 6, fill, default");
-        backlashOffsetXTf.setColumns(5);
-        
-        JLabel lblBacklashOffsetY = new JLabel("Backlash Offset Y [Units]");
-        settingsPanel.add(lblBacklashOffsetY, "6, 6, right, default");
-        
-        backlashOffsetYTf = new JTextField();
-        settingsPanel.add(backlashOffsetYTf, "8, 6, fill, default");
-        backlashOffsetYTf.setColumns(5);
-        
-        JLabel lblBacklashOffsetZ = new JLabel("Backlash Offset Z [Units]");
-        settingsPanel.add(lblBacklashOffsetZ, "2, 8, right, default");
-        
-        backlashOffsetZTf = new JTextField();
-        backlashOffsetZTf.setToolTipText("Amount of z-axis backlash compensation");
-        settingsPanel.add(backlashOffsetZTf, "4, 8, fill, default");
-        backlashOffsetZTf.setColumns(5);
-        
-        JLabel lblBacklashOffsetR = new JLabel("Backlash Offset R [Units]");
-        settingsPanel.add(lblBacklashOffsetR, "6, 8, right, default");
-        
-        backlashOffsetRTf = new JTextField();
-        backlashOffsetRTf.setToolTipText("Amount of rotation backlash compensation");
-        settingsPanel.add(backlashOffsetRTf, "8, 8, fill, default");
-        backlashOffsetRTf.setColumns(5);
+        connectWaitTimeTf.setColumns(10);
         
         JLabel lblBacklashFeedSpeedFactor = new JLabel("Backlash Feed Rate Factor");
-        settingsPanel.add(lblBacklashFeedSpeedFactor, "2, 10, right, default");
+        settingsPanel.add(lblBacklashFeedSpeedFactor, "2, 6, right, default");
         
         backlashFeedRateFactorTf = new JTextField();
-        settingsPanel.add(backlashFeedRateFactorTf, "4, 10, fill, default");
-        backlashFeedRateFactorTf.setColumns(5);
+        settingsPanel.add(backlashFeedRateFactorTf, "4, 6, fill, default");
+        backlashFeedRateFactorTf.setColumns(10);
         
-        JLabel lblNewLabel = new JLabel("Driver Name");
-        settingsPanel.add(lblNewLabel, "6, 10, right, default");
-        
-        driverName = new JTextField();
-        driverName.setColumns(5);
-        settingsPanel.add(driverName, "8, 10");
-        
-        JLabel lblNonSquarenessFactor = new JLabel("Non-Squareness Factor");
-        settingsPanel.add(lblNonSquarenessFactor, "2, 12, right, default");
-        
-        nonSquarenessFactorTf = new JTextField();
-        settingsPanel.add(nonSquarenessFactorTf, "4, 12, fill, default");
-        nonSquarenessFactorTf.setColumns(5);
-        
-        JLabel lblVisualHoming = new JLabel("Visual Homing");
-        settingsPanel.add(lblVisualHoming, "6, 12, right, default");
-        
-        visualHoming = new JCheckBox("");
-        settingsPanel.add(visualHoming, "8, 12");
-        
-        JLabel lblBackslashEscapedCharacters = new JLabel("Backslash Escaped Characters");
+        JLabel lblBackslashEscapedCharacters = new JLabel("Backslash Escaped Characters?");
         lblBackslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                 + "feed, \\r for carriage return, and \\f for form feed.");
-        settingsPanel.add(lblBackslashEscapedCharacters, "2, 14, right, default");
+        settingsPanel.add(lblBackslashEscapedCharacters, "2, 8, right, default");
         
         backslashEscapedCharacters = new JCheckBox("");
         backslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                 + "feed, \\r for carriage return, and \\f for form feed.");
-        settingsPanel.add(backslashEscapedCharacters, "4, 14");
+        settingsPanel.add(backslashEscapedCharacters, "4, 8");
+        
+        JLabel lblLetterVariables = new JLabel("Letter Variables?");
+        lblLetterVariables.setToolTipText("Axis variables in Gcode are named using the Axis Letters rather than the Axis Type.");
+        settingsPanel.add(lblLetterVariables, "6, 8, right, default");
+        
+        letterVariables = new JCheckBox("");
+        settingsPanel.add(letterVariables, "8, 8");
+        
+        JLabel lblAllowPremoveCommands = new JLabel("Allow Pre-Move Commands?");
+        settingsPanel.add(lblAllowPremoveCommands, "2, 10, right, default");
+        
+        supportingPreMove = new JCheckBox("");
+        settingsPanel.add(supportingPreMove, "4, 10");
     }
 
     @Override
@@ -184,28 +144,17 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         
         addWrappedBinding(driver, "units", unitsCb, "selectedItem");
         addWrappedBinding(driver, "maxFeedRate", maxFeedRateTf, "text", intConverter);
-        addWrappedBinding(driver, "backlashOffsetX", backlashOffsetXTf, "text", doubleConverter);
-        addWrappedBinding(driver, "backlashOffsetY", backlashOffsetYTf, "text", doubleConverter);
-        addWrappedBinding(driver, "backlashOffsetZ", backlashOffsetZTf, "text", doubleConverter);
-        addWrappedBinding(driver, "backlashOffsetR", backlashOffsetRTf, "text", doubleConverter);
-        addWrappedBinding(driver, "nonSquarenessFactor", nonSquarenessFactorTf, "text", doubleConverterFine);
         addWrappedBinding(driver, "backlashFeedRateFactor", backlashFeedRateFactorTf, "text", doubleConverter);
         addWrappedBinding(driver, "timeoutMilliseconds", commandTimeoutTf, "text", intConverter);
         addWrappedBinding(driver, "connectWaitTimeMilliseconds", connectWaitTimeTf, "text", intConverter);
-        addWrappedBinding(driver, "name", driverName, "text");
-        addWrappedBinding(driver, "visualHomingEnabled", visualHoming, "selected");
         addWrappedBinding(driver, "backslashEscapedCharactersEnabled", backslashEscapedCharacters, "selected");
+        addWrappedBinding(driver, "supportingPreMove", supportingPreMove, "selected");
+        addWrappedBinding(driver, "usingLetterVariables", letterVariables, "selected");
         
         ComponentDecorators.decorateWithAutoSelect(maxFeedRateTf);
-        ComponentDecorators.decorateWithAutoSelect(backlashOffsetXTf);
-        ComponentDecorators.decorateWithAutoSelect(nonSquarenessFactorTf);
-        ComponentDecorators.decorateWithAutoSelect(backlashOffsetYTf);
-        ComponentDecorators.decorateWithAutoSelect(backlashOffsetZTf);
-        ComponentDecorators.decorateWithAutoSelect(backlashOffsetRTf);
         ComponentDecorators.decorateWithAutoSelect(backlashFeedRateFactorTf);
         ComponentDecorators.decorateWithAutoSelect(commandTimeoutTf);
         ComponentDecorators.decorateWithAutoSelect(connectWaitTimeTf);
-        ComponentDecorators.decorateWithAutoSelect(driverName);
     }
 
     public final Action exportProfileAction = new AbstractAction() {
@@ -335,17 +284,12 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         }
     };
     private JTextField maxFeedRateTf;
-    private JTextField backlashOffsetXTf;
-    private JTextField backlashOffsetYTf;
-    private JTextField backlashOffsetZTf;
-    private JTextField backlashOffsetRTf;
     private JTextField backlashFeedRateFactorTf;
-    private JTextField nonSquarenessFactorTf;
     private JTextField commandTimeoutTf;
     private JTextField connectWaitTimeTf;
     private JComboBox unitsCb;
-    private JTextField driverName;
-    private JCheckBox visualHoming;
+    private JCheckBox supportingPreMove;
+    private JCheckBox letterVariables;
     private JCheckBox backslashEscapedCharacters;
 
     static class HeadMountableItem {

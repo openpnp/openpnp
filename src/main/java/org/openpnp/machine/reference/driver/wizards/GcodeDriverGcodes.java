@@ -43,6 +43,7 @@ import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.simpleframework.xml.Serializer;
 
@@ -79,19 +80,28 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         gcodePanel.add(comboBoxHm, "2, 4, fill, default");
 
         comboBoxHm.addItem(new HeadMountableItem(null));
-        for (Head head : Configuration.get().getMachine().getHeads()) {
+        Machine machine = Configuration.get().getMachine();
+        for (Head head : machine.getHeads()) {
             for (Nozzle hm : head.getNozzles()) {
-                comboBoxHm.addItem(new HeadMountableItem(hm));
+                if (!hm.getMappedAxes(machine).drivenBy(driver).isEmpty()) {
+                    comboBoxHm.addItem(new HeadMountableItem(hm));
+                }
             }
             for (Camera hm : head.getCameras()) {
-                comboBoxHm.addItem(new HeadMountableItem(hm));
+                if (!hm.getMappedAxes(machine).drivenBy(driver).isEmpty()) {
+                    comboBoxHm.addItem(new HeadMountableItem(hm));
+                }
             }
             for (Actuator hm : head.getActuators()) {
-                comboBoxHm.addItem(new HeadMountableItem(hm));
+                if (hm.getDriver() == driver || !hm.getMappedAxes(machine).drivenBy(driver).isEmpty()) {
+                    comboBoxHm.addItem(new HeadMountableItem(hm));
+                }
             }
         }
         for (Actuator actuator : Configuration.get().getMachine().getActuators()) {
-            comboBoxHm.addItem(new HeadMountableItem(actuator));
+            if (actuator.getDriver() == driver) {
+                comboBoxHm.addItem(new HeadMountableItem(actuator));
+            }
         }
 
         comboBoxCommandType = new JComboBox<>();

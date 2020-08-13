@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
+import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.Named;
 
 
@@ -88,6 +89,13 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
     public Camera getCamera(String id);
 
     /**
+     * Get a list of all the HeadMountables attached to this Head.
+     * 
+     * @return
+     */
+    List<HeadMountable> getHeadMountables();
+
+    /**
      * Directs the Head to move to it's home position and to move any attached devices to their home
      * positions.
      */
@@ -118,6 +126,17 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
     public Machine getMachine();
     
     public Location getParkLocation();
+
+    /**
+     * All HeadMountable motion must go through the head to map to the right
+     * drivers.  
+     * 
+     * @param hm
+     * @param location
+     * @param speed
+     * @throws Exception
+     */
+    public void moveTo(HeadMountable hm, Location location, double speed, MotionOption... options) throws Exception;
 
     /**
      * Returns true if any nozzle on the Head is currently carrying a part.

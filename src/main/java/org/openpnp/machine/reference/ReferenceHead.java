@@ -20,6 +20,7 @@
 package org.openpnp.machine.reference;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.swing.Action;
 
@@ -29,20 +30,65 @@ import org.openpnp.machine.reference.psh.ActuatorsPropertySheetHolder;
 import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
 import org.openpnp.machine.reference.psh.NozzlesPropertySheetHolder;
 import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
+import org.openpnp.model.Motion.MotionOption;
+import org.openpnp.model.Part;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.spi.base.AbstractHead;
+import org.openpnp.spi.base.AbstractHeadMountable;
 import org.pmw.tinylog.Logger;
 
 public class ReferenceHead extends AbstractHead {
+    
     @Override
     public void home() throws Exception {
         Logger.debug("{}.home()", getName());
-        getDriver().home(this);
+        
+        // Note, don't call super.home() yet, need to do the physical homing first.
+        if (getVisualHomingMethod() != VisualHomingMethod.None) {
+            /*
+             * The head default camera should now be (if everything has homed correctly) directly
+             * above the homing fiducial on the machine bed, use the head camera scan for this and make sure
+             * this is exactly central - otherwise we move the camera until it is, and then reset all
+             * the axis back to the fiducial location as this is calibrated home.
+             */
+            HeadMountable hm = getDefaultCamera();
+            Part homePart = Configuration.get().getPart("FIDUCIAL-HOME");
+            if (homePart == null) {
+                throw new Exception("Visual homing is missing the FIDUCIAL-HOME part. Please create it.");
+            }
+            Location homingLocation = Configuration.get().getMachine().getFiducialLocator()
+                    .getHomeFiducialLocation(getHomingFiducialLocation(), homePart);
+            if (homingLocation == null) {
+                // Homing failed
+                throw new Exception("Visual homing failed");
+            }
+
+            ReferenceMachine machine = getMachine();
+            AxesLocation axesHomingLocation;
+            if (getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
+                // Convert fiducial location to raw coordinates
+                // TODO: are you sure the toHeadLocation() is needed?
+                axesHomingLocation = hm.toRaw(hm.toHeadLocation(getHomingFiducialLocation()));
+            }
+            else {
+                // Use bare X, Y homing coordinates (legacy mode).
+                axesHomingLocation =  new AxesLocation(machine, 
+                        (axis) -> (axis.getHomeCoordinate())); 
+            }
+            // Just take the X and Y axes.
+            axesHomingLocation = axesHomingLocation.byType(Axis.Type.X, Axis.Type.Y); 
+            // Reset to the homing fiducial location as the new Working Coordinate System.
+            machine.getMotionPlanner().setGlobalOffsets(axesHomingLocation);
+        }
+        // Now that the machine is physically homed, do the logical homing.
         super.home();
+        // Let everybody know.
         getMachine().fireMachineHeadActivity(this);
     }
 
@@ -83,43 +129,36 @@ public class ReferenceHead extends AbstractHead {
 
     @Override 
     public boolean isInsideSoftLimits(HeadMountable hm, Location location)  throws Exception {
-        if (isSoftLimitsEnabled()) {
-            /**
-             * Since minLocation and maxLocation are captured with the Camera's coordinates, we need
-             * to know where the Camera will land, not the HeadMountable.
-             */
-            if (hm instanceof ReferenceHeadMountable) {
-                Location cameraLocation = location.subtract(((ReferenceHeadMountable)hm).getHeadOffsets());
-                cameraLocation = cameraLocation.add(((ReferenceCamera) getDefaultCamera()).getHeadOffsets());
-                Location minLocation = this.minLocation.convertToUnits(cameraLocation.getUnits());
-                Location maxLocation = this.maxLocation.convertToUnits(cameraLocation.getUnits());
-                if (cameraLocation.getX() < minLocation.getX() || cameraLocation.getX() > maxLocation.getX() ||
-                        cameraLocation.getY() < minLocation.getY() || cameraLocation.getY() > maxLocation.getY()) {
-                    return false;
-                }
+        if (hm instanceof ReferenceHeadMountable) {
+            Location headLocation = ((AbstractHeadMountable) hm).toHeadLocation(location);
+            AxesLocation axesLocation = ((AbstractHeadMountable) hm).toRaw(headLocation);
+            if (getMachine().getMotionPlanner().isValidLocation(axesLocation)) {
+                return false;
             }
         }
         return true;
     }
 
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, MoveToOption... options) throws Exception {
-        if (! isInsideSoftLimits(hm, location)) {
-            throw new Exception(String.format("Can't move %s to %s, outside of soft limits on head %s.",
-                    hm.getName(), location, getName()));
+    @Override 
+    public void moveTo(HeadMountable hm, Location location, double speed, MotionOption... options) throws Exception {
+        ReferenceMachine machine = getMachine();
+        AxesLocation mappedAxes = hm.getMappedAxes(machine);
+        if (!mappedAxes.isEmpty()) {
+            AxesLocation axesLocation = hm.toRaw(location);
+            machine.getMotionPlanner().moveTo(hm, axesLocation, speed, options);
+            // TODO: wait only where necessary, e.g. in vision and (perhaps) vacuum sensing.
+            machine.getMotionPlanner().waitForCompletion(hm, 
+                    Arrays.asList(options).contains(MotionOption.JogMotion) ? 
+                            CompletionType.CommandJog : CompletionType.WaitForStillstand);
+            machine.fireMachineHeadActivity(this);
         }
-        getDriver().moveTo(hm, location, speed);
-        getMachine().fireMachineHeadActivity(this);
     }
 
     @Override
     public String toString() {
         return getName();
     }
-    
-    ReferenceDriver getDriver() {
-        return getMachine().getDriver();
-    }
-    
+
     public ReferenceMachine getMachine() {
         return (ReferenceMachine) Configuration.get().getMachine();
     }

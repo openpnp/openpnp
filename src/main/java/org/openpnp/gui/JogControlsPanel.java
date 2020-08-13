@@ -54,6 +54,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
@@ -228,7 +229,8 @@ public class JogControlsPanel extends JPanel {
             }
         }
 
-        tool.moveTo(targetLocation);
+        tool.moveTo(targetLocation, MotionOption.JogMotion); 
+        // to test without backlash comp for continous jogging: add MotionOption.SpeedOverPrecision
     }
 
     private boolean nozzleLocationIsSafe(Location origin, Location dimension, Location nozzle,

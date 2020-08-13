@@ -35,6 +35,15 @@ import com.google.common.util.concurrent.FutureCallback;
  */
 public interface Machine extends WizardConfigurable, PropertySheetHolder, Closeable {
     /**
+     * Gets a List of Axes attached to the Machine.
+     * 
+     * @return
+     */
+    public List<Axis> getAxes();
+
+    public Axis getAxis(String id);
+
+    /**
      * Gets all active heads on the machine.
      * 
      * @return
@@ -92,9 +101,17 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public Actuator getActuatorByName(String name);
 
     /**
-     * Commands all Heads to move to their home positions and reset their current positions to
-     * 0,0,0,0. Depending on the head configuration of the machine the home positions may not all be
-     * the same but the end result should be that any head commanded to move to a certain position
+     * Gets a List of Drivers attached to the Machine.
+     * 
+     * @return
+     */
+    public List<Driver> getDrivers();
+
+    public Driver getDriver(String id);
+
+    /**
+     * Commands all Heads to perform visual homing if available. Depending on the head configuration of the machine 
+     * the home positions may not all be the same but the end result should be that any head commanded to move to a certain position
      * will end up in the same position.
      */
     public void home() throws Exception;
@@ -137,6 +154,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public void removeListener(MachineListener listener);
 
+    public List<Class<? extends Axis>> getCompatibleAxisClasses();
+
     public List<Class<? extends Feeder>> getCompatibleFeederClasses();
 
     public List<Class<? extends Camera>> getCompatibleCameraClasses();
@@ -146,6 +165,20 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public List<Class<? extends Actuator>> getCompatibleActuatorClasses();
 
     public List<Class<? extends Signaler>> getCompatibleSignalerClasses();
+
+    public List<Class<? extends Driver>> getCompatibleDriverClasses();
+
+    public void addAxis(Axis axis) throws Exception;
+
+    public void removeAxis(Axis axis);
+
+    public void permutateAxis(Axis axis, int direction);
+
+    public void addDriver(Driver driver) throws Exception;
+
+    public void removeDriver(Driver driver);
+
+    public void permutateDriver(Driver driver, int direction);
 
     public void addFeeder(Feeder feeder) throws Exception;
 
