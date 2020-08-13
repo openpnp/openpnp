@@ -131,9 +131,13 @@ M803 ; Turn off nozzle 1 exhaust solenoid
 
 ### PUMP_ON_COMMAND
 
+**NOTE** This command is deprecated in OpenPnP 2.0. Use the [Vacuum Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup) instead. The command remains in OpenPnP so you can move it to the actuator.
+
 Sent to turn on the vacuum pump before performing a pick.
 
 ### PUMP_OFF_COMMAND
+
+**NOTE** This command is deprecated in OpenPnP 2.0. Use the [Vacuum Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup) instead. The command remains in OpenPnP so you can move it to the actuator.
 
 Sent to turn off the vacuum pump after a place if there are no longer any nozzles that are picked.
 
