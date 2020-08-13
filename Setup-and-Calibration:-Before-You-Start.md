@@ -18,8 +18,6 @@ If your machine uses Gcode, you can use a tool like [Printrun](https://github.co
 
 If you have not yet chosen a motion controller, see [[Motion Controllers]] for some helpful advice.
 
-This is also the best moment to make sure your machine is mechanically adjusted, belts properly tensioned, etc. You will soon calibrate the machine and capture all sorts of measurements from it, so it is important that the frame of reference will not change afterwards. Have a look at the [[Machine Squaring Guide]].
-
 ## Install OpenPnP
 
 If you haven't already, [download and install OpenPnP](http://openpnp.org/downloads) and start it up for the first time. Run through the [[Quick Start]] to get a basic understanding of the interface and the major controls.
