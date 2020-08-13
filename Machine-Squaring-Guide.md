@@ -28,5 +28,5 @@ This guide covers mechanical squaring of a machine that has a double belt driven
 16. Be careful with the impossibly tiny set screws (Tip: use a high quality key, it matters). 
 17. Check everything by jogging a 100mm x 100mm square.
 18. Don’t overdo it. You can never be 100% precise. A slight imprecision is better that wearing out the delicate set screws, leaving you with a broken machine, if you don't have a replacement. You can [adjust any remaining non-squareness in OpenPNP](https://github.com/openpnp/openpnp/wiki/GcodeDriver#non-squareness-compensation).  
-19. Note how the squareness of the machine depends on these tiny set screws gripping on the polished drive shaft. You might add a screw locker fluid between pulley and shaft (one that can be broken if needed). 
+19. Note how the squareness of the machine depends on these tiny set screws gripping on the polished drive shaft. You might add a screw locker fluid between pulley and shaft on both sides (one that can be broken if needed). 
 
