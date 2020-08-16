@@ -12,3 +12,11 @@ Rapid Feeder is a new type of automatic feeder developed by and soon available a
 5. Supports all types of tapes, up to 0402 and 2mm pitch.
 6. Reset button on feeder or optionally undock and re-dock the feeder.
 7. Requires an Atmega32u4 motherboard, also provided by Deltaprintr and is open source in case you want to customize to fit your machine.
+
+### Mounting the feeder
+
+*To Do*
+
+### Adding and configuring feeders in OpenPNP
+
+Youtube Video for setting up in OpenPNP: [https://youtu.be/VlpsAToBvS0](https://youtu.be/VlpsAToBvS0)
