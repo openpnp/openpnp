@@ -17,6 +17,9 @@ Rapid Feeder is a new type of automatic feeder developed by and soon available a
 
 *To Do*
 
+### Loading Tapes
+*To Do*
+
 ### Adding and configuring feeders in OpenPNP
 
 Youtube Video for setting up in OpenPNP: [https://youtu.be/VlpsAToBvS0](https://youtu.be/VlpsAToBvS0)
