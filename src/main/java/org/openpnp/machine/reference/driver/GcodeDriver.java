@@ -803,7 +803,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         }
         // If a command was specified and no confirmation was found it's a timeout error.
         if (command != null & foundError) {
-            throw new Exception("Controller raised an error: " + errorResponse);
+            throw new Exception("Error response from controller: " + errorResponse);
         }
         if (command != null && !found) {
             throw new Exception("Timeout waiting for response to " + command);
