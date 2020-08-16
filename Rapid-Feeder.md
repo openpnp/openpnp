@@ -1,6 +1,6 @@
 ### What is it?
 
-Rapid Feeder is a new type of automatic feeder developed by and soon available at [Deltaprintr.com](deltaprintr.com). It's small, compact and very precise, capable of handling up to 0402 components and supports all tape widths up to 2mm pitch. Each feeder has a UUID address that's also readable on the QR sticker on the top and the side of the feeder. As a result, each feeder has a unique address that's pre-set by Deltaprintr.
+Rapid Feeder is a new type of automatic feeder developed by and soon available at [Deltaprintr.com](deltaprintr.com). It's small, compact and very precise, capable of handling up to 0402 components and supports all tape widths up to 2mm pitch. Each feeder has a UUID address that's also readable on the QR sticker on the top and the side of the feeder. As a result, each feeder has a unique address that's pre-set by Deltaprintr. It was designed specifically so you don't have to mechanically index your feeders with a slot built into the machine. The feeder system is designed so you can save space by grouping many different width feeders close together in any order you'd like. No more feeder banks or empty gaps between feeders!
 
 ![](https://i.imgur.com/wf70vV1.png) ![](https://i.imgur.com/plVsUnR.png)
 
