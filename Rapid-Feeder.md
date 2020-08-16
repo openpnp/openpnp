@@ -21,7 +21,7 @@ Rapid Feeder is a new type of automatic feeder developed by and soon available a
 
 Youtube Video for setting up in OpenPNP: [https://youtu.be/VlpsAToBvS0](https://youtu.be/VlpsAToBvS0)
 
-After creating an actuator, create a new sub-driver under GcodeDriver for the Rapid Feeder system. Under ACTUATE_STRING_COMMAND add M603 {StringValue} and hit apply. M603 is to advance the tape forward and M602 is reverse.
+After creating an actuator, create a new sub-driver under GcodeDriver for the Rapid Feeder system. Under ACTUATE_STRING_COMMAND add M603 `{StringValue}` and hit apply. M603 is to advance the tape forward and M602 is reverse.
 
 To perform an initial scan for feeders, go to the Feeders tab and create a new RapidFeeder. You should name it something that describes the bank of feeders that it will scan for, such as RapidFeeder-West.
 
@@ -31,3 +31,7 @@ Scan Start: When scanning for QR codes, the camera will be moved to this positio
 Scan End: When scanning for QR codes, the camera will finish the scan at this location. Move the camera to the location of the last possible QR code and save the location.
 Scan Increment: When scanning for QR codes, the camera will move by this distance between each image capture. This value should be approximately half the size of the camera image frame. This ensures that the scan will never advance past a QR code and miss it.
 When the above values are set, press the Scan button. The machine will move the camera along the line formed by the start and end points and capture QR codes. When it finishes it will create or update feeders in the feeder tab for each QR code it finds.
+
+### Usage
+
+Once scanning is complete, pressing the feed button for any of the new feeders will send the FEED command to the RAPIDFEEDER actuator in the form of `{M603 {ADDRESS} {PITCH}}`.
