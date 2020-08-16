@@ -273,7 +273,7 @@ public class Motion {
                             // vector component. The division by d takes care of the first step of that. The second step i.e. norming the 
                             // result to the overall motion unit, will take place  after the loop, by multiplying by the overall motion 
                             // distance.
-                            if (axis.isControllerRotational()) {
+                            if (axis.isRotationalOnController()) {
                                 rotationalLimits[0] += dSq;
                                 rotationalLimits[order] = Math.min(rotationalLimits[order],
                                         limit/d);
@@ -447,7 +447,7 @@ public class Motion {
             if (axis.getDriver() == driver || driver == null) {
                 MotionProfile profile = axesProfiles[entry.getValue()];
                 double val =  f.apply(axis, profile);
-                if (axis.isControllerRotational()) {
+                if (axis.isRotationalOnController()) {
                     rotationalRate += Math.pow(val, 2);
                 }
                 else {

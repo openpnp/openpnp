@@ -225,7 +225,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     @Override
-    public boolean isControllerRotational() {
+    public boolean isRotationalOnController() {
         return getType() == Axis.Type.Rotation ^ invertLinearRotational;
     }
 }

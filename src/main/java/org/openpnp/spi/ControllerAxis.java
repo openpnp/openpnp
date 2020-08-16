@@ -64,6 +64,6 @@ public interface ControllerAxis extends LinearInputAxis, CoordinateAxis {
      * @return Whether the axis is handled as rotational in the controller. This happens if the user is forced
      * to use axes that are rotational for linear axes and vice versa.
      */
-    boolean isControllerRotational();
+    boolean isRotationalOnController();
 
 }
