@@ -195,6 +195,7 @@ public class Motion {
         // Create a distance vector that has only axes mentioned in location1 that at the same time 
         // do not match coordinates with location0.
         AxesLocation distance = location0.motionSegmentTo(location1);
+        final int motionLimitsOrder = 3;
         if (distance.isEmpty() || hasOption(MotionOption.UncoordinatedMotion)) {
             // Zero distance or uncoordinated motion. Axes constraints simply apply directly.
             for (Entry<ControllerAxis, Integer> entry : axisIndex.entrySet()) {
@@ -241,10 +242,10 @@ public class Motion {
             // Find the euclidean distance of linear/rotational and all axes.
             // Find the most limiting axis feed-rate/acceleration/etc. limit per distance.
             // Find the most limiting driver feed-rate limit.
-            double [] linearLimits = new double [ControllerAxis.motionLimitsOrder+1];
-            double [] rotationalLimits = new double [ControllerAxis.motionLimitsOrder+1];
-            double [] overallLimits = new double [ControllerAxis.motionLimitsOrder+1];
-            for (int order = 1; order <= ControllerAxis.motionLimitsOrder; order++) {
+            double [] linearLimits = new double [motionLimitsOrder+1];
+            double [] rotationalLimits = new double [motionLimitsOrder+1];
+            double [] overallLimits = new double [motionLimitsOrder+1];
+            for (int order = 1; order <= motionLimitsOrder; order++) {
                 linearLimits[order] = Double.POSITIVE_INFINITY;
                 rotationalLimits[order] = Double.POSITIVE_INFINITY;
                 overallLimits[order] = Double.POSITIVE_INFINITY;
@@ -261,7 +262,7 @@ public class Motion {
                 double d = Math.abs(distance.getCoordinate(axis));
                 double dSq = d*d;  
                 if (dSq > 0) {
-                    for (int order = 1; order <= ControllerAxis.motionLimitsOrder; order++) {
+                    for (int order = 1; order <= motionLimitsOrder; order++) {
                         double limit = axis.getMotionLimit(order);
                         if (limit > 0) {
                             // In the following section we find the limiting i.e minimum limits.
@@ -272,7 +273,7 @@ public class Motion {
                             // vector component. The division by d takes care of the first step of that. The second step i.e. norming the 
                             // result to the overall motion unit, will take place  after the loop, by multiplying by the overall motion 
                             // distance.
-                            if (axis.getType() == Axis.Type.Rotation) {
+                            if (axis.isControllerRotational()) {
                                 rotationalLimits[0] += dSq;
                                 rotationalLimits[order] = Math.min(rotationalLimits[order],
                                         limit/d);
@@ -294,7 +295,7 @@ public class Motion {
             rotationalLimits[0] = Math.sqrt(rotationalLimits[0]);
             overallLimits[0] = Math.sqrt(overallLimits[0]);
             // Norm the fractional axes limits to the overall motion distances.
-            for (int order = 1; order <= ControllerAxis.motionLimitsOrder; order++) {
+            for (int order = 1; order <= motionLimitsOrder; order++) {
                 if (linearLimits[0] > 0) {
                     linearLimits[order] = linearLimits[order] * linearLimits[0];
                 }
@@ -419,6 +420,18 @@ public class Motion {
     }
 
     /**
+     * Get the target location of this Motion with only the moved axes of the given driver in it. 
+     * 
+     * @param driver
+     * @return
+     */
+    public AxesLocation getMovingAxesTargetLocation(Driver driver) {
+        AxesLocation axesMoved = location0.motionSegmentTo(location1);
+        return new AxesLocation(axesMoved.getAxes(driver), 
+                (axis) -> location1.getLengthCoordinate(axis));
+    }
+
+    /**
      * Get the rate function of a motion from the planned profile. 
      * 
      * @param driver The driver for which the rate is calculated i.e. for the axes mapped to it.
@@ -434,7 +447,7 @@ public class Motion {
             if (axis.getDriver() == driver || driver == null) {
                 MotionProfile profile = axesProfiles[entry.getValue()];
                 double val =  f.apply(axis, profile);
-                if (axis.getType() == Axis.Type.Rotation) {
+                if (axis.isControllerRotational()) {
                     rotationalRate += Math.pow(val, 2);
                 }
                 else {

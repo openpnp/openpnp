@@ -93,7 +93,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
     public synchronized void setGlobalOffsets(AxesLocation axesLocation) throws Exception {
         // Offset all the specified axes on the respective drivers. 
         for (Driver driver : axesLocation.getAxesDrivers(getMachine())) {
-            ((ReferenceDriver) driver).setGlobalOffsets(getMachine(), axesLocation);
+            ((ReferenceDriver) driver).setGlobalOffsets(getMachine(), axesLocation.drivenBy(driver));
         }
         // Offset all the axes (including virtual ones) to their new coordinates.
         for (Axis axis : axesLocation.getAxes()) {
@@ -197,7 +197,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
     protected void executeMoveTo(ReferenceMachine machine, ReferenceHeadMountable hm,
             Motion plannedMotion) throws Exception {
         AxesLocation motionSegment = plannedMotion.getLocation0().motionSegmentTo(plannedMotion.getLocation1());
-        // Note, this will be empty if the motion is empty.
+        // Note, this loop will be empty if the motion is empty.
         for (Driver driver : motionSegment.getAxesDrivers(machine)) {
             ((ReferenceDriver) driver).moveTo(hm, plannedMotion);
         }

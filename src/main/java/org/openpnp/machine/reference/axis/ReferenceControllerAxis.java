@@ -26,6 +26,7 @@ import org.openpnp.machine.reference.axis.wizards.ReferenceControllerAxisConfigu
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.base.AbstractControllerAxis;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -84,6 +85,8 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
      */
     @Element(required = false)
     private double resolution = 0.0001; // 
+
+    private boolean invertLinearRotational;
 
     public double getResolution() {
         if (resolution <= 0.0) {
@@ -194,6 +197,14 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
         this.softLimitHighEnabled = softLimitHighEnabled;
     }
 
+    public boolean isInvertLinearRotational() {
+        return invertLinearRotational;
+    }
+
+    public void setInvertLinearRotational(boolean invertLinearRotational) {
+        this.invertLinearRotational = invertLinearRotational;
+    }
+
     @Override
     public Wizard getConfigurationWizard() {
         return new ReferenceControllerAxisConfigurationWizard(this);
@@ -211,5 +222,10 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
             return getJerkPerSecond3().convertToUnits(AxesLocation.getUnits()).getValue();
         }
         return 0;
+    }
+
+    @Override
+    public boolean isControllerRotational() {
+        return getType() == Axis.Type.Rotation ^ invertLinearRotational;
     }
 }

@@ -522,7 +522,7 @@ public class AxesLocation {
     public AxesLocation motionSegmentTo(AxesLocation location1) {
         AxesLocation distance = new AxesLocation(getControllerAxes(), 
                 (a) -> ( location1.contains(a) ? 
-                        (!a.coordinatesMatch(getCoordinate(a), location1.getCoordinate(a)) ? 
+                        (!a.coordinatesMatch(getLengthCoordinate(a), location1.getLengthCoordinate(a)) ? 
                                 new Length(location1.getCoordinate(a) - getCoordinate(a), AxesLocation.getUnits())
                                 :null)
                         :null));
