@@ -42,6 +42,10 @@ Here is a short description of the feeder types supported by OpenPnP:
 
   See [[SchultzFeeder-and-SlotSchultzFeeder]]'s page for more information and help.
 
+* **Rapid Feeder**: An automatic feeder that does not require mechanical indexing, saving space. Produced by Deltaprintr.
+
+  See [[Rapid-Feeder]]'s page for more information and help.
+
 ## Adding a Feeder
 Let's add a Strip Feeder to the machine so that we can test the feeder system.
 
