@@ -121,6 +121,13 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
 
     public Nozzle getDefaultNozzle() throws Exception;
 
+    /**
+     * @return The default HeadMountable on a Head. A Camera takes precedence, but if none is present, 
+     * the first HeadMountable will do.
+     * @throws Exception
+     */
+    public HeadMountable getDefaultHeadMountable() throws Exception;
+
     public void setMachine(Machine machine);
     
     public Machine getMachine();

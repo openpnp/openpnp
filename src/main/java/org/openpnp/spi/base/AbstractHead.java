@@ -250,6 +250,21 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     }
 
     @Override
+    public HeadMountable getDefaultHeadMountable() throws Exception {
+        // Camera takes precedence.
+        List<Camera> cameras = getCameras();
+        if (cameras != null && !cameras.isEmpty()) {
+            return cameras.get(0);
+        }
+        // Fall back to any head mountable.
+        List<HeadMountable> headMountables = getHeadMountables();
+        if (headMountables == null || headMountables.isEmpty()) {
+            throw new Exception("No default head mountable available on head " + getName());
+        }
+        return headMountables.get(0);
+    }
+
+    @Override
     public Machine getMachine() {
         return machine;
     }

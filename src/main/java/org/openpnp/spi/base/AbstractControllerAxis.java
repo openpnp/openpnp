@@ -131,7 +131,12 @@ public abstract class AbstractControllerAxis extends AbstractCoordinateAxis impl
 
     @Override
     public String getLetter() {
-        return letter;
+        if (letter == null) {
+            return "";
+        }
+        else {
+            return letter;
+        }
     }
 
     @Override

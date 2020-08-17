@@ -97,7 +97,10 @@ public class ReferenceMappedAxis extends AbstractSingleTransformedAxis {
         coordinate = coordinate - mapOutput0.convertToUnits(AxesLocation.getUnits()).getValue();
         coordinate = coordinate / scale; 
         coordinate = coordinate + mapInput0.convertToUnits(AxesLocation.getUnits()).getValue(); 
-        return toRaw(location.put(new AxesLocation(inputAxis, coordinate)), options);
+        //  store the new coordinate
+        location = location.put(new AxesLocation(inputAxis, coordinate));
+        // recurse
+        return inputAxis.toRaw(location, options);
     }
 
     public Length getMapInput0() {

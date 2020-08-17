@@ -23,7 +23,6 @@ package org.openpnp.spi;
 
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
 
 /**
  * A ControllerAxis is an axis coordinate dimension as exposed by the machine's controller/driver.
@@ -59,7 +58,12 @@ public interface ControllerAxis extends LinearInputAxis, CoordinateAxis {
     
     void setDriverLengthCoordinate(Length coordinate);
 
-    int motionLimitsOrder = 3;
     double getMotionLimit(int order);
+
+    /**
+     * @return Whether the axis is handled as rotational in the controller. This happens if the user is forced
+     * to use axes that are rotational for linear axes and vice versa.
+     */
+    boolean isRotationalOnController();
 
 }

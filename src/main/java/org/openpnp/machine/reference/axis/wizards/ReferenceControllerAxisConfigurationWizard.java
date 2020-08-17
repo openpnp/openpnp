@@ -75,6 +75,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
     private JTextField homeCoordinate;
     private JLabel lblDesignator;
     private JTextField letter;
+    private JLabel lblInvertLinearrotational;
+    private JCheckBox invertLinearRotational;
     private JLabel lblDriver;
     private JComboBox driver;
     private JLabel lblResolution;
@@ -190,23 +192,25 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
                 ColumnSpec.decode("max(50dlu;default):grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        RowSpec.decode("default:grow"),}));
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("default:grow"),}));
 
         lblDriver = new JLabel("Driver");
         panelControllerSettings.add(lblDriver, "2, 2, right, default");
@@ -226,48 +230,56 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         letter = new JTextField();
         panelControllerSettings.add(letter, "4, 4, fill, default");
         letter.setColumns(10);
+        
+        lblInvertLinearrotational = new JLabel("Switch Linear ↔ Rotational?");
+        lblInvertLinearrotational.setToolTipText("<html>\r\n<p>It is important that OpenPnP understands whether an Axis is linear or rotational in <br/>\r\nthe controller. </p> \r\n<p>Most of the times this is already determined by the Axis Type, i.e. X, Y, Z are linear <br/>\r\nand Rotation is rotational. But sometimes you may run out of proper axes on the <br/>\r\ncontroller and then have to use a linear controller axis for a rotational OpenPnP axis <br/>\r\nor vice versa.</p>\r\n<p>If you cannot configure your controller to switch this meaning, it is important to enable <br/>\r\nthe Switch Linear ↔ Rotational checkbox.</p>\r\n<p>This is relevant in computing proper limits for feed-rate, acceleration and jerk in mixed<br/>\r\naxes moves, as only the motion of linear axes is taken into consideration for the limts in \\br/>\r\nstandard G-Code.</p>\r\n</html>");
+        panelControllerSettings.add(lblInvertLinearrotational, "2, 6, right, default");
+        
+        invertLinearRotational = new JCheckBox("");
+        invertLinearRotational.setToolTipText("");
+        panelControllerSettings.add(invertLinearRotational, "4, 6");
 
         JLabel lblHomeCoordinate = new JLabel("Home Coordinate");
-        panelControllerSettings.add(lblHomeCoordinate, "2, 6, right, default");
+        panelControllerSettings.add(lblHomeCoordinate, "2, 8, right, default");
 
         homeCoordinate = new JTextField();
-        panelControllerSettings.add(homeCoordinate, "4, 6, fill, default");
+        panelControllerSettings.add(homeCoordinate, "4, 8, fill, default");
         homeCoordinate.setColumns(10);
 
         lblBacklashOffset = new JLabel("Backlash Offset");
-        panelControllerSettings.add(lblBacklashOffset, "2, 8, right, default");
+        panelControllerSettings.add(lblBacklashOffset, "2, 10, right, default");
 
         backlashOffset = new JTextField();
-        panelControllerSettings.add(backlashOffset, "4, 8, fill, default");
+        panelControllerSettings.add(backlashOffset, "4, 10, fill, default");
         backlashOffset.setColumns(10);
 
         lblResolution = new JLabel("Resolution [Driver Units]");
         lblResolution.setToolTipText("<html>Numeric resolution of this axis. Coordinates will be rounded to the nearest multiple<br/>\r\nwhen comparing them in order to determine whether a move is necessary. <br/>\r\nFor the GcodeDriver, make sure the resolution can be expressed with the format in the <br/>\r\n<code>MOVE_TO_COMMAND</code>. Default is 0.0001 which corresponds to the %.4f <br/>\r\n(four fractional digits) format in the <code>MOVE_TO_COMMAND</code>.<br/>\r\nNote, the resolution is given and applied in driver (not system) units.\r\n</html>");
-        panelControllerSettings.add(lblResolution, "2, 10, right, default");
+        panelControllerSettings.add(lblResolution, "2, 12, right, default");
 
         resolution = new JTextField();
-        panelControllerSettings.add(resolution, "4, 10, fill, default");
+        panelControllerSettings.add(resolution, "4, 12, fill, default");
         resolution.setColumns(10);
 
         lblLimitRotation = new JLabel("Limit to ±180°");
         lblLimitRotation.setToolTipText("Limit the rotation to -180° ... +180°. ");
-        panelControllerSettings.add(lblLimitRotation, "2, 12, right, default");
+        panelControllerSettings.add(lblLimitRotation, "2, 14, right, default");
 
         limitRotation = new JCheckBox("");
-        panelControllerSettings.add(limitRotation, "4, 12");
+        panelControllerSettings.add(limitRotation, "4, 14");
 
         lblWrapAroundRotation = new JLabel("Wrap Around");
         lblWrapAroundRotation.setToolTipText("<html>Always rotate the axis the shorter way around. E.g. if it is at 270° and is commanded <br/>\r\nto go to 0° it will instead go to 360°.<br/>\r\nIf this is combined with Limit to ±180°, the axis is reset to its wrap-around coordinate <br/>\r\nusing a driver Global Offset command. With the GcodeDriver you must configure the<br/> <code>SET_GLOBAL_OFFSETS_COMMAND</code> or this will not work.\r\n</html>\r\n");
-        panelControllerSettings.add(lblWrapAroundRotation, "2, 14, right, default");
+        panelControllerSettings.add(lblWrapAroundRotation, "2, 16, right, default");
 
         wrapAroundRotation = new JCheckBox("");
-        panelControllerSettings.add(wrapAroundRotation, "4, 14");
+        panelControllerSettings.add(wrapAroundRotation, "4, 16");
 
         lblPremoveCommand = new JLabel("Pre-Move Command");
-        panelControllerSettings.add(lblPremoveCommand, "2, 16, right, top");
+        panelControllerSettings.add(lblPremoveCommand, "2, 18, right, top");
 
         scrollPane = new JScrollPane();
-        panelControllerSettings.add(scrollPane, "4, 16, 3, 1, fill, fill");
+        panelControllerSettings.add(scrollPane, "4, 18, 3, 1, fill, fill");
 
         preMoveCommand = new JTextArea();
         preMoveCommand.setRows(1);
@@ -397,6 +409,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
 
         addWrappedBinding(axis, "driver", driver, "selectedItem", driverConverter);
         addWrappedBinding(axis, "letter", letter, "text");
+        addWrappedBinding(axis, "invertLinearRotational", invertLinearRotational, "selected");
         addWrappedBinding(axis, "homeCoordinate", homeCoordinate, "text", lengthConverter);
         addWrappedBinding(axis, "backlashOffset", backlashOffset, "text", lengthConverter);
         addWrappedBinding(axis, "resolution", resolution, "text", doubleConverter);

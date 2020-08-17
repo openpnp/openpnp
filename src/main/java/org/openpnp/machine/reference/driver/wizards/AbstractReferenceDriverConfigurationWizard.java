@@ -245,14 +245,14 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
 
         ipAddressTextField = new JTextField(17);
         panelTcp.add(ipAddressTextField, "4, 2, fill, default");
-        ipAddressTextField.setColumns(5);
+        ipAddressTextField.setColumns(10);
 
         JLabel lblPort = new JLabel("Port");
         panelTcp.add(lblPort, "2, 4, right, default");
 
         portTextField = new JTextField(17);
         panelTcp.add(portTextField, "4, 4, fill, default");
-        portTextField.setColumns(5);
+        portTextField.setColumns(10);
 
         //Finally, click a radio button to initialise enabled/disabled setting
         if(driver.getCommunicationsType().equals("serial")){ radioSerial.doClick(); }

@@ -72,7 +72,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         @Deprecated
         POST_VISION_HOME_COMMAND,
         HOME_COMMAND("Id", "Name"),
-        HOME_COMPLETE_REGEX(true),
+        HOME_COMPLETE_REGEX,
         SET_GLOBAL_OFFSETS_COMMAND("Id", "Name", "X", "Y", "Z", "Rotation"),
         @Deprecated
         PUMP_ON_COMMAND,
@@ -353,23 +353,35 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             Head head = machine.getDefaultHead();
             command = substituteVariable(command, "Id", head.getId());
             command = substituteVariable(command, "Name", head.getName());
+            boolean isEmpty = true;
             for (String variable : getAxisVariables(machine)) {
                 ControllerAxis axis = axesLocation.getAxisByVariable(this, variable);
                 if (axis != null) {
-                    double coordinate = axesLocation.getCoordinate(axis, getUnits());
-                    command = substituteVariable(command, variable, coordinate);
-                    command = substituteVariable(command, variable+"L", 
-                            axis.getLetter());
-
-                    // Store the new driver coordinate on the axis.
-                    axis.setDriverCoordinate(coordinate);
+                    if (hasVariable(command, variable)) {
+                        double coordinate = axesLocation.getCoordinate(axis, getUnits());
+                        command = substituteVariable(command, variable, coordinate);
+                        command = substituteVariable(command, variable+"L", 
+                                axis.getLetter());
+                        // Store the new driver coordinate on the axis.
+                        axis.setDriverCoordinate(coordinate);
+                        isEmpty = false;
+                    }
+                    else {
+                        // It is imperative that the axis global offset is really set. Otherwise all bets 
+                        // are off and collisions in subsequent moves are very likely. 
+                        throw new Exception("Axis variable "+variable+" is missing in SET_GLOBAL_OFFSETS_COMMAND.");
+                    }
                 }
                 else {
                     command = substituteVariable(command, variable, null);
                     command = substituteVariable(command, variable+"L", null); 
                 }
             }
-            sendGcode(command, -1);
+            if (!isEmpty) {
+                // If no axes are included, the G92 command must not be executed, because it would otherwise reset all
+                // axes to zero in some controllers! 
+                sendGcode(command, -1);
+            }
         }
         else {
             // Try the legacy POST_VISION_HOME_COMMAND
@@ -387,8 +399,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 // Execute the command
                 sendGcode(postVisionHomeCommand, -1);
                 // Store the new current coordinate on the axis.
-                axisX.setDriverLengthCoordinate(axesLocation.getLengthCoordinate(axisX));
-                axisY.setDriverLengthCoordinate(axesLocation.getLengthCoordinate(axisY));
+                axisX.setDriverCoordinate(axesLocation.getCoordinate(axisX, getUnits()));
+                axisY.setDriverCoordinate(axesLocation.getCoordinate(axisY, getUnits()));
             }
         }
     }
@@ -447,7 +459,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     @Override
     public void moveTo(ReferenceHeadMountable hm, Motion motion)
             throws Exception {
-        AxesLocation location = motion.getLocation1();
+        // Get the axes that are actually moving.
+        AxesLocation location = motion.getMovingAxesTargetLocation(this);
         double feedRate = motion.getFeedRatePerMinute(this);
         Double acceleration = motion.getAccelerationPerSecond2(this);
         Double jerk = motion.getJerkPerSecond3(this);
@@ -471,40 +484,47 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         command = substituteVariable(command, "BacklashFeedRate", enableBacklash ? feedRate * backlashFeedRateFactor : feedRate);
         command = substituteVariable(command, "Acceleration", acceleration);
         command = substituteVariable(command, "Jerk", jerk);
+        
+        if (this.usingLetterVariables && this.supportingPreMove) {
+            throw new Exception(getName()+" configuration error: Using Letter Variables and Pre-Move Commands at the same time is not supported.");
+        }
 
-        // Go through all the axes and handle them.
-        boolean doesMove = false;
         ReferenceMachine machine = (ReferenceMachine) hm.getHead().getMachine();
+        // Get a map of the axes of ...
+        AxesLocation mappedAxes = (this.usingLetterVariables ?
+                motion.getLocation1()          // ... all the axes in case of using letter variables
+                : hm.getMappedAxes(machine))   // ... just the HeadMountable in case of using type variables
+                .drivenBy(this);               // ... but just those driven by this driver.
+        // Go through all the axes variables and handle them.
+        boolean doesMove = false;
         for (String variable : getAxisVariables(machine)) {
+            // Note, if the axis is included in the location, this means it actually changes the coordinate in resolution steps. 
+            // The resolution stepping is used to suppress artificial coordinate changes due to floating point artifacts from transformations etc. 
+            // If set up correctly, this also suppresses "rounded-to-nothing" moves due to MOVE_TO_COMMANDs format specifier (usually %.4f).
             ControllerAxis axis = location.getAxisByVariable(this, variable);
-            boolean moveAxis = false;
-            boolean includeAxis = false;
-            if (axis != null) {
-                // Compare the coordinates using the resolution of the axis to tolerate floating point errors
-                // from transformation etc. Also suppresses rounded-to-0 moves due to MOVE_TO_COMMANDs format 
-                // specifier (usually %.4f).
-                moveAxis = !axis.coordinatesMatch(location.getCoordinate(axis, getUnits()), axis.getDriverCoordinate());
-                if (moveAxis) {
-                    includeAxis = true;
-                }
-                else {
-                    // If the command has forced-output coordinate variables "XF", "YF", "ZF" and "RotationF", 
-                    // always include the corresponding axis in the command.
-                    // This may be employed for axes, where OpenPNP cannot not keep track when an axis has physically 
-                    // moved behind its back. By always forcing the axis coordinate output, the controller will take care 
-                    // of restoring the axis position, if necessary.  
-                    // As we are always moving in absolute coordinates this has no ill effect if it results in no 
-                    // position change after all. 
-                    // Note, there is no need for separate backlash compensation variables, as these are always 
-                    // substituted alongside. 
-                    includeAxis = hasVariable(command, variable+"F");
+            if (axis == null) {
+                // Axis not moved. Might still be forced.
+
+                // If the command has forced-output coordinate variables "XF", "YF", "ZF" etc., 
+                // always include the corresponding axis in the command.
+                // This may be employed for axes, where OpenPNP cannot keep track when an axis has physically 
+                // moved behind its back. By always forcing the axis coordinate output, the controller will take care 
+                // of restoring the axis position, if necessary.  
+                // As we are always moving in absolute coordinates this has no ill effect if it results in no 
+                // position change after all. 
+                // Note, there is no need for separate backlash compensation variables, as these are always 
+                // substituted alongside. 
+                if (hasVariable(command, variable+"F")) {
+                    // Force it! Must get it from the mappedAxes. If the mappedAxes do not have it, it is 
+                    // still suppressed (this never happens when using letter variables). 
+                    axis = mappedAxes.getAxisByVariable(this, variable);
                 }
             }
-            if (axis != null && includeAxis) {
+            if (axis != null) {
                 // The move is definitely on. 
                 doesMove = true;
-                // TODO: discuss whether we should round to axis precision here.
-                double coordinate = location.getCoordinate(axis); 
+                // TODO: discuss whether we should round to axis resolution here.
+                double coordinate = motion.getLocation1().getCoordinate(axis); 
                 double previousCoordinate = axis.getCoordinate(); 
                 int direction = ((Double)coordinate).compareTo(previousCoordinate);
                 // Substitute the axis variables.
@@ -544,7 +564,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             List<String> responses = sendGcode(command);
 
             // TODO: determine if it is technically possible to move this to waitForCompletion() with the 
-            // responses correctly associated.
+            // responses correctly associated. It has been discussed, that using N letter line numbers could
+            // help. 
+            // See: https://groups.google.com/g/openpnp/c/bEVZvYoXO98/m/Cc0VxGGYBwAJ
 
             /*
              * If moveToCompleteRegex is specified we need to wait until we match the regex in a
@@ -1220,6 +1242,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 homingFiducialLocation = homingFiducialLocation
                         .subtract(new Location(homingFiducialLocation.getUnits(), homingFiducialLocation.getY()*nonSquarenessFactor, 0, 0, 0));
                 ((AbstractHead)head).setHomingFiducialLocation(homingFiducialLocation);
+            }
+            else {
+                ((AbstractHead)head).setVisualHomingMethod(VisualHomingMethod.None);
             }
             for (Actuator actuator : head.getActuators()) {
                 // This is not 100% foolproof. Theoretically an actuator could have been smeared across
