@@ -36,7 +36,7 @@ To see what we are doing, we need to enable Diagnostics. Choose one of the advan
 
 The first task is to see how well the camera performs. We need a steady stream of frames taken. 
 
-The Diagnostics should have plotted plot a graph. In the blue curve you see how fast your camera delivers frames. When the blue curve is up, it is waiting for a frame, when it is down, it is analyzing the settling. The scale is Milliseconds. 
+The Diagnostics should have plotted a graph. In the blue curve you see how fast your camera delivers frames. When the blue curve is up, it is waiting for a frame, when it is down, it is analyzing the settling. The scale is Milliseconds. 
 
 ![grafik](https://user-images.githubusercontent.com/9963310/81853582-e2a1b600-955c-11ea-8812-ed2accaa9f63.png)
 
