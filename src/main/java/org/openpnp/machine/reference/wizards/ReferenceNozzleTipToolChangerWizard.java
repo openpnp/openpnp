@@ -43,6 +43,7 @@ import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
 import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -126,35 +127,35 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         		FormSpecs.DEFAULT_ROWSPEC,}));
         
         
-        // Bert added this to put actuator combo box into changer
+        // Bert start
         label = new JLabel("Post 1 Actuator");
         panelChanger.add(label, "2, 5, right, center");
         label = new JLabel("Post 2 Actuator");
         panelChanger.add(label, "2, 7, right, center");
         label = new JLabel("Post 3 Actuator");
         panelChanger.add(label, "2, 9, right, center");
-        
-        Head head = null;
+
+        Machine myMachine = null;
         try {
-            head = Configuration.get().getMachine().getDefaultHead();
+            myMachine = Configuration.get().getMachine();
         }
-        catch (Exception e) {
-            Logger.error(e, "Cannot determine default head of machine.");
+        catch (Exception e){
+        	Logger.error(e, "Cannot determine Name of machine.");
         }
         
         tcPostOneComboBoxActuator = new JComboBox();
-        tcPostOneComboBoxActuator.setModel(new ActuatorsComboBoxModel(head));
+        tcPostOneComboBoxActuator.setModel(new ActuatorsComboBoxModel(myMachine));
         panelChanger.add(tcPostOneComboBoxActuator, "4, 5,");
         
         tcPostTwoComboBoxActuator = new JComboBox();
-        tcPostTwoComboBoxActuator.setModel(new ActuatorsComboBoxModel(head));
+        tcPostTwoComboBoxActuator.setModel(new ActuatorsComboBoxModel(myMachine));
         panelChanger.add(tcPostTwoComboBoxActuator, "4, 7");
         
         tcPostThreeComboBoxActuator = new JComboBox();
-        tcPostThreeComboBoxActuator.setModel(new ActuatorsComboBoxModel(head));
+        tcPostThreeComboBoxActuator.setModel(new ActuatorsComboBoxModel(myMachine));
         panelChanger.add(tcPostThreeComboBoxActuator, "4, 9");
         
-        // end of bert added stuff
+        // bert stop
         
         lblX = new JLabel("X");
         panelChanger.add(lblX, "4, 2");
@@ -323,11 +324,11 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         addWrappedBinding(changerEndLocation, "lengthZ", textFieldChangerEndZ, "text",
                 lengthConverter);
         
-        // start bert
+        // bert start
         addWrappedBinding(nozzleTip, "changerActuatorPostStepOne", tcPostOneComboBoxActuator, "selectedItem");
         addWrappedBinding(nozzleTip, "changerActuatorPostStepTwo", tcPostTwoComboBoxActuator, "selectedItem");
         addWrappedBinding(nozzleTip, "changerActuatorPostStepThree", tcPostThreeComboBoxActuator, "selectedItem");
-        // end bert
+        // bert stop
         
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartY);
