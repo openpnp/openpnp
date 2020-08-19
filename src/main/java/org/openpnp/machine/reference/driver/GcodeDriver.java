@@ -323,14 +323,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         homeLocation.setToDriverCoordinates(this);
     }
 
-    protected List<String> getAxisVariables(ReferenceMachine machine) {
+    public List<String> getAxisVariables(ReferenceMachine machine) {
         List<String> variables = new ArrayList<>();
         if (usingLetterVariables) {
             for (org.openpnp.spi.Axis axis : machine.getAxes()) {
                 if (axis instanceof ControllerAxis) {
-                    String letter =((ControllerAxis) axis).getLetter(); 
-                    if (letter != null && !letter.isEmpty()) {
-                        variables.add(letter);
+                    if (((ControllerAxis) axis).getDriver() == this) {
+                        String letter = ((ControllerAxis) axis).getLetter(); 
+                        if (letter != null && !letter.isEmpty()) {
+                            variables.add(letter);
+                        }
                     }
                 }
             }

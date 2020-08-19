@@ -147,7 +147,7 @@ public class MotionProfile {
         return a[segment];
     }
     public double getJerk(int segment) {
-        return a[segment];
+        return j[segment];
     }
 
 
@@ -1032,7 +1032,6 @@ public class MotionProfile {
         }
         if (leadProfile != null) {
             leadProfile.assertSolved();
-            // Can't use bestDist, need it signed.
             coordinateProfilesToLead(profiles, leadProfile);
         }
     }

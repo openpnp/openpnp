@@ -23,11 +23,15 @@ package org.openpnp.machine.reference;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.util.function.BiFunction;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.camera.ImageCamera;
+import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.NullDriver;
+import org.openpnp.machine.reference.driver.ReferenceDriverCommunications;
+import org.openpnp.machine.reference.driver.SimulatedCommunications;
 import org.openpnp.machine.reference.feeder.BlindsFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.wizards.SimulationModeMachineConfigurationWizard;
@@ -48,6 +52,7 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.util.GcodeServer;
 import org.openpnp.util.NanosecondTime;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -268,11 +273,11 @@ public class SimulationModeMachine extends ReferenceMachine {
         for (Feeder feeder : getFeeders()) {
             if (feeder instanceof ReferenceFeeder) {
                 ((ReferenceFeeder) feeder)
-                 .setLocation(((ReferenceFeeder) feeder).getLocation()
-                         .derive(null, null, 
-                                 machineTableZ.convertToUnits(((ReferenceFeeder) feeder).getLocation().getUnits())
-                                 .getValue(), 
-                                 null));
+                .setLocation(((ReferenceFeeder) feeder).getLocation()
+                        .derive(null, null, 
+                                machineTableZ.convertToUnits(((ReferenceFeeder) feeder).getLocation().getUnits())
+                                .getValue(), 
+                                null));
             }
             if (feeder instanceof ReferenceStripFeeder) {
                 ((ReferenceStripFeeder) feeder)
@@ -379,7 +384,7 @@ public class SimulationModeMachine extends ReferenceMachine {
      * @return
      */
     public static Location getSimulatedPhysicalLocation(HeadMountable hm, Looking looking) {
-        // Use ideal location as a default, used too in case this fails (not a place to throw).
+        // Use ideal location as a default, used in case this fails (not a place to throw).
         Location location = hm.getLocation().convertToUnits(AxesLocation.getUnits()); 
         // Try to get a simulated physical location.
         SimulationModeMachine machine = getSimulationModeMachine();
@@ -396,18 +401,15 @@ public class SimulationModeMachine extends ReferenceMachine {
             location = hm.toHeadMountableLocation(location);
         } 
         else {
-            double lag = 0;
-            if (looking != null
-                    && machine.getSimulationMode().isDynamicallyImperfectMachine()) {
-                lag = machine.getSimulatedCameraLag();
-            }
-            double cameraTime = NanosecondTime.getRuntimeSeconds() - lag;
-            Motion momentary = machine.getMotionPlanner()
-                    .getMomentaryMotion(cameraTime);
-            AxesLocation axesLocation = momentary.getMomentaryLocation(cameraTime - momentary.getPlannedTime0());
-            //AxesLocation axesVelocity = momentary.getVector(Motion.Derivative.Velocity);
-            AxesLocation mappedAxes = hm.getMappedAxes(machine);
             try {
+                double lag = 0;
+                if (looking != null
+                        && machine.getSimulationMode().isDynamicallyImperfectMachine()) {
+                    lag = machine.getSimulatedCameraLag();
+                }
+                double cameraTime = NanosecondTime.getRuntimeSeconds() - lag;
+                AxesLocation axesLocation = getMomentaryVector(machine, cameraTime, (m, time) -> m.getMomentaryLocation(time));
+                AxesLocation mappedAxes = hm.getMappedAxes(machine);
                 for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
                     AxesLocation homingOffsets = null;
                     if (driver instanceof NullDriver) {
@@ -430,9 +432,7 @@ public class SimulationModeMachine extends ReferenceMachine {
                         Axis yAxis = mappedAxes.getAxis(Axis.Type.Y);
                         double t;
                         for (t = 0; t < vibrationDuration; t += dt) {
-                            Motion vibration = machine.getMotionPlanner()
-                                    .getMomentaryMotion(cameraTime - t);
-                            AxesLocation a = vibration.getMomentaryAcceleration(cameraTime - t - vibration.getPlannedTime0());
+                            AxesLocation a = getMomentaryVector(machine, cameraTime - t, (m, time) -> m.getMomentaryAcceleration(time)); 
                             double x = a.getCoordinate(xAxis);
                             double y = a.getCoordinate(yAxis);
                             if (x != 0 || y != 0) {
@@ -443,14 +443,14 @@ public class SimulationModeMachine extends ReferenceMachine {
                                 yIntegral += Math.cos(ph)*y*amp;
                             }
                         }
-    
+
                         if (xIntegral != 0 || yIntegral != 0) {
                             //Logger.trace("vibration t="+(cameraTime - t)+" x="+xIntegral+" y="+yIntegral);
                             axesLocation = axesLocation.add(new AxesLocation((a, b) -> (b),
-                                new AxesLocation(xAxis, -xIntegral), 
-                                new AxesLocation(yAxis, -yIntegral)));
+                                    new AxesLocation(xAxis, -xIntegral), 
+                                    new AxesLocation(yAxis, -yIntegral)));
                         }
-                        
+
                     }
                 }
 
@@ -490,6 +490,28 @@ public class SimulationModeMachine extends ReferenceMachine {
             }
         }
         return location;
+    }
+
+    public static AxesLocation getMomentaryVector(SimulationModeMachine machine,
+            double cameraTime, BiFunction<Motion, Double, AxesLocation> function) throws Exception {
+        // First take it from the motion planner.
+        Motion momentary = machine.getMotionPlanner()
+                .getMomentaryMotion(cameraTime);
+        AxesLocation axesLocation = function.apply(momentary, cameraTime - momentary.getPlannedTime0());
+        // Then override this with location data from any GcodeDriver that runs in simulation. 
+        for (Driver driver : machine.getDrivers()) {
+            if (driver instanceof GcodeDriver) {
+                ReferenceDriverCommunications comms = ((GcodeDriver) driver).getCommunications();
+                if (comms instanceof SimulatedCommunications) {
+                    GcodeServer server = ((SimulatedCommunications) comms).getGcodeServer();
+                    momentary = server
+                            .getMomentaryMotion(cameraTime);
+                    AxesLocation driverLocation = function.apply(momentary, cameraTime - momentary.getPlannedTime0());
+                    axesLocation = axesLocation.put(driverLocation);
+                }
+            }
+        }
+        return axesLocation;
     }
 
     public static void drawSimulatedCameraNoise(Graphics2D gFrame, int width, int height) {

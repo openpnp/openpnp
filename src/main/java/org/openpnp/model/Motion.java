@@ -102,7 +102,7 @@ public class Motion {
         return optionFlags;
     }
 
-    public Motion(HeadMountable headMountable, AxesLocation location0, AxesLocation location1, double nominalSpeed, int options) {
+    public Motion(HeadMountable headMountable, AxesLocation location0, AxesLocation location1, double nominalSpeed, double feedrateOverride, double accelerationOverride, double jerkOverride, int options) {
         super();
         this.headMountable = headMountable;
         this.location0 = location0;
@@ -114,7 +114,10 @@ public class Motion {
             axisIndex.put(axis, count++);
         }
         axesProfiles = new MotionProfile[count];
-        computeLimitsAndProfile();
+        computeLimitsAndProfile(feedrateOverride, accelerationOverride, jerkOverride);
+    }
+    public Motion(HeadMountable headMountable, AxesLocation location0, AxesLocation location1, double nominalSpeed, int options) {
+        this(headMountable, location0, location1, nominalSpeed, 0, 0, 0, options);
     }
     public Motion(HeadMountable headMountable, AxesLocation location0, AxesLocation location1, double nominalSpeed, MotionOption... options) {
         this(headMountable, location0, location1, nominalSpeed, optionFlags(options));
@@ -189,9 +192,12 @@ public class Motion {
 
     /**
      * Compute the limits (maximum axis velocity, acceleration, jerk) and the initial raw axis motion profile.
+     * @param jerkOverride 
+     * @param accelerationOverride 
+     * @param feedrateOverride 
      * 
      */
-    protected void computeLimitsAndProfile() {
+    protected void computeLimitsAndProfile(double feedrateOverride, double accelerationOverride, double jerkOverride) {
         // Create a distance vector that has only axes mentioned in location1 that at the same time 
         // do not match coordinates with location0.
         AxesLocation distance = location0.motionSegmentTo(location1);
@@ -306,7 +312,17 @@ public class Motion {
                     overallLimits[order] = overallLimits[order] * overallLimits[0];
                 }
             }
-            if (!hasOption(MotionOption.NoDriverLimit)) {
+            if (feedrateOverride != 0) {
+                if (linearLimits[0] > 0) {
+                    // Limit the linear axes limit by the driver feed-rate. 
+                    linearLimits[1] = Math.min(linearLimits[1], feedrateOverride); 
+                }
+                else  {
+                    // Limit the rotational axes limit by the driver feed-rate?
+                    rotationalLimits[1] = Math.min(rotationalLimits[1], feedrateOverride); 
+                }
+            }
+            else if (!hasOption(MotionOption.NoDriverLimit)) {
                 // According to NIST RS274NGC Interpreter - Version 3, Section 2.1.2.5 (p. 7)
                 // the F feed-rate is to be interpreted over the Euclidean linear axis distance of a move 
                 // and in the absence of any linear axes, over the Euclidean rotational distance 
@@ -321,6 +337,26 @@ public class Motion {
                     // NOPE: it is non-sense to apply a mm/s feedrate to a rotational axis. 
                     // We depart from former OpenPnP behavior here. 
                     //   rotationalLimits[1] = Math.min(rotationalLimits[1], minDriverFeedrate); 
+                }
+            }
+            if (accelerationOverride != 0) {
+                if (linearLimits[0] > 0) {
+                    // Limit the linear axes limit by the driver feed-rate. 
+                    linearLimits[2] = Math.min(linearLimits[2], accelerationOverride); 
+                }
+                else  {
+                    // Limit the rotational axes limit by the driver feed-rate?
+                    rotationalLimits[2] = Math.min(rotationalLimits[2], accelerationOverride); 
+                }
+            }
+            if (jerkOverride != 0) {
+                if (linearLimits[0] > 0) {
+                    // Limit the linear axes limit by the driver feed-rate. 
+                    linearLimits[3] = Math.min(linearLimits[3], jerkOverride); 
+                }
+                else  {
+                    // Limit the rotational axes limit by the driver feed-rate?
+                    rotationalLimits[3] = Math.min(rotationalLimits[3], jerkOverride); 
                 }
             }
             double time = Math.max(
@@ -351,11 +387,11 @@ public class Motion {
                         *overallLimits[1]*axisFraction;  
 
                 double aMax = 
-                        Math.pow(effectiveSpeed, 2) // speed factor must be to the power of the order of the derivative
+                        Math.pow(nominalSpeed, 2) // speed factor must be to the power of the order of the derivative
                         *overallLimits[2]*axisFraction;  
 
                 double jMax = 
-                        Math.pow(effectiveSpeed, 3) // speed factor must be to the power of the order of the derivative
+                        Math.pow(nominalSpeed, 3) // speed factor must be to the power of the order of the derivative
                         *overallLimits[3]*axisFraction;
 
                 // Compute s0 by distance rather than taking location0, because some axes may have been omitted in location1. 

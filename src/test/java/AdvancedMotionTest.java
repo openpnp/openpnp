@@ -158,7 +158,7 @@ public class AdvancedMotionTest {
 
         testProfileCase(message, profile, expectedError);
         testProfileCase(message+" (reverse)", profileRev, expectedError);
-        testProfileCase(message+" (constant aceleration)", profileConstantAcc, expectedError);
+        testProfileCase(message+" (constant acceleration)", profileConstantAcc, expectedError);
         System.out.println(" ");
     }
 

@@ -5,6 +5,8 @@ import java.io.IOException;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceDriver;
+import org.openpnp.machine.reference.SimulationModeMachine;
+import org.openpnp.machine.reference.SimulationModeMachine.SimulationMode;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.DataBits;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.FlowControl;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.Parity;
@@ -22,6 +24,9 @@ public abstract class AbstractReferenceDriver extends AbstractDriver implements 
 
     @Element(required = false)
     protected TcpCommunications tcp = new TcpCommunications();
+    
+    @Element(required = false)
+    protected SimulatedCommunications simulated = new SimulatedCommunications();
 
     @Attribute(required = false, name = "communications")
     protected String communicationsType = "serial";
@@ -122,6 +127,11 @@ public abstract class AbstractReferenceDriver extends AbstractDriver implements 
     }
     
     public ReferenceDriverCommunications getCommunications() {
+        SimulationModeMachine machine = SimulationModeMachine.getSimulationModeMachine();
+        if (machine != null && machine.getSimulationMode() != SimulationMode.Off) {
+            simulated.setDriver(this);
+            return simulated;
+        }
         switch (communicationsType) {
             case "serial": {
                 return serial;
