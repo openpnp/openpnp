@@ -26,7 +26,7 @@ Some Smoothie based boards that are known to work with OpenPnP, and which you ca
 * **Cohesion3D Remix**: http://cohesion3d.com/cohesion3d-remix/
     Created by an OpenPnP forum member, this board is designed with PnP in mind and has up to 6 stepper drivers and 6 MOSFET outputs. This board is great for larger, more complex machines.
 * **Azteeg**: http://www.panucatt.com/default.asp
-    Panucatt Devices sells a series of Smoothie based boards called Azteeg. We don't currently have a lot of information on these boards so anyone who uses them is invited to comment here.
+    Panucatt Devices sells a series of Smoothie based boards called Azteeg. There is a review [here](https://makr.zone/choosing-a-motion-controller-the-panucatt-azteeg-x5-gt-32bit/455/).
 * **Re-Arm**: http://www.panucatt.com/default.asp
     Panucatt Devices also sells the Re-Arm, which is a Smoothie based board in the form factor of an Arduino Mega. This allows it to be used with existing RAMPS 1.4 boards which are common in the 3D printer world. 
 
