@@ -95,7 +95,7 @@ public class GcodeServer extends Thread {
     enum Gcode {
         // See http://linuxcnc.org/docs/2.4/html/gcode_overview.html#sec:Modal-Groups
         G0(1), G1(1), G2(1), G3(1), G33(1), G38(1), G73(1), G76(1), G80(1), G81(1),
-           G82(1), G83(1), G84(1), G85(1), G86(1), G87(1), G88(1), G89(1),
+        G82(1), G83(1), G84(1), G85(1), G86(1), G87(1), G88(1), G89(1),
         G17(2), G18(2), G19(2),
         G7(3), G8(3),
         G90(4), G91(4),
@@ -405,9 +405,9 @@ public class GcodeServer extends Thread {
         private void simulateGcode(List<GcodeWord> commandWords) throws Exception {
             if (!commandWords.isEmpty()) {
 
-                
+
                 Logger.debug(toString(commandWords));
-                
+
                 // Order of execution
                 //
                 // See http://linuxcnc.org/docs/2.4/html/gcode_overview.html#sec:Order-of-Execution
@@ -467,7 +467,7 @@ public class GcodeServer extends Thread {
                 if (fWord != null) {
                     feedRate = fWord.getNumberDouble()*unit/60; // convert per second
                 }
-                
+
                 // Acceleration
                 GcodeWord m204Word = getCodeWord(Gcode.M204, commandWords);
                 if (m204Word != null && sWord != null) {
@@ -481,7 +481,7 @@ public class GcodeServer extends Thread {
                 boolean doDwell = false;
                 GcodeWord g4Word = getCodeWord(Gcode.G4, commandWords);
                 GcodeWord m400Word = getCodeWord(Gcode.M400, commandWords);
-                
+
                 // Dwell command
                 if (g4Word != null) {
                     if (pWord != null) {
@@ -493,18 +493,39 @@ public class GcodeServer extends Thread {
                     doDwell = true;
                 }
                 
+                GcodeWord g92Word = getCodeWord(Gcode.G92, commandWords);
+                if (g92Word != null) {
+                    doDwell = true; // ???
+                }
+                
                 // Wait for completion command.
                 if (m400Word != null) {
                     doDwell = true;
                 }
-                
+
+                if (doDwell && dwellMilliseconds > 0) {
+                    // There is a command, that waits for completion/dwells.
+                    if (dwellMilliseconds > 10000) {
+                        // Be reasonable
+                        Logger.warn("Dwell time limited to 10s from "+(dwellMilliseconds/1000.)+"s");
+                        dwellMilliseconds = 10000;
+                    }
+                    Logger.trace("Waiting "+dwellMilliseconds+"ms");
+                    Thread.sleep(dwellMilliseconds);
+
+                    // Remove old stuff.
+                    double time = NanosecondTime.getRuntimeSeconds() - 30;
+                    while (motionPlan.isEmpty() == false && motionPlan.firstKey() < time) {
+                        motionPlan.remove(motionPlan.firstKey());
+                    }
+                }
+
 
                 // Set global offsets. 
-                GcodeWord g92Word = getCodeWord(Gcode.G92, commandWords);
                 if (g92Word != null) {
                     homingOffsets = axesLocation.subtract(machineLocation).add(homingOffsets);
-                    machineLocation = axesLocation;
-                    doDwell = true;
+                    machineLocation = machineLocation.put(axesLocation);
+                    Logger.debug("New offset location: "+machineLocation);
                 }
 
                 // Set unit. 
@@ -530,23 +551,6 @@ public class GcodeServer extends Thread {
                     absolute = false;
                 }
 
-                
-                if (doDwell && dwellMilliseconds > 0) {
-                    // There is a command, that waits for completion/dwells.
-                    if (dwellMilliseconds > 10000) {
-                        // Be reasonable
-                        Logger.warn("Dwell time limited to 10s from "+(dwellMilliseconds/1000.)+"s");
-                        dwellMilliseconds = 10000;
-                    }
-                    Logger.trace("Waiting "+dwellMilliseconds+"ms");
-                    Thread.sleep(dwellMilliseconds);
-                    
-                    // Remove old stuff.
-                    double time = NanosecondTime.getRuntimeSeconds() - 30;
-                    while (motionPlan.isEmpty() == false && motionPlan.firstKey() < time) {
-                        motionPlan.remove(motionPlan.firstKey());
-                    }
-                }
 
                 // Motion.
                 GcodeWord g0Word = getCodeWord(Gcode.G0, commandWords);
@@ -586,8 +590,10 @@ public class GcodeServer extends Thread {
                     t += motion.getTime();
                     Logger.debug("move takes "+(motion.getTime()*1000)+" ms");
                     motionPlan.put(t, motion);
+                    motion.setPlannedTime1(t);
                     // Store new location.
                     machineLocation = machineLocation.put(axesLocation);
+                    Logger.debug("New location: "+machineLocation);
                 }
 
                 // Standard response.

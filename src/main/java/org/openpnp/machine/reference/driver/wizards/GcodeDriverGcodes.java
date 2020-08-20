@@ -132,17 +132,29 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         importExportPanel.setBorder(new TitledBorder(null, "Import / Export", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(importExportPanel);
-        importExportPanel.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        importExportPanel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JButton btnExportGcodeProfile = new JButton(exportProfileAction);
         importExportPanel.add(btnExportGcodeProfile, "2, 2");
 
         JButton btnCopyGcodeProfile = new JButton(copyProfileToClipboardAction);
         importExportPanel.add(btnCopyGcodeProfile, "2, 4");
+        
+        JButton btnResetToDefaults = new JButton(resetToDefaultAction);
+        importExportPanel.add(btnResetToDefaults, "2, 8");
 
         headMountableChanged();
         commandTypeChanged();
@@ -367,6 +379,32 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.get(), "Paste Failed", e);
+            }
+        }
+    };
+    public final Action resetToDefaultAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.delete);
+            putValue(NAME, "Reset to defaults");
+            putValue(SHORT_DESCRIPTION, "Reset the Gcode profile to the default.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            try {
+                int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "This will delete all your Gcode and reset it to minimal defaults.\n"
+                        + "Are you absolutely sure?", 
+                        "Reset to defaults",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE);
+                if (ret == JOptionPane.YES_OPTION) {
+                    driver.createDefaultCommands();
+                    resetAction.actionPerformed(arg0);
+                }
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(MainFrame.get(), "Reset Failed", e);
             }
         }
     };

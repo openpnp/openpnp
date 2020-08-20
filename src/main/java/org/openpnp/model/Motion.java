@@ -145,7 +145,7 @@ public class Motion {
     }
 
     public double getTime() {
-        return axesProfiles[0].getTime();
+        return axesProfiles.length == 0 ? 0 : axesProfiles[0].getTime();
     }
 
     public double getPlannedTime0() {
@@ -205,6 +205,14 @@ public class Motion {
         final int motionLimitsOrder = 3;
         if (distance.isEmpty() || hasOption(MotionOption.UncoordinatedMotion)) {
             // Zero distance or uncoordinated motion. Axes constraints simply apply directly.
+            effectiveSpeed = getNominalSpeed();
+            boolean linearMove = false;
+            for (ControllerAxis axis : distance.getControllerAxes()) {
+                double d = Math.abs(distance.getCoordinate(axis));
+                if (d > 0 && !axis.isRotationalOnController()) {
+                    linearMove = true;
+                }
+            }
             for (Entry<ControllerAxis, Integer> entry : axisIndex.entrySet()) {
                 ControllerAxis axis = entry.getKey();
                 double sMin = Double.NEGATIVE_INFINITY;
@@ -217,16 +225,26 @@ public class Motion {
                         sMax = ((ReferenceControllerAxis) axis).getSoftLimitHigh().convertToUnits(AxesLocation.getUnits()).getValue();
                     }
                 }
-                effectiveSpeed = getNominalSpeed();
+                
+                double d = Math.abs(distance.getCoordinate(axis));
                 
                 double vMax = effectiveSpeed 
                         *axis.getMotionLimit(1);  
+                if (d > 0 && (axis.isRotationalOnController() ^ linearMove) && feedrateOverride != 0) {
+                    vMax = Math.min(vMax, feedrateOverride);
+                }
 
                 double aMax = Math.pow(effectiveSpeed, 2) // speed factor must be to the power of the order of the derivative
                         *axis.getMotionLimit(2);  
+                if (d > 0 && (axis.isRotationalOnController() ^ linearMove) && accelerationOverride != 0) {
+                    aMax = Math.min(aMax, accelerationOverride);
+                }
 
                 double jMax = Math.pow(effectiveSpeed, 3) // speed factor must be to the power of the order of the derivative
                         *axis.getMotionLimit(3);
+                if (d > 0 && (axis.isRotationalOnController() ^ linearMove) && jerkOverride != 0) {
+                    jMax = Math.min(jMax, jerkOverride);
+                }
 
                 // Compute s0 by distance rather than taking location0, because some axes may have been omitted in location1. 
                 double s1 = location1.getCoordinate(axis); 
@@ -330,6 +348,7 @@ public class Motion {
                     // Limit the rotational axes limit by the driver feed-rate?
                     rotationalLimits[1] = Math.min(rotationalLimits[1], feedrateOverride); 
                 }
+                //overallLimits[1] = Math.min(overallLimits[1], feedrateOverride);
             }
             else if (!hasOption(MotionOption.NoDriverLimit)) {
                 // According to NIST RS274NGC Interpreter - Version 3, Section 2.1.2.5 (p. 7)
@@ -357,6 +376,7 @@ public class Motion {
                     // Limit the rotational axes limit by the driver feed-rate?
                     rotationalLimits[2] = Math.min(rotationalLimits[2], accelerationOverride); 
                 }
+                //overallLimits[2] = Math.min(overallLimits[2], accelerationOverride); 
             }
             if (jerkOverride != 0) {
                 if (linearLimits[0] > 0) {
@@ -367,6 +387,7 @@ public class Motion {
                     // Limit the rotational axes limit by the driver feed-rate?
                     rotationalLimits[3] = Math.min(rotationalLimits[3], jerkOverride); 
                 }
+                //overallLimits[3] = Math.min(overallLimits[3], jerkOverride); 
             }
             double time = Math.max(
                     linearLimits[0]/linearLimits[1],
