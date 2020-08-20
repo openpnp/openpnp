@@ -238,4 +238,9 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
     public boolean isUsingLetterVariables() {
         return false;
     }
+
+    @Override
+    public MotionControlType getMotionControlType() {
+        return MotionControlType.Full3rdOrderControl;
+    }
 }

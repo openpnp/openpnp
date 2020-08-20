@@ -19,6 +19,9 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
 public abstract class AbstractReferenceDriver extends AbstractDriver implements ReferenceDriver {
+    @Attribute(required = false)
+    protected MotionControlType motionControlType = MotionControlType.ToolpathFeedRate; 
+
     @Element(required = false)
     protected SerialPortCommunications serial = new SerialPortCommunications();
 
@@ -100,7 +103,16 @@ public abstract class AbstractReferenceDriver extends AbstractDriver implements 
     }
     
     public abstract void disconnect() throws Exception;
-    
+
+    @Override
+    public MotionControlType getMotionControlType() {
+        return motionControlType;
+    }
+
+    public void setMotionControlType(MotionControlType motionControlType) {
+        this.motionControlType = motionControlType;
+    }
+
     public String getCommunicationsType() {
         return communicationsType;
     }

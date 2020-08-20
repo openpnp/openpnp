@@ -219,6 +219,11 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
             return getAccelerationPerSecond2().convertToUnits(AxesLocation.getUnits()).getValue();
         }
         else if (order == 3) {
+            if (getDriver() != null 
+                    && getDriver().getMotionControlType().isConstantAcceleration()) {
+                // Suppress any jerk setting in constant acceleration motion control.
+                return 0;
+            }
             return getJerkPerSecond3().convertToUnits(AxesLocation.getUnits()).getValue();
         }
         return 0;

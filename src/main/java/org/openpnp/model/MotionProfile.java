@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import org.openpnp.spi.Driver.MotionControlType;
 import org.openpnp.util.NanosecondTime;
 import org.pmw.tinylog.Logger;
 
@@ -82,6 +83,7 @@ public class MotionProfile {
     public enum ProfileOption {
         Coordinated,
         Jog,
+        SimplifiedSCurve,
         UnconstrainedExit,
         UnconstrainedEntry, 
         CroppedEntry, 
@@ -239,22 +241,43 @@ public class MotionProfile {
         return hasOption(ProfileOption.Solved);
     }
 
-    public double getProfileVelocity() {
-        // TODO: for advanced motion planning: calculate the real maximum over the profile, for cases with entry/exit conditions and/or tMin != 0
-        return Math.abs(v[4]);
+    public double getProfileVelocity(MotionControlType motionControlType) {
+        if (motionControlType == MotionControlType.EuclideanAxisLimits) {
+            return vMax;
+        }
+        else {
+            // TODO: for advanced motion planning: calculate the real maximum over the profile, for cases with entry/exit conditions and/or tMin != 0
+            return Math.abs(v[4]);
+        }
     }
 
-    public double getProfileEntryAcceleration() {
-        // TODO: for advanced motion planning: calculate the real maximum over the profile, for cases with entry/exit conditions. 
-        return Math.abs(a[2]);
+    public double getProfileEntryAcceleration(MotionControlType motionControlType) {
+        if (motionControlType == MotionControlType.EuclideanAxisLimits) {
+            return aMaxEntry;
+        }
+        else {
+            // TODO: for advanced motion planning: calculate the real maximum over the profile, for cases with entry/exit conditions. 
+            return Math.abs(a[2]);
+        }
     }
 
-    public double getProfileExitAcceleration() {
-        return Math.abs(a[6]);
+    public double getProfileExitAcceleration(MotionControlType motionControlType) {
+        if (motionControlType == MotionControlType.EuclideanAxisLimits) {
+            return aMaxExit;
+        }
+        else {
+         // TODO: for advanced motion planning: calculate the real maximum over the profile, for cases with entry/exit conditions. 
+            return Math.abs(a[6]);
+        }
     }
 
-    public double getProfileJerk() {
-        return Math.max(Math.abs(j[0]), Math.abs(j[6]));
+    public double getProfileJerk(MotionControlType motionControlType) {
+        if (motionControlType == MotionControlType.EuclideanAxisLimits) {
+            return jMax;
+        }
+        else {
+            return Math.max(Math.abs(j[0]), Math.abs(j[6]));
+        }
     }
 
     public double getTime() {
@@ -591,7 +614,7 @@ public class MotionProfile {
                     trace("Analytical solution with constant acceleration profile = "+vInitialGuess);
                 }
             }
-            else {
+            else if (!hasOption(ProfileOption.SimplifiedSCurve)){
                 // If the move is long enough to reach aMax we can try solving for vPeak analytically.
                 // Obtained from Sage Math:
                 //
@@ -1893,49 +1916,118 @@ public class MotionProfile {
         if (signumExit == 0) {
             signumExit = signumEntry;
         }
+        double dVEntry =  (vPeak - v[0]);
+        double dVExit =  (v[7] - vPeak);
         
         if (isConstantAcceleration()) {
             // Use a simple constant acceleration profile.
             j[0] = 0;
             // Acceleration jumps right up so we need to change a[0]
             a[0] = signumEntry*aMaxEntry;
-            double tAccelEntry = (vPeak - v[0])/a[0];
+            double tAccelEntry = dVEntry/a[0];
             t[1] = tAccelEntry*0.5;
             v[1] = v[0] + a[0]*t[1];
             s[1] = s[0] + v[0]*t[1] + 1./2*a[0]*Math.pow(t[1], 2); 
-            
+
             t[2] = 0;
             j[2] = 0;
             a[1] = a[0];
             v[2] = v[1];
             s[2] = s[1];
-            
+
             t[3] = tAccelEntry*0.5;
             j[3] = 0;
             a[2] = a[1];
             v[3] = vPeak;
             s[3] = s[2] + v[2]*t[1] + 1./2*a[2]*Math.pow(t[1], 2); 
             a[3] = 0;
-            
+
             // Reverse exit ramp.
             j[6] = 0;
             a[6] = -signumExit*aMaxExit;
-            double tAccelExit = (v[7] - vPeak)/a[6];
+            double tAccelExit = dVExit/a[6];
             t[7] = tAccelExit*0.5;
             v[6] = v[7] - a[6]*t[7];
             s[6] = s[7] - v[7]*t[7] + 1./2*a[6]*Math.pow(t[7], 2); 
-            
+
             t[6] = 0;
             j[5] = 0;
             a[5] = a[6];
             v[5] = v[6];
             s[5] = s[6];
-            
+
             t[5] = tAccelExit*0.5;
             j[4] = 0;
             a[4] = a[5];
             v[4] = vPeak;
             s[4] = s[5] - v[5]*t[5] + 1./2*a[4]*Math.pow(t[5], 2);
+        }
+        else if (hasOption(ProfileOption.SimplifiedSCurve)) {
+            // We must limit acceleration on very short moves then apply jerk for equivalent avg. constant acceleration.
+            double aMaxEntry = this.aMaxEntry;
+            if (Math.abs(dVEntry) < eps) {
+                aMaxEntry = 0;
+                j[0] = signumEntry*jMax;
+            }
+            else {
+                if (signumEntry*aMaxEntry*aMaxEntry/dVEntry > jMax) {
+                    // For very low velocity deltas the acceleration must be limited, lest the jMax is violated.
+                    aMaxEntry = Math.sqrt(Math.abs(dVEntry*jMax));
+                }
+                // 
+                j[0] = aMaxEntry*aMaxEntry/dVEntry;
+            }
+
+            a[0] = 0; // nothing else is supported
+
+            a[1] = signumEntry*aMaxEntry;
+            t[1] = a[1]/j[0];
+            s[1] = s[0] + v[0]*t[1] + 1./6*j[0]*Math.pow(t[1], 3); 
+            v[1] = v[0] + 1./2*j[0]*Math.pow(t[1], 2);
+
+            j[1] = 0;
+            t[2] = 0;
+            a[2] = a[1];
+            v[2] = v[1];
+            s[2] = s[1];
+
+            j[2] = -j[0];
+            t[3] = t[1];
+            a[3] = 0;
+            v[3] = vPeak;
+            s[3] = s[2] + v[2]*t[3] + 1./2*a[2]*Math.pow(t[3], 2) + 1./6*j[2]*Math.pow(t[3], 3); 
+
+            // Reverse exit ramp.
+            double aMaxExit = this.aMaxExit;
+            if (Math.abs(dVExit) < eps) {
+                aMaxExit = 0;
+                j[6] = signumExit*jMax;
+            }
+            else  {
+                if (-signumExit*aMaxExit*aMaxExit/dVExit > jMax) {
+                    // For very low velocity deltas the acceleration must be limited, lest the jMax is violated.
+                    aMaxExit = Math.sqrt(Math.abs(dVExit*jMax));
+                }
+                j[6] = -aMaxExit*aMaxExit/dVExit;
+            }
+
+            a[7] = 0; // nothing else is supported
+            a[6] = -signumExit*aMaxExit;
+            t[7] = -a[6]/j[6];
+            v[6] = v[7] + 1./2*j[6]*Math.pow(t[7], 2);
+            s[6] = s[7] - v[7]*t[7] - 1./6*j[6]*Math.pow(t[7], 3);
+            
+            j[5] = 0;
+            t[6] = 0;
+            a[5] = a[6];
+            v[5] = v[6];
+            s[5] = s[6];
+            
+            j[4] = -j[6];
+            t[5] = t[7];
+            a[4] = 0;
+            v[4] = vPeak;
+            s[4] = s[5] - v[5]*t[5] + 1./2*a[5]*Math.pow(t[5], 2) - 1./6*j[4]*Math.pow(t[5], 3); 
         }
         else {
             // 3rd order profile.
@@ -2010,6 +2102,7 @@ public class MotionProfile {
                 }
 
                 // Phase 5: Negative jerk to deceleration.
+                // TODO: reorder to reverse ramp as above. 
                 j[4] = -j6;
 
                 j[6] = j6;                  // Phase 7 look-ahead

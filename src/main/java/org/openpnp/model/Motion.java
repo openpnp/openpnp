@@ -31,6 +31,7 @@ import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Driver.MotionControlType;
 import org.openpnp.util.Triplet;
 
 /**
@@ -230,13 +231,17 @@ public class Motion {
                 // Compute s0 by distance rather than taking location0, because some axes may have been omitted in location1. 
                 double s1 = location1.getCoordinate(axis); 
                 double s0 = s1 - distance.getCoordinate(axis);
+                int options = profileOptions();
+                if (axis.getDriver() != null && axis.getDriver().getMotionControlType() == MotionControlType.SimpleSCurve) {
+                    options |= ProfileOption.SimplifiedSCurve.flag();
+                }
                 axesProfiles[entry.getValue()] = new MotionProfile(
                         s0, s1,
                         0, 0, 0, 0, // initialize with still-stand
                         sMin, sMax, 
                         vMax, aMax, aMax, jMax, 
                         0, Double.POSITIVE_INFINITY,
-                        profileOptions());
+                        options);
             }
             // As these profiles are uncoordinated, they need to be synchronized, i.e. made sure they take the same amount of time.
             MotionProfile.synchronizeProfiles(axesProfiles);
@@ -258,16 +263,23 @@ public class Motion {
             }
             double minDriverFeedrate =  Double.POSITIVE_INFINITY;
             for (ControllerAxis axis : distance.getControllerAxes()) {
-                if (axis.getDriver() != null && !hasOption(MotionOption.NoDriverLimit)) {
+                double d = Math.abs(distance.getCoordinate(axis));
+                double dSq = d*d;  
+                if (d > 0 && axis.getDriver() != null && !hasOption(MotionOption.NoDriverLimit)) {
                     double driverFeedrate = axis.getDriver().getFeedRatePerSecond()
                             .convertToUnits(AxesLocation.getUnits()).getValue();
                     if (driverFeedrate != 0.0) {
                         minDriverFeedrate = Math.min(minDriverFeedrate, driverFeedrate);
                     }
                 }
-                double d = Math.abs(distance.getCoordinate(axis));
-                double dSq = d*d;  
                 if (dSq > 0) {
+                    if (axis.isRotationalOnController()) {
+                        rotationalLimits[0] += dSq;
+                    }
+                    else {
+                        linearLimits[0] += dSq;
+                    }
+                    overallLimits[0] += dSq;
                     for (int order = 1; order <= motionLimitsOrder; order++) {
                         double limit = axis.getMotionLimit(order);
                         if (limit > 0) {
@@ -280,16 +292,13 @@ public class Motion {
                             // result to the overall motion unit, will take place  after the loop, by multiplying by the overall motion 
                             // distance.
                             if (axis.isRotationalOnController()) {
-                                rotationalLimits[0] += dSq;
                                 rotationalLimits[order] = Math.min(rotationalLimits[order],
                                         limit/d);
                             }
                             else {
-                                linearLimits[0] += dSq;
                                 linearLimits[order] = Math.min(linearLimits[order],
                                         limit/d);
                             }
-                            overallLimits[0] += dSq;
                             overallLimits[order] = Math.min(overallLimits[order],
                                     limit/d);
                         }
@@ -398,13 +407,17 @@ public class Motion {
                 double s1 = location1.getCoordinate(axis); 
                 double s0 = s1 - distance.getCoordinate(axis);
                 
+                int options = profileOptions();
+                if (axis.getDriver() != null && axis.getDriver().getMotionControlType() == MotionControlType.SimpleSCurve) {
+                    options |= ProfileOption.SimplifiedSCurve.flag();
+                }
                 axesProfiles[entry.getValue()] = new MotionProfile(
                         s0, s1, 
                         0, 0, 0, 0, // initialize with still-stand
                         sMin, sMax, 
                         vMax, aMax, aMax, jMax, 
                         0, Double.POSITIVE_INFINITY,
-                        profileOptions());
+                        options);
             }
             MotionProfile.coordinateProfiles(axesProfiles);
         }
@@ -528,9 +541,18 @@ public class Motion {
      * in driver units per second. 
      */
     public Double getFeedRatePerSecond(Driver driver) {
+        Double defaultFeedrate = driver.getFeedRatePerSecond()
+                .convertToUnits(driver.getUnits()).getValue()
+                *getNominalSpeed();
+        if (defaultFeedrate == 0.0) {
+            defaultFeedrate  = null;
+        }
+        if (driver.getMotionControlType() == MotionControlType.ToolpathFeedRate) {
+            return defaultFeedrate;
+        }
         return getNistRate(driver,
-                (axis, profile) -> (profile.getProfileVelocity()),
-                driver == null ? null : driver.getFeedRatePerSecond().convertToUnits(driver.getUnits()).getValue()); 
+                (axis, profile) -> (profile.getProfileVelocity(driver.getMotionControlType())),
+                defaultFeedrate); 
     }
     /**
      * @param driver The driver for which the rate is calculated i.e. for the axes mapped to it.
@@ -538,15 +560,22 @@ public class Motion {
      * in driver units per minute. 
      */
     public Double getFeedRatePerMinute(Driver driver) {
-        return getFeedRatePerSecond(driver)*60.0;
+        Double feedRate = getFeedRatePerSecond(driver);
+        if (feedRate != null) {
+            return feedRate*60.;
+        }
+        return null;
     }
     /**
      * @param driver The driver for which the rate is calculated i.e. for the axes mapped to it.
      * @return The driver specific acceleration limit in driver units per second squared. 
      */
     public Double getAccelerationPerSecond2(Driver driver) {
+        if (driver.getMotionControlType() == MotionControlType.ToolpathFeedRate) {
+            return null;
+        }
         return getNistRate(driver,
-                (axis, profile) -> (Math.max(profile.getProfileEntryAcceleration(), profile.getProfileExitAcceleration())),
+                (axis, profile) -> (Math.max(profile.getProfileEntryAcceleration(driver.getMotionControlType()), profile.getProfileExitAcceleration(driver.getMotionControlType()))),
                 null);
     }
     /**
@@ -554,8 +583,11 @@ public class Motion {
      * @return The driver specific jerk limit in driver units per second cubed.
      */
     public Double getJerkPerSecond3(Driver driver) {
+        if (driver.getMotionControlType() == MotionControlType.ToolpathFeedRate) {
+            return null;
+        }
         return getNistRate(driver,
-                (axis, profile) -> (profile.getProfileJerk()),
+                (axis, profile) -> (profile.getProfileJerk(driver.getMotionControlType())),
                 null);
     }
 }

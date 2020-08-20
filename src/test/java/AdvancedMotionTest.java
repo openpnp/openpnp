@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.openpnp.model.MotionProfile;
 import org.openpnp.model.MotionProfile.ErrorState;
 import org.openpnp.model.MotionProfile.ProfileOption;
+import org.openpnp.spi.Driver.MotionControlType;
 
 public class AdvancedMotionTest {
 
@@ -123,10 +124,10 @@ public class AdvancedMotionTest {
         MotionProfile profile2 = new MotionProfile(
                 0, 400, 0, -20, 0, -100,
                 0, 1000, 
-                profile.getProfileVelocity(), 
-                profile.getProfileEntryAcceleration(), 
-                profile.getProfileExitAcceleration(),
-                profile.getProfileJerk(),
+                profile.getProfileVelocity(MotionControlType.Full3rdOrderControl), 
+                profile.getProfileEntryAcceleration(MotionControlType.Full3rdOrderControl), 
+                profile.getProfileExitAcceleration(MotionControlType.Full3rdOrderControl),
+                profile.getProfileJerk(MotionControlType.Full3rdOrderControl),
                 0.0, Double.POSITIVE_INFINITY, 0);
         testProfile("recheck solution", profile2, null);
     }
@@ -156,9 +157,22 @@ public class AdvancedMotionTest {
                 profile.getTimeMin(), profile.getTimeMax(), 
                 profile.getOptions());
 
+        MotionProfile profileSimpleSCurve = new MotionProfile(
+                profile.getLocation(0), profile.getLocation(MotionProfile.segments), 
+                profile.getVelocity(0), profile.getVelocity(MotionProfile.segments),  
+                0, 0,
+                profile.getLocationMin(), profile.getLocationMax(),
+                profile.getVelocityMax(), 
+                profile.getEntryAccelerationMax(), 
+                profile.getExitAccelerationMax(),
+                profile.getJerkMax(),
+                profile.getTimeMin(), profile.getTimeMax(), 
+                profile.getOptions() | ProfileOption.SimplifiedSCurve.flag());
+
         testProfileCase(message, profile, expectedError);
         testProfileCase(message+" (reverse)", profileRev, expectedError);
         testProfileCase(message+" (constant acceleration)", profileConstantAcc, expectedError);
+        testProfileCase(message+" (simplified S-Curve)", profileSimpleSCurve, expectedError);
         System.out.println(" ");
     }
 

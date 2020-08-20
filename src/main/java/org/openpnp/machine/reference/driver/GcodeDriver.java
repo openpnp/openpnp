@@ -463,7 +463,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             throws Exception {
         // Get the axes that are actually moving.
         AxesLocation location = motion.getMovingAxesTargetLocation(this);
-        double feedRate = motion.getFeedRatePerMinute(this);
+        Double feedRate = motion.getFeedRatePerMinute(this);
         Double acceleration = motion.getAccelerationPerSecond2(this);
         Double jerk = motion.getJerkPerSecond3(this);
 
@@ -483,7 +483,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         command = substituteVariable(command, "Id", hm.getId());
         command = substituteVariable(command, "Name", hm.getName());
         command = substituteVariable(command, "FeedRate", feedRate);
-        command = substituteVariable(command, "BacklashFeedRate", enableBacklash ? feedRate * backlashFeedRateFactor : feedRate);
+        command = substituteVariable(command, "BacklashFeedRate", feedRate == null ? null : 
+            (enableBacklash ? feedRate * backlashFeedRateFactor : feedRate));
         command = substituteVariable(command, "Acceleration", acceleration);
         command = substituteVariable(command, "Jerk", jerk);
         
