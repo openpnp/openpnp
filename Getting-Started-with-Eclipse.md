@@ -25,6 +25,16 @@
 * <sup>1</sup> It is possible to later change so your clone is pointing to your fork at Github.
 * <sup>2</sup> You cannot directly push your changes to OpenPnP, it must go through your own fork.
 
+### Working with different configuration directories
+
+When launching OpenPNP from within Eclipse IDE it will use your default configuration directory.
+If you want to use an own directory, for example if you are using different branches with different machine.xml, then you can supply the **configDir** variable in the "Run Configuration":
+
+Select menu "Run -> Run configurations"
+Select your Main Java Application settings
+Choose the Arguments tab
+In the section VM arguments add: -DconfigDir=yourdirectory
+
 
 ## Additional steps if you want to contribute
 1. Ensure you have the automatic code formatter for eclipse activated. See the [coding style-section in the developers guide to download a preconfigured settings file](https://github.com/openpnp/openpnp/wiki/Developers-Guide#coding-style).
