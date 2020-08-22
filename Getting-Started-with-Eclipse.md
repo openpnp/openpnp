@@ -30,10 +30,12 @@
 When launching OpenPNP from within Eclipse IDE it will use your default configuration directory.
 If you want to use an own directory, for example if you are using different branches with different machine.xml, then you can supply the **configDir** variable in the "Run Configuration":
 
-Select menu "Run -> Run configurations"
-Select your Main Java Application settings
-Choose the Arguments tab
-In the section VM arguments add: -DconfigDir=yourdirectory
+![eclipse_configDir](https://user-images.githubusercontent.com/11256235/90951519-ff069600-e45b-11ea-90e3-b6bf13bd6caf.png)
+
+* Select menu "Run -> Run configurations"
+* Select your Main Java Application settings
+* Choose the Arguments tab
+* In the section VM arguments add: -DconfigDir=yourdirectory
 
 
 ## Additional steps if you want to contribute
