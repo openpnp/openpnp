@@ -35,6 +35,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Driver.MotionControlType;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.simpleframework.xml.Serializer;
@@ -72,67 +73,76 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
+        JLabel lblMotionControlType = new JLabel("Motion Control Type");
+        lblMotionControlType.setToolTipText("<html>\r\n<p>Determines how the OpenPnP MotionPlanner will plan the motion and how it will talk <br/>\r\nto the controller:</p>\r\n<ul>\r\n<li><strong>ToolpathFeedRate:</strong><br/>\r\nApply the nominal driver feed-rate limit multiplied by the speed factor to the tool-path.<br/>\r\nThe driver feed-rate must be specified. No acceleration control is applied.</li>\r\n<li><strong>EuclideanAxisLimits:</strong><br/>\r\nApply axis feed-rate, acceleration and jerk limits multiplied by the proper speed factors. <br/>\r\nThe Euclidean Metric is calculated to allow the machine to run faster in a diagonal.<br/>\r\nAll profile motion control is left to the controller. </li>  \r\n<li><strong>ConstantAcceleration:</strong><br/>\r\nApply motion planning assuming a controller with constant acceleration motion control. </li>\r\n<li><strong>SimpleSCurve:</strong><br/>\r\nApply motion planning assuming a controller with simplified S-Curve motion control. <br/>\r\nSimplified S-Curves have no constant acceleration phase, only jerk phases (e.g. TinyG, Marlin).</li>\r\n<li><strong>Full3rdOrderControl:</strong><br/>\r\nApply motion planning assuming a controller with full 3rd order motion control.</li> \r\n</html>");
+        settingsPanel.add(lblMotionControlType, "2, 2, right, default");
+        
+        motionControlType = new JComboBox(MotionControlType.values());
+        settingsPanel.add(motionControlType, "4, 2, 5, 1, fill, default");
+        
         JLabel lblUnits = new JLabel("Units");
-        settingsPanel.add(lblUnits, "6, 2, right, default");
+        settingsPanel.add(lblUnits, "6, 4, right, default");
         
         unitsCb = new JComboBox(LengthUnit.values());
-        settingsPanel.add(unitsCb, "8, 2, fill, default");
+        settingsPanel.add(unitsCb, "8, 4, fill, default");
         
         JLabel lblMaxFeedRate = new JLabel("Max Feed Rate [/min]");
         lblMaxFeedRate.setToolTipText("<html><p>Maximum tool-path feed-rate in driver units per minute. </p>\r\n<p>Set to 0 to disable and only use axis feed-rate limits. Diagonal moves will then be faster. </p>\r\n</html>");
-        settingsPanel.add(lblMaxFeedRate, "6, 4, right, default");
+        settingsPanel.add(lblMaxFeedRate, "6, 6, right, default");
         
         maxFeedRateTf = new JTextField();
-        settingsPanel.add(maxFeedRateTf, "8, 4, fill, default");
+        settingsPanel.add(maxFeedRateTf, "8, 6, fill, default");
         maxFeedRateTf.setColumns(5);
         
         JLabel lblCommandTimeoutms = new JLabel("Command Timeout [ms]");
-        settingsPanel.add(lblCommandTimeoutms, "2, 2, right, default");
+        settingsPanel.add(lblCommandTimeoutms, "2, 4, right, default");
         
         commandTimeoutTf = new JTextField();
-        settingsPanel.add(commandTimeoutTf, "4, 2, fill, default");
+        settingsPanel.add(commandTimeoutTf, "4, 4, fill, default");
         commandTimeoutTf.setColumns(10);
         
         JLabel lblConnectWaitTime = new JLabel("Connect Wait Time [ms]");
-        settingsPanel.add(lblConnectWaitTime, "2, 4, right, default");
+        settingsPanel.add(lblConnectWaitTime, "2, 6, right, default");
         
         connectWaitTimeTf = new JTextField();
-        settingsPanel.add(connectWaitTimeTf, "4, 4, fill, default");
+        settingsPanel.add(connectWaitTimeTf, "4, 6, fill, default");
         connectWaitTimeTf.setColumns(10);
         
         JLabel lblBacklashFeedSpeedFactor = new JLabel("Backlash Feed Rate Factor");
-        settingsPanel.add(lblBacklashFeedSpeedFactor, "2, 6, right, default");
+        settingsPanel.add(lblBacklashFeedSpeedFactor, "2, 8, right, default");
         
         backlashFeedRateFactorTf = new JTextField();
-        settingsPanel.add(backlashFeedRateFactorTf, "4, 6, fill, default");
+        settingsPanel.add(backlashFeedRateFactorTf, "4, 8, fill, default");
         backlashFeedRateFactorTf.setColumns(10);
         
         JLabel lblBackslashEscapedCharacters = new JLabel("Backslash Escaped Characters?");
         lblBackslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                 + "feed, \\r for carriage return, and \\f for form feed.");
-        settingsPanel.add(lblBackslashEscapedCharacters, "2, 8, right, default");
+        settingsPanel.add(lblBackslashEscapedCharacters, "2, 10, right, default");
         
         backslashEscapedCharacters = new JCheckBox("");
         backslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                 + "feed, \\r for carriage return, and \\f for form feed.");
-        settingsPanel.add(backslashEscapedCharacters, "4, 8");
+        settingsPanel.add(backslashEscapedCharacters, "4, 10");
         
         JLabel lblLetterVariables = new JLabel("Letter Variables?");
         lblLetterVariables.setToolTipText("Axis variables in Gcode are named using the Axis Letters rather than the Axis Type.");
-        settingsPanel.add(lblLetterVariables, "6, 8, right, default");
+        settingsPanel.add(lblLetterVariables, "6, 10, right, default");
         
         letterVariables = new JCheckBox("");
-        settingsPanel.add(letterVariables, "8, 8");
+        settingsPanel.add(letterVariables, "8, 10");
         
         JLabel lblAllowPremoveCommands = new JLabel("Allow Pre-Move Commands?");
-        settingsPanel.add(lblAllowPremoveCommands, "2, 10, right, default");
+        settingsPanel.add(lblAllowPremoveCommands, "2, 12, right, default");
         
         supportingPreMove = new JCheckBox("");
-        settingsPanel.add(supportingPreMove, "4, 10");
+        settingsPanel.add(supportingPreMove, "4, 12");
     }
 
     @Override
@@ -142,6 +152,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         DoubleConverter doubleConverterFine = new DoubleConverter("%f");
         
+        addWrappedBinding(driver, "motionControlType", motionControlType, "selectedItem");
         addWrappedBinding(driver, "units", unitsCb, "selectedItem");
         addWrappedBinding(driver, "maxFeedRate", maxFeedRateTf, "text", intConverter);
         addWrappedBinding(driver, "backlashFeedRateFactor", backlashFeedRateFactorTf, "text", doubleConverter);
@@ -283,6 +294,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
             }
         }
     };
+    private JComboBox motionControlType;
     private JTextField maxFeedRateTf;
     private JTextField backlashFeedRateFactorTf;
     private JTextField commandTimeoutTf;

@@ -16,6 +16,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Motion;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.Driver.MotionControlType;
 import org.openpnp.spi.base.AbstractDriver;
 import org.simpleframework.xml.Attribute;
 
@@ -153,6 +154,11 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
         }
 
         @Override
+        public MotionControlType getMotionControlType() {
+            return MotionControlType.Full3rdOrderControl;
+        }
+
+        @Override
         public LengthUnit getUnits() {
             return LengthUnit.Millimeters;
         }
@@ -181,6 +187,11 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
             return null;
         }
    }
+
+    @Override
+    public MotionControlType getMotionControlType() {
+        return MotionControlType.Full3rdOrderControl;
+    }
 
     @Override
     public LengthUnit getUnits() {

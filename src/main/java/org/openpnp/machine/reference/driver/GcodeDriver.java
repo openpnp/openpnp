@@ -229,11 +229,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     public void createDefaults() throws Exception {
         createAxisMappingDefaults((ReferenceMachine) Configuration.get().getMachine());
 
+        createDefaultCommands();
+    }
+
+    public void createDefaultCommands() {
         commands = new ArrayList<>();
         commands.add(new Command(null, CommandType.COMMAND_CONFIRM_REGEX, "^ok.*"));
         commands.add(new Command(null, CommandType.CONNECT_COMMAND, "G21 ; Set millimeters mode\nG90 ; Set absolute positioning mode\nM82 ; Set absolute mode for extruder"));
         commands.add(new Command(null, CommandType.HOME_COMMAND, "G28 ; Home all axes"));
-        commands.add(new Command(null, CommandType.MOVE_TO_COMMAND, "G0 {XL}{X:%.4f} {YL}{Y:%.4f} {ZL}{Z:%.4f} {RotationL}{Rotation:%.4f} F{FeedRate:%.0f} ; Send standard Gcode move"));
+        commands.add(new Command(null, CommandType.SET_GLOBAL_OFFSETS_COMMAND, "G92 {XL}{X:%.4f} {YL}{Y:%.4f} {ZL}{Z:%.4f} {RotationL}{Rotation:%.4f} ; Reset current position to given coordinates"));
+        commands.add(new Command(null, CommandType.MOVE_TO_COMMAND, "{Acceleration:M204 S%.1f} G0 {XL}{X:%.4f} {YL}{Y:%.4f} {ZL}{Z:%.4f} {RotationL}{Rotation:%.4f} {FeedRate:F%.1f} ; Send standard Gcode move"));
         commands.add(new Command(null, CommandType.MOVE_TO_COMPLETE_COMMAND, "M400 ; Wait for moves to complete before returning"));
     }
 
@@ -323,14 +328,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         homeLocation.setToDriverCoordinates(this);
     }
 
-    protected List<String> getAxisVariables(ReferenceMachine machine) {
+    public List<String> getAxisVariables(ReferenceMachine machine) {
         List<String> variables = new ArrayList<>();
         if (usingLetterVariables) {
             for (org.openpnp.spi.Axis axis : machine.getAxes()) {
                 if (axis instanceof ControllerAxis) {
-                    String letter =((ControllerAxis) axis).getLetter(); 
-                    if (letter != null && !letter.isEmpty()) {
-                        variables.add(letter);
+                    if (((ControllerAxis) axis).getDriver() == this) {
+                        String letter = ((ControllerAxis) axis).getLetter(); 
+                        if (letter != null && !letter.isEmpty()) {
+                            variables.add(letter);
+                        }
                     }
                 }
             }
@@ -461,7 +468,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             throws Exception {
         // Get the axes that are actually moving.
         AxesLocation location = motion.getMovingAxesTargetLocation(this);
-        double feedRate = motion.getFeedRatePerMinute(this);
+        Double feedRate = motion.getFeedRatePerMinute(this);
         Double acceleration = motion.getAccelerationPerSecond2(this);
         Double jerk = motion.getJerkPerSecond3(this);
 
@@ -481,7 +488,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         command = substituteVariable(command, "Id", hm.getId());
         command = substituteVariable(command, "Name", hm.getName());
         command = substituteVariable(command, "FeedRate", feedRate);
-        command = substituteVariable(command, "BacklashFeedRate", enableBacklash ? feedRate * backlashFeedRateFactor : feedRate);
+        command = substituteVariable(command, "BacklashFeedRate", feedRate == null ? null : 
+            (enableBacklash ? feedRate * backlashFeedRateFactor : feedRate));
         command = substituteVariable(command, "Acceleration", acceleration);
         command = substituteVariable(command, "Jerk", jerk);
         

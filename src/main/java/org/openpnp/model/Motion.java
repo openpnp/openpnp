@@ -31,6 +31,7 @@ import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Driver.MotionControlType;
 import org.openpnp.util.Triplet;
 
 /**
@@ -102,7 +103,7 @@ public class Motion {
         return optionFlags;
     }
 
-    public Motion(HeadMountable headMountable, AxesLocation location0, AxesLocation location1, double nominalSpeed, int options) {
+    public Motion(HeadMountable headMountable, AxesLocation location0, AxesLocation location1, double nominalSpeed, double feedrateOverride, double accelerationOverride, double jerkOverride, int options) {
         super();
         this.headMountable = headMountable;
         this.location0 = location0;
@@ -114,7 +115,10 @@ public class Motion {
             axisIndex.put(axis, count++);
         }
         axesProfiles = new MotionProfile[count];
-        computeLimitsAndProfile();
+        computeLimitsAndProfile(feedrateOverride, accelerationOverride, jerkOverride);
+    }
+    public Motion(HeadMountable headMountable, AxesLocation location0, AxesLocation location1, double nominalSpeed, int options) {
+        this(headMountable, location0, location1, nominalSpeed, 0, 0, 0, options);
     }
     public Motion(HeadMountable headMountable, AxesLocation location0, AxesLocation location1, double nominalSpeed, MotionOption... options) {
         this(headMountable, location0, location1, nominalSpeed, optionFlags(options));
@@ -141,7 +145,7 @@ public class Motion {
     }
 
     public double getTime() {
-        return axesProfiles[0].getTime();
+        return axesProfiles.length == 0 ? 0 : axesProfiles[0].getTime();
     }
 
     public double getPlannedTime0() {
@@ -189,15 +193,26 @@ public class Motion {
 
     /**
      * Compute the limits (maximum axis velocity, acceleration, jerk) and the initial raw axis motion profile.
+     * @param jerkOverride 
+     * @param accelerationOverride 
+     * @param feedrateOverride 
      * 
      */
-    protected void computeLimitsAndProfile() {
+    protected void computeLimitsAndProfile(double feedrateOverride, double accelerationOverride, double jerkOverride) {
         // Create a distance vector that has only axes mentioned in location1 that at the same time 
         // do not match coordinates with location0.
         AxesLocation distance = location0.motionSegmentTo(location1);
         final int motionLimitsOrder = 3;
         if (distance.isEmpty() || hasOption(MotionOption.UncoordinatedMotion)) {
             // Zero distance or uncoordinated motion. Axes constraints simply apply directly.
+            effectiveSpeed = getNominalSpeed();
+            boolean linearMove = false;
+            for (ControllerAxis axis : distance.getControllerAxes()) {
+                double d = Math.abs(distance.getCoordinate(axis));
+                if (d > 0 && !axis.isRotationalOnController()) {
+                    linearMove = true;
+                }
+            }
             for (Entry<ControllerAxis, Integer> entry : axisIndex.entrySet()) {
                 ControllerAxis axis = entry.getKey();
                 double sMin = Double.NEGATIVE_INFINITY;
@@ -210,27 +225,41 @@ public class Motion {
                         sMax = ((ReferenceControllerAxis) axis).getSoftLimitHigh().convertToUnits(AxesLocation.getUnits()).getValue();
                     }
                 }
-                effectiveSpeed = getNominalSpeed();
+                
+                double d = Math.abs(distance.getCoordinate(axis));
                 
                 double vMax = effectiveSpeed 
                         *axis.getMotionLimit(1);  
+                if (d > 0 && (axis.isRotationalOnController() ^ linearMove) && feedrateOverride != 0) {
+                    vMax = Math.min(vMax, feedrateOverride);
+                }
 
                 double aMax = Math.pow(effectiveSpeed, 2) // speed factor must be to the power of the order of the derivative
                         *axis.getMotionLimit(2);  
+                if (d > 0 && (axis.isRotationalOnController() ^ linearMove) && accelerationOverride != 0) {
+                    aMax = Math.min(aMax, accelerationOverride);
+                }
 
                 double jMax = Math.pow(effectiveSpeed, 3) // speed factor must be to the power of the order of the derivative
                         *axis.getMotionLimit(3);
+                if (d > 0 && (axis.isRotationalOnController() ^ linearMove) && jerkOverride != 0) {
+                    jMax = Math.min(jMax, jerkOverride);
+                }
 
                 // Compute s0 by distance rather than taking location0, because some axes may have been omitted in location1. 
                 double s1 = location1.getCoordinate(axis); 
                 double s0 = s1 - distance.getCoordinate(axis);
+                int options = profileOptions();
+                if (axis.getDriver() != null && axis.getDriver().getMotionControlType() == MotionControlType.SimpleSCurve) {
+                    options |= ProfileOption.SimplifiedSCurve.flag();
+                }
                 axesProfiles[entry.getValue()] = new MotionProfile(
                         s0, s1,
                         0, 0, 0, 0, // initialize with still-stand
                         sMin, sMax, 
                         vMax, aMax, aMax, jMax, 
                         0, Double.POSITIVE_INFINITY,
-                        profileOptions());
+                        options);
             }
             // As these profiles are uncoordinated, they need to be synchronized, i.e. made sure they take the same amount of time.
             MotionProfile.synchronizeProfiles(axesProfiles);
@@ -252,16 +281,23 @@ public class Motion {
             }
             double minDriverFeedrate =  Double.POSITIVE_INFINITY;
             for (ControllerAxis axis : distance.getControllerAxes()) {
-                if (axis.getDriver() != null && !hasOption(MotionOption.NoDriverLimit)) {
+                double d = Math.abs(distance.getCoordinate(axis));
+                double dSq = d*d;  
+                if (d > 0 && axis.getDriver() != null && !hasOption(MotionOption.NoDriverLimit)) {
                     double driverFeedrate = axis.getDriver().getFeedRatePerSecond()
                             .convertToUnits(AxesLocation.getUnits()).getValue();
                     if (driverFeedrate != 0.0) {
                         minDriverFeedrate = Math.min(minDriverFeedrate, driverFeedrate);
                     }
                 }
-                double d = Math.abs(distance.getCoordinate(axis));
-                double dSq = d*d;  
                 if (dSq > 0) {
+                    if (axis.isRotationalOnController()) {
+                        rotationalLimits[0] += dSq;
+                    }
+                    else {
+                        linearLimits[0] += dSq;
+                    }
+                    overallLimits[0] += dSq;
                     for (int order = 1; order <= motionLimitsOrder; order++) {
                         double limit = axis.getMotionLimit(order);
                         if (limit > 0) {
@@ -274,16 +310,13 @@ public class Motion {
                             // result to the overall motion unit, will take place  after the loop, by multiplying by the overall motion 
                             // distance.
                             if (axis.isRotationalOnController()) {
-                                rotationalLimits[0] += dSq;
                                 rotationalLimits[order] = Math.min(rotationalLimits[order],
                                         limit/d);
                             }
                             else {
-                                linearLimits[0] += dSq;
                                 linearLimits[order] = Math.min(linearLimits[order],
                                         limit/d);
                             }
-                            overallLimits[0] += dSq;
                             overallLimits[order] = Math.min(overallLimits[order],
                                     limit/d);
                         }
@@ -306,7 +339,18 @@ public class Motion {
                     overallLimits[order] = overallLimits[order] * overallLimits[0];
                 }
             }
-            if (!hasOption(MotionOption.NoDriverLimit)) {
+            if (feedrateOverride != 0) {
+                if (linearLimits[0] > 0) {
+                    // Limit the linear axes limit by the driver feed-rate. 
+                    linearLimits[1] = Math.min(linearLimits[1], feedrateOverride); 
+                }
+                else  {
+                    // Limit the rotational axes limit by the driver feed-rate?
+                    rotationalLimits[1] = Math.min(rotationalLimits[1], feedrateOverride); 
+                }
+                //overallLimits[1] = Math.min(overallLimits[1], feedrateOverride);
+            }
+            else if (!hasOption(MotionOption.NoDriverLimit)) {
                 // According to NIST RS274NGC Interpreter - Version 3, Section 2.1.2.5 (p. 7)
                 // the F feed-rate is to be interpreted over the Euclidean linear axis distance of a move 
                 // and in the absence of any linear axes, over the Euclidean rotational distance 
@@ -322,6 +366,28 @@ public class Motion {
                     // We depart from former OpenPnP behavior here. 
                     //   rotationalLimits[1] = Math.min(rotationalLimits[1], minDriverFeedrate); 
                 }
+            }
+            if (accelerationOverride != 0) {
+                if (linearLimits[0] > 0) {
+                    // Limit the linear axes limit by the driver feed-rate. 
+                    linearLimits[2] = Math.min(linearLimits[2], accelerationOverride); 
+                }
+                else  {
+                    // Limit the rotational axes limit by the driver feed-rate?
+                    rotationalLimits[2] = Math.min(rotationalLimits[2], accelerationOverride); 
+                }
+                //overallLimits[2] = Math.min(overallLimits[2], accelerationOverride); 
+            }
+            if (jerkOverride != 0) {
+                if (linearLimits[0] > 0) {
+                    // Limit the linear axes limit by the driver feed-rate. 
+                    linearLimits[3] = Math.min(linearLimits[3], jerkOverride); 
+                }
+                else  {
+                    // Limit the rotational axes limit by the driver feed-rate?
+                    rotationalLimits[3] = Math.min(rotationalLimits[3], jerkOverride); 
+                }
+                //overallLimits[3] = Math.min(overallLimits[3], jerkOverride); 
             }
             double time = Math.max(
                     linearLimits[0]/linearLimits[1],
@@ -351,24 +417,28 @@ public class Motion {
                         *overallLimits[1]*axisFraction;  
 
                 double aMax = 
-                        Math.pow(effectiveSpeed, 2) // speed factor must be to the power of the order of the derivative
+                        Math.pow(nominalSpeed, 2) // speed factor must be to the power of the order of the derivative
                         *overallLimits[2]*axisFraction;  
 
                 double jMax = 
-                        Math.pow(effectiveSpeed, 3) // speed factor must be to the power of the order of the derivative
+                        Math.pow(nominalSpeed, 3) // speed factor must be to the power of the order of the derivative
                         *overallLimits[3]*axisFraction;
 
                 // Compute s0 by distance rather than taking location0, because some axes may have been omitted in location1. 
                 double s1 = location1.getCoordinate(axis); 
                 double s0 = s1 - distance.getCoordinate(axis);
                 
+                int options = profileOptions();
+                if (axis.getDriver() != null && axis.getDriver().getMotionControlType() == MotionControlType.SimpleSCurve) {
+                    options |= ProfileOption.SimplifiedSCurve.flag();
+                }
                 axesProfiles[entry.getValue()] = new MotionProfile(
                         s0, s1, 
                         0, 0, 0, 0, // initialize with still-stand
                         sMin, sMax, 
                         vMax, aMax, aMax, jMax, 
                         0, Double.POSITIVE_INFINITY,
-                        profileOptions());
+                        options);
             }
             MotionProfile.coordinateProfiles(axesProfiles);
         }
@@ -492,9 +562,18 @@ public class Motion {
      * in driver units per second. 
      */
     public Double getFeedRatePerSecond(Driver driver) {
+        Double defaultFeedrate = driver.getFeedRatePerSecond()
+                .convertToUnits(driver.getUnits()).getValue()
+                *getNominalSpeed();
+        if (defaultFeedrate == 0.0) {
+            defaultFeedrate  = null;
+        }
+        if (driver.getMotionControlType() == MotionControlType.ToolpathFeedRate) {
+            return defaultFeedrate;
+        }
         return getNistRate(driver,
-                (axis, profile) -> (profile.getProfileVelocity()),
-                driver == null ? null : driver.getFeedRatePerSecond().convertToUnits(driver.getUnits()).getValue()); 
+                (axis, profile) -> (profile.getProfileVelocity(driver.getMotionControlType())),
+                defaultFeedrate); 
     }
     /**
      * @param driver The driver for which the rate is calculated i.e. for the axes mapped to it.
@@ -502,15 +581,22 @@ public class Motion {
      * in driver units per minute. 
      */
     public Double getFeedRatePerMinute(Driver driver) {
-        return getFeedRatePerSecond(driver)*60.0;
+        Double feedRate = getFeedRatePerSecond(driver);
+        if (feedRate != null) {
+            return feedRate*60.;
+        }
+        return null;
     }
     /**
      * @param driver The driver for which the rate is calculated i.e. for the axes mapped to it.
      * @return The driver specific acceleration limit in driver units per second squared. 
      */
     public Double getAccelerationPerSecond2(Driver driver) {
+        if (driver.getMotionControlType() == MotionControlType.ToolpathFeedRate) {
+            return null;
+        }
         return getNistRate(driver,
-                (axis, profile) -> (Math.max(profile.getProfileEntryAcceleration(), profile.getProfileExitAcceleration())),
+                (axis, profile) -> (Math.max(profile.getProfileEntryAcceleration(driver.getMotionControlType()), profile.getProfileExitAcceleration(driver.getMotionControlType()))),
                 null);
     }
     /**
@@ -518,8 +604,11 @@ public class Motion {
      * @return The driver specific jerk limit in driver units per second cubed.
      */
     public Double getJerkPerSecond3(Driver driver) {
+        if (driver.getMotionControlType() == MotionControlType.ToolpathFeedRate) {
+            return null;
+        }
         return getNistRate(driver,
-                (axis, profile) -> (profile.getProfileJerk()),
+                (axis, profile) -> (profile.getProfileJerk(driver.getMotionControlType())),
                 null);
     }
 }

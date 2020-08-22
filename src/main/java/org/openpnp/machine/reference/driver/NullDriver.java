@@ -44,9 +44,8 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
 /**
- * An example of the simplest possible driver that can support multiple heads. This driver maintains
- * a set of coordinates for each Head that it is asked to handle and simply logs all commands sent
- * to it.
+ * An example of the simplest possible driver. This driver maintains a set of coordinates for each Axis
+ * that it is asked to handle and simply logs all commands sent to it.
  */
 public class NullDriver extends AbstractDriver implements ReferenceDriver {
 
@@ -238,5 +237,10 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
     @Override
     public boolean isUsingLetterVariables() {
         return false;
+    }
+
+    @Override
+    public MotionControlType getMotionControlType() {
+        return MotionControlType.Full3rdOrderControl;
     }
 }
