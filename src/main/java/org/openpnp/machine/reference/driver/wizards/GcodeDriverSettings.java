@@ -73,6 +73,8 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         JLabel lblMotionControlType = new JLabel("Motion Control Type");
@@ -114,26 +116,26 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         lblBackslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                 + "feed, \\r for carriage return, and \\f for form feed.");
-        settingsPanel.add(lblBackslashEscapedCharacters, "2, 8, right, default");
+        settingsPanel.add(lblBackslashEscapedCharacters, "2, 10, right, default");
         
         backslashEscapedCharacters = new JCheckBox("");
         backslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                 + "feed, \\r for carriage return, and \\f for form feed.");
-        settingsPanel.add(backslashEscapedCharacters, "4, 8");
+        settingsPanel.add(backslashEscapedCharacters, "4, 10");
         
         JLabel lblLetterVariables = new JLabel("Letter Variables?");
         lblLetterVariables.setToolTipText("Axis variables in Gcode are named using the Axis Letters rather than the Axis Type.");
-        settingsPanel.add(lblLetterVariables, "6, 8, right, default");
+        settingsPanel.add(lblLetterVariables, "6, 10, right, default");
         
         letterVariables = new JCheckBox("");
-        settingsPanel.add(letterVariables, "8, 8");
+        settingsPanel.add(letterVariables, "8, 10");
         
         JLabel lblAllowPremoveCommands = new JLabel("Allow Pre-Move Commands?");
-        settingsPanel.add(lblAllowPremoveCommands, "2, 10, right, default");
+        settingsPanel.add(lblAllowPremoveCommands, "2, 12, right, default");
         
         supportingPreMove = new JCheckBox("");
-        settingsPanel.add(supportingPreMove, "4, 10");
+        settingsPanel.add(supportingPreMove, "4, 12");
     }
 
     @Override
