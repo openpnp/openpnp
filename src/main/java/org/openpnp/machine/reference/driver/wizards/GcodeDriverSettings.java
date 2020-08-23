@@ -73,8 +73,6 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         JLabel lblMotionControlType = new JLabel("Motion Control Type");
@@ -112,37 +110,30 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         settingsPanel.add(connectWaitTimeTf, "4, 6, fill, default");
         connectWaitTimeTf.setColumns(10);
         
-        JLabel lblBacklashFeedSpeedFactor = new JLabel("Backlash Feed Rate Factor");
-        settingsPanel.add(lblBacklashFeedSpeedFactor, "2, 8, right, default");
-        
-        backlashFeedRateFactorTf = new JTextField();
-        settingsPanel.add(backlashFeedRateFactorTf, "4, 8, fill, default");
-        backlashFeedRateFactorTf.setColumns(10);
-        
         JLabel lblBackslashEscapedCharacters = new JLabel("Backslash Escaped Characters?");
         lblBackslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                 + "feed, \\r for carriage return, and \\f for form feed.");
-        settingsPanel.add(lblBackslashEscapedCharacters, "2, 10, right, default");
+        settingsPanel.add(lblBackslashEscapedCharacters, "2, 8, right, default");
         
         backslashEscapedCharacters = new JCheckBox("");
         backslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                 + "feed, \\r for carriage return, and \\f for form feed.");
-        settingsPanel.add(backslashEscapedCharacters, "4, 10");
+        settingsPanel.add(backslashEscapedCharacters, "4, 8");
         
         JLabel lblLetterVariables = new JLabel("Letter Variables?");
         lblLetterVariables.setToolTipText("Axis variables in Gcode are named using the Axis Letters rather than the Axis Type.");
-        settingsPanel.add(lblLetterVariables, "6, 10, right, default");
+        settingsPanel.add(lblLetterVariables, "6, 8, right, default");
         
         letterVariables = new JCheckBox("");
-        settingsPanel.add(letterVariables, "8, 10");
+        settingsPanel.add(letterVariables, "8, 8");
         
         JLabel lblAllowPremoveCommands = new JLabel("Allow Pre-Move Commands?");
-        settingsPanel.add(lblAllowPremoveCommands, "2, 12, right, default");
+        settingsPanel.add(lblAllowPremoveCommands, "2, 10, right, default");
         
         supportingPreMove = new JCheckBox("");
-        settingsPanel.add(supportingPreMove, "4, 12");
+        settingsPanel.add(supportingPreMove, "4, 10");
     }
 
     @Override
@@ -155,7 +146,6 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         addWrappedBinding(driver, "motionControlType", motionControlType, "selectedItem");
         addWrappedBinding(driver, "units", unitsCb, "selectedItem");
         addWrappedBinding(driver, "maxFeedRate", maxFeedRateTf, "text", intConverter);
-        addWrappedBinding(driver, "backlashFeedRateFactor", backlashFeedRateFactorTf, "text", doubleConverter);
         addWrappedBinding(driver, "timeoutMilliseconds", commandTimeoutTf, "text", intConverter);
         addWrappedBinding(driver, "connectWaitTimeMilliseconds", connectWaitTimeTf, "text", intConverter);
         addWrappedBinding(driver, "backslashEscapedCharactersEnabled", backslashEscapedCharacters, "selected");
@@ -163,7 +153,6 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         addWrappedBinding(driver, "usingLetterVariables", letterVariables, "selected");
         
         ComponentDecorators.decorateWithAutoSelect(maxFeedRateTf);
-        ComponentDecorators.decorateWithAutoSelect(backlashFeedRateFactorTf);
         ComponentDecorators.decorateWithAutoSelect(commandTimeoutTf);
         ComponentDecorators.decorateWithAutoSelect(connectWaitTimeTf);
     }
@@ -296,7 +285,6 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
     };
     private JComboBox motionControlType;
     private JTextField maxFeedRateTf;
-    private JTextField backlashFeedRateFactorTf;
     private JTextField commandTimeoutTf;
     private JTextField connectWaitTimeTf;
     private JComboBox unitsCb;

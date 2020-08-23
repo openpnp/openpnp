@@ -22,6 +22,7 @@ import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis.BacklashCompensationMethod;
 import org.openpnp.machine.reference.axis.ReferenceLinearTransformAxis;
 import org.openpnp.machine.reference.axis.ReferenceMappedAxis;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConsole;
@@ -178,6 +179,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     @Attribute(required = false)
     protected double nonSquarenessFactor = 0;
 
+    @Deprecated
     @Attribute(required = false)
     protected double backlashFeedRateFactor = 0.1;
 
@@ -477,19 +479,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         if (command == null) {
             return;
         }
-
-        boolean enableBacklash = true;
-        int options = motion.getOptions();
-        if (MotionOption.SpeedOverPrecision.isSetIn(options)) {
-            // for this move backslash is zero
-            enableBacklash = false;
+        if (hasVariable(command, "BacklashFeedRate")) {
+            throw new Exception(getName()+" configuration upgrade needed: Please remove the extra backlash compensation move from your MOVE_TO_COMMAND. "
+                    +"Backlash compensation is now done outside of the drivers.");
         }
 
         command = substituteVariable(command, "Id", hm.getId());
         command = substituteVariable(command, "Name", hm.getName());
         command = substituteVariable(command, "FeedRate", feedRate);
-        command = substituteVariable(command, "BacklashFeedRate", feedRate == null ? null : 
-            (enableBacklash ? feedRate * backlashFeedRateFactor : feedRate));
         command = substituteVariable(command, "Acceleration", acceleration);
         command = substituteVariable(command, "Jerk", jerk);
         
@@ -539,11 +536,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 command = substituteVariable(command, variable, coordinate);
                 command = substituteVariable(command, variable+"F", coordinate);
                 command = substituteVariable(command, variable+"L", axis.getLetter());
-                // Apply backlash offset.
-                double backlashOffset = (enableBacklash ?
-                        ((ReferenceControllerAxis) axis).getBacklashOffset().convertToUnits(getUnits()).getValue()
-                        : 0);
-                command = substituteVariable(command, "BacklashOffset"+variable,  coordinate + backlashOffset); 
+                if (hasVariable(command, "BacklashOffset"+variable)) {
+                    throw new Exception(getName()+" configuration upgrade needed: Please remove the extra backlash compensation move from your MOVE_TO_COMMAND. "
+                            +"Backlash compensation is now done outside of the drivers.");
+                }
                 command = substituteVariable(command, variable+"Decreasing", direction < 0 ? true : null);
                 command = substituteVariable(command, variable+"Increasing", direction > 0 ? true : null);
                 if (isSupportingPreMove() && axis instanceof ReferenceControllerAxis) {
@@ -983,14 +979,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         this.units = units;
     }
 
-    public double getBacklashFeedRateFactor() {
-        return backlashFeedRateFactor;
-    }
-
-    public void setBacklashFeedRateFactor(double backlashFeedRateFactor) {
-        this.backlashFeedRateFactor = backlashFeedRateFactor;
-    }
-
     public int getMaxFeedRate() {
         return maxFeedRate;
     }
@@ -1086,7 +1074,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         double maxFeedRate = this.maxFeedRate;
         switch (axis.getType()) {
             case X:
+                axis.setBacklashCompensationMethod(backlashOffsetX != 0 ?
+                        BacklashCompensationMethod.OneSidedPositioning 
+                        : BacklashCompensationMethod.None);
                 axis.setBacklashOffset(new Length(backlashOffsetX, getUnits()));
+                axis.setBacklashSpeedFactor(backlashFeedRateFactor);
                 if (head.isSoftLimitsEnabled()) {
                     axis.setSoftLimitLow(minLocation.getLengthX());
                     axis.setSoftLimitLowEnabled(true);
@@ -1095,7 +1087,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 }
                 break;
             case Y:
+                axis.setBacklashCompensationMethod(backlashOffsetY != 0 ?
+                        BacklashCompensationMethod.OneSidedPositioning 
+                        : BacklashCompensationMethod.None);
                 axis.setBacklashOffset(new Length(backlashOffsetY, getUnits()));
+                axis.setBacklashSpeedFactor(backlashFeedRateFactor);
                 if (head.isSoftLimitsEnabled()) {
                     axis.setSoftLimitLow(minLocation.getLengthY());
                     axis.setSoftLimitLowEnabled(true);
@@ -1104,10 +1100,18 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 }
                 break;
             case Z:
+                axis.setBacklashCompensationMethod(backlashOffsetZ != 0 ?
+                        BacklashCompensationMethod.OneSidedPositioning 
+                        : BacklashCompensationMethod.None);
                 axis.setBacklashOffset(new Length(backlashOffsetZ, getUnits()));
+                axis.setBacklashSpeedFactor(backlashFeedRateFactor);
                 break;
             case Rotation:
+                axis.setBacklashCompensationMethod(backlashOffsetR != 0 ?
+                        BacklashCompensationMethod.OneSidedPositioning 
+                        : BacklashCompensationMethod.None);
                 axis.setBacklashOffset(new Length(backlashOffsetR, getUnits()));
+                axis.setBacklashSpeedFactor(backlashFeedRateFactor);
                 maxFeedRate *= 10;
                 break;
         }
