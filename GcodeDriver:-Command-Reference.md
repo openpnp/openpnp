@@ -78,7 +78,6 @@ This command has special handling for the X, Y, Z and Rotation variables. If the
 Example:
 ```
 G0 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:E%.4f} F{FeedRate:%.0f} ; Send standard Gcode move
-M400 ; Wait for moves to complete before returning
 ```
 
 Make sure to check the axis designators. The rotation axis might be designated "A" instead of "E" in some controllers, so it must read {Rotation:A%.4f} instead.
