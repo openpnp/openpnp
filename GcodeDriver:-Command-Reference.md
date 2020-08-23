@@ -79,12 +79,11 @@ Example:
 ```
 G0 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:E%.4f} F{FeedRate:%.0f} ; Send standard Gcode move
 ```
+Make sure to check the axis designators. The rotation axis might be designated "A" instead of "E" in some controllers, so it must read {Rotation:A%.4f} instead.
 
-**NOTE**: for OpenPnP 1.0 there must be an additional line (it has been moved to MOVE_TO_COMPLETE_COMMAND in newer Versions):
+**NOTE** For OpenPnP 1.0 add an additional line (it must be moved to MOVE_TO_COMPLETE_COMMAND in newer versions):
 
 `M400 ; Wait for moves to complete before returning`
-
-Make sure to check the axis designators. The rotation axis might be designated "A" instead of "E" in some controllers, so it must read {Rotation:A%.4f} instead.
 
 If you need to move in mils or microns see this post on the form:
 
