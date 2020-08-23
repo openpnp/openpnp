@@ -34,9 +34,52 @@ import org.simpleframework.xml.Element;
 public class ReferenceControllerAxis extends AbstractControllerAxis {
     // The more implementation specific properties are in the ReferenceControllerAxis
 
+    /**
+     * Backlash compensation is used to counter any looseness or play in the mechanical linkages of the given axis.  
+     * When the actuator reverses the direction of travel, there is often a moment where nothing happens, because the
+     * slack from the belt or lash/play from the lead/ball screw needs to be taken up, before mechanical force can again 
+     * be transmitted. Note that backlash is often unavoidable, otherwise friction will be too high or lubrication 
+     * impossible.   
+     *
+     */
+    public enum BacklashCompensationMethod {
+        /**
+         * No backlash compensation is performed. The offset is ignored.
+         */
+        None,
+        /**
+         * Backlash compensation is applied by always moving to the end position from one side. 
+         * The backlash offset does not need to be very precise, i.e. it can be larger than the actual backlash and 
+         * the machine will still end up in the correct precise position.  
+         * The machine always needs to perform an extra move.
+         * 
+         */
+        OneSidedPositioning,
+        /**
+         * Works like OneSidedPositioning except it will only perform an extra move when moving from the wrong side.
+         * 
+         */
+        OneSidedOptimizedPositioning,
+        /**
+         * Backlash compensation is applied in the direction of travel. 
+         * Half of the offset is added to the actual target location.    
+         */
+        DirectionalCompensation;
+
+        public boolean isOneSidedPositioningMethod() {
+            return this == OneSidedPositioning || this == OneSidedOptimizedPositioning;
+        }
+    }
+
+    @Attribute(required = false)
+    private BacklashCompensationMethod backlashCompensationMethod = BacklashCompensationMethod.None;
+
     @Element(required = false)
     private Length backlashOffset = new Length(0.0, LengthUnit.Millimeters);
     
+    @Attribute(required = false) 
+    private double backlashSpeedFactor = 0.1; 
+
     /**
      * If limitRotation is enabled the nozzle will reverse directions when commanded to rotate past
      * 180 degrees. So, 190 degrees becomes -170 and -190 becomes 170.
@@ -141,12 +184,28 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
         this.preMoveCommand = preMoveCommand;
     }
 
+    public BacklashCompensationMethod getBacklashCompensationMethod() {
+        return backlashCompensationMethod;
+    }
+
+    public void setBacklashCompensationMethod(BacklashCompensationMethod backlashCompensationMethod) {
+        this.backlashCompensationMethod = backlashCompensationMethod;
+    }
+
     public Length getBacklashOffset() {
         return backlashOffset;
     }
 
     public void setBacklashOffset(Length backlashOffset) {
         this.backlashOffset = backlashOffset;
+    }
+
+    public double getBacklashSpeedFactor() {
+        return backlashSpeedFactor;
+    }
+
+    public void setBacklashSpeedFactor(double backlashSpeedFactor) {
+        this.backlashSpeedFactor = backlashSpeedFactor;
     }
 
     public boolean isLimitRotation() {

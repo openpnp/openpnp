@@ -31,6 +31,7 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis.BacklashCompensationMethod;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -73,10 +74,14 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
     protected LinkedList<Motion> motionCommands = new LinkedList<>();
     protected TreeMap<Double, Motion> motionPlan = new TreeMap<Double, Motion>();
 
+    private AxesLocation lastDirectionalBacklashOffset = new AxesLocation();
+
     @Override
     public synchronized void home() throws Exception {
         // Just to make sure we're on the same page in the planner.
         waitForCompletion(null, CompletionType.WaitForStillstand);
+        // Reset lastDirectionalBacklashOffset (we don't actually know it, but it will be known after the first move).
+        lastDirectionalBacklashOffset = new AxesLocation();
         // Home all the drivers with their respective mapped axes (can be an empty map). 
         for (Driver driver : getMachine().getDrivers()) {
             ((ReferenceDriver) driver).home(getMachine());
@@ -91,9 +96,12 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
 
     @Override
     public synchronized void setGlobalOffsets(AxesLocation axesLocation) throws Exception {
+        // We need to adjust the driver Location for any lastDirectionalBacklashOffset.
+        AxesLocation driverLocation = new AxesLocation(axesLocation.getControllerAxes(), 
+                (a) -> axesLocation.getLengthCoordinate(a).add(lastDirectionalBacklashOffset.getLengthCoordinate(a)));
         // Offset all the specified axes on the respective drivers. 
-        for (Driver driver : axesLocation.getAxesDrivers(getMachine())) {
-            ((ReferenceDriver) driver).setGlobalOffsets(getMachine(), axesLocation.drivenBy(driver));
+        for (Driver driver : driverLocation.getAxesDrivers(getMachine())) {
+            ((ReferenceDriver) driver).setGlobalOffsets(getMachine(), driverLocation.drivenBy(driver));
         }
         // Offset all the axes (including virtual ones) to their new coordinates.
         for (Axis axis : axesLocation.getAxes()) {
@@ -114,22 +122,102 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
         AxesLocation newLocation = 
                 currentLocation
                 .put(axesLocation);
-        // Define the motion.
-        Motion motionCommand = new Motion(
-                hm, 
-                currentLocation, 
-                newLocation, 
-                speed,
-                options);
-        // Add to the recorded motion commands. 
-        motionCommands.addLast(motionCommand);
-
+        // Create the motion commands needed for backlash compensation if enabled.
+        createBacklashCompensatedMotion(hm, speed, currentLocation, newLocation, options);
         // Set all the axes (including virtual ones) to their new coordinates.
         for (Axis axis : axesLocation.getAxes()) {
             if (axis instanceof CoordinateAxis) {
-                ((CoordinateAxis) axis).setLengthCoordinate(axesLocation.getLengthCoordinate(axis));
+                ((CoordinateAxis) axis).setLengthCoordinate(newLocation.getLengthCoordinate(axis));
             }
         }
+    }
+
+    protected AxesLocation createBacklashCompensatedMotion(HeadMountable hm, double speed,
+            AxesLocation currentLocation, AxesLocation newLocation, MotionOption... options) {
+        int optionFlags = Motion.optionFlags(options);
+        AxesLocation backlashCompensatedLocation = newLocation;
+        double backlashCompensatedSpeed = speed;
+        boolean needsExtraBacklashMove = false;
+        if (!Motion.MotionOption.SpeedOverPrecision.isSetIn(optionFlags)) {
+            // Get the segment vector of axes that really move.
+            AxesLocation segment = currentLocation.motionSegmentTo(newLocation);
+            for (ControllerAxis axis : segment.getControllerAxes()) {
+                if (axis instanceof ReferenceControllerAxis) {
+                    ReferenceControllerAxis refAxis = ((ReferenceControllerAxis) axis);
+                    Length backlashOffset = refAxis.getBacklashOffset(); 
+                    if (backlashOffset.getValue() != 0) {
+                        // An offset has to be applied.
+                        if (refAxis.getBacklashCompensationMethod() == BacklashCompensationMethod.OneSidedPositioning
+                                || (refAxis.getBacklashCompensationMethod() == BacklashCompensationMethod.OneSidedOptimizedPositioning
+                                && Math.signum(segment.getCoordinate(refAxis)) == Math.signum(backlashOffset.getValue()))) {
+                            // We have either full OneSidedPositioning or OneSidedOptimizedPositioning with a move that goes into the offset direction. 
+                            // Add the offset to the target location, and the move back from that to the actual target location. 
+                            backlashCompensatedLocation = backlashCompensatedLocation.add(
+                                    new AxesLocation(axis, backlashOffset));
+                            // This needs an extra move. 
+                            needsExtraBacklashMove = true;
+                            // Take the lowest speed factor of any backlash compensated axis. 
+                            // Note, unlike in previous versions of OpenPnP this does not multiply with speed, it just lowers
+                            // it to the minimum. So an already very low speed parameter  will not be lowered further.
+                            // The idea of OneSidedPositioning is also that it happens at the same speed every time i.e. the
+                            // forces and tensions in the mechanical linkage will be similar.  
+                            backlashCompensatedSpeed = Math.min(backlashCompensatedSpeed, refAxis.getBacklashSpeedFactor());
+                        }
+                        else if (refAxis.getBacklashCompensationMethod() == BacklashCompensationMethod.DirectionalCompensation) {
+                            // The compensation is determines by the direction in which the axis travels. Because we assume some 
+                            // slack or play, we always move a bit farther in that direction.
+                            // Note, this is applied to both the extra backlashCompensatedLocation and the newLocation, in case the 
+                            // methods are mixed across axes.
+                            // The actual compensation is only half the absolute offset, always into the direction of travel. 
+                            // The absolute offset is taken (by applying signum), so the user can switch the method back and forth from/to 
+                            // OneSidedPositioning where a negative offset might make sense. 
+                            double signum = Math.signum(backlashOffset.getValue());
+                            Length halfBacklashOffset = backlashOffset.multiply(segment.getCoordinate(refAxis) > 0 ? signum*0.5 : signum*-0.5);
+                            backlashCompensatedLocation = backlashCompensatedLocation.add(
+                                    new AxesLocation(axis, halfBacklashOffset));
+                            newLocation = newLocation.add(
+                                    new AxesLocation(axis, halfBacklashOffset));
+                            // Remember the last backlash offset we applied. This is important if we use setGlobalOffsets() or 
+                            // interpret position reports later.  
+                            lastDirectionalBacklashOffset = lastDirectionalBacklashOffset.put(new AxesLocation(refAxis, halfBacklashOffset));
+                        }
+                    }
+                }
+            }
+        }
+        if (needsExtraBacklashMove) {
+            // First move goes to the extra backlashCompensatedLocation.
+            Motion motionCommand = new Motion(
+                    hm, 
+                    currentLocation, 
+                    backlashCompensatedLocation, 
+                    speed,
+                    optionFlags);
+            // Add to the recorded motion commands. 
+            motionCommands.addLast(motionCommand);
+
+            // Second move to the actual target at backlashCompensatedSpeed. 
+            motionCommand = new Motion(
+                    hm, 
+                    backlashCompensatedLocation, 
+                    newLocation, 
+                    backlashCompensatedSpeed,
+                    optionFlags);
+            // Add to the recorded motion commands. 
+            motionCommands.addLast(motionCommand);
+        }
+        else {
+            // Can go directly to the target.
+            Motion motionCommand = new Motion(
+                    hm, 
+                    currentLocation, 
+                    newLocation, 
+                    speed,
+                    optionFlags);
+            // Add to the recorded motion commands. 
+            motionCommands.addLast(motionCommand);
+        }
+        return newLocation;
     }
 
     /**

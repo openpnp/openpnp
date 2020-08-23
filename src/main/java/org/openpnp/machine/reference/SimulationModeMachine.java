@@ -183,6 +183,14 @@ public class SimulationModeMachine extends ReferenceMachine {
     }
 
     public void setSimulationMode(SimulationMode simulationMode) {
+        if (this.simulationMode != simulationMode) {
+            try {
+                setEnabled(false);
+            }
+            catch (Exception e) {
+                Logger.error(e);
+            }
+        }
         this.simulationMode = simulationMode;
     }
 

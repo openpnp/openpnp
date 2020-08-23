@@ -65,7 +65,6 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
