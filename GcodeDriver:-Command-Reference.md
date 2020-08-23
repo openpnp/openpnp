@@ -80,6 +80,10 @@ Example:
 G0 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:E%.4f} F{FeedRate:%.0f} ; Send standard Gcode move
 ```
 
+**NOTE**: for OpenPnP 1.0 there must be an additional line (it has been moved to MOVE_TO_COMPLETE_COMMAND in newer Versions):
+
+`M400 ; Wait for moves to complete before returning`
+
 Make sure to check the axis designators. The rotation axis might be designated "A" instead of "E" in some controllers, so it must read {Rotation:A%.4f} instead.
 
 If you need to move in mils or microns see this post on the form:
@@ -90,6 +94,7 @@ https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/openpnp
 
 This command is useful in systems that use multiple controllers where it is desirable to have them move simultaneously.  To use it, remove the "M400 ; Wait for moves to complete before returning" from the MOVE_TO_COMMAND and add it to the MOVE_TO_COMPLETE_COMMAND.  Now the G0 portion of the command will be sent to all involved controllers first.  Then M400 will be sent to each controller in turn, starting from the last one, until all moves are complete.
 
+`M400 ; Wait for moves to complete before returning`
 
 ### PICK_COMMAND
 
