@@ -35,6 +35,7 @@ import org.openpnp.machine.reference.axis.ReferenceControllerAxis.BacklashCompen
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Motion;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.spi.Axis;
@@ -132,6 +133,17 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
         }
     }
 
+    /**
+     * Create the backlash compensated motion according to the settings on the axes. A sub-class might override this
+     * method and provide a more advanced implementation, perhaps avoiding some extra moves by motion blending. 
+     * 
+     * @param hm
+     * @param speed
+     * @param currentLocation
+     * @param newLocation
+     * @param options
+     * @return
+     */
     protected AxesLocation createBacklashCompensatedMotion(HeadMountable hm, double speed,
             AxesLocation currentLocation, AxesLocation newLocation, MotionOption... options) {
         int optionFlags = Motion.optionFlags(options);
@@ -165,21 +177,21 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
                         }
                         else if (refAxis.getBacklashCompensationMethod() == BacklashCompensationMethod.DirectionalCompensation) {
                             // The compensation is determines by the direction in which the axis travels. Because we assume some 
-                            // slack or play, we always move a bit farther in that direction.
+                            // slack or play, we move a bit farther in that direction. The actual compensation is only applied, if its 
+                            // signum points into the direction of travel. In that way it is compatible with the other one-sided methods,
+                            // the difference is that it has to be accurate.
+                            Length effectiveBacklashOffset = Math.signum(segment.getCoordinate(refAxis)) == Math.signum(backlashOffset.getValue()) ? 
+                                    backlashOffset 
+                                    : new Length(0, LengthUnit.Millimeters);
                             // Note, this is applied to both the extra backlashCompensatedLocation and the newLocation, in case the 
                             // methods are mixed across axes.
-                            // The actual compensation is only half the absolute offset, always into the direction of travel. 
-                            // The absolute offset is taken (by applying signum), so the user can switch the method back and forth from/to 
-                            // OneSidedPositioning where a negative offset might make sense. 
-                            double signum = Math.signum(backlashOffset.getValue());
-                            Length halfBacklashOffset = backlashOffset.multiply(segment.getCoordinate(refAxis) > 0 ? signum*0.5 : signum*-0.5);
                             backlashCompensatedLocation = backlashCompensatedLocation.add(
-                                    new AxesLocation(axis, halfBacklashOffset));
+                                    new AxesLocation(axis, effectiveBacklashOffset));
                             newLocation = newLocation.add(
-                                    new AxesLocation(axis, halfBacklashOffset));
+                                    new AxesLocation(axis, effectiveBacklashOffset));
                             // Remember the last backlash offset we applied. This is important if we use setGlobalOffsets() or 
                             // interpret position reports later.  
-                            lastDirectionalBacklashOffset = lastDirectionalBacklashOffset.put(new AxesLocation(refAxis, halfBacklashOffset));
+                            lastDirectionalBacklashOffset = lastDirectionalBacklashOffset.put(new AxesLocation(refAxis, effectiveBacklashOffset));
                         }
                     }
                 }
