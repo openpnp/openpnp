@@ -18,16 +18,16 @@ Check out https://github.com/openpnp/openpnp/wiki/Getting-Help for information o
 
 ## Where are configuration and log files located?
 
-The configuration and log files are located in a subdirectory of your user's home directory called `.openpnp`.
+The configuration and log files are located in a subdirectory of your user's home directory called `.openpnp` (Version 1) or `.openpnp2` (Version 2).
 
 To find your home directory, check out this Wikipedia article that explains where the home directory lives on various operating systems: http://en.wikipedia.org/wiki/Home_directory
 
 Examples:
 
 ```
-Windows: C:\Users\your_username\.openpnp
-Linux: /home/your_username/.openpnp
-Mac OS X: /Users/your_username/.openpnp
+Windows: C:\Users\your_username\.openpnp2
+Linux: /home/your_username/.openpnp2
+Mac OS X: /Users/your_username/.openpnp2
 ```
 
 Configuration files are `machine.xml`, `parts.xml` and `packages.xml` along with other plugin specific files.
