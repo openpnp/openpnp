@@ -34,6 +34,10 @@ Configuration files are `machine.xml`, `parts.xml` and `packages.xml` along with
 
 Log files are under the `log` subdirectory and the current file is always called `OpenPnP.log`.
 
+If you double-click your camera view, a snapshot gets written to the `snapshots` subfolder.
+
+Some Computer Vision pipelines also write debug images into various subfolders here.
+
 ## How do I reset my configuration?
 
 Sometimes it's easiest just to completely reset your configuration and start over. To do that, just delete the whole OpenPnP configuration directory. See [Where are configuration and log files located?](#where-are-configuration-and-log-files-located) for it's location.
