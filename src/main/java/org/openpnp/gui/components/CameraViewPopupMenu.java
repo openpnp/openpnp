@@ -33,6 +33,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 
+import org.openpnp.gui.components.CameraView.RenderingQuality;
 import org.openpnp.gui.components.reticle.CrosshairReticle;
 import org.openpnp.gui.components.reticle.FiducialReticle;
 import org.openpnp.gui.components.reticle.Reticle;
@@ -47,6 +48,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
     private JMenu zoomIncMenu;
     private JMenu reticleMenu;
     private JMenu reticleOptionsMenu;
+    private JMenu renderingQualityMenu;
 
     public CameraViewPopupMenu(CameraView cameraView) {
         this.cameraView = cameraView;
@@ -54,6 +56,10 @@ public class CameraViewPopupMenu extends JPopupMenu {
         zoomIncMenu = createZoomIncMenu();
 
         add(zoomIncMenu);
+
+        renderingQualityMenu = createRenderingQualityMenu();
+
+        add(renderingQualityMenu);
 
         reticleMenu = createReticleMenu();
 
@@ -146,7 +152,54 @@ public class CameraViewPopupMenu extends JPopupMenu {
         
         return subMenu;
     }
-    
+
+    private JMenu createRenderingQualityMenu() {
+        JMenu subMenu = new JMenu("Rendering Quality");
+        ButtonGroup buttonGroup = new ButtonGroup();
+        JRadioButtonMenuItem menuItem;
+        
+        menuItem = new JRadioButtonMenuItem("Low Quality");
+        buttonGroup.add(menuItem);
+        if (cameraView.getRenderingQuality() == RenderingQuality.Low) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cameraView.setRenderingQuality(RenderingQuality.Low);
+            }
+        });
+        subMenu.add(menuItem);
+        
+        menuItem = new JRadioButtonMenuItem("High Quality");
+        buttonGroup.add(menuItem);
+        if (cameraView.getRenderingQuality() == RenderingQuality.High) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cameraView.setRenderingQuality(RenderingQuality.High);
+            }
+        });
+        subMenu.add(menuItem);
+        
+        menuItem = new JRadioButtonMenuItem("Highest Quality (best scale)");
+        buttonGroup.add(menuItem);
+        if (cameraView.getRenderingQuality() == RenderingQuality.BestScale) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cameraView.setRenderingQuality(RenderingQuality.BestScale);
+            }
+        });
+        subMenu.add(menuItem);
+        
+        return subMenu;
+    }
+
     private JMenu createReticleMenu() {
         JMenu menu = new JMenu("Reticle");
 

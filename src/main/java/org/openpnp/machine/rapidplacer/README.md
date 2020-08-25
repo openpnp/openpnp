@@ -20,6 +20,8 @@ bus actions.
 
 # Setup and Scanning
 
+After creating an actuator, create a new sub-driver under GcodeDriver for the Rapid Feeder system. Under ACTUATE_STRING_COMMAND add `M603 {StringValue}` and hit apply. M603 is to advance the tape forward and M602 is reverse.
+
 To perform an initial scan for feeders, go to the Feeders tab and create a new RapidFeeder. You
 should name it something that describes the bank of feeders that it will scan for, such as
 RapidFeeder-West.
@@ -42,5 +44,5 @@ or update feeders in the feeder tab for each QR code it finds.
 # Usage
 
 Once scanning is complete, pressing the feed button for any of the new feeders will send
-the FEED command to the RAPIDFEEDER actuator in the form of `{{ADDRESS}} FEED {{PITCH}}`.
+the FEED command to the RAPIDFEEDER actuator in the form of `{M603 {ADDRESS} {PITCH}}`.
        
