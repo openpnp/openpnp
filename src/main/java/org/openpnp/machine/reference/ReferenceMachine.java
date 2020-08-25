@@ -33,7 +33,6 @@ import org.openpnp.machine.marek.MarekNozzle;
 import org.openpnp.machine.neoden4.NeoDen4Driver;
 import org.openpnp.machine.neoden4.Neoden4Camera;
 import org.openpnp.machine.rapidplacer.RapidFeeder;
-import org.openpnp.machine.reference.camera.GstreamerCamera;
 import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
@@ -295,7 +294,6 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(ImageCamera.class);
         l.add(SwitcherCamera.class);
         l.add(SimulatedUpCamera.class);
-        l.add(GstreamerCamera.class);
         return l;
     }
 

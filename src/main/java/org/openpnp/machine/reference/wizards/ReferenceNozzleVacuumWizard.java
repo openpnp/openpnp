@@ -49,6 +49,8 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
         this.nozzle = nozzle;
         createUi();
     }
+    
+    
     private void createUi() {
         
         CellConstraints cc = new CellConstraints();
