@@ -218,7 +218,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     private double calibrationToleranceMm = 1.95;
     // vision and comparison sprocket hole tolerance (in size, position)
     @Attribute(required = false)
-    private double sprocketHoleToleranceMm = 0.3;
+    private double sprocketHoleToleranceMm = 0.6;
     // for rows of feeders, the tolerance in X, Y
     @Attribute(required = false)
     private double rowLocationToleranceMm = 4.0; 
@@ -239,6 +239,18 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
      * is. Subtracting these offsets from the pickLocation produces the correct pick location.
      */
     protected Location visionOffset;
+
+    public enum CalibrationTrigger {
+        None,
+        OnFirstUse,
+        UntilConfident,
+        OnEachTapeFeed
+    }
+
+    @Attribute(required = false)
+    protected CalibrationTrigger calibrationTrigger = CalibrationTrigger.UntilConfident;
+
+    private boolean partsMayContainSpaces = false;
 
     public static final Location nullLocation = new Location(LengthUnit.Millimeters);
 
@@ -281,17 +293,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 .getDefaultHead()
                 .getDefaultCamera();
     }
-
-
-    public enum CalibrationTrigger {
-        None,
-        OnFirstUse,
-        UntilConfident,
-        OnEachTapeFeed
-    }
-
-    @Attribute(required = false)
-    protected CalibrationTrigger calibrationTrigger = CalibrationTrigger.UntilConfident;
 
     public void assertCalibrated(boolean tapeFeed) throws Exception {
         if ((visionOffset == null && calibrationTrigger != CalibrationTrigger.None)
@@ -1172,8 +1173,14 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             }
         }
         StringBuilder alphabet = new StringBuilder();
+        partsMayContainSpaces = false;
         for (char ch : characterSet) {
-            if (ch != ' ') {
+            if (ch == ' ') {
+                // Remember, parts can have spaces. 
+                partsMayContainSpaces = true;
+            }
+            else {
+                // It is not a space, add the character. Spaces and newlines are recognized differently.
                 alphabet.append(ch);
             }
         }
@@ -2022,9 +2029,13 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         if (pos >= 0) {
             partId = partId.substring(0, pos);
         }                
-        pos = partId.indexOf(' ');
-        if (pos >= 0) {
-            partId = partId.substring(0, pos);
+        if (!partsMayContainSpaces) {
+            // We know, parts may not contain spaces, so cut of anything behind the first space
+            // to allow for extra human readable info on the label.  
+            pos = partId.indexOf(' ');
+            if (pos >= 0) {
+                partId = partId.substring(0, pos);
+            }
         }
         Configuration cfg = Configuration.get();
         Part ocrPart = cfg.getPart(partId);
