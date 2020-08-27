@@ -340,7 +340,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
                     // Warmup complete. 
                     warmup = false;
                     // Start the real capture timer of 2 seconds.
-                    t0 = System.currentTimeMillis();
+                    t0 = t1;
                     timeout = t0 + 2000;
                     capturedFrames = 0;
                 }
