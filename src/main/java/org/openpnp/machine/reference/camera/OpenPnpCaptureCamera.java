@@ -318,6 +318,41 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         thread.start();
     }
 
+    public double estimateCaptureFps() throws Exception {
+        ensureOpen();
+        if (stream == null || format == null) {
+            throw new Exception("Camera stream not properly initialized."); 
+        }
+        // Start warmup capture timer for 1 second.
+        boolean warmup = true;
+        long t0 = System.currentTimeMillis();
+        long timeout = t0 + 1000;
+        long t1 = 0;
+        int capturedFrames = 0;
+        for (int frames = 0; frames < 120; frames++) {
+            stream.capture();
+            while (!stream.hasNewFrame()) {
+            }
+            t1 = System.currentTimeMillis();
+            capturedFrames++;
+            if (t1 > timeout) {
+                if (warmup) {
+                    // Warmup complete. 
+                    warmup = false;
+                    // Start the real capture timer of 2 seconds.
+                    t0 = System.currentTimeMillis();
+                    timeout = t0 + 2000;
+                    capturedFrames = 0;
+                }
+                else {
+                    break;
+                }
+            }
+        }
+        // Compute the fps.
+        return capturedFrames*1000./(t1-t0);
+    }
+
     private void setPropertiesStream(CaptureStream stream) {
         backLightCompensation.setStream(stream);
         brightness.setStream(stream);
