@@ -329,7 +329,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         long timeout = t0 + 1000;
         long t1 = 0;
         int capturedFrames = 0;
-        for (int frames = 0; frames < 120; frames++) {
+        for (int frames = 0; frames < 480; frames++) {
             stream.capture();
             while (!stream.hasNewFrame()) {
             }
