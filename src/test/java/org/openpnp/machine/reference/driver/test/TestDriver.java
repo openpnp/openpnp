@@ -42,6 +42,11 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
     }
 
     @Override
+    public AxesLocation getMomentaryLocation() throws Exception {
+        return delegate.getMomentaryLocation();
+    }
+
+    @Override
     public void moveTo(ReferenceHeadMountable hm, Motion motion)
             throws Exception {
         
@@ -88,6 +93,11 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
                 throws Exception {
         }
  
+        @Override
+        public AxesLocation getMomentaryLocation() throws Exception {
+            return null;
+        }
+
         @Override
         public void moveTo(ReferenceHeadMountable hm, Motion motion)
                 throws Exception {

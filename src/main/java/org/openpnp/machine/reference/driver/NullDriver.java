@@ -128,6 +128,16 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
     }
 
     @Override
+    public AxesLocation getMomentaryLocation() throws Exception {
+        ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
+        double now = NanosecondTime.getRuntimeSeconds();
+        Motion motion = machine.getMotionPlanner()
+                .getMomentaryMotion(now);
+        return motion.getMomentaryLocation(now - motion.getPlannedTime0());
+    }
+
+
+    @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
         Logger.debug("actuate({}, {})", actuator, value);
         checkEnabled();

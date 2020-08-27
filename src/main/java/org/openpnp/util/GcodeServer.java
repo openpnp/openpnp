@@ -176,8 +176,14 @@ public class GcodeServer extends Thread {
                             write(response);
                         }
                         else if (driver != null) {
-                            // No canned responses. Try to interpret.
-                            interpretGcode(input);
+                            try {
+                                // No canned responses. Try to interpret.
+                                interpretGcode(input);
+                            }
+                            catch (Exception e) {
+                                Logger.error(e);
+                                write("*** Unknown syntax: "+e.getMessage());
+                            }
                         }
                         else {    
                             write("error:unknown command");
@@ -283,7 +289,7 @@ public class GcodeServer extends Thread {
                     if (!insideComment) {
                         throw new Exception("Mismatched comment at "+col+": "+input);
                     }
-                    insideComment = true;
+                    insideComment = false;
                 }
                 else if (insideComment) {
                     if (currentWord != null) {
@@ -334,6 +340,8 @@ public class GcodeServer extends Thread {
             }
             commandWords = handleGcodeWord(currentWord, commandWords);
             simulateGcode(commandWords);
+            // Standard response.
+            write("ok");
         }
 
         public List<GcodeWord> handleGcodeWord(GcodeWord currentWord,
@@ -595,9 +603,6 @@ public class GcodeServer extends Thread {
                     machineLocation = machineLocation.put(axesLocation);
                     Logger.debug("New location: "+machineLocation);
                 }
-
-                // Standard response.
-                write("ok");
             }
         }
     }

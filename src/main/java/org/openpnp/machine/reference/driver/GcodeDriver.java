@@ -62,7 +62,7 @@ import org.simpleframework.xml.core.Commit;
 import com.google.common.base.Joiner;
 
 @Root
-public class GcodeDriver extends AbstractReferenceDriver implements Named, Runnable {
+public class GcodeDriver extends AbstractReferenceDriver implements Named {
     public enum CommandType {
         COMMAND_CONFIRM_REGEX,
         POSITION_REPORT_REGEX,
@@ -75,6 +75,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         HOME_COMMAND("Id", "Name"),
         HOME_COMPLETE_REGEX,
         SET_GLOBAL_OFFSETS_COMMAND("Id", "Name", "X", "Y", "Z", "Rotation"),
+        GET_POSITION_COMMAND,
         @Deprecated
         PUMP_ON_COMMAND,
         @Deprecated
@@ -196,6 +197,12 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     @Attribute(required = false)
     protected boolean backslashEscapedCharactersEnabled = false;
 
+    @Attribute(required = false)
+    protected boolean removeComments;
+
+    @Attribute(required = false)
+    protected boolean compressGcode;
+
     @Deprecated
     @Element(required = false)
     protected Location homingFiducialLocation = new Location(LengthUnit.Millimeters);
@@ -217,10 +224,12 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     @ElementList(required = false)
     protected List<Axis> axes = null;
 
-    private Thread readerThread;
-    private boolean disconnectRequested;
-    private boolean connected;
-    private LinkedBlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
+    private ReaderThread readerThread;
+    boolean disconnectRequested;
+    protected boolean connected;
+    protected LinkedBlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
+
+    private AxesLocation positionReportLocation;
 
     @Commit
     public void commit() {
@@ -246,11 +255,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
 
     public synchronized void connect() throws Exception {
         getCommunications().connect();
-
         connected = false;
-        readerThread = new Thread(this);
-        readerThread.setDaemon(true);
-        readerThread.start();
+
+        connectThreads();
 
         // Wait a bit while the controller starts up
         Thread.sleep(connectWaitTimeMilliseconds);
@@ -272,6 +279,17 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         sendGcode(getCommand(null, CommandType.CONNECT_COMMAND));
 
         connected = true;
+    }
+
+    /**
+     * Connect the threads used for communications.
+     * 
+     * @throws Exception
+     */
+    protected void connectThreads() throws Exception {
+        readerThread = new ReaderThread();
+        readerThread.setDaemon(true);
+        readerThread.start();
     }
 
     @Override
@@ -414,6 +432,19 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         }
     }
 
+
+    @Override
+    public AxesLocation getMomentaryLocation() throws Exception {
+        ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
+        String command = getCommand(null, CommandType.GET_POSITION_COMMAND);
+        positionReportLocation = null;
+        sendGcode(command, -1);
+        // TODO: blocking queue and timeout !!
+        while (positionReportLocation == null) {
+            Thread.yield();
+        }
+        return positionReportLocation;
+    }
 
     public Command getCommand(HeadMountable hm, CommandType type, boolean checkDefaults) {
         // If a HeadMountable is specified, see if we can find a match
@@ -603,11 +634,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         if (command != null) {
             sendGcode(command);
         }
-        if (completionType.isWaitingForDrivers()) {
-            // TODO: as soon as the async writer/hand-shaking is implemented, we must explicitly
-            // wait for the controller's acknowledgment here. 
-            // This distinction does not works yet, as we always implicitly wait in sendGcode();
-        }
     }
 
     private boolean containsMatch(List<String> responses, String regex) {
@@ -721,14 +747,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         disconnectRequested = true;
         connected = false;
 
-        try {
-            if (readerThread != null && readerThread.isAlive()) {
-                readerThread.join(3000);
-            }
-        }
-        catch (Exception e) {
-            Logger.error("disconnect()", e);
-        }
+        disconnectThreads();
 
         try {
             getCommunications().disconnect();
@@ -737,6 +756,20 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             Logger.error("disconnect()", e);
         }
         disconnectRequested = false;
+    }
+
+    /**
+     *  Disconnect the threads used for communications.
+     */
+    protected void disconnectThreads() {
+        try {
+            if (readerThread != null && readerThread.isAlive()) {
+                readerThread.join(3000);
+            }
+        }
+        catch (Exception e) {
+            Logger.error("disconnect()", e);
+        }
     }
 
     @Override
@@ -778,9 +811,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
 
         // Send the command, if one was specified
         if (command != null) {
-            if (backslashEscapedCharactersEnabled) {
-                command = unescape(command);
-            }
+            command = preProcessCommand(command);
             Logger.trace("[{}] >> {}", getCommunications().getConnectionName(), command);
             try {
                 getCommunications().writeLine(command);
@@ -843,36 +874,132 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         return responses;
     }
 
-    public void run() {
-        while (!disconnectRequested) {
-            String line;
-            try {
-                line = getCommunications().readLine();
-                if (line == null) {
-                    // Line read failed eg. due to socket closure
-                    Logger.error("Failed to read gcode response");
+    protected String preProcessCommand(String command) {
+        if (removeComments || compressGcode) {
+            // See http://linuxcnc.org/docs/2.4/html/gcode_overview.html
+            int col = 0;
+            boolean insideComment = false;
+            boolean decimal = false;
+            int trailingZeroes = 0;
+            StringBuilder compressedCommand = new StringBuilder();
+            for (char ch : command.toCharArray()) {
+                col++;
+                if (ch == ' ') {
+                    // Note, in Gcode, spaces are allowed in the middle of decimals.
+                    if (compressGcode) {
+                        continue;
+                    }
+                }
+                else if (ch == '(') {
+                    trailingZeroes = compressDecimal(trailingZeroes, compressedCommand);
+                    decimal = false;
+                    insideComment = true;
+                    if (removeComments) {
+                        continue;
+                    }
+                }
+                else if (ch == ')') {
+                    insideComment = false;
+                    if (removeComments) {
+                        continue;
+                    }
+                }
+                else if (insideComment) {
+                    if (removeComments) {
+                        continue;
+                    }
+                }
+                else if (ch == ';') {
+                    trailingZeroes = compressDecimal(trailingZeroes, compressedCommand);
+                    decimal = false;
+                    if (removeComments) {
+                        break;
+                    }
+                    else {
+                        // Not removed, append as is.
+                        compressedCommand.append(command.substring(col-1));
+                        break;
+                    }
+                }
+                else if (ch == '.') {
+                    decimal = true;
+                    trailingZeroes = 1; // treat the dot as a trailing zero character
+                }
+                else if (ch >= '1' && ch <= '9') {
+                    trailingZeroes = 0;
+                }
+                else if (ch == '0') {
+                    if (decimal) {
+                        trailingZeroes++;
+                    }
+                }
+                else {
+                    trailingZeroes = compressDecimal(trailingZeroes, compressedCommand);
+                    decimal = false;
+                }
+                compressedCommand.append(ch);
+            }
+            trailingZeroes = compressDecimal(trailingZeroes, compressedCommand);
+            decimal = false;
+            command = compressedCommand.toString();
+        }
+        if (backslashEscapedCharactersEnabled) {
+            command = unescape(command);
+        }
+        return command;
+    }
+
+    private int compressDecimal(int trailingZeroes, StringBuilder compressedCommand) {
+        if (compressGcode && trailingZeroes > 0) {
+            // Cut away trailing zeroes.
+            compressedCommand.delete(compressedCommand.length() - trailingZeroes, compressedCommand.length());
+        }
+        return 0;
+    }
+
+    protected class ReaderThread extends Thread {
+        @Override
+        public void run() {
+            while (!disconnectRequested) {
+                String line;
+                try {
+                    line = getCommunications().readLine();
+                    if (line == null) {
+                        // Line read failed eg. due to socket closure
+                        Logger.error("Failed to read gcode response");
+                        return;
+                    }
+                    line = line.trim();
+                }
+                catch (TimeoutException ex) {
+                    continue;
+                }
+                catch (IOException e) {
+                    Logger.error("Read error", e);
                     return;
                 }
                 line = line.trim();
+                Logger.trace("[{}] << {}", getCommunications().getConnectionName(), line);
+                // Process the response.
+                processResponse(line);
+                // add to the responseQueue (even if it happens to be a processed response, it might still also contain the "ok"
+                // acknowledgment e.g. the position report on Smoothieware)
+                responseQueue.offer(line);
             }
-            catch (TimeoutException ex) {
-                continue;
-            }
-            catch (IOException e) {
-                Logger.error("Read error", e);
-                return;
-            }
-            line = line.trim();
-            Logger.trace("[{}] << {}", getCommunications().getConnectionName(), line);
-            // extract a position report, if present
-            processPositionReport(line);
-            // add to the responseQueue (even if it happens to be a position report, it might still also contain the "ok"
-            // acknowledgment e.g. on Smoothieware)
-            responseQueue.offer(line);
         }
+
     }
 
-    private boolean processPositionReport(String line) {
+    /**
+     * Process a received response immediately. 
+     * @param line
+     */
+    protected void processResponse(String line) {
+        // extract a position report, if present
+        processPositionReport(line);
+    }
+
+    protected boolean processPositionReport(String line) {
         if (getCommand(null, CommandType.POSITION_REPORT_REGEX) == null) {
             return false;
         }
@@ -886,27 +1013,22 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         Matcher matcher =
                 Pattern.compile(getCommand(null, CommandType.POSITION_REPORT_REGEX)).matcher(line);
         matcher.matches();
-        for (org.openpnp.spi.Axis axis : machine.getAxes()) {
-            if (axis instanceof ReferenceControllerAxis) {
-                if (((ReferenceControllerAxis) axis).getDriver() == this) {
-                    try {
-                        String s = matcher.group(axis.getName());
-                        Double d = Double.valueOf(s);
-                        ((ReferenceControllerAxis) axis).setDriverCoordinate(d);
-                    }
-                    catch (IllegalArgumentException e) {
-                        // Axis is not present in pattern. That's OK. 
-                    }
-                    catch (Exception e) {
-                        Logger.warn("Error processing position report for axis {}: {}", axis.getName(), e);
-                    }
-                }
+        AxesLocation position = AxesLocation.zero;
+        for (ControllerAxis axis : new AxesLocation(machine).getAxes(this)) {
+            try {
+                String variable = axis.getLetter(); 
+                String s = matcher.group(variable);
+                Double d = Double.valueOf(s);
+                position = position.put(new AxesLocation(axis, new Length(d, getUnits())));
+            }
+            catch (IllegalArgumentException e) {
+                // Axis is not present in pattern. That's ok. 
+            }
+            catch (Exception e) {
+                Logger.warn("Error processing position report for axis {}: {}", axis.getName(), e);
             }
         }
-
-        for (Head head : Configuration.get().getMachine().getHeads()) {
-            machine.fireMachineHeadActivity(head);
-        }
+        positionReportLocation = position;
         return true;
     }
 
@@ -1014,6 +1136,22 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
 
     public void setBackslashEscapedCharactersEnabled(boolean backslashEscapedCharactersEnabled) {
         this.backslashEscapedCharactersEnabled = backslashEscapedCharactersEnabled;
+    }
+
+    public boolean isRemoveComments() {
+        return removeComments;
+    }
+
+    public void setRemoveComments(boolean removeComments) {
+        this.removeComments = removeComments;
+    }
+
+    public boolean isCompressGcode() {
+        return compressGcode;
+    }
+
+    public void setCompressGcode(boolean compressGcode) {
+        this.compressGcode = compressGcode;
     }
 
     public boolean isUsingLetterVariables() {
@@ -1408,5 +1546,4 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         @Attribute(required = false)
         private double scaleFactor = 1;
     }
-
 }

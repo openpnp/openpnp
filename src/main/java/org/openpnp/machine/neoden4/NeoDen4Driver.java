@@ -382,6 +382,12 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         throw new Exception("Not supported in this driver");
     }
 
+    @Override
+    public AxesLocation getMomentaryLocation() throws Exception {
+        // TODO: if the driver can do it, please implement. 
+        throw new Exception("Not supported in this driver");
+    }
+
     private void moveXy(double x, double y) throws Exception {
         write(0x48);
         expect(0x05);

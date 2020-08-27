@@ -83,6 +83,14 @@ public interface ReferenceDriver extends Driver, WizardConfigurable, PropertyShe
     public void moveTo(ReferenceHeadMountable hm, Motion motion) throws Exception;
 
     /**
+     * Get the momentary real-time location from the controller. This might be in mid-motion. 
+     * 
+     * @return
+     * @throws Exception
+     */
+    public AxesLocation getMomentaryLocation() throws Exception;
+
+    /**
      * Perform a coordinated wait for completion. This must be issued before capturing camera frames etc.
      * 
      * @param hm The HeadMountable to wait for. If null, wait for all the axes on the driver. Most drivers/controllers will probably 

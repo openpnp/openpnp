@@ -117,7 +117,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
         // Handle soft limits and rotation axes limiting and wrap-around.
         axesLocation = limitAxesLocation(axesLocation, false);
 
-        // Get current location of all the axes.
+        // Get current planned location of all the axes.
         AxesLocation currentLocation = new AxesLocation(getMachine()); 
         // The new locations must include all the machine axes, so put them into the whole set.
         AxesLocation newLocation = 
@@ -147,9 +147,11 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
     protected AxesLocation createBacklashCompensatedMotion(HeadMountable hm, double speed,
             AxesLocation currentLocation, AxesLocation newLocation, MotionOption... options) {
         int optionFlags = Motion.optionFlags(options);
-        AxesLocation backlashCompensatedLocation = newLocation;
         double backlashCompensatedSpeed = speed;
         boolean needsExtraBacklashMove = false;
+        AxesLocation backlashCompensatedLocation = newLocation;
+        // Adjust the current location to include any backlash compensation offset that was applied in the last move.
+        currentLocation = currentLocation.add(lastDirectionalBacklashOffset);
         if (!Motion.MotionOption.SpeedOverPrecision.isSetIn(optionFlags)) {
             // Get the segment vector of axes that really move.
             AxesLocation segment = currentLocation.motionSegmentTo(newLocation);
@@ -189,8 +191,8 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
                                     new AxesLocation(axis, effectiveBacklashOffset));
                             newLocation = newLocation.add(
                                     new AxesLocation(axis, effectiveBacklashOffset));
-                            // Remember the last backlash offset we applied. This is important if we use setGlobalOffsets() or 
-                            // interpret position reports later.  
+                            // Remember the last backlash offset we applied. This is important to have the right starting location
+                            // for the next move and other purposes such as setGlobalOffsets() or getMomentaryLocation().  
                             lastDirectionalBacklashOffset = lastDirectionalBacklashOffset.put(new AxesLocation(refAxis, effectiveBacklashOffset));
                         }
                     }
