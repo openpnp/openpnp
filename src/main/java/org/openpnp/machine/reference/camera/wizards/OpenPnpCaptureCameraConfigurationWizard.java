@@ -716,9 +716,13 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         nativeFps.setText("Testing...");
         SwingUtilities.invokeLater(() -> {
             UiUtils.messageBoxOnException(() -> {
-                double fps = camera.estimateCaptureFps();
-                nativeFps.setText(String.format(Locale.US, "%.0f", fps));
-                setCursor(Cursor.getDefaultCursor());
+                try {
+                    double fps = camera.estimateCaptureFps();
+                    nativeFps.setText(String.format(Locale.US, "%.0f", fps));
+                }
+                finally {
+                    setCursor(Cursor.getDefaultCursor());
+                }
             });
         });
     }
