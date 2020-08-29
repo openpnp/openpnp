@@ -137,10 +137,16 @@ public abstract class AbstractReferenceDriver extends AbstractDriver implements 
     public void setConnectionKeepAlive(boolean connectionKeepAlive) {
     	this.connectionKeepAlive = connectionKeepAlive;
     }
-    
-    public ReferenceDriverCommunications getCommunications() {
+
+    public boolean isInSimulationMode() {
         SimulationModeMachine machine = SimulationModeMachine.getSimulationModeMachine();
-        if (machine != null && machine.getSimulationMode() != SimulationMode.Off) {
+        return (machine != null && machine.getSimulationMode() != SimulationMode.Off);
+    }
+
+    public ReferenceDriverCommunications getCommunications() {
+        if (isInSimulationMode()) {
+            // Switch off keep-alive, to allow for dynamic switching. 
+            setConnectionKeepAlive(false);
             simulated.setDriver(this);
             return simulated;
         }

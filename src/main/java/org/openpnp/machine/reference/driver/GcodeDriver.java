@@ -354,7 +354,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         }
 
         if (connected && !enabled) {
-            if (!connectionKeepAlive) {
+            if (isInSimulationMode() || !connectionKeepAlive) {
                 disconnect();
             }
         }
@@ -473,6 +473,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     public AxesLocation getMomentaryLocation() throws Exception {
         ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
         String command = getCommand(null, CommandType.GET_POSITION_COMMAND);
+        if (command == null) {
+            throw new Exception(getName()+" configuration error: missing GET_POSITION_COMMAND.");
+        }
+        if (getCommand(null, CommandType.POSITION_REPORT_REGEX) == null) {
+            throw new Exception(getName()+" configuration error: missing POSITION_REPORT_REGEX.");
+        }
+        
         // Reset the last position report.
         positionReportLocation = null;
         sendGcode(command, -1);
