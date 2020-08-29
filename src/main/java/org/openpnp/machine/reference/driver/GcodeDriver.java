@@ -1,6 +1,7 @@
 package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -9,7 +10,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,7 +34,6 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Motion;
-import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.Named;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis.Type;
@@ -51,6 +50,7 @@ import org.openpnp.spi.base.AbstractHead.VisualHomingMethod;
 import org.openpnp.spi.base.AbstractHeadMountable;
 import org.openpnp.spi.base.AbstractSingleTransformedAxis;
 import org.openpnp.spi.base.AbstractTransformedAxis;
+import org.openpnp.util.NanosecondTime;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -116,6 +116,20 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
         public boolean isHeadMountable() {
             return headMountable;
+        }
+
+        public boolean isDeprecated() {
+            try {
+                Class<CommandType> commandTypeEnum = CommandType.class;
+                Field commandType = commandTypeEnum.getField(toString());
+                return commandType.isAnnotationPresent(Deprecated.class);
+            }
+            catch (NoSuchFieldException e) {
+                return false;
+            }
+            catch (SecurityException e) {
+                return false;
+            }
         }
     }
 
@@ -227,9 +241,40 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     private ReaderThread readerThread;
     boolean disconnectRequested;
     protected boolean connected;
-    protected LinkedBlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
+    
+    public class Line {
+        final String line;
+        final double transmissionTime;
 
+        public Line(String line) {
+            super();
+            this.line = line;
+            this.transmissionTime = NanosecondTime.getRuntimeSeconds();
+        }
+
+        public String getLine() {
+            return line;
+        }
+
+        /**
+         * @return The real-time in seconds (since application start) when this Line was sent or received.
+         */
+        public double getTransmissionTime() {
+            return transmissionTime;
+        }
+
+        @Override
+        public String toString() {
+            return line;
+        }
+    }
+
+    protected LinkedBlockingQueue<Line> responseQueue = new LinkedBlockingQueue<>();
+    
+    private long receivedConfirmations;
+    private Line errorResponse;
     private AxesLocation positionReportLocation;
+    private double positionReportTime;
 
     @Commit
     public void commit() {
@@ -264,7 +309,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
         // Consume any startup messages
         try {
-            while (!sendCommand(null, 250).isEmpty()) {
+            while (!receiveResponses().isEmpty()) {
 
             }
         }
@@ -290,6 +335,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         readerThread = new ReaderThread();
         readerThread.setDaemon(true);
         readerThread.start();
+        errorResponse = null;
+        receivedConfirmations = 0;
     }
 
     @Override
@@ -323,25 +370,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         command = substituteVariable(command, "Id", head.getId()); 
         command = substituteVariable(command, "Name", head.getName());
         long timeout = -1;
-        List<String> responses = sendGcode(command, timeout);
+        sendGcode(command, timeout);
 
         // Check home complete response against user's regex
         String homeCompleteRegex = getCommand(null, CommandType.HOME_COMPLETE_REGEX);
         if (homeCompleteRegex != null) {
-            if (timeout == -1) {
-                timeout = Long.MAX_VALUE;
-            }
-            if (!containsMatch(responses, homeCompleteRegex)) {
-                long t = System.currentTimeMillis();
-                boolean done = false;
-                while (!done && System.currentTimeMillis() - t < timeout) {
-                    done = containsMatch(sendCommand(null, 250), homeCompleteRegex);
-                }
-                if (!done) {
-                    // Should never get here but just in case.
-                    throw new Exception("Timed out waiting for home to complete.");
-                }
-            }
+            receiveResponses(homeCompleteRegex, timeout, (responses) -> { 
+                throw new Exception("Timed out waiting for home to complete."); 
+            });
         }
 
         AxesLocation homeLocation = new AxesLocation(machine, this, (axis) -> (axis.getHomeCoordinate()));
@@ -437,13 +473,22 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     public AxesLocation getMomentaryLocation() throws Exception {
         ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
         String command = getCommand(null, CommandType.GET_POSITION_COMMAND);
+        // Reset the last position report.
         positionReportLocation = null;
         sendGcode(command, -1);
-        // TODO: blocking queue and timeout !!
-        while (positionReportLocation == null) {
+        // Blocking queue?
+        long t1 = (timeoutMilliseconds == -1) ?
+                Long.MAX_VALUE
+                : System.currentTimeMillis() + timeoutMilliseconds;
+        do { 
+            if (positionReportLocation != null) {
+                return positionReportLocation;
+            }
             Thread.yield();
         }
-        return positionReportLocation;
+        while (System.currentTimeMillis() < t1);
+        // Timeout expired, apply timeout action.
+        throw new Exception("Timeout waiting for response to " + command);
     }
 
     public Command getCommand(HeadMountable hm, CommandType type, boolean checkDefaults) {
@@ -596,7 +641,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         }
         if (doesMove) {
             // We do actually send the command. 
-            List<String> responses = sendGcode(command);
+            sendGcode(command);
 
             // TODO: determine if it is technically possible to move this to waitForCompletion() with the 
             // responses correctly associated. It has been discussed, that using N letter line numbers could
@@ -613,16 +658,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
              */
             String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
             if (moveToCompleteRegex != null) {
-                if (!containsMatch(responses, moveToCompleteRegex)) {
-                    long t = System.currentTimeMillis();
-                    boolean done = false;
-                    while (!done && System.currentTimeMillis() - t < timeoutMilliseconds) {
-                        done = containsMatch(sendCommand(null, 250), moveToCompleteRegex);
-                    }
-                    if (!done) {
-                        throw new Exception("Timed out waiting for move to complete.");
-                    }
-                }
+                receiveResponses(moveToCompleteRegex, timeoutMilliseconds, (responses) -> {
+                    throw new Exception("Timed out waiting for move to complete.");
+                });
             }
         }
     }
@@ -636,9 +674,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         }
     }
 
-    private boolean containsMatch(List<String> responses, String regex) {
-        for (String response : responses) {
-            if (response.matches(regex)) {
+    private boolean containsMatch(List<Line> responses, String regex) {
+        for (Line response : responses) {
+            if (response.line.matches(regex)) {
                 return true;
             }
         }
@@ -693,9 +731,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         }
         String regex = getCommand(actuator, CommandType.ACTUATOR_READ_REGEX);
         if (command != null && regex != null) {
-            /**
-             * This driver has the command and regex defined, so it must service the command.
-             */
             command = substituteVariable(command, "Id", actuator.getId());
             command = substituteVariable(command, "Name", actuator.getName());
             command = substituteVariable(command, "Index", actuator.getIndex());
@@ -703,12 +738,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 command = substituteVariable(command, "DoubleValue", parameter);
                 command = substituteVariable(command, "IntegerValue", (int) parameter.doubleValue());
             }
-
-            List<String> responses = sendGcode(command);
+            sendGcode(command);
+            List<Line> responses = receiveResponses(regex, timeoutMilliseconds, (r) -> {
+                throw new Exception(String.format("Actuator \"%s\" read error: No matching responses found.", actuator.getName()));
+            }); 
 
             Pattern pattern = Pattern.compile(regex);
-            for (String line : responses) {
-                Matcher matcher = pattern.matcher(line);
+            for (Line line : responses) {
+                Matcher matcher = pattern.matcher(line.getLine());
                 if (matcher.matches()) {
                     Logger.trace("actuatorRead response: {}", line);
                     try {
@@ -725,8 +762,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     }
                 }
             }
-
-            throw new Exception(String.format("Actuator \"%s\" read error: No matching responses found.", actuator.getName()));
+            // This should not happen, as the regex is pre-matched in receiveResponses().
+            throw new Exception(String.format("Actuator \"%s\" read error: Regex matching response vanished.", actuator.getName()));
         }
         else {
             throw new Exception(String.format("Actuator \"%s\" read error: Driver configuration is missing ACTUATOR_READ_COMMAND or ACTUATOR_READ_REGEX.", actuator.getName()));
@@ -764,6 +801,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     protected void disconnectThreads() {
         try {
             if (readerThread != null && readerThread.isAlive()) {
+                // Bump the thread if it is in a blocking wait.
+                readerThread.interrupt();
                 readerThread.join(3000);
             }
         }
@@ -777,101 +816,104 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         super.close();
     }
 
-    protected List<String> sendGcode(String gCode) throws Exception {
-        return sendGcode(gCode, timeoutMilliseconds);
+    protected void sendGcode(String gCode) throws Exception {
+        sendGcode(gCode, timeoutMilliseconds);
     }
 
-    protected List<String> sendGcode(String gCode, long timeout) throws Exception {
+    protected void sendGcode(String gCode, long timeout) throws Exception {
         if (gCode == null) {
-            return new ArrayList<>();
+            return;
         }
-        List<String> responses = new ArrayList<>();
         for (String command : gCode.split("\n")) {
             command = command.trim();
             if (command.length() == 0) {
                 continue;
             }
-            responses.addAll(sendCommand(command, timeout));
+            sendCommand(command, timeout);
         }
+    }
+
+    public void sendCommand(String command) throws Exception {
+        sendCommand(command, timeoutMilliseconds);
+    }
+
+    public void sendCommand(String command, long timeout) throws Exception {
+        // An error may have popped up in the meantime. Check and bail on it, before sending the next command. 
+        bailOnError();
+        if (command == null) {
+            return;
+        }
+
+        Logger.debug("[{}] >> {}, {}", getCommunications().getConnectionName(), command, timeout);
+        command = preProcessCommand(command);
+        // After sending this, we want one more confirmation. 
+        long wantedConfirmations = receivedConfirmations + 1;
+        try {
+            // Send the command.
+            getCommunications().writeLine(command);
+        }
+        catch (IOException ex) {
+            Logger.error("Failed to write command: ", command);
+            disconnect();
+            Configuration.get().getMachine().setEnabled(false);
+        }
+
+        // Wait until we get the confirmations count we want..
+        long t1 = (timeout == -1) ? 
+                Long.MAX_VALUE
+                : System.currentTimeMillis() + timeout;
+        // Loop until we've timed out.
+        do {
+            bailOnError();
+            if (receivedConfirmations >= wantedConfirmations) {
+                Logger.trace("[{}] confirmed {}", getCommunications().getConnectionName(), command);
+                return;
+            }
+            // Need to wait.
+            Thread.yield();
+        }
+        while(System.currentTimeMillis() < t1);
+        // Timeout. 
+        throw new Exception("Timeout waiting for response to " + command);
+    }
+
+    protected void bailOnError() throws Exception {
+        if (errorResponse != null) {
+            Line error = errorResponse; 
+            errorResponse = null;
+            throw new Exception("Error response from controller: " + error);
+        }
+    }
+
+    public List<Line> receiveResponses() throws Exception {
+        bailOnError();
+        List<Line> responses = new ArrayList<>();
+        // Read any responses that might be queued up.
+        responseQueue.drainTo(responses);
         return responses;
     }
 
-    public List<String> sendCommand(String command) throws Exception {
-        return sendCommand(command, timeoutMilliseconds);
+    @FunctionalInterface
+    public interface TimeoutAction {
+        List<Line> apply(List<Line> responses) throws Exception;
     }
 
-    public List<String> sendCommand(String command, long timeout) throws Exception {
-        List<String> responses = new ArrayList<>();
-
-        // Read any responses that might be queued up so that when we wait
-        // for a response to a command we actually wait for the one we expect.
-        responseQueue.drainTo(responses);
-
-        Logger.debug("sendCommand({}, {})...", command, timeout);
-
-        // Send the command, if one was specified
-        if (command != null) {
-            command = preProcessCommand(command);
-            Logger.trace("[{}] >> {}", getCommunications().getConnectionName(), command);
-            try {
-                getCommunications().writeLine(command);
-            }
-            catch (IOException ex) {
-                Logger.error("Failed to write command: ", command);
-                disconnect();
-                Configuration.get().getMachine().setEnabled(false);
+    public List<Line> receiveResponses(String regex, long timeout, 
+            TimeoutAction timeoutAction)
+            throws Exception {
+        long t1 = (timeout == -1) ?
+                Long.MAX_VALUE
+                : System.currentTimeMillis() + timeout;
+        List<Line> responses = new ArrayList<>();
+        do{ 
+            responses.addAll(receiveResponses());
+            if (containsMatch(responses, regex)) {
+                return responses;
             }
         }
-
-        // Collect responses till we find one with the confirmation or we timeout. Return
-        // the collected responses.
-        if (timeout == -1) {
-            timeout = Long.MAX_VALUE;
-        }
-        long t = System.currentTimeMillis();
-        boolean found = false;
-        boolean foundError = false;
-        String errorResponse = "";
-        // Loop until we've timed out
-        while (System.currentTimeMillis() - t < timeout) {
-            // Wait to see if a response came in. We wait up until the number of millis remaining
-            // in the timeout.
-            String response = responseQueue.poll(timeout - (System.currentTimeMillis() - t),
-                    TimeUnit.MILLISECONDS);
-            // If no response yet, try again.
-            if (response == null) {
-                continue;
-            }
-            // Store the response that was received
-            responses.add(response);
-            // If the response is an ok or error we're done
-            if (response.matches(getCommand(null, CommandType.COMMAND_CONFIRM_REGEX))) {
-                found = true;
-                break;
-            }
-
-            if (getCommand(null, CommandType.COMMAND_ERROR_REGEX) != null) {
-                if (response.matches(getCommand(null, CommandType.COMMAND_ERROR_REGEX))) {
-                    foundError = true;
-                    errorResponse = response;
-                    break;
-                }
-            }
-        }
-        // If a command was specified and no confirmation was found it's a timeout error.
-        if (command != null & foundError) {
-            throw new Exception("Error response from controller: " + errorResponse);
-        }
-        if (command != null && !found) {
-            throw new Exception("Timeout waiting for response to " + command);
-        }
-
-        // Read any additional responses that came in after the initial one.
-        responseQueue.drainTo(responses);
-
-        Logger.debug("sendCommand({} {}, {}) => {}",
-                new Object[] {getCommunications().getConnectionName(), command, timeout == Long.MAX_VALUE ? -1 : timeout, responses});
-        return responses;
+        while (System.currentTimeMillis() < t1);
+        // Timeout expired, apply timeout action.
+        return timeoutAction.apply(responses);
     }
 
     protected String preProcessCommand(String command) {
@@ -942,6 +984,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             trailingZeroes = compressDecimal(trailingZeroes, compressedCommand);
             decimal = false;
             command = compressedCommand.toString();
+            Logger.trace("Preprocessed Gcode: {}", command);
         }
         if (backslashEscapedCharactersEnabled) {
             command = unescape(command);
@@ -961,15 +1004,15 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         @Override
         public void run() {
             while (!disconnectRequested) {
-                String line;
+                String receivedLine;
                 try {
-                    line = getCommunications().readLine();
-                    if (line == null) {
+                    receivedLine = getCommunications().readLine();
+                    if (receivedLine == null) {
                         // Line read failed eg. due to socket closure
                         Logger.error("Failed to read gcode response");
                         return;
                     }
-                    line = line.trim();
+                    receivedLine = receivedLine.trim();
                 }
                 catch (TimeoutException ex) {
                     continue;
@@ -978,40 +1021,47 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     Logger.error("Read error", e);
                     return;
                 }
-                line = line.trim();
-                Logger.trace("[{}] << {}", getCommunications().getConnectionName(), line);
+                Line line = new Line(receivedLine);
+                Logger.debug("[{}] << {}", getCommunications().getConnectionName(), line);
                 // Process the response.
                 processResponse(line);
-                // add to the responseQueue (even if it happens to be a processed response, it might still also contain the "ok"
-                // acknowledgment e.g. the position report on Smoothieware)
+                // Add to the responseQueue for further processing by the caller.
                 responseQueue.offer(line);
             }
         }
-
     }
 
     /**
      * Process a received response immediately. 
+     *  
      * @param line
      */
-    protected void processResponse(String line) {
+    protected void processResponse(Line line) {
+        String regex = getCommand(null, CommandType.COMMAND_CONFIRM_REGEX);
+        if (regex != null && line.getLine().matches(regex)) {
+            receivedConfirmations++;
+        }
+        regex = getCommand(null, CommandType.COMMAND_ERROR_REGEX);
+        if (regex != null && line.getLine().matches(regex)) {
+            errorResponse = line;
+        }
         // extract a position report, if present
         processPositionReport(line);
     }
 
-    protected boolean processPositionReport(String line) {
+    protected boolean processPositionReport(Line line) {
         if (getCommand(null, CommandType.POSITION_REPORT_REGEX) == null) {
             return false;
         }
 
-        if (!line.matches(getCommand(null, CommandType.POSITION_REPORT_REGEX))) {
+        if (!line.getLine().matches(getCommand(null, CommandType.POSITION_REPORT_REGEX))) {
             return false;
         }
 
         Logger.trace("Position report: {}", line);
         ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
         Matcher matcher =
-                Pattern.compile(getCommand(null, CommandType.POSITION_REPORT_REGEX)).matcher(line);
+                Pattern.compile(getCommand(null, CommandType.POSITION_REPORT_REGEX)).matcher(line.getLine());
         matcher.matches();
         AxesLocation position = AxesLocation.zero;
         for (ControllerAxis axis : new AxesLocation(machine).getAxes(this)) {
@@ -1028,7 +1078,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 Logger.warn("Error processing position report for axis {}: {}", axis.getName(), e);
             }
         }
+        // Store the latest position report.
         positionReportLocation = position;
+        positionReportTime = line.getTransmissionTime();
         return true;
     }
 

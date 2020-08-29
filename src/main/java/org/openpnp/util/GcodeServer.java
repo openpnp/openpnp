@@ -7,12 +7,14 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.model.AxesLocation;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Motion;
 import org.openpnp.model.Motion.MotionOption;
@@ -32,7 +34,9 @@ public class GcodeServer extends Thread {
     private AxesLocation homingOffsets = new AxesLocation();
 
     protected TreeMap<Double, Motion> motionPlan = new TreeMap<Double, Motion>();
+    private AxesLocation machineLocation;
 
+    private long maxDwellTimeMilliseconds = 20000;
 
     /**
      * Create a GcodeServer listening on the given port.
@@ -66,6 +70,13 @@ public class GcodeServer extends Thread {
     public void setDriver(ReferenceDriver driver) {
         this.machine = SimulationModeMachine.getSimulationModeMachine();
         this.driver = driver;
+    }
+
+    public AxesLocation getMachineLocation() {
+        if (machineLocation == null) {
+            machineLocation = new AxesLocation(machine).drivenBy(getDriver());
+        }
+        return machineLocation;
     }
 
     public void addCommandResponse(String command, String response) {
@@ -113,6 +124,7 @@ public class GcodeServer extends Thread {
         O(16),
         G4(0), G10(0), G28(0), G30(0), G53(0), G92(0), M1nn(0), 
         // Smoothie plus
+        M114(0),
         M204(12),
         M400(0);
 
@@ -129,11 +141,11 @@ public class GcodeServer extends Thread {
         final Socket socket;
         final InputStream input;
         final OutputStream output;
-        private AxesLocation machineLocation;
         private double feedRate;
         private double acceleration;
         private double jerk;
         private double unit = 1.0; // 1.0 --> mm or 25.4 --> inch
+        private LengthUnit lengthUnit = LengthUnit.Millimeters; 
         private boolean absolute = true;
 
         public Worker(Socket socket) throws Exception {
@@ -243,21 +255,21 @@ public class GcodeServer extends Thread {
                     decimal = 1;
                 }
 
-                if (letter == 'T') {
-                    this.code = Gcode.Tn;
+                String codeName = ((Character)letter).toString()+getNumberIntegral();
+                for (Gcode code : Gcode.values()) {
+                    if (code.toString().equals(codeName)) {
+                        this.code = code;
+                    }
                 }
-                else if (letter == 'O') {
-                    this.code = Gcode.O;
-                }
-                else if (letter == 'M' && getNumberIntegral()/100 == 1) {
-                    this.code = Gcode.M1nn;
-                }
-                else {
-                    String codeName = ((Character)letter).toString()+getNumberIntegral();
-                    for (Gcode code : Gcode.values()) {
-                        if (code.toString().equals(codeName)) {
-                            this.code = code;
-                        }
+                if (this.code == null) {
+                    if (letter == 'T') {
+                        this.code = Gcode.Tn;
+                    }
+                    else if (letter == 'O') {
+                        this.code = Gcode.O;
+                    }
+                    else if (letter == 'M' && getNumberIntegral()/100 == 1) {
+                        this.code = Gcode.M1nn;
                     }
                 }
             }
@@ -414,7 +426,7 @@ public class GcodeServer extends Thread {
             if (!commandWords.isEmpty()) {
 
 
-                Logger.debug(toString(commandWords));
+                Logger.debug("Parsed Gcode: "+toString(commandWords));
 
                 // Order of execution
                 //
@@ -441,13 +453,10 @@ public class GcodeServer extends Thread {
                 //    20. Perform motion (G0 to G3, G33, G73, G76, G80 to G89), as modified (possibly) by G53. 
                 //    21. Stop (M0, M1, M2, M30, M60).
 
-                if (machineLocation == null) {
-                    machineLocation = new AxesLocation(machine).drivenBy(getDriver());
-                }
                 // Get some general params.
                 GcodeWord sWord = getLetterWord('S', commandWords);
                 GcodeWord pWord = getLetterWord('P', commandWords);
-                AxesLocation axesLocation = machineLocation;
+                AxesLocation axesLocation = getMachineLocation();
                 AxesLocation axesGiven = AxesLocation.zero;
                 for (Axis axis : machine.getAxes()) {
                     if (axis instanceof ControllerAxis) {
@@ -476,6 +485,33 @@ public class GcodeServer extends Thread {
                     feedRate = fWord.getNumberDouble()*unit/60; // convert per second
                 }
 
+                GcodeWord m114Word = getCodeWord(Gcode.M114, commandWords);
+                if (m114Word != null) {
+                    StringBuilder response = new StringBuilder();
+                    AxesLocation reportedLocation = machineLocation;
+                    if (m114Word.getNumberFraction() == 0) {
+                        response.append("ok S:");
+                    }
+                    else if (m114Word.getNumberFraction() == 1) {
+                        response.append("ok WCS:");
+                        double now = NanosecondTime.getRuntimeSeconds();
+                        Motion motion = getMomentaryMotion(now);
+                        reportedLocation = motion.getMomentaryLocation(now - motion.getPlannedTime0());
+                    }
+                    for (Axis axis : machine.getAxes()) {
+                        if (axis instanceof ControllerAxis) {
+                            if (((ControllerAxis) axis).getDriver() == getDriver()) {
+                                response.append(' ');
+                                response.append(((ControllerAxis) axis).getLetter());
+                                response.append(':');
+                                response.append(String.format(Locale.US, "%.4f", reportedLocation.getCoordinate(axis, lengthUnit)));
+                            }
+                        }
+                    }
+                    write(response.toString());
+                }
+
+
                 // Acceleration
                 GcodeWord m204Word = getCodeWord(Gcode.M204, commandWords);
                 if (m204Word != null && sWord != null) {
@@ -483,7 +519,7 @@ public class GcodeServer extends Thread {
                 }
 
                 // Compute the wait or dwell time. Start with the motion plan completion time. 
-                int dwellMilliseconds = (motionPlan.isEmpty() ? 
+                long dwellMilliseconds = (motionPlan.isEmpty() ? 
                         0 : (int)Math.max(0, (motionPlan.lastKey() - NanosecondTime.getRuntimeSeconds())*1000));
                 //Logger.debug("Motion ongoing for +"+dwellMilliseconds+" ms, lastKey = "+(motionPlan.isEmpty() ? 0 : motionPlan.lastKey())+", now="+NanosecondTime.getRuntimeSeconds());
                 boolean doDwell = false;
@@ -500,12 +536,12 @@ public class GcodeServer extends Thread {
                     }
                     doDwell = true;
                 }
-                
+
                 GcodeWord g92Word = getCodeWord(Gcode.G92, commandWords);
                 if (g92Word != null) {
                     doDwell = true; // ???
                 }
-                
+
                 // Wait for completion command.
                 if (m400Word != null) {
                     doDwell = true;
@@ -513,10 +549,10 @@ public class GcodeServer extends Thread {
 
                 if (doDwell && dwellMilliseconds > 0) {
                     // There is a command, that waits for completion/dwells.
-                    if (dwellMilliseconds > 10000) {
+                    if (dwellMilliseconds > maxDwellTimeMilliseconds) {
                         // Be reasonable
-                        Logger.warn("Dwell time limited to 10s from "+(dwellMilliseconds/1000.)+"s");
-                        dwellMilliseconds = 10000;
+                        Logger.warn("Dwell time limited from "+(dwellMilliseconds/1000.)+"s");
+                        dwellMilliseconds = maxDwellTimeMilliseconds;
                     }
                     Logger.trace("Waiting "+dwellMilliseconds+"ms");
                     Thread.sleep(dwellMilliseconds);
@@ -528,12 +564,11 @@ public class GcodeServer extends Thread {
                     }
                 }
 
-
                 // Set global offsets. 
                 if (g92Word != null) {
                     homingOffsets = axesLocation.subtract(machineLocation).add(homingOffsets);
                     machineLocation = machineLocation.put(axesLocation);
-                    Logger.debug("New offset location: "+machineLocation);
+                    Logger.trace("New global offset location: "+machineLocation);
                 }
 
                 // Set unit. 
@@ -542,10 +577,12 @@ public class GcodeServer extends Thread {
                 if (g21Word != null) {
                     // Millimeters
                     unit = 1.0;
+                    lengthUnit = LengthUnit.Millimeters;
                 }
                 if (g20Word != null) {
                     // Inches
                     unit = 25.4;
+                    lengthUnit = LengthUnit.Inches;
                 }
 
                 GcodeWord g90Word = getCodeWord(Gcode.G90, commandWords);
@@ -589,26 +626,31 @@ public class GcodeServer extends Thread {
                     Motion motion = new Motion(null, machineLocation, axesLocation, speed, 
                             feedRate, acceleration, jerk,
                             (g0Word != null ? MotionOption.UncoordinatedMotion.flag() : 0));
-                    double t = NanosecondTime.getRuntimeSeconds();
-                    if (motionPlan.isEmpty() == false && motionPlan.lastKey() > t) {
-                        // Append to a plan that is still running. 
-                        t = motionPlan.lastKey();
+                    synchronized (motionPlan) {
+                        double t = NanosecondTime.getRuntimeSeconds();
+                        if (motionPlan.isEmpty() == false && motionPlan.lastKey() > t) {
+                            // Append to a plan that is still running. 
+                            t = motionPlan.lastKey();
+                        }
+                        // Put into timed plan.
+                        t += motion.getTime();
+                        motionPlan.put(t, motion);
+                        motion.setPlannedTime1(t);
                     }
-                    // Put into timed plan.
-                    t += motion.getTime();
-                    Logger.debug("move takes "+(motion.getTime()*1000)+" ms");
-                    motionPlan.put(t, motion);
-                    motion.setPlannedTime1(t);
                     // Store new location.
+                    Logger.trace("Move takes "+(motion.getTime()*1000)+" ms");
                     machineLocation = machineLocation.put(axesLocation);
-                    Logger.debug("New location: "+machineLocation);
+                    Logger.trace("New location: "+machineLocation);
                 }
             }
         }
     }
 
-    public synchronized Motion getMomentaryMotion(double time) {
-        Map.Entry<Double, Motion> entry1 = motionPlan.higherEntry(time);
+    public Motion getMomentaryMotion(double time) {
+        Map.Entry<Double, Motion> entry1; 
+        synchronized (motionPlan) {
+            entry1 = motionPlan.higherEntry(time);
+        }
         if (entry1 != null) {
             // Return the current motion.
             Motion motion = entry1.getValue();
@@ -616,20 +658,15 @@ public class GcodeServer extends Thread {
         }
         else {
             // Nothing in the plan or machine stopped before this time, just get the current axes location.
-            AxesLocation currentLocation = new AxesLocation(machine); 
             Motion motion = new Motion( 
                     null, 
-                    currentLocation,
-                    currentLocation,
+                    getMachineLocation(),
+                    getMachineLocation(),
                     1.0,
                     MotionOption.Stillstand);
             // Anchor it in real-time.
             motion.setPlannedTime1(time);
             return motion;
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        GcodeServer server = new GcodeServer();
     }
 }

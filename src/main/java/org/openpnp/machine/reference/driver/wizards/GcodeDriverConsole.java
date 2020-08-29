@@ -178,8 +178,9 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
         textAreaConsole.append("> " + cmd + "\n");
         // Send command and get responses
         try {
-            for (String line : driver.sendCommand(cmd, 5000)) {
-                textAreaConsole.append(line + "\n");
+            driver.sendCommand(cmd, 5000);
+            for (GcodeDriver.Line line : driver.receiveResponses()) {
+                textAreaConsole.append(line.getLine() + "\n");
             }
         }
         catch (Exception ex) {

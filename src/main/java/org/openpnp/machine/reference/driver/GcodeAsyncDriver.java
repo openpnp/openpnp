@@ -22,38 +22,37 @@
 package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.openpnp.machine.reference.ReferenceHeadMountable;
-import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.pmw.tinylog.Logger;
 
 /**
  * The GcodeAsyncDriver extends the GcodeDriver for asynchronous communication with the controller. 
- * The goal is to increase the command throughput to allow for fine-grained motion path generation. 
+ * The goal is to increase the command throughput/decrease latency to allow for small time step motion 
+ * path generation/interpolation. 
  *  
- * It creates a writer thread that does the writing in the background while freeing the calling thread up
- * to continue with the job. While the GcodeDriver performs hand-shaking for every command by waiting for a 
- * mandatory reply, the GcodeAsyncDriver will blindly send the commands, utilizing intermediate buffering
- * and pipelining in the communications chain, including the command buffering of the controller itself.  
+ * GcodeAsyncDriver creates a writer thread sending commands in the background while freeing the calling thread 
+ * up to continue with the job. While the GcodeDriver performs hand-shaking for every command by waiting for a 
+ * mandatory reply, the GcodeAsyncDriver will just blindly send commands, utilizing intermediate buffering
+ * and pipelining in the communications chain, including the command buffers and look-ahead motion planning
+ * in the controller itself.  
  * 
  * While the GcodeDriver (through its on-by-one hand-shaking) knows when each and every command is 
  * acknowledged by the controller, the GcodeAsyncDriver does not. The responses (mostly a stream of 
  * "ok"s) are too generic to reliably detect how many and which commands have been acknowledged. Sometimes 
- * controllers will output additional informations. GcodeAsyncDriver must therefore find a new way to 
- * implement hand-shaking when (and only when) it is really needed. Most importantly this is the case 
+ * controllers will also output additional unsolicitated messages. GcodeAsyncDriver must therefore find a new 
+ * way to implement hand-shaking when (and only when) it is really needed. Most importantly this is the case 
  * when OpenPnP wants to wait for the machine to physically have completed a motion sequence. GcodeAsyncDriver 
  * will therefore issue specific reporting commands where needed, making the responses uniquely recognizable, 
  * and marking the position in the response stream. 
  * 
- * To optimize this asynchronous operation, Actuator reads should also be handled differently. Often the 
+ * FUTURE WORK:
+ * 
+ * To optimize the asynchronous operation, Actuator reads should also be handled differently. Often the 
  * commands to elicit sensor reading reports are shared by multiple Actuators. Therefore the responses are not 
  * distinguishable, when they arrive in the response stream. Furthermore, these commands are executed 
  * asynchronously on the controller, i.e. they create an immediate response with the readings, in parallel 
@@ -80,21 +79,8 @@ public class GcodeAsyncDriver extends GcodeDriver {
     private int maxCommandsQueued = 1000;
 
     private WriterThread writerThread;
-    private final List<String> emptyResponses = Collections.unmodifiableList(new ArrayList<>());
 
-    protected class Command {
-        final String line;
-        final long timeout;
-
-        public Command(String line, long timeout) {
-            super();
-            this.line = line;
-            this.timeout = timeout;
-        }
-    }
-    protected LinkedBlockingQueue<Command> commandQueue;
-    private long confirmations;
-    private String errorResponse;
+    protected LinkedBlockingQueue<Line> commandQueue;
 
     @Override
     protected void connectThreads() throws Exception {
@@ -103,8 +89,6 @@ public class GcodeAsyncDriver extends GcodeDriver {
         writerThread = new WriterThread();
         writerThread.setDaemon(true);
         writerThread.start();
-        errorResponse = null;
-        confirmations = 0;
     }
 
     @Override
@@ -112,6 +96,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
         try {
             if (writerThread != null && writerThread.isAlive()) {
                 if (commandQueue.isEmpty()) {
+                    // Bump the thread if it is in a blocking wait on the queue.
                     writerThread.interrupt();
                 }
                 writerThread.join(3000);
@@ -130,7 +115,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
         @Override
         public void run() {
             while (!disconnectRequested) {
-                Command command;
+                Line command;
                 try {
                     command = commandQueue.poll(writerPollingInterval,
                             TimeUnit.MILLISECONDS);
@@ -158,39 +143,15 @@ public class GcodeAsyncDriver extends GcodeDriver {
      * So it MUST NOT call super.sendCommand()
      */
     @Override
-    public List<String> sendCommand(String command, long timeout) throws Exception {
-
-        if (errorResponse != null) {
-            // In the GcodeAsyncDriver everything is asynchronous (really?) and therefore the error is 
-            // only indicated when the next command is sent.
-            String error = errorResponse; 
-            errorResponse = null;
-            throw new Exception("Error response from controller: " + error);
-            
-        }
-
-        if (command != null) {
-            Logger.debug("sendCommand({}, {})...", command, timeout);
-            commandQueue.offer(new Command(command, timeout), writerQueueTimeout, TimeUnit.MILLISECONDS);
-        }
-
-        return emptyResponses;
-    }
-
-    @Override
-    protected void processResponse(String line) {
-        super.processResponse(line);
-
-        String regex = getCommand(null, CommandType.COMMAND_CONFIRM_REGEX);
-        if (regex != null && line.matches(regex)) {
-            confirmations++;
+    public void sendCommand(String command, long timeout) throws Exception {
+        bailOnError();
+        if (command == null) {
             return;
         }
-        regex = getCommand(null, CommandType.COMMAND_ERROR_REGEX);
-        if (regex != null && line.matches(regex)) {
-            errorResponse = line;
-            return;
-        }
+
+        Logger.debug("{} sendCommand({}, {})...", getCommunications().getConnectionName(), command, timeout);
+        command = preProcessCommand(command);
+        commandQueue.offer(new Line(command), writerQueueTimeout, TimeUnit.MILLISECONDS);
     }
 
     @Override

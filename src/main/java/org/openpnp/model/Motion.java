@@ -27,11 +27,10 @@ import java.util.function.BiFunction;
 
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.model.MotionProfile.ProfileOption;
-import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
-import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Driver.MotionControlType;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.util.Triplet;
 
 /**
