@@ -29,6 +29,7 @@ import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.pmw.tinylog.Logger;
+import org.simpleframework.xml.Attribute;
 
 /**
  * The GcodeAsyncDriver extends the GcodeDriver for asynchronous communication with the controller. 
@@ -74,14 +75,28 @@ import org.pmw.tinylog.Logger;
  * 
  */
 public class GcodeAsyncDriver extends GcodeDriver {
+
+    @Attribute(required=false)
     private long writerPollingInterval = 100;
+
+    @Attribute(required=false)
     private long writerQueueTimeout = 60000;
+
+    @Attribute(required=false)
     private int maxCommandsQueued = 1000;
+
+    @Attribute(required=false)
+    private boolean confirmationFlowControl = false;
+
 
     private WriterThread writerThread;
 
     protected LinkedBlockingQueue<Line> commandQueue;
+    private Line lastCommand;
+    private long lastTimeout;
 
+    private long wantedConfirmations;
+    
     @Override
     protected void connectThreads() throws Exception {
         super.connectThreads();
@@ -89,6 +104,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
         writerThread = new WriterThread();
         writerThread.setDaemon(true);
         writerThread.start();
+        wantedConfirmations = 0; 
     }
 
     @Override
@@ -138,6 +154,13 @@ public class GcodeAsyncDriver extends GcodeDriver {
         }
     }
 
+    @Override
+    protected void bailOnError() throws Exception {
+        super.bailOnError();
+        if (! writerThread.isAlive()) {
+            throw new Exception("IO Error on writing to the controller.");
+        }
+    }
     /**
      * Note this Override will completely change the way commands are sent and hand-shaking is done.
      * So it MUST NOT call super.sendCommand()
@@ -151,7 +174,15 @@ public class GcodeAsyncDriver extends GcodeDriver {
 
         Logger.debug("{} sendCommand({}, {})...", getCommunications().getConnectionName(), command, timeout);
         command = preProcessCommand(command);
-        commandQueue.offer(new Line(command), writerQueueTimeout, TimeUnit.MILLISECONDS);
+        Line commandLine = new Line(command);
+        if (confirmationFlowControl) {
+            // Before we can send the new command, make sure the wanted confirmations of the last commands were received.
+            waitForConfirmation(lastCommand.toString(), lastTimeout, wantedConfirmations);
+            // Set up the wanted confirmations for next time.
+            wantedConfirmations = receivedConfirmations.get() + 1;
+            lastCommand = commandLine;
+        }
+        commandQueue.offer(commandLine, writerQueueTimeout, TimeUnit.MILLISECONDS);
     }
 
     @Override

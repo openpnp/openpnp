@@ -11,6 +11,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -66,6 +67,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     public enum CommandType {
         COMMAND_CONFIRM_REGEX,
         POSITION_REPORT_REGEX,
+        MOMENTARY_POSITION_REPORT_REGEX,
         COMMAND_ERROR_REGEX,
         CONNECT_COMMAND,
         ENABLE_COMMAND,
@@ -75,7 +77,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         HOME_COMMAND("Id", "Name"),
         HOME_COMPLETE_REGEX,
         SET_GLOBAL_OFFSETS_COMMAND("Id", "Name", "X", "Y", "Z", "Rotation"),
-        GET_POSITION_COMMAND,
+        GET_MOMENTARY_POSITION_COMMAND,
         @Deprecated
         PUMP_ON_COMMAND,
         @Deprecated
@@ -271,10 +273,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
     protected LinkedBlockingQueue<Line> responseQueue = new LinkedBlockingQueue<>();
     
-    private long receivedConfirmations;
+    protected AtomicLong receivedConfirmations = new AtomicLong();
     private Line errorResponse;
-    private AxesLocation positionReportLocation;
-    private double positionReportTime;
+    private AxesLocation lastMomentaryLocation;
+    private double lastMomentaryTime;
 
     @Commit
     public void commit() {
@@ -336,7 +338,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         readerThread.setDaemon(true);
         readerThread.start();
         errorResponse = null;
-        receivedConfirmations = 0;
+        receivedConfirmations = new AtomicLong();
     }
 
     @Override
@@ -472,24 +474,25 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Override
     public AxesLocation getMomentaryLocation() throws Exception {
         ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
-        String command = getCommand(null, CommandType.GET_POSITION_COMMAND);
+        String command = getCommand(null, CommandType.GET_MOMENTARY_POSITION_COMMAND);
         if (command == null) {
-            throw new Exception(getName()+" configuration error: missing GET_POSITION_COMMAND.");
+            throw new Exception(getName()+" configuration error: missing GET_MOMENTARY_POSITION_COMMAND.");
         }
-        if (getCommand(null, CommandType.POSITION_REPORT_REGEX) == null) {
-            throw new Exception(getName()+" configuration error: missing POSITION_REPORT_REGEX.");
+        if (getCommand(null, CommandType.MOMENTARY_POSITION_REPORT_REGEX) == null) {
+            throw new Exception(getName()+" configuration error: missing MOMENTARY_POSITION_REPORT_REGEX.");
         }
         
         // Reset the last position report.
-        positionReportLocation = null;
+        lastMomentaryLocation = null;
         sendGcode(command, -1);
         // Blocking queue?
         long t1 = (timeoutMilliseconds == -1) ?
                 Long.MAX_VALUE
                 : System.currentTimeMillis() + timeoutMilliseconds;
         do { 
-            if (positionReportLocation != null) {
-                return positionReportLocation;
+            if (lastMomentaryLocation != null) {
+                Logger.trace("Got lastMomentaryLocation");
+                return lastMomentaryLocation;
             }
             Thread.yield();
         }
@@ -854,7 +857,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         Logger.debug("[{}] >> {}, {}", getCommunications().getConnectionName(), command, timeout);
         command = preProcessCommand(command);
         // After sending this, we want one more confirmation. 
-        long wantedConfirmations = receivedConfirmations + 1;
+        long wantedConfirmations = receivedConfirmations.get() + 1;
         try {
             // Send the command.
             getCommunications().writeLine(command);
@@ -864,15 +867,19 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             disconnect();
             Configuration.get().getMachine().setEnabled(false);
         }
+        waitForConfirmation(command, timeout, wantedConfirmations);
+    }
 
-        // Wait until we get the confirmations count we want..
+    protected void waitForConfirmation(String command, long timeout, long wantedConfirmations)
+            throws Exception {
+        // Wait until we get the confirmations count we want.
         long t1 = (timeout == -1) ? 
                 Long.MAX_VALUE
                 : System.currentTimeMillis() + timeout;
         // Loop until we've timed out.
         do {
             bailOnError();
-            if (receivedConfirmations >= wantedConfirmations) {
+            if (receivedConfirmations.get() >= wantedConfirmations) {
                 Logger.trace("[{}] confirmed {}", getCommunications().getConnectionName(), command);
                 return;
             }
@@ -889,6 +896,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             Line error = errorResponse; 
             errorResponse = null;
             throw new Exception("Error response from controller: " + error);
+        }
+        if (! readerThread.isAlive()) {
+            throw new Exception("IO Error on reading from the controller.");
         }
     }
 
@@ -1046,29 +1056,30 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     protected void processResponse(Line line) {
         String regex = getCommand(null, CommandType.COMMAND_CONFIRM_REGEX);
         if (regex != null && line.getLine().matches(regex)) {
-            receivedConfirmations++;
+            receivedConfirmations.incrementAndGet();
         }
         regex = getCommand(null, CommandType.COMMAND_ERROR_REGEX);
         if (regex != null && line.getLine().matches(regex)) {
             errorResponse = line;
         }
-        // extract a position report, if present
-        processPositionReport(line);
+        processPositionReport(line, CommandType.POSITION_REPORT_REGEX);
+        processPositionReport(line, CommandType.MOMENTARY_POSITION_REPORT_REGEX);
     }
 
-    protected boolean processPositionReport(Line line) {
-        if (getCommand(null, CommandType.POSITION_REPORT_REGEX) == null) {
+    protected boolean processPositionReport(Line line, CommandType positionType) {
+        String regex = getCommand(null, positionType); 
+        if (regex == null) {
             return false;
         }
 
-        if (!line.getLine().matches(getCommand(null, CommandType.POSITION_REPORT_REGEX))) {
+        if (!line.getLine().matches(regex)) {
             return false;
         }
 
         Logger.trace("Position report: {}", line);
         ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
         Matcher matcher =
-                Pattern.compile(getCommand(null, CommandType.POSITION_REPORT_REGEX)).matcher(line.getLine());
+                Pattern.compile(regex).matcher(line.getLine());
         matcher.matches();
         AxesLocation position = AxesLocation.zero;
         for (ControllerAxis axis : new AxesLocation(machine).getAxes(this)) {
@@ -1085,9 +1096,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 Logger.warn("Error processing position report for axis {}: {}", axis.getName(), e);
             }
         }
-        // Store the latest position report.
-        positionReportLocation = position;
-        positionReportTime = line.getTransmissionTime();
+        if (positionType == CommandType.MOMENTARY_POSITION_REPORT_REGEX) {
+            // Store the latest momentary position.
+            lastMomentaryLocation = position;
+            lastMomentaryTime = line.getTransmissionTime();
+        }
+        else {
+            // Store the actual driver location. This is used to re-sync OpenPnP to the actual controller 
+            // location, when its axes might have moved behind its back. 
+            position.setToDriverCoordinates(this);
+        }
         return true;
     }
 

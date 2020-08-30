@@ -418,13 +418,22 @@ public class SimulationModeMachine extends ReferenceMachine {
                 double cameraTime = NanosecondTime.getRuntimeSeconds() - lag;
                 AxesLocation axesLocation = getMomentaryVector(machine, cameraTime, (m, time) -> m.getMomentaryLocation(time));
                 AxesLocation mappedAxes = hm.getMappedAxes(machine);
-                for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
-                    AxesLocation homingOffsets = null;
-                    if (driver instanceof NullDriver) {
-                        if (looking == Looking.Down) {
-                            homingOffsets = ((NullDriver)driver).getHomingOffsets();
+                if (looking == Looking.Down) {
+                    // This is a down-looking camera, apply the homing error. 
+                    for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
+                        if (driver instanceof NullDriver) {
+                            AxesLocation homingOffsets = ((NullDriver)driver).getHomingOffsets();
                             // Apply homing offset
                             axesLocation = axesLocation.subtract(homingOffsets);
+                        }
+                        else if (driver instanceof GcodeDriver) {
+                            ReferenceDriverCommunications comms = ((GcodeDriver) driver).getCommunications();
+                            if (comms instanceof SimulatedCommunications) {
+                                GcodeServer server = ((SimulatedCommunications) comms).getGcodeServer();
+                                AxesLocation homingOffsets = server.getHomingOffsets();
+                                // Apply homing offset
+                                axesLocation = axesLocation.subtract(homingOffsets);
+                            }
                         }
                     }
                 }

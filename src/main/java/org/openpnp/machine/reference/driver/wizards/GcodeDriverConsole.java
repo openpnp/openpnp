@@ -23,6 +23,7 @@ import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.driver.GcodeDriver;
+import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
 import org.openpnp.model.Configuration;
 import org.pmw.tinylog.Logger;
 
@@ -174,12 +175,18 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
             // most controllers prefer commands to be in upper case.
             cmd = cmd.toUpperCase();
         }
-        // display the command in the console
-        textAreaConsole.append("> " + cmd + "\n");
         // Send command and get responses
         try {
-            driver.sendCommand(cmd, 5000);
+            // Print any responses in the console that may have accumulated in the mean-time.
             for (GcodeDriver.Line line : driver.receiveResponses()) {
+                textAreaConsole.append(line.getLine() + "\n");
+            }
+            // Send the command.
+            driver.sendCommand(cmd, 5000);
+            // display the command in the console
+            textAreaConsole.append("> " + cmd + "\n");
+            for (GcodeDriver.Line line : driver.receiveResponses(driver.getCommand(null, CommandType.COMMAND_CONFIRM_REGEX), driver.getTimeoutMilliseconds(), 
+                    (r) -> { return r; })) {
                 textAreaConsole.append(line.getLine() + "\n");
             }
         }

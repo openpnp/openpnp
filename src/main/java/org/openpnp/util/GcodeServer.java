@@ -67,6 +67,14 @@ public class GcodeServer extends Thread {
         return driver;
     }
 
+    public AxesLocation getHomingOffsets() {
+        return homingOffsets;
+    }
+
+    public void setHomingOffsets(AxesLocation homingOffsets) {
+        this.homingOffsets = homingOffsets;
+    }
+
     public void setDriver(ReferenceDriver driver) {
         this.machine = SimulationModeMachine.getSimulationModeMachine();
         this.driver = driver;
@@ -147,6 +155,7 @@ public class GcodeServer extends Thread {
         private double unit = 1.0; // 1.0 --> mm or 25.4 --> inch
         private LengthUnit lengthUnit = LengthUnit.Millimeters; 
         private boolean absolute = true;
+        private String response;
 
         public Worker(Socket socket) throws Exception {
             this.socket = socket;
@@ -279,6 +288,9 @@ public class GcodeServer extends Thread {
         }
 
         public void interpretGcode(String input) throws Exception {
+            // Set standard Response.
+            setResponse("ok");
+            // Try parse the Gcode.
             GcodeWord currentWord = null;
             int col = 0;
             boolean insideComment = false;
@@ -352,8 +364,8 @@ public class GcodeServer extends Thread {
             }
             commandWords = handleGcodeWord(currentWord, commandWords);
             simulateGcode(commandWords);
-            // Standard response.
-            write("ok");
+            // Send Response.
+            write(response);
         }
 
         public List<GcodeWord> handleGcodeWord(GcodeWord currentWord,
@@ -508,7 +520,7 @@ public class GcodeServer extends Thread {
                             }
                         }
                     }
-                    write(response.toString());
+                    setResponse(response.toString());
                 }
 
 
@@ -596,7 +608,6 @@ public class GcodeServer extends Thread {
                     absolute = false;
                 }
 
-
                 // Motion.
                 GcodeWord g0Word = getCodeWord(Gcode.G0, commandWords);
                 GcodeWord g1Word = getCodeWord(Gcode.G1, commandWords);
@@ -643,6 +654,10 @@ public class GcodeServer extends Thread {
                     Logger.trace("New location: "+machineLocation);
                 }
             }
+        }
+
+        private void setResponse(String response) {
+            this.response = response;
         }
     }
 

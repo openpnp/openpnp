@@ -338,23 +338,32 @@ public class Motion {
                     overallLimits[order] = overallLimits[order] * overallLimits[0];
                 }
             }
+            // According to NIST RS274NGC Interpreter - Version 3, Section 2.1.2.5 (p. 7)
+            // the F feed-rate is to be interpreted over the Euclidean linear axis distance of a move 
+            // and in the absence of any linear axes, over the Euclidean rotational distance 
+            // of the move.
+            // https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=823374
+            // Calculate the factor between the overall vector and the feed-rate relevant vector.  
+            double overallFactor;
+            if (linearLimits[0] > 0) {
+                overallFactor = overallLimits[0]/linearLimits[0];
+            }
+            else  {
+                overallFactor = overallLimits[0]/rotationalLimits[0];
+            }
             if (feedrateOverride != 0) {
                 if (linearLimits[0] > 0) {
-                    // Limit the linear axes limit by the driver feed-rate. 
+                    // Limit the linear axes limit by the override. 
                     linearLimits[1] = Math.min(linearLimits[1], feedrateOverride); 
                 }
                 else  {
-                    // Limit the rotational axes limit by the driver feed-rate?
+                    // Limit the rotational axes limit by the override.
                     rotationalLimits[1] = Math.min(rotationalLimits[1], feedrateOverride); 
                 }
-                //overallLimits[1] = Math.min(overallLimits[1], feedrateOverride);
+                overallLimits[1] = Math.min(overallLimits[1], feedrateOverride*overallFactor);
             }
             else if (!hasOption(MotionOption.NoDriverLimit)) {
-                // According to NIST RS274NGC Interpreter - Version 3, Section 2.1.2.5 (p. 7)
-                // the F feed-rate is to be interpreted over the Euclidean linear axis distance of a move 
-                // and in the absence of any linear axes, over the Euclidean rotational distance 
-                // of the move.
-                // https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=823374
+ 
                 if (linearLimits[0] > 0) {
                     // Limit the linear axes limit by the driver feed-rate. 
                     linearLimits[1] = Math.min(linearLimits[1], minDriverFeedrate); 
@@ -368,25 +377,25 @@ public class Motion {
             }
             if (accelerationOverride != 0) {
                 if (linearLimits[0] > 0) {
-                    // Limit the linear axes limit by the driver feed-rate. 
+                    // Limit the linear axes limit by override.
                     linearLimits[2] = Math.min(linearLimits[2], accelerationOverride); 
                 }
                 else  {
-                    // Limit the rotational axes limit by the driver feed-rate?
+                    // Limit the rotational axes limit by the override.
                     rotationalLimits[2] = Math.min(rotationalLimits[2], accelerationOverride); 
                 }
-                //overallLimits[2] = Math.min(overallLimits[2], accelerationOverride); 
+                overallLimits[2] = Math.min(overallLimits[2], accelerationOverride*overallFactor);
             }
             if (jerkOverride != 0) {
                 if (linearLimits[0] > 0) {
-                    // Limit the linear axes limit by the driver feed-rate. 
+                    // Limit the linear axes limit by the override. 
                     linearLimits[3] = Math.min(linearLimits[3], jerkOverride); 
                 }
                 else  {
-                    // Limit the rotational axes limit by the driver feed-rate?
+                    // Limit the rotational axes limit by the override.
                     rotationalLimits[3] = Math.min(rotationalLimits[3], jerkOverride); 
                 }
-                //overallLimits[3] = Math.min(overallLimits[3], jerkOverride); 
+                overallLimits[3] = Math.min(overallLimits[3], jerkOverride*overallFactor); 
             }
             double time = Math.max(
                     linearLimits[0]/linearLimits[1],

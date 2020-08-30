@@ -351,9 +351,7 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
                         double currentAngle = refAxis.getCoordinate();
                         double specifiedAngle = axesLocation.getCoordinate(axis);
                         double newAngle = currentAngle + Utils2D.normalizeAngle180(specifiedAngle - currentAngle);
-                        if (!refAxis.coordinatesMatch(specifiedAngle, newAngle)) {
-                            axesLocation = axesLocation.put(new AxesLocation(refAxis, newAngle));
-                        }
+                        axesLocation = axesLocation.put(new AxesLocation(refAxis, newAngle));
                     }
                     else if (refAxis.isLimitRotation()) {
                         // Set the rotation to be within the +/-180 degree range
@@ -450,6 +448,8 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
             waitForDriverCompletion(hm, completionType);
         }
         // Apply the rotation axes wrap-around handling.
+        // NOTE: unfortunately this does only work when the machine stands still due to a 
+        // Smoothieware bug.
         wrapUpCoordinates();
         // Remove old stuff.
         clearMotionPlanOlderThan(NanosecondTime.getRuntimeSeconds() - maximumPlanHistory);
