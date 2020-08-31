@@ -21,7 +21,9 @@
 
 package org.openpnp.model;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.function.BiFunction;
 
@@ -198,7 +200,7 @@ public class Motion {
      * 
      */
     protected void computeLimitsAndProfile(double feedrateOverride, double accelerationOverride, double jerkOverride) {
-        // Create a distance vector that has only axes mentioned in location1 that at the same time 
+        // Create a distance vector that has only axes mentioned in location that at the same time 
         // do not match coordinates with location0.
         AxesLocation distance = location0.motionSegmentTo(location1);
         final int motionLimitsOrder = 3;
@@ -245,7 +247,7 @@ public class Motion {
                     jMax = Math.min(jMax, jerkOverride);
                 }
 
-                // Compute s0 by distance rather than taking location0, because some axes may have been omitted in location1. 
+                // Compute s0 by distance rather than taking location0, because some axes may have been omitted in location. 
                 double s1 = location1.getCoordinate(axis); 
                 double s0 = s1 - distance.getCoordinate(axis);
                 int options = profileOptions();
@@ -432,7 +434,7 @@ public class Motion {
                         Math.pow(nominalSpeed, 3) // speed factor must be to the power of the order of the derivative
                         *overallLimits[3]*axisFraction;
 
-                // Compute s0 by distance rather than taking location0, because some axes may have been omitted in location1. 
+                // Compute s0 by distance rather than taking location0, because some axes may have been omitted in location. 
                 double s1 = location1.getCoordinate(axis); 
                 double s0 = s1 - distance.getCoordinate(axis);
                 
@@ -551,7 +553,7 @@ public class Motion {
      * @param defaultRate
      * @return The rate in driver units per second^x
      */
-    public Double getNistRate(Driver driver, BiFunction<ControllerAxis, MotionProfile, Double> f, Double defaultRate) {
+    public Double getRS274NGCRate(Driver driver, BiFunction<ControllerAxis, MotionProfile, Double> f, Double defaultRate) {
         Triplet<Double, Double, Double> rate = getRate(driver, f);
         if (rate.first != 0.0) {
             return Length.convertToUnits(rate.first, 
@@ -579,7 +581,7 @@ public class Motion {
         if (driver.getMotionControlType() == MotionControlType.ToolpathFeedRate) {
             return defaultFeedrate;
         }
-        return getNistRate(driver,
+        return getRS274NGCRate(driver,
                 (axis, profile) -> (profile.getProfileVelocity(driver.getMotionControlType())),
                 defaultFeedrate); 
     }
@@ -603,7 +605,7 @@ public class Motion {
         if (driver.getMotionControlType() == MotionControlType.ToolpathFeedRate) {
             return null;
         }
-        return getNistRate(driver,
+        return getRS274NGCRate(driver,
                 (axis, profile) -> (Math.max(profile.getProfileEntryAcceleration(driver.getMotionControlType()), profile.getProfileExitAcceleration(driver.getMotionControlType()))),
                 null);
     }
@@ -615,8 +617,111 @@ public class Motion {
         if (driver.getMotionControlType() == MotionControlType.ToolpathFeedRate) {
             return null;
         }
-        return getNistRate(driver,
+        return getRS274NGCRate(driver,
                 (axis, profile) -> (profile.getProfileJerk(driver.getMotionControlType())),
                 null);
+    }
+
+    static public class MoveToCommand {
+        private AxesLocation location;
+        private AxesLocation movedAxesLocation;
+        private Double feedRatePerSecond;
+        private Double accelerationPerSecond2;
+        private Double jerkPerSecond3;
+
+        public MoveToCommand(AxesLocation location, AxesLocation movedAxesLocation,
+                Double feedRatePerSecond, Double accelerationPerSecond2, Double jerkPerSecond3) {
+            super();
+            this.location = location;
+            this.movedAxesLocation = movedAxesLocation;
+            this.feedRatePerSecond = feedRatePerSecond;
+            this.accelerationPerSecond2 = accelerationPerSecond2;
+            this.jerkPerSecond3 = jerkPerSecond3;
+        }
+
+        public AxesLocation getLocation() {
+            return location;
+        }
+
+        public AxesLocation getMovedAxesLocation() {
+            return movedAxesLocation;
+        }
+
+        public Double getFeedRatePerSecond() {
+            return feedRatePerSecond;
+        }
+        public Double getFeedRatePerMinute() {
+            return feedRatePerSecond*60.0;
+        }
+
+        public Double getAccelerationPerSecond2() {
+            return accelerationPerSecond2;
+        }
+
+        public Double getJerkPerSecond3() {
+            return jerkPerSecond3;
+        }
+
+    }
+
+    /**
+     * Interpolate the Motion using the given timeStep.
+     * 
+     * @param driver
+     * @param timeStep
+     * @return
+     */
+    public List<MoveToCommand> interpolate(Driver driver, double timeStep) {
+        double time = getTime();
+        int numSteps = (int)Math.ceil(time/timeStep/2)*2;
+        List<MoveToCommand> list = new ArrayList<>(numSteps);
+        if (driver.getMotionControlType() != MotionControlType.Simulated3rdOrderControl
+                || numSteps < 4) {
+            // No interpolation, or move too short for interpolation. Just execute as one. 
+            list.add(new MoveToCommand(
+                    getLocation1(),
+                    getMovingAxesTargetLocation(driver),
+                    getFeedRatePerMinute(driver),
+                    getAccelerationPerSecond2(driver),
+                    getJerkPerSecond3(driver)));
+        }
+        else {
+            // Perform the interpolation. 
+            AxesLocation location0 = getMomentaryLocation(0);
+            AxesLocation velocity0 = getMomentaryVelocity(0);
+            double t0 = 0;
+            for (long i = 1; i <= numSteps; i++) {
+                double t1 = i*time/numSteps; 
+                double dt = t1 - t0;
+                AxesLocation location1 = getMomentaryLocation(t1);
+                AxesLocation segment = location0.motionSegmentTo(location1).drivenBy(driver);
+                AxesLocation movedAxesLocation = new AxesLocation(segment.getAxes(driver), 
+                        (axis) -> location1.getLengthCoordinate(axis));
+                AxesLocation velocity1 = getMomentaryVelocity(t1);
+                // Note, this is an approximation if the profile is curved. We could calculate the dot product.
+                // But then again, the controller will perform junction deviation and all bets are off anyway.
+                final AxesLocation vel0 = velocity0;
+                double v0 = segment.getRS274NGCMetric(driver, 
+                        (axis) -> vel0.getCoordinate(axis));
+                double v1 = segment.getRS274NGCMetric(driver, 
+                        (axis) -> velocity1.getCoordinate(axis));
+                // Acceleration is the difference.
+                // TODO: recalc dt 
+                double acceleration = (v1 - v0)/dt;
+                // Add to list.
+                list.add(new MoveToCommand(location1,
+                        movedAxesLocation, // just the axes that are actually moved  
+                        Math.max(Math.abs(v0)+0.01,  Math.abs(v1)+0.01), 
+                        Math.abs(acceleration)+0.01,
+                        null)); // No jerk, we're simulating it, remember?
+                // Next, please.
+                t0 = t1;
+                location0 = location1;
+                velocity0 = velocity1;
+            }
+            // TODO: fuse a long cruising segment into one. 
+            // TODO: re-time it to match the planning time more exactly. 
+        }
+        return list;
     }
 }

@@ -122,7 +122,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     double x = 0, y = 0;
     double z1 = 0, z2 = 0, z3 = 0, z4 = 0;
     double c1 = 0, c2 = 0, c3 = 0, c4 = 0;
-    
+
+    private boolean motionPending;
 
     private ReferenceActuator getOrCreateActuatorInHead(ReferenceHead head, String actuatorName) throws Exception {
         ReferenceActuator a = (ReferenceActuator) head.getActuatorByName(actuatorName);
@@ -598,12 +599,19 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         
         // Store the new location to the axes.
         location.setToDriverCoordinates(this);
+        motionPending = true;
+    }
+
+    @Override
+    public boolean isMotionPending() {
+        return motionPending;
     }
 
     @Override
     public void waitForCompletion(ReferenceHeadMountable hm, 
             CompletionType completionType) throws Exception {
-        // TODO Auto-generated method stub
+        // TODO implement
+        motionPending = false;
     }
 
     @Override

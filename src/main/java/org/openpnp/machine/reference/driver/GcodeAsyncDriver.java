@@ -91,12 +91,20 @@ public class GcodeAsyncDriver extends GcodeDriver {
 
     private WriterThread writerThread;
 
-    protected LinkedBlockingQueue<Line> commandQueue;
-    private Line lastCommand;
-    private long lastTimeout;
+    static public class CommandLine extends Line {
+        final long timeout;
 
-    private long wantedConfirmations;
-    
+        public CommandLine(String line, long timeout) {
+            super(line);
+            this.timeout = timeout;
+        }
+
+        public long getTimeout() {
+            return timeout;
+        }
+    }
+    protected LinkedBlockingQueue<CommandLine> commandQueue;
+
     @Override
     protected void connectThreads() throws Exception {
         super.connectThreads();
@@ -104,7 +112,6 @@ public class GcodeAsyncDriver extends GcodeDriver {
         writerThread = new WriterThread();
         writerThread.setDaemon(true);
         writerThread.start();
-        wantedConfirmations = 0; 
     }
 
     @Override
@@ -130,8 +137,10 @@ public class GcodeAsyncDriver extends GcodeDriver {
 
         @Override
         public void run() {
+            CommandLine lastCommand = null;
+            long wantedConfirmations = 0;
             while (!disconnectRequested) {
-                Line command;
+                CommandLine command;
                 try {
                     command = commandQueue.poll(writerPollingInterval,
                             TimeUnit.MILLISECONDS);
@@ -143,13 +152,26 @@ public class GcodeAsyncDriver extends GcodeDriver {
                     continue;
                 }
                 try {
+                    if (confirmationFlowControl && lastCommand != null) {
+                        // Before we can send the new command, make sure the wanted confirmation count of the last command was received.
+                        waitForConfirmation(lastCommand.toString(), lastCommand.getTimeout(), wantedConfirmations);
+                    }
+                    // Set up the wanted confirmations for next time.
+                    wantedConfirmations = receivedConfirmations.get() + 1;
+                    lastCommand = command;
                     getCommunications().writeLine(command.line);
+                    //Logger.trace("[{}] >> {}", getCommunications().getConnectionName(), command);
                 }
                 catch (IOException e) {
                     Logger.error("Write error", e);
                     return;
                 }
-                Logger.trace("[{}] >> {}", getCommunications().getConnectionName(), command);
+                catch (Exception e) {
+                    // We probably got a timeout exception. We can't throw from the writer thread. Therefore, set 
+                    // the exception as an error response, it will be reported when the driver wants to do the next step. 
+                    errorResponse = new Line(e.getMessage());
+                    //Logger.error("[{}] {}", getCommunications().getConnectionName(), e);
+                }
             }
         }
     }
@@ -174,21 +196,19 @@ public class GcodeAsyncDriver extends GcodeDriver {
 
         Logger.debug("{} sendCommand({}, {})...", getCommunications().getConnectionName(), command, timeout);
         command = preProcessCommand(command);
-        Line commandLine = new Line(command);
-        if (confirmationFlowControl) {
-            // Before we can send the new command, make sure the wanted confirmations of the last commands were received.
-            waitForConfirmation(lastCommand.toString(), lastTimeout, wantedConfirmations);
-            // Set up the wanted confirmations for next time.
-            wantedConfirmations = receivedConfirmations.get() + 1;
-            lastCommand = commandLine;
-        }
+        CommandLine commandLine = new CommandLine(command, timeout);
         commandQueue.offer(commandLine, writerQueueTimeout, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public void waitForCompletion(ReferenceHeadMountable hm, 
             CompletionType completionType) throws Exception {
+        if (!isMotionPending()) {
+            return;
+        }
+        // Issue the M400 in the super class.
         super.waitForCompletion(hm, completionType);
+        // Then make sure we get a uniquely recognizable confirmation. 
         if (completionType.isWaitingForDrivers()) {
             // Explicitly wait for the controller's acknowledgment here. 
             // This is signaled with a position report.

@@ -37,6 +37,7 @@ import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.Machine;
+import org.openpnp.util.Triplet;
 
 /**
  * Like the classic OpenPnP Location, the AxesLocation stores a set of coordinates. However AxesLocation 
@@ -545,4 +546,51 @@ public class AxesLocation {
         return Math.sqrt(sumSq);
     }
 
+    /**
+     * Get the Euclidean metric i.e. the distance in N-dimensional space of the AxesLocation 
+     * using the given function. 
+     * 
+     * @param driver The driver for which the rate is calculated i.e. for the axes mapped to it.
+     * @param f The function to be applied to the AxesLocation to obtain the metric.
+     * @return a Triplet with <linear, rotational, overall> Euclidean rate.
+     */
+    public Triplet<Double, Double, Double> getEuclideanMetric(Driver driver, Function<ControllerAxis, Double> f) {
+        double linearRate = 0;
+        double rotationalRate = 0;
+        double euclideanRate = 0;
+        for (ControllerAxis axis : getAxes(driver)) {
+            double val =  f.apply(axis);
+            if (axis.isRotationalOnController()) {
+                rotationalRate += Math.pow(val, 2);
+            }
+            else {
+                linearRate += Math.pow(val, 2);
+            }
+            euclideanRate += Math.pow(val, 2);
+        }
+        linearRate = Math.sqrt(linearRate);
+        rotationalRate = Math.sqrt(rotationalRate);
+        euclideanRate = Math.sqrt(euclideanRate);
+        return new Triplet<Double, Double, Double>(linearRate, rotationalRate, euclideanRate);
+    }
+
+    /**
+     * Get the metric according to NIST RS274NGC Interpreter - Version 3, Section 2.1.2.5 (p. 7).
+     * The rate is to be interpreted over the Euclidean linear axis distance of a move 
+     * and in the absence of any linear axes, over the Euclidean angular distance of the move.
+     * @see https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=823374
+     *
+     * @param driver
+     * @param f
+     * @return
+     */
+    public Double getRS274NGCMetric(Driver driver, Function<ControllerAxis, Double> f) {
+        Triplet<Double, Double, Double> rates = getEuclideanMetric(driver, f);
+        if (rates.first != null && rates.first != 0) {
+            return rates.first; 
+        }
+        else {
+            return rates.second;
+        }        
+    }
 }

@@ -45,7 +45,11 @@ public interface Driver extends Identifiable, Named, Closeable, WizardConfigurab
          */
         SimpleSCurve,
 
-        //TODO: Simulated3rdOrderControl,
+        /**
+         * Apply motion planning assuming a controller constant acceleration motion control but
+         * simulating 3rd order control with time step interpolation.  
+         */
+        Simulated3rdOrderControl,
 
         /**
          * Apply motion planning assuming a controller with full 3rd order motion control. 

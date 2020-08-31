@@ -91,6 +91,12 @@ public interface ReferenceDriver extends Driver, WizardConfigurable, PropertyShe
     public AxesLocation getMomentaryLocation() throws Exception;
 
     /**
+     * @return true if a motion is still assumed to be pending, i.e. waitForCompletion() has not yet been called.  
+     * 
+     */
+    public boolean isMotionPending();
+
+    /**
      * Perform a coordinated wait for completion. This must be issued before capturing camera frames etc.
      * 
      * @param hm The HeadMountable to wait for. If null, wait for all the axes on the driver. Most drivers/controllers will probably 

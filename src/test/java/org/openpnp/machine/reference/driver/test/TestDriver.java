@@ -196,6 +196,11 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
         public Length getFeedRatePerSecond() {
             return null;
         }
+
+        @Override
+        public boolean isMotionPending() {
+            return false;
+        }
    }
 
     @Override
@@ -257,5 +262,10 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
     public void migrateDriver(ReferenceMachine machine) throws Exception {
         machine.addDriver(this);
         createAxisMappingDefaults(machine);
+    }
+
+    @Override
+    public boolean isMotionPending() {
+        return false;
     }
 }

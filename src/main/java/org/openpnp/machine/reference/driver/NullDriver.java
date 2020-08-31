@@ -61,6 +61,8 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
      */
     private AxesLocation homingOffsets = new AxesLocation();
 
+    private boolean motionPending;
+
     @Override
     public void home(ReferenceMachine machine) throws Exception {
         Logger.debug("home()");
@@ -114,7 +116,13 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
             // Store to axes
             newDriverLocation.setToDriverCoordinates(this);
             Logger.debug("Machine new location {}", newDriverLocation);
+            motionPending = true;
         }
+    }
+
+    @Override
+    public boolean isMotionPending() {
+        return motionPending;
     }
 
     @Override
@@ -125,6 +133,7 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
                 .hasOption(Motion.MotionOption.Stillstand)) {
             Thread.sleep(1);
         }
+        motionPending = false;
     }
 
     @Override

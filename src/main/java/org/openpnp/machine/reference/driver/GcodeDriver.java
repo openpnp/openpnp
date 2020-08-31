@@ -244,7 +244,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     boolean disconnectRequested;
     protected boolean connected;
     
-    public class Line {
+    static public class Line {
         final String line;
         final double transmissionTime;
 
@@ -274,9 +274,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     protected LinkedBlockingQueue<Line> responseQueue = new LinkedBlockingQueue<>();
     
     protected AtomicLong receivedConfirmations = new AtomicLong();
-    private Line errorResponse;
+    protected Line errorResponse;
     private AxesLocation lastMomentaryLocation;
     private double lastMomentaryTime;
+    private boolean motionPending;
+
+    @Attribute(required = false)
+    private double interpolationTimeStep = 0.01;
 
     @Commit
     public void commit() {
@@ -554,134 +558,147 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Override
     public void moveTo(ReferenceHeadMountable hm, Motion motion)
             throws Exception {
-        // Get the axes that are actually moving.
-        AxesLocation location = motion.getMovingAxesTargetLocation(this);
-        Double feedRate = motion.getFeedRatePerMinute(this);
-        Double acceleration = motion.getAccelerationPerSecond2(this);
-        Double jerk = motion.getJerkPerSecond3(this);
-
-        // Start composing the command, will decide later, whether we actually send it.
-        String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
-        if (command == null) {
-            return;
-        }
-        if (hasVariable(command, "BacklashFeedRate")) {
-            throw new Exception(getName()+" configuration upgrade needed: Please remove the extra backlash compensation move from your MOVE_TO_COMMAND. "
-                    +"Backlash compensation is now done outside of the drivers.");
-        }
-
-        command = substituteVariable(command, "Id", hm.getId());
-        command = substituteVariable(command, "Name", hm.getName());
-        command = substituteVariable(command, "FeedRate", feedRate);
-        command = substituteVariable(command, "Acceleration", acceleration);
-        command = substituteVariable(command, "Jerk", jerk);
-        
-        if (this.usingLetterVariables && this.supportingPreMove) {
-            throw new Exception(getName()+" configuration error: Using Letter Variables and Pre-Move Commands at the same time is not supported.");
-        }
-
-        ReferenceMachine machine = (ReferenceMachine) hm.getHead().getMachine();
-        // Get a map of the axes of ...
-        AxesLocation mappedAxes = (this.usingLetterVariables ?
-                motion.getLocation1()          // ... all the axes in case of using letter variables
-                : hm.getMappedAxes(machine))   // ... just the HeadMountable in case of using type variables
-                .drivenBy(this);               // ... but just those driven by this driver.
-        // Go through all the axes variables and handle them.
-        boolean doesMove = false;
-        for (String variable : getAxisVariables(machine)) {
-            // Note, if the axis is included in the location, this means it actually changes the coordinate in resolution steps. 
-            // The resolution stepping is used to suppress artificial coordinate changes due to floating point artifacts from transformations etc. 
-            // If set up correctly, this also suppresses "rounded-to-nothing" moves due to MOVE_TO_COMMANDs format specifier (usually %.4f).
-            ControllerAxis axis = location.getAxisByVariable(this, variable);
-            if (axis == null) {
-                // Axis not moved. Might still be forced.
-
-                // If the command has forced-output coordinate variables "XF", "YF", "ZF" etc., 
-                // always include the corresponding axis in the command.
-                // This may be employed for axes, where OpenPNP cannot keep track when an axis has physically 
-                // moved behind its back. By always forcing the axis coordinate output, the controller will take care 
-                // of restoring the axis position, if necessary.  
-                // As we are always moving in absolute coordinates this has no ill effect if it results in no 
-                // position change after all. 
-                // Note, there is no need for separate backlash compensation variables, as these are always 
-                // substituted alongside. 
-                if (hasVariable(command, variable+"F")) {
-                    // Force it! Must get it from the mappedAxes. If the mappedAxes do not have it, it is 
-                    // still suppressed (this never happens when using letter variables). 
-                    axis = mappedAxes.getAxisByVariable(this, variable);
-                }
+        for (Motion.MoveToCommand move : motion.interpolate(this, interpolationTimeStep)) {
+            // Get the axes that are actually moving.
+            AxesLocation movedAxesLocation = move.getMovedAxesLocation();
+            AxesLocation allAxesLocation = move.getLocation();
+            Double feedRate = move.getFeedRatePerMinute();
+            Double acceleration = move.getAccelerationPerSecond2();
+            Double jerk = move.getJerkPerSecond3();
+    
+            // Start composing the command, will decide later, whether we actually send it.
+            String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
+            if (command == null) {
+                return;
             }
-            if (axis != null) {
-                // The move is definitely on. 
-                doesMove = true;
-                // TODO: discuss whether we should round to axis resolution here.
-                double coordinate = motion.getLocation1().getCoordinate(axis); 
-                double previousCoordinate = axis.getCoordinate(); 
-                int direction = ((Double)coordinate).compareTo(previousCoordinate);
-                // Substitute the axis variables.
-                command = substituteVariable(command, variable, coordinate);
-                command = substituteVariable(command, variable+"F", coordinate);
-                command = substituteVariable(command, variable+"L", axis.getLetter());
-                if (hasVariable(command, "BacklashOffset"+variable)) {
-                    throw new Exception(getName()+" configuration upgrade needed: Please remove the extra backlash compensation move from your MOVE_TO_COMMAND. "
-                            +"Backlash compensation is now done outside of the drivers.");
-                }
-                command = substituteVariable(command, variable+"Decreasing", direction < 0 ? true : null);
-                command = substituteVariable(command, variable+"Increasing", direction > 0 ? true : null);
-                if (isSupportingPreMove() && axis instanceof ReferenceControllerAxis) {
-                    // Check for a pre-move command.
-                    String preMoveCommand = ((ReferenceControllerAxis) axis).getPreMoveCommand();
-                    if (preMoveCommand != null && !preMoveCommand.isEmpty()) {
-                        preMoveCommand = substituteVariable(preMoveCommand, "Coordinate", previousCoordinate);
-                        sendGcode(preMoveCommand);
+            if (hasVariable(command, "BacklashFeedRate")) {
+                throw new Exception(getName()+" configuration upgrade needed: Please remove the extra backlash compensation move from your MOVE_TO_COMMAND. "
+                        +"Backlash compensation is now done outside of the drivers.");
+            }
+    
+            command = substituteVariable(command, "Id", hm.getId());
+            command = substituteVariable(command, "Name", hm.getName());
+            command = substituteVariable(command, "FeedRate", feedRate);
+            command = substituteVariable(command, "Acceleration", acceleration);
+            command = substituteVariable(command, "Jerk", jerk);
+            
+            if (this.usingLetterVariables && this.supportingPreMove) {
+                throw new Exception(getName()+" configuration error: Using Letter Variables and Pre-Move Commands at the same time is not supported.");
+            }
+    
+            ReferenceMachine machine = (ReferenceMachine) hm.getHead().getMachine();
+            // Get a map of the axes of ...
+            AxesLocation mappedAxes = (this.usingLetterVariables ?
+                    allAxesLocation                // ... all the axes in case of using letter variables
+                    : hm.getMappedAxes(machine))   // ... just the HeadMountable in case of using type variables
+                    .drivenBy(this);               // ... but just those driven by this driver.
+            // Go through all the axes variables and handle them.
+            boolean doesMove = false;
+            for (String variable : getAxisVariables(machine)) {
+                // Note, if the axis is included in the location, this means it actually changes the coordinate in resolution steps. 
+                // The resolution stepping is used to suppress artificial coordinate changes due to floating point artifacts from transformations etc. 
+                // If set up correctly, this also suppresses "rounded-to-nothing" moves due to MOVE_TO_COMMANDs format specifier (usually %.4f).
+                ControllerAxis axis = movedAxesLocation.getAxisByVariable(this, variable);
+                if (axis == null) {
+                    // Axis not moved. Might still be forced.
+    
+                    // If the command has forced-output coordinate variables "XF", "YF", "ZF" etc., 
+                    // always include the corresponding axis in the command.
+                    // This may be employed for axes, where OpenPNP cannot keep track when an axis has physically 
+                    // moved behind its back. By always forcing the axis coordinate output, the controller will take care 
+                    // of restoring the axis position, if necessary.  
+                    // As we are always moving in absolute coordinates this has no ill effect if it results in no 
+                    // position change after all. 
+                    // Note, there is no need for separate backlash compensation variables, as these are always 
+                    // substituted alongside. 
+                    if (hasVariable(command, variable+"F")) {
+                        // Force it! Must get it from the mappedAxes. If the mappedAxes do not have it, it is 
+                        // still suppressed (this never happens when using letter variables). 
+                        axis = mappedAxes.getAxisByVariable(this, variable);
                     }
                 }
-                // Store the new driver coordinate on the axis.
-                axis.setDriverCoordinate(coordinate);
+                if (axis != null) {
+                    // The move is definitely on. 
+                    doesMove = true;
+                    // TODO: discuss whether we should round to axis resolution here.
+                    double coordinate = allAxesLocation.getCoordinate(axis); 
+                    double previousCoordinate = axis.getDriverCoordinate(); 
+                    int direction = ((Double)coordinate).compareTo(previousCoordinate);
+                    // Substitute the axis variables.
+                    command = substituteVariable(command, variable, coordinate);
+                    command = substituteVariable(command, variable+"F", coordinate);
+                    command = substituteVariable(command, variable+"L", axis.getLetter());
+                    if (hasVariable(command, "BacklashOffset"+variable)) {
+                        throw new Exception(getName()+" configuration upgrade needed: Please remove the extra backlash compensation move from your MOVE_TO_COMMAND. "
+                                +"Backlash compensation is now done outside of the drivers.");
+                    }
+                    command = substituteVariable(command, variable+"Decreasing", direction < 0 ? true : null);
+                    command = substituteVariable(command, variable+"Increasing", direction > 0 ? true : null);
+                    if (isSupportingPreMove() && axis instanceof ReferenceControllerAxis) {
+                        // Check for a pre-move command.
+                        String preMoveCommand = ((ReferenceControllerAxis) axis).getPreMoveCommand();
+                        if (preMoveCommand != null && !preMoveCommand.isEmpty()) {
+                            preMoveCommand = substituteVariable(preMoveCommand, "Coordinate", previousCoordinate);
+                            sendGcode(preMoveCommand);
+                        }
+                    }
+                    // Store the new driver coordinate on the axis.
+                    axis.setDriverCoordinate(coordinate);
+                }
+                else {
+                    // Delete the unused axis variables.
+                    command = substituteVariable(command, variable, null);
+                    command = substituteVariable(command, variable+"F", null);
+                    command = substituteVariable(command, variable+"L", null); 
+                    command = substituteVariable(command, "BacklashOffset"+variable, null);
+                    command = substituteVariable(command, variable+"Decreasing", null);
+                    command = substituteVariable(command, variable+"Increasing", null);
+                }
             }
-            else {
-                // Delete the unused axis variables.
-                command = substituteVariable(command, variable, null);
-                command = substituteVariable(command, variable+"F", null);
-                command = substituteVariable(command, variable+"L", null); 
-                command = substituteVariable(command, "BacklashOffset"+variable, null);
-                command = substituteVariable(command, variable+"Decreasing", null);
-                command = substituteVariable(command, variable+"Increasing", null);
-            }
-        }
-        if (doesMove) {
-            // We do actually send the command. 
-            sendGcode(command);
-
-            // TODO: determine if it is technically possible to move this to waitForCompletion() with the 
-            // responses correctly associated. It has been discussed, that using N letter line numbers could
-            // help. 
-            // See: https://groups.google.com/g/openpnp/c/bEVZvYoXO98/m/Cc0VxGGYBwAJ
-
-            /*
-             * If moveToCompleteRegex is specified we need to wait until we match the regex in a
-             * response before continuing. We first search the initial responses from the
-             * command for the regex. If it's not found we then collect responses for up to
-             * timeoutMillis while searching the responses for the regex. As soon as it is
-             * matched we continue. If it's not matched within the timeout we throw an
-             * Exception.
-             */
-            String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
-            if (moveToCompleteRegex != null) {
-                receiveResponses(moveToCompleteRegex, timeoutMilliseconds, (responses) -> {
-                    throw new Exception("Timed out waiting for move to complete.");
-                });
+            if (doesMove) {
+                // We do actually send the command.
+                motionPending = true;
+                sendGcode(command);
             }
         }
     }
 
     @Override
+    public boolean isMotionPending() {
+        return motionPending;
+    }
+
+    @Override
     public void waitForCompletion(ReferenceHeadMountable hm, 
             CompletionType completionType) throws Exception {
+        if (!motionPending) {
+            return;
+        }
         String command = getCommand(hm, CommandType.MOVE_TO_COMPLETE_COMMAND);
         if (command != null) {
             sendGcode(command);
         }
+
+        // TODO: determine if it is technically possible to have the responses correctly associated if this is a 
+        // multi-move. It has been discussed, that using N letter line numbers could help. 
+        // See: https://groups.google.com/g/openpnp/c/bEVZvYoXO98/m/Cc0VxGGYBwAJ
+
+        /*
+         * If moveToCompleteRegex is specified we need to wait until we match the regex in a
+         * response before continuing. We first search the initial responses from the
+         * command for the regex. If it's not found we then collect responses for up to
+         * timeoutMillis while searching the responses for the regex. As soon as it is
+         * matched we continue. If it's not matched within the timeout we throw an
+         * Exception.
+         */
+        String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
+        if (moveToCompleteRegex != null) {
+            receiveResponses(moveToCompleteRegex, timeoutMilliseconds, (responses) -> {
+                throw new Exception("Timed out waiting for move to complete.");
+            });
+        }
+        // Remember, we're now standing still.  
+        motionPending = false;
     }
 
     private boolean containsMatch(List<Line> responses, String regex) {
