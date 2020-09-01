@@ -55,11 +55,58 @@ public abstract class ReferenceDriverCommunications {
 
     abstract public String getConnectionName();
 
-    abstract public String readLine() throws TimeoutException, IOException;
-    abstract public void writeLine(String data) throws IOException;
+    abstract public void writeBytes(byte[] data) throws IOException;
 
     abstract public int read() throws TimeoutException, IOException;
-    abstract public void write(int d) throws IOException;
+
+    /**
+     * Read a line from the input stream. Blocks for the default timeout. If the read times out a
+     * TimeoutException is thrown. Any other failure to read results in an IOExeption;
+     *
+     * @return
+     * @throws TimeoutException
+     * @throws IOException
+     */
+    public String readLine() throws TimeoutException, IOException {
+        return readUntil("\r\n");
+    }
+
+    public void writeLine(String data) throws IOException {
+        writeBytes(data.getBytes());
+        writeBytes(getLineEndingType().getLineEnding().getBytes());
+    }
+
+    /**
+     * Read the input stream until one of the characters is found. Blocks for the default timeout. If the read times out
+     * a TimeoutException is thrown. Any other failure to read results in an IOExeption;
+     *
+     * @param characters list of ending characters
+     * @return
+     * @throws TimeoutException
+     * @throws IOException
+     */
+    public String readUntil(String characters) throws TimeoutException, IOException {
+        StringBuffer line = new StringBuffer();
+        while (true) {
+            int ch = read();
+            if (ch == -1) {
+                return null;
+            }
+            else if (characters.indexOf((char)ch) >= 0) {
+                if (line.length() > 0) {
+                    return line.toString();
+                }
+            }
+            else {
+                line.append((char) ch);
+            }
+        }
+    }
+
+    public void write(int d) throws IOException {
+        byte[] b = new byte[] { (byte) d };
+        writeBytes(b);
+    }
     
     public void setLineEndingType(LineEndingType lineEndingType) {
         this.lineEndingType = lineEndingType;
