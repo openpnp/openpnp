@@ -41,30 +41,38 @@ public class LogEntryListModel extends AbstractListModel<LogEntry> implements Wr
 
     private static final int LINE_LIMIT = 10000;
 
-    public List<LogEntry> getOriginalLogEntries() {
-        return originalLogEntries;
+    /**
+     * Returns a snapshot copy of the original log entries.
+     * @return 
+     */
+    public synchronized List<LogEntry> getOriginalLogEntries() {
+        return new ArrayList<>(originalLogEntries);
     }
 
-    public List<LogEntry> getFilteredLogEntries() {
-        return filteredLogEntries;
+    /**
+     * Returns a snapshot copy of the filtered log entries.
+     * @return
+     */
+    public synchronized List<LogEntry> getFilteredLogEntries() {
+        return new ArrayList<>(filteredLogEntries);
     }
 
     @Override
-    public int getSize() {
+    public synchronized int getSize() {
         return filteredLogEntries.size();
     }
 
     @Override
-    public LogEntry getElementAt(int index) {
+    public synchronized LogEntry getElementAt(int index) {
         return filteredLogEntries.get(index);
     }
 
-    public void addFilter(LogEntryFilter filter) {
+    public synchronized void addFilter(LogEntryFilter filter) {
         this.filters.add(filter);
         filter();
     }
 
-    public void removeFilter(LogEntryFilter filter) {
+    public synchronized void removeFilter(LogEntryFilter filter) {
         this.filters.remove(filter);
         filter();
     }
@@ -80,17 +88,17 @@ public class LogEntryListModel extends AbstractListModel<LogEntry> implements Wr
     }
 
     @Override
-    public void write(LogEntry logEntry) throws Exception {
+    public synchronized void write(LogEntry logEntry) throws Exception {
         originalLogEntries.add(logEntry);
         trim();
     }
 
-    public void clear() {
+    public synchronized void clear() {
         this.originalLogEntries.clear();
         filter();
     }
 
-    public void filter() {
+    public synchronized void filter() {
         // Reduce all filters to a single one and apply it to our logEntries
         this.filteredLogEntries = originalLogEntries.stream().filter(
                 filters.stream().map(LogEntryFilter::getFilter).reduce(Predicate::and).orElse(t -> false)
@@ -99,7 +107,7 @@ public class LogEntryListModel extends AbstractListModel<LogEntry> implements Wr
         SwingUtilities.invokeLater(() -> fireContentsChanged(this, 0, filteredLogEntries.size() - 1));
     }
 
-    private void trim() {
+    private synchronized void trim() {
         if (originalLogEntries.size() > LINE_LIMIT) {
             originalLogEntries.subList(0, originalLogEntries.size() - LINE_LIMIT).clear();
         }
