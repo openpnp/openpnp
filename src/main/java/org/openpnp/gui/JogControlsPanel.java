@@ -158,14 +158,28 @@ public class JogControlsPanel extends JPanel {
         return boardProtectionOverrideCheck.isSelected();
     }
 
-    private void jog(final int x, final int y, final int z, final int c) {
+    public void jog(final int x, final int y, final int z, final int c) {
         UiUtils.submitUiMachineTask(() -> {
             HeadMountable tool = machineControlsPanel.getSelectedTool();
             jogTool(x, y, z, c, tool);
         });
     }
 
-    public void jogTool(final int x, final int y, final int z, final int c, HeadMountable tool)
+    public void jogValue(final double x, final double y, final double z, final double c) {
+        UiUtils.submitUiMachineTask(() -> {
+            HeadMountable tool = machineControlsPanel.getSelectedTool();
+            jogToolValue(x, y, z, c, tool);
+        });
+    }
+    
+    public void jogTool(final int x, final int y, final int z, final int c, HeadMountable tool) throws Exception {
+    	double jogIncrement =
+                new Length(getJogIncrement(), configuration.getSystemUnits()).getValue();
+        jogToolValue(x*jogIncrement, y*jogIncrement, z*jogIncrement, c*jogIncrement, tool);
+    	
+    }
+    
+    public void jogToolValue(final double x, final double y, final double z, final double c, HeadMountable tool)
             throws Exception {
         Location l = tool.getLocation()
                          .convertToUnits(Configuration.get()
@@ -175,36 +189,10 @@ public class JogControlsPanel extends JPanel {
         double zPos = l.getZ();
         double cPos = l.getRotation();
 
-        double jogIncrement =
-                new Length(getJogIncrement(), configuration.getSystemUnits()).getValue();
-
-        if (x > 0) {
-            xPos += jogIncrement;
-        }
-        else if (x < 0) {
-            xPos -= jogIncrement;
-        }
-
-        if (y > 0) {
-            yPos += jogIncrement;
-        }
-        else if (y < 0) {
-            yPos -= jogIncrement;
-        }
-
-        if (z > 0) {
-            zPos += jogIncrement;
-        }
-        else if (z < 0) {
-            zPos -= jogIncrement;
-        }
-
-        if (c > 0) {
-            cPos += jogIncrement;
-        }
-        else if (c < 0) {
-            cPos -= jogIncrement;
-        }
+        xPos += x;
+        yPos += y;
+        zPos += z;
+        cPos += c;
 
         Location targetLocation = new Location(l.getUnits(), xPos, yPos, zPos, cPos);
         if (!this.getBoardProtectionOverrideEnabled()) {
