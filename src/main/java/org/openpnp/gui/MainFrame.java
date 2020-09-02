@@ -20,6 +20,7 @@
 package org.openpnp.gui;
 
 import java.awt.AWTEvent;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Desktop;
@@ -90,6 +91,7 @@ import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.gui.support.RotationCellValue;
+import org.openpnp.machine.reference.driver.TcpCommunications;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.pmw.tinylog.Logger;
@@ -98,6 +100,8 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+
+import org.openpnp.tcpServer.TcpServer;
 
 /**
  * The main window of the application.
@@ -153,6 +157,8 @@ public class MainFrame extends JFrame {
     private Map<KeyStroke, Action> hotkeyActionMap;
     
     private UndoManager undoManager = new UndoManager();
+    
+    private TcpServer tcpServer;
 
     public static MainFrame get() {
         return mainFrame;
@@ -681,6 +687,8 @@ public class MainFrame extends JFrame {
 	        }
 	    }
         splitWindows();
+        
+        tcpServer = new TcpServer(machineControlsPanel.getJobPanel(), machineControlsPanel.getJogControlsPanel());
     }
 
     // 20161222 - ldpgh/lutz_dd
