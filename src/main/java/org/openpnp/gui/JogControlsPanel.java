@@ -176,7 +176,6 @@ public class JogControlsPanel extends JPanel {
     	double jogIncrement =
                 new Length(getJogIncrement(), configuration.getSystemUnits()).getValue();
         jogToolValue(x*jogIncrement, y*jogIncrement, z*jogIncrement, c*jogIncrement, tool);
-    	
     }
     
     public void jogToolValue(final double x, final double y, final double z, final double c, HeadMountable tool)
