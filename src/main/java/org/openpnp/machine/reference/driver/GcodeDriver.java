@@ -279,9 +279,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     private double lastMomentaryTime;
     private boolean motionPending;
 
-    @Attribute(required = false)
-    private double interpolationTimeStep = 0.01;
-
     @Commit
     public void commit() {
         super.commit();
@@ -490,9 +487,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         lastMomentaryLocation = null;
         sendGcode(command, -1);
         // Blocking queue?
-        long t1 = (timeoutMilliseconds == -1) ?
+        long timeout = getTimeoutAtMachineSpeed();
+        long t1 = (timeout == -1) ?
                 Long.MAX_VALUE
-                : System.currentTimeMillis() + timeoutMilliseconds;
+                : System.currentTimeMillis() + timeout;
         do { 
             if (lastMomentaryLocation != null) {
                 Logger.trace("Got lastMomentaryLocation");
@@ -558,7 +556,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Override
     public void moveTo(ReferenceHeadMountable hm, Motion motion)
             throws Exception {
-        for (Motion.MoveToCommand move : motion.interpolate(this, interpolationTimeStep)) {
+        for (Motion.MoveToCommand move : motion.interpolatedMoveToCommands(this,
+                getInterpolationMaxSteps(), getInterpolationTimeStep(), getInterpolationDistStep())) {
             // Get the axes that are actually moving.
             AxesLocation movedAxesLocation = move.getMovedAxesLocation();
             AxesLocation allAxesLocation = move.getLocation();
@@ -676,7 +675,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         }
         String command = getCommand(hm, CommandType.MOVE_TO_COMPLETE_COMMAND);
         if (command != null) {
-            sendGcode(command);
+            sendGcode(command, getTimeoutAtMachineSpeed());
         }
 
         // TODO: determine if it is technically possible to have the responses correctly associated if this is a 
@@ -693,7 +692,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
          */
         String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
         if (moveToCompleteRegex != null) {
-            receiveResponses(moveToCompleteRegex, timeoutMilliseconds, (responses) -> {
+            receiveResponses(moveToCompleteRegex, getTimeoutAtMachineSpeed(), (responses) -> {
                 throw new Exception("Timed out waiting for move to complete.");
             });
         }
@@ -828,8 +827,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     protected void disconnectThreads() {
         try {
             if (readerThread != null && readerThread.isAlive()) {
-                // Bump the thread if it is in a blocking wait.
-                readerThread.interrupt();
                 readerThread.join(3000);
             }
         }
@@ -845,6 +842,12 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
     protected void sendGcode(String gCode) throws Exception {
         sendGcode(gCode, timeoutMilliseconds);
+    }
+
+    protected long getTimeoutAtMachineSpeed() {
+        return timeoutMilliseconds == -1 ?
+                timeoutMilliseconds 
+                : Math.round(timeoutMilliseconds/Math.max(0.05, Configuration.get().getMachine().getSpeed()));
     }
 
     protected void sendGcode(String gCode, long timeout) throws Exception {
@@ -1018,7 +1021,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             trailingZeroes = compressDecimal(trailingZeroes, compressedCommand);
             decimal = false;
             command = compressedCommand.toString();
-            Logger.trace("Preprocessed Gcode: {}", command);
+            Logger.trace("Compressed Gcode: {}", command);
         }
         if (backslashEscapedCharactersEnabled) {
             command = unescape(command);
@@ -1056,12 +1059,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     return;
                 }
                 Line line = new Line(receivedLine);
-                Logger.debug("[{}] << {}", getCommunications().getConnectionName(), line);
+                Logger.trace("[{}] << {}", getCommunications().getConnectionName(), line);
                 // Process the response.
                 processResponse(line);
                 // Add to the responseQueue for further processing by the caller.
                 responseQueue.offer(line);
             }
+            Logger.trace("[{}] diconnectRequested, bye-bye.", getCommunications().getConnectionName());
         }
     }
 
@@ -1265,6 +1269,20 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         this.supportingPreMove = supportingPreMove;
     }
 
+    public int getInterpolationMaxSteps() {
+        // Not supported.
+        return 0;
+    }
+
+    public double getInterpolationTimeStep() {
+        // Not supported.
+        return Double.POSITIVE_INFINITY;
+    }
+
+    public int getInterpolationDistStep() {
+        // Not supported.
+        return Integer.MAX_VALUE;
+    }
 
     @Deprecated
     public Axis getLegacyAxis(HeadMountable hm, Type type) {

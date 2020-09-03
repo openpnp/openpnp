@@ -1,0 +1,125 @@
+package org.openpnp.machine.reference.driver.wizards;
+
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.border.TitledBorder;
+
+import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.DoubleConverter;
+import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.machine.reference.driver.GcodeDriver;
+import org.openpnp.model.Configuration;
+
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
+
+public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
+    private final GcodeDriver driver;
+    private JCheckBox confirmationFlowControl;
+    private JTextField interpolationTimeStep;
+    private JTextField interpolationDistStep;
+    private JTextField interpolationMaxSteps;
+
+    public GcodeAsyncDriverSettings(GcodeDriver driver) {
+        this.driver = driver;
+
+        JPanel settingsPanel = new JPanel();
+        settingsPanel.setBorder(new TitledBorder(null, "Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(settingsPanel);
+        settingsPanel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        JPanel interpolationPanel = new JPanel();
+        interpolationPanel.setBorder(new TitledBorder(null, "Interpolation Motion Control", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(interpolationPanel);
+        interpolationPanel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("fill:default:grow"),}));
+
+        JLabel lblMaximumNumberOf = new JLabel("Maximum Number of Steps");
+        interpolationPanel.add(lblMaximumNumberOf, "2, 2, right, default");
+
+        interpolationMaxSteps = new JTextField();
+        interpolationPanel.add(interpolationMaxSteps, "4, 2");
+        interpolationMaxSteps.setColumns(10);
+
+        JLabel lblInterpolationTimeStep = new JLabel("Minimum Step Time [s]");
+        interpolationPanel.add(lblInterpolationTimeStep, "2, 4, right, default");
+        lblInterpolationTimeStep.setToolTipText("<html>\r\n<p>The minimal time step used to interpolate advanced motion paths. Specified in seconds.</p>\r\n</html>\r\n");
+
+        interpolationTimeStep = new JTextField();
+        interpolationPanel.add(interpolationTimeStep, "4, 4");
+        interpolationTimeStep.setColumns(10);
+
+        JLabel lblInterpolationMinimumTicks = new JLabel("Minimum Axis Resolution Ticks");
+        interpolationPanel.add(lblInterpolationMinimumTicks, "2, 6, right, default");
+        lblInterpolationMinimumTicks.setToolTipText("<html>\r\n<p>Minimum step axis distance used to interpolate advanced motion paths.</p>\r\n<p>This is given in resolution ticks of the axes.</p>\r\n</html>\r\n");
+
+        interpolationDistStep = new JTextField();
+        interpolationPanel.add(interpolationDistStep, "4, 6");
+        interpolationDistStep.setColumns(10);
+
+        JLabel lblConfirmationFlowControl = new JLabel("Confimation Flow Control");
+        lblConfirmationFlowControl.setToolTipText("<html>\r\n<p>The communication with the controller is flow-controlled by awaiting the \"ok\"<br/>\r\nbefore sending the next command. </p>\r\n<p>This is slower than other types of flow control such as RTS/CTS on a serial connection, so <br/>\r\nthe latter should be preferred.</p>\r\n</html>");
+        settingsPanel.add(lblConfirmationFlowControl, "2, 2, right, default");
+
+        confirmationFlowControl = new JCheckBox("");
+        settingsPanel.add(confirmationFlowControl, "4, 2");
+
+    }
+
+    @Override
+    public void createBindings() {
+        IntegerConverter intConverter = new IntegerConverter();
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+        //DoubleConverter doubleConverterFine = new DoubleConverter("%f");
+
+        addWrappedBinding(driver, "confirmationFlowControl", confirmationFlowControl, "selected");
+        addWrappedBinding(driver, "interpolationMaxSteps", interpolationMaxSteps, "text", intConverter);
+        addWrappedBinding(driver, "interpolationTimeStep", interpolationTimeStep, "text", doubleConverter);
+        addWrappedBinding(driver, "interpolationDistStep", interpolationDistStep, "text", intConverter);
+
+        ComponentDecorators.decorateWithAutoSelect(interpolationMaxSteps);
+        ComponentDecorators.decorateWithAutoSelect(interpolationTimeStep);
+        ComponentDecorators.decorateWithAutoSelect(interpolationDistStep);
+    }
+}

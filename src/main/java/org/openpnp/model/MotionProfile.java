@@ -151,6 +151,12 @@ public class MotionProfile {
     public double getJerk(int segment) {
         return j[segment];
     }
+    public double getSegmentBeginTime(int segment) {
+        if (segment <= 0) {
+            return 0;
+        }
+        return t[segment] + getSegmentBeginTime(segment-1);
+    }
 
 
     public double getLocationMin() {

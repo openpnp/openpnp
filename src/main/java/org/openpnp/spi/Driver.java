@@ -40,17 +40,22 @@ public interface Driver extends Identifiable, Named, Closeable, WizardConfigurab
          */
         ConstantAcceleration,
         /**
+         * Apply motion planning assuming a controller constant acceleration motion control but
+         * moderate the acceleration and velocity to resemble those of 3rd order control, resulting
+         * in a move that takes the same amount of time. 
+         * 
+         */
+        ModeratedConstantAcceleration,
+        /**
          * Apply motion planning assuming a controller with simplified S-Curve motion control. 
          * Simplified S-Curves have no constant acceleration phase, only jerk phases (e.g. TinyG, Marlin). 
          */
         SimpleSCurve,
-
         /**
          * Apply motion planning assuming a controller constant acceleration motion control but
          * simulating 3rd order control with time step interpolation.  
          */
         Simulated3rdOrderControl,
-
         /**
          * Apply motion planning assuming a controller with full 3rd order motion control. 
          */
@@ -58,6 +63,10 @@ public interface Driver extends Identifiable, Named, Closeable, WizardConfigurab
 
         public boolean isConstantAcceleration() {
             return this == ToolpathFeedRate || this == ConstantAcceleration;
+        }
+
+        public boolean isInterpolated() {
+            return this == Simulated3rdOrderControl;
         }
     }
 

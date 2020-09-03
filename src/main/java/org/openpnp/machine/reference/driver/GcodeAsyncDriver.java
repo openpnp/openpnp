@@ -25,9 +25,14 @@ import java.io.IOException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
+import org.openpnp.machine.reference.driver.wizards.GcodeAsyncDriverSettings;
+import org.openpnp.machine.reference.driver.wizards.GcodeDriverSettings;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.spi.MotionPlanner.CompletionType;
+import org.openpnp.spi.PropertySheetHolder.PropertySheet;
+import org.openpnp.util.Collect;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
@@ -88,6 +93,15 @@ public class GcodeAsyncDriver extends GcodeDriver {
     @Attribute(required=false)
     private boolean confirmationFlowControl = false;
 
+    @Attribute(required = false)
+    private int interpolationMaxSteps = 32;
+
+    @Attribute(required = false)
+    private double interpolationTimeStep = 0.01;
+
+    @Attribute(required = false)
+    private int interpolationDistStep = 8;
+
 
     private WriterThread writerThread;
 
@@ -105,6 +119,41 @@ public class GcodeAsyncDriver extends GcodeDriver {
     }
     protected LinkedBlockingQueue<CommandLine> commandQueue;
 
+    public boolean isConfirmationFlowControl() {
+        return confirmationFlowControl;
+    }
+
+    public void setConfirmationFlowControl(boolean confirmationFlowControl) {
+        this.confirmationFlowControl = confirmationFlowControl;
+    }
+
+    @Override 
+    public int getInterpolationMaxSteps() {
+        return interpolationMaxSteps;
+    }
+
+    public void setInterpolationMaxSteps(int interpolationMaxSteps) {
+        this.interpolationMaxSteps = interpolationMaxSteps;
+    }
+
+    @Override
+    public double getInterpolationTimeStep() {
+        return interpolationTimeStep;
+    }
+
+    public void setInterpolationTimeStep(double interpolationTimeStep) {
+        this.interpolationTimeStep = interpolationTimeStep;
+    }
+
+    @Override
+    public int getInterpolationDistStep() {
+        return interpolationDistStep;
+    }
+
+    public void setInterpolationDistStep(int interpolationDistStep) {
+        this.interpolationDistStep = interpolationDistStep;
+    }
+
     @Override
     protected void connectThreads() throws Exception {
         super.connectThreads();
@@ -118,10 +167,6 @@ public class GcodeAsyncDriver extends GcodeDriver {
     protected void disconnectThreads() {
         try {
             if (writerThread != null && writerThread.isAlive()) {
-                if (commandQueue.isEmpty()) {
-                    // Bump the thread if it is in a blocking wait on the queue.
-                    writerThread.interrupt();
-                }
                 writerThread.join(3000);
             }
             commandQueue = null;
@@ -138,6 +183,9 @@ public class GcodeAsyncDriver extends GcodeDriver {
         @Override
         public void run() {
             CommandLine lastCommand = null;
+            // Get the copy that is valid for this thread. 
+            LinkedBlockingQueue<CommandLine> commandQueue = GcodeAsyncDriver.this.commandQueue;
+            
             long wantedConfirmations = 0;
             while (!disconnectRequested) {
                 CommandLine command;
@@ -160,7 +208,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
                     wantedConfirmations = receivedConfirmations.get() + 1;
                     lastCommand = command;
                     getCommunications().writeLine(command.line);
-                    //Logger.trace("[{}] >> {}", getCommunications().getConnectionName(), command);
+                    Logger.trace("[{}] >> {}", getCommunications().getConnectionName(), command);
                 }
                 catch (IOException e) {
                     Logger.error("Write error", e);
@@ -173,6 +221,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
                     //Logger.error("[{}] {}", getCommunications().getConnectionName(), e);
                 }
             }
+            Logger.trace("[{}] diconnectRequested, bye-bye.", getCommunications().getConnectionName());
         }
     }
 
@@ -194,7 +243,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
             return;
         }
 
-        Logger.debug("{} sendCommand({}, {})...", getCommunications().getConnectionName(), command, timeout);
+        Logger.debug("{} commandQueue.offer({}, {})...", getCommunications().getConnectionName(), command, timeout);
         command = preProcessCommand(command);
         CommandLine commandLine = new CommandLine(command, timeout);
         commandQueue.offer(commandLine, writerQueueTimeout, TimeUnit.MILLISECONDS);
@@ -216,5 +265,12 @@ public class GcodeAsyncDriver extends GcodeDriver {
             // TODO: Compare to current executed driver location.
             
         }
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return Collect.concat(super.getPropertySheets(), new PropertySheet[] { 
+                new PropertySheetWizardAdapter(new GcodeAsyncDriverSettings(this), "Advanced Settings")
+        });
     }
 }

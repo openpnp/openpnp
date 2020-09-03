@@ -226,9 +226,9 @@ public class Motion {
                         sMax = ((ReferenceControllerAxis) axis).getSoftLimitHigh().convertToUnits(AxesLocation.getUnits()).getValue();
                     }
                 }
-                
+
                 double d = Math.abs(distance.getCoordinate(axis));
-                
+
                 double vMax = effectiveSpeed 
                         *axis.getMotionLimit(1);  
                 if (d > 0 && (axis.isRotationalOnController() ^ linearMove) && feedrateOverride != 0) {
@@ -365,7 +365,7 @@ public class Motion {
                 overallLimits[1] = Math.min(overallLimits[1], feedrateOverride*overallFactor);
             }
             else if (!hasOption(MotionOption.NoDriverLimit)) {
- 
+
                 if (linearLimits[0] > 0) {
                     // Limit the linear axes limit by the driver feed-rate. 
                     linearLimits[1] = Math.min(linearLimits[1], minDriverFeedrate); 
@@ -407,7 +407,7 @@ public class Motion {
             // Also include the given speed factor.
             effectiveSpeed = (time > 0 ? euclideanTime/time : 1.0) * Math.max(0.01, nominalSpeed);
             euclideanDistance = overallLimits[0];
-            
+
             for (Entry<ControllerAxis, Integer> entry : axisIndex.entrySet()) {
                 ControllerAxis axis = entry.getKey();
                 double axisFraction = Math.abs(distance.getCoordinate(axis)) // fractional axis distance
@@ -437,7 +437,7 @@ public class Motion {
                 // Compute s0 by distance rather than taking location0, because some axes may have been omitted in location. 
                 double s1 = location1.getCoordinate(axis); 
                 double s0 = s1 - distance.getCoordinate(axis);
-                
+
                 int options = profileOptions();
                 if (axis.getDriver() != null && axis.getDriver().getMotionControlType() == MotionControlType.SimpleSCurve) {
                     options |= ProfileOption.SimplifiedSCurve.flag();
@@ -651,7 +651,7 @@ public class Motion {
             return feedRatePerSecond;
         }
         public Double getFeedRatePerMinute() {
-            return feedRatePerSecond*60.0;
+            return feedRatePerSecond == null ? null : feedRatePerSecond*60.0;
         }
 
         public Double getAccelerationPerSecond2() {
@@ -665,36 +665,71 @@ public class Motion {
     }
 
     /**
-     * Interpolate the Motion using the given timeStep.
+     * Interpolate the Motion using the given parameters and return a list of moveToCommands with waypoints and
+     * envelope rate constraints (feed-rate, acceleration limits as needed). 
      * 
      * @param driver
-     * @param timeStep
+     * @param maxSteps The maximum number of interpolation steps we're allowed to use. Governed by the controller's 
+     * look-ahead queue.
+     * @param timeStep The minimum interpolation time step. 
+     * @param distStep The minimum distance over which an interpolated step has to move, given in axis resolution ticks.
      * @return
+     * @throws Exception
      */
-    public List<MoveToCommand> interpolate(Driver driver, double timeStep) {
+    public List<MoveToCommand> interpolatedMoveToCommands(Driver driver, int maxSteps, double timeStep, int distStep) throws Exception {
         double time = getTime();
-        int numSteps = (int)Math.ceil(time/timeStep/2)*2;
-        List<MoveToCommand> list = new ArrayList<>(numSteps);
-        if (driver.getMotionControlType() != MotionControlType.Simulated3rdOrderControl
-                || numSteps < 4) {
-            // No interpolation, or move too short for interpolation. Just execute as one. 
-            list.add(new MoveToCommand(
-                    getLocation1(),
-                    getMovingAxesTargetLocation(driver),
-                    getFeedRatePerMinute(driver),
-                    getAccelerationPerSecond2(driver),
-                    getJerkPerSecond3(driver)));
+        if (driver.getMotionControlType() == MotionControlType.ModeratedConstantAcceleration) {
+            return moderatedMoveTo(driver, time);
         }
-        else {
-            // Perform the interpolation. 
-            AxesLocation location0 = getMomentaryLocation(0);
-            AxesLocation velocity0 = getMomentaryVelocity(0);
-            double t0 = 0;
-            for (long i = 1; i <= numSteps; i++) {
-                double t1 = i*time/numSteps; 
-                double dt = t1 - t0;
-                AxesLocation location1 = getMomentaryLocation(t1);
-                AxesLocation segment = location0.motionSegmentTo(location1).drivenBy(driver);
+        else if (!driver.getMotionControlType().isInterpolated()) {
+            return singleMoveTo(driver);
+        }
+
+        if (maxSteps == 0) {
+            throw new Exception("Driver does not support move interpolation.");
+        }
+
+        int numSteps = (int)Math.min(Math.floor(time/timeStep/2)*2, maxSteps);
+        if (numSteps < 4) {
+            // No interpolation, or move too short for interpolation. Just execute as one moderated moveTo. 
+            return moderatedMoveTo(driver, time);
+        }
+
+        List<MoveToCommand> list = new ArrayList<>(numSteps);
+        // Perform the interpolation. 
+        //Sanity
+        distStep = Math.max(1, distStep);
+        AxesLocation locationS = getMomentaryLocation(0);
+        AxesLocation velocityS = getMomentaryVelocity(0);
+        double tS = 0;
+        double tSNominal = 0;
+        AxesLocation location0 = locationS;
+        AxesLocation velocity0 = velocityS;
+        double t0 = 0;
+        double t0Nominal = 0;
+        double t1Nominal = 0;
+        double maxVelocity = 0;
+        for (long i = 1; i <= numSteps; i++) {
+            double t1 = i*time/numSteps; 
+            AxesLocation location1 = getMomentaryLocation(t1);
+            AxesLocation segment = location0.motionSegmentTo(location1).drivenBy(driver);
+            boolean isTooSmall = segment.multiply(1.0/distStep).matches(AxesLocation.zero);  
+            if (i == numSteps && isTooSmall) {
+                // Last step distance lower than distStep resolution ticks, merge with previous segment
+                if (list.size() > 0) {
+                    list.remove(list.size() - 1);
+                }
+                location0 = locationS;
+                velocity0 = velocityS;
+                t0 = tS;
+                t0Nominal = tSNominal;
+                segment = location0.motionSegmentTo(location1).drivenBy(driver);
+                isTooSmall = false;
+            }
+            if (!isTooSmall) {
+                final AxesLocation ds = segment;
+                double distance = ds.getRS274NGCMetric(driver, 
+                        (axis) -> ds.getCoordinate(axis));
                 AxesLocation movedAxesLocation = new AxesLocation(segment.getAxes(driver), 
                         (axis) -> location1.getLengthCoordinate(axis));
                 AxesLocation velocity1 = getMomentaryVelocity(t1);
@@ -705,23 +740,127 @@ public class Motion {
                         (axis) -> vel0.getCoordinate(axis));
                 double v1 = segment.getRS274NGCMetric(driver, 
                         (axis) -> velocity1.getCoordinate(axis));
-                // Acceleration is the difference.
-                // TODO: recalc dt 
-                double acceleration = (v1 - v0)/dt;
+                maxVelocity = Math.max(Math.max(Math.abs(v0)+0.0001,  Math.abs(v1)+0.0001), maxVelocity);
+                // Avg. velocity with constant velocity.
+                double avgVelocity = (v0 + v1)*0.5;
+                double dtNominal = distance == 0 ? 0 : distance/avgVelocity;
+                t1Nominal = t0Nominal + dtNominal;
+                // Acceleration is the velocity difference over nominal time.
+                double acceleration = (v1 - v0)/dtNominal;
+
+                //TRACE
+                //Logger.trace("t0="+t0+", t1="+t1+", t1(nom)="+t1Nominal+", d="+distance+", v1="+v1);
+                //TRACE
+
                 // Add to list.
                 list.add(new MoveToCommand(location1,
                         movedAxesLocation, // just the axes that are actually moved  
-                        Math.max(Math.abs(v0)+0.01,  Math.abs(v1)+0.01), 
-                        Math.abs(acceleration)+0.01,
+                        null,//Math.max(Math.abs(v0)+0.0001,  Math.abs(v1)+0.0001), 
+                        Math.abs(acceleration)+0.0001,
                         null)); // No jerk, we're simulating it, remember?
+
                 // Next, please.
+                tS = t0;
+                tSNominal = t0Nominal;
+                locationS = location0;
+                velocityS = velocity0;
                 t0 = t1;
+                t0Nominal = t1Nominal;
                 location0 = location1;
                 velocity0 = velocity1;
             }
-            // TODO: fuse a long cruising segment into one. 
-            // TODO: re-time it to match the planning time more exactly. 
         }
+        if (list.size() < 4) {
+            // Interpolation collapsed.
+            return moderatedMoveTo(driver, time);
+        }
+        // The interpolation will use constant acceleration to reach the way-points, i.e. it will be slightly faster. 
+        // Re-time the whole path to match the planning time exactly.
+        double factor = t1Nominal/time;
+        double factorSq = factor*factor;
+        // Set the maximum for the whole move.
+        list.get(0).feedRatePerSecond = maxVelocity;
+        for (MoveToCommand move : list) {
+            if (move.feedRatePerSecond != null) {
+                move.feedRatePerSecond *= factor;
+            }
+            if (move.accelerationPerSecond2 != null) {
+                move.accelerationPerSecond2 *= factorSq;
+            }
+        }
+        // TODO: fuse similar acceleration segments into one. 
+        return list;
+    }
+
+    /**
+     * Create a constant acceleration move out of a move planned with jerk control.
+     * The move should take the same amount of time and have similar average acceleration
+     * and peak feed-rates. This creates more defensive short moves, while allowing quicker long moves.
+     * In comparison with fixed constant acceleration moves, this will already reduce vibrations a bit.  
+     * Because of equal move duration, these moves can also be used to compare constant acceleration 
+     * and jerk controlled moves in a fair way. 
+     * 
+     * @param driver
+     * @param time
+     * @return
+     */
+    protected List<MoveToCommand> moderatedMoveTo(Driver driver, double time) {
+        double [] unitVector = MotionProfile.getUnitVector(axesProfiles);
+        int leadAxis = MotionProfile.getLeadAxisIndex(unitVector);
+        MotionProfile profile = axesProfiles[leadAxis];
+        double vPeak = profile.getProfileVelocity(MotionControlType.Full3rdOrderControl);
+        double vEntry = profile.getVelocity(0);    
+        double vExit = profile.getVelocity(7);    
+        double dtEntry = profile.getSegmentBeginTime(3);
+        double dtExit = profile.getSegmentBeginTime(7) - profile.getSegmentBeginTime(4);
+        double avgAcceleration = (Math.abs(vPeak-vEntry) + Math.abs(vPeak - vExit))/(dtEntry + dtExit);
+        MotionProfile moderatedProfile = new MotionProfile(
+                profile.getLocation(0), profile.getLocation(7),
+                vEntry, vExit, 
+                0, 0, // entry/exit acceleration is irrelevant for constant acceleration motion control.
+                profile.getLocationMin(), profile.getLocationMax(),
+                profile.getVelocityMax(),
+                avgAcceleration, avgAcceleration,
+                0, // no jerk 
+                time, profile.getTimeMax(), 
+                0);
+        moderatedProfile.assertSolved();
+        AxesLocation location0 = getLocation0();
+        AxesLocation location1 = getLocation1();
+        AxesLocation segment = location0.motionSegmentTo(location1).drivenBy(driver);
+
+        // Calculate the factor from this single lead Axis to the rate along the relevant axes 
+        // (either linear or rotational axes, according to RS274NGC).  
+        double distance = segment.getRS274NGCMetric(driver, 
+                (axis) -> segment.getCoordinate(axis));
+        double factor = distance/segment.getEuclideanMetric()/Math.abs(unitVector[leadAxis]);
+        List<MoveToCommand> list = new ArrayList<>(1);
+        list.add(new MoveToCommand(
+                location1,
+                getMovingAxesTargetLocation(driver),
+                factor*moderatedProfile.getProfileVelocity(MotionControlType.ConstantAcceleration), 
+                factor*avgAcceleration,
+                null));
+        return list;
+    }
+
+    /**
+     * Creates a single move out of the motion. It just takes the nominal profile velocity, acceleration and
+     * jerk limits with no regard to how the move will be executed in the controller, i.e. if the move was planned 
+     * with jerk control and is then executed on a constant acceleration controller, it will not take the 
+     * predicted amount of time. 
+     * 
+     * @param driver
+     * @return
+     */
+    public List<MoveToCommand> singleMoveTo(Driver driver) {
+        List<MoveToCommand> list = new ArrayList<>(1);
+        list.add(new MoveToCommand(
+                getLocation1(),
+                getMovingAxesTargetLocation(driver),
+                getFeedRatePerSecond(driver),
+                getAccelerationPerSecond2(driver),
+                getJerkPerSecond3(driver)));
         return list;
     }
 }
