@@ -95,40 +95,40 @@ public class ClientProcessor implements Runnable {
 					jogControlsPanel.jogValue(-10, 0, 0, 0);
 					break;
 				case MOVE_YP_01_MIL:
-					jogControlsPanel.jogValue(0.1, 0, 0, 0);
+					jogControlsPanel.jogValue(0, 0.1, 0, 0);
 					break;
 				case MOVE_YP_1_MIL:
-					jogControlsPanel.jogValue(1, 0, 0, 0);
+					jogControlsPanel.jogValue(0, 1, 0, 0);
 					break;
 				case MOVE_YP_10_MIL:
-					jogControlsPanel.jogValue(10, 0, 0, 0);
+					jogControlsPanel.jogValue(0, 10, 0, 0);
 					break;
 				case MOVE_YM_01_MIL:
-					jogControlsPanel.jogValue(-0.1, 0, 0, 0);
+					jogControlsPanel.jogValue(0, -0.1, 0, 0);
 					break;
 				case MOVE_YM_1_MIL:
-					jogControlsPanel.jogValue(-1, 0, 0, 0);
+					jogControlsPanel.jogValue(0, -1, 0, 0);
 					break;
 				case MOVE_YM_10_MIL:
-					jogControlsPanel.jogValue(-10, 0, 0, 0);
+					jogControlsPanel.jogValue(0, -10, 0, 0);
 					break;
 				case MOVE_ZP_01_MIL:
-					jogControlsPanel.jogValue(0.1, 0, 0, 0);
+					jogControlsPanel.jogValue(0, 0, 0.1, 0);
 					break;
 				case MOVE_ZP_1_MIL:
-					jogControlsPanel.jogValue(1, 0, 0, 0);
+					jogControlsPanel.jogValue(0, 0, 1, 0);
 					break;
 				case MOVE_ZP_10_MIL:
-					jogControlsPanel.jogValue(10, 0, 0, 0);
+					jogControlsPanel.jogValue(0, 0, 10, 0);
 					break;
 				case MOVE_ZM_01_MIL:
-					jogControlsPanel.jogValue(-0.1, 0, 0, 0);
+					jogControlsPanel.jogValue(0, 0, -0.1, 0);
 					break;
 				case MOVE_ZM_1_MIL:
-					jogControlsPanel.jogValue(-1, 0, 0, 0);
+					jogControlsPanel.jogValue(0, 0, -1, 0);
 					break;
 				case MOVE_ZM_10_MIL:
-					jogControlsPanel.jogValue(-10, 0, 0, 0);
+					jogControlsPanel.jogValue(0, 0, -10, 0);
 					break;
 
 				default:
