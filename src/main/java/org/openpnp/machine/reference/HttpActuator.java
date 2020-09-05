@@ -30,7 +30,7 @@ import org.openpnp.machine.reference.wizards.HttpActuatorConfigurationWizard;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
 
-public class HttpActuator extends ReferenceActuator implements ReferenceHeadMountable {
+public class HttpActuator extends ReferenceActuator {
 
     @Element(required = false)
     protected String onUrl = "";
@@ -85,7 +85,7 @@ public class HttpActuator extends ReferenceActuator implements ReferenceHeadMoun
 
     @Override
     public Wizard getConfigurationWizard() {
-        return new HttpActuatorConfigurationWizard(this);
+        return new HttpActuatorConfigurationWizard(getMachine(), this);
     }
 
     public String getOnUrl() {

@@ -21,9 +21,14 @@
 
 package org.openpnp.machine.reference.driver;
 
+import java.util.Arrays;
 import java.util.List;
 
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Motion;
+import org.openpnp.model.Motion.MotionOption;
+import org.openpnp.spi.HeadMountable;
 
 /**
  * Simplest possible implementation of the motion planner. Just executes the unmodified motion commands 1:1. 
@@ -34,7 +39,22 @@ public class NullMotionPlanner extends AbstractMotionPlanner {
     @Override
     protected void optimizeExecutionPlan(List<Motion> executionPlan,
             CompletionType completionType) {
-        // The NullMotionPLanner does nothing to the plan.
+        // The NullMotionPLanner does nothing to the motion execution plan.
     }
 
+    @Override
+    public void moveTo(HeadMountable hm, AxesLocation axesLocation, double speed,
+            MotionOption... options) throws Exception {
+        super.moveTo(hm, axesLocation, speed, options);
+        // The NullMotionPLanner executes moves immediately, one by one.
+        getMachine().getMotionPlanner().waitForCompletion(hm, 
+                Arrays.asList(options).contains(MotionOption.JogMotion) ? 
+                        CompletionType.CommandJog 
+                        : CompletionType.WaitForStillstand);
+    }
+
+    @Override
+    public Wizard getConfigurationWizard() {
+        return null;
+    }
 }

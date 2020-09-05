@@ -52,6 +52,7 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.util.Collect;
 import org.openpnp.util.GcodeServer;
 import org.openpnp.util.NanosecondTime;
 import org.pmw.tinylog.Logger;
@@ -174,8 +175,10 @@ public class SimulationModeMachine extends ReferenceMachine {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard()),
-                new PropertySheetWizardAdapter(new SimulationModeMachineConfigurationWizard(this), "Simulation Mode"),};
+        return Collect.concat(super.getPropertySheets(),
+                new PropertySheet[] {
+                        new PropertySheetWizardAdapter(new SimulationModeMachineConfigurationWizard(this), "Simulation Mode")
+                });
     }
 
     public SimulationMode getSimulationMode() {

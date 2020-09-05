@@ -72,7 +72,7 @@ import org.openpnp.model.Motion.MotionOption;
  * </p>
  * 
  */
-public interface MotionPlanner {
+public interface MotionPlanner extends PropertySheetHolder {
 
     /**
      * Perform the homing operation. This calls the home() methods of the underlying 
@@ -96,7 +96,6 @@ public interface MotionPlanner {
      * @throws Exception
      */
     public void setGlobalOffsets(AxesLocation axesLocation) throws Exception;
-
 
     /**
      * Add a nominal moveTo() command to the motion sequence. Planner implementations are free to interpolate,
@@ -146,6 +145,7 @@ public interface MotionPlanner {
             return this == WaitForStillstand;
         }
     }
+
     /**
      * Perform a coordinated wait for completion. This will force planning and issuing of motion commands 
      * to the driver(s) and waiting for completion on all the drivers involved. This must be issued before 
@@ -160,8 +160,8 @@ public interface MotionPlanner {
 
     /**
      * Get the planned motion at a certain time. Works into the future as far as planned and into the past
-     * as far as retained. This is used to simulate Camera Views (with lag), to analyze excitation by 
-     * acceleration to predict vibrations etc.   
+     * as far as retained. This is used to simulate Camera Views, to analyze excitation by acceleration to 
+     * predict vibrations etc.   
      * 
      * @param time
      * @return

@@ -3,7 +3,6 @@ package org.openpnp.spi.base;
 import javax.swing.Icon;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;

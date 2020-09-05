@@ -50,6 +50,7 @@ import org.openpnp.machine.reference.driver.GcodeAsyncDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.driver.NullMotionPlanner;
+import org.openpnp.machine.reference.driver.ReferenceAdvancedMotionPlanner;
 import org.openpnp.machine.reference.feeder.AdvancedLoosePartFeeder;
 import org.openpnp.machine.reference.feeder.BlindsFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
@@ -91,6 +92,7 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.Signaler;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
+import org.openpnp.util.Collect;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
@@ -195,6 +197,7 @@ public class ReferenceMachine extends AbstractMachine {
         }
     }
 
+    @Override
     public MotionPlanner getMotionPlanner() {
         return motionPlanner;
     }
@@ -243,7 +246,8 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
+        return Collect.concat(new PropertySheet[] { new PropertySheetWizardAdapter(getConfigurationWizard()) },
+                getMotionPlanner().getPropertySheets());
     }
 
     public void registerFeederClass(Class<? extends Feeder> cls) {
@@ -331,6 +335,14 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(GcodeDriver.class);
         l.add(GcodeAsyncDriver.class);
         l.add(NeoDen4Driver.class);
+        return l;
+    }
+
+    @Override
+    public List<Class<? extends MotionPlanner>> getCompatibleMotionPlannerClasses() {
+        List<Class<? extends MotionPlanner>> l = new ArrayList<>();
+        l.add(NullMotionPlanner.class);
+        l.add(ReferenceAdvancedMotionPlanner.class);
         return l;
     }
 

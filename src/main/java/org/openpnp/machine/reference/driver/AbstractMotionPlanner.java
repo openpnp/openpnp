@@ -22,17 +22,22 @@
 package org.openpnp.machine.reference.driver;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import javax.swing.Action;
+import javax.swing.Icon;
+
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
+import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis.BacklashCompensationMethod;
+import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -47,6 +52,7 @@ import org.openpnp.spi.Driver;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.MotionPlanner;
+import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
@@ -66,7 +72,7 @@ import org.simpleframework.xml.Attribute;
  * </ul>
  *
  */
-public abstract class AbstractMotionPlanner implements MotionPlanner {
+public abstract class AbstractMotionPlanner extends AbstractModelObject implements MotionPlanner, PropertySheetHolder {
 
     @Attribute(required=false)
     private double maximumPlanHistory = 60; 
@@ -134,12 +140,6 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
                 ((CoordinateAxis) axis).setLengthCoordinate(newLocation.getLengthCoordinate(axis));
             }
         }
-        
-        // TODO: wait only where necessary, e.g. in vision and (perhaps) vacuum sensing and when interlocking between drivers.
-        machine.getMotionPlanner().waitForCompletion(hm, 
-                Arrays.asList(options).contains(MotionOption.JogMotion) ? 
-                        CompletionType.CommandJog 
-                        : CompletionType.WaitForStillstand);
     }
 
     /**
@@ -514,5 +514,33 @@ public abstract class AbstractMotionPlanner implements MotionPlanner {
         while (motionPlan.isEmpty() == false && motionPlan.firstKey() < time) {
             motionPlan.remove(motionPlan.firstKey());
         }
+    }
+
+
+    @Override
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
+        return null;
+    }
+
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        return null;
+    }
+
+    abstract public Wizard getConfigurationWizard();
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard(), "Motion Planning")};
+    }
+
+    @Override
+    public String getPropertySheetHolderTitle() {
+        return getClass().getSimpleName();
+    }
+
+    @Override
+    public Icon getPropertySheetHolderIcon() {
+        return null;
     }
 }

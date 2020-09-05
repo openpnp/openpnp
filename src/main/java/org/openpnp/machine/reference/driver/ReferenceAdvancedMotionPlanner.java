@@ -21,9 +21,16 @@
 
 package org.openpnp.machine.reference.driver;
 
+import java.util.Arrays;
 import java.util.List;
 
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.wizards.ReferenceAdvancedMotionPlannerConfigurationWizard;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Motion;
+import org.openpnp.model.Motion.MotionOption;
+import org.openpnp.spi.HeadMountable;
+import org.simpleframework.xml.Attribute;
 
 /**
  * Advanced Motion Planner. TODO: 
@@ -31,10 +38,39 @@ import org.openpnp.model.Motion;
  */
 public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
 
+    @Attribute(required = false)
+    private boolean allowContinuousMotion = false;
+
+    public boolean isAllowContinuousMotion() {
+        return allowContinuousMotion;
+    }
+
+    public void setAllowContinuousMotion(boolean allowContinuousMotion) {
+        this.allowContinuousMotion = allowContinuousMotion;
+    }
+
     @Override
     protected void optimizeExecutionPlan(List<Motion> executionPlan,
             CompletionType completionType) {
         // TODO: implement!
 
+    }
+
+    @Override
+    public void moveTo(HeadMountable hm, AxesLocation axesLocation, double speed,
+            MotionOption... options) throws Exception {
+        super.moveTo(hm, axesLocation, speed, options);
+
+        if (!allowContinuousMotion) {
+            getMachine().getMotionPlanner().waitForCompletion(hm, 
+                    Arrays.asList(options).contains(MotionOption.JogMotion) ? 
+                            CompletionType.CommandJog 
+                            : CompletionType.WaitForStillstand);
+        }
+    }
+
+    @Override
+    public Wizard getConfigurationWizard() {
+        return new ReferenceAdvancedMotionPlannerConfigurationWizard(this);
     }
 }
