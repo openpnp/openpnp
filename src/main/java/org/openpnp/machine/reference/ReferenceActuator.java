@@ -78,7 +78,13 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     @Override
     public void actuate(boolean on) throws Exception {
         Logger.debug("{}.actuate({})", getName(), on);
+        if (isCoordinatedBeforeActuate()) {
+            coordinateWithMachine();
+        }
         getDriver().actuate(this, on);
+        if (isCoordinatedAfterActuate()) {
+            coordinateWithMachine();
+        }
         getMachine().fireMachineHeadActivity(head);
     }
 
@@ -90,27 +96,48 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     @Override
     public void actuate(double value) throws Exception {
         Logger.debug("{}.actuate({})", getName(), value);
+        if (isCoordinatedBeforeActuate()) {
+            coordinateWithMachine();
+        }
         getDriver().actuate(this, value);
+        if (isCoordinatedAfterActuate()) {
+            coordinateWithMachine();
+        }
         getMachine().fireMachineHeadActivity(head);
     }
     
     @Override
     public void actuate(String value) throws Exception {
         Logger.debug("{}.actuate({})", getName(), value);
+        if (isCoordinatedBeforeActuate()) {
+            coordinateWithMachine();
+        }
         getDriver().actuate(this, value);
+        if (isCoordinatedAfterActuate()) {
+            coordinateWithMachine();
+        }
         getMachine().fireMachineHeadActivity(head);
     }
     
     @Override
     public String read() throws Exception {
+        if (isCoordinatedBeforeRead()) {
+            coordinateWithMachine();
+        }
         String value = getDriver().actuatorRead(this);
         Logger.debug("{}.read(): {}", getName(), value);
+        if (isCoordinatedAfterActuate()) {
+            coordinateWithMachine();
+        }
         getMachine().fireMachineHeadActivity(head);
         return value;
     }
 
     @Override
     public String read(double parameter) throws Exception {
+        if (isCoordinatedBeforeRead()) {
+            coordinateWithMachine();
+        }
         String value = getDriver().actuatorRead(this, parameter);
         Logger.debug("{}.readWithDouble({}): {}", getName(), parameter, value);
         getMachine().fireMachineHeadActivity(head);

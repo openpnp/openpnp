@@ -75,7 +75,7 @@ import org.simpleframework.xml.Attribute;
 public abstract class AbstractMotionPlanner extends AbstractModelObject implements MotionPlanner, PropertySheetHolder {
 
     @Attribute(required=false)
-    private double maximumPlanHistory = 60; 
+    private double maximumPlanHistory = 60; // s
 
     private ReferenceMachine machine;
 

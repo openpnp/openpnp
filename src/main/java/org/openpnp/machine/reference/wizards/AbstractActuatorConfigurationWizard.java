@@ -50,6 +50,7 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import javax.swing.JComboBox;
+import javax.swing.JCheckBox;
 
 @SuppressWarnings("serial")
 public abstract class AbstractActuatorConfigurationWizard extends AbstractConfigurationWizard {
@@ -74,6 +75,14 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
     private JTextField locationRotation;
     private JLabel lblAxis;
     private JLabel lblOffset;
+
+    private JPanel panelCoordination;
+    private JCheckBox coordinatedBeforeActuate;
+    private JLabel lblBeforeActuation;
+    private JLabel lblAfterActuation;
+    private JCheckBox coordinatedAfterActuate;
+    private JLabel lblBeforeRead;
+    private JCheckBox coordinatedBeforeRead;
 
     public AbstractActuatorConfigurationWizard(AbstractMachine machine, ReferenceActuator actuator) {
         this.actuator = actuator;
@@ -188,6 +197,47 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         indexTextField = new JTextField();
         generalPanel.add(indexTextField, "4, 2, fill, default");
         indexTextField.setColumns(10);
+        
+        panelCoordination = new JPanel();
+        headMountablePanel.add(panelCoordination);
+        panelCoordination.setBorder(new TitledBorder(null, "Machine Coordination", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
+        panelCoordination.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblBeforeActuation = new JLabel("Before Actuation?");
+        lblBeforeActuation.setToolTipText("<html>\r\nCoordinate with the machine, before the actuator is actuated, i.e. wait for the controllers <br/>\r\nto acknowledge that all the pending commands (including motion) were sent and executed. \r\n</html>");
+        panelCoordination.add(lblBeforeActuation, "2, 2, right, default");
+        
+        coordinatedBeforeActuate = new JCheckBox("");
+        panelCoordination.add(coordinatedBeforeActuate, "4, 2, center, bottom");
+        
+        lblAfterActuation = new JLabel("After Actuation?");
+        lblAfterActuation.setToolTipText("<html>\r\nCoordinate with the machine, after the actuator was actuated, i.e. wait for the controllers <br/>\r\nto acknowledge that the actuation as well as all the pending commands (including motion)<br/>\r\nwere sent and executed. \r\n</html>");
+        panelCoordination.add(lblAfterActuation, "2, 4, right, default");
+        
+        coordinatedAfterActuate = new JCheckBox("");
+        panelCoordination.add(coordinatedAfterActuate, "4, 4");
+        
+        lblBeforeRead = new JLabel("Before Read?");
+        lblBeforeRead.setToolTipText("<html>\r\nCoordinate with the machine, before the actuator is read, i.e. wait for the controllers <br/>\r\nto acknowledge that all the pending commands (including motion) were sent and executed. \r\n</html>");
+        panelCoordination.add(lblBeforeRead, "2, 6, right, default");
+        
+        coordinatedBeforeRead = new JCheckBox("");
+        panelCoordination.add(coordinatedBeforeRead, "4, 6");
+
         if (actuator.getHead() == null) {
             headMountablePanel.setVisible(false);
         }
@@ -214,6 +264,11 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         addWrappedBinding(headOffsets, "rotation", locationRotation, "text", doubleConverter);
 
         addWrappedBinding(actuator, "safeZ", textFieldSafeZ, "text", lengthConverter);
+
+        addWrappedBinding(actuator, "coordinatedBeforeActuate", coordinatedBeforeActuate, "selected");
+        addWrappedBinding(actuator, "coordinatedAfterActuate", coordinatedAfterActuate, "selected");
+        addWrappedBinding(actuator, "coordinatedBeforeRead", coordinatedBeforeRead, "selected");
+
         addWrappedBinding(actuator, "index", indexTextField, "text", intConverter);
 
         ComponentDecorators.decorateWithAutoSelect(indexTextField);
