@@ -90,6 +90,7 @@ import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PnpJobProcessor;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.Signaler;
+import org.openpnp.spi.base.AbstractDriver;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.openpnp.util.Collect;
@@ -100,7 +101,7 @@ import org.simpleframework.xml.core.Commit;
 public class ReferenceMachine extends AbstractMachine {
     @Deprecated
     @Element(required = false)
-    private ReferenceDriver driver = null;
+    private Driver driver = null;
 
     @Element(required = false)
     protected PnpJobProcessor pnpJobProcessor = new ReferencePnpJobProcessor();
@@ -129,12 +130,12 @@ public class ReferenceMachine extends AbstractMachine {
         super.commit();
     }
 
-    public ReferenceDriver getDefaultDriver() {
+    public Driver getDefaultDriver() {
         // If this is a brand new Machine, create a NullDriver.
         if (drivers.isEmpty()) {
             drivers.add(new NullDriver());
         }
-        return (ReferenceDriver) drivers.get(0);
+        return drivers.get(0);
     }
 
     public ReferenceMachine() {
@@ -148,10 +149,10 @@ public class ReferenceMachine extends AbstractMachine {
                                  partAlignments.add(new ReferenceBottomVision());
                              }
                              // Migrate the driver.
-                             if (driver != null) {
+                             if (driver != null && driver instanceof AbstractDriver) {
                                  // Note, the migrated driver will add itself to the machine driver list 
                                  // and for GcodeDrivers it will recurse into the sub-drivers.
-                                 driver.migrateDriver(ReferenceMachine.this);
+                                 ((AbstractDriver)driver).migrateDriver(ReferenceMachine.this);
                                  driver = null;
                              }
                          }
@@ -169,7 +170,7 @@ public class ReferenceMachine extends AbstractMachine {
         if (enabled) {
             try {
                 for (Driver driver : getDrivers()) {
-                    ((ReferenceDriver)driver).setEnabled(true);
+                    driver.setEnabled(true);
                 }
                 this.enabled = true;
             }
@@ -182,7 +183,7 @@ public class ReferenceMachine extends AbstractMachine {
         else {
             try {
                 for (Driver driver : getDrivers()) {
-                    ((ReferenceDriver)driver).setEnabled(false);
+                    driver.setEnabled(false);
                 }
                 this.enabled = false;
             }

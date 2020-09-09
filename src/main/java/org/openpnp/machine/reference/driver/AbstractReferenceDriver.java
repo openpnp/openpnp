@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.SimulationModeMachine.SimulationMode;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.DataBits;
@@ -18,7 +17,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
-public abstract class AbstractReferenceDriver extends AbstractDriver implements ReferenceDriver {
+public abstract class AbstractReferenceDriver extends AbstractDriver {
     @Attribute(required = false)
     protected MotionControlType motionControlType = MotionControlType.ToolpathFeedRate; 
 

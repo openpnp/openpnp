@@ -8,8 +8,8 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.TimeoutException;
 
-import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.driver.ReferenceDriverCommunications.LineEndingType;
+import org.openpnp.spi.Driver;
 import org.openpnp.util.GcodeServer;
 import org.simpleframework.xml.Attribute;
 
@@ -23,7 +23,7 @@ public class SimulatedCommunications extends ReferenceDriverCommunications {
     protected DataOutputStream output;
 
     protected GcodeServer gcodeServer;
-    private ReferenceDriver driver;
+    private Driver driver;
 
     public synchronized void connect() throws Exception {
         disconnect();
@@ -115,7 +115,7 @@ public class SimulatedCommunications extends ReferenceDriverCommunications {
         output.write(d);
     }
 
-    public void setDriver(ReferenceDriver driver) {
+    public void setDriver(Driver driver) {
         this.driver = driver;
     }
 }

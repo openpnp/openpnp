@@ -128,7 +128,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
     }
 
     @Override 
-    public int getInterpolationMaxSteps() {
+    public Integer getInterpolationMaxSteps() {
         return interpolationMaxSteps;
     }
 
@@ -137,7 +137,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
     }
 
     @Override
-    public double getInterpolationTimeStep() {
+    public Double getInterpolationTimeStep() {
         return interpolationTimeStep;
     }
 
@@ -146,7 +146,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
     }
 
     @Override
-    public int getInterpolationDistStep() {
+    public Integer getInterpolationMinStep() {
         return interpolationDistStep;
     }
 

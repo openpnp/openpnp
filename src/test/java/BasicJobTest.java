@@ -19,6 +19,7 @@ import org.openpnp.model.Job;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Motion;
+import org.openpnp.model.Motion.MoveToCommand;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
@@ -158,9 +159,9 @@ public class BasicJobTest {
         }
 
         @Override
-        public void moveTo(ReferenceHeadMountable hm, Motion motion)
+        public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
                 throws Exception {
-            AxesLocation location = motion.getLocation1();
+            AxesLocation location = move.getLocation();
             
             System.out.println(hm + " " + location);
             if (expectedOps.isEmpty()) {
@@ -173,9 +174,9 @@ public class BasicJobTest {
                     throw new Exception("Unexpected Move " + hm + " " + location + ". Expected " + op);
                 }
 
-                ExpectedMove move = (ExpectedMove) op;
+                ExpectedMove expectedMove = (ExpectedMove) op;
 
-                if (!move.location.matches(location) || hm != move.headMountable) {
+                if (!expectedMove.location.matches(location) || hm != expectedMove.headMountable) {
                     throw new Exception("Unexpected Move " + hm + " " + location + ". Expected " + op);
                 }
             }

@@ -30,17 +30,22 @@ import org.openpnp.model.Motion.MotionOption;
  * The MotionPlanner coordinates motion, homing etc. across multiple drivers. It has a similar interface as the 
  * drivers themselves and acts as a black box to abstract from the complexities of multiple, mixed drivers.</p>
  * 
- * <p>The Motion planner may also perform advanced motion planning i.e. it might reorder, blend and refine the raw 
- * moveTo() commands sent to it in order to improve performance, reduce machine vibrations etc.</p>
+ * <p>In OpenPnP, the Head does not move on it's own. It is moved by the moving of attached objects:
+ * Nozzles, Cameras, Actuators, so-called HeadMountables. The HeadMountables specify by which axes 
+ * they are moved. The axes are in turn assigned to the Driver. When you move a HeadMountable the 
+ * MotionPlanner will determine which axes are involved and call the drivers accordingly.</p> 
+ * 
+ * <p>The Motion planner may also perform advanced motion planning i.e. it might reorder, blend and interpolate the 
+ * original moveTo() commands in order to improve performance, reduce machine vibrations etc.</p>
  * 
  * <p>These are the most important tasks:</p>  
  * <ul>
  * <li>Perform home() commands across drivers.</li>
- * <li>Accept a sequence of raw moveTo() commands.</li>
+ * <li>Accept a sequence of original moveTo() commands.</li>
  * <li>Coordinate motion across multiple drivers.</li>
  * <li>For advanced MotionPlanners, perform optimization on the sequence. </li>
  * <li>As soon as the motion is commited i.e. when waiting for completion, command the drivers to plan and execute the plan.</li>
- * <li>Provide access to the planned motion over time for simulation, visualization etc. </li>
+ * <li>Provide access to the planned motion over time for coordination, simulation, visualization etc. </li>
  * </ul>
  * <p>
  * A MotionPlanner can be a simple proxy, just sending commands directly to the drivers. See the 

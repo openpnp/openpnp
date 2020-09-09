@@ -210,11 +210,6 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         this.safeZ = safeZ;
     }
 
-    @Override
-    public ReferenceDriver getDriver() {
-        return (ReferenceDriver)super.getDriver();
-    }
-
     ReferenceMachine getMachine() {
         return (ReferenceMachine) Configuration.get().getMachine();
     }

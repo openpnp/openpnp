@@ -32,7 +32,6 @@ import javax.swing.Icon;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
@@ -92,7 +91,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         lastDirectionalBacklashOffset = new AxesLocation();
         // Home all the drivers with their respective mapped axes (can be an empty map). 
         for (Driver driver : getMachine().getDrivers()) {
-            ((ReferenceDriver) driver).home(getMachine());
+            driver.home(getMachine());
         }
         // Home all the axes (including virtual ones) to their homing coordinates.
         for (Axis axis : getMachine().getAxes()) {
@@ -111,7 +110,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 (a) -> axesLocation.getLengthCoordinate(a).add(lastDirectionalBacklashOffset.getLengthCoordinate(a)));
         // Offset all the specified axes on the respective drivers. 
         for (Driver driver : driverLocation.getAxesDrivers(getMachine())) {
-            ((ReferenceDriver) driver).setGlobalOffsets(getMachine(), driverLocation.drivenBy(driver));
+            driver.setGlobalOffsets(getMachine(), driverLocation.drivenBy(driver));
         }
         // Offset all the axes (including virtual ones) to their new coordinates.
         for (Axis axis : axesLocation.getAxes()) {
@@ -287,9 +286,12 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         for (Motion plannedMotion : executionPlan) {
             if (!plannedMotion.hasOption(MotionOption.Stillstand)) {
                 // Put into timed plan.
-                t += plannedMotion.getTime();
-                motionPlan.put(t, plannedMotion);
+                double dt = plannedMotion.getTime();
+                // Note, all-virtual moves can have dt == 0.0, so we take a nano-second, to make sure a new Map entry is created 
+                // in the motionPlan.
+                t += Math.max(dt, 1e-9);  
                 plannedMotion.setPlannedTime1(t);
+                motionPlan.put(t, plannedMotion);
                 // Execute across drivers.
                 ReferenceHeadMountable  hm = (ReferenceHeadMountable) plannedMotion.getHeadMountable();
                 if (hm != null) {
@@ -326,7 +328,9 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         AxesLocation motionSegment = plannedMotion.getLocation0().motionSegmentTo(plannedMotion.getLocation1());
         // Note, this loop will be empty if the motion is empty.
         for (Driver driver : motionSegment.getAxesDrivers(machine)) {
-            ((ReferenceDriver) driver).moveTo(hm, plannedMotion);
+            for (Motion.MoveToCommand moveToCommand : plannedMotion.interpolatedMoveToCommands(driver)) {
+                driver.moveTo(hm, moveToCommand);
+            }
         }
     }
 
@@ -469,7 +473,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                     double anglePresent = refAxis.getDriverCoordinate();
                     double angleWrappedAround = Utils2D.normalizeAngle180(anglePresent);
                     if (anglePresent != angleWrappedAround) {
-                        ((ReferenceDriver) refAxis.getDriver()).setGlobalOffsets(getMachine(), 
+                        refAxis.getDriver().setGlobalOffsets(getMachine(), 
                                 new AxesLocation(refAxis, angleWrappedAround));
                         // This also reflects in the motion planner's coordinate.
                         refAxis.setCoordinate(refAxis.getDriverCoordinate());
@@ -489,7 +493,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 : new AxesLocation(machine));
         if (!mappedAxes.isEmpty()) {
             for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
-                ((ReferenceDriver) driver).waitForCompletion((ReferenceHeadMountable) hm, completionType);
+                driver.waitForCompletion((ReferenceHeadMountable) hm, completionType);
             }
             if (hm != null) {
                 machine.fireMachineHeadActivity(hm.getHead());

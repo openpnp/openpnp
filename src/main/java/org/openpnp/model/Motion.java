@@ -403,7 +403,7 @@ public class Motion {
                     linearLimits[0]/linearLimits[1],
                     rotationalLimits[0]/rotationalLimits[1]);
             double euclideanTime = overallLimits[0]/overallLimits[1];
-            // We convert from the (optionally) driver-limited NIST feed-rate to Euclidean limit by relating the motion time. 
+            // We convert from the (optionally) driver-limited RS274NGC feed-rate to Euclidean limit by relating the motion time. 
             // Also include the given speed factor.
             effectiveSpeed = (time > 0 ? euclideanTime/time : 1.0) * Math.max(0.01, nominalSpeed);
             euclideanDistance = overallLimits[0];
@@ -622,7 +622,7 @@ public class Motion {
                 null);
     }
 
-    static public class MoveToCommand {
+    public class MoveToCommand {
         private AxesLocation location;
         private AxesLocation movedAxesLocation;
         private Double feedRatePerSecond;
@@ -637,6 +637,10 @@ public class Motion {
             this.feedRatePerSecond = feedRatePerSecond;
             this.accelerationPerSecond2 = accelerationPerSecond2;
             this.jerkPerSecond3 = jerkPerSecond3;
+        }
+
+        public Motion getMotion() {
+            return Motion.this;
         }
 
         public AxesLocation getLocation() {
@@ -676,23 +680,26 @@ public class Motion {
      * @return
      * @throws Exception
      */
-    public List<MoveToCommand> interpolatedMoveToCommands(Driver driver, int maxSteps, double timeStep, int distStep) throws Exception {
-        double time = getTime();
+    public List<MoveToCommand> interpolatedMoveToCommands(Driver driver) throws Exception {
         if (driver.getMotionControlType() == MotionControlType.ModeratedConstantAcceleration) {
-            return moderatedMoveTo(driver, time);
+            return moderatedMoveTo(driver);
         }
         else if (!driver.getMotionControlType().isInterpolated()) {
             return singleMoveTo(driver);
         }
 
-        if (maxSteps == 0) {
+        double time = getTime();
+        Integer maxSteps = driver.getInterpolationMaxSteps();
+        Double timeStep = driver.getInterpolationTimeStep();
+        Integer distStep = driver.getInterpolationMinStep();
+        if (maxSteps == null || timeStep == null || distStep == null) {
             throw new Exception("Driver does not support move interpolation.");
         }
 
         int numSteps = (int)Math.min(Math.floor(time/timeStep/2)*2, maxSteps);
         if (numSteps < 4) {
             // No interpolation, or move too short for interpolation. Just execute as one moderated moveTo. 
-            return moderatedMoveTo(driver, time);
+            return moderatedMoveTo(driver);
         }
 
         List<MoveToCommand> list = new ArrayList<>(numSteps);
@@ -772,7 +779,7 @@ public class Motion {
         }
         if (list.size() < 4) {
             // Interpolation collapsed.
-            return moderatedMoveTo(driver, time);
+            return moderatedMoveTo(driver);
         }
         // The interpolation will use constant acceleration to reach the way-points, i.e. it will be slightly faster. 
         // Re-time the whole path to match the planning time exactly.
@@ -804,7 +811,7 @@ public class Motion {
      * @param time
      * @return
      */
-    protected List<MoveToCommand> moderatedMoveTo(Driver driver, double time) {
+    protected List<MoveToCommand> moderatedMoveTo(Driver driver) {
         double [] unitVector = MotionProfile.getUnitVector(axesProfiles);
         int leadAxis = MotionProfile.getLeadAxisIndex(unitVector);
         MotionProfile profile = axesProfiles[leadAxis];
@@ -814,6 +821,7 @@ public class Motion {
         double dtEntry = profile.getSegmentBeginTime(3);
         double dtExit = profile.getSegmentBeginTime(7) - profile.getSegmentBeginTime(4);
         double avgAcceleration = (Math.abs(vPeak-vEntry) + Math.abs(vPeak - vExit))/(dtEntry + dtExit);
+        double time = getTime();
         MotionProfile moderatedProfile = new MotionProfile(
                 profile.getLocation(0), profile.getLocation(7),
                 vEntry, vExit, 

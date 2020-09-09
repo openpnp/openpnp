@@ -11,7 +11,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.LengthUnit;
@@ -20,12 +19,13 @@ import org.openpnp.model.Motion;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
+import org.openpnp.spi.Driver;
 import org.pmw.tinylog.Logger;
 
 public class GcodeServer extends Thread {
     final Map<String, String> commandResponses = new HashMap<>();
     final ServerSocket serverSocket;
-    ReferenceDriver driver;
+    Driver driver;
     SimulationModeMachine machine;
     /**
      * The simulated visual homing offsets are applied to what the simulated down camera sees.
@@ -63,7 +63,7 @@ public class GcodeServer extends Thread {
         return serverSocket.getLocalPort();
     }
 
-    public ReferenceDriver getDriver() {
+    public Driver getDriver() {
         return driver;
     }
 
@@ -75,7 +75,7 @@ public class GcodeServer extends Thread {
         this.homingOffsets = homingOffsets;
     }
 
-    public void setDriver(ReferenceDriver driver) {
+    public void setDriver(Driver driver) {
         this.machine = SimulationModeMachine.getSimulationModeMachine();
         this.driver = driver;
     }

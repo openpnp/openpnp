@@ -22,7 +22,6 @@
 package org.openpnp.spi.base;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -116,7 +115,7 @@ public abstract class AbstractControllerAxis extends AbstractCoordinateAxis impl
 
     public void setDriver(Driver driver) {
         Object oldValue = this.driver;
-        this.driver = (ReferenceDriver) driver;
+        this.driver = driver;
         this.driverId = (driver == null) ? null : driver.getId();
         firePropertyChange("driver", oldValue, driver);
     }
