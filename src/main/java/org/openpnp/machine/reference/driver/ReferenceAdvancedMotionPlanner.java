@@ -28,6 +28,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceAdvancedMotionPlannerConfigurationWizard;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Motion;
+import org.openpnp.model.MotionProfile;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.spi.HeadMountable;
 import org.simpleframework.xml.Attribute;
@@ -49,11 +50,30 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
         this.allowContinuousMotion = allowContinuousMotion;
     }
 
+    protected class PlannerPath extends MotionProfile.Path {
+        private final List<Motion> executionPlan;
+
+        public PlannerPath(List<Motion> executionPlan) {
+            super();
+            this.executionPlan = executionPlan;
+        }
+
+        @Override
+        public int size() {
+            return executionPlan.size();
+        }
+
+        @Override
+        public MotionProfile[] get(int i) {
+            return executionPlan.get(i).getAxesProfiles();
+        }
+    }
+
     @Override
     protected void optimizeExecutionPlan(List<Motion> executionPlan,
             CompletionType completionType) {
-        // TODO: implement!
-
+//        PlannerPath path = new PlannerPath(executionPlan);
+//        MotionProfile.solvePath(path);
     }
 
     @Override
