@@ -16,9 +16,9 @@ You can use OpenPnP's [Actuator](https://github.com/openpnp/openpnp/wiki/Setup-a
 
 # Add Lighting Control Scripts
 
-**The following is for OpenPnP 1.0 only**:
+**The following is for OpenPnP 2.0 only**:
 
-For newer versions of OpenPnP 2.0, you must use the Camera.BeforeSettle/Camera.AfterSettle scripts, instead of the Capture ones. See also [[Scripting#CameraBeforeSettle]] and [[Scripting#CameraAfterSettle]].
+For newer versions of OpenPnP 2.0, you must use the Camera.BeforeSettle/Camera.AfterSettle scripts, instead of the Capture ones. See also [[Scripting#CameraBeforeSettle]], [[Scripting#CameraAfterSettle]] and the page about [[Camera Settling]].
 
 1. Download the [zipfile containing the scripts](https://github.com/ozzysv/Camera-Lighting-openpnp/raw/master/Camera%20Lighting.zip)
 2. Expand the zipfile. There should be two scripts inside.
