@@ -276,10 +276,10 @@ public class AdvancedMotionTest {
                     options);
 
             // Solve as a single coordinated move.
-//            double [] unitVector = MotionProfile.getUnitVector(profiles);
-//            int leadAxis = MotionProfile.getLeadAxisIndex(unitVector);
-//            profiles[leadAxis].solve();
-//            MotionProfile.coordinateProfiles(profiles);
+            double [] unitVector = MotionProfile.getUnitVector(profiles);
+            int leadAxis = MotionProfile.getLeadAxisIndex(unitVector);
+            profiles[leadAxis].solve();
+            MotionProfile.coordinateProfiles(profiles);
             // Add.
             add(profiles);
             // Remember last coordinates.
@@ -350,22 +350,38 @@ public class AdvancedMotionTest {
                 path.moveTo(100, 100, 15, 2);
                 path.moveTo(100, 100, -safeZ, 2);
                 path.moveTo(120, 100, safeZ, 1);
-                path.moveTo(120, 100, -10, 1);
+                path.moveTo(120, 100, -15, 1);
                 path.moveTo(120, 100, safeZ, 1);
                 path.moveTo(124, 100, -safeZ, 2);
                 path.moveTo(124, 100, 15, 2);
                 path.moveTo(124, 100, -safeZ, 2);
                 path.moveTo(125, 100, safeZ, 1);
-                path.moveTo(125, 100, -10, 1);
+                path.moveTo(125, 100, -15, 1);
                 path.moveTo(125, 100, safeZ, 1);
+
+                path.moveTo(0, 150, safeZ, 1);
+                path.moveTo(0, 150, -15, 1);
+                path.moveTo(0, 150, safeZ, 1);
+                path.moveTo(100, 150, -safeZ, 2);
+                path.moveTo(100, 150, 15, 2);
+                path.moveTo(100, 150, -safeZ, 2);
+                path.moveTo(120, 150, safeZ, 1);
+                path.moveTo(120, 150, -10, 1);
+                path.moveTo(120, 150, safeZ, 1);
+                path.moveTo(124, 150, -safeZ, 2);
+                path.moveTo(124, 150, 15, 2);
+                path.moveTo(124, 150, -safeZ, 2);
+                path.moveTo(125, 150, safeZ, 1);
+                path.moveTo(125, 150, -10, 1);
+                path.moveTo(125, 150, safeZ, 1);
 
                 // move to push/pull feeder
                 path.moveTo(200, 50, safeZ, 1);
                 path.moveTo(220, 50, safeZ-5, 1);
                 path.moveTo(220, 50, safeZ, 1);
                 path.moveTo(200, 80, safeZ, 1);
-                path.moveTo(150, 100, safeZ, 1);
-                path.moveTo(150, 120, safeZ, 1);
+                path.moveTo(190, 100, safeZ, 1);
+                path.moveTo(190, 120, safeZ, 1);
                 path.moveTo(300, 120, -15, 1);
                 path.moveTo(300, 150, -15, 1);
                 path.moveTo(280, 150, -15, 1);
@@ -376,7 +392,7 @@ public class AdvancedMotionTest {
                 if (warmup == 0) {
                     System.out.println("==========================================");
                     // Unoptimized/single moves.
-                    MotionProfile.pathToSvg(path);
+                    //MotionProfile.pathToSvg(path, null);
                     double unoptimizedTime = path.getOverallTime();
                     // Solve. 
                     double t0 = NanosecondTime.getRuntimeSeconds(); 
@@ -388,11 +404,13 @@ public class AdvancedMotionTest {
                         System.out.println("Z:"+profiles[2]);
                         System.out.println(" ");
                     }
-                    MotionProfile.pathToSvg(path);
-                    System.out.println("Solved, jerk: "+path.jerk+", "+(path.sCurves ? " simple S-Curves, " : "")
-                            +"total move time: "+String.format("%.2f", path.getOverallTime())+" s, "
-                            +"from unoptimized: "+String.format("%.2f", unoptimizedTime)+" s, "
-                            +"solving time: "+String.format("%.4f", solvingTime*1000)+" ms");
+                    String message = (path.jerk == 0 ? "Constant acceleration" : ("Jerk control: "+path.jerk+" mm/s³"))+", "
+                            +(path.jerk > 0 && path.sCurves ? " simple S-Curves, " : "")
+                            +"total move time: "+String.format("%.3f", path.getOverallTime())+" s, "
+                            +"from unoptimized: "+String.format("%.3f", unoptimizedTime)+" s, "
+                            +"total solving time: "+String.format("%.3f", solvingTime)+" s";
+                    MotionProfile.toSvg(path, message);
+                    System.out.println(message);
                 }
             }
         }
