@@ -10,6 +10,7 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.machine.reference.driver.GcodeAsyncDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.model.Configuration;
 
@@ -22,10 +23,10 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
     private final GcodeDriver driver;
     private JCheckBox confirmationFlowControl;
     private JTextField interpolationTimeStep;
-    private JTextField interpolationDistStep;
+    private JTextField interpolationMinStep;
     private JTextField interpolationMaxSteps;
 
-    public GcodeAsyncDriverSettings(GcodeDriver driver) {
+    public GcodeAsyncDriverSettings(GcodeAsyncDriver driver) {
         this.driver = driver;
 
         JPanel settingsPanel = new JPanel();
@@ -94,9 +95,9 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
         interpolationPanel.add(lblInterpolationMinimumTicks, "2, 6, right, default");
         lblInterpolationMinimumTicks.setToolTipText("<html>\r\n<p>Minimum step axis distance used to interpolate advanced motion paths.</p>\r\n<p>This is given in resolution ticks of the axes.</p>\r\n</html>\r\n");
 
-        interpolationDistStep = new JTextField();
-        interpolationPanel.add(interpolationDistStep, "4, 6");
-        interpolationDistStep.setColumns(10);
+        interpolationMinStep = new JTextField();
+        interpolationPanel.add(interpolationMinStep, "4, 6");
+        interpolationMinStep.setColumns(10);
 
         JLabel lblConfirmationFlowControl = new JLabel("Confimation Flow Control");
         lblConfirmationFlowControl.setToolTipText("<html>\r\n<p>The communication with the controller is flow-controlled by awaiting the \"ok\"<br/>\r\nbefore sending the next command. </p>\r\n<p>This is slower than other types of flow control such as RTS/CTS on a serial connection, so <br/>\r\nthe latter should be preferred.</p>\r\n</html>");
@@ -116,10 +117,10 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
         addWrappedBinding(driver, "confirmationFlowControl", confirmationFlowControl, "selected");
         addWrappedBinding(driver, "interpolationMaxSteps", interpolationMaxSteps, "text", intConverter);
         addWrappedBinding(driver, "interpolationTimeStep", interpolationTimeStep, "text", doubleConverter);
-        addWrappedBinding(driver, "interpolationDistStep", interpolationDistStep, "text", intConverter);
+        addWrappedBinding(driver, "interpolationMinStep", interpolationMinStep, "text", intConverter);
 
         ComponentDecorators.decorateWithAutoSelect(interpolationMaxSteps);
         ComponentDecorators.decorateWithAutoSelect(interpolationTimeStep);
-        ComponentDecorators.decorateWithAutoSelect(interpolationDistStep);
+        ComponentDecorators.decorateWithAutoSelect(interpolationMinStep);
     }
 }

@@ -16,7 +16,7 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
     final int iterations = 3;    // 3
 
     protected final static int segments = MotionProfile.segments; 
-    
+
     public abstract int size();
     public abstract MotionProfile [] get(int i);
 
@@ -50,7 +50,7 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
     public void solve() throws Exception {
         solve(adaption, iterations);
     }
-    
+
     /**
      *  <h1>Simplified "PnP use case" heuristics for continuous smoothed motion path optimization.</h1> 
      *  <p>
@@ -132,7 +132,7 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
         double[][] straightLineTime = new double[size][dimensions];
         double[] straightLineCoordinatedTime = new double[size];
 
-        
+
         for (int iteration = 0; iteration < iterations; iteration++) {
             int iNext;
             boolean hasUncoordinated = false;
@@ -346,81 +346,81 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
                                 else {
                                     expandExit = true;
                                 }
-//                                if (solve && (expandEntry || expandExit)) {
-//                                    // Entry and/or exit expansion, solve using an overreaching profile.
-//                                    MotionProfile solverProfile = new MotionProfile(profiles[axis]);
-//                                    double signum = solverProfile.profileSignum(vEffEntry, vEffExit);
-//                                    if (iteration > 0) {
-//                                        // This is a further refinement.
-//                                        double timeWastedEntry = prevProfiles == null ? 0 : (prevProfiles[axis].time - straightLineCoordinatedTime[i-1]);
-//                                        double timeWastedExit = nextProfiles == null ? 0 : (nextProfiles[axis].time - straightLineCoordinatedTime[i+1]);
-//                                        controlOvershoot(prevProfiles, profiles, profiles, nextProfiles, axis,
-//                                                timeWastedEntry, timeWastedExit, solverProfile, adaption);
-//                                        //expandEntry = profiles[axis].hasOption(ProfileOption.CroppedEntry);
-//                                        //expandExit = profiles[axis].hasOption(ProfileOption.CroppedExit);
-//                                    }
-//                                    else {
-//                                        if (expandEntry) {
-//                                            if (signum > 0) {
-//                                                // Going positive, take sMin into consideration 
-//                                                if (prevProfiles != null && Double.isFinite(prevProfiles[axis].sMin)) {
-//                                                    solverProfile.s[0] = prevProfiles[axis].sMin;
-//                                                    // We got a limit, do not expand after all.
-//                                                    expandEntry = false;
-//                                                }
-//                                            }
-//                                            else if (signum < 0) {
-//                                                // Going negative, take sMax into consideration 
-//                                                if (prevProfiles != null && Double.isFinite(prevProfiles[axis].sMax)) {
-//                                                    solverProfile.s[0] = prevProfiles[axis].sMax;
-//                                                    // We got a limit, do not expand after all.
-//                                                    expandEntry = false;
-//                                                }
-//                                            }
-//                                            solverProfile.v[0] = 0;
-//                                            solverProfile.a[0] = 0;
-//                                        }
-//                                        if (expandExit) {
-//                                            if (signum < 0) {
-//                                                // Going negative, take sMin into consideration 
-//                                                if (nextProfiles != null && Double.isFinite(nextProfiles[axis].sMin)) {
-//                                                    solverProfile.s[segments] = nextProfiles[axis].sMin;
-//                                                    // We got a limit, do not expand after all.
-//                                                    expandExit = false;
-//                                                }
-//                                            }
-//                                            else if (signum > 0) {
-//                                                // Going positive, take sMax into consideration 
-//                                                if (nextProfiles != null && Double.isFinite(nextProfiles[axis].sMax)) {
-//                                                    solverProfile.s[segments] = nextProfiles[axis].sMax;
-//                                                    // We got a limit, do not expand after all.
-//                                                    expandExit = false;
-//                                                }
-//                                            }
-//                                            solverProfile.v[segments] = 0;
-//                                            solverProfile.a[segments] = 0;
-//                                        }
-//                                    }
-//                                    if  (signum != 0 && (expandEntry || expandExit)) {
-//                                        // Still expanding, do it.
-//                                        solverProfile.solveByExpansion(signum, expandEntry, expandExit);
-//                                        double t0 = solverProfile.getForwardCrossingTime(profiles[axis].s[0], false);
-//                                        double t1 = solverProfile.getBackwardCrossingTime(profiles[axis].s[segments], false);
-//                                        profiles[axis].extractProfileSectionFrom(solverProfile, t0, t1);
-//                                        profiles[axis].validate("extracted from expansion, move "+i);                                    
-//                                    }
-//                                    else {
-//                                        // Solve and extract.
-//                                        solverProfile.assertSolved();
-//                                        double t0 = solverProfile.getForwardCrossingTime(profiles[axis].s[0], false);
-//                                        double t1 = solverProfile.getBackwardCrossingTime(profiles[axis].s[segments], false);
-//                                        profiles[axis].extractProfileSectionFrom(solverProfile, t0, t1);
-//                                        profiles[axis].validate("extracted, move "+i);                                    
-//                                    }
-//                                    hasSolved = true;
-//                                }
-//                                else 
-                                    if (solve) {
+                                //                                if (solve && (expandEntry || expandExit)) {
+                                //                                    // Entry and/or exit expansion, solve using an overreaching profile.
+                                //                                    MotionProfile solverProfile = new MotionProfile(profiles[axis]);
+                                //                                    double signum = solverProfile.profileSignum(vEffEntry, vEffExit);
+                                //                                    if (iteration > 0) {
+                                //                                        // This is a further refinement.
+                                //                                        double timeWastedEntry = prevProfiles == null ? 0 : (prevProfiles[axis].time - straightLineCoordinatedTime[i-1]);
+                                //                                        double timeWastedExit = nextProfiles == null ? 0 : (nextProfiles[axis].time - straightLineCoordinatedTime[i+1]);
+                                //                                        controlOvershoot(prevProfiles, profiles, profiles, nextProfiles, axis,
+                                //                                                timeWastedEntry, timeWastedExit, solverProfile, adaption);
+                                //                                        //expandEntry = profiles[axis].hasOption(ProfileOption.CroppedEntry);
+                                //                                        //expandExit = profiles[axis].hasOption(ProfileOption.CroppedExit);
+                                //                                    }
+                                //                                    else {
+                                //                                        if (expandEntry) {
+                                //                                            if (signum > 0) {
+                                //                                                // Going positive, take sMin into consideration 
+                                //                                                if (prevProfiles != null && Double.isFinite(prevProfiles[axis].sMin)) {
+                                //                                                    solverProfile.s[0] = prevProfiles[axis].sMin;
+                                //                                                    // We got a limit, do not expand after all.
+                                //                                                    expandEntry = false;
+                                //                                                }
+                                //                                            }
+                                //                                            else if (signum < 0) {
+                                //                                                // Going negative, take sMax into consideration 
+                                //                                                if (prevProfiles != null && Double.isFinite(prevProfiles[axis].sMax)) {
+                                //                                                    solverProfile.s[0] = prevProfiles[axis].sMax;
+                                //                                                    // We got a limit, do not expand after all.
+                                //                                                    expandEntry = false;
+                                //                                                }
+                                //                                            }
+                                //                                            solverProfile.v[0] = 0;
+                                //                                            solverProfile.a[0] = 0;
+                                //                                        }
+                                //                                        if (expandExit) {
+                                //                                            if (signum < 0) {
+                                //                                                // Going negative, take sMin into consideration 
+                                //                                                if (nextProfiles != null && Double.isFinite(nextProfiles[axis].sMin)) {
+                                //                                                    solverProfile.s[segments] = nextProfiles[axis].sMin;
+                                //                                                    // We got a limit, do not expand after all.
+                                //                                                    expandExit = false;
+                                //                                                }
+                                //                                            }
+                                //                                            else if (signum > 0) {
+                                //                                                // Going positive, take sMax into consideration 
+                                //                                                if (nextProfiles != null && Double.isFinite(nextProfiles[axis].sMax)) {
+                                //                                                    solverProfile.s[segments] = nextProfiles[axis].sMax;
+                                //                                                    // We got a limit, do not expand after all.
+                                //                                                    expandExit = false;
+                                //                                                }
+                                //                                            }
+                                //                                            solverProfile.v[segments] = 0;
+                                //                                            solverProfile.a[segments] = 0;
+                                //                                        }
+                                //                                    }
+                                //                                    if  (signum != 0 && (expandEntry || expandExit)) {
+                                //                                        // Still expanding, do it.
+                                //                                        solverProfile.solveByExpansion(signum, expandEntry, expandExit);
+                                //                                        double t0 = solverProfile.getForwardCrossingTime(profiles[axis].s[0], false);
+                                //                                        double t1 = solverProfile.getBackwardCrossingTime(profiles[axis].s[segments], false);
+                                //                                        profiles[axis].extractProfileSectionFrom(solverProfile, t0, t1);
+                                //                                        profiles[axis].validate("extracted from expansion, move "+i);                                    
+                                //                                    }
+                                //                                    else {
+                                //                                        // Solve and extract.
+                                //                                        solverProfile.assertSolved();
+                                //                                        double t0 = solverProfile.getForwardCrossingTime(profiles[axis].s[0], false);
+                                //                                        double t1 = solverProfile.getBackwardCrossingTime(profiles[axis].s[segments], false);
+                                //                                        profiles[axis].extractProfileSectionFrom(solverProfile, t0, t1);
+                                //                                        profiles[axis].validate("extracted, move "+i);                                    
+                                //                                    }
+                                //                                    hasSolved = true;
+                                //                                }
+                                //                                else 
+                                if (solve) {
                                     // Solve with given entry/exit conditions.
                                     profiles[axis].solve();
                                     profiles[axis].validate("simply solved, move "+i);             
@@ -852,48 +852,18 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
         //        }
     }
 
-    public void validate(String title) throws Exception {
-        MotionProfile [] prevProfiles = null; 
-        int i = 0;
-        final double sErr = Math.sqrt(MotionProfile.eps);
-        final double vErr = MotionProfile.vtol*0.1;
-        final double aErr = MotionProfile.atol*0.1;
-        for (MotionProfile [] profiles : this) {
-            MotionProfile.validateProfiles(profiles);
-            for (int axis = 0; axis < profiles.length; axis++) {
-                if (prevProfiles == null) {
-                    if (profiles[axis].v[0] != 0) {
-                        throw new Exception(title+": axis "+axis+" v[0] is not zero");
-                    }
-                    if (!profiles[axis].isConstantAcceleration() && profiles[axis].a[0] != 0) {
-                        throw new Exception(title+": axis "+axis+" a[0] is not zero");
-                    }
-                }
-                else {
-                    if ( MotionProfile.mismatch(profiles[axis].s[0], prevProfiles[axis].s[segments], sErr)) {
-                        throw new Exception(title+": axis "+axis+" location discontinous into move "+i);
-                    }
-                    if ( MotionProfile.mismatch(profiles[axis].v[0], prevProfiles[axis].v[segments], vErr)) {
-                        throw new Exception(title+": axis "+axis+" velocity discontinous into move "+i);
-                    }
-                    if (!profiles[axis].isConstantAcceleration() 
-                            &&  MotionProfile.mismatch(profiles[axis].a[0], prevProfiles[axis].a[segments], aErr)) {
-                        throw new Exception(title+": axis "+axis+" acceleration discontinous into move "+i);
-                    }
-                }
-            }
-            // Next.
-            prevProfiles = profiles;
-            i++;
-        }
-    }
-
+    /**
+     * Helper for the optimizer: reduces excess overshoot into uncoordinated moves. This is a simple
+     * heuristic controlled by excess time detected in the uncoordinated move. Excess time is assumed
+     * when the move takes longer that the straight line move from/to still-stand. 
+     * 
+     */
     protected static boolean controlOvershoot(MotionProfile[] prevProfiles,
             MotionProfile[] entryProfiles, MotionProfile[] exitProfiles,
             MotionProfile[] nextProfiles, int axis, double timeWastedEntry, double timeWastedExit,
             MotionProfile solverProfile, double adaption, int iteration) {
         boolean changed = false;
-        double minf = (iteration == 0) ? 0.71 : 0;
+        double minf = (iteration == 0) ? 0.71 : 0.5;
 
         if (entryProfiles[axis].hasOption(ProfileOption.CroppedEntry)) {
             solverProfile.s[0] = entryProfiles[axis].sEntryControl;
@@ -928,6 +898,48 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
         // Solve to boundary conditions.
         solverProfile.solve();
         return changed;
+    }
+
+    /**
+     * Validate the path for seamless continuity. 
+     * 
+     * @param title
+     * @throws Exception
+     */
+    public void validate(String title) throws Exception {
+        MotionProfile [] prevProfiles = null; 
+        int i = 0;
+        final double sErr = Math.sqrt(MotionProfile.eps);
+        final double vErr = MotionProfile.vtol*0.1;
+        final double aErr = MotionProfile.atol*0.1;
+        for (MotionProfile [] profiles : this) {
+            MotionProfile.validateProfiles(profiles);
+            for (int axis = 0; axis < profiles.length; axis++) {
+                if (prevProfiles == null) {
+                    if (profiles[axis].v[0] != 0) {
+                        throw new Exception(title+": axis "+axis+" v[0] is not zero");
+                    }
+                    if (!profiles[axis].isConstantAcceleration() && profiles[axis].a[0] != 0) {
+                        throw new Exception(title+": axis "+axis+" a[0] is not zero");
+                    }
+                }
+                else {
+                    if ( MotionProfile.mismatch(profiles[axis].s[0], prevProfiles[axis].s[segments], sErr)) {
+                        throw new Exception(title+": axis "+axis+" location discontinous into move "+i);
+                    }
+                    if ( MotionProfile.mismatch(profiles[axis].v[0], prevProfiles[axis].v[segments], vErr)) {
+                        throw new Exception(title+": axis "+axis+" velocity discontinous into move "+i);
+                    }
+                    if (!profiles[axis].isConstantAcceleration() 
+                            &&  MotionProfile.mismatch(profiles[axis].a[0], prevProfiles[axis].a[segments], aErr)) {
+                        throw new Exception(title+": axis "+axis+" acceleration discontinous into move "+i);
+                    }
+                }
+            }
+            // Next.
+            prevProfiles = profiles;
+            i++;
+        }
     }
 
     public void toSvg(String title) {

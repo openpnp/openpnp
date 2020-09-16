@@ -41,6 +41,7 @@ import javax.swing.border.TitledBorder;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.DriversComboBoxModel;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
@@ -96,8 +97,24 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
     private JCheckBox softLimitHighEnabled;
     private JButton btnCaptureSoftLimitLow;
     private JButton btnCaptureSoftLimitHigh;
+    private JButton btnPositionSoftLimitLow;
+    private JButton btnPositionSoftLimitHigh;
+    private JLabel lblBacklashCompensation;
+    private JComboBox backlashCompensationMethod;
+    private JLabel lblBacklashSpeedFactor;
+    private JTextField backlashSpeedFactor;
+    private JLabel lblSafeZoneLow;
+    private JLabel lblSafeZoneHigh;
+    private JTextField safeZoneLow;
+    private JTextField safeZoneHigh;
+    private JCheckBox safeZoneLowEnabled;
+    private JCheckBox safeZoneHighEnabled;
+    private JButton btnCaptureSafeZoneLow;
+    private JButton btnPositionSafeZoneLow;
+    private JButton btnCaptureSafeZoneHigh;
+    private JButton btnPositionSafeZoneHigh;
 
-    private Action captureSoftLimitLowAction = new AbstractAction() {
+    private Action captureSoftLimitLowAction = new AbstractAction(null, Icons.captureAxisLow) {
         {
             putValue(Action.SHORT_DESCRIPTION,
                     "Capture the current axis position as the low soft-limit.");
@@ -115,7 +132,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         }
     };
 
-    private Action captureSoftLimitHighAction = new AbstractAction() {
+    private Action captureSoftLimitHighAction = new AbstractAction(null, Icons.captureAxisHigh) {
         {
             putValue(Action.SHORT_DESCRIPTION,
                     "Capture the current axis position as the high soft-limit.");
@@ -132,10 +149,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
             });
         }
     };
-    private JButton btnPositionSoftLimitLow;
-    private JButton btnPositionSoftLimitHigh;
 
-    private Action positionSoftLimitLowAction = new AbstractAction() {
+    private Action positionSoftLimitLowAction = new AbstractAction(null, Icons.positionAxisLow) {
         {
             putValue(Action.SHORT_DESCRIPTION,
                     "Position the axis to the low soft-limit coordinate.");
@@ -151,7 +166,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         }
     };
 
-    private Action positionSoftLimitHighAction = new AbstractAction() {
+    private Action positionSoftLimitHighAction = new AbstractAction(null, Icons.positionAxisHigh) {
         {
             putValue(Action.SHORT_DESCRIPTION,
                     "Position the axis to the high soft-limit coordinate.");
@@ -166,10 +181,75 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
             });
         }
     };
-    private JLabel lblBacklashCompensation;
-    private JComboBox backlashCompensationMethod;
-    private JLabel lblBacklashSpeedFactor;
-    private JTextField backlashSpeedFactor;
+    
+
+    private Action captureSafeZoneLowAction = new AbstractAction(null, Icons.captureAxisLow) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Capture the current axis position as the lower limit of the safe zone.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.submitUiMachineTask(() -> {
+                Length position = ((AbstractControllerAxis) axis).getDriverLengthCoordinate();
+                SwingUtilities.invokeAndWait(() -> {
+                    LengthConverter lengthConverter = new LengthConverter();
+                    safeZoneLow.setText(lengthConverter.convertForward(position));
+                });
+            });
+        }
+    };
+
+    private Action captureSafeZoneHighAction = new AbstractAction(null, Icons.captureAxisHigh) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Capture the current axis position as the upper limit of the safe zone.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.submitUiMachineTask(() -> {
+                Length position = ((AbstractControllerAxis) axis).getDriverLengthCoordinate();
+                SwingUtilities.invokeAndWait(() -> {
+                    LengthConverter lengthConverter = new LengthConverter();
+                    safeZoneHigh.setText(lengthConverter.convertForward(position));
+                });
+            });
+        }
+    };
+
+    private Action positionSafeZoneLowAction = new AbstractAction(null, Icons.positionAxisLow) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Position the axis to the lower limit of the safe zone.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            LengthConverter lengthConverter = new LengthConverter();
+            Length limit = lengthConverter.convertReverse(safeZoneLow.getText());
+            UiUtils.submitUiMachineTask(() -> {
+                ((AbstractControllerAxis) axis).moveAxis(limit);
+            });
+        }
+    };
+
+    private Action positionSafeZoneHighAction = new AbstractAction(null, Icons.positionAxisHigh) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Position the axis to the higher limit of the safe zone.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            LengthConverter lengthConverter = new LengthConverter();
+            Length limit = lengthConverter.convertReverse(safeZoneHigh.getText());
+            UiUtils.submitUiMachineTask(() -> {
+                ((AbstractControllerAxis) axis).moveAxis(limit);
+            });
+        }
+    };    
 
     public ReferenceControllerAxisConfigurationWizard(ReferenceControllerAxis axis) {
         super(axis);
@@ -334,6 +414,10 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblSoftLimitLow = new JLabel("Soft Limit Low");
@@ -347,50 +431,78 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         panelKinematics.add(softLimitLowEnabled, "6, 2");
 
         btnCaptureSoftLimitLow = new JButton(captureSoftLimitLowAction);
-        btnCaptureSoftLimitLow.setText("<html><span style=\"color:#005BD9;\">┬</span></html>");
         panelKinematics.add(btnCaptureSoftLimitLow, "8, 2");
 
         btnPositionSoftLimitLow = new JButton(positionSoftLimitLowAction);
-        btnPositionSoftLimitLow.setText("<html><span style=\"color:red;\">┬</span></html>");
         panelKinematics.add(btnPositionSoftLimitLow, "10, 2");
+        
+        lblSafeZoneLow = new JLabel("Safe Zone Low");
+        panelKinematics.add(lblSafeZoneLow, "2, 4, right, default");
+        
+        safeZoneLow = new JTextField();
+        panelKinematics.add(safeZoneLow, "4, 4, fill, default");
+        safeZoneLow.setColumns(10);
+        
+        safeZoneLowEnabled = new JCheckBox("Enabled?");
+        panelKinematics.add(safeZoneLowEnabled, "6, 4");
+        
+        btnCaptureSafeZoneLow = new JButton(captureSafeZoneLowAction);
+        panelKinematics.add(btnCaptureSafeZoneLow, "8, 4");
+        
+        btnPositionSafeZoneLow = new JButton(positionSafeZoneLowAction);
+        panelKinematics.add(btnPositionSafeZoneLow, "10, 4");
+        
+        lblSafeZoneHigh = new JLabel("Safe Zone High");
+        panelKinematics.add(lblSafeZoneHigh, "2, 6, right, default");
+        
+        safeZoneHigh = new JTextField();
+        panelKinematics.add(safeZoneHigh, "4, 6, fill, default");
+        safeZoneHigh.setColumns(10);
+        
+        safeZoneHighEnabled = new JCheckBox("Enabled?");
+        panelKinematics.add(safeZoneHighEnabled, "6, 6");
+        
+        btnCaptureSafeZoneHigh = new JButton(captureSafeZoneHighAction);
+        panelKinematics.add(btnCaptureSafeZoneHigh, "8, 6");
+        
+        btnPositionSafeZoneHigh = new JButton(positionSafeZoneHighAction);
+        panelKinematics.add(btnPositionSafeZoneHigh, "10, 6");
 
         lblSoftLimitHigh = new JLabel("Soft Limit High");
-        panelKinematics.add(lblSoftLimitHigh, "2, 4, right, default");
+        panelKinematics.add(lblSoftLimitHigh, "2, 8, right, default");
 
         softLimitHigh = new JTextField();
-        panelKinematics.add(softLimitHigh, "4, 4, fill, default");
+        panelKinematics.add(softLimitHigh, "4, 8, fill, default");
         softLimitHigh.setColumns(10);
 
         softLimitHighEnabled = new JCheckBox("Enabled?");
-        panelKinematics.add(softLimitHighEnabled, "6, 4");
+        panelKinematics.add(softLimitHighEnabled, "6, 8");
 
         btnCaptureSoftLimitHigh = new JButton(captureSoftLimitHighAction);
-        btnCaptureSoftLimitHigh.setText("<html><span style=\"color:#005BD9;\">┴</span></html>");
-        panelKinematics.add(btnCaptureSoftLimitHigh, "8, 4");
+        panelKinematics.add(btnCaptureSoftLimitHigh, "8, 8");
 
         btnPositionSoftLimitHigh = new JButton(positionSoftLimitHighAction);
-        btnPositionSoftLimitHigh.setText("<html><span style=\"color:red;\">┴</span></html>");
-        panelKinematics.add(btnPositionSoftLimitHigh, "10, 4");
+        panelKinematics.add(btnPositionSoftLimitHigh, "10, 8");
 
         lblFeedrates = new JLabel("Feedrate [/s]");
-        panelKinematics.add(lblFeedrates, "2, 8, right, default");
+        panelKinematics.add(lblFeedrates, "2, 12, right, default");
 
         feedratePerSecond = new JTextField();
-        panelKinematics.add(feedratePerSecond, "4, 8, fill, default");
+        panelKinematics.add(feedratePerSecond, "4, 12, fill, default");
         feedratePerSecond.setColumns(10);
 
         lblAccelerations = new JLabel("Acceleration [/s²]");
-        panelKinematics.add(lblAccelerations, "2, 10, right, default");
+        panelKinematics.add(lblAccelerations, "2, 14, right, default");
 
         accelerationPerSecond2 = new JTextField();
-        panelKinematics.add(accelerationPerSecond2, "4, 10, fill, default");
+        panelKinematics.add(accelerationPerSecond2, "4, 14, fill, default");
         accelerationPerSecond2.setColumns(10);
 
         lblJerks = new JLabel("Jerk [/s³]");
-        panelKinematics.add(lblJerks, "2, 12, right, default");
+        panelKinematics.add(lblJerks, "2, 16, right, default");
 
         jerkPerSecond3 = new JTextField();
-        panelKinematics.add(jerkPerSecond3, "4, 12, fill, default");
+        panelKinematics.add(jerkPerSecond3, "4, 16, fill, default");
         jerkPerSecond3.setColumns(10);
 
         driverConverter = new NamedConverter<>(Configuration.get().getMachine().getDrivers()); 
@@ -455,6 +567,11 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         addWrappedBinding(axis, "softLimitLowEnabled", softLimitLowEnabled, "selected");
         addWrappedBinding(axis, "softLimitHigh", softLimitHigh, "text", lengthConverter);
         addWrappedBinding(axis, "softLimitHighEnabled", softLimitHighEnabled, "selected");
+
+        addWrappedBinding(axis, "safeZoneLow", safeZoneLow, "text", lengthConverter);
+        addWrappedBinding(axis, "safeZoneLowEnabled", safeZoneLowEnabled, "selected");
+        addWrappedBinding(axis, "safeZoneHigh", safeZoneHigh, "text", lengthConverter);
+        addWrappedBinding(axis, "safeZoneHighEnabled", safeZoneHighEnabled, "selected");
 
         addWrappedBinding(axis, "feedratePerSecond", feedratePerSecond, "text", lengthConverter);
         addWrappedBinding(axis, "accelerationPerSecond2", accelerationPerSecond2, "text", lengthConverter);

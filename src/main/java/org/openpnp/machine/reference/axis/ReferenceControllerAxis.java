@@ -111,6 +111,18 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     private boolean softLimitHighEnabled = false;
 
     @Element(required = false)
+    private Length safeZoneLow = new Length(0.0, LengthUnit.Millimeters);
+    
+    @Attribute(required = false)
+    private boolean safeZoneLowEnabled = false;
+
+    @Element(required = false)
+    private Length safeZoneHigh = new Length(0.0, LengthUnit.Millimeters);
+
+    @Attribute(required = false)
+    private boolean safeZoneHighEnabled = false;
+
+    @Element(required = false)
     private Length feedratePerSecond = new Length(250, LengthUnit.Millimeters);
 
     @Element(required = false)
@@ -254,6 +266,38 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
 
     public void setSoftLimitHighEnabled(boolean softLimitHighEnabled) {
         this.softLimitHighEnabled = softLimitHighEnabled;
+    }
+
+    public Length getSafeZoneLow() {
+        return safeZoneLow;
+    }
+
+    public void setSafeZoneLow(Length safeZoneLow) {
+        this.safeZoneLow = safeZoneLow;
+    }
+
+    public boolean isSafeZoneLowEnabled() {
+        return safeZoneLowEnabled;
+    }
+
+    public void setSafeZoneLowEnabled(boolean safeZoneLowEnabled) {
+        this.safeZoneLowEnabled = safeZoneLowEnabled;
+    }
+
+    public Length getSafeZoneHigh() {
+        return safeZoneHigh;
+    }
+
+    public void setSafeZoneHigh(Length safeZoneHigh) {
+        this.safeZoneHigh = safeZoneHigh;
+    }
+
+    public boolean isSafeZoneHighEnabled() {
+        return safeZoneHighEnabled;
+    }
+
+    public void setSafeZoneHighEnabled(boolean safeZoneHighEnabled) {
+        this.safeZoneHighEnabled = safeZoneHighEnabled;
     }
 
     public boolean isInvertLinearRotational() {

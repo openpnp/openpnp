@@ -100,7 +100,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
     private double interpolationTimeStep = 0.01;
 
     @Attribute(required = false)
-    private int interpolationDistStep = 8;
+    private int interpolationMinStep = 8;
 
 
     private WriterThread writerThread;
@@ -147,11 +147,11 @@ public class GcodeAsyncDriver extends GcodeDriver {
 
     @Override
     public Integer getInterpolationMinStep() {
-        return interpolationDistStep;
+        return interpolationMinStep;
     }
 
-    public void setInterpolationDistStep(int interpolationDistStep) {
-        this.interpolationDistStep = interpolationDistStep;
+    public void setInterpolationMinStep(int interpolationMinStep) {
+        this.interpolationMinStep = interpolationMinStep;
     }
 
     @Override
