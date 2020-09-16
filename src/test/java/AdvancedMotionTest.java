@@ -81,6 +81,16 @@ public class AdvancedMotionTest {
                 0, 400, 700, -700, 2000, 2000,
                 0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, 0);
         testProfile("Move with entry/exit velocity/acceleration", profile, MotionProfile.ErrorState.MaxVelocityViolated);
+        // Problem move with entry/exit velocity/acceleration 
+        profile = new MotionProfile(
+                100, 110, 200, 200, 2000, 2000,
+                0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, 0);
+        testProfile("Problem move with entry/exit velocity/acceleration", profile, null);
+        // Problem move with entry/exit velocity/acceleration and min-time 
+        profile = new MotionProfile(
+                100, 110, 200, 200, 2000, 2000,
+                0, 1000, 700, 2000, 2000, 15000, profile.getTime()+0.1, Double.POSITIVE_INFINITY, 0);
+        testProfile("Problem move with entry/exit velocity/acceleration and min-time", profile, null);
         // Null moves
         profile = new MotionProfile(
                 0, 0, 0, 0, 0, 0,
@@ -236,52 +246,55 @@ public class AdvancedMotionTest {
             return path.get(i);
         }
 
-        private double x0 = 0;
-        private double y0 = 0;
-        private double z0 = 0;
+        private Double x0 = null;
+        private Double y0 = null;
+        private Double z0 = null;
 
         public void moveTo(double x, double y, double z, int nozzle) {
-            MotionProfile [] profiles = new MotionProfile[3];
-            int options = (sCurves ? ProfileOption.SimplifiedSCurve.flag() : 0);
-            double zMin, zMax;
-            boolean inSafeZone = 
-                    (z0 >= safeZ && z0 <= -safeZ)
-                    && (z >= safeZ && z <= -safeZ);
-            if (nozzle == 1) {
-                zMin = -20;
-                zMax = 5;
-            }
-            else {
-                zMin = -5;
-                zMax = 20;
-            }
-            if (inSafeZone) {
-                zMin = safeZ;
-                zMax = -safeZ;
-            }
-            else {
-                options |= ProfileOption.Coordinated.flag();
-            }
-            profiles[0] = new MotionProfile(
-                    x0, x, 0, 0, 0, 0,
-                    0, 1000, 700, 2000, 2000, jerk, 0, Double.POSITIVE_INFINITY, 
-                    options);
-            profiles[1] = new MotionProfile(
-                    y0, y, 0, 0, 0, 0,
-                    0, 500, 700, 2000, 2000, jerk, 0, Double.POSITIVE_INFINITY, 
-                    options);
-            profiles[2] = new MotionProfile(
-                    z0, z, 0, 0, 0, 0,
-                    zMin, zMax, 700, 2000, 2000, jerk, 0, Double.POSITIVE_INFINITY, 
-                    options);
+            if (x0 != null && y0 != null && z0 != null) {
+                // Previous waypoint was set, add a motion.
+                MotionProfile [] profiles = new MotionProfile[3];
+                int options = (sCurves ? ProfileOption.SimplifiedSCurve.flag() : 0);
+                double zMin, zMax;
+                boolean inSafeZone = 
+                        (z0 >= safeZ && z0 <= -safeZ)
+                        && (z >= safeZ && z <= -safeZ);
+                if (nozzle == 1) {
+                    zMin = -20;
+                    zMax = 5;
+                }
+                else {
+                    zMin = -5;
+                    zMax = 20;
+                }
+                if (inSafeZone) {
+                    zMin = safeZ;
+                    zMax = -safeZ;
+                }
+                else {
+                    options |= ProfileOption.Coordinated.flag();
+                }
+                profiles[0] = new MotionProfile(
+                        x0, x, 0, 0, 0, 0,
+                        0, 1000, 700, 2000, 2000, jerk, 0, Double.POSITIVE_INFINITY, 
+                        options);
+                profiles[1] = new MotionProfile(
+                        y0, y, 0, 0, 0, 0,
+                        0, 500, 700, 2000, 2000, jerk, 0, Double.POSITIVE_INFINITY, 
+                        options);
+                profiles[2] = new MotionProfile(
+                        z0, z, 0, 0, 0, 0,
+                        zMin, zMax, 700, 2000, 2000, jerk, 0, Double.POSITIVE_INFINITY, 
+                        options);
 
-            // Solve as a single coordinated move.
-            double [] unitVector = MotionProfile.getUnitVector(profiles);
-            int leadAxis = MotionProfile.getLeadAxisIndex(unitVector);
-            profiles[leadAxis].solve();
-            MotionProfile.coordinateProfiles(profiles);
-            // Add.
-            add(profiles);
+                // Solve as a single coordinated move.
+                double [] unitVector = MotionProfile.getUnitVector(profiles);
+                int leadAxis = MotionProfile.getLeadAxisIndex(unitVector);
+                profiles[leadAxis].solve();
+                MotionProfile.coordinateProfiles(profiles);
+                // Add.
+                add(profiles);
+            }
             // Remember last coordinates.
             x0 = x;
             y0 = y;
@@ -304,9 +317,9 @@ public class AdvancedMotionTest {
                     new PlannerPath(30000, false), new PlannerPath(30000, true),
                     new PlannerPath(15000, false), new PlannerPath(15000, true),
                     new PlannerPath(0, false), new PlannerPath(0, true) 
-                    }) {
-                
-                // pick & place
+            }) {
+
+                // pick & place, one nozzle, symmetric
                 path.moveTo(0, 0, safeZ, 1);
                 path.moveTo(0, 0, -15, 1);
                 path.moveTo(0, 0, safeZ, 1);
@@ -323,10 +336,7 @@ public class AdvancedMotionTest {
                 path.moveTo(125, 0, -15, 1);
                 path.moveTo(125, 0, safeZ, 1);
 
-                //path.moveTo(130, 20, safeZ);
-                //path.moveTo(130, 20, -10);
-                //path.moveTo(130, 20, safeZ);
-
+                // pick & place, one nozzle, asymmetric
                 path.moveTo(0, 50, safeZ, 1);
                 path.moveTo(0, 50, -10, 1);
                 path.moveTo(0, 50, safeZ, 1);
@@ -343,6 +353,7 @@ public class AdvancedMotionTest {
                 path.moveTo(125, 50, -10, 1);
                 path.moveTo(125, 50, safeZ, 1);
 
+                // pick & place, dual nozzle, symmetric
                 path.moveTo(0, 100, safeZ, 1);
                 path.moveTo(0, 100, -15, 1);
                 path.moveTo(0, 100, safeZ, 1);
@@ -359,6 +370,7 @@ public class AdvancedMotionTest {
                 path.moveTo(125, 100, -15, 1);
                 path.moveTo(125, 100, safeZ, 1);
 
+                // pick & place, dual nozzle, asymmetric
                 path.moveTo(0, 150, safeZ, 1);
                 path.moveTo(0, 150, -15, 1);
                 path.moveTo(0, 150, safeZ, 1);
@@ -387,12 +399,11 @@ public class AdvancedMotionTest {
                 path.moveTo(280, 150, -15, 1);
                 path.moveTo(279, 150, -15, 1);
                 path.moveTo(275, 150, -15, 1);
-                //path.moveTo(275, 150, safeZ);
+                path.moveTo(275, 150, safeZ, 1);
 
                 if (warmup == 0) {
                     System.out.println("==========================================");
                     // Unoptimized/single moves.
-                    //MotionProfile.pathToSvg(path, null);
                     double unoptimizedTime = path.getOverallTime();
                     // Solve. 
                     double t0 = NanosecondTime.getRuntimeSeconds(); 
@@ -404,13 +415,21 @@ public class AdvancedMotionTest {
                         System.out.println("Z:"+profiles[2]);
                         System.out.println(" ");
                     }
-                    String message = (path.jerk == 0 ? "Constant acceleration" : ("Jerk control: "+path.jerk+" mm/s³"))+", "
-                            +(path.jerk > 0 && path.sCurves ? " simple S-Curves, " : "")
+                    String title = (path.jerk == 0 ? 
+                            "Constant acceleration" 
+                            : ("Jerk control: "+path.jerk+" mm/s³"))
+                            +(path.jerk > 0 && path.sCurves ? ", simplified S-Curves" : "");
+                    String message = title+": "
                             +"total move time: "+String.format("%.3f", path.getOverallTime())+" s, "
-                            +"from unoptimized: "+String.format("%.3f", unoptimizedTime)+" s, "
-                            +"total solving time: "+String.format("%.3f", solvingTime)+" s";
+                            +(path.getOverallTime() == unoptimizedTime ? 
+                                    "not optimized. "
+                                    : ("from unoptimized: "+String.format("%.3f", unoptimizedTime)+" s, "
+                                            +String.format("%.2f", 100.0*(path.getOverallTime()/unoptimizedTime - 1))+" %, "
+                                            +"total solving time: "+String.format("%.3f", solvingTime)+" s"));
+                    MotionProfile.validatePath(path, title);
                     MotionProfile.toSvg(path, message);
                     System.out.println(message);
+
                 }
             }
         }

@@ -422,19 +422,19 @@ public class MotionProfile {
                 }
                 tSum += t[i];
                 // Check continuity.
-                if (mismatch(s[i], s[i-1] + v[i-1]*t[i] + 1./2*a[i-1]*Math.pow(t[i], 2) + 1./6*j[i-1]*Math.pow(t[i], 3))) {
+                if (mismatch(s[i], s[i-1] + v[i-1]*t[i] + 1./2*a[i-1]*Math.pow(t[i], 2) + 1./6*j[i-1]*Math.pow(t[i], 3), eps)) {
                     return ErrorState.LocationDiscontinuity;
                 }
-                if (mismatch(v[i], v[i-1] + a[i-1]*t[i] + 1./2*j[i-1]*Math.pow(t[i], 2))) {
+                if (mismatch(v[i], v[i-1] + a[i-1]*t[i] + 1./2*j[i-1]*Math.pow(t[i], 2), eps)) {
                     return ErrorState.VelocityDiscontinuity;
                 }
-                if (!isConstantAcceleration() && mismatch(a[i], a[i-1] + j[i-1]*t[i])) {
+                if (!isConstantAcceleration() && mismatch(a[i], a[i-1] + j[i-1]*t[i], eps)) {
                     return ErrorState.AccelerationDiscontinuity;
                 }
             }
         }
         // Check time sum constraints-.
-        if (mismatch(tSum, time)) {
+        if (mismatch(tSum, time, eps)) {
             return ErrorState.TimeSumMismatch;
         }
         if (tSum < tMin - eps) {
@@ -476,8 +476,8 @@ public class MotionProfile {
         return null;
     }
 
-    private boolean mismatch(double a, double b) {
-        if (Math.abs(a-b) > eps) {
+    private static boolean mismatch(double a, double b, double tol) {
+        if (Math.abs(a-b) > tol) {
             return true; // (debug point)
         }
         return false;
@@ -943,7 +943,7 @@ public class MotionProfile {
             }
             // TODO: if this is still zero we just assume it's completely symmetric, but this might not be true
             // if the V&a mix are not the same on entry/exit and by chance still cancel out in the effective speed. 
-            // We would need to calculate the displacement to still-stand and compare.
+            // We would need to calculate the displacement to still-stand and compare. For now, computeProfile() has to cope.
             if (signum == 0) {
                 trace("*** signum 0");
             }
@@ -1301,8 +1301,8 @@ public class MotionProfile {
          * 
          *   
          */
-        final double adaption = 0.3;
-        for (int outer = 0; outer < 2; outer++) {
+        final double adaption = 0.33;
+        for (int outer = 0; outer < 4; outer++) {
             int iNext;
             boolean hasUncoordinated = false;
             for (int i = 0; i <= last; i = iNext) {
@@ -1768,12 +1768,6 @@ public class MotionProfile {
 
 
 
-
-
-
-
-
-
         //
         //        // Pass 2: Greedy backward motion, unconstrained.
         //        MotionProfile [] nextProfiles = null;
@@ -2024,22 +2018,56 @@ public class MotionProfile {
         }
     }
 
+    public static void validatePath(Path path, String title) throws Exception {
+        MotionProfile [] prevProfiles = null; 
+        int i = 0;
+        final double sErr = Math.sqrt(eps);
+        final double vErr = vtol*0.1;
+        final double aErr = atol*0.1;
+        for (MotionProfile [] profiles : path) {
+            validateProfiles(profiles);
+            for (int axis = 0; axis < profiles.length; axis++) {
+                if (prevProfiles == null) {
+                    if (profiles[axis].v[0] != 0) {
+                        throw new Exception(title+": axis "+axis+" v[0] is not zero");
+                    }
+                    if (!profiles[axis].isConstantAcceleration() && profiles[axis].a[0] != 0) {
+                        throw new Exception(title+": axis "+axis+" a[0] is not zero");
+                    }
+                }
+                else {
+                    if (mismatch(profiles[axis].s[0], prevProfiles[axis].s[segments], sErr)) {
+                        throw new Exception(title+": axis "+axis+" location discontinous into move "+i);
+                    }
+                    if (mismatch(profiles[axis].v[0], prevProfiles[axis].v[segments], vErr)) {
+                        throw new Exception(title+": axis "+axis+" velocity discontinous into move "+i);
+                    }
+                    if (!profiles[axis].isConstantAcceleration() 
+                            && mismatch(profiles[axis].a[0], prevProfiles[axis].a[segments], aErr)) {
+                        throw new Exception(title+": axis "+axis+" acceleration discontinous into move "+i);
+                    }
+                }
+            }
+            // Next.
+            prevProfiles = profiles;
+            i++;
+        }
+    }
+
     protected static boolean controlOvershoot(MotionProfile[] prevProfiles,
             MotionProfile[] entryProfiles, MotionProfile[] exitProfiles,
             MotionProfile[] nextProfiles, int axis, double timeWastedEntry, double timeWastedExit,
             MotionProfile solverProfile, double adaption) {
         boolean changed = false;
-        
+
         if (entryProfiles[axis].hasOption(ProfileOption.CroppedEntry)) {
             solverProfile.s[0] = entryProfiles[axis].sEntryControl;
             if (prevProfiles != null && !isCoordinated(prevProfiles)) {
-                double sControl = entryProfiles[axis].sEntryControl - prevProfiles[axis].s[segments];
-                if (sControl != 0) {
-                    double stuffBackTime = prevProfiles[axis].time -  
-                            Math.min(entryProfiles[axis].tEntryControl, timeWastedEntry)*adaption;
-                    double sNewControl = entryProfiles[axis].sEntryControl 
-                            - prevProfiles[axis].getMomentaryLocation(stuffBackTime);
-                    double factor = Math.max(0, Math.min(1, sNewControl/sControl));
+                double tControl = entryProfiles[axis].tEntryControl;
+                if (tControl != 0) {
+                    double factor = Math.max(0, Math.min(1, 
+                            (tControl - timeWastedEntry*adaption)/tControl));
+                    double sControl = entryProfiles[axis].sEntryControl - prevProfiles[axis].s[segments];
                     solverProfile.s[0] = prevProfiles[axis].s[segments] + sControl*factor;
                     changed = true;
                 }
@@ -2050,13 +2078,11 @@ public class MotionProfile {
         if (exitProfiles[axis].hasOption(ProfileOption.CroppedExit)) {
             solverProfile.s[segments] = exitProfiles[axis].sExitControl;
             if (nextProfiles != null && !isCoordinated(nextProfiles)) {
-                double sControl = exitProfiles[axis].sExitControl - nextProfiles[axis].s[0];
-                if (sControl != 0) {
-                    double stuffBackTime = 
-                            Math.min(exitProfiles[axis].tExitControl, timeWastedExit)*adaption;
-                    double sNewControl = exitProfiles[axis].sExitControl 
-                            - nextProfiles[axis].getMomentaryLocation(stuffBackTime);
-                    double factor = Math.max(0, Math.min(1, sNewControl/sControl));
+                double tControl = exitProfiles[axis].tExitControl;
+                if (tControl != 0) {
+                    double factor = Math.max(0, Math.min(1, 
+                            (tControl - timeWastedExit*adaption)/tControl));
+                    double sControl = exitProfiles[axis].sExitControl - nextProfiles[axis].s[0];
                     solverProfile.s[segments] = nextProfiles[axis].s[0] + sControl*factor;
                     changed = true;
                 }
@@ -3156,7 +3182,7 @@ solve(eq, t)            # Solve for t
         double sy = -1;
         double shad = 0.0;
 
-        svg.append("<text x=\"0\" y=\"20\" fill=\"black\" font-family=\"sans-serif\" font-size=\"9\">");
+        svg.append("<text x=\"0\" y=\"20\" fill=\"black\" font-family=\"sans-serif\" font-size=\"7\">");
         svg.append(escapeHTML(title));
         svg.append("</text>\n");
 
