@@ -3,6 +3,7 @@ import java.util.List;
 
 import org.apache.batik.transcoder.ToSVGAbstractTranscoder;
 import org.junit.Test;
+import org.openpnp.model.AbstractMotionPath;
 import org.openpnp.model.Motion;
 import org.openpnp.model.MotionProfile;
 import org.openpnp.model.MotionProfile.ErrorState;
@@ -222,7 +223,7 @@ public class AdvancedMotionTest {
     }
 
     final double safeZ = -5;
-    private class PlannerPath extends MotionProfile.Path {
+    private class PlannerPath extends AbstractMotionPath {
         private final List<MotionProfile []> path = new ArrayList<>();
         private final double jerk;
         private final boolean sCurves;
@@ -407,7 +408,7 @@ public class AdvancedMotionTest {
                     double unoptimizedTime = path.getOverallTime();
                     // Solve. 
                     double t0 = NanosecondTime.getRuntimeSeconds(); 
-                    MotionProfile.solvePath(path);
+                    path.solve();
                     double solvingTime = NanosecondTime.getRuntimeSeconds() - t0; 
                     for (MotionProfile [] profiles : path) {
                         System.out.println("X:"+profiles[0]);
@@ -426,8 +427,8 @@ public class AdvancedMotionTest {
                                     : ("from unoptimized: "+String.format("%.3f", unoptimizedTime)+" s, "
                                             +String.format("%.2f", 100.0*(path.getOverallTime()/unoptimizedTime - 1))+" %, "
                                             +"total solving time: "+String.format("%.3f", solvingTime)+" s"));
-                    MotionProfile.validatePath(path, title);
-                    MotionProfile.toSvg(path, message);
+                    path.validate(title);
+                    path.toSvg(message);
                     System.out.println(message);
 
                 }

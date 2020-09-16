@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceAdvancedMotionPlannerConfigurationWizard;
+import org.openpnp.model.AbstractMotionPath;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Motion;
 import org.openpnp.model.MotionProfile;
@@ -50,7 +51,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
         this.allowContinuousMotion = allowContinuousMotion;
     }
 
-    protected class PlannerPath extends MotionProfile.Path {
+    protected class PlannerPath extends AbstractMotionPath {
         private final List<Motion> executionPlan;
 
         public PlannerPath(List<Motion> executionPlan) {
@@ -71,9 +72,9 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
 
     @Override
     protected void optimizeExecutionPlan(List<Motion> executionPlan,
-            CompletionType completionType) {
-//        PlannerPath path = new PlannerPath(executionPlan);
-//        MotionProfile.solvePath(path);
+            CompletionType completionType) throws Exception {
+        PlannerPath path = new PlannerPath(executionPlan);
+        path.solve();
     }
 
     @Override

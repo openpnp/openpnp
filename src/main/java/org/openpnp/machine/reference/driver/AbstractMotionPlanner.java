@@ -358,8 +358,9 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
      * 
      * @param executionPlan
      * @param completionType
+     * @throws Exception 
      */
-    protected abstract void optimizeExecutionPlan(List<Motion> executionPlan, CompletionType completionType);
+    protected abstract void optimizeExecutionPlan(List<Motion> executionPlan, CompletionType completionType) throws Exception;
 
     /**
      * Sub-classes may override this in order to execute/interpolate more complex MotionProfiles with simulated jerk control, 
