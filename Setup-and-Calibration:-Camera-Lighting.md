@@ -22,6 +22,8 @@ to your desktop or somewhere else you can easily find it.
 4. In the folder that opens, open the Events directory.
 5. Copy the two scripts into the Events directory.
 
+**Note**: for newer versions of OpenPnP 2.0, you must use the Camera.BeforeSettle/Camera.AfterSettle scripts, instead of the Capture ones. Please consult the Scripting page. The following is outdated/for OpenPnP 1.0:
+
 Now, whenever OpenPnP needs to capture an image from your Up looking camera it will run the Camera.BeforeCapture.js script, capture an image and then run the Camera.AfterCapture.js script. The first one will turn the lights on and the second will turn the lights off.
 
 You can customize the way this works by modifying the scripts or the Gcode that controls the lights.
