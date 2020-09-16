@@ -15,14 +15,16 @@ You can use OpenPnP's [Actuator](https://github.com/openpnp/openpnp/wiki/Setup-a
 1. Go to Main Window -> Machine Controls -> Actuators and click the UpCamLights button. Your lights should come on. Click it again and they should turn off. If this doesn't work, adjust your Gcode settings until it does, or ask for help.
 
 # Add Lighting Control Scripts
+**Note**: for newer versions of OpenPnP 2.0, you must use the Camera.BeforeSettle/Camera.AfterSettle scripts, instead of the Capture ones. Please see [[Scripting#CameraBeforeSettle]]. 
+
+The following is for OpenPnP 1.0 only:
+
 1. Download the [zipfile containing the scripts](https://gist.github.com/vonnieda/1bed59fe30c637b88470e0ca3cb5d05d/archive/fb9682a01708e3555f44d26469df7c81007be34a.zip) 
 to your desktop or somewhere else you can easily find it.
 2. Expand the zipfile. There should be two scripts inside.
 3. Go to Main Menu -> Scripts -> Open Scripts Directory.
 4. In the folder that opens, open the Events directory.
 5. Copy the two scripts into the Events directory.
-
-**Note**: for newer versions of OpenPnP 2.0, you must use the Camera.BeforeSettle/Camera.AfterSettle scripts, instead of the Capture ones. Please consult the Scripting page. The following is outdated/for OpenPnP 1.0:
 
 Now, whenever OpenPnP needs to capture an image from your Up looking camera it will run the Camera.BeforeCapture.js script, capture an image and then run the Camera.AfterCapture.js script. The first one will turn the lights on and the second will turn the lights off.
 
