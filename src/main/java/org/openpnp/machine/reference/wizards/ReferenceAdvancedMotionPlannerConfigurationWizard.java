@@ -35,6 +35,7 @@ import javax.swing.JCheckBox;
 public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractConfigurationWizard {
     private final MotionPlanner motionPlanner;
     private JCheckBox allowContinuousMotion;
+    private JCheckBox allowUncoordinated;
 
     public ReferenceAdvancedMotionPlannerConfigurationWizard(ReferenceAdvancedMotionPlanner motionPlanner) {
         this.motionPlanner = motionPlanner;
@@ -50,6 +51,8 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         JLabel lblContinuousMotion = new JLabel("Allow continous motion?");
@@ -59,10 +62,17 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
         allowContinuousMotion = new JCheckBox("");
         contentPanel.add(allowContinuousMotion, "4, 2");
         
+        JLabel lblAllowUncoordinated = new JLabel("Allow uncoordinated?");
+        contentPanel.add(lblAllowUncoordinated, "2, 4, right, default");
+        
+        allowUncoordinated = new JCheckBox("");
+        contentPanel.add(allowUncoordinated, "4, 4");
+        
     }
 
     @Override
     public void createBindings() {
         addWrappedBinding(motionPlanner, "allowContinuousMotion", allowContinuousMotion, "selected");
+        addWrappedBinding(motionPlanner, "allowUncoordinated", allowUncoordinated, "selected");
     }
 }

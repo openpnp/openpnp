@@ -176,6 +176,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         panelSafeZ.add(lblSafeZ, "2, 2, right, default");
 
         textFieldSafeZ = new JTextField();
+        textFieldSafeZ.setEditable(false);
         panelSafeZ.add(textFieldSafeZ, "4, 2, fill, default");
         textFieldSafeZ.setColumns(10);
         

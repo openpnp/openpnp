@@ -222,7 +222,6 @@ public class AdvancedMotionTest {
         }
     }
 
-    final double safeZ = -5;
     private class PlannerPath extends AbstractMotionPath {
         private final List<MotionProfile []> path = new ArrayList<>();
         private final double jerk;
@@ -311,6 +310,10 @@ public class AdvancedMotionTest {
         }
     }
 
+    final double safeZ = -7;
+    final double za = -15;
+    final double zb = -13;
+
     @Test 
     public void testMotionPaths() throws Exception {
         for (int warmup = 2; warmup >= 0; warmup--) {
@@ -322,70 +325,70 @@ public class AdvancedMotionTest {
 
                 // pick & place, one nozzle, symmetric
                 path.moveTo(0, 0, safeZ, 1);
-                path.moveTo(0, 0, -15, 1);
+                path.moveTo(0, 0, za, 1);
                 path.moveTo(0, 0, safeZ, 1);
                 path.moveTo(100, 0, safeZ, 1);
-                path.moveTo(100, 0, -15, 1);
+                path.moveTo(100, 0, za, 1);
                 path.moveTo(100, 0, safeZ, 1);
                 path.moveTo(120, 0, safeZ, 1);
-                path.moveTo(120, 0, -15, 1);
+                path.moveTo(120, 0, za, 1);
                 path.moveTo(120, 0, safeZ, 1);
                 path.moveTo(124, 0, safeZ, 1);
-                path.moveTo(124, 0, -15, 1);
+                path.moveTo(124, 0, za, 1);
                 path.moveTo(124, 0, safeZ, 1);
                 path.moveTo(125, 0, safeZ, 1);
-                path.moveTo(125, 0, -15, 1);
+                path.moveTo(125, 0, za, 1);
                 path.moveTo(125, 0, safeZ, 1);
 
                 // pick & place, one nozzle, asymmetric
                 path.moveTo(0, 50, safeZ, 1);
-                path.moveTo(0, 50, -10, 1);
+                path.moveTo(0, 50, zb, 1);
                 path.moveTo(0, 50, safeZ, 1);
                 path.moveTo(100, 50, safeZ, 1);
-                path.moveTo(100, 50, -15, 1);
+                path.moveTo(100, 50, za, 1);
                 path.moveTo(100, 50, safeZ, 1);
                 path.moveTo(120, 50, safeZ, 1);
-                path.moveTo(120, 50, -10, 1);
+                path.moveTo(120, 50, zb, 1);
                 path.moveTo(120, 50, safeZ, 1);
                 path.moveTo(124, 50, safeZ, 1);
-                path.moveTo(124, 50, -15, 1);
+                path.moveTo(124, 50, za, 1);
                 path.moveTo(124, 50, safeZ, 1);
                 path.moveTo(125, 50, safeZ, 1);
-                path.moveTo(125, 50, -10, 1);
+                path.moveTo(125, 50, zb, 1);
                 path.moveTo(125, 50, safeZ, 1);
 
                 // pick & place, dual nozzle, symmetric
                 path.moveTo(0, 100, safeZ, 1);
-                path.moveTo(0, 100, -15, 1);
+                path.moveTo(0, 100, za, 1);
                 path.moveTo(0, 100, safeZ, 1);
                 path.moveTo(100, 100, -safeZ, 2);
                 path.moveTo(100, 100, 15, 2);
                 path.moveTo(100, 100, -safeZ, 2);
                 path.moveTo(120, 100, safeZ, 1);
-                path.moveTo(120, 100, -15, 1);
+                path.moveTo(120, 100, za, 1);
                 path.moveTo(120, 100, safeZ, 1);
                 path.moveTo(124, 100, -safeZ, 2);
                 path.moveTo(124, 100, 15, 2);
                 path.moveTo(124, 100, -safeZ, 2);
                 path.moveTo(125, 100, safeZ, 1);
-                path.moveTo(125, 100, -15, 1);
+                path.moveTo(125, 100, za, 1);
                 path.moveTo(125, 100, safeZ, 1);
 
                 // pick & place, dual nozzle, asymmetric
                 path.moveTo(0, 150, safeZ, 1);
-                path.moveTo(0, 150, -15, 1);
+                path.moveTo(0, 150, za, 1);
                 path.moveTo(0, 150, safeZ, 1);
                 path.moveTo(100, 150, -safeZ, 2);
                 path.moveTo(100, 150, 15, 2);
                 path.moveTo(100, 150, -safeZ, 2);
                 path.moveTo(120, 150, safeZ, 1);
-                path.moveTo(120, 150, -10, 1);
+                path.moveTo(120, 150, zb, 1);
                 path.moveTo(120, 150, safeZ, 1);
                 path.moveTo(124, 150, -safeZ, 2);
                 path.moveTo(124, 150, 15, 2);
                 path.moveTo(124, 150, -safeZ, 2);
                 path.moveTo(125, 150, safeZ, 1);
-                path.moveTo(125, 150, -10, 1);
+                path.moveTo(125, 150, zb, 1);
                 path.moveTo(125, 150, safeZ, 1);
 
                 // move to push/pull feeder
@@ -395,11 +398,11 @@ public class AdvancedMotionTest {
                 path.moveTo(200, 80, safeZ, 1);
                 path.moveTo(190, 100, safeZ, 1);
                 path.moveTo(190, 120, safeZ, 1);
-                path.moveTo(300, 120, -15, 1);
-                path.moveTo(300, 150, -15, 1);
-                path.moveTo(280, 150, -15, 1);
-                path.moveTo(279, 150, -15, 1);
-                path.moveTo(275, 150, -15, 1);
+                path.moveTo(300, 120, za, 1);
+                path.moveTo(300, 150, za, 1);
+                path.moveTo(280, 150, za, 1);
+                path.moveTo(279, 150, za, 1);
+                path.moveTo(275, 150, za, 1);
                 path.moveTo(275, 150, safeZ, 1);
 
                 if (warmup == 0) {
@@ -428,7 +431,7 @@ public class AdvancedMotionTest {
                                             +String.format("%.2f", 100.0*(path.getOverallTime()/unoptimizedTime - 1))+" %, "
                                             +"total solving time: "+String.format("%.3f", solvingTime)+" s"));
                     path.validate(title);
-                    path.toSvg(message);
+                    path.toSvg(message, -za);
                     System.out.println(message);
 
                 }

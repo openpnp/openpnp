@@ -92,6 +92,9 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
                 ((AbstractHeadMountable)hm).setAxisY(axisY);
                 ((AbstractHeadMountable)hm).setAxisZ(axisZ);
                 ((AbstractHeadMountable)hm).setAxisRotation(axisRotation);
+                if (hm instanceof ReferenceNozzle) {
+                    ((ReferenceNozzle)hm).migrateSafeZ();
+                }
             }
             // No movable actuators mapped for these test drivers.
         }

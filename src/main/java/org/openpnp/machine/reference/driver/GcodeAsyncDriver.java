@@ -132,7 +132,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
         return interpolationMaxSteps;
     }
 
-    public void setInterpolationMaxSteps(int interpolationMaxSteps) {
+    public void setInterpolationMaxSteps(Integer interpolationMaxSteps) {
         this.interpolationMaxSteps = interpolationMaxSteps;
     }
 
@@ -141,7 +141,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
         return interpolationTimeStep;
     }
 
-    public void setInterpolationTimeStep(double interpolationTimeStep) {
+    public void setInterpolationTimeStep(Double interpolationTimeStep) {
         this.interpolationTimeStep = interpolationTimeStep;
     }
 
@@ -150,7 +150,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
         return interpolationMinStep;
     }
 
-    public void setInterpolationMinStep(int interpolationMinStep) {
+    public void setInterpolationMinStep(Integer interpolationMinStep) {
         this.interpolationMinStep = interpolationMinStep;
     }
 

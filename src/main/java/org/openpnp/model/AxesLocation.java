@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.CoordinateAxis;
@@ -510,6 +511,34 @@ public class AxesLocation {
             }
         }
         return found;
+    }
+
+    public boolean isInSafeZone() {
+        for (Entry<Axis, Double> entry : location.entrySet()) {
+            if (entry.getKey() instanceof ReferenceControllerAxis) {
+                ReferenceControllerAxis refAxis = (ReferenceControllerAxis)entry.getKey();
+                double coordinate = entry.getValue(); 
+                if (refAxis.isSafeZoneLowEnabled()) {
+                    double limit = refAxis.getSafeZoneLow()
+                            .convertToUnits(getUnits()).getValue();
+                    if (coordinate < limit 
+                            && ! refAxis.coordinatesMatch(coordinate, limit)) {
+                        // Definitely out.
+                        return false;
+                    }
+                }
+                if (refAxis.isSafeZoneHighEnabled()) {
+                    double limit = refAxis.getSafeZoneHigh()
+                            .convertToUnits(getUnits()).getValue();
+                    if (coordinate > limit 
+                            && ! refAxis.coordinatesMatch(coordinate, limit)) {
+                        // Definitely out.
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     /**

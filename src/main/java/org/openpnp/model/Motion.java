@@ -63,9 +63,9 @@ public class Motion {
          */
         NoDriverLimit,
         /**
-         * The motion is limited to the SafeZ zone, usually required to allow uncoordinated motion.
+         * The motion is limited to the Safe Zone, usually required to allow uncoordinated motion.
          */
-        LimitToSafeZZone,
+        LimitToSafeZone,
         /**
          * The motion is open to continue, let the controller handle the real-time deceleration planning.
          */
@@ -224,6 +224,14 @@ public class Motion {
                     }
                     if (((ReferenceControllerAxis) axis).isSoftLimitHighEnabled()) {
                         sMax = ((ReferenceControllerAxis) axis).getSoftLimitHigh().convertToUnits(AxesLocation.getUnits()).getValue();
+                    }
+                    if (hasOption(MotionOption.LimitToSafeZone)) {
+                        if (((ReferenceControllerAxis) axis).isSafeZoneLowEnabled()) {
+                            sMin = ((ReferenceControllerAxis) axis).getSafeZoneLow().convertToUnits(AxesLocation.getUnits()).getValue();
+                        }
+                        if (((ReferenceControllerAxis) axis).isSafeZoneHighEnabled()) {
+                            sMax = ((ReferenceControllerAxis) axis).getSafeZoneHigh().convertToUnits(AxesLocation.getUnits()).getValue();
+                        }
                     }
                 }
 
@@ -420,6 +428,14 @@ public class Motion {
                     }
                     if (((ReferenceControllerAxis) axis).isSoftLimitHighEnabled()) {
                         sMax = ((ReferenceControllerAxis) axis).getSoftLimitHigh().convertToUnits(AxesLocation.getUnits()).getValue();
+                    }
+                    if (hasOption(MotionOption.LimitToSafeZone)) {
+                        if (((ReferenceControllerAxis) axis).isSafeZoneLowEnabled()) {
+                            sMin = ((ReferenceControllerAxis) axis).getSafeZoneLow().convertToUnits(AxesLocation.getUnits()).getValue();
+                        }
+                        if (((ReferenceControllerAxis) axis).isSafeZoneHighEnabled()) {
+                            sMax = ((ReferenceControllerAxis) axis).getSafeZoneHigh().convertToUnits(AxesLocation.getUnits()).getValue();
+                        }
                     }
                 }
                 double vMax = 

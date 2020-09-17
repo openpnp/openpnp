@@ -86,8 +86,9 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     @Attribute(required = false)
     protected boolean flipY = false;
 
+    @Deprecated
     @Element(required = false)
-    protected Length safeZ = new Length(0, LengthUnit.Millimeters);
+    protected Length safeZ = null;
 
     @Attribute(required = false)
     protected int offsetX = 0;
@@ -555,26 +556,6 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     public LensCalibrationParams getCalibration() {
         return calibration;
-    }
-
-/* This should now work automatically right due to no axes mapped.
- *  @Override
-    public Location getLocation() {
-        // If this is a fixed camera we just treat the head offsets as it's
-        // table location.
-        if (getHead() == null) {
-            return getHeadOffsets();
-        }
-        return super.getLocation(this);
-    }*/
-
-    @Override 
-    public Length getSafeZ() {
-        return safeZ;
-    }
-
-    public void setSafeZ(Length safeZ) {
-        this.safeZ = safeZ;
     }
 
     @Override

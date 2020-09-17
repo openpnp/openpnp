@@ -54,6 +54,8 @@ public class MotionProfile {
     double tMin;
     double tMax;
 
+    Double initialTime;
+
     double sEntryControl;
     double sExitControl;
     double tEntryControl;
@@ -1745,25 +1747,27 @@ solve(eq, t)            # Solve for t
             else if (isConstantAcceleration()) {
                 // Constant acceleration solution.
                 double ts = t[1] + t[2] + t[3];
-                double vm = (s[3] - s[0])/ts;
-                double dt = (s[4] - s[3])/vm;
-                if (dt > 0 && dt < tMin) {
-                    ts += dt;
-                    double as = (v[3] - v[0])/ts;
-                    a[0] = as;
-                    t[1] = 0;
-                    a[1] = as;
-                    v[1] = v[0];
-                    s[1] = s[0];
+                if (ts > eps) {
+                    double vm = (s[3] - s[0])/ts;
+                    double dt = (s[4] - s[3])/vm;
+                    if (dt > 0 && dt < tMin) {
+                        ts += dt;
+                        double as = (v[3] - v[0])/ts;
+                        a[0] = as;
+                        t[1] = 0;
+                        a[1] = as;
+                        v[1] = v[0];
+                        s[1] = s[0];
 
-                    t[2] = ts;
-                    a[2] = as;
-                    v[2] = v[3]; 
-                    s[2] = s[4]; // mend it
+                        t[2] = ts;
+                        a[2] = as;
+                        v[2] = v[3]; 
+                        s[2] = s[4]; // mend it
 
-                    t[3] = 0;
-                    a[3] = 0;
-                    s[3] = s[4]; // mend it 
+                        t[3] = 0;
+                        a[3] = 0;
+                        s[3] = s[4]; // mend it 
+                    }
                 }
             }
             if (s[4] != s[3]) {
@@ -1806,24 +1810,26 @@ solve(eq, t)            # Solve for t
                 else if (isConstantAcceleration()) {
                     // Constant acceleration solution.
                     double ts = t[7] + t[6] + t[5];
-                    double vm = (s[7] - s[4])/ts;
-                    double dt = (s[4] - s[3])/vm;
-                    if (dt > 0 && dt < tMin) {
-                        ts += dt;
-                        double as = (v[7] - v[4])/ts;
-                        t[7] = 0;
-                        a[6] = as;
-                        v[6] = v[7];
-                        s[6] = s[7];
-
-                        t[6] = ts;
-                        a[5] = as;
-                        v[5] = v[4]; 
-                        s[5] = s[3]; // mend it
-
-                        t[5] = 0;
-                        a[4] = as;
-                        s[4] = s[3]; // mend it 
+                    if (ts > eps) {
+                        double vm = (s[7] - s[4])/ts;
+                        double dt = (s[4] - s[3])/vm;
+                        if (dt > 0 && dt < tMin) {
+                            ts += dt;
+                            double as = (v[7] - v[4])/ts;
+                            t[7] = 0;
+                            a[6] = as;
+                            v[6] = v[7];
+                            s[6] = s[7];
+    
+                            t[6] = ts;
+                            a[5] = as;
+                            v[5] = v[4]; 
+                            s[5] = s[3]; // mend it
+    
+                            t[5] = 0;
+                            a[4] = as;
+                            s[4] = s[3]; // mend it 
+                        }
                     }
                 }
             }
@@ -2311,6 +2317,7 @@ solve(eq, t)            # Solve for t
             File file = File.createTempFile("profile-solver-", ".svg");
             try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
                 out.println(svg.toString());
+                System.out.println(file.toURI());
             }
             catch (FileNotFoundException e) {
                 e.printStackTrace();

@@ -268,37 +268,38 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         }
         if (needsExtraBacklashMove) {
             // First move goes to the extra backlashCompensatedLocation.
-            Motion motionCommand = new Motion(
-                    hm, 
+            addMotion(hm, speed, 
                     backlashCompensatedCurrentLocation, 
-                    backlashCompensatedNewLocation, 
-                    speed,
+                    backlashCompensatedNewLocation,
                     optionFlags);
-            // Add to the recorded motion commands. 
-            motionCommands.addLast(motionCommand);
 
             // Second move to the actual target at backlashCompensatedSpeed. 
-            motionCommand = new Motion(
-                    hm, 
+            addMotion(hm, 
+                    backlashCompensatedSpeed,
                     backlashCompensatedNewLocation, 
                     newLocation, 
-                    backlashCompensatedSpeed,
                     optionFlags);
-            // Add to the recorded motion commands. 
-            motionCommands.addLast(motionCommand);
         }
         else {
-            // Can go directly to the target.
-            Motion motionCommand = new Motion(
-                    hm, 
+            addMotion(hm, speed, 
                     backlashCompensatedCurrentLocation, 
                     newLocation, 
-                    speed,
                     optionFlags);
-            // Add to the recorded motion commands. 
-            motionCommands.addLast(motionCommand);
         }
         return newLocation;
+    }
+
+    protected Motion addMotion(HeadMountable hm, double speed, AxesLocation location0,
+            AxesLocation location1, int options) {
+        Motion motionCommand = new Motion(
+                hm, 
+                location0, 
+                location1, 
+                speed,
+                options);
+        // Add to the recorded motion commands. 
+        motionCommands.addLast(motionCommand);
+        return motionCommand;
     }
 
     /**

@@ -25,23 +25,27 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.wizards.ReferenceAdvancedMotionPlannerConfigurationWizard;
 import org.openpnp.model.AbstractMotionPath;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Motion;
 import org.openpnp.model.MotionProfile;
 import org.openpnp.model.Motion.MotionOption;
+import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.HeadMountable;
 import org.simpleframework.xml.Attribute;
 
 /**
- * Advanced Motion Planner. TODO: 
+ * The Advanced Motion Planner applies optimizing planning to the path. TODO: doc.
  *
  */
 public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
 
     @Attribute(required = false)
     private boolean allowContinuousMotion = false;
+    @Attribute(required = false)
+    private boolean allowUncoordinated;
 
     public boolean isAllowContinuousMotion() {
         return allowContinuousMotion;
@@ -49,6 +53,14 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
 
     public void setAllowContinuousMotion(boolean allowContinuousMotion) {
         this.allowContinuousMotion = allowContinuousMotion;
+    }
+
+    public boolean isAllowUncoordinated() {
+        return allowUncoordinated;
+    }
+
+    public void setAllowUncoordinated(boolean allowUncoordinated) {
+        this.allowUncoordinated = allowUncoordinated;
     }
 
     protected class PlannerPath extends AbstractMotionPath {
@@ -68,6 +80,20 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
         public MotionProfile[] get(int i) {
             return executionPlan.get(i).getAxesProfiles();
         }
+    }
+
+    @Override
+    protected Motion addMotion(HeadMountable hm, double speed, AxesLocation location0,
+            AxesLocation location1, int options) {
+        if (allowUncoordinated) {
+            if (location0.isInSafeZone()
+                    && location1.isInSafeZone()) {
+                // Both locations are in the Save Zone. Add the uncoordinated flags.
+                options |= MotionOption.UncoordinatedMotion.flag()
+                        | MotionOption.LimitToSafeZone.flag();
+            }
+        }
+        return super.addMotion(hm, speed, location0, location1, options);
     }
 
     @Override

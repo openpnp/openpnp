@@ -1561,6 +1561,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         }
         if (getLegacyAxis(hm, Type.Z) == legacyAxis) {
             ((AbstractHeadMountable)hm).setAxisZ(assignAxis);
+            if (hm instanceof ReferenceNozzle) {
+                ((ReferenceNozzle)hm).migrateSafeZ();
+            }
         }
         if (getLegacyAxis(hm, Type.Rotation) == legacyAxis) {
             ((AbstractHeadMountable)hm).setAxisRotation(assignAxis);
