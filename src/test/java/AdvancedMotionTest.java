@@ -267,9 +267,12 @@ public class AdvancedMotionTest {
                     zMin = -5;
                     zMax = 20;
                 }
-                if (inSafeZone) {
+                if (inSafeZone && nozzle != 0) {
                     zMin = safeZ;
                     zMax = -safeZ;
+                    options |= ProfileOption.SynchronizeStraighten.flag() | 
+                            ProfileOption.SynchronizeEarlyBird.flag() | 
+                            ProfileOption.SynchronizeLastMinute.flag();
                 }
                 else {
                     options |= ProfileOption.Coordinated.flag();
@@ -280,7 +283,7 @@ public class AdvancedMotionTest {
                         options);
                 profiles[1] = new MotionProfile(
                         y0, y, 0, 0, 0, 0,
-                        0, 500, 700, 2000, 2000, jerk, 0, Double.POSITIVE_INFINITY, 
+                        0, 500, 700, 2000/2, 2000/2, jerk, 0, Double.POSITIVE_INFINITY, 
                         options);
                 profiles[2] = new MotionProfile(
                         z0, z, 0, 0, 0, 0,
@@ -318,8 +321,8 @@ public class AdvancedMotionTest {
     public void testMotionPaths() throws Exception {
         for (int warmup = 2; warmup >= 0; warmup--) {
             for (PlannerPath path : new PlannerPath[] { 
+                    new PlannerPath(90000, false), new PlannerPath(90000, true),
                     new PlannerPath(30000, false), new PlannerPath(30000, true),
-                    new PlannerPath(15000, false), new PlannerPath(15000, true),
                     new PlannerPath(0, false), new PlannerPath(0, true) 
             }) {
 

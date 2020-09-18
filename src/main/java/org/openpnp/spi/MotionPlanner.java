@@ -140,14 +140,19 @@ public interface MotionPlanner extends PropertySheetHolder {
          * This does always wait for the driver to complete i.e. the caller can be sure the machine has physically arrived 
          * at the final location.  
          */
-        WaitForStillstand;
+        WaitForStillstand,
+        
+        /**
+         * Wait forever.
+         */
+        WaitForStillstandIndefinitely;
 
         public boolean isEnforcingStillstand() {
-            return this == WaitForStillstand || this == CommandStillstand;
+            return isWaitingForDrivers() || this == CommandStillstand;
         }
 
         public boolean isWaitingForDrivers() {
-            return this == WaitForStillstand;
+            return this == WaitForStillstand || this == WaitForStillstandIndefinitely;
         }
     }
 

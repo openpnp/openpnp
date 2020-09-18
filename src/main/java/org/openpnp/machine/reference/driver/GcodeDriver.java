@@ -306,10 +306,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         getCommunications().connect();
         connected = false;
 
-        connectThreads();
-
         // Wait a bit while the controller starts up
         Thread.sleep(connectWaitTimeMilliseconds);
+
+        connectThreads();
 
         // Consume any startup messages
         try {
@@ -474,7 +474,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
 
     @Override
-    public AxesLocation getMomentaryLocation() throws Exception {
+    public AxesLocation getMomentaryLocation(long timeout) throws Exception {
         ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
         String command = getCommand(null, CommandType.GET_MOMENTARY_POSITION_COMMAND);
         if (command == null) {
@@ -488,7 +488,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         lastMomentaryLocation = null;
         sendGcode(command, -1);
         // Blocking queue?
-        long timeout = getTimeoutAtMachineSpeed();
         long t1 = (timeout == -1) ?
                 Long.MAX_VALUE
                 : System.currentTimeMillis() + timeout;
@@ -673,7 +672,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         }
         String command = getCommand(hm, CommandType.MOVE_TO_COMPLETE_COMMAND);
         if (command != null) {
-            sendGcode(command, getTimeoutAtMachineSpeed());
+            sendGcode(command, completionType == CompletionType.WaitForStillstandIndefinitely ?
+                    -1 : getTimeoutAtMachineSpeed());
         }
 
         // TODO: determine if it is technically possible to have the responses correctly associated if this is a 
@@ -690,7 +690,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
          */
         String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
         if (moveToCompleteRegex != null) {
-            receiveResponses(moveToCompleteRegex, getTimeoutAtMachineSpeed(), (responses) -> {
+            receiveResponses(moveToCompleteRegex, completionType == CompletionType.WaitForStillstandIndefinitely ?
+                    -1 : getTimeoutAtMachineSpeed(), 
+                    (responses) -> {
                 throw new Exception("Timed out waiting for move to complete.");
             });
         }

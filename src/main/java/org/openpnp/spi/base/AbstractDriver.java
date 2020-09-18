@@ -62,6 +62,12 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
     }
 
     @Override
+    public double getMinimumVelocity() {
+        // For now just return a fixed 0.1mm/s minimum feed-rate, i.e. 6mm/min minimum F word in Gcode.
+        return 0.1;
+    }
+
+    @Override
     public Length getFeedRatePerSecond() {
         // Default implementation for feeders that don't implement an extra feed-rate. 
         // The axes' fee-rate will be used.

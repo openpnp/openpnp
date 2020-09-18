@@ -88,11 +88,12 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
 
     /**
      * Get the momentary real-time location from the controller. This might be in mid-motion. 
+     * @param timeout TODO
      * 
      * @return
      * @throws Exception
      */
-    public AxesLocation getMomentaryLocation() throws Exception;
+    public AxesLocation getMomentaryLocation(long timeout) throws Exception;
 
     /**
      * @return true if a motion is still assumed to be pending, i.e. waitForCompletion() has not yet been called.  
@@ -260,4 +261,10 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
     public default Integer getInterpolationMinStep() {
         return null;
     }
+
+    /**
+     * @return The minimum velocity the driver supports, in mm/s. Used to prevent "rounded to zero" errors caused in
+     * interpolation. 
+     */
+    double getMinimumVelocity();
 }

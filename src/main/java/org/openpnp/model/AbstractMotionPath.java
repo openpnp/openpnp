@@ -561,8 +561,8 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
                 double x0 = 0;
                 double y0 = 0;
                 double z0 = 0;
-
-                for (double t = 0; t <= Math.min(10, profiles[0].time); t+= dt) {
+                double time = Math.max(profiles[0].time, profiles[0].tMin); 
+                for (double t = 0; t <= Math.min(10, time); t+= dt) {
                     double x = profiles[0].getMomentaryLocation(t);
                     double y = profiles[1].getMomentaryLocation(t);
                     double z = profiles[2].getMomentaryLocation(t)+zr;

@@ -138,7 +138,7 @@ public class NullDriver extends AbstractDriver {
     }
 
     @Override
-    public AxesLocation getMomentaryLocation() throws Exception {
+    public AxesLocation getMomentaryLocation(long timeout) throws Exception {
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
         double now = NanosecondTime.getRuntimeSeconds();
         Motion motion = machine.getMotionPlanner()

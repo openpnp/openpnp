@@ -32,6 +32,7 @@ import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Motion;
 import org.openpnp.model.MotionProfile;
 import org.openpnp.model.Motion.MotionOption;
+import org.openpnp.model.MotionProfile.ProfileOption;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.HeadMountable;
 import org.simpleframework.xml.Attribute;
@@ -90,7 +91,10 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                     && location1.isInSafeZone()) {
                 // Both locations are in the Save Zone. Add the uncoordinated flags.
                 options |= MotionOption.UncoordinatedMotion.flag()
-                        | MotionOption.LimitToSafeZone.flag();
+                        | MotionOption.LimitToSafeZone.flag()
+                        | MotionOption.SynchronizeStraighten.flag()
+                        | MotionOption.SynchronizeEarlyBird.flag()
+                        | MotionOption.SynchronizeLastMinute.flag();
             }
         }
         return super.addMotion(hm, speed, location0, location1, options);

@@ -130,9 +130,7 @@ public class ReferenceHead extends AbstractHead {
         if (hm instanceof ReferenceHeadMountable) {
             Location headLocation = ((AbstractHeadMountable) hm).toHeadLocation(location);
             AxesLocation axesLocation = ((AbstractHeadMountable) hm).toRaw(headLocation);
-            if (getMachine().getMotionPlanner().isValidLocation(axesLocation)) {
-                return false;
-            }
+            return (getMachine().getMotionPlanner().isValidLocation(axesLocation));
         }
         return true;
     }

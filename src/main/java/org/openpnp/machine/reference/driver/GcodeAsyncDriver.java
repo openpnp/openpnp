@@ -27,11 +27,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
+import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.driver.wizards.GcodeAsyncDriverSettings;
-import org.openpnp.machine.reference.driver.wizards.GcodeDriverSettings;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.spi.MotionPlanner.CompletionType;
-import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.openpnp.util.Collect;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -102,6 +101,12 @@ public class GcodeAsyncDriver extends GcodeDriver {
     @Attribute(required = false)
     private int interpolationMinStep = 8;
 
+
+    @Override
+    public void home(ReferenceMachine machine) throws Exception {
+        super.home(machine);
+        waitForCompletion(null, CompletionType.WaitForStillstandIndefinitely);
+    }
 
     private WriterThread writerThread;
 
@@ -201,8 +206,14 @@ public class GcodeAsyncDriver extends GcodeDriver {
                 }
                 try {
                     if (confirmationFlowControl && lastCommand != null) {
-                        // Before we can send the new command, make sure the wanted confirmation count of the last command was received.
-                        waitForConfirmation(lastCommand.toString(), lastCommand.getTimeout(), wantedConfirmations);
+                        try {
+                            // Before we can send the new command, make sure the wanted confirmation count of the last command was received.
+                            waitForConfirmation(lastCommand.toString(), lastCommand.getTimeout(), wantedConfirmations);
+                        }
+                        finally {
+                            // Whatever happens, never wait for this one again.
+                            lastCommand = null;
+                        }
                     }
                     // Set up the wanted confirmations for next time.
                     wantedConfirmations = receivedConfirmations.get() + 1;
@@ -252,7 +263,8 @@ public class GcodeAsyncDriver extends GcodeDriver {
     @Override
     public void waitForCompletion(ReferenceHeadMountable hm, 
             CompletionType completionType) throws Exception {
-        if (!isMotionPending()) {
+        if (completionType != CompletionType.WaitForStillstandIndefinitely 
+                && !isMotionPending()) {
             return;
         }
         // Issue the M400 in the super class.
@@ -261,7 +273,9 @@ public class GcodeAsyncDriver extends GcodeDriver {
         if (completionType.isWaitingForDrivers()) {
             // Explicitly wait for the controller's acknowledgment here. 
             // This is signaled with a position report.
-            AxesLocation location = getMomentaryLocation();
+            AxesLocation location = getMomentaryLocation(
+                    completionType == CompletionType.WaitForStillstandIndefinitely ?
+                    -1 : getTimeoutAtMachineSpeed());
             // TODO: Compare to current executed driver location.
             
         }

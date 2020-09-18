@@ -42,8 +42,8 @@ public class TestDriver extends AbstractDriver implements Driver {
     }
 
     @Override
-    public AxesLocation getMomentaryLocation() throws Exception {
-        return delegate.getMomentaryLocation();
+    public AxesLocation getMomentaryLocation(long timeout) throws Exception {
+        return delegate.getMomentaryLocation(-1);
     }
 
     @Override
@@ -94,7 +94,7 @@ public class TestDriver extends AbstractDriver implements Driver {
         }
  
         @Override
-        public AxesLocation getMomentaryLocation() throws Exception {
+        public AxesLocation getMomentaryLocation(long timeout) throws Exception {
             return null;
         }
 
@@ -195,6 +195,11 @@ public class TestDriver extends AbstractDriver implements Driver {
         @Override
         public boolean isMotionPending() {
             return false;
+        }
+
+        @Override
+        public double getMinimumVelocity() {
+            return 0;
         }
    }
 

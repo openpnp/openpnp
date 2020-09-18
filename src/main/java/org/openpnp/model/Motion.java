@@ -57,7 +57,20 @@ public class Motion {
          * The move does not have to be a straight line and profile segments do not need to 
          * coincide in time.
          */
-        UncoordinatedMotion,
+        UncoordinatedMotion, 
+        /**
+         * In uncoordinated moves from/to still-stand, synchronize axes by straightening the motion into a line 
+         * where possible. 
+         */
+        SynchronizeStraighten,
+        /**
+         * In uncoordinated moves to still-stand, synchronize axes by moving them as early as possible.
+         */
+        SynchronizeEarlyBird,
+        /**
+         * In uncoordinated moves from still-stand, synchronize axes by moving them as late as possible.
+         */
+        SynchronizeLastMinute,
         /**
          * The driver's tool-path feed-rate limit is not applied, only the axes' feed-rate limits are.
          */
@@ -139,7 +152,7 @@ public class Motion {
         this.options |= option.flag();
     }
     public void clearOption(MotionOption option) {
-        this.options &=  ~option.flag();
+        this.options &= ~option.flag();
     }
     public int getOptions() {
         return options;
@@ -475,6 +488,15 @@ public class Motion {
         if (!hasOption(MotionOption.UncoordinatedMotion)) {
             profileOptions |= ProfileOption.Coordinated.flag(); 
         }
+        if (hasOption(MotionOption.SynchronizeEarlyBird)) {
+            profileOptions |= ProfileOption.SynchronizeEarlyBird.flag(); 
+        }
+        if (hasOption(MotionOption.SynchronizeLastMinute)) {
+            profileOptions |= ProfileOption.SynchronizeLastMinute.flag(); 
+        }
+        if (hasOption(MotionOption.SynchronizeStraighten)) {
+            profileOptions |= ProfileOption.SynchronizeStraighten.flag(); 
+        }
         return profileOptions;
     }
 
@@ -686,13 +708,9 @@ public class Motion {
 
     /**
      * Interpolate the Motion using the given parameters and return a list of moveToCommands with waypoints and
-     * envelope rate constraints (feed-rate, acceleration limits as needed). 
+     * envelope feed-rate and acceleration limits as needed. 
      * 
      * @param driver
-     * @param maxSteps The maximum number of interpolation steps we're allowed to use. Governed by the controller's 
-     * look-ahead queue.
-     * @param timeStep The minimum interpolation time step. 
-     * @param distStep The minimum distance over which an interpolated step has to move, given in axis resolution ticks.
      * @return
      * @throws Exception
      */
@@ -717,7 +735,9 @@ public class Motion {
             // No interpolation, or move too short for interpolation. Just execute as one moderated moveTo. 
             return moderatedMoveTo(driver);
         }
-
+        //TODO: recalculate the feedrate whenever the set of axes changes from rotational to linear or back
+        //TODO: use junction deviation and jerk analysis to make steps where needed.
+        
         List<MoveToCommand> list = new ArrayList<>(numSteps);
         // Perform the interpolation. 
         //Sanity
@@ -731,7 +751,8 @@ public class Motion {
         double t0 = 0;
         double t0Nominal = 0;
         double t1Nominal = 0;
-        double maxVelocity = 0;
+        double minVel = driver.getMinimumVelocity();
+        double maxVelocity = minVel;
         for (long i = 1; i <= numSteps; i++) {
             double t1 = i*time/numSteps; 
             AxesLocation location1 = getMomentaryLocation(t1);
@@ -763,7 +784,7 @@ public class Motion {
                         (axis) -> vel0.getCoordinate(axis));
                 double v1 = segment.getRS274NGCMetric(driver, 
                         (axis) -> velocity1.getCoordinate(axis));
-                maxVelocity = Math.max(Math.max(Math.abs(v0)+0.0001,  Math.abs(v1)+0.0001), maxVelocity);
+                maxVelocity = Math.max(Math.max(Math.abs(v0)+minVel*0.5,  Math.abs(v1)+minVel*0.5), maxVelocity);
                 // Avg. velocity with constant velocity.
                 double avgVelocity = (v0 + v1)*0.5;
                 double dtNominal = distance == 0 ? 0 : distance/avgVelocity;
@@ -862,7 +883,8 @@ public class Motion {
         list.add(new MoveToCommand(
                 location1,
                 getMovingAxesTargetLocation(driver),
-                factor*moderatedProfile.getProfileVelocity(MotionControlType.ConstantAcceleration), 
+                Math.max(driver.getMinimumVelocity(), 
+                        factor*moderatedProfile.getProfileVelocity(MotionControlType.ConstantAcceleration)), 
                 factor*avgAcceleration,
                 null));
         return list;
