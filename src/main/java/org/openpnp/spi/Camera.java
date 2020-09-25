@@ -121,14 +121,4 @@ public interface Camera extends HeadMountable, WizardConfigurable,
      * @return
      */
     public int getHeight();
-
-    /**
-     * Get the time in milliseconds that the Camera should be allowed to settle before images are
-     * captured for vision operations.
-     * 
-     * @return
-     */
-    public long getSettleTimeMs();
-
-    public void setSettleTimeMs(long settleTimeMs);
 }

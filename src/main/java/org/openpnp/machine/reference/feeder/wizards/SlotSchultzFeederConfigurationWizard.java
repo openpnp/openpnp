@@ -181,10 +181,15 @@ public class SlotSchultzFeederConfigurationWizard
         flowLayout_1.setAlignment(FlowLayout.LEFT);
         whateverPanel.add(panel_1, "12, 2");
         
-        JButton newFeederBtn = new JButton(newFeederAction);
-        panel_1.add(newFeederBtn);
+        JButton loadFeederBtn = new JButton(loadFeederAction);
+        loadFeederBtn.setToolTipText("Load installed feeder to slot.");
+        panel_1.add(loadFeederBtn);
+        
+//        JButton newFeederBtn = new JButton(newFeederAction);
+//        panel_1.add(newFeederBtn);
         
         JButton deleteFeederBtn = new JButton(deleteFeederAction);
+        deleteFeederBtn.setToolTipText("Remove selected feeder from database.");
         panel_1.add(deleteFeederBtn);
         
         JLabel lblBank = new JLabel("Bank");
@@ -633,7 +638,32 @@ public class SlotSchultzFeederConfigurationWizard
 
     }
     
-    private Action newFeederAction = new AbstractAction("New") {
+    private Action loadFeederAction = new AbstractAction("Load") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            Bank bank = (Bank) bankCb.getSelectedItem();
+            Feeder f = new Feeder(idText.getText());
+            Feeder item;
+            int i;
+            for (i = 1; i < feederCb.getItemCount(); i++) {
+            	item = (Feeder) feederCb.getItemAt(i);
+            	if (item.getName().equals(f.getName()))  {
+            		feederCb.setSelectedIndex(i);
+            		break;
+            	}
+            }
+            if (i == feederCb.getItemCount()) {	  // list did not contain feeder, so create it
+				Logger.warn("No feeder {} exists in bank, so creating new.", f);
+                bank.getFeeders().add(f);
+                feederCb.addItem(f);
+                feederCb.setSelectedItem(f);
+            	xOffsetTf.setText("-5");		// set default offsets for new feeder
+            	yOffsetTf.setText("-30");
+            }
+        }
+    };
+
+/*    private Action newFeederAction = new AbstractAction("New") {
         @Override
         public void actionPerformed(ActionEvent e) {
             Bank bank = (Bank) bankCb.getSelectedItem();
@@ -641,9 +671,12 @@ public class SlotSchultzFeederConfigurationWizard
             bank.getFeeders().add(f);
             feederCb.addItem(f);
             feederCb.setSelectedItem(f);
+        	xOffsetTf.setText("-5");		// set default offsets for new feeder
+        	yOffsetTf.setText("-30");
         }
     };
-
+*/
+    
     private Action deleteFeederAction = new AbstractAction("Delete") {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -888,8 +921,12 @@ public class SlotSchultzFeederConfigurationWizard
 						return;
 					}
 					Location newLocation = feeder.getFiducialLocation(feeder.getLocation(), feeder.getFiducialPart());
-					xPickLocTf.setText(newLocation.getLengthX().toString());
-					yPickLocTf.setText(newLocation.getLengthY().toString());
+		            if (newLocation == null) {
+		                throw new Exception("Unable to locate fiducial");
+		            } else {
+		            	xPickLocTf.setText(newLocation.getLengthX().toString());
+		            	yPickLocTf.setText(newLocation.getLengthY().toString());
+		            }
 				}
 			});
     	}

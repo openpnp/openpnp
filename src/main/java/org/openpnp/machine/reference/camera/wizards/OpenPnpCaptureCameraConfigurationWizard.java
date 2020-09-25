@@ -20,8 +20,10 @@
 package org.openpnp.machine.reference.camera.wizards;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -29,6 +31,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
@@ -43,14 +46,15 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.camera.OpenCvCamera.OpenCvCapturePropertyValue;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.model.Configuration;
+import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.SwingConstants;
-import javax.swing.JTextArea;
-import javax.swing.UIManager;
+import javax.swing.JButton;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 @SuppressWarnings("serial")
 public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurationWizard {
@@ -161,6 +165,9 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
     private JLabel sharpnessMax;
     private JLabel sharpnessDefault;
     private JPanel panelGeneral;
+    private JLabel lblCaptureFps;
+    private JTextField nativeFps;
+    private JButton btnTest;
 
     public OpenPnpCaptureCameraConfigurationWizard(OpenPnpCaptureCamera camera) {
         this.camera = camera;
@@ -208,6 +215,24 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
                                                         fps.setToolTipText("<html>\nFrame rate for live camera view. Lower uses less CPU and does not affect vision speed.\n<br>0 will update the camera view only when vision or machine movement happens.\n<br>10 FPS is a good starting point.\n</html>\n");
                                                         panelGeneral.add(fps, "4, 6");
                                                         fps.setColumns(10);
+                                                        
+                                                        lblCaptureFps = new JLabel("Capture FPS");
+                                                        lblCaptureFps.setToolTipText("<html>\r\n<p>The test captures frames as fast as possible and computes the average FPS obtained.</p>\r\n<p>Frames are copied from the camera buffer and converted to Java images, <br/>\r\nbut no additional processing is done (no lens calibration, no transforms etc.)</p>\r\n<p>For most accurate results, set Preview PFS to 0.</p>\r\n</html>");
+                                                        panelGeneral.add(lblCaptureFps, "2, 8, right, default");
+                                                        
+                                                        nativeFps = new JTextField();
+                                                        nativeFps.setEditable(false);
+                                                        panelGeneral.add(nativeFps, "4, 8, fill, default");
+                                                        nativeFps.setColumns(10);
+                                                        
+                                                        btnTest = new JButton("Test");
+                                                        btnTest.addActionListener(new ActionListener() {
+                                                            public void actionPerformed(ActionEvent e) {
+                                                                applyAction.actionPerformed(e); 
+                                                                testNativeFps();
+                                                            }
+                                                        });
+                                                        panelGeneral.add(btnTest, "6, 8");
                         
                                 deviceCb.addActionListener(l -> {
                                     formatCb.removeAllItems();
@@ -684,6 +709,22 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
     protected void saveToModel() {
         super.saveToModel();
         camera.open();
+    }
+
+    protected void testNativeFps() { 
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        nativeFps.setText("Testing...");
+        SwingUtilities.invokeLater(() -> {
+            UiUtils.messageBoxOnException(() -> {
+                try {
+                    double fps = camera.estimateCaptureFps();
+                    nativeFps.setText(String.format(Locale.US, "%.0f", fps));
+                }
+                finally {
+                    setCursor(Cursor.getDefaultCursor());
+                }
+            });
+        });
     }
 
     class BooleanInverter extends Converter<Boolean, Boolean> {

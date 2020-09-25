@@ -136,43 +136,6 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
         return portNames.toArray(new String[] {});
     }
 
-    /**
-     * Read a line from the serial port. Blocks for the default timeout. If the read times out a
-     * TimeoutException is thrown. Any other failure to read results in an IOExeption;
-     * 
-     * @return
-     * @throws TimeoutException
-     * @throws IOException
-     */
-    public String readLine() throws TimeoutException, IOException {
-        StringBuffer line = new StringBuffer();
-        while (true) {
-            int ch = read();
-            if (ch == '\n' || ch == '\r') {
-                if (line.length() > 0) {
-                    return line.toString();
-                }
-            }
-            else {
-                line.append((char) ch);
-            }
-        }
-    }
-
-    public void writeLine(String data) throws IOException
-    {
-        byte[] b = data.getBytes();
-        int l = serialPort.writeBytes(b, b.length);
-        if (l == -1) {
-            throw new IOException("Write error.");
-        }
-        b = getLineEndingType().getLineEnding().getBytes();
-        l = serialPort.writeBytes(b, b.length);
-        if (l == -1) {
-            throw new IOException("Write error.");
-        }
-    }
-
     public int read() throws TimeoutException, IOException {
         byte[] b = new byte[1];
         int l = serialPort.readBytes(b, 1);
@@ -184,14 +147,14 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
         }
         return b[0];
     }
-    
-    public void write(int d) throws IOException {
-        byte[] b = new byte[] { (byte) d };
-        int l = serialPort.writeBytes(b, 1);
+
+    public void writeBytes(byte[] data) throws IOException {
+        int l = serialPort.writeBytes(data, data.length);
         if (l == -1) {
             throw new IOException("Write error.");
         }
     }
+
 
     public String getConnectionName() {
         return "serial://" + portName;

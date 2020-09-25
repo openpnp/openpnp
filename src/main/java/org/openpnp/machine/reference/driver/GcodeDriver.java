@@ -76,6 +76,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         PLACE_COMMAND(true, "Id", "Name"),
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
+        ACTUATE_STRING_COMMAND(true, "Id", "Name", "Index", "StringValue"),
         ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index"),
         ACTUATOR_READ_WITH_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
         ACTUATOR_READ_REGEX(true);
@@ -845,6 +846,20 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         }
     }
     
+    @Override
+    public void actuate(ReferenceActuator actuator, String value) throws Exception {
+        String command = getCommand(actuator, CommandType.ACTUATE_STRING_COMMAND);
+        command = substituteVariable(command, "Id", actuator.getId());
+        command = substituteVariable(command, "Name", actuator.getName());
+        command = substituteVariable(command, "Index", actuator.getIndex());
+        command = substituteVariable(command, "StringValue", value);
+        sendGcode(command);
+
+        for (ReferenceDriver driver : subDrivers) {
+            driver.actuate(actuator, value);
+        }
+    }
+    
     private String actuatorRead(ReferenceActuator actuator, Double parameter) throws Exception {
         /**
          * The logic here is a little complicated. This is the only driver method that is
@@ -910,8 +925,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
              * If the command or regex is null we'll query the subdrivers. The first to respond
              * with a non-null value wins.
              */
+        	String val;
             for (ReferenceDriver driver : subDrivers) {
-                String val = driver.actuatorRead(actuator);
+                if (parameter == null) {
+                    val = driver.actuatorRead(actuator);
+                }
+                else {
+                    val = driver.actuatorRead(actuator, parameter);
+                }
                 if (val != null) {
                     return val;
                 }
@@ -921,7 +942,12 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
              * we've exhausted all the options to service the command, so throw an error.
              */
             if (parent == null) {
-                throw new Exception(String.format("Actuator \"%s\" read error: Driver configuration is missing ACTUATOR_READ_COMMAND or ACTUATOR_READ_REGEX.", actuator.getName()));
+                if (parameter == null) {
+                	throw new Exception(String.format("Actuator \"%s\" read error: Driver configuration is missing ACTUATOR_READ_COMMAND or ACTUATOR_READ_REGEX.", actuator.getName()));
+                }
+                else {
+                	throw new Exception(String.format("Actuator \"%s\" read error: Driver configuration is missing ACTUATOR_READ_WITH_DOUBLE_COMMAND or ACTUATOR_READ_REGEX.", actuator.getName()));
+                }
             }
             else {
                 return null;
@@ -1021,7 +1047,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 command = unescape(command);
             }
             Logger.trace("[{}] >> {}", getCommunications().getConnectionName(), command);
-            getCommunications().writeLine(command);
+            try {
+                getCommunications().writeLine(command);
+            }
+            catch (IOException ex) {
+                Logger.error("Failed to write command: ", command);
+                disconnect();
+                Configuration.get().getMachine().setEnabled(false);
+            }
         }
 
         // Collect responses till we find one with the confirmation or we timeout. Return
@@ -1079,7 +1112,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         while (!disconnectRequested) {
             String line;
             try {
-                line = getCommunications().readLine().trim();
+                line = getCommunications().readLine();
+                if (line == null) {
+                    // Line read failed eg. due to socket closure
+                    Logger.error("Failed to read gcode response");
+                    return;
+                }
+                line = line.trim();
             }
             catch (TimeoutException ex) {
                 continue;
