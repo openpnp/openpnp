@@ -563,9 +563,9 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
                 double z0 = 0;
                 double time = Math.max(profiles[0].time, profiles[0].tMin); 
                 for (double t = 0; t <= Math.min(10, time); t+= dt) {
-                    double x = profiles[0].getMomentaryLocation(t);
-                    double y = profiles[1].getMomentaryLocation(t);
-                    double z = profiles[2].getMomentaryLocation(t)+zr;
+                    double x = profiles[0].getMomentary(t).getLocation();
+                    double y = profiles[1].getMomentary(t).getLocation();
+                    double z = profiles[2].getMomentary(t).getLocation()+zr;
                     if (t > 0) {
                         if (shadow) {
                             svg.append("<line x1=\""+(x+orthx*y+shad*z)+"\" y1=\""+(y+shad*z)*orthy*sy+"\" x2=\""+(x0+orthx*y0+shad*z0)+"\" y2=\""+(y0+shad*z0)*orthy*sy+"\" stroke-linecap=\"round\" style=\"stroke-width: "+d+"; stroke:grey;\"/>\n");

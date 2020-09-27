@@ -339,43 +339,69 @@ public class MotionProfile {
         return time;
     }
 
-    protected double getMomentary(double ts, double f0, double f7, BiFunction<Integer, Double, Double> f) {
-        if (ts <= t[0]) {
-            return f0;
-        }
-        ts -= t[0];
-        if (ts >= time) {
-            return f7;
-        }
-        for (int i = 1; i <= segments; i++) {
-            if (ts <= t[i]) {
-                return f.apply(i, ts);
+    protected class Momentary {
+        final double time;
+        final private double location;
+        final private double velocity;
+        final private double acceleration;
+        final private double jerk;
+
+        Momentary(double time) {
+            this.time = time;
+            if (time <= t[0]) {
+                location = s[0];
+                velocity = v[0];
+                acceleration = a[0];
+                jerk = j[0];
             }
-            ts -= t[i];
+            else {
+                time -= t[0];
+                if (time < time) {
+                    for (int i = 1; i <= segments; i++) {
+                        if (time <= t[i]) {
+                            location = s[i-1] + v[i-1]*time + 1./2*a[i-1]*Math.pow(time, 2) + 1./6*j[i-1]*Math.pow(time, 3);
+                            velocity = v[i-1] + a[i-1]*time + 1./2*j[i-1]*Math.pow(time, 2);
+                            acceleration = a[i-1] + j[i-1]*time;
+                            jerk = j[i-1];
+                            return; //------------>
+                        }
+                        time -= t[i];
+                    }
+                }
+                location = s[segments];
+                velocity = v[segments];
+                acceleration = isConstantAcceleration() ? 0 : a[segments];
+                jerk = 0;
+            }
         }
-        return f7;
-    }
 
-    public double getMomentaryLocation(double time) { 
-        return getMomentary(time, s[0], s[segments], 
-                // s0 + V0*t + 1/2*a0*t^2 + 1/6*j*t^3
-                (i, ts) -> (s[i-1] + v[i-1]*ts + 1./2*a[i-1]*Math.pow(ts, 2) + 1./6*j[i-1]*Math.pow(ts, 3)));
-    }
+        public MotionProfile getProfile() {
+            return MotionProfile.this;
+        }
 
-    public double getMomentaryVelocity(double time) { 
-        return getMomentary(time, v[0], v[segments], 
-                // V0 + a0*t + 1/2*j*t^2
-                (i, ts) -> (v[i-1] + a[i-1]*ts + 1./2*j[i-1]*Math.pow(ts, 2)));
-    }
+        public double getTime() {
+            return time;
+        }
 
-    public double getMomentaryAcceleration(double time) { 
-        return getMomentary(time, a[0], isConstantAcceleration() ? 0 : a[segments], 
-                // a0 + j*t
-                (i, ts) -> (a[i-1] + j[i-1]*ts));
-    }
+        public double getLocation() {
+            return location;
+        }
 
-    public double getMomentaryJerk(double time) { 
-        return getMomentary(time, j[0], 0, (i, ts) -> (j[i-1]));
+        public double getVelocity() {
+            return velocity;
+        }
+
+        public double getAcceleration() {
+            return acceleration;
+        }
+
+        public double getJerk() {
+            return jerk;
+        }
+    }
+    
+    public Momentary getMomentary(double time) {
+        return new Momentary(time);
     }
 
     public enum ErrorState {
@@ -500,7 +526,7 @@ public class MotionProfile {
 
     static boolean mismatch(double a, double b, double tol) {
         if (Math.abs(a-b) > tol) {
-            return true; // (debug point)
+            return true; // (break-point)
         }
         return false;
     }
@@ -1300,19 +1326,19 @@ public class MotionProfile {
         }
         else {
             // Extract a partial profile.
-            // Assert the given t0 t1 match in location.
-            assert Math.abs(solvedProfile.getMomentaryLocation(t0)-s[0]) < eps;
-            assert Math.abs(solvedProfile.getMomentaryLocation(t7)-s[7]) < eps;
             // Assert we're not in a stretched profile.
             assert t[0] == 0;
             assert t[segments+1] == 0;
-            // Get border values.
-            double v0 = solvedProfile.getMomentaryVelocity(t0);
-            double a0 = solvedProfile.getMomentaryAcceleration(t0);
-            //double j0 = solvedProfile.getMomentaryJerk(t0);
-            double v7 = solvedProfile.getMomentaryVelocity(t7);
-            double a7 = solvedProfile.getMomentaryAcceleration(t7);
-            //double j7 = solvedProfile.getMomentaryJerk(t7);
+            // Get border crossing values.
+            Momentary momentary0 = solvedProfile.getMomentary(t0);
+            Momentary momentary7 = solvedProfile.getMomentary(t7); 
+            // Assert the given t0 t1 match in location.
+            assert Math.abs(momentary0.getLocation()-s[0]) < eps;
+            assert Math.abs(momentary7.getLocation()-s[7]) < eps;
+            double v0 = momentary0.getVelocity();
+            double a0 = momentary0.getAcceleration();
+            double v7 = momentary7.getVelocity();
+            double a7 = momentary7.getAcceleration();
             double tSeg = 0;
             double tEntrySlack = 0;
             double tExitSlack = 0;

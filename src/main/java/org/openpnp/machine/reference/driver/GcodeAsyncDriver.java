@@ -30,10 +30,13 @@ import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.driver.wizards.GcodeAsyncDriverSettings;
 import org.openpnp.model.AxesLocation;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.util.Collect;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 
 /**
  * The GcodeAsyncDriver extends the GcodeDriver for asynchronous communication with the controller. 
@@ -101,6 +104,8 @@ public class GcodeAsyncDriver extends GcodeDriver {
     @Attribute(required = false)
     private int interpolationMinStep = 8;
 
+    @Element(required = false)
+    private Length junctionDeviation = new Length(0.02, LengthUnit.Millimeters);
 
     @Override
     public void home(ReferenceMachine machine) throws Exception {
@@ -157,6 +162,15 @@ public class GcodeAsyncDriver extends GcodeDriver {
 
     public void setInterpolationMinStep(Integer interpolationMinStep) {
         this.interpolationMinStep = interpolationMinStep;
+    }
+
+    @Override
+    public Length getJunctionDeviation() {
+        return junctionDeviation;
+    }
+
+    public void setJunctionDeviation(Length junctionDeviation) {
+        this.junctionDeviation = junctionDeviation;
     }
 
     @Override

@@ -23,11 +23,17 @@ package org.openpnp.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.function.BiFunction;
 
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.model.MotionProfile.Momentary;
 import org.openpnp.model.MotionProfile.ProfileOption;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
@@ -522,19 +528,19 @@ public class Motion {
 
     public AxesLocation getMomentaryLocation(double time) {
         return new AxesLocation(axisIndex.keySet(),
-                (axis) -> new Length(getAxisProfile(axis).getMomentaryLocation(time), AxesLocation.getUnits()));
+                (axis) -> new Length(getAxisProfile(axis).getMomentary(time).getLocation(), AxesLocation.getUnits()));
     }
     public AxesLocation getMomentaryVelocity(double time) {
         return new AxesLocation(axisIndex.keySet(),
-                (axis) -> new Length(getAxisProfile(axis).getMomentaryVelocity(time), AxesLocation.getUnits()));
+                (axis) -> new Length(getAxisProfile(axis).getMomentary(time).getVelocity(), AxesLocation.getUnits()));
     }
     public AxesLocation getMomentaryAcceleration(double time) {
         return new AxesLocation(axisIndex.keySet(),
-                (axis) -> new Length(getAxisProfile(axis).getMomentaryAcceleration(time), AxesLocation.getUnits()));
+                (axis) -> new Length(getAxisProfile(axis).getMomentary(time).getAcceleration(), AxesLocation.getUnits()));
     }
     public AxesLocation getMomentaryJerk(double time) {
         return new AxesLocation(axisIndex.keySet(),
-                (axis) -> new Length(getAxisProfile(axis).getMomentaryJerk(time), AxesLocation.getUnits()));
+                (axis) -> new Length(getAxisProfile(axis).getMomentary(time).getJerk(), AxesLocation.getUnits()));
     }
 
     /**
@@ -706,6 +712,7 @@ public class Motion {
 
     }
 
+
     /**
      * Interpolate the Motion using the given parameters and return a list of moveToCommands with waypoints and
      * envelope feed-rate and acceleration limits as needed. 
@@ -730,13 +737,129 @@ public class Motion {
             throw new Exception("Driver does not support move interpolation.");
         }
 
+//        // First throw all the axes' time segments into the interpolation pot.
+//        Set<Double> stepTimes = new TreeSet<>();
+//        for (MotionProfile profile : getAxesProfiles()) {
+//            for (int i = 0; i <= MotionProfile.segments+1; i++) {
+//                stepTimes.add(profile.t[i]);
+//            }
+//        }
+//        // Remove near duplicates.
+//        Double t0 = null;
+//        for (Iterator<Double> it = stepTimes.iterator(); it.hasNext(); ) {
+//            Double t = it.next();
+//            if (t0 != null && t - t0 < MotionProfile.ttol) {
+//                stepTimes.remove(t0);
+//            }
+//            t0 = t; 
+//        }
+//        // Always add t = 0.
+//        stepTimes.add(0.0);
+//        // Get the momentaries.
+//        TreeMap<Double, MotionProfile.Momentary[]> interpolation = new TreeMap<>();
+//        int jerkSteps = driver.getInterpolationMaxSteps()/(4+1);
+//        double junctionDeviation = driver.getJunctionDeviation().convertToUnits(AxesLocation.getUnits()).getValue(); 
+//        boolean hasSplits;
+//        do {
+//            hasSplits = false;
+//            t0 = null;
+//            MotionProfile.Momentary [] prevMomentaries = null;
+//            for (Double t : stepTimes) {
+//                MotionProfile.Momentary [] momentaries = getProfileMomentaries(t); 
+//                interpolation.put(t, momentaries);
+//                if (t0 != null) {
+//                    // Split segments into interpolations.
+//                    double dt = t - t0;
+//                    int steps = 1;
+//                    int axis = 0;
+//                    double [] split2Vector = new double [momentaries.length];
+//                    double [] split3Vector = new double [momentaries.length];
+//                    double [] straightVector = new double [momentaries.length];
+//                    double dSqSplit2 = 0;
+//                    double dSqSplit3 = 0;
+//                    double dSqStraight = 0;
+//                    for (MotionProfile.Momentary momentary : prevMomentaries) {
+//                        // Split up acceleration steps when jerk is present
+//                        double accelerationMax = prevMomentaries[axis].getProfile().getEntryAccelerationMax();
+//                        if (accelerationMax > 0 && jerkSteps > 1) {
+//                            double acceleration =  prevMomentaries[axis].getJerk()*dt;
+//                            steps = Math.max(steps, (int)Math.round(jerkSteps*acceleration/accelerationMax));
+//                        }
+//                        if (steps < 3) {
+//                            // Split up in two or three steps to see how much the trajectory deviates from the straight line.
+//                            // This will create a more even interpolation than simple bisection. It is also more likely to catch 
+//                            // third order polynomial extremes.
+//                            straightVector[axis] = momentaries[axis].getLocation()
+//                                    - prevMomentaries[axis].getLocation();
+//                            split2Vector[axis] = prevMomentaries[axis].getProfile().getMomentary(t0 + dt/2).getLocation()
+//                                    - prevMomentaries[axis].getLocation();
+//                            split3Vector[axis] = prevMomentaries[axis].getProfile().getMomentary(t0 + dt/3).getLocation()
+//                                    - prevMomentaries[axis].getLocation();
+//                            dSqStraight += Math.pow(straightVector[axis], 2);
+//                            dSqSplit2 += Math.pow(split2Vector[axis], 2);
+//                            dSqSplit3 += Math.pow(split3Vector[axis], 3);
+//                        }
+//                        axis++;
+//                    }
+//                    if (steps < 3) {
+//                        // Check deviations (not enough steps due to Jerk simulation). 
+//                        double dStraight = Math.sqrt(dSqStraight);
+//                        double dSplit3 = Math.sqrt(dSqSplit3);
+//                        // Calculate the dot product. 
+//                        double dotSplit2 = 0;
+//                        double dotSplit3 = 0;
+//                        for (axis = 0; axis < straightVector.length; axis++) {
+//                            dotSplit2 +=  split2Vector[axis]
+//                                    *straightVector[axis];
+//                            dotSplit3 +=  split3Vector[axis]
+//                                    *straightVector[axis];
+//                        }
+//                        // Norm to unit vectors.
+//                        dotSplit3 = dotSplit3/dSqSplit3/dStraight;
+//                        // Note, the dot product of two unit vectors is the cosinus of the angle between them.
+//                        // For the deviation, calculate the sinus by Pythagorean theorem. 
+//                        double sinus = Math.sqrt(1 - Math.pow(dotSplit3, 2));
+//                        double deviation = sinus*dSplit3;
+//                        if (deviation > junctionDeviation) {
+//                            // Three-way split. 
+//                            steps = 3;
+//                        }
+//                        else if (steps < 2) {
+//                            // No three-way split, try two-way. 
+//                            double dSplit2 = Math.sqrt(dSqSplit2);
+//                            dotSplit2 = dotSplit2/dSqSplit2/dStraight;
+//                            sinus = Math.sqrt(1 - Math.pow(dotSplit2, 2));
+//                            deviation = sinus*dSplit2;
+//                            if (deviation > junctionDeviation) {
+//                                // Split.
+//                                steps = 2;
+//                                hasSplits = true;
+//                            }
+//                        }
+//                    }
+//                    if (steps > 1) {
+//                        // Perform the splits. 
+//                        hasSplits = true;
+//                        for(int s = 1; s < steps; s++) {
+//                            double ti = t0 + s*dt/steps;
+//                            MotionProfile.Momentary [] interMomentaries = getProfileMomentaries(ti);
+//                            interpolation.put(ti, interMomentaries);
+//                        }
+//                    }
+//                }
+//                t0 = t;
+//                prevMomentaries = momentaries;
+//            }
+//            stepTimes = interpolation.keySet();
+//        }
+//        while (hasSplits); // If we had splits, we need to repeat.
+//        
+        
         int numSteps = (int)Math.min(Math.floor(time/timeStep/2)*2, maxSteps);
         if (numSteps < 4) {
             // No interpolation, or move too short for interpolation. Just execute as one moderated moveTo. 
             return moderatedMoveTo(driver);
         }
-        //TODO: recalculate the feedrate whenever the set of axes changes from rotational to linear or back
-        //TODO: use junction deviation and jerk analysis to make steps where needed.
         
         List<MoveToCommand> list = new ArrayList<>(numSteps);
         // Perform the interpolation. 
@@ -748,7 +871,7 @@ public class Motion {
         double tSNominal = 0;
         AxesLocation location0 = locationS;
         AxesLocation velocity0 = velocityS;
-        double t0 = 0;
+        double t0 = 0.0;
         double t0Nominal = 0;
         double t1Nominal = 0;
         double minVel = driver.getMinimumVelocity();
@@ -834,6 +957,15 @@ public class Motion {
         }
         // TODO: fuse similar acceleration segments into one. 
         return list;
+    }
+
+    public MotionProfile.Momentary[] getProfileMomentaries(Double t) {
+        MotionProfile.Momentary [] momentaries = new Momentary[getAxesProfiles().length];
+        int axis = 0;
+        for (MotionProfile profile : getAxesProfiles()) {
+            momentaries[axis++] = profile.getMomentary(t);
+        }
+        return momentaries;
     }
 
     /**

@@ -262,9 +262,13 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
         return null;
     }
 
+    public default Length getJunctionDeviation() {
+        return null;
+    }
     /**
      * @return The minimum velocity the driver supports, in mm/s. Used to prevent "rounded to zero" errors caused in
      * interpolation. 
      */
     double getMinimumVelocity();
+
 }

@@ -10,6 +10,7 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.machine.reference.driver.GcodeAsyncDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.model.Configuration;
@@ -25,6 +26,7 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
     private JTextField interpolationTimeStep;
     private JTextField interpolationMinStep;
     private JTextField interpolationMaxSteps;
+    private JTextField junctionDeviation;
 
     public GcodeAsyncDriverSettings(GcodeAsyncDriver driver) {
         this.driver = driver;
@@ -64,7 +66,7 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                RowSpec.decode("default:grow"),
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -98,6 +100,14 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
         interpolationMinStep = new JTextField();
         interpolationPanel.add(interpolationMinStep, "4, 6");
         interpolationMinStep.setColumns(10);
+        
+        JLabel lblJunctionDeviation = new JLabel("Maximum Junction Deviation");
+        lblJunctionDeviation.setToolTipText("The maximum Junction Deviation allowed by the driver. Please consult the driver's documentation. ");
+        interpolationPanel.add(lblJunctionDeviation, "2, 8, right, default");
+        
+        junctionDeviation = new JTextField();
+        interpolationPanel.add(junctionDeviation, "4, 8, fill, default");
+        junctionDeviation.setColumns(10);
 
         JLabel lblConfirmationFlowControl = new JLabel("Confimation Flow Control");
         lblConfirmationFlowControl.setToolTipText("<html>\r\n<p>The communication with the controller is flow-controlled by awaiting the \"ok\"<br/>\r\nbefore sending the next command. </p>\r\n<p>This is slower than other types of flow control such as RTS/CTS on a serial connection, so <br/>\r\nthe latter should be preferred.</p>\r\n</html>");
@@ -113,14 +123,17 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
         IntegerConverter intConverter = new IntegerConverter();
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         //DoubleConverter doubleConverterFine = new DoubleConverter("%f");
+        LengthConverter lengthConverter = new LengthConverter();
 
         addWrappedBinding(driver, "confirmationFlowControl", confirmationFlowControl, "selected");
         addWrappedBinding(driver, "interpolationMaxSteps", interpolationMaxSteps, "text", intConverter);
         addWrappedBinding(driver, "interpolationTimeStep", interpolationTimeStep, "text", doubleConverter);
         addWrappedBinding(driver, "interpolationMinStep", interpolationMinStep, "text", intConverter);
+        addWrappedBinding(driver, "junctionDeviation", junctionDeviation, "text", lengthConverter);
 
         ComponentDecorators.decorateWithAutoSelect(interpolationMaxSteps);
         ComponentDecorators.decorateWithAutoSelect(interpolationTimeStep);
         ComponentDecorators.decorateWithAutoSelect(interpolationMinStep);
+        ComponentDecorators.decorateWithAutoSelect(junctionDeviation);
     }
 }
