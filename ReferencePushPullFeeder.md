@@ -46,7 +46,7 @@ If this is a 2mm pitch tape, choose the pick location closest to the tape reel, 
 
 The Auto-Setup will set up all your locations automatically. If you already have other ReferencePushPullFeeders defined, this will also clone some setting over from them (more about that later).  
 
-**Important Note**: the Auto-Setup is really only a first-step tool. Do not use it once the feeder is already set up, setting will be overwritten! To avoid mishaps, a warning message box will ask you to confirm.  
+**Important Note**: the Auto-Setup is really only a first-step tool. Do not use it once the feeder is already set up, hand-tuned settings may be overwritten! To avoid mishaps, a warning message box will ask you to confirm.  
 
 ### Tape Settings
 
