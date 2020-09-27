@@ -24,7 +24,11 @@ Here is a short description of the feeder types supported by OpenPnP:
 
 * **ReferenceDragFeeder**: A "drag" feeder which allows the use of an Actuator, typically a solenoid with a pin, to advance the tape by dragging it. Basic vision for part center detection is also supported.
 
-* **ReferenceLeverFeeder**: A feeder where a lever is pushed by a Actuator, typically the head, to advance the tape.  All part pitches are supported with multiple lever presses as required.
+* **ReferenceLeverFeeder**: A feeder where a lever is pushed by an Actuator, typically the head, to advance the tape.  All part pitches are supported with multiple lever presses as required.
+
+* **ReferencePushPullFeeder**: A feeder where a more elaborate pushing/pulling motion can be actuated by an Actuator to advance the tape, also separate from the pick motion. Supports 2mm pitch tapes (e.g. 0402/0201 parts) where the tape is only advanced on every second feed. Supports OCR part label recognition. Vision calibration. Elaborate auto-learning, one-click auto-setup, OCR based feeder row discovery.
+
+  See [[ReferencePushPullFeeder]]'s page for more information and help.
 
 * **ReferenceTrayFeeder**: Supports 2D arrays of parts in trays. Currently limited to trays that are aligned at 90 degrees in X and Y. Simple incremental pick, no vision.
 
