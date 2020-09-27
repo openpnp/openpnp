@@ -1346,34 +1346,35 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
 
         public FindFeatures invoke() throws Exception {
-            List resultsList = null; 
-            try {
-                // in accordance with EIA-481 etc. we use all millimeters.
-                Location mmScale = camera.getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters);
-                // reset the features
-                holes = new ArrayList<>();
-                lines = new ArrayList<>();
+            // in accordance with EIA-481 etc. we use all millimeters.
+            Location mmScale = camera.getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters);
+            // reset the features
+            holes = new ArrayList<>();
+            lines = new ArrayList<>();
 
-                if (calibrationTrigger == CalibrationTrigger.None) {
-                    // No vision calibration wanted - just copy the pre-set locations
-                    calibratedHole1Location = getHole1Location();
-                    calibratedHole2Location = getHole2Location();
-                    calibratedPickLocation  = getLocation();
-                }
-                else {
-                    final double sprocketHoleDiameterMm = 1.5;
-                    final double sprocketHolePitchMm = 4;
-                    final double partPitchMinMm = 2;
-                    final double sprocketHoleToPartMinMm = 3.5; // sprocket hole to part @ 8mm
-                    final double sprocketHoleToPartGridMm = 2;  // +multiples of 2mm for wider tapes 
-                    final double sprocketHoleDiameterPx = sprocketHoleDiameterMm/mmScale.getX();
-                    final double sprocketHolePitchPx = sprocketHolePitchMm/mmScale.getX();
-                    final double sprocketHoleTolerancePx = sprocketHoleToleranceMm/mmScale.getX(); 
+            if (calibrationTrigger == CalibrationTrigger.None) {
+                // No vision calibration wanted - just copy the pre-set locations
+                calibratedHole1Location = getHole1Location();
+                calibratedHole2Location = getHole2Location();
+                calibratedPickLocation  = getLocation();
+            }
+            else {
+                final double sprocketHoleDiameterMm = 1.5;
+                final double sprocketHolePitchMm = 4;
+                final double partPitchMinMm = 2;
+                final double sprocketHoleToPartMinMm = 3.5; // sprocket hole to part @ 8mm
+                final double sprocketHoleToPartGridMm = 2;  // +multiples of 2mm for wider tapes 
+                final double sprocketHoleDiameterPx = sprocketHoleDiameterMm/mmScale.getX();
+                final double sprocketHolePitchPx = sprocketHolePitchMm/mmScale.getX();
+                final double sprocketHoleTolerancePx = sprocketHoleToleranceMm/mmScale.getX(); 
+                List<CvStage.Result.Circle> results = new ArrayList<>();
+                Object res = null;
+                try {
                     // Grab the results
-                    resultsList = (List) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
+                    res = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
+                    List resultsList = (List) res;
 
                     // Convert eligible results into circles
-                    List<CvStage.Result.Circle> results = new ArrayList<>();;
                     for (Object result : resultsList) {
                         if ((result) instanceof Result.Circle) {
                             Result.Circle circle = ((Result.Circle) result);
@@ -1393,212 +1394,213 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                             KeyPoint keyPoint = ((KeyPoint) result);
                             results.add(new Result.Circle(keyPoint.pt.x, keyPoint.pt.y, sprocketHoleDiameterPx));
                         }
+                        else {
+                            throw new Exception("Unrecognized result type (should be Result.Circle, RotatedRect, KeyPoint): " + result);
+                        }
                     }
+                }
+                catch (ClassCastException e) {
+                    throw new Exception("Unrecognized result type (should be List of Result.Circle, RotatedRect, KeyPoint): " + res);
+                }
 
+                // collect the circles into a list of points
+                List<Point> points = new ArrayList<>();
+                for (Result.Circle circle : results) {
+                    points.add(new Point(circle.x, circle.y));
+                }
+                List<Ransac.Line> ransacLines = Ransac.ransac(points, 100, sprocketHoleTolerancePx, sprocketHolePitchPx, sprocketHoleTolerancePx);
+                // Get the best line within the calibration tolerance
+                Ransac.Line bestLine = null;
+                Location bestUnitVector = null;
+                double bestDistanceMm = Double.MAX_VALUE;
+                for (Ransac.Line line : ransacLines) {
+                    Point a = line.a;
+                    Point b = line.b;
 
+                    Location aLocation = VisionUtils.getPixelLocation(camera, a.x, a.y);
+                    Location bLocation = VisionUtils.getPixelLocation(camera, b.x, b.y);
 
-                    // collect the circles into a list of points
-                    List<Point> points = new ArrayList<>();
+                    // Checks the distance to the line.
+                    double distanceMm = camera.getLocation().convertToUnits(LengthUnit.Millimeters).getLinearDistanceToLineSegment(aLocation, bLocation);
+                    if (distanceMm < (autoSetupMode == FindFeaturesMode.CalibrateHoles ? calibrationToleranceMm : bestDistanceMm)) {
+                        // Take the first line that is close enough, as the lines are ordered by length (descending).
+                        // In autoSetupMode take the closest line.
+                        bestLine = line;
+                        bestUnitVector = aLocation.unitVectorTo(bLocation);
+                        bestDistanceMm = distanceMm;
+                        lines.add(bestLine);
+                        break;
+                    }
+                }
+
+                if (autoSetupMode != null) {
+                    if (bestLine == null) {
+                        throw new Exception("No line of sprocket holes can be recognized"); 
+                    }
+                }
+                if (bestLine != null) {
+                    // Filter the circles by distance from the resulting line
                     for (Result.Circle circle : results) {
-                        points.add(new Point(circle.x, circle.y));
-                    }
-                    List<Ransac.Line> ransacLines = Ransac.ransac(points, 100, sprocketHoleTolerancePx, sprocketHolePitchPx, sprocketHoleTolerancePx);
-                    // Get the best line within the calibration tolerance
-                    Ransac.Line bestLine = null;
-                    Location bestUnitVector = null;
-                    double bestDistanceMm = Double.MAX_VALUE;
-                    for (Ransac.Line line : ransacLines) {
-                        Point a = line.a;
-                        Point b = line.b;
-
-                        Location aLocation = VisionUtils.getPixelLocation(camera, a.x, a.y);
-                        Location bLocation = VisionUtils.getPixelLocation(camera, b.x, b.y);
-
-                        // Checks the distance to the line.
-                        double distanceMm = camera.getLocation().convertToUnits(LengthUnit.Millimeters).getLinearDistanceToLineSegment(aLocation, bLocation);
-                        if (distanceMm < (autoSetupMode == FindFeaturesMode.CalibrateHoles ? calibrationToleranceMm : bestDistanceMm)) {
-                            // Take the first line that is close enough, as the lines are ordered by length (descending).
-                            // In autoSetupMode take the closest line.
-                            bestLine = line;
-                            bestUnitVector = aLocation.unitVectorTo(bLocation);
-                            bestDistanceMm = distanceMm;
-                            lines.add(bestLine);
-                            break;
+                        Point p = new Point(circle.x, circle.y);
+                        if (FluentCv.pointToLineDistance(bestLine.a, bestLine.b, p) <= sprocketHoleTolerancePx) {
+                            holes.add(circle);
                         }
                     }
 
-                    if (autoSetupMode != null) {
-                        if (bestLine == null) {
-                            throw new Exception("No line of sprocket holes can be recognized"); 
+                    // Sort holes by distance from camera center.
+                    Collections.sort(holes, new Comparator<Result.Circle>() {
+                        @Override
+                        public int compare(Result.Circle o1, Result.Circle o2) {
+                            double d1 = VisionUtils.getPixelLocation(camera, o1.x, o1.y).getLinearDistanceTo(camera.getLocation());
+                            double d2 = VisionUtils.getPixelLocation(camera, o2.x, o2.y).getLinearDistanceTo(camera.getLocation());
+                            return Double.compare(d1, d2);
                         }
+                    });
+
+                    if (autoSetupMode  == FindFeaturesMode.FromPickLocationGetHoles) {
+                        // because we sorted the holes by distance, the first two are our holes 1 and 2
+                        if (holes.size() < 2) {
+                            throw new Exception("At least two sprocket holes need to be recognized"); 
+                        }
+                        calibratedHole1Location = VisionUtils.getPixelLocation(camera, holes.get(0).x, holes.get(0).y)
+                                .convertToUnits(LengthUnit.Millimeters);
+                        calibratedHole2Location = VisionUtils.getPixelLocation(camera, holes.get(1).x, holes.get(1).y)
+                                .convertToUnits(LengthUnit.Millimeters);
+                        Location partLocation = camera.getLocation().convertToUnits(LengthUnit.Millimeters);
+                        double angle1 = Math.atan2(calibratedHole1Location.getY()-partLocation.getY(), calibratedHole1Location.getX()-partLocation.getX());
+                        double angle2 = Math.atan2(calibratedHole2Location.getY()-partLocation.getY(), calibratedHole2Location.getX()-partLocation.getX());
+                        double angleDiff = angleNorm180((angle2-angle1)*180/Math.PI);
+                        if (angleDiff > 0) {
+                            // The holes 1 and 2 must appear counter-clockwise from the part location, swap them! 
+                            Location swap = calibratedHole2Location;
+                            calibratedHole2Location = calibratedHole1Location;
+                            calibratedHole1Location = swap;
+                        }
+                        if (calibratedHole1Location.unitVectorTo(calibratedHole2Location)
+                                .dotProduct(bestUnitVector).getValue() < 0.0) {
+                            // turn the unite vector around
+                            bestUnitVector = bestUnitVector.multiply(-1.0, -1.0, 0, 0);
+                        }
+                        // determine the correct transformation
+                        double angleTape = Math.atan2(bestUnitVector.getY(), bestUnitVector.getX())*180.0/Math.PI;
+                        // preliminary pick location
+                        calibratedPickLocation = camera.getLocation()
+                                .derive(getLocation(), false, false, true, false) // previous Z
+                                .derive(null,  null, null, angleTape); // preliminary feeeder orientation
                     }
-                    if (bestLine != null) {
-                        // Filter the circles by distance from the resulting line
-                        for (Result.Circle circle : results) {
-                            Point p = new Point(circle.x, circle.y);
-                            if (FluentCv.pointToLineDistance(bestLine.a, bestLine.b, p) <= sprocketHoleTolerancePx) {
-                                holes.add(circle);
-                            }
-                        }
-
-                        // Sort holes by distance from camera center.
-                        Collections.sort(holes, new Comparator<Result.Circle>() {
-                            @Override
-                            public int compare(Result.Circle o1, Result.Circle o2) {
-                                double d1 = VisionUtils.getPixelLocation(camera, o1.x, o1.y).getLinearDistanceTo(camera.getLocation());
-                                double d2 = VisionUtils.getPixelLocation(camera, o2.x, o2.y).getLinearDistanceTo(camera.getLocation());
-                                return Double.compare(d1, d2);
-                            }
-                        });
-
-                        if (autoSetupMode  == FindFeaturesMode.FromPickLocationGetHoles) {
-                            // because we sorted the holes by distance, the first two are our holes 1 and 2
-                            if (holes.size() < 2) {
-                                throw new Exception("At least two sprocket holes need to be recognized"); 
-                            }
-                            calibratedHole1Location = VisionUtils.getPixelLocation(camera, holes.get(0).x, holes.get(0).y)
+                    else {
+                        // find the two holes matching 
+                        for (Result.Circle hole : holes) {
+                            Location l = VisionUtils.getPixelLocation(camera, hole.x, hole.y)
                                     .convertToUnits(LengthUnit.Millimeters);
-                            calibratedHole2Location = VisionUtils.getPixelLocation(camera, holes.get(1).x, holes.get(1).y)
-                                    .convertToUnits(LengthUnit.Millimeters);
-                            Location partLocation = camera.getLocation().convertToUnits(LengthUnit.Millimeters);
-                            double angle1 = Math.atan2(calibratedHole1Location.getY()-partLocation.getY(), calibratedHole1Location.getX()-partLocation.getX());
-                            double angle2 = Math.atan2(calibratedHole2Location.getY()-partLocation.getY(), calibratedHole2Location.getX()-partLocation.getX());
-                            double angleDiff = angleNorm180((angle2-angle1)*180/Math.PI);
-                            if (angleDiff > 0) {
-                                // The holes 1 and 2 must appear counter-clockwise from the part location, swap them! 
-                                Location swap = calibratedHole2Location;
-                                calibratedHole2Location = calibratedHole1Location;
-                                calibratedHole1Location = swap;
+                            double dist1Mm = l.getLinearDistanceTo(getHole1Location()); 
+                            double dist2Mm = l.getLinearDistanceTo(getHole2Location()); 
+                            if (dist1Mm < calibrationToleranceMm && dist1Mm < dist2Mm) {
+                                calibratedHole1Location = l;
                             }
+                            else if (dist2Mm < calibrationToleranceMm && dist2Mm < dist1Mm) {
+                                calibratedHole2Location = l;
+                            }
+                        }
+                        if (calibratedHole1Location == null || calibratedHole2Location == null) {
+                            if (autoSetupMode  == FindFeaturesMode.CalibrateHoles) {
+                                throw new Exception("The two reference sprocket holes cannot be recognized"); 
+                            }
+                        }
+                        else {
                             if (calibratedHole1Location.unitVectorTo(calibratedHole2Location)
                                     .dotProduct(bestUnitVector).getValue() < 0.0) {
-                                // turn the unite vector around
+                                // turn the unit vector around
                                 bestUnitVector = bestUnitVector.multiply(-1.0, -1.0, 0, 0);
+                            }
+                            if (snapToAxis) {
+                                if (Math.abs(bestUnitVector.getX()) > Math.abs(bestUnitVector.getY())*5) {
+                                    // close enough, snap to X
+                                    bestUnitVector = new Location(LengthUnit.Millimeters, Math.signum(bestUnitVector.getX()), 0, 0, 0);
+                                }
+                                else if (Math.abs(bestUnitVector.getY()) > Math.abs(bestUnitVector.getX())*5) {
+                                    // close enough, snap to Y
+                                    bestUnitVector = new Location(LengthUnit.Millimeters, 0, Math.signum(bestUnitVector.getY()), 0, 0);
+                                }
                             }
                             // determine the correct transformation
                             double angleTape = Math.atan2(bestUnitVector.getY(), bestUnitVector.getX())*180.0/Math.PI;
-                            // preliminary pick location
-                            calibratedPickLocation = camera.getLocation()
-                                    .derive(getLocation(), false, false, true, false) // previous Z
-                                    .derive(null,  null, null, angleTape); // preliminary feeeder orientation
-                        }
-                        else {
-                            // find the two holes matching 
-                            for (Result.Circle hole : holes) {
-                                Location l = VisionUtils.getPixelLocation(camera, hole.x, hole.y)
-                                        .convertToUnits(LengthUnit.Millimeters);
-                                double dist1Mm = l.getLinearDistanceTo(getHole1Location()); 
-                                double dist2Mm = l.getLinearDistanceTo(getHole2Location()); 
-                                if (dist1Mm < calibrationToleranceMm && dist1Mm < dist2Mm) {
-                                    calibratedHole1Location = l;
+                            // the new calibration target is really the mid-point
+                            Location midPoint = calibratedHole1Location.add(calibratedHole2Location).multiply(0.5, 0.5, 0, 0);
+                            // but let's project that back to the real hole positions with nominal pitch (undistorted by the camera lens and Z parallax)
+                            double distanceHolesMm = Math.round(calibratedHole1Location.getLinearDistanceTo(calibratedHole2Location)
+                                    /sprocketHolePitchMm)*sprocketHolePitchMm;
+                            calibratedHole1Location = midPoint.subtract(bestUnitVector.multiply(distanceHolesMm*0.5, distanceHolesMm*0.5, 0, 0));
+                            calibratedHole2Location = midPoint.add(bestUnitVector.multiply(distanceHolesMm*0.5, distanceHolesMm*0.5, 0, 0));
+                            Logger.trace("[ReferencePushPullFeeder] calibrated hole locations are: " + calibratedHole1Location + ", " +calibratedHole2Location);
+                            if (autoSetupMode  == FindFeaturesMode.CalibrateHoles) {
+                                // get the current pick location relative to hole 1
+                                Location pickLocation = getLocation().convertToUnits(LengthUnit.Millimeters);
+                                Location relativePickLocation = pickLocation
+                                        .subtract(getHole1Location());
+                                // rotate from old angle 
+                                relativePickLocation =  relativePickLocation.rotateXy(-pickLocation.getRotation())
+                                        .derive(null, null, null, 0.0);
+                                // normalize to a nominal local pick location according to EIA 481
+                                if (normalizePickLocation) {
+                                    relativePickLocation = new Location(LengthUnit.Millimeters,
+                                            Math.round(relativePickLocation.getX()/partPitchMinMm)*partPitchMinMm,
+                                            -sprocketHoleToPartMinMm+Math.round((relativePickLocation.getY()+sprocketHoleToPartMinMm)/sprocketHoleToPartGridMm)*sprocketHoleToPartGridMm,
+                                            0, 0);
                                 }
-                                else if (dist2Mm < calibrationToleranceMm && dist2Mm < dist1Mm) {
-                                    calibratedHole2Location = l;
-                                }
-                            }
-                            if (calibratedHole1Location == null || calibratedHole2Location == null) {
-                                if (autoSetupMode  == FindFeaturesMode.CalibrateHoles) {
-                                    throw new Exception("The two reference sprocket holes cannot be recognized"); 
-                                }
-                            }
-                            else {
-                                if (calibratedHole1Location.unitVectorTo(calibratedHole2Location)
-                                        .dotProduct(bestUnitVector).getValue() < 0.0) {
-                                    // turn the unit vector around
-                                    bestUnitVector = bestUnitVector.multiply(-1.0, -1.0, 0, 0);
-                                }
-                                if (snapToAxis) {
-                                    if (Math.abs(bestUnitVector.getX()) > Math.abs(bestUnitVector.getY())*5) {
-                                        // close enough, snap to X
-                                        bestUnitVector = new Location(LengthUnit.Millimeters, Math.signum(bestUnitVector.getX()), 0, 0, 0);
-                                    }
-                                    else if (Math.abs(bestUnitVector.getY()) > Math.abs(bestUnitVector.getX())*5) {
-                                        // close enough, snap to Y
-                                        bestUnitVector = new Location(LengthUnit.Millimeters, 0, Math.signum(bestUnitVector.getY()), 0, 0);
-                                    }
-                                }
-                                // determine the correct transformation
-                                double angleTape = Math.atan2(bestUnitVector.getY(), bestUnitVector.getX())*180.0/Math.PI;
-                                // the new calibration target is really the mid-point
-                                Location midPoint = calibratedHole1Location.add(calibratedHole2Location).multiply(0.5, 0.5, 0, 0);
-                                // but let's project that back to the real hole positions with nominal pitch (undistorted by the camera lens and Z parallax)
-                                double distanceHolesMm = Math.round(calibratedHole1Location.getLinearDistanceTo(calibratedHole2Location)
-                                        /sprocketHolePitchMm)*sprocketHolePitchMm;
-                                calibratedHole1Location = midPoint.subtract(bestUnitVector.multiply(distanceHolesMm*0.5, distanceHolesMm*0.5, 0, 0));
-                                calibratedHole2Location = midPoint.add(bestUnitVector.multiply(distanceHolesMm*0.5, distanceHolesMm*0.5, 0, 0));
-                                Logger.trace("[ReferencePushPullFeeder] calibrated hole locations are: " + calibratedHole1Location + ", " +calibratedHole2Location);
-                                if (autoSetupMode  == FindFeaturesMode.CalibrateHoles) {
-                                    // get the current pick location relative to hole 1
-                                    Location pickLocation = getLocation().convertToUnits(LengthUnit.Millimeters);
-                                    Location relativePickLocation = pickLocation
-                                            .subtract(getHole1Location());
-                                    // rotate from old angle 
-                                    relativePickLocation =  relativePickLocation.rotateXy(-pickLocation.getRotation())
-                                            .derive(null, null, null, 0.0);
-                                    // normalize to a nominal local pick location according to EIA 481
-                                    if (normalizePickLocation) {
-                                        relativePickLocation = new Location(LengthUnit.Millimeters,
-                                                Math.round(relativePickLocation.getX()/partPitchMinMm)*partPitchMinMm,
-                                                -sprocketHoleToPartMinMm+Math.round((relativePickLocation.getY()+sprocketHoleToPartMinMm)/sprocketHoleToPartGridMm)*sprocketHoleToPartGridMm,
-                                                0, 0);
-                                    }
-                                    // calculate the new pick location with the new hole 1 location and tape angle 
-                                    calibratedPickLocation = calibratedHole1Location.add(relativePickLocation.rotateXy(angleTape))
-                                            .derive(null, null, pickLocation.getZ(), angleTape);
-                                }
-                            }
-                        }
-
-                        if (calibratedHole1Location != null && calibratedPickLocation != null) {
-                            // we have our calibrated locations
-                            // Get the calibrated vision offset (with Z always 0)
-                            calibratedVisionOffset = getLocation()
-                                    .subtractWithRotation(calibratedPickLocation)
-                                    .derive(null, null, 0.0, null);
-                            Logger.debug("[ReferencePushPullFeeder] calibrated vision offset is: " + calibratedVisionOffset + ", length is: "+calibratedVisionOffset.getLinearLengthTo(nullLocation));
-
-                            // Add tick marks for show
-                            if (calibratedPickLocation != null) {
-                                org.openpnp.model.Point a;
-                                org.openpnp.model.Point b;
-                                Location tick = new Location(LengthUnit.Millimeters, -bestUnitVector.getY(), bestUnitVector.getX(), 0, 0);
-                                a = VisionUtils.getLocationPixels(camera, calibratedPickLocation.subtract(tick));
-                                b = VisionUtils.getLocationPixels(camera, calibratedPickLocation.add(tick));
-                                lines.add(new Ransac.Line(new Point(a.x, a.y), new Point(b.x, b.y)));
-                                a = VisionUtils.getLocationPixels(camera, calibratedPickLocation.subtract(bestUnitVector));
-                                b = VisionUtils.getLocationPixels(camera, calibratedPickLocation.add(bestUnitVector));
-                                lines.add(new Ransac.Line(new Point(a.x, a.y), new Point(b.x, b.y)));
-                                Logger.debug("[ReferencePushPullFeeder] calibrated pick location is: " + calibratedPickLocation);
+                                // calculate the new pick location with the new hole 1 location and tape angle 
+                                calibratedPickLocation = calibratedHole1Location.add(relativePickLocation.rotateXy(angleTape))
+                                        .derive(null, null, pickLocation.getZ(), angleTape);
                             }
                         }
                     }
-                }
 
-                Result ocrStageResult = pipeline.getResult("OCR"); 
-                if (ocrStageResult != null) {
-                    detectedOcrModel = (SimpleOcr.OcrModel) ocrStageResult.model;
-                }
+                    if (calibratedHole1Location != null && calibratedPickLocation != null) {
+                        // we have our calibrated locations
+                        // Get the calibrated vision offset (with Z always 0)
+                        calibratedVisionOffset = getLocation()
+                                .subtractWithRotation(calibratedPickLocation)
+                                .derive(null, null, 0.0, null);
+                        Logger.debug("[ReferencePushPullFeeder] calibrated vision offset is: " + calibratedVisionOffset + ", length is: "+calibratedVisionOffset.getLinearLengthTo(nullLocation));
 
-                if (showResultMilliseconds > 0) {
-                    // Draw the result onto the pipeline image.
-                    Mat resultMat = pipeline.getWorkingImage().clone();
-                    drawHoles(resultMat, getHoles(), Color.green);
-                    drawLines(resultMat, getLines(), new Color(0, 0, 255));
-                    drawPartNumbers(resultMat, Color.orange);
-                    drawOcrText(resultMat, Color.orange);
-
-                    if (Logger.getLevel() == org.pmw.tinylog.Level.DEBUG || Logger.getLevel() == org.pmw.tinylog.Level.TRACE) {
-                        File file = Configuration.get().createResourceFile(getClass(), "push-pull-feeder", ".png");
-                        Imgcodecs.imwrite(file.getAbsolutePath(), resultMat);
+                        // Add tick marks for show
+                        if (calibratedPickLocation != null) {
+                            org.openpnp.model.Point a;
+                            org.openpnp.model.Point b;
+                            Location tick = new Location(LengthUnit.Millimeters, -bestUnitVector.getY(), bestUnitVector.getX(), 0, 0);
+                            a = VisionUtils.getLocationPixels(camera, calibratedPickLocation.subtract(tick));
+                            b = VisionUtils.getLocationPixels(camera, calibratedPickLocation.add(tick));
+                            lines.add(new Ransac.Line(new Point(a.x, a.y), new Point(b.x, b.y)));
+                            a = VisionUtils.getLocationPixels(camera, calibratedPickLocation.subtract(bestUnitVector));
+                            b = VisionUtils.getLocationPixels(camera, calibratedPickLocation.add(bestUnitVector));
+                            lines.add(new Ransac.Line(new Point(a.x, a.y), new Point(b.x, b.y)));
+                            Logger.debug("[ReferencePushPullFeeder] calibrated pick location is: " + calibratedPickLocation);
+                        }
                     }
-                    BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
-                    resultMat.release();
-                    MainFrame.get().getCameraViews().getCameraView(camera)
-                    .showFilteredImage(showResult, showResultMilliseconds);
                 }
             }
-            catch (ClassCastException e) {
-                throw new Exception("Unrecognized result type (should be Result.Circle, RotatedRect, KeyPoint): " + resultsList);
+
+            Result ocrStageResult = pipeline.getResult("OCR"); 
+            if (ocrStageResult != null) {
+                detectedOcrModel = (SimpleOcr.OcrModel) ocrStageResult.model;
+            }
+
+            if (showResultMilliseconds > 0) {
+                // Draw the result onto the pipeline image.
+                Mat resultMat = pipeline.getWorkingImage().clone();
+                drawHoles(resultMat, getHoles(), Color.green);
+                drawLines(resultMat, getLines(), new Color(0, 0, 255));
+                drawPartNumbers(resultMat, Color.orange);
+                drawOcrText(resultMat, Color.orange);
+
+                if (Logger.getLevel() == org.pmw.tinylog.Level.DEBUG || Logger.getLevel() == org.pmw.tinylog.Level.TRACE) {
+                    File file = Configuration.get().createResourceFile(getClass(), "push-pull-feeder", ".png");
+                    Imgcodecs.imwrite(file.getAbsolutePath(), resultMat);
+                }
+                BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
+                resultMat.release();
+                MainFrame.get().getCameraViews().getCameraView(camera)
+                .showFilteredImage(showResult, showResultMilliseconds);
             }
             return this;
         }
