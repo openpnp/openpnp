@@ -1,6 +1,6 @@
 ## What is it?
 
-In short, the ReferencePushPullFeeder is a feeder where an elaborate pushing/pulling motion can be actuated by an Actuator to advance the tape. The motion can be independent of the pick, therefore it supports 2mm pitch tapes (e.g. with 0402/0201 parts) where the tape is only advanced on every second feed. Supports OCR part label recognition, optimizing vision calibration, elaborate auto-learning, one-click auto-setup, OCR based feeder row discovery.
+In short, the ReferencePushPullFeeder is a feeder where an elaborate motion can be actuated by an Actuator to advance the tape. The motion can be independent of the pick, it can perform a "hook and pull" articulation, therefore it can support 2mm pitch tapes (e.g. with 0402/0201 parts) where the tape is only advanced on every second feed. The feeder supports OCR part label recognition, optimized vision calibration, elaborate auto-learning, one-click auto-setup, OCR based feeder row discovery and more.
 
 ## Features in more Detail
 
@@ -38,7 +38,7 @@ Normally, you let computer vision get the locations automatically for you. When 
 
 For computer vision to work reliably, it is recommended to have a contrasting background behind the tape's sprocket holes. For best robustness use a vivid (i.e. high saturation) color, like the "green screen" that is used in movie special effects. The color-screening method works across a large range of brightnesses, even in difficult lighting/shadow situations. The ReferencePushPullFeeder comes with a default vision pipeline that is optimized for a green-yello-orange-red range of screening colors out of the box. However, the vision process is very flexible and also works with any custom sprocket hole detection method and many pipeline result types. So if your machine has a monochrome camera or non-color background, don't give up yet (you need to edit the vision pipeline, though).
 
-For a very quick setup, just move your camera to over the pick location and press the Auto-Setup button. 
+For a very quick setup, just move your camera center roughly over the pick location and press the Auto-Setup button. 
 ![Auto-Setup](https://user-images.githubusercontent.com/9963310/94364461-aadd7a00-00c9-11eb-908c-ae259b719d84.png)
 If this is a 2mm pitch tape, choose the pick location closest to the tape reel, i.e. closest to where it is feeding from. You can also press the Preview Vision Features button to check first.  
 
@@ -46,14 +46,25 @@ If this is a 2mm pitch tape, choose the pick location closest to the tape reel, 
 
 The Auto-Setup will set up all your locations automatically. If you already have other ReferencePushPullFeeders defined, this will also clone some setting over from them (more about that later).  
 
-**Important Note**: the Auto-Setup is really only a first-step tool. Do not use it once the feeder is already set up, hand-tuned settings may be overwritten! To avoid mishaps, a warning message box will ask you to confirm.  
+**Important Note**: the Auto-Setup is really only a first-step tool. Do not use it once the feeder is already set up, hand-tuned settings may be overwritten! To avoid mishaps, a warning message box will ask you to confirm.
+
+The **Normalize?** option will normalize the pick location(s) to nominal coordinates relative to the vision calibrated sprocket holes according to the EIA 481 standard. This means it does not matter how precisely you capture the Pick Location i.e. the center of the tape pocket in Auto-Setup (or manually). Your manual capture need only be within ±1mm of the true pick location. If you want to override the standard, switch **Normalize?** off.
+
+The **Snap to Axis?** option will align the vision calibrated sprocket hole locations to the nearest axis, i.e. either to X or Y (within ±10°). This means you are trusting the mechanical squareness of your machine, feeder mount and tape guide more than any relative rotation of the sprocket holes obtained from computer vision.
 
 ### Tape Settings
 
 ![Tape Settings](https://user-images.githubusercontent.com/9963310/94364897-00ffec80-00cd-11eb-8d18-91e98d523656.png)
 
-In the Tape Settings you can set the right **Part Pitch**. If your feeder's tape advancement is not the standard 4mm, you can set it in the **Feed Pitch**. 
+In the Tape Settings you can set the right **Part Pitch**. 
 
-The **Rotation in Tape** setting must be interpreted relative to the tape's feed orientation, where 0° points away from the reel, along the tape.  
+The **Feed Pitch** is the mechanical tape transport per feeder actuation. If the Part Pitch is larger than that, OpenPnP will automatically actuate the feeder multiple times. If the Part Pitch is less than that, OpenPnP will automatically skip actuation and instead iterate between the pick locations. 
+
+The **Rotation in Tape** setting must be interpreted relative to the tape's orientation, regardless of how the feeder/tape is oriented on the machine. Unfortunately, it seems there is no universal industry standard of how to interpret the orientation of the tape. Furthermore, your E-CAD library parts might have mixed orientation. So let's proceed pragmatically as follows:
+
+1. Look at the neutral upright orientation of the part/package as drawn inside your E-CAD library (orientation of pin 1/polarity/cathode etc.). This is 0° for the part.
+2. Look at the tape with the sprocket holes on top. The direction of unreeling goes to the right and this is our 0° tape direction.
+3. Determine how the part is rotated the tape, relative from its upright orientation (1). This is the **Rotation in Tape**.
  
- 
+The **Multiplier** allows you to actuate the feeder multiple times to feed more parts per serving as a speed optimization. This may reduce the feed time per part because the actuator is already at the right place and engaged. 
+
