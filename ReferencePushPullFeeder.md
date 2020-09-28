@@ -72,7 +72,7 @@ The **Rotation in Tape** setting must be interpreted relative to the tape's orie
 
 1. Look at the neutral upright orientation of the part/package as drawn inside your E-CAD library. Look for the orientation of pin 1, polarity, cathode etc. This is 0° for the part.
 2. Look at the tape with the sprocket holes on top. The direction of unreeling goes to the right and this is our 0° tape direction.
-3. Determine how the part is rotated the tape, relative from its upright orientation (1). This is the **Rotation in Tape**.
+3. Determine how the part is rotated inside the tape pocket, relative from its upright orientation (1). This is the **Rotation in Tape**.
  
 The **Multiplier** allows you to actuate the feeder multiple times to feed more parts per serving, as a speed optimization. This may reduce the feed time per part because the actuator is already at the right place and/or engaged in the mechanics. 
 
