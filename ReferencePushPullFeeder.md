@@ -18,19 +18,23 @@ In short, the ReferencePushPullFeeder is a feeder where an elaborate motion can 
 * One click setup from the second feeder.
 * Handles geometric transformations for all the relevant settings (allows cloning settings from a “west” to a “south” feeder, for instance).
 
-## Basic Setup
+## Video
 
 There is a video documenting the most important setup steps. You can watch this to get going and get a first impression. However, some steps aren't covered so you should come back to this page to fill in the missing details. Also note that the 3D-printed feeder featured in the video is just one example standing in for a wide variety of possible feeder hardware designs. Any feeder requiring any type of motion actuation (lever, knob, push, drag, etc. pp.) is supported. 
 
 https://youtu.be/5QcJ2ziIJ14
 
-### General Settings 
+## Reuse of Settings
+
+The settings described in the following sections are numerous and it may sound like hard work to setup a single feeder. However most of these settings are fine to be left on the defaults, and the few exceptions must only be visited once, for the first feeder of a certain tape specification. The settings will subsequently be automatically cloned to the next feeder. See [[Clone Setting|ReferencePushPullFeeder#clone-settings]].
+
+## General Settings 
 
 ![General Settings](https://user-images.githubusercontent.com/9963310/94363615-af9f2f80-00c3-11eb-9688-5385838f3a6a.png)
 
-The General Settings are as for every other feeder. However, because we will be using OCR to detect the right part, we just leave this on the default. 
+The General Settings are as for every other feeder. However, because we will be using OCR to detect the right part, we just leave it alone now. 
 
-### Locations
+## Locations
 
 ![Locations](https://user-images.githubusercontent.com/9963310/94363743-c09c7080-00c4-11eb-96ff-474db04ceb34.png)
 
@@ -56,7 +60,7 @@ The **Normalize?** option will normalize the pick location(s) to nominal coordin
 
 The **Snap to Axis?** option will align the vision calibrated sprocket hole locations to the nearest axis, i.e. either to X or Y (within ±10°). This means you are trusting the mechanical squareness of your machine, feeder mount and tape guide more than any relative rotation of the sprocket holes obtained from computer vision.
 
-### Tape Settings
+## Tape Settings
 
 ![Tape Settings](https://user-images.githubusercontent.com/9963310/94364897-00ffec80-00cd-11eb-8d18-91e98d523656.png)
 
@@ -71,6 +75,8 @@ The **Rotation in Tape** setting must be interpreted relative to the tape's orie
 3. Determine how the part is rotated the tape, relative from its upright orientation (1). This is the **Rotation in Tape**.
  
 The **Multiplier** allows you to actuate the feeder multiple times to feed more parts per serving, as a speed optimization. This may reduce the feed time per part because the actuator is already at the right place and/or engaged in the mechanics. 
+
+## Vision
 
 ### Vision / Calibration
 
@@ -132,6 +138,30 @@ As usual, use the **Edit Pipeline** and **Reset Pipeline** buttons.
 ![Editing Pipeline](https://user-images.githubusercontent.com/9963310/79022084-7870ac80-7b7d-11ea-9d7e-83efb3004551.png)
 
 ## Clone Settings
+
+![Clone Settings](https://user-images.githubusercontent.com/9963310/94479451-1bbd8880-01d5-11eb-9f1a-a2f5488e72ea.png)
+
+Setting up a ReferencePushPullFeeder may involve many settings and it is clear that we want to re-use these settings comfortably. We want OpenPnP to clone settings from one feeder definition to the next, either automatically, when creating a new feeder, or when we specifically want to revise the settings of a whole group of feeders. 
+
+Not all feeders/tapes are the same, therefore OpenPnP need to know how to treat them as a group with common settings. By default the group is defined by the **packages** of the parts that are selected in the feeders. To further group similar tapes/parts, you can set a **Tape Specification** on the Packages Tab:
+
+![Tape Specification](https://user-images.githubusercontent.com/9963310/94481324-d3539a00-01d7-11eb-9d5a-b83d28ddf577.png)
+
+This is just a textual tag, grouping packages with the same Tape Specification. The example above just uses a common way to describe the relevant properties of the tapes, like for example `width x pitch`. The pattern is completely up to the user. 
+
+Once we have defined the grouping, we must designate one feeder in each group as the template, where all the settings are managed. This is done using the **Use this one as Template?** option. 
+
+The **Template** info will show you which feeder clones to which either actively...
+
+![grafik](https://user-images.githubusercontent.com/9963310/94482242-44478180-01d9-11eb-9c87-420df8e3faa2.png)
+
+... or passively...
+
+![grafik](https://user-images.githubusercontent.com/9963310/94482353-6a6d2180-01d9-11eb-9638-657a4ff12ecf.png)
+
+If you want to change the settings of a whole group of feeders, you can edit the template and then use the **Clone to Feeders** button. The various option checkboxes will then determine which settings are cloned over. 
+
+![Clone to Feeders](https://user-images.githubusercontent.com/9963310/94482663-f0896800-01d9-11eb-852c-73b10873dc64.png)
 
 (work in progress)
 
