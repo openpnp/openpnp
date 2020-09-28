@@ -64,15 +64,15 @@ The **Feed Pitch** is the mechanical tape transport per feeder actuation. If the
 
 The **Rotation in Tape** setting must be interpreted relative to the tape's orientation, regardless of how the feeder/tape is oriented on the machine. Unfortunately, it seems there is no universal industry standard of how to interpret the orientation of the tape. Furthermore, your E-CAD library parts might have mixed orientation. So let's proceed pragmatically as follows:
 
-1. Look at the neutral upright orientation of the part/package as drawn inside your E-CAD library (orientation of pin 1/polarity/cathode etc.). This is 0° for the part.
+1. Look at the neutral upright orientation of the part/package as drawn inside your E-CAD library. Look for the orientation of pin 1, polarity, cathode etc. This is 0° for the part.
 2. Look at the tape with the sprocket holes on top. The direction of unreeling goes to the right and this is our 0° tape direction.
 3. Determine how the part is rotated the tape, relative from its upright orientation (1). This is the **Rotation in Tape**.
  
 The **Multiplier** allows you to actuate the feeder multiple times to feed more parts per serving, as a speed optimization. This may reduce the feed time per part because the actuator is already at the right place and/or engaged in the mechanics. 
 
-### Vision
+### Vision / Calibration
 
-![Vision](https://user-images.githubusercontent.com/9963310/94425495-4e8f5e80-018c-11eb-92a0-0735bcaa81e6.png)
+![Vision Calibration](https://user-images.githubusercontent.com/9963310/94429454-97e2ac80-0192-11eb-9121-1634f343fb44.png)
 
 The **Calibration Trigger** determines when the feeder location is calibrated using computer vision. 
 
@@ -85,5 +85,51 @@ The **Calibration Trigger** determines when the feeder location is calibrated us
 
 Calibration will also be invalidated whenever you change crucial feeder settings, such as Locations or when you press **Reset Feed Count**.
 
+The **Precision wanted** is the tolerance in pick location that can be tolerated for this feeder/part. Only used with the **UntilConfident** setting. This should be no larger than about 1/4 of your part's contact size or pitch. 
 
+The **Precision Average**, **Precision Confidence Limit** and **Calibration Count** are the statistical indicators showing the precision of your feeder's tape transport, i.e. the repeatability of the pick locations deduced from the sprocket holes after tape transport. You can press **Reset Statistics** to start a fresh statistics e.g. after re-mounting a feeder or after changing feeder settings that might impact precision. 
+
+### Vision / OCR
+
+![grafik](https://user-images.githubusercontent.com/9963310/94429541-bfd21000-0192-11eb-9f29-2770279c87c6.png)
+
+The **OCR Wrong Part Action** determines what should happen if the OCR detects a different part than set in the General Settings: 
+
+![grafik](https://user-images.githubusercontent.com/9963310/94429376-80a3bf00-0192-11eb-9df1-4ae0362a9aab.png)
+
+* **None**: Use this setting if you don't want to use OCR. 
+* **SwapFeeders**: If a wrong part is detected but the right part is selected in a different ReferencePushPullFeeder, the locations of the two feeders are swapped. The swapped-in feeder will be enabled. This will happen, if you unload/reload/rearrange your feeders on the machine.
+* **SwapOrCreate**: Works like **SwapFeeders**, but if no other feeder with the right part is found, a new one will be created and swapped-in at the current feeder's location. The current feeder is then disabled in turn (they are now sitting at the same location and only one must be enabled). 
+* **ChangePart**: The part in the current feeder is changed. This will only work correctly, if the tape settings etc. remain the same between the parts i.e. if you restrict any reloading/rearranging to groups of feeders with the same settings. 
+* **ChangePartAndClone**: The part in the current feeder is changed but settings are cloned from a template feeder (see [[Clone Setting|ReferencePushPullFeeder#clone-settings]]). 
+
+The **Stop after wrong part?** option will stop any process (e.g. pause the Job) after a wrong part was detected and the chosen action performed. The user can then review the changes before resuming. 
+
+The **Check on Job Start?** option will perform calibration and OCR detection on all enabled ReferencePushPullFeeders, before the Job is started so any changed parts can be resolved up front. A Travelling Salesman optimization will be used to visit all the feeders along an optimal path. 
+
+The **OCR Font Name** and **OCR Font Size [pt]** settings determine the font used to print the label on the feeder. Make sure to have the font installed on the machine that runs OpenPnP. NOTE: the currently selected font will appear in the selection box regardless of wheter it is installed on the system or not (it will then appear at the top). If in doubt, use a different application to make sure. Users have reported that under Windows fonts need to be installed **system-wide** rather than just for the logged-in user in order to work in Java/OpenPnP. 
+
+The **Setup OCR Region** button can be used to define the area of the Camera View that is taken for OCR. The instructions displayed underneath the camera view will guide you through the steps. You will be asked to define the region by clicking on the corners of a rectangle. If the label is rotated, make sure to select the corners in the sense of the text orientation. Also make sure to allow for enough space around the characters, i.e. the whole character box must be within the region for a character to be successfully detected. 
+
+![OCR Region](https://user-images.githubusercontent.com/9963310/94434266-c912ab00-0199-11eb-8947-dcb5cd0f71d0.png)
+
+Use the **Part by OCR** button to perform the OCR action manually. 
+
+Use the **All Feeder OCR** button to perform the OCR action on all the feeders manually. Again a Travelling Salesman optimization will be used to visit all the feeders along an optimal path. 
+
+**NOTE**: the feeder will automatically and dynamically generate the minimal **OCR alphabet** from all the part IDs definied in OpenPnP. Characters not occuring anywhere in part IDs will not be recognized. Therefore you must make sure that parts are imported from the E-CAD (or manually defined) before testing OCR. 
+
+### Vision / Edit Pipeline
+
+As usual, use the **Edit Pipeline** and **Reset Pipeline** buttons. 
+
+![Buttons](https://user-images.githubusercontent.com/9963310/94434817-9fa64f00-019a-11eb-9095-392c0b95da2e.png) 
+
+**NOTE**: when editing the Pipeline, be aware that many stage properties are controlled by the feeder i.e. the ones visible in the stages will be ineffective. The AffineWarp is fully controlled by the OCR region set up in the feeder. Likewise the OCR Font etc. are controlled by the corresponding feeder settings, the OCR Alphabet is generated dynamically. 
+
+![Editing Pipeline](https://user-images.githubusercontent.com/9963310/79022084-7870ac80-7b7d-11ea-9d7e-83efb3004551.png)
+
+## Clone Settings
+
+(work in progress)
 
