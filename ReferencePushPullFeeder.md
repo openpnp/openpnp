@@ -1,6 +1,6 @@
 ## What is it?
 
-In short, the ReferencePushPullFeeder is a feeder where an elaborate motion can be actuated by an Actuator to advance the tape. The motion can be independent of the pick and it can perform a "hook and pull" articulation, therefore it can support 2mm pitch tapes (e.g. with 0402/0201 parts) where the tape is only advanced on every second feed. The feeder supports OCR part label recognition, optimized vision calibration, elaborate auto-learning, one-click auto-setup, OCR based feeder row discovery and more.
+In short, the ReferencePushPullFeeder is a feeder where an elaborate motion can be used to advance the tape mechanically. The motion can be independent of the pick motion and it can perform a "hook and pull" articulation, therefore it can support 2mm pitch tapes (e.g. with 0402/0201 parts) where the tape is only advanced on every second feed. The feeder supports OCR part label recognition, optimized vision calibration, elaborate auto-learning, one-click auto-setup, OCR based feeder row discovery and more.
 
 ![Example Feeder in Action](https://user-images.githubusercontent.com/9963310/94424926-54387480-018b-11eb-96b1-963e69c14e50.gif)
 
