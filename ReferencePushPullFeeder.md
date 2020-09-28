@@ -26,7 +26,9 @@ https://youtu.be/5QcJ2ziIJ14
 
 ## Reuse of Settings
 
-The settings described in the following sections are numerous and it may sound like hard work to setup a single feeder. However most of these settings are fine to be left on the defaults, and the few exceptions must only be visited once, for the first feeder of a certain tape specification. The settings will subsequently be automatically cloned to the next feeder. See [[Clone Setting|ReferencePushPullFeeder#clone-settings]].
+The settings described in the following sections are numerous and it may sound like hard work to setup a single feeder. However most of these settings are fine to be left on the defaults, and the few exceptions must only be visited once, for the first feeder of a certain tape specification. The settings will subsequently be automatically cloned to the next feeder. See [[Clone Setting|ReferencePushPullFeeder#clone-settings]]. 
+
+**Looking forward: **Subsequent feeders may be setup with as little as one click!
 
 ## General Settings 
 
