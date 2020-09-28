@@ -151,7 +151,7 @@ This is just a textual tag, grouping packages with the same Tape Specification. 
 
 Once we have defined the grouping, we must designate one feeder in each group as the template, where all the settings are managed. This is done using the **Use this one as Template?** option. 
 
-The **Template** info will show you which feeder clones to which either actively...
+The **Template** info will show you which feeder clones to which. Either actively...
 
 ![grafik](https://user-images.githubusercontent.com/9963310/94482242-44478180-01d9-11eb-9c87-420df8e3faa2.png)
 
@@ -159,7 +159,7 @@ The **Template** info will show you which feeder clones to which either actively
 
 ![grafik](https://user-images.githubusercontent.com/9963310/94482353-6a6d2180-01d9-11eb-9638-657a4ff12ecf.png)
 
-If you want to change the settings of a whole group of feeders, you can edit the template and then use the **Clone to Feeders** button. The various option checkboxes will then determine which settings are cloned over. 
+If you want to change the settings of a whole group of feeders, you can edit the template and then use the **Clone to Feeders** button. The various option checkboxes will determine which settings are cloned over. 
 
 ![Clone to Feeders](https://user-images.githubusercontent.com/9963310/94482663-f0896800-01d9-11eb-852c-73b10873dc64.png)
 
