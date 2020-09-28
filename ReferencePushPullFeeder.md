@@ -1,6 +1,8 @@
 ## What is it?
 
-In short, the ReferencePushPullFeeder is a feeder where an elaborate motion can be actuated by an Actuator to advance the tape. The motion can be independent of the pick, it can perform a "hook and pull" articulation, therefore it can support 2mm pitch tapes (e.g. with 0402/0201 parts) where the tape is only advanced on every second feed. The feeder supports OCR part label recognition, optimized vision calibration, elaborate auto-learning, one-click auto-setup, OCR based feeder row discovery and more.
+In short, the ReferencePushPullFeeder is a feeder where an elaborate motion can be actuated by an Actuator to advance the tape. The motion can be independent of the pick and it can perform a "hook and pull" articulation, therefore it can support 2mm pitch tapes (e.g. with 0402/0201 parts) where the tape is only advanced on every second feed. The feeder supports OCR part label recognition, optimized vision calibration, elaborate auto-learning, one-click auto-setup, OCR based feeder row discovery and more.
+
+![Example Feeder in Action](https://user-images.githubusercontent.com/9963310/94424926-54387480-018b-11eb-96b1-963e69c14e50.gif)
 
 ## Features in more Detail
 
@@ -36,7 +38,7 @@ The Locations define the orientation and location of the feeder _or rather of th
 
 Normally, you let computer vision get the locations automatically for you. When this is not possible e.g. for transparent tapes or when the camera can't reach the feeder, you can set the locations up using the standard capture buttons. Read the tooltips on the field labels to learn which location is which. 
 
-For computer vision to work reliably, it is recommended to have a contrasting background behind the tape's sprocket holes. For best robustness use a vivid (i.e. high saturation) color, like the "green screen" that is used in movie special effects. The color-screening method works across a large range of brightnesses, even in difficult lighting/shadow situations. The ReferencePushPullFeeder comes with a default vision pipeline that is optimized for a green-yello-orange-red range of screening colors out of the box. However, the vision process is very flexible and also works with any custom sprocket hole detection method and many pipeline result types. So if your machine has a monochrome camera or non-color background, don't give up yet (you need to edit the vision pipeline, though).
+For computer vision to work reliably, it is recommended to have a contrasting background behind the tape's sprocket holes. For best robustness use a vivid (i.e. high saturation) color, like the "green screen" that is used in movie special effects. The color-screening method works across a large range of brightnesses, even in difficult lighting/shadow situations. The ReferencePushPullFeeder comes with a default vision pipeline that is optimized for a green-yello-orange-red range of screening colors out of the box. However, the vision process is very flexible and also works with any custom sprocket hole detection method and many pipeline result types. So if your machine has a monochrome camera or non-color background, don't give up yet. In this case you need to edit the vision pipeline, see the [[Vision|ReferencePushPullFeeder#vision]] section below. The following assumes you have a working pipeline.
 
 For a very quick setup, just move your camera center roughly over the pick location and press the Auto-Setup button. 
 ![Auto-Setup](https://user-images.githubusercontent.com/9963310/94364461-aadd7a00-00c9-11eb-908c-ae259b719d84.png)
@@ -66,5 +68,22 @@ The **Rotation in Tape** setting must be interpreted relative to the tape's orie
 2. Look at the tape with the sprocket holes on top. The direction of unreeling goes to the right and this is our 0° tape direction.
 3. Determine how the part is rotated the tape, relative from its upright orientation (1). This is the **Rotation in Tape**.
  
-The **Multiplier** allows you to actuate the feeder multiple times to feed more parts per serving as a speed optimization. This may reduce the feed time per part because the actuator is already at the right place and engaged. 
+The **Multiplier** allows you to actuate the feeder multiple times to feed more parts per serving, as a speed optimization. This may reduce the feed time per part because the actuator is already at the right place and/or engaged in the mechanics. 
+
+### Vision
+
+![Vision](https://user-images.githubusercontent.com/9963310/94425495-4e8f5e80-018c-11eb-92a0-0735bcaa81e6.png)
+
+The **Calibration Trigger** determines when the feeder location is calibrated using computer vision. 
+
+![Calibration Trigger](https://user-images.githubusercontent.com/9963310/94426384-c90cae00-018d-11eb-9052-9e5d74b60cc7.png)
+
+* **None**: No calibration takes place. Use this setting for feeders/tapes, where sprocket hole recognition is impossible e.g. with a transparent tape or when the feeder is outside the camera reach.
+* **OnFirstUse**: Calibration is performed on first use once after machine homing. You can press **Reset Statistics** to invalidate the current calibration. 
+* **OnEachTapeFeed**: Calibration is performed on first use and after each tape feed. Use this setting when the tape transport is somewhat imprecise or if the parts are very small. 
+* **UntilConfident**: Starts out like **OnEachTapeFeed**, but based on statistics over the accuracy of the tape transport, this will automatically skip further calibrations, once statistical confidence is reached. You can press **Reset Statistics** to invalidate the current calibration and recorded statistics. 
+
+Calibration will also be invalidated whenever you change crucial feeder settings, such as Locations or when you press **Reset Feed Count**.
+
+
 
