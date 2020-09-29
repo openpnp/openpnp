@@ -150,11 +150,11 @@ As usual, use the **Edit Pipeline** and **Reset Pipeline** buttons.
 
 Setting up a ReferencePushPullFeeder may involve many settings and it is clear that we want to re-use these settings comfortably. We want OpenPnP to clone settings from one feeder definition to the next, either automatically, when creating a new feeder, or when we specifically want to revise the settings of a whole group of feeders. 
 
-Not all feeders/tapes are the same, therefore OpenPnP need to know how to treat them as a group with common settings. By default the group is defined by the **packages** of the parts that are selected in the feeders. To further group similar tapes/parts, you can set a **Tape Specification** on the Packages Tab:
+Not all feeders/tapes are the same, therefore OpenPnP need to know how to treat them as a group with common settings. By default the group is defined by the **packages** of the parts that are selected in the feeders. If multiple packages can share the same feeder settings because their tapes are equal in terms of pitch etc. you can set a **Tape Specification** on the Packages Tab:
 
 ![Tape Specification](https://user-images.githubusercontent.com/9963310/94481324-d3539a00-01d7-11eb-9d5a-b83d28ddf577.png)
 
-This is just a textual tag, grouping packages with the same Tape Specification. The example above just uses a common way to describe the relevant properties of the tapes, like for example `width x pitch`. The pattern is completely up to the user. 
+This is just a textual tag, grouping packages with the same Tape Specification together. The example above just uses a common way to describe the relevant properties of the tapes, like for example `width x pitch`. The pattern is completely up to the user, it should include all properties relevant for the feeder settings, usually for the feed geometry and in special cases for vision (e.g. a different tag for transparent tapes). 
 
 Once we have defined the grouping, we must designate one feeder in each group as the template, where all the settings are managed. This is done using the **Use this one as Template?** option. 
 
