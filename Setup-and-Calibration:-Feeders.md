@@ -26,7 +26,7 @@ Here is a short description of the feeder types supported by OpenPnP:
 
 * **ReferenceLeverFeeder**: A feeder where a lever is pushed by an Actuator, typically the head, to advance the tape.  All part pitches are supported with multiple lever presses as required.
 
-* **ReferencePushPullFeeder**: A feeder where a more elaborate pushing/pulling motion can be actuated by an Actuator to advance the tape, independent of the pick motion. Supports 2mm pitch tapes (e.g. 0402/0201 parts) where the tape is only advanced on every second feed. Supports OCR part label recognition. Optimizing vision calibration. Elaborate auto-learning, one-click auto-setup, OCR based feeder row discovery.
+* **ReferencePushPullFeeder**: A feeder where an elaborate motion can be used to advance the tape mechanically. Any feeder requiring any type of mechanical actuation (lever, knob, push, drag, etc. pp.) is supported. The motion can be independent of the pick motion and it can perform a "hook and pull" articulation, therefore it supports 2mm pitch tapes (e.g. with 0402/0201 parts) where the tape is only advanced on every second feed. The feeder features OCR part label recognition, optimized vision calibration, elaborate auto-learning, one-click auto-setup, OCR based feeder row discovery and more.
 
   See [[ReferencePushPullFeeder]]'s page for more information and help.
 
