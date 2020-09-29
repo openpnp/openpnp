@@ -22,11 +22,11 @@ Here is a short description of the feeder types supported by OpenPnP:
 
   See [[BlindsFeeder]]'s page for more information and help.
 
-* **ReferenceDragFeeder**: A "drag" feeder which allows the use of an Actuator, typically a solenoid with a pin, to advance the tape by dragging it. Basic vision for part center detection is also supported.
+* **ReferenceDragFeeder**: A "drag" feeder which allows the use of an Actuator, typically a solenoid with a pin, to advance the tape by dragging it. Basic vision for part center detection is also supported. 
 
 * **ReferenceLeverFeeder**: A feeder where a lever is pushed by an Actuator, typically the head, to advance the tape.  All part pitches are supported with multiple lever presses as required.
 
-* **ReferencePushPullFeeder**: A feeder where an elaborate motion can be used to advance the tape mechanically. Any feeder requiring any type of mechanical actuation (lever, knob, push, drag, etc. pp.) is supported. The motion can be independent of the pick motion and it can perform a "hook and pull" articulation, therefore it supports 2mm pitch tapes (e.g. with 0402/0201 parts) where the tape is only advanced on every second feed. The feeder features OCR part label recognition, optimized vision calibration, elaborate auto-learning, one-click auto-setup, OCR based feeder row discovery and more.
+* **ReferencePushPullFeeder**: A feeder where an elaborate 5-point motion can be used to advance the tape mechanically. With Vision and OCR support. Many feeder designs requiring mechanical actuation (lever, knob, push, drag, etc. pp.) are supported. The actuation can be independent of the pick motion and it can perform a "hook and pull" articulation, therefore it supports 2mm pitch tapes (e.g. with 0402/0201 parts) where the tape is only advanced on every second feed. The feeder features OCR part label recognition, optimized vision calibration, elaborate auto-learning, one-click auto-setup, OCR based feeders-in-a-row discovery and more.
 
   See [[ReferencePushPullFeeder]]'s page for more information and help.
 
