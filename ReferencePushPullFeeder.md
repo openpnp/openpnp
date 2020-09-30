@@ -4,6 +4,8 @@ In short, the ReferencePushPullFeeder can use an elaborate 5-point motion to adv
 
 ![Example Feeder in Action](https://user-images.githubusercontent.com/9963310/94424926-54387480-018b-11eb-96b1-963e69c14e50.gif)
 
+While this feeder software solution was developed side-by-side with the all-3D-printed feeder [featured here](https://makr.zone/new-all-3d-printed-tapereel-feeder/399/), it was an important design goal to create the software side as universal as possible, to be used for all kinds of mechanical feeders. Your design can be completely different!  
+
 ## Features in more Detail
 
 * Generic implementation for a feeder that can feed parts by performing push and pull (and other) motions using a head-mounted Actuator.
@@ -169,6 +171,46 @@ The **Template** info will show you which feeder clones to which. Either activel
 If you want to change the settings of a whole group of feeders, you can edit the template and then use the **Clone to Feeders** button. The various option checkboxes will determine which settings are cloned over. 
 
 ![Clone to Feeders](https://user-images.githubusercontent.com/9963310/94482663-f0896800-01d9-11eb-852c-73b10873dc64.png)
+
+A similar function is available on the feeders that are **not** templates. It can be used to update just one feeder from the template. 
+
+## Feeder Actuator
+
+As a preparation for the next step, we need to create an Actuator on the machine Head. This Actuator will be used to mechanically execute the feeding motion and it is usually attached to a part of the Nozzle mechanics, so it will be able to move up and down in Z but does not rotate with it (this is just one obvious design choice but others are of course possible). The Actuator can have its own Offsets, but it is recommended to use the same Offsets as the Nozzle it is attached to, so the motion can be easily aligned with the pick location. 
+
+![Actuator](https://user-images.githubusercontent.com/9963310/94699702-e7fc7300-033a-11eb-81e7-3897932c2621.png)
+
+### Actuator Axis Mapping
+
+If the Actuator moves in Z, make sure to map it to the Z axis. In current versions of OpenPnP this requires the following steps:
+
+1. Exit OpenPnP
+2. Find and open the `machine.xml` (as [described here](https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located))
+3. Search for the name of the Actuator you created. 
+4. Copy the `id` from there.
+  
+  ![Actuator ID](https://user-images.githubusercontent.com/9963310/94701105-8c32e980-033c-11eb-8b77-62cd0dd1f5cc.png)
+
+5. Search for `<axis` with `type="Z"`.
+6. Add the Actuator's `id` as a new `<string>` entry in the `<head-mountable-ids>`:
+
+  ![Axis Z](https://user-images.githubusercontent.com/9963310/94701415-eaf86300-033c-11eb-9624-eb4ebab70ea9.png)
+
+7. Save the machine.xml
+8. Restart OpenPnP.
+9. Select the Actuator in the Machine Controls.
+10. Test the mapping by jogging up and down in Z.
+
+**Preview**: In future Versions of OpenPnP this will be much simpler: Just map the axes by drop-down, right on the Actuator: 
+
+![Axis Mapping Preview](https://user-images.githubusercontent.com/9963310/94703419-167c4d00-033f-11eb-8656-e633c456bc0d.png)
+
+### Actuator Boolean Command
+
+The Actuator may also have a Boolean command that is executed half-way through the actuation motion. See the [https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators#assigning-commands](Actuators page) for more information.
+
+## Push-Pull Motion
+
 
 (work in progress)
 
