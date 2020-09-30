@@ -203,14 +203,36 @@ If the Actuator moves in Z, make sure to map it to the Z axis. In current versio
 
 **Preview**: In future Versions of OpenPnP this will be much simpler: Just map the axes by drop-down, right on the Actuator: 
 
-![Axis Mapping Preview](https://user-images.githubusercontent.com/9963310/94703419-167c4d00-033f-11eb-8656-e633c456bc0d.png)
+![Axis Mapping Preview](https://user-images.githubusercontent.com/9963310/94711842-f3ef3180-0348-11eb-8412-66a50f14ae33.png)
 
 ### Actuator Boolean Command
 
-The Actuator may also have a Boolean command that is executed half-way through the actuation motion. See the [Actuators page](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators#assigning-commands) for more information.
+The Actuator may also be assigned a Boolean command. It is switched ON after having moved to the Start Location and before performing the actual actuation motion. It is switched OFF again when the motion has finished. 
+
+See the [Actuators page](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators#assigning-commands) for more information on how to assign the command.
 
 ## Push-Pull Motion
 
+Go back to the feeder and the Push-Pull Motion tab.
 
-(work in progress)
+![Push-Pull Motion](https://user-images.githubusercontent.com/9963310/94712971-7a584300-034a-11eb-97be-f710354d3a62.png)
 
+### Assigning Actuators
+
+The **Actuator** can now be selected in the Push-Pull Settings. This is the motion actuator, press Apply to make sure, the capture buttons are wired to it. The dot symbols (as shown above) should now appear, instead of the nozzle symbols. 
+
+A second **Peel Off Actuator** may be selected optionally. This one switches an assigned Boolean command ON once the End Location is reached. It will be switched OFF, when the motion is complete. 
+
+### The Push-Pull Motion
+
+As the name somewhat implies, the Push-Pull Motion is executed forward and backward along the given five Locations. However, the forward and backward motions need not be completely identical, you can skip Locations one way or the other. There are three columns of checkboxes where you can switch Locations on and off. The left column (↓) is going forward, the right column (↑) is going backward. 
+
+The middle column (↑↓) is active in multi-feeds, i.e. when the feeder is actuated multiple times at once. The multi-feed is needed, when the part pitch is larger than the feed pitch, i.e. when the tape needs to be advanced multiple times to go to the next part. It is also needed, if you chose to use a **Multiplier** greater than 1 (see [[Tape Settings|ReferencePushPullFeeder#tape-settings]] above). Often, there is no point in completely disengaging the actuator from the feeder mechanics, instead you only need to repeat a central part of the actuation motion. Use the middle column (↑↓) switches to set this up. A Location is only included in the multi-feed forward/backward motion, if both the middle column (↑↓) switch and the corresponding right (↑) or left (↓) switches are ON, respectively. 
+
+### Motion Path / Locations
+
+You can now enter or capture the up to five Locations using the common OpenPnP capture buttons. 
+
+The **Speed** fields can be used to control the speed factor of the motion between the Locations. The left column (↓) controls the forward going speed, the right column (↑) the backward going speed. 
+
+All these Locations are handled like the Pick and Sprocket Hole Locations discussed in the [[Locations|ReferencePushPullFeeder#locations]] section above i.e. they are automatically vision calibrated and automatically transformed if a feeder is moved around on the machine e.g. by OCR detection or if a new feeder is created from a template. This even supports rotation, so if a "west" feeder is later loaded at a "south" slot, this is not a problem. 
