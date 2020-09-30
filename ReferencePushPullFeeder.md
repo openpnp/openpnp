@@ -243,14 +243,14 @@ All this was hard work. Now comes the fun part. If your feeders are
 * the same type,
 * arranged in a row, 
 * have an OCR label, 
-you can just press the big green plus sign button:
+you can just press the green **Plus One** button:
 
-![Plus One](https://user-images.githubusercontent.com/9963310/94717773-0c634a00-0351-11eb-8eb9-59d3ef5e2917.png)
+![Plus One](https://user-images.githubusercontent.com/9963310/94719565-a3310600-0353-11eb-8f1f-52ff2ae0ca68.png)
 
 OpenPnP will then automatically detect the next feeder and fully set it up with cloned settings and transformed locations. **This is litterally a One-Click-Setup**. 
 
 If this is only the second feeder in a row, some guesswork is in play. It will try to find the next one on the right side of the current feeder (going counter-clockwise around the machine edge) and it will use a standard tape width + 8mm grid (that's the [all-3D-printed feeder's](https://makr.zone/new-all-3d-printed-tapereel-feeder/399/) design spec). If this doesn't work, move the camera to the next feeder's pick location and press **Auto-Setup**. Done. 
 
-If this is the third or any later feeder in a row, it will have learned the row grid and direction from the row so far and One-Click-Setup should always work. 
+If this is the third or any later feeder in a row, it will have learned the row grid and direction and One-Click-Setup should always work. 
 
 Enjoy!
