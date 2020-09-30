@@ -207,7 +207,7 @@ If the Actuator moves in Z, make sure to map it to the Z axis. In current versio
 
 ### Actuator Boolean Command
 
-The Actuator may also have a Boolean command that is executed half-way through the actuation motion. See the [https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators#assigning-commands](Actuators page) for more information.
+The Actuator may also have a Boolean command that is executed half-way through the actuation motion. See the [Actuators page](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators#assigning-commands) for more information.
 
 ## Push-Pull Motion
 
