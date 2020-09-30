@@ -240,9 +240,12 @@ All these Locations are handled like the Pick and Sprocket Hole Locations discus
 ## The next Feeder
 
 All this was hard work. Now comes the fun part. If your feeders are 
-* the same type,
+
+* the same design,
 * arranged in a row, 
 * have an OCR label, 
+* identifying a part with known tape specification or package, 
+
 you can just press the green **Plus One** button:
 
 ![Plus One](https://user-images.githubusercontent.com/9963310/94719565-a3310600-0353-11eb-8f1f-52ff2ae0ca68.png)
@@ -252,5 +255,7 @@ OpenPnP will then automatically detect the next feeder and fully set it up with 
 If this is only the second feeder in a row, some guesswork is in play. It will try to find the next one on the right side of the current feeder (going counter-clockwise around the machine edge) and it will use a standard tape width + 8mm grid (that's the [all-3D-printed feeder's](https://makr.zone/new-all-3d-printed-tapereel-feeder/399/) design spec). If this doesn't work, move the camera to the next feeder's pick location and press **Auto-Setup**. Done. 
 
 If this is the third or any later feeder in a row, it will have learned the row grid and direction and One-Click-Setup should always work. 
+
+Even if the part has an unknown tape specification/package, some settings will be cloned from the best match. These will only have to be adjusted where there are differences. Because the ReferencePushPullFeeder is driven by sprocket hole vision and the semantics of EIA 481, a new package/tape specification is often configured by simply adjusting the **Part Pitch**, everything else remains the same or is automatically recalculated under the hood. 
 
 Enjoy!
