@@ -32,10 +32,8 @@ import java.util.List;
 import java.util.Set;
 
 import javax.swing.Action;
-import javax.swing.JOptionPane;
 
 import org.apache.commons.io.IOUtils;
-import org.opencv.core.Core;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -340,7 +338,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             throw new Exception(String.format("No actuator name set on feeder %s.", getName()));
         }
 
-
         Head head = nozzle.getHead();
         Actuator actuator = head.getActuatorByName(actuatorName);
         if (actuator == null) {
@@ -495,7 +492,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     }
 
     public void setSnapToAxis(boolean snapToAxis) {
-        Object oldValue = this.normalizePickLocation;
+        Object oldValue = this.snapToAxis;
         this.snapToAxis = snapToAxis;
         firePropertyChange("snapToAxis", oldValue, snapToAxis);
     }
@@ -2070,6 +2067,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     +" is not present in any other feeder. Cannot swap out feeders.");
                 }
                 swapOutFeeders(otherFeeder);
+                otherFeeder.setEnabled(true);
             }
             if (ocrAction == OcrWrongPartAction.SwapOrCreate) {
                 if (otherFeeder == null) {
