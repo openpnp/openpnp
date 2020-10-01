@@ -14,7 +14,7 @@ While this feeder software solution was developed side-by-side with the all-3D-p
 * OCR based automatic feeder slot swapping, part changing or even new feeder creation with auto-cloned settings.
 * Automatic and learning "only when needed" calibration for feeders that are mounted with large tolerances (+/-2mm).
 * Any part pitch, any feed pitch, any tape width.
-* Multi-feed: 2mm pitch (0402/0201) support i.e. the feeder will only advance the tape on every second feed. 
+* 2mm pitch (0402/0201) support i.e. the feeder will only advance the tape on every second feed. 
 * Multiplier: For speed, you can use a Multi-feed for any pitch, i.e. the feeder can quickly actuate multiple times.
 * Easy to clone & sync settings between feeders, by package or by (new) Tape&Reel Specification.
 * One click setup from the second feeder.
