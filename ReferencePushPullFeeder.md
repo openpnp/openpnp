@@ -116,7 +116,7 @@ The **OCR Wrong Part Action** determines what should happen if the OCR detects a
 
 * **None**: Use this setting if you don't want to use OCR. 
 * **SwapFeeders**: If a wrong part is detected but the right part is selected in a different ReferencePushPullFeeder, the locations of the two feeders are swapped. The swapped-in feeder will be enabled. This will happen, if you unload/reload/rearrange your feeders on the machine.
-* **SwapOrCreate**: Works like **SwapFeeders**, but if no other feeder with the right part is found, a new one will be created and swapped-in at the current feeder's location. The current feeder is then disabled in turn (they are now sitting at the same location and only one must be enabled). 
+* **SwapOrCreate**: Works like **SwapFeeders**, but if no other feeder with the right part is found, a new one will be created and swapped-in at the current feeder's location. The current feeder is then disabled in turn (they are now sitting at the same location and only one must be enabled). The new feeder will have its settings cloned from a template (see [[Clone Setting|ReferencePushPullFeeder#clone-settings]]).
 * **ChangePart**: The part in the current feeder is changed. This will only work correctly, if the tape settings etc. remain the same between the parts i.e. if you restrict any reloading/rearranging to groups of feeders with the same settings. 
 * **ChangePartAndClone**: The part in the current feeder is changed but settings are cloned from a template feeder (see [[Clone Setting|ReferencePushPullFeeder#clone-settings]]). 
 
