@@ -249,6 +249,14 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
     }
 
     /**
+     * @return The maximum number of interpolation steps that should be applied to simulate jerk 
+     * control per acceleration/deceleration ramp. Should be much less than getInterpolationMaxSteps().
+     */
+    public default Integer getInterpolationJerkSteps() {
+        return null; 
+    }
+
+    /**
      * @return The minimal time step that should be used to simulate more advanced motion control. 
      */
     public default Double getInterpolationTimeStep() {
@@ -265,10 +273,10 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
     public default Length getJunctionDeviation() {
         return null;
     }
+
     /**
      * @return The minimum velocity the driver supports, in mm/s. Used to prevent "rounded to zero" errors caused in
      * interpolation. 
      */
     double getMinimumVelocity();
-
 }

@@ -237,6 +237,42 @@ public class AxesLocation {
     }
 
     /**
+     * Returns the dot product of this AxesLocation with the other, both treated as vectors.
+     *   
+     * @param other
+     * @return
+     */
+    public double dotProduct(AxesLocation other) {
+        double dot = 0;
+        for (Entry<Axis, Double> entry : this.location.entrySet()) {
+            dot += entry.getValue()*other.getCoordinate(entry.getKey());
+        }
+        return dot;
+    }
+
+    /**
+     * Returns this vector projected perpendicularly onto the other. This results in a vector that
+     * points into the same direction as the other vector and has a length that is equal to the length
+     * of this vector times the cosine of the angle between them.   
+     * 
+     * @param other
+     * @return
+     */
+    public AxesLocation along(AxesLocation other) {
+        // The dot product of two vectors is the cosine of the angle between them, times both their length. 
+        // So if we norm the other vector to its unit vector, we get the desired result.
+        double dot = dotProduct(other);
+        double norm = other.getEuclideanMetric();
+        if (norm == 0) {
+            return other.multiply(0); 
+        }
+        else {
+            double factor = dot/norm/norm; // need to norm twice, because of multiply.
+            return other.multiply(factor);
+        }
+    }
+
+    /**
      * Filter those axes from the AxesLocation that are driven by the given driver.
      * 
      * @param driver

@@ -99,6 +99,9 @@ public class GcodeAsyncDriver extends GcodeDriver {
     private int interpolationMaxSteps = 32;
 
     @Attribute(required = false)
+    private int interpolationJerkSteps = 4; // relative to max acceleration
+
+    @Attribute(required = false)
     private double interpolationTimeStep = 0.01;
 
     @Attribute(required = false)
@@ -144,6 +147,15 @@ public class GcodeAsyncDriver extends GcodeDriver {
 
     public void setInterpolationMaxSteps(Integer interpolationMaxSteps) {
         this.interpolationMaxSteps = interpolationMaxSteps;
+    }
+
+    @Override 
+    public Integer getInterpolationJerkSteps() {
+        return interpolationJerkSteps;
+    }
+
+    public void setInterpolationJerkSteps(Integer interpolationJerkSteps) {
+        this.interpolationJerkSteps = interpolationJerkSteps;
     }
 
     @Override

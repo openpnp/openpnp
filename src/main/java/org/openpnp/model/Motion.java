@@ -23,17 +23,11 @@ package org.openpnp.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.function.BiFunction;
 
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
-import org.openpnp.model.MotionProfile.Momentary;
 import org.openpnp.model.MotionProfile.ProfileOption;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
@@ -518,8 +512,8 @@ public class Motion {
         return axesProfiles;
     }
 
-    public HashMap<ControllerAxis, Integer> getAxisIndex() {
-        return axisIndex;
+    public Integer getAxisIndex(ControllerAxis axis) {
+        return axisIndex.get(axis);
     }
 
     public double getEuclideanDistance() {
@@ -528,19 +522,19 @@ public class Motion {
 
     public AxesLocation getMomentaryLocation(double time) {
         return new AxesLocation(axisIndex.keySet(),
-                (axis) -> new Length(getAxisProfile(axis).getMomentary(time).getLocation(), AxesLocation.getUnits()));
+                (axis) -> new Length(getAxisProfile(axis).getMomentaryLocation(time), AxesLocation.getUnits()));
     }
     public AxesLocation getMomentaryVelocity(double time) {
         return new AxesLocation(axisIndex.keySet(),
-                (axis) -> new Length(getAxisProfile(axis).getMomentary(time).getVelocity(), AxesLocation.getUnits()));
+                (axis) -> new Length(getAxisProfile(axis).getMomentaryVelocity(time), AxesLocation.getUnits()));
     }
     public AxesLocation getMomentaryAcceleration(double time) {
         return new AxesLocation(axisIndex.keySet(),
-                (axis) -> new Length(getAxisProfile(axis).getMomentary(time).getAcceleration(), AxesLocation.getUnits()));
+                (axis) -> new Length(getAxisProfile(axis).getMomentaryAcceleration(time), AxesLocation.getUnits()));
     }
     public AxesLocation getMomentaryJerk(double time) {
         return new AxesLocation(axisIndex.keySet(),
-                (axis) -> new Length(getAxisProfile(axis).getMomentary(time).getJerk(), AxesLocation.getUnits()));
+                (axis) -> new Length(getAxisProfile(axis).getMomentaryJerk(time), AxesLocation.getUnits()));
     }
 
     /**
@@ -667,20 +661,22 @@ public class Motion {
     }
 
     public class MoveToCommand {
-        private AxesLocation location;
-        private AxesLocation movedAxesLocation;
+        private final AxesLocation location;
+        private final AxesLocation movedAxesLocation;
         private Double feedRatePerSecond;
         private Double accelerationPerSecond2;
         private Double jerkPerSecond3;
+        private Double time;
 
         public MoveToCommand(AxesLocation location, AxesLocation movedAxesLocation,
-                Double feedRatePerSecond, Double accelerationPerSecond2, Double jerkPerSecond3) {
+                Double feedRatePerSecond, Double accelerationPerSecond2, Double jerkPerSecond3, Double time) {
             super();
             this.location = location;
             this.movedAxesLocation = movedAxesLocation;
             this.feedRatePerSecond = feedRatePerSecond;
             this.accelerationPerSecond2 = accelerationPerSecond2;
             this.jerkPerSecond3 = jerkPerSecond3;
+            this.time = time;
         }
 
         public Motion getMotion() {
@@ -710,8 +706,10 @@ public class Motion {
             return jerkPerSecond3;
         }
 
+        public Double getTime() {
+            return time;
+        }
     }
-
 
     /**
      * Interpolate the Motion using the given parameters and return a list of moveToCommands with waypoints and
@@ -731,222 +729,268 @@ public class Motion {
 
         double time = getTime();
         Integer maxSteps = driver.getInterpolationMaxSteps();
+        Integer maxJerkSteps = driver.getInterpolationJerkSteps();
         Double timeStep = driver.getInterpolationTimeStep();
         Integer distStep = driver.getInterpolationMinStep();
-        if (maxSteps == null || timeStep == null || distStep == null) {
+        Length junctionDeviationLength = driver.getJunctionDeviation();
+
+        if (maxSteps == null || maxJerkSteps == null || timeStep == null || distStep == null || junctionDeviationLength == null) {
             throw new Exception("Driver does not support move interpolation.");
         }
 
-//        // First throw all the axes' time segments into the interpolation pot.
-//        Set<Double> stepTimes = new TreeSet<>();
-//        for (MotionProfile profile : getAxesProfiles()) {
-//            for (int i = 0; i <= MotionProfile.segments+1; i++) {
-//                stepTimes.add(profile.t[i]);
-//            }
-//        }
-//        // Remove near duplicates.
-//        Double t0 = null;
-//        for (Iterator<Double> it = stepTimes.iterator(); it.hasNext(); ) {
-//            Double t = it.next();
-//            if (t0 != null && t - t0 < MotionProfile.ttol) {
-//                stepTimes.remove(t0);
-//            }
-//            t0 = t; 
-//        }
-//        // Always add t = 0.
-//        stepTimes.add(0.0);
-//        // Get the momentaries.
-//        TreeMap<Double, MotionProfile.Momentary[]> interpolation = new TreeMap<>();
-//        int jerkSteps = driver.getInterpolationMaxSteps()/(4+1);
-//        double junctionDeviation = driver.getJunctionDeviation().convertToUnits(AxesLocation.getUnits()).getValue(); 
-//        boolean hasSplits;
-//        do {
-//            hasSplits = false;
-//            t0 = null;
-//            MotionProfile.Momentary [] prevMomentaries = null;
-//            for (Double t : stepTimes) {
-//                MotionProfile.Momentary [] momentaries = getProfileMomentaries(t); 
-//                interpolation.put(t, momentaries);
-//                if (t0 != null) {
-//                    // Split segments into interpolations.
-//                    double dt = t - t0;
-//                    int steps = 1;
-//                    int axis = 0;
-//                    double [] split2Vector = new double [momentaries.length];
-//                    double [] split3Vector = new double [momentaries.length];
-//                    double [] straightVector = new double [momentaries.length];
-//                    double dSqSplit2 = 0;
-//                    double dSqSplit3 = 0;
-//                    double dSqStraight = 0;
-//                    for (MotionProfile.Momentary momentary : prevMomentaries) {
-//                        // Split up acceleration steps when jerk is present
-//                        double accelerationMax = prevMomentaries[axis].getProfile().getEntryAccelerationMax();
-//                        if (accelerationMax > 0 && jerkSteps > 1) {
-//                            double acceleration =  prevMomentaries[axis].getJerk()*dt;
-//                            steps = Math.max(steps, (int)Math.round(jerkSteps*acceleration/accelerationMax));
-//                        }
-//                        if (steps < 3) {
-//                            // Split up in two or three steps to see how much the trajectory deviates from the straight line.
-//                            // This will create a more even interpolation than simple bisection. It is also more likely to catch 
-//                            // third order polynomial extremes.
-//                            straightVector[axis] = momentaries[axis].getLocation()
-//                                    - prevMomentaries[axis].getLocation();
-//                            split2Vector[axis] = prevMomentaries[axis].getProfile().getMomentary(t0 + dt/2).getLocation()
-//                                    - prevMomentaries[axis].getLocation();
-//                            split3Vector[axis] = prevMomentaries[axis].getProfile().getMomentary(t0 + dt/3).getLocation()
-//                                    - prevMomentaries[axis].getLocation();
-//                            dSqStraight += Math.pow(straightVector[axis], 2);
-//                            dSqSplit2 += Math.pow(split2Vector[axis], 2);
-//                            dSqSplit3 += Math.pow(split3Vector[axis], 3);
-//                        }
-//                        axis++;
-//                    }
-//                    if (steps < 3) {
-//                        // Check deviations (not enough steps due to Jerk simulation). 
-//                        double dStraight = Math.sqrt(dSqStraight);
-//                        double dSplit3 = Math.sqrt(dSqSplit3);
-//                        // Calculate the dot product. 
-//                        double dotSplit2 = 0;
-//                        double dotSplit3 = 0;
-//                        for (axis = 0; axis < straightVector.length; axis++) {
-//                            dotSplit2 +=  split2Vector[axis]
-//                                    *straightVector[axis];
-//                            dotSplit3 +=  split3Vector[axis]
-//                                    *straightVector[axis];
-//                        }
-//                        // Norm to unit vectors.
-//                        dotSplit3 = dotSplit3/dSqSplit3/dStraight;
-//                        // Note, the dot product of two unit vectors is the cosinus of the angle between them.
-//                        // For the deviation, calculate the sinus by Pythagorean theorem. 
-//                        double sinus = Math.sqrt(1 - Math.pow(dotSplit3, 2));
-//                        double deviation = sinus*dSplit3;
-//                        if (deviation > junctionDeviation) {
-//                            // Three-way split. 
-//                            steps = 3;
-//                        }
-//                        else if (steps < 2) {
-//                            // No three-way split, try two-way. 
-//                            double dSplit2 = Math.sqrt(dSqSplit2);
-//                            dotSplit2 = dotSplit2/dSqSplit2/dStraight;
-//                            sinus = Math.sqrt(1 - Math.pow(dotSplit2, 2));
-//                            deviation = sinus*dSplit2;
-//                            if (deviation > junctionDeviation) {
-//                                // Split.
-//                                steps = 2;
-//                                hasSplits = true;
-//                            }
-//                        }
-//                    }
-//                    if (steps > 1) {
-//                        // Perform the splits. 
-//                        hasSplits = true;
-//                        for(int s = 1; s < steps; s++) {
-//                            double ti = t0 + s*dt/steps;
-//                            MotionProfile.Momentary [] interMomentaries = getProfileMomentaries(ti);
-//                            interpolation.put(ti, interMomentaries);
-//                        }
-//                    }
-//                }
-//                t0 = t;
-//                prevMomentaries = momentaries;
-//            }
-//            stepTimes = interpolation.keySet();
-//        }
-//        while (hasSplits); // If we had splits, we need to repeat.
-//        
-        
-        int numSteps = (int)Math.min(Math.floor(time/timeStep/2)*2, maxSteps);
+        int numSteps = (int)Math.floor(time/timeStep/2)*2;
         if (numSteps < 4) {
             // No interpolation, or move too short for interpolation. Just execute as one moderated moveTo. 
             return moderatedMoveTo(driver);
         }
-        
-        List<MoveToCommand> list = new ArrayList<>(numSteps);
+        // Sanity.
+        distStep = Math.max(3, distStep);
+
+        // Converting Junction Deviation (per axis) to allowable instant delta V
+        //   s = 1/2 a t²
+        //     = 1/2 a (dV/a)²
+        //     = 1/2 dV²/a
+        // Solving for dV
+        //   dV = √(2)*√(a*s)
+        // Because we treat entry/exit delta V separately, we take half.  
+        double junctionDeviation = junctionDeviationLength.convertToUnits(AxesLocation.getUnits()).getValue();
+        AxesLocation maxDeltaV = new AxesLocation(location0.getAxes(driver),
+                (axis) -> new Length(
+                        1./2*Math.sqrt(2)*Math.sqrt(junctionDeviation*axesProfiles[getAxisIndex(axis)].getAccelerationMax()), 
+                        AxesLocation.getUnits()));
+        // Determine per axis maximum delta a.
+        AxesLocation maxDeltaA = new AxesLocation(location0.getAxes(driver),
+                (axis) -> new Length(
+                        axesProfiles[getAxisIndex(axis)].getAccelerationMax()/Math.max(1, maxJerkSteps), 
+                        AxesLocation.getUnits()));
+
+        /*
+         * The interpolation uses minimal time intervals to step through the move. At each time step it is testing
+         * the interpolation by a straight segment connecting the last interpolation point (or the starting point) to the 
+         * time step point. This interpolation might be forbidden for various reasons:
+         *
+         * 1. Distance too small: If the distance is too small we will get artifacts from the axes' resolution when
+         *    the way-points are snapped to resolution ticks. Differential Vectors will become degraded. 
+         *
+         * 2. Instant change of velocity too large: When interpolating uncoordinated motion, curves in N-dimensional space
+         *    will occur and they need to be approximated into polygons. At the polygon corners there will be instant 
+         *    velocity changes, if moved through at speed. The instant velocity change must not be too large or
+         *    stepper motors may lose steps or vibrate too much. We are checking at segment begin and end and allow half
+         *    the allowed instant velocity change at each end. 
+         *
+         * 3. Instant change of acceleration too large: In order to simulate 3rd order motion control a.k.a. jerk control, 
+         *    we need to ramp up and down acceleration in multiple discrete steps to approximate a continuous acceleration 
+         *    ramp. The instant acceleration change must not become too large.  
+         * 
+         * 4. Acceleration has already plateaued or has already left a plateau: Once constant acceleration is reached or left 
+         *    (including zero acceleration when constant velocity is reached), a new segment should already have been made.  
+         *
+         * When 1. happens, we must continue with the next time step, effectively invalidating this one. However, if this 
+         * one is the very last time step, we have no choice but to merge it with the previous interpolation segment.
+         * This might not fully conform with 2. or 3. but deviations are expected to be very small due to the small distance. 
+         * 
+         * When 2., 3. or 4. happens, we create a new interpolation segment, but at the previous valid time step that had 
+         * not yet violated these constraints. If there is no previous valid time step, we are forced to take this one anyway. 
+         * In this case, time resolution was simply too coarse. Due to the nature of 3rd order motion control, i.e. due to the 
+         * limits in jerk, acceleration etc., it is expected this will only occur in very tight curves, where speed is 
+         * already very low and further degradation can be tolerated.    
+         * 
+         */
+
         // Perform the interpolation. 
-        //Sanity
-        distStep = Math.max(1, distStep);
-        AxesLocation locationS = getMomentaryLocation(0);
-        AxesLocation velocityS = getMomentaryVelocity(0);
+        List<MoveToCommand> list = new ArrayList<>(numSteps);
+        // Last taken interpolation point, initialized to be the start. 
+        AxesLocation location0 = getMomentaryLocation(0);
+        AxesLocation velocity0 = getMomentaryVelocity(0);
+        AxesLocation acceleration0 = getMomentaryAcceleration(0);
+        double t0 = 0;
+
+        // Last candidate interpolation point. 
+        AxesLocation location1 = location0;
+        AxesLocation velocity1 = velocity0;
+        AxesLocation acceleration1 = acceleration0;
+        double t1 = 0;
+        MoveToCommand command1 = null;
+
+        // Second-last interpolation point.
+        AxesLocation locationS = location0;
+        AxesLocation velocityS = velocity0;
+        AxesLocation accelerationS = acceleration0;
         double tS = 0;
-        double tSNominal = 0;
-        AxesLocation location0 = locationS;
-        AxesLocation velocity0 = velocityS;
-        double t0 = 0.0;
-        double t0Nominal = 0;
-        double t1Nominal = 0;
-        double minVel = driver.getMinimumVelocity();
-        double maxVelocity = minVel;
+
+        double minVelocity = driver.getMinimumVelocity();
+        double minAcceleration = minVelocity*4; // HACK
+        double maxVelocity = minVelocity; 
+
         for (long i = 1; i <= numSteps; i++) {
-            double t1 = i*time/numSteps; 
-            AxesLocation location1 = getMomentaryLocation(t1);
-            AxesLocation segment = location0.motionSegmentTo(location1).drivenBy(driver);
-            boolean isTooSmall = segment.multiply(1.0/distStep).matches(AxesLocation.zero);  
-            if (i == numSteps && isTooSmall) {
-                // Last step distance lower than distStep resolution ticks, merge with previous segment
-                if (list.size() > 0) {
-                    list.remove(list.size() - 1);
+            double t2 = i*time/numSteps;
+            AxesLocation location2 = getMomentaryLocation(t2);
+            while(true) {
+                AxesLocation segment = location0.motionSegmentTo(location2).drivenBy(driver);
+                boolean isTooSmall = segment.multiply(1.0/distStep).matches(AxesLocation.zero);  
+                if (i == numSteps && isTooSmall) {
+                    // Last step distance lower than distStep resolution ticks, merge with previous segment.
+                    if (command1 != null) {
+                        // Just make sure its merged with candidate command 1.
+                        command1 = null;
+                    }
+                    else {
+                        // There is no candidate command. Need to merge with the previous command.
+                        if (list.size() > 0) {
+                            list.remove(list.size() - 1);
+                        }
+                        location0 = locationS;
+                        velocity0 = velocityS;
+                        acceleration0 = accelerationS;
+                        t0 = tS;
+                        segment = location0.motionSegmentTo(location2).drivenBy(driver);
+                    }
+                    isTooSmall = false;
                 }
-                location0 = locationS;
-                velocity0 = velocityS;
-                t0 = tS;
-                t0Nominal = tSNominal;
-                segment = location0.motionSegmentTo(location1).drivenBy(driver);
-                isTooSmall = false;
-            }
-            if (!isTooSmall) {
-                final AxesLocation ds = segment;
-                double distance = ds.getRS274NGCMetric(driver, 
-                        (axis) -> ds.getCoordinate(axis));
-                AxesLocation movedAxesLocation = new AxesLocation(segment.getAxes(driver), 
-                        (axis) -> location1.getLengthCoordinate(axis));
-                AxesLocation velocity1 = getMomentaryVelocity(t1);
-                // Note, this is an approximation if the profile is curved. We could calculate the dot product.
-                // But then again, the controller will perform junction deviation and all bets are off anyway.
-                final AxesLocation vel0 = velocity0;
-                double v0 = segment.getRS274NGCMetric(driver, 
-                        (axis) -> vel0.getCoordinate(axis));
-                double v1 = segment.getRS274NGCMetric(driver, 
-                        (axis) -> velocity1.getCoordinate(axis));
-                maxVelocity = Math.max(Math.max(Math.abs(v0)+minVel*0.5,  Math.abs(v1)+minVel*0.5), maxVelocity);
-                // Avg. velocity with constant velocity.
-                double avgVelocity = (v0 + v1)*0.5;
-                double dtNominal = distance == 0 ? 0 : distance/avgVelocity;
-                t1Nominal = t0Nominal + dtNominal;
-                // Acceleration is the velocity difference over nominal time.
-                double acceleration = (v1 - v0)/dtNominal;
-
-                //TRACE
-                //Logger.trace("t0="+t0+", t1="+t1+", t1(nom)="+t1Nominal+", d="+distance+", v1="+v1);
-                //TRACE
-
-                // Add to list.
-                list.add(new MoveToCommand(location1,
-                        movedAxesLocation, // just the axes that are actually moved  
-                        null,//Math.max(Math.abs(v0)+0.0001,  Math.abs(v1)+0.0001), 
-                        Math.abs(acceleration)+0.0001,
-                        null)); // No jerk, we're simulating it, remember?
-
-                // Next, please.
-                tS = t0;
-                tSNominal = t0Nominal;
-                locationS = location0;
-                velocityS = velocity0;
-                t0 = t1;
-                t0Nominal = t1Nominal;
-                location0 = location1;
-                velocity0 = velocity1;
+                if (isTooSmall) {
+                    break;
+                }
+                else {
+                    final AxesLocation ds = segment;
+                    double distance = ds.getRS274NGCMetric(driver, 
+                            (axis) -> ds.getCoordinate(axis));
+                    AxesLocation movedAxesLocation = new AxesLocation(segment.getAxes(driver), 
+                            (axis) -> location2.getLengthCoordinate(axis));
+                    AxesLocation velocity2 = getMomentaryVelocity(t2);
+                    AxesLocation acceleration2 = getMomentaryAcceleration(t2);
+    
+                    // Note, if the motion is curved, we might have an angle between the segments (corners of a polygon), 
+                    // so we need to calculate the velocity projected onto the straight segment. This will lower the 
+                    // absolute velocity slightly and introduce an instant velocity change in the corner instead 
+                    // (in controllers this is typically called "junction deviation" or "jerk"). 
+                    final AxesLocation segmentVelocity0 = velocity0.along(segment);
+                    final AxesLocation segmentVelocity2 = velocity2.along(segment);
+    
+                    // Calculate RS274NGC (G-code) tool-path velocities.
+                    double v0 = segment.getRS274NGCMetric(driver, 
+                            (axis) -> segmentVelocity0.getCoordinate(axis));
+                    double v2 = segment.getRS274NGCMetric(driver, 
+                            (axis) -> segmentVelocity2.getCoordinate(axis));
+    
+                    // Avg. velocity with constant acceleration.
+                    double avgVelocity = (v0 + v2)*0.5;
+                    double dtNominal = distance == 0 ? 0 : distance/avgVelocity;
+                    // Tool-path acceleration is the velocity difference over nominal time.
+                    double acceleration = (v2 - v0)/dtNominal;
+    
+                    // Record the maximum velocity. This is done, even if this segment is later not be recorded, which is 
+                    // fine because we actually want to get the true peak.
+                    maxVelocity = Math.max(Math.max(Math.abs(v0), Math.abs(v2)), maxVelocity);
+    
+                    //TRACE
+                    //Logger.trace("t0="+t0+", t1="+t1+", t1(nom)="+t1Nominal+", d="+distance+", v1="+v1);
+                    //TRACE
+    
+                    MoveToCommand command2 = new MoveToCommand(location1,
+                            movedAxesLocation, // just the axes that are actually moved  
+                            null, // No velocity limit, jerk control just limits the acceleration.
+                            Math.max(Math.abs(acceleration), minAcceleration),
+                            null,
+                            dtNominal); // No jerk, we're simulating it, remember?
+    
+                    // Are we making a new segment?
+                    boolean newSegment = false;
+                    // Check instant velocity change on entry.
+                    AxesLocation deltaV0 = velocity0.subtract(segmentVelocity0);
+                    for (ControllerAxis axis : deltaV0.getControllerAxes()) {
+                        if (Math.abs(deltaV0.getCoordinate(axis)) > maxDeltaV.getCoordinate(axis)) {
+                            newSegment = true;
+                            break;
+                        }
+                    }
+                    if (!newSegment) {
+                        // Check instant velocity change on exit.
+                        AxesLocation deltaV2 = velocity2.subtract(segmentVelocity2);
+                        for (ControllerAxis axis : deltaV2.getControllerAxes()) {
+                            if (Math.abs(deltaV2.getCoordinate(axis)) > maxDeltaV.getCoordinate(axis)) {
+                                newSegment = true;
+                                break;
+                            }
+                        }
+                        if (!newSegment) {
+                            // Check acceleration / simulate jerk control. 
+                            AxesLocation deltaA20 = acceleration2.subtract(acceleration0);
+                            AxesLocation deltaA21 = acceleration2.subtract(acceleration1);
+                            AxesLocation deltaA10 = acceleration1.subtract(acceleration0);
+                            for (ControllerAxis axis : deltaA20.getControllerAxes()) {
+                                double da20 = Math.abs(deltaA20.getCoordinate(axis));
+                                double da21 = Math.abs(deltaA21.getCoordinate(axis));
+                                double da10 = Math.abs(deltaA10.getCoordinate(axis));
+                                if (da20 > maxDeltaA.getCoordinate(axis) 
+                                        || (da20 > 0 && (da21 == 0 || da10 == 0))) {
+                                    // Acceleration delta too high or plateau reached or left.
+                                    newSegment = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (newSegment) {
+                        if (command1 == null) {
+                            // There is no candidate command before this one. We are forced to take it fully.
+                            t1 = t2;
+                            location1 = location2;
+                            velocity1 = velocity2;
+                            acceleration1 = acceleration2; 
+                            command1 = command2;
+                            command2 = null;
+                        }
+                        // Add to list.
+                        list.add(command1);
+    
+                        // Remember previous segment begin.
+                        tS = t0;
+                        locationS = location0;
+                        velocityS = velocity0;
+                        accelerationS = acceleration0;
+    
+                        // Shift one segment. 
+                        t0 = t1;
+                        location0 = location1;
+                        velocity0 = velocity1;
+                        acceleration0 = acceleration1;
+                        command1 = null;
+                        if (command2 == null) {
+                            break;
+                        }
+                    }
+                    else {
+                        // This segment becomes candidate.
+                        t1 = t2;
+                        location1 = location2;
+                        velocity1 = velocity2;
+                        acceleration1 = acceleration2; 
+                        command1 = command2;
+                        // Go to next time segment, i.e. break the inner loop.
+                        break;
+                    }
+                }
             }
         }
+        // Always add the last command. 
+        if (command1 != null) {
+            list.add(command1);
+        }
+
         if (list.size() < 4) {
             // Interpolation collapsed.
             return moderatedMoveTo(driver);
         }
         // The interpolation will use constant acceleration to reach the way-points, i.e. it will be slightly faster. 
         // Re-time the whole path to match the planning time exactly.
-        double factor = t1Nominal/time;
+        double timeEffective = 0;
+        for (MoveToCommand move : list) {
+            timeEffective += move.getTime();
+        }
+        double factor = timeEffective/time;
         double factorSq = factor*factor;
         // Set the maximum for the whole move.
-        list.get(0).feedRatePerSecond = maxVelocity;
+        list.get(0).feedRatePerSecond = maxVelocity;    
         for (MoveToCommand move : list) {
             if (move.feedRatePerSecond != null) {
                 move.feedRatePerSecond *= factor;
@@ -955,17 +999,7 @@ public class Motion {
                 move.accelerationPerSecond2 *= factorSq;
             }
         }
-        // TODO: fuse similar acceleration segments into one. 
         return list;
-    }
-
-    public MotionProfile.Momentary[] getProfileMomentaries(Double t) {
-        MotionProfile.Momentary [] momentaries = new Momentary[getAxesProfiles().length];
-        int axis = 0;
-        for (MotionProfile profile : getAxesProfiles()) {
-            momentaries[axis++] = profile.getMomentary(t);
-        }
-        return momentaries;
     }
 
     /**
@@ -1018,7 +1052,8 @@ public class Motion {
                 Math.max(driver.getMinimumVelocity(), 
                         factor*moderatedProfile.getProfileVelocity(MotionControlType.ConstantAcceleration)), 
                 factor*avgAcceleration,
-                null));
+                null,
+                time));
         return list;
     }
 
@@ -1038,7 +1073,8 @@ public class Motion {
                 getMovingAxesTargetLocation(driver),
                 getFeedRatePerSecond(driver),
                 getAccelerationPerSecond2(driver),
-                getJerkPerSecond3(driver)));
+                getJerkPerSecond3(driver),
+                null));
         return list;
     }
 }
