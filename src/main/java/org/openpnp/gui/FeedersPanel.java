@@ -555,12 +555,12 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             }
             if (nozzle.getNozzleTip() == null) {
                 throw new Exception("Can't pick, no nozzle tip loaded on nozzle "+nozzle.getName()+". "
-                        +"You may want to enable automatic nozzle tip change on manual feed on the Nozzle / Tool Changer.");
+                        +"You may want to enable automatic nozzle tip change on manual pick on the Nozzle / Tool Changer.");
             }
             else if (! resolved) {
                 throw new Exception("Can't pick, loaded nozzle tip "+
                         nozzle.getNozzleTip().getName()+" is not compatible with package "+packag.getId()+". "
-                        +"You may want to enable automatic nozzle tip change on manual feed on the Nozzle / Tool Changer.");
+                        +"You may want to enable automatic nozzle tip change on manual pick on the Nozzle / Tool Changer.");
             }
         }
 
