@@ -32,7 +32,7 @@ public class ClientProcessor implements Runnable {
 	// Le traitement lancé dans un thread séparé
 	public void run() {
 		Thread.currentThread().setName("TCPClient");
-		System.err.println("Lancement du traitement de la connexion cliente");
+		System.out.println("new TCP client ");
 
 		try {
 			writer = new PrintWriter(sock.getOutputStream());
