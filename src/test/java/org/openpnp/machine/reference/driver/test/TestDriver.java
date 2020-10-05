@@ -51,7 +51,7 @@ public class TestDriver extends AbstractDriver implements Driver {
             throws Exception {
         
         // Take only this driver's axes.
-        AxesLocation newDriverLocation = move.getLocation();
+        AxesLocation newDriverLocation = move.getLocation1();
         // Take the current driver location of the given axes.
         AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this), 
                 (axis) -> (axis.getDriverLengthCoordinate()));

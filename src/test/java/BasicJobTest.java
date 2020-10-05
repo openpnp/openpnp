@@ -174,7 +174,7 @@ public class BasicJobTest {
         @Override
         public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
                 throws Exception {
-            AxesLocation location = move.getLocation();
+            AxesLocation location = move.getLocation1();
             
             System.out.println(hm + " " + location);
             if (expectedOps.isEmpty()) {

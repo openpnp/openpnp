@@ -107,9 +107,9 @@ public class NullDriver extends AbstractDriver {
     @Override
     public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
             throws Exception {
-        Logger.debug("moveTo({}, {}, {})", hm, move.getLocation(), move.getFeedRatePerSecond());
+        Logger.debug("moveTo({}, {}, {})", hm, move.getLocation1(), move.getFeedRatePerSecond());
         checkEnabled();
-        AxesLocation newDriverLocation = move.getLocation();
+        AxesLocation newDriverLocation = move.getLocation1();
         // Take the current driver location of the given axes.
         AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this), 
                 (axis) -> (axis.getDriverLengthCoordinate()));

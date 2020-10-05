@@ -136,6 +136,11 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                     if (dataScale.getColor() != null) {
                         // Scale is colored -> draw it
                         g2d.setColor(dataScale.getColor());
+                        if (dataScale.isLabelShown()) {
+                            String text = dataScale.getLabel();
+                            Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
+                            g2d.drawString(text, (int)(w/2 - bounds.getWidth()/2), (int)(yOrigin-yScale+fontAscent));
+                        }
                         double yUnit0 = Math.ceil((min.y+yUnitFont*0.5)/yUnit)*yUnit;
                         double yUnit1 = Math.floor((max.y-yUnitFont*0.5)/yUnit)*yUnit;
 

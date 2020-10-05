@@ -496,7 +496,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     @Override
     public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
             throws Exception {
-        AxesLocation location = move.getLocation();
+        AxesLocation location = move.getLocation1();
         double feedRate = move.getFeedRatePerSecond();
         // Reconstruct speed factor from "virtual" feed-rate assuming the default 
         // 250mm/s axes feedrate.

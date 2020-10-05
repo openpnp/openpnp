@@ -1,4 +1,6 @@
 /*
+ * Copyright (C) 2020 <mark@makr.zone>
+ * inspired and based on work
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
  * 
  * This file is part of OpenPnP.
@@ -17,9 +19,10 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.machine.reference.wizards;
+package org.openpnp.machine.reference.driver.wizards;
 
 
+import org.openpnp.gui.components.SimpleGraphView;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.driver.ReferenceAdvancedMotionPlanner;
 import org.openpnp.spi.MotionPlanner;
@@ -29,6 +32,11 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import javax.swing.JLabel;
+
+import java.awt.Font;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+
 import javax.swing.JCheckBox;
 
 @SuppressWarnings("serial")
@@ -36,6 +44,9 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
     private final MotionPlanner motionPlanner;
     private JCheckBox allowContinuousMotion;
     private JCheckBox allowUncoordinated;
+    private JLabel lblDiagnostics;
+    private JCheckBox diagnosticsEnabled;
+    private SimpleGraphView motionGraph;
 
     public ReferenceAdvancedMotionPlannerConfigurationWizard(ReferenceAdvancedMotionPlanner motionPlanner) {
         this.motionPlanner = motionPlanner;
@@ -46,10 +57,24 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -62,17 +87,38 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
         allowContinuousMotion = new JCheckBox("");
         contentPanel.add(allowContinuousMotion, "4, 2");
         
+        lblDiagnostics = new JLabel("Diagnostics?");
+        contentPanel.add(lblDiagnostics, "8, 2");
+        
+        diagnosticsEnabled = new JCheckBox("");
+        contentPanel.add(diagnosticsEnabled, "10, 2");
+        
         JLabel lblAllowUncoordinated = new JLabel("Allow uncoordinated?");
         contentPanel.add(lblAllowUncoordinated, "2, 4, right, default");
         
         allowUncoordinated = new JCheckBox("");
         contentPanel.add(allowUncoordinated, "4, 4");
         
+        JLabel lblMotionGraph = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nLocation <span style=\"color:#00BB00\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nVelocity <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nAcceleration <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n</body>\r\n</html>");
+        contentPanel.add(lblMotionGraph, "2, 8, 1, 5");
+        
+        motionGraph = new SimpleGraphView();
+        contentPanel.add(motionGraph, "4, 8, 9, 5");
+        motionGraph.addPropertyChangeListener(new PropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (evt.getPropertyName().equals("selectedX")) {
+                    Double t = motionGraph.getSelectedX();
+                }
+            }
+        });
+        motionGraph.setFont(new Font("Dialog", Font.PLAIN, 11));
     }
 
     @Override
     public void createBindings() {
         addWrappedBinding(motionPlanner, "allowContinuousMotion", allowContinuousMotion, "selected");
         addWrappedBinding(motionPlanner, "allowUncoordinated", allowUncoordinated, "selected");
+        addWrappedBinding(motionPlanner, "diagnosticsEnabled", diagnosticsEnabled, "selected");
+        addWrappedBinding(motionPlanner, "motionGraph", motionGraph, "graph");
     }
 }

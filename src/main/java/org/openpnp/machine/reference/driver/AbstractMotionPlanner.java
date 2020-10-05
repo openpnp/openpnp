@@ -43,6 +43,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Motion;
 import org.openpnp.model.Motion.MotionOption;
+import org.openpnp.model.Motion.MoveToCommand;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.ControllerAxis;
@@ -348,12 +349,13 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 }
             }
         }
+        // Publish recorded DIagnostics
+        publishDiagnostics();
         // Notify heads.
         for (Head movedHead : movedHeads) {
             machine.fireMachineHeadActivity(movedHead);
         }
     }
-
     /**
      * Subclasses must override this method to implement their advanced planning magic.
      * 
@@ -376,12 +378,26 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
     protected void executeMoveTo(ReferenceMachine machine, ReferenceHeadMountable hm,
             Motion plannedMotion) throws Exception {
         AxesLocation motionSegment = plannedMotion.getLocation0().motionSegmentTo(plannedMotion.getLocation1());
-        // Note, this loop will be empty if the motion is empty.
+        // Note, this loop will be empty if the motion is empty, i.e. if it only contains VirtualAxis movement.
         for (Driver driver : motionSegment.getAxesDrivers(machine)) {
             for (Motion.MoveToCommand moveToCommand : plannedMotion.interpolatedMoveToCommands(driver)) {
                 driver.moveTo(hm, moveToCommand);
+                recordDiagnostics(plannedMotion, moveToCommand, driver);
             }
         }
+    }
+
+    /**
+     * Sub.classes with diagnostics can override this method to record (interpolated) motion.
+     * 
+     * @param plannedMotion
+     * @param moveToCommand
+     * @param driver TODO
+     */
+    protected void recordDiagnostics(Motion plannedMotion, MoveToCommand moveToCommand, Driver driver) {
+    }
+
+    protected void publishDiagnostics() {
     }
 
     /**

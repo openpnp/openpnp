@@ -558,7 +558,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             throws Exception {
         // Get the axes that are actually moving.
         AxesLocation movedAxesLocation = move.getMovedAxesLocation();
-        AxesLocation allAxesLocation = move.getLocation();
+        AxesLocation allAxesLocation = move.getLocation1();
         Double feedRate = move.getFeedRatePerMinute();
         Double acceleration = move.getAccelerationPerSecond2();
         Double jerk = move.getJerkPerSecond3();
