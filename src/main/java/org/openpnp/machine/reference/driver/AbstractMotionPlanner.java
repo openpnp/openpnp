@@ -364,8 +364,9 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
     protected abstract void optimizeExecutionPlan(List<Motion> executionPlan, CompletionType completionType) throws Exception;
 
     /**
-     * Sub-classes may override this in order to execute/interpolate more complex MotionProfiles with simulated jerk control, 
-     * and/or curved trajectories from motion blending, etc. 
+     * Standard implementation to interpolate and execute driver moveTo commands. 
+     * May generate more complex motion with simulated jerk control, and/or curved trajectories from motion blending, etc. 
+     * according to the plannedMotion.  
      * 
      * @param machine
      * @param hm

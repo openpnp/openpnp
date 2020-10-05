@@ -24,6 +24,7 @@ package org.openpnp.model;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.function.BiFunction;
 
@@ -33,7 +34,9 @@ import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.Driver.MotionControlType;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.Triplet;
+import org.pmw.tinylog.Logger;
 
 /**
  * The Motion represents one segment in a motion sequence. It contains the start and end location
@@ -798,6 +801,7 @@ public class Motion {
          */
 
         // Perform the interpolation. 
+        double compT0 = NanosecondTime.getRuntimeSeconds();
         List<MoveToCommand> list = new ArrayList<>(numSteps);
         // Last taken interpolation point, initialized to be the start. 
         AxesLocation location0 = getMomentaryLocation(0);
@@ -812,7 +816,7 @@ public class Motion {
         double t1 = 0;
         MoveToCommand command1 = null;
 
-        // Second-last interpolation point.
+        // Second-last taken interpolation point.
         AxesLocation locationS = location0;
         AxesLocation velocityS = velocity0;
         AxesLocation accelerationS = acceleration0;
@@ -820,10 +824,11 @@ public class Motion {
 
         double minVelocity = driver.getMinimumVelocity();
         double minAcceleration = minVelocity*4; // HACK
-        double maxVelocity = minVelocity; 
+        double maxVelocity = minVelocity;
+        double dt = time/numSteps;
 
         for (long i = 1; i <= numSteps; i++) {
-            double t2 = i*time/numSteps;
+            double t2 = i*dt;
             AxesLocation location2 = getMomentaryLocation(t2);
             while(true) {
                 AxesLocation segment = location0.motionSegmentTo(location2).drivenBy(driver);
@@ -922,7 +927,7 @@ public class Motion {
                                 double da21 = Math.abs(deltaA21.getCoordinate(axis));
                                 double da10 = Math.abs(deltaA10.getCoordinate(axis));
                                 if (da20 > maxDeltaA.getCoordinate(axis) 
-                                        || (da20 > 0 && (da21 == 0 || da10 == 0))) {
+                                        || (da20 > 0 && (da21 == 0 || command1 != null && da10 == 0))) {
                                     // Acceleration delta too high or plateau reached or left.
                                     newSegment = true;
                                     break;
@@ -977,7 +982,10 @@ public class Motion {
             list.add(command1);
         }
 
-        if (list.size() < 4) {
+        double compTime = NanosecondTime.getRuntimeSeconds() - compT0;
+        Logger.debug("Interpolation "+numSteps+" probes, "+list.size()
+        +" steps, computing time "+String.format(Locale.US, "%.3f", compTime*1000)+"ms");
+        if (list.size() < 2) {
             // Interpolation collapsed.
             return moderatedMoveTo(driver);
         }

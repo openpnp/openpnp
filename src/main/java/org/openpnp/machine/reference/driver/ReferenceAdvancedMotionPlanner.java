@@ -92,9 +92,10 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                 // Both locations are in the Save Zone. Add the uncoordinated flags.
                 options |= MotionOption.UncoordinatedMotion.flag()
                         | MotionOption.LimitToSafeZone.flag()
-                        | MotionOption.SynchronizeStraighten.flag()
-                        | MotionOption.SynchronizeEarlyBird.flag()
-                        | MotionOption.SynchronizeLastMinute.flag();
+                       // | MotionOption.SynchronizeStraighten.flag()
+                       // | MotionOption.SynchronizeEarlyBird.flag()
+                       // | MotionOption.SynchronizeLastMinute.flag()
+                        ;
             }
         }
         return super.addMotion(hm, speed, location0, location1, options);
