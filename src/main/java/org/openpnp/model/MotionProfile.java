@@ -98,7 +98,7 @@ public class MotionProfile {
         Coordinated, 
         SynchronizeEarlyBird, 
         SynchronizeLastMinute,
-        SynchronizeStraighten,
+        SynchronizeStraighten, 
         Jog,
         SimplifiedSCurve,
         UnconstrainedExit,
@@ -305,28 +305,16 @@ public class MotionProfile {
             return vMax;
         }
         else {
-            // TODO: for advanced motion planning: calculate the real maximum over the profile, for cases with entry/exit conditions and/or tMin != 0
-            return Math.abs(v[4]);
+            return Math.max(Math.abs(vBound0), Math.abs(vBound1));
         }
     }
 
-    public double getProfileEntryAcceleration(MotionControlType motionControlType) {
+    public double getProfileAcceleration(MotionControlType motionControlType) {
         if (motionControlType == MotionControlType.EuclideanAxisLimits) {
-            return aMaxEntry;
+            return Math.max(aMaxEntry, aMaxExit);
         }
         else {
-            // TODO: for advanced motion planning: calculate the real maximum over the profile, for cases with entry/exit conditions. 
-            return Math.abs(a[2]);
-        }
-    }
-
-    public double getProfileExitAcceleration(MotionControlType motionControlType) {
-        if (motionControlType == MotionControlType.EuclideanAxisLimits) {
-            return aMaxExit;
-        }
-        else {
-            // TODO: for advanced motion planning: calculate the real maximum over the profile, for cases with entry/exit conditions. 
-            return Math.abs(a[6]);
+            return Math.max(Math.abs(aBound0), Math.abs(aBound1));
         }
     }
 
@@ -1117,7 +1105,7 @@ public class MotionProfile {
      * Recalculate the profile to make sure it takes the given amount of time.
      * @param newTime
      */
-    private boolean retimeProfile() {
+    public boolean retimeProfile() {
         if (solveIfNullMove()) {
             return true;
         }
@@ -1166,53 +1154,58 @@ public class MotionProfile {
     }
 
     public static void coordinateProfilesToLead(MotionProfile[] profiles, MotionProfile leadProfile) {
-        double leadDist = leadProfile.s[segments]-leadProfile.s[0];
         for (MotionProfile profile : profiles) { 
             if (profile != leadProfile) {
-                double factor; 
-                if (leadDist == 0) {
-                    factor = 0;
-                }
-                else {
-                    factor = (profile.s[segments]-profile.s[0])/leadDist;
-                }
-                if (factor == 0) {
-                    for (int i = 0; i <= segments; i++) {
-                        profile.t[i] = 0;
-                        profile.s[i] = profile.s[0];
-                        profile.v[i] = 0;
-                        profile.a[i] = 0;
-                        profile.j[i] = 0;
-                    }
-                    profile.t[4] = leadProfile.time;
-                }
-                else {
-                    for (int i = 0; i <= segments; i++) {
-                        profile.t[i] = leadProfile.t[i];
-                        profile.s[i] = (leadProfile.s[i] - leadProfile.s[0])*factor + profile.s[0];
-                        profile.v[i] = leadProfile.v[i]*factor;
-                        profile.a[i] = leadProfile.a[i]*factor;
-                        profile.j[i] = leadProfile.j[i]*factor;
-                    }
-                }
-                profile.time = leadProfile.time;
-                profile.tMin = leadProfile.tMin;
-                profile.computeBounds();
-                // Treat as if solved.
-                profile.eval = 0;
-                profile.solvingTime = 0;
-                profile.setOption(ProfileOption.Solved);
+                profile.coordinateProfileToLead(leadProfile);
             }
         }
+    }
+    public void coordinateProfileToLead(MotionProfile leadProfile) {
+        double leadDist = leadProfile.s[segments]-leadProfile.s[0];
+        double factor; 
+        if (leadDist == 0) {
+            factor = 0;
+        }
+        else {
+            factor = (s[segments]-s[0])/leadDist;
+        }
+        if (factor == 0) {
+            for (int i = 0; i <= segments; i++) {
+                t[i] = 0;
+                s[i] = s[0];
+                v[i] = 0;
+                a[i] = 0;
+                j[i] = 0;
+            }
+            t[4] = leadProfile.time;
+        }
+        else {
+            for (int i = 0; i <= segments; i++) {
+                t[i] = leadProfile.t[i];
+                s[i] = (leadProfile.s[i] - leadProfile.s[0])*factor + s[0];
+                v[i] = leadProfile.v[i]*factor;
+                a[i] = leadProfile.a[i]*factor;
+                j[i] = leadProfile.j[i]*factor;
+            }
+        }
+        time = leadProfile.time;
+        tMin = leadProfile.tMin;
+        computeBounds();
+        // Treat as if solved.
+        eval = 0;
+        solvingTime = 0;
+        setOption(ProfileOption.Solved);
     }
 
     public static void synchronizeProfiles(MotionProfile [] profiles) {
         // Find the maximum time.
         double maxTime = 0;
+        MotionProfile leadProfile = null;
         for (MotionProfile profile : profiles) {
             profile.assertSolved();
             if (profile.time > maxTime) {
                 maxTime = profile.time;
+                leadProfile = profile;
                 trace("    max time "+maxTime+" from "+profile);
             }
         }
@@ -1221,41 +1214,116 @@ public class MotionProfile {
         do {
             restart = false;
             for (MotionProfile profile : profiles) {
+                profile.assertSolved();
                 profile.tMin = maxTime;
                 if (profile.time != maxTime) {
                     if (profile.hasOption(ProfileOption.SynchronizeStraighten) 
-                            && profile.v[0] == 0 
-                            && profile.v[segments] == 0 
-                            && (profile.isConstantAcceleration() || (profile.a[0] == 0 && profile.a[segments] == 0))) {
-                        // Profile has no continuous entry/exit velocity acceleration, we can straighten it.
-                        profile.retimeProfile();
+                            && (profile.v[0] == 0 || profile.v[segments] == 0) 
+                            && (profile.isConstantAcceleration() || profile.a[0] == 0 || profile.a[segments] == 0)) {
+                        // Profile has some zero entry/exit velocity/acceleration, we can try to straighten it.
+                        if (leadProfile != null) {
+                            MotionProfile coordinated = null;
+                            // Try full coordination
+                            double leadDist = Math.abs(leadProfile.s[segments]-leadProfile.s[0]);
+                            if (leadDist > eps) {
+                                //double factor = Math.abs((coordinated.s[segments]-coordinated.s[0])/leadDist);
+                                double factor = Math.abs((profile.s[segments]-profile.s[0])/leadDist);
+                                if (factor > 0) {
+                                    coordinated = new MotionProfile(profile); 
+                                    if (profile.v[0] == 0 && profile.v[segments] == 0) {
+                                        coordinated.setVelocityMax(leadProfile.getVelocityMax()*factor);
+                                    }
+                                    if (profile.isConstantAcceleration() || profile.a[0] == 0) {
+                                        coordinated.setEntryAccelerationMax(leadProfile.getEntryAccelerationMax()*factor);
+                                    }
+                                    if (profile.isConstantAcceleration() || profile.a[segments] == 0) {
+                                        coordinated.setExitAccelerationMax(leadProfile.getExitAccelerationMax()*factor);
+                                    }
+                                    if (!profile.isConstantAcceleration()) {
+                                        coordinated.setJerkMax(leadProfile.getJerkMax()*factor);
+                                    }
+                                    coordinated.solve();
+                                    if (coordinated.time <= maxTime && coordinated.checkValidity() == null) {
+                                        // No errors, take it.
+                                        profile.copyProfileSolution(coordinated);
+                                        continue;
+                                    }
+                                    // not valid
+                                    coordinated = null;
+                                }
+                            }
+                            // Try partial coordination. 
+                            if (profile.v[0] == 0 && (profile.isConstantAcceleration() || profile.a[0] == 0)
+                                    && leadProfile.v[0] == 0 && (leadProfile.isConstantAcceleration() || leadProfile.a[0] == 0)) {
+                                double timeFactor = profile.getSegmentBeginTime(3)/leadProfile.getSegmentBeginTime(3);
+                                timeFactor *= profile.time/maxTime;
+                                if (timeFactor > 0.0 && timeFactor < 1.0) {
+                                    coordinated = new MotionProfile(profile); 
+                                    coordinated.setEntryAccelerationMax(leadProfile.getEntryAccelerationMax()*Math.pow(timeFactor, 2));
+                                    if (!profile.isConstantAcceleration()) {
+                                        coordinated.setJerkMax(leadProfile.getJerkMax()*Math.pow(timeFactor, 3));
+                                    }
+                                }
+                            }
+                            if (profile.v[segments] == 0 && (profile.isConstantAcceleration() || profile.a[segments] == 0)
+                                    && leadProfile.v[segments] == 0 && (leadProfile.isConstantAcceleration() || leadProfile.a[segments] == 0)) {
+                                double timeFactor = 
+                                        (profile.getTime()-profile.getSegmentBeginTime(4))/
+                                        (leadProfile.getTime()-leadProfile.getSegmentBeginTime(4));
+                                timeFactor *= profile.time/maxTime;
+                                if (timeFactor > 0.0 && timeFactor < 1.0) {
+                                    if (coordinated == null) { 
+                                        coordinated = new MotionProfile(profile); 
+                                    }
+                                    coordinated.setExitAccelerationMax(leadProfile.getExitAccelerationMax()*Math.pow(timeFactor, 2));
+                                    if (!profile.isConstantAcceleration()) {
+                                        coordinated.setJerkMax(leadProfile.getJerkMax()*Math.pow(timeFactor, 3));
+                                    }
+                                }
+                            }
+                            if (coordinated != null) {
+                                coordinated.solve();
+                                if (coordinated.time <= maxTime && coordinated.checkValidity() == null) {
+                                    // No errors, take it.
+                                    profile.copyProfileSolution(coordinated);
+                                    continue;
+                                }
+                            }
+                        }
+                        if (profile.v[0] == 0 && profile.v[segments] == 0 
+                                && profile.a[0] == 0 && profile.a[segments] == 0) {
+                            // No entry conditions set, we can just re-time.
+                            profile.retimeProfile();
+                            continue;
+                        }
                     }
-                    else if (profile.hasOption(ProfileOption.SynchronizeEarlyBird) 
+                    if (profile.hasOption(ProfileOption.SynchronizeEarlyBird) 
                             && profile.v[segments] == 0 
                             && (profile.isConstantAcceleration() || profile.a[segments] == 0)) {
                         // We just leave the profile as is. The axis will move to the target early and then stay put.
                         profile.t[segments+1] += profile.tMin - profile.time;
                         profile.time = profile.tMin;
+                        continue;
                     }
-                    else if (profile.hasOption(ProfileOption.SynchronizeLastMinute) 
+                    if (profile.hasOption(ProfileOption.SynchronizeLastMinute) 
                             && profile.v[0] == 0 
                             && (profile.isConstantAcceleration() || profile.a[0] == 0)) {
                         // We just leave the profile as is. The axis will move to the target early and then stay put.
                         profile.t[0] += profile.tMin - profile.time;
                         profile.time = profile.tMin;
+                        continue;
                     }
-                    else {
-                        // None of the simple solutions applicable. Re-solve with tMin.
-                        profile.solve();
-                        if (profile.time > maxTime) {
-                            // Sometimes the solution was at/near entry/exit speeds and in these cases, it is possible
-                            // that the new tMin is impossible, i.e. more time is needed. 
-                            // --> restart the process.
-                            trace("    need to restart synchronize, maxTime "+maxTime+" breached with "+profile.time+" on "+profile);
-                            maxTime = profile.time;
-                            restart = true;
-                            break;
-                        }
+
+                    // Arrived here: none of the simple solutions applicable. Re-solve with tMin.
+                    profile.solve();
+                    if (profile.time > maxTime) {
+                        // Sometimes the solution was at/near entry/exit speeds and in these cases, it is possible
+                        // that the new tMin is impossible, i.e. more time is needed. 
+                        // --> restart the process.
+                        trace("    need to restart synchronize, maxTime "+maxTime+" breached with "+profile.time+" on "+profile);
+                        maxTime = profile.time;
+                        restart = true;
+                        break;
                     }
                 }
             }

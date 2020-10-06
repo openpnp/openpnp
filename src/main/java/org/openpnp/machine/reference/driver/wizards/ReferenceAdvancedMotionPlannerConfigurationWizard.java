@@ -65,10 +65,16 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),},
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.PREF_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -87,23 +93,23 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
         allowContinuousMotion = new JCheckBox("");
         contentPanel.add(allowContinuousMotion, "4, 2");
         
-        lblDiagnostics = new JLabel("Diagnostics?");
-        contentPanel.add(lblDiagnostics, "8, 2");
-        
-        diagnosticsEnabled = new JCheckBox("");
-        contentPanel.add(diagnosticsEnabled, "10, 2");
-        
         JLabel lblAllowUncoordinated = new JLabel("Allow uncoordinated?");
-        contentPanel.add(lblAllowUncoordinated, "2, 4, right, default");
+        contentPanel.add(lblAllowUncoordinated, "6, 2, right, default");
         
         allowUncoordinated = new JCheckBox("");
-        contentPanel.add(allowUncoordinated, "4, 4");
+        contentPanel.add(allowUncoordinated, "8, 2");
         
-        JLabel lblMotionGraph = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nLocation <span style=\"color:#00BB00\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nVelocity <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nAcceleration <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n</body>\r\n</html>");
-        contentPanel.add(lblMotionGraph, "2, 8, 1, 5");
+        lblDiagnostics = new JLabel("Diagnostics?");
+        contentPanel.add(lblDiagnostics, "10, 2, right, default");
+        
+        diagnosticsEnabled = new JCheckBox("");
+        contentPanel.add(diagnosticsEnabled, "12, 2");
+        
+        JLabel lblMotionGraph = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nLocation <span style=\"color:#00BB00\">&mdash;&mdash;</span>\r\n&nbsp;&nbsp;\r\nVelocity <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n&nbsp;&nbsp;\r\nAcceleration <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n&nbsp;&nbsp;\r\nJerk <span style=\"color:#FFBB00\">&mdash;&mdash;</span>\r\n</p>\r\n</body>\r\n</html>");
+        contentPanel.add(lblMotionGraph, "14, 2, right, default");
         
         motionGraph = new SimpleGraphView();
-        contentPanel.add(motionGraph, "4, 8, 9, 5");
+        contentPanel.add(motionGraph, "2, 6, 15, 9");
         motionGraph.addPropertyChangeListener(new PropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent evt) {
                 if (evt.getPropertyName().equals("selectedX")) {

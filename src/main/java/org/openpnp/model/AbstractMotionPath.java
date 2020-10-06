@@ -9,7 +9,6 @@ import java.util.NoSuchElementException;
 
 import org.openpnp.model.MotionProfile.ProfileOption;
 import org.openpnp.util.XmlSerialize;
-import org.python.modules.math;
 
 public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
     final double approximation = 0.75; // 0.75
