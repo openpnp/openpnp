@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map.Entry;
+import java.util.TreeSet;
 import java.util.function.BiFunction;
 
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
@@ -802,9 +803,7 @@ public class Motion {
         // Determine per axis maximum delta a.
         AxesLocation maxDeltaA = new AxesLocation(location0.getAxes(driver),
                 (axis) -> new Length(
-                        (axesProfiles[getAxisIndex(axis)].isConstantAcceleration() ?
-                                Double.POSITIVE_INFINITY :
-                                    axesProfiles[getAxisIndex(axis)].getAccelerationMax()/Math.max(1, maxJerkSteps)), 
+                        computeMaxDeltaA(maxJerkSteps, axis), 
                         AxesLocation.getUnits()));
 
         /*
@@ -842,6 +841,86 @@ public class Motion {
 
         // Perform the interpolation. 
         double compT0 = NanosecondTime.getRuntimeSeconds();
+
+        // Collect special intervals.
+        TreeSet<Double> intervals = new TreeSet<>();
+        TreeSet<Double> intervalsExtremes = new TreeSet<>();
+        intervals.add(0.);
+        for (MotionProfile profile : axesProfiles) {
+            // Add all the profile times.
+            double t = profile.t[0]; 
+            for (int i = 1; i <= MotionProfile.segments+1; i++) {
+                intervals.add(t);
+                t += profile.t[i];
+            }
+            // Add any location extremes, where the velocity inverts. 
+            intervalsExtremes.add(profile.tSBound0);
+            intervalsExtremes.add(profile.tSBound1);
+            // Add any velocity peaks. 
+            if (profile.t[4] < MotionProfile.ttol) {
+                intervalsExtremes.add(profile.tVBound0);
+                intervalsExtremes.add(profile.tVBound1);
+            }
+        }
+        // Filter the intervals.
+        TreeSet<Double> motionIntervals = new TreeSet<>();
+        double tPrev = -1; 
+        int constantV = 0;
+        double tConstantA = Double.NaN;
+        int constantA = 0;
+        for (Double t : intervals) {
+            if (t > tPrev + MotionProfile.eps) {
+//                Logger.debug("candidate interval t="+t);
+                AxesLocation velocity = getMomentaryVelocity(t);
+                AxesLocation acceleration = getMomentaryAcceleration(t+MotionProfile.eps);
+                AxesLocation jerk = getMomentaryJerk(t+MotionProfile.eps);
+                if (t > 0 && intervalsExtremes.contains(t)) {
+                    // Location extreme
+                    motionIntervals.add(t);
+                    //                    Logger.debug("extreme t="+t);
+                }
+                if (t > 0 && acceleration.matches(AxesLocation.zero) && jerk.matches(AxesLocation.zero)){
+                    if (!velocity.matches(AxesLocation.zero)) {
+                        if (constantV == 0) {
+                            // Begin of constant V
+                            motionIntervals.add(t);
+                            //                            Logger.debug("begin constant V t="+t);
+                        }
+                        constantV++;
+                    }
+                }
+                else {
+                    if (constantV > 0) {
+                        // End of constant V plateau
+                        motionIntervals.add(t);
+                        //                        Logger.debug("end constant V t="+t);
+                    }
+                    constantV = 0;
+                }
+                if (!acceleration.matches(AxesLocation.zero) && jerk.matches(AxesLocation.zero)){
+                    if (constantA == 0) {
+                        // Begin of constant a
+                        tConstantA = t;
+                    }
+                    constantA++;
+                }
+                else {
+                    if (constantA > 0) {
+                        if (t - tConstantA > timeStep*8) {
+                            if (tConstantA > 0) {
+                                motionIntervals.add(tConstantA);
+                            }
+                            //                            Logger.debug("begin constant a t="+tConstantA);
+                            motionIntervals.add(t);
+                            //                            Logger.debug("end constant a t="+t);
+                        }
+                        constantA = 0;
+                    }
+                }
+                tPrev = t;
+            }
+        }
+
         List<MoveToCommand> list = new ArrayList<>(numSteps);
         // Last taken interpolation point, initialized to be the start. 
         AxesLocation location0 = getMomentaryLocation(0);
@@ -869,48 +948,24 @@ public class Motion {
         double maxVelocity = minVelocity;
 
         double dt = time/numSteps;
-
-        //        TreeSet<Double> probes = new TreeSet<>();
-        //        for (MotionProfile profile : axesProfiles) {
-        //            double t = profile.t[0];
-        //            for (int i = 0; i <= MotionProfile.segments; i++) {
-        //                t += profile.t[i+1];
-        //                if (profile.j[i] != 0 || profile.a[i] != 0) {
-        //                    int segs = (int)Math.ceil(profile.t[i+1]/timeStep);
-        //                    double dt = profile.t[i+1]/segs;
-        //                    for (int ti = 0; ti < segs; ti++) {
-        //                        double tp = t-ti*dt;
-        //                        if (tp > timeStep*0.9) {
-        //                            Double higher = probes.higher(tp);
-        //                            if (higher == null || higher - tp > timeStep*0.9) {
-        //                                Double lower = probes.lower(tp);
-        //                                if (lower != null && tp - lower < timeStep*0.9) {
-        //                                    probes.remove(lower);
-        //                                }
-        //                                probes.add(tp);
-        //                            }
-        //                        }
-        //                    }
-        //                }
-        //            }
-        //        }
-
+        boolean interpolationNeeded = false;
         int probeCount = 0;
         for (int i = 1; i <= numSteps; i++) {
             double t2 = i*dt;
-
-            //        numSteps = probes.size();
-            //        int probe = 0;
-            //        for (Double t2 : probes) {
-            //            //Logger.debug(t2 - t1);
-            //            if (t2 - t1 < timeStep*0.9) {
-            //                continue;
-            //            }
-            //            probe++;
+            boolean special = (i == numSteps);
+            // Snap to a any special interval.
+            while (!motionIntervals.isEmpty() && motionIntervals.first() < t2+dt) {
+                t2 = motionIntervals.first();
+                motionIntervals.remove(t2);
+                special = true;
+            }
+//            if (special) {
+//                Logger.debug("t2="+t2+" special");
+//            }
 
             AxesLocation location2 = getMomentaryLocation(t2);
             AxesLocation acceleration2 = getMomentaryAcceleration(t2);
-            if (i < numSteps 
+            if (!special
                     && acceleration2.matches(AxesLocation.zero) && acceleration1.matches(AxesLocation.zero)) {
                 // Straight line, nothing happens.
                 continue;
@@ -920,7 +975,7 @@ public class Motion {
             while(true) {
                 AxesLocation segment = location0.motionSegmentTo(location2).drivenBy(driver);
                 boolean isTooSmall = segment.multiply(1.0/distStep).matches(AxesLocation.zero);  
-                if (i == numSteps && isTooSmall) {
+                if (special && isTooSmall) {
                     // Last step distance lower than distStep resolution ticks, merge with previous segment.
                     if (command1 != null) {
                         // Just make sure its merged with candidate command 1.
@@ -957,97 +1012,26 @@ public class Motion {
                     // (in controllers this is typically called "junction deviation" or "jerk"). 
                     final AxesLocation segmentVelocity0 = velocity0.along(segment);
                     final AxesLocation segmentVelocity2 = velocity2.along(segment);
-                    final AxesLocation segmentAcceleration0 = acceleration0.along(segment);
-                    final AxesLocation segmentAcceleration2 = acceleration2.along(segment);
                     // Calculate scalar RS274NGC (G-code) tool-path rates.
-                    double v0, v2, a0, a2;
-                    if (true) {
-                        // Segment rates.
-                        v0 = segment.getRS274NGCMetric(driver, 
-                                (axis) -> segmentVelocity0.getCoordinate(axis));
-                        v2 = segment.getRS274NGCMetric(driver, 
-                                (axis) -> segmentVelocity2.getCoordinate(axis));
-                        a0 = segment.getRS274NGCMetric(driver, 
-                                (axis) -> segmentAcceleration0.getCoordinate(axis));
-                        a2 = segment.getRS274NGCMetric(driver, 
-                                (axis) -> segmentAcceleration2.getCoordinate(axis));
-                    }
-                    else {
-                        // Tangential rates.
-                        final AxesLocation vel0 = velocity0; // capture
-                        final AxesLocation acc0 = acceleration0; // capture
-                        v0 = segment.getRS274NGCMetric(driver, 
-                                (axis) -> vel0.getCoordinate(axis));
-                        v2 = segment.getRS274NGCMetric(driver, 
-                                (axis) -> velocity2.getCoordinate(axis));
-                        a0 = segment.getRS274NGCMetric(driver, 
-                                (axis) -> acc0.getCoordinate(axis));
-                        a2 = segment.getRS274NGCMetric(driver, 
-                                (axis) -> acceleration2.getCoordinate(axis));
-                    }
-
+                    double v0, v2;
+                    // Segment scalar rates.
+                    v0 = segment.getRS274NGCMetric(driver, 
+                            (axis) -> segmentVelocity0.getCoordinate(axis));
+                    v2 = segment.getRS274NGCMetric(driver, 
+                            (axis) -> segmentVelocity2.getCoordinate(axis));
                     // Avg. velocity with constant acceleration.
                     double avgVelocity = (v0 + v2)*0.5;
                     double dtNominal = distance == 0 ? 0 : distance/avgVelocity;
                     // Tool-path acceleration is the velocity difference over nominal time.
                     double acceleration = (v2 - v0)/dtNominal;
-                    double dotV02 = segmentVelocity0.dotProduct(segmentVelocity2);
-                    double dotA02 = segmentAcceleration0.dotProduct(segmentAcceleration2);
                     // Record the maximum velocity. This is done, even if this segment is later not be recorded, which is 
                     // fine because we actually want to get the true peak.
                     double maxSegmentVelocity = Math.max(Math.abs(v0), Math.abs(v2));
-                    Double velocity = null;
-                    double t = t2 - t0;
-                    if ((dotA02 <= 0 && t < dtNominal - MotionProfile.eps)
-                            || (avgVelocity < MotionProfile.eps)) {
-                        // Acceleration reversal or plateau in the segment. Switch to velocity governing.
-                        double a = Math.max(a0, a2);
-                        double s = distance;
-                        double signum = Math.signum(acceleration0.dotProduct(segment));
-                        if (signum == 0) {
-                            signum = -Math.signum(acceleration2.dotProduct(segment));;
-                            if (signum == 0) {
-                                signum = 1;
-                            }
-                        }
-                        /* Solve for trapezoid V.
-                         * From SageMath:
-var('s t v v0 v2 a')
-t0=(v-v0)/a
-t2=(v-v2)/a
-t1=t-t0-t2
-eq=(s==v0*t0 + 1/2*a*t0^2 + v*t1 + v2*t2 + 1/2*a*t2^2)
-solve(eq, v)
-
-                        >>
-                        [v == 1/2*a*t + 1/2*v0 + 1/2*v2 - 1/2*sqrt(a^2*t^2 + 2*a*t*v0 - 4*a*s - v0^2 + 2*(a*t + v0)*v2 - v2^2), 
-                         v == 1/2*a*t + 1/2*v0 + 1/2*v2 + 1/2*sqrt(a^2*t^2 + 2*a*t*v0 - 4*a*s - v0^2 + 2*(a*t + v0)*v2 - v2^2)]]
-                         */
-                        double sTerm = 1./2*Math.sqrt(Math.pow(a,2)*Math.pow(t,2) + 2*a*t*v0 - 4*a*s - Math.pow(v0,2) + 2*(a*t + v0)*v2 - Math.pow(v2,2));
-                        double v = 1./2*a*t + 1./2*v0 + 1./2*v2 - signum*sTerm;
-                        //double v_ = 1./2*a*t + 1./2*v0 + 1./2*v2 + signum*sTerm;
-                        double simpleRampDisplacement = maxSegmentVelocity*t - 1./2*a*Math.pow(t, 2); 
-                        double tv0 = (v-v0)/a;
-                        double tv2 = (v-v2)/a;
-                        double tvMid = t-tv0-tv2;
-                        if (simpleRampDisplacement + MotionProfile.eps < s 
-                                && tvMid > MotionProfile.eps) {
-                            //Logger.debug("Trapezoidal t0="+t0+" t2="+t2+" dt="+t+" dtNominal="+dtNominal+" v0="+v0+" v2="+v2+" v="+v+" v'="+v_+" a0="+a0+" a2="+a2+" a="+a+" simple ramp="+simpleRampDisplacement+" s="+s);
-                            // It is not just a simple ramp, i.e. it is trapezoidal - take the solution.
-                            acceleration = a;
-                            dtNominal = t;
-                            avgVelocity = s/t;
-                            maxSegmentVelocity = v;
-                            velocity = v;
-                            // TODO: recalc if that v0 > v || v2 > v
-                            v0 = Math.min(v0, v);
-                            v2 = Math.min(v2, v);
-                        }
-                        else {
-                            //Logger.debug("*** Not a trapezoidal t0="+t0+" t2="+t2+" dt="+t+" dtNominal="+dtNominal+" v0="+v0+" v2="+v2+" v="+v+" v'="+v_+" a0="+a0+" a2="+a2+" a="+a+" simple ramp="+simpleRampDisplacement+" s="+s);
-                        }
-                    }
                     maxVelocity = Math.max(maxSegmentVelocity, maxVelocity);
+                    Double velocity = null;
+                    if (acceleration == 0) {
+                        velocity = maxSegmentVelocity;
+                    }
 
                     MoveToCommand command2 = new MoveToCommand(
                             location0, location2,
@@ -1059,13 +1043,9 @@ solve(eq, v)
 
                     // Are we making a new segment?
                     boolean newSegment = false;
-                    if (velocity == null && (command1 != null && command1.feedRatePerSecond != null)) {
-                        // Last segment was velocity governed and this one isn't, must add it.
+                    if (special) {
                         newSegment = true;
-                    }
-                    else if (dotV02 < 0) {
-                        // Velocity reversed.
-                        newSegment = true;
+                        command1 = null;
                     }
                     else {
                         // Check instant velocity change on entry.
@@ -1073,28 +1053,31 @@ solve(eq, v)
                         for (ControllerAxis axis : deltaV0.getControllerAxes()) {
                             if (Math.abs(deltaV0.getCoordinate(axis)) > maxDeltaV.getCoordinate(axis)) {
                                 newSegment = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (!newSegment) {
-                        // Check instant velocity change on exit.
-                        AxesLocation deltaV2 = velocity2.subtract(segmentVelocity2);
-                        for (ControllerAxis axis : deltaV2.getControllerAxes()) {
-                            if (Math.abs(deltaV2.getCoordinate(axis)) > maxDeltaV.getCoordinate(axis)) {
-                                newSegment = true;
+                                interpolationNeeded = true;
                                 break;
                             }
                         }
                         if (!newSegment) {
-                            // Check acceleration / simulate jerk control. 
-                            AxesLocation deltaA20 = segmentAcceleration2.subtract(segmentAcceleration0);
-                            for (ControllerAxis axis : deltaA20.getControllerAxes()) {
-                                double da20 = Math.abs(deltaA20.getCoordinate(axis));
-                                if (da20 > maxDeltaA.getCoordinate(axis)) {
-                                    // Acceleration delta too high.
+                            // Check instant velocity change on exit.
+                            AxesLocation deltaV2 = velocity2.subtract(segmentVelocity2);
+                            for (ControllerAxis axis : deltaV2.getControllerAxes()) {
+                                if (Math.abs(deltaV2.getCoordinate(axis)) > maxDeltaV.getCoordinate(axis)) {
                                     newSegment = true;
+                                    interpolationNeeded = true;
                                     break;
+                                }
+                            }
+                            if (!newSegment) {
+                                // Check acceleration / simulate jerk control. 
+                                AxesLocation deltaA20 = acceleration2.subtract(acceleration0);
+                                for (ControllerAxis axis : deltaA20.getControllerAxes()) {
+                                    double da20 = Math.abs(deltaA20.getCoordinate(axis));
+                                    if (da20 > maxDeltaA.getCoordinate(axis)) {
+                                        // Acceleration delta too high.
+                                        newSegment = true;
+                                        interpolationNeeded = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -1115,11 +1098,14 @@ solve(eq, v)
                             command1 = command2;
                             command2 = null;
                         }
-                        //                        if (command1.feedRatePerSecond != null) {
-                        //                            Logger.debug("Trapezoidal taken");
-                        //                        }
                         // Add to list.
                         list.add(command1);
+                        //                        if (commandS != null && !intervalsExtremes.contains(commandS.t0)) {
+                        //                            if (commandS.feedRatePerSecond == null && command1.feedRatePerSecond == null
+                        //                                && Math.abs(commandS.accelerationPerSecond2 - command1.accelerationPerSecond2) < MotionProfile.atol) {
+                        //                                list.remove(commandS);
+                        //                            }
+                        //                        }
 
                         // Remember previous segment begin.
                         tS = t0;
@@ -1142,7 +1128,7 @@ solve(eq, v)
                         // else: continue in the inner loop, create the shifted segment. 
                     }
                     else {
-                        // This segment becomes candidate.
+                        // This segment becomes the new candidate.
                         t1 = t2;
                         location1 = location2;
                         velocity1 = velocity2;
@@ -1160,9 +1146,9 @@ solve(eq, v)
         }
 
         double compTime = NanosecondTime.getRuntimeSeconds() - compT0;
-        Logger.debug("Interpolation "+numSteps+" ticks, "+probeCount+" probes, "+list.size()
+        Logger.debug("Interpolation "+numSteps+" intervals, "+probeCount+" probes, "+list.size()
         +" steps, comp time "+String.format(Locale.US, "%.3f", compTime*1000)+"ms");
-        if (list.size() < 2) {
+        if (!interpolationNeeded || list.size() < 2) {
             // Interpolation collapsed.
             return moderatedMoveTo(driver);
         }
@@ -1194,7 +1180,26 @@ solve(eq, v)
             move.time /= factor;
             tSum += move.time;
         }
+
+//        list.get(0).feedRatePerSecond = maxVelocity;
+//        double tSum = 0;
+//        for (MoveToCommand move : list) {
+//            move.t0 = tSum;
+//            tSum += move.time;
+//        }
         return list;
+    }
+
+    private double computeMaxDeltaA(Integer maxJerkSteps, ControllerAxis axis) {
+        MotionProfile profile = axesProfiles[getAxisIndex(axis)]; 
+        if (profile.isConstantAcceleration() || maxJerkSteps < 2) {
+            return Double.POSITIVE_INFINITY; 
+        }
+        double profileAcceleration = Math.max(profile.aBound0, profile.aBound1);
+        double deltaA = profile.getAccelerationMax()/maxJerkSteps;
+        double steps = Math.max(2, Math.ceil(profileAcceleration/deltaA));
+        return MotionProfile.atol+profileAcceleration/steps;
+//        return profileAcceleration/maxJerkSteps;
     }
 
     /**
@@ -1217,40 +1222,106 @@ solve(eq, v)
         double vEntry = profile.getVelocity(0);    
         double vExit = profile.getVelocity(7);    
         double time = getTime();
-        MotionProfile moderatedProfile = new MotionProfile(
-                profile.getLocation(0), profile.getLocation(7),
-                vEntry, vExit, 
-                0, 0, // entry/exit acceleration is irrelevant for constant acceleration motion control.
-                profile.getLocationMin(), profile.getLocationMax(),
-                profile.getVelocityMax(),
-                profile.getEntryAccelerationMax(), profile.getExitAccelerationMax(),
-                0, // no jerk 
-                0, profile.getTimeMax(), 
-                0);
-        moderatedProfile.assertSolved();
-        // Now stretch it match the time of the 3rd order motion.
-        moderatedProfile.setTimeMin(time);
-        moderatedProfile.retimeProfile();
+
+        // Create the minimum acceleration move.
+        double s = profile.getLocation(7) - profile.getLocation(0);
+        double vmax = profile.getVelocityMax();
+        double t = time;
+        double v0 = vEntry;
+        double v7 = vExit;
+        // TODO: Do not allow loops.
+
+        /* From SageMath
+# try acceleration only
+
+var ('s t v v0 v7')
+a = (2*v - v0 - v7)/t
+t0 = (v - v0)/a
+t7 = (v - v7)/a
+eq=(s == t*v - (v-v0)*t0/2 - (v-v7)*t7/2)
+solve(eq, v)
+  
+>> [v == 1/2*(2*s - sqrt(2*t^2*v0^2 + 2*t^2*v7^2 - 4*s*t*v0 - 4*s*t*v7 + 4*s^2))/t, 
+    v == 1/2*(2*s + sqrt(2*t^2*v0^2 + 2*t^2*v7^2 - 4*s*t*v0 - 4*s*t*v7 + 4*s^2))/t]
+
+ */
+        double v = 1./2*(2*s + Math.signum(s)*Math.sqrt(2*Math.pow(t, 2)*Math.pow(v0, 2) + 2*Math.pow(t, 2)*Math.pow(v7, 2) - 4*s*t*v0 - 4*s*t*v7 + 4*Math.pow(s, 2)))/t;
+        double a;
+        if (v <= vmax) {
+            // Acceleration only profile, Vmax not reached.
+            a = (2*v - v0 - v7)/t;
+        }
+        else {
+            
+            /* From SageMath
+# try Vmax 
+var ('s t v v0 v7 a')
+t0=(v-v0)/a
+t7=(v-v7)/a
+eq=(s==t*v-t0*(v-v0)/2-t7*(v-v7)/2)
+solve(eq, a)
+
+>> a == 1/2*(2*v^2 - 2*v*v0 + v0^2 - 2*v*v7 + v7^2)/(t*v - s)
+*/
+            v = vmax;
+            a = 1./2*(2*Math.pow(v, 2) - 2*v*v0 + Math.pow(v0, 2) - 2*v*v7 + Math.pow(v7, 2))/(t*v - s);
+        }
+        
+        // Calculate the factor from this single lead Axis to the rate along the relevant axes 
+        // (either linear or rotational axes, according to RS274NGC).  
+        List<MoveToCommand> list = new ArrayList<>(1);
         AxesLocation location0 = getLocation0();
         AxesLocation location1 = getLocation1();
         AxesLocation segment = location0.motionSegmentTo(location1).drivenBy(driver);
-
-        // Calculate the factor from this single lead Axis to the rate along the relevant axes 
-        // (either linear or rotational axes, according to RS274NGC).  
         double distance = segment.getRS274NGCMetric(driver, 
                 (axis) -> segment.getCoordinate(axis));
         double factor = distance/segment.getEuclideanMetric()/Math.abs(unitVector[leadAxis]);
-        List<MoveToCommand> list = new ArrayList<>(1);
         list.add(new MoveToCommand(
                 location0, location1,
                 getMovingAxesTargetLocation(driver),
                 Math.max(driver.getMinimumVelocity(), 
-                        factor*moderatedProfile.getProfileVelocity(MotionControlType.ConstantAcceleration)), 
-                Math.max(driver.getMinimumVelocity(), // HACK
-                        factor*moderatedProfile.getProfileAcceleration(MotionControlType.ConstantAcceleration)),
+                        Math.abs(factor*v)), 
+                Math.max(driver.getMinimumVelocity()*4, // HACK
+                        Math.abs(factor*a)),
                 null, // No jerk
                 0.0, time, Math.abs(factor*vEntry), Math.abs(factor*vExit)));
         return list;
+
+        
+//        MotionProfile moderatedProfile = new MotionProfile(
+//                profile.getLocation(0), profile.getLocation(7),
+//                vEntry, vExit, 
+//                0, 0, // entry/exit acceleration is irrelevant for constant acceleration motion control.
+//                profile.getLocationMin(), profile.getLocationMax(),
+//                profile.getVelocityMax(),
+//                profile.getEntryAccelerationMax(), profile.getExitAccelerationMax(),
+//                0, // no jerk 
+//                0, profile.getTimeMax(), 
+//                0);
+//        moderatedProfile.assertSolved();
+//        // Now stretch it match the time of the 3rd order motion.
+//        moderatedProfile.setTimeMin(time);
+//        moderatedProfile.retimeProfile();
+//        AxesLocation location0 = getLocation0();
+//        AxesLocation location1 = getLocation1();
+//        AxesLocation segment = location0.motionSegmentTo(location1).drivenBy(driver);
+//
+//        // Calculate the factor from this single lead Axis to the rate along the relevant axes 
+//        // (either linear or rotational axes, according to RS274NGC).  
+//        double distance = segment.getRS274NGCMetric(driver, 
+//                (axis) -> segment.getCoordinate(axis));
+//        double factor = distance/segment.getEuclideanMetric()/Math.abs(unitVector[leadAxis]);
+//        List<MoveToCommand> list = new ArrayList<>(1);
+//        list.add(new MoveToCommand(
+//                location0, location1,
+//                getMovingAxesTargetLocation(driver),
+//                Math.max(driver.getMinimumVelocity(), 
+//                        factor*moderatedProfile.getProfileVelocity(MotionControlType.ConstantAcceleration)), 
+//                Math.max(driver.getMinimumVelocity()*4, // HACK
+//                        factor*moderatedProfile.getProfileAcceleration(MotionControlType.ConstantAcceleration)),
+//                null, // No jerk
+//                0.0, time, Math.abs(factor*vEntry), Math.abs(factor*vExit)));
+//        return list;
     }
 
     /**

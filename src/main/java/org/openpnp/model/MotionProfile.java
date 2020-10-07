@@ -340,7 +340,7 @@ public class MotionProfile {
             return f7;
         }
         for (int i = 1; i <= segments; i++) {
-            if (ts <= t[i]) {
+            if (ts < t[i]) {
                 return f.apply(i, ts);
             }
             ts -= t[i];
@@ -1229,17 +1229,24 @@ public class MotionProfile {
                                 //double factor = Math.abs((coordinated.s[segments]-coordinated.s[0])/leadDist);
                                 double factor = Math.abs((profile.s[segments]-profile.s[0])/leadDist);
                                 if (factor > 0) {
+                                    double aFactor = factor;
+                                    if (leadProfile.isConstantAcceleration() && !profile.isConstantAcceleration()) {
+                                        aFactor = Math.sqrt(aFactor); 
+                                    }
+                                    else if (profile.isConstantAcceleration() && !leadProfile.isConstantAcceleration()) {
+                                        aFactor = 0.71; 
+                                    }
                                     coordinated = new MotionProfile(profile); 
                                     if (profile.v[0] == 0 && profile.v[segments] == 0) {
                                         coordinated.setVelocityMax(leadProfile.getVelocityMax()*factor);
                                     }
                                     if (profile.isConstantAcceleration() || profile.a[0] == 0) {
-                                        coordinated.setEntryAccelerationMax(leadProfile.getEntryAccelerationMax()*factor);
+                                        coordinated.setEntryAccelerationMax(leadProfile.getEntryAccelerationMax()*aFactor);
                                     }
                                     if (profile.isConstantAcceleration() || profile.a[segments] == 0) {
-                                        coordinated.setExitAccelerationMax(leadProfile.getExitAccelerationMax()*factor);
+                                        coordinated.setExitAccelerationMax(leadProfile.getExitAccelerationMax()*aFactor);
                                     }
-                                    if (!profile.isConstantAcceleration()) {
+                                    if (!profile.isConstantAcceleration() && !leadProfile.isConstantAcceleration()) {
                                         coordinated.setJerkMax(leadProfile.getJerkMax()*factor);
                                     }
                                     coordinated.solve();
@@ -1288,6 +1295,8 @@ public class MotionProfile {
                                     profile.copyProfileSolution(coordinated);
                                     continue;
                                 }
+                                // not valid
+                                coordinated = null;
                             }
                         }
                         if (profile.v[0] == 0 && profile.v[segments] == 0 

@@ -166,7 +166,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                 // Reverse order for better drawing order.
                 SimpleGraph.DataScale jScale =  motionGraph.getScale(axis.getName()+" j");
                 SimpleGraph.DataRow jRow = motionGraph.getRow(axis.getName()+" j", "j");
-                jRow.setColor(new Color(0xFF, 0xBB, 0x00)); 
+                jRow.setColor(new Color(0xDD, 0xBB, 0x00)); 
 
                 SimpleGraph.DataScale aScale =  motionGraph.getScale(axis.getName()+" a");
                 SimpleGraph.DataRow aRow = motionGraph.getRow(axis.getName()+" a", "a");
@@ -251,7 +251,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
             // (either linear or rotational axes, according to RS274NGC).  
             double distance = segment.getRS274NGCMetric(driver, 
                     (axis) -> segment.getCoordinate(axis));
-            double factor = 1/distance;///Math.pow(segment.getEuclideanMetric(), 2);
+            double factorRS274NGC = 1/distance;
 
             for (ControllerAxis axis : moveToCommand.getMovedAxesLocation().getControllerAxes()) {
                 Double t = moveToCommand.getTimeStart() + plannedMotion.getPlannedTime0() - recordingT0;
@@ -259,9 +259,9 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                 if (t != null && d != null) {
                     d -= tick;// subtract one tick to make it unique.
                     if (showApproximation ) {
+                        Double v = moveToCommand.getFeedRatePerSecond();
                         Double v0 = moveToCommand.getV0();
                         Double v1 = moveToCommand.getV1();
-                        Double v = moveToCommand.getFeedRatePerSecond();
                         Double a = moveToCommand.getAccelerationPerSecond2();
                         if (v0 != null && v1 != null && a != null) {
                             // Approximated constant acceleration move. Reconstruct Profile.
@@ -270,28 +270,27 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                             SimpleGraph.DataRow aRow = recordingMotionGraph.getRow(axis.getName()+" a", "a'");
                             double s0 = moveToCommand.getLocation0().getCoordinate(axis);
                             double s1 = moveToCommand.getLocation1().getCoordinate(axis);
-                            double signum = (s1 - s0)*factor;
-                            v0 = v0* signum;
-                            v1 = v1*signum;
-                            a = a*signum;
-                            vRow.recordDataPoint(t, v0);
-                            vRow.recordDataPoint(t+d, v1);
+                            double factor = (s1 - s0)*factorRS274NGC;
+                            v0 = v0* factor;
+                            v1 = v1*factor;
+                            a = a*factor;
                             sRow.recordDataPoint(t, s0);
                             sRow.recordDataPoint(t+d, s1);
-                            if (v != null) {
-                                v = v*signum;
+                            if (v != null && plannedMotion.getTime() == moveToCommand.getTimeDuration()) { 
+                                // Single trapezoidal move
+                                v = v*factor;
                                 double t0 = (v-v0)/a;
                                 double t1 = (v-v1)/a;
                                 double tMid = d-t0-t1;
                                 if ((t0 > tick || t1 > tick) && tMid > -tick*2) {
-                                    // Trapezoid
+                                    // Valid Trapezoidal.
                                     vRow.recordDataPoint(t+t0, v);
                                     vRow.recordDataPoint(t+d-t1, v);
                                     if (t0 > tick) {
                                         aRow.recordDataPoint(t, a);
                                         aRow.recordDataPoint(t+t0-tick, a);
                                     }
-                                    if (tMid > 0) {
+                                    if (tMid > tick*4) {
                                         aRow.recordDataPoint(t+t0, 0);
                                         aRow.recordDataPoint(t+d-t1, 0);
                                     }
@@ -299,56 +298,57 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                                         aRow.recordDataPoint(t+d-t1+tick, -a);
                                         aRow.recordDataPoint(t+d, -a);
                                     }
-                                    // Forward
+                                    // s Forward
                                     for (double ts = dt; ts <= t0; ts += dt) {
                                         double sm = s0 + v0*ts + 1./2*a*Math.pow(ts, 2);
                                         sRow.recordDataPoint(t+ts, sm);
                                     }
-                                    // Backward
+                                    // s Backward
                                     for (double ts = dt; ts <= t1; ts += dt) {
                                         double sm = s1 - v1*ts - 1./2*a*Math.pow(ts, 2);
                                         sRow.recordDataPoint(t+d-ts, sm);
                                     }
                                 }
-                                else {
-                                    // Not a trapezoid
-                                    v = null;
-                                }
                             }
-                            if (v == null) {
-                                if ((v1 - v0)/a < 0) {
+                            else {
+                                // Approximation ramp (always one-sided).
+                                if (a != 0 && (v1 - v0)/a < 0) {
                                     a = -a;
                                 }
-                                // Simple ramp
-                                aRow.recordDataPoint(t, a);
-                                aRow.recordDataPoint(t+d, a);
+                                // s Ramp
                                 for (double ts = dt; ts < d; ts += dt) {
                                     double sm = s0 + v0*ts + 1./2*a*Math.pow(ts, 2);
                                     sRow.recordDataPoint(t+ts, sm);
                                 }
+                                aRow.recordDataPoint(t, a);
+                                aRow.recordDataPoint(t+d, a);
                             }
+                            vRow.recordDataPoint(t, v0);
+                            vRow.recordDataPoint(t+d, v1);
                         }
                     }
-                    // Show the theoretical motion. 
-                    MotionProfile profile = plannedMotion.getAxesProfiles()[plannedMotion.getAxisIndex(axis)];
-                    SimpleGraph.DataRow sRow = recordingMotionGraph.getRow(axis.getName(), "s");
-                    SimpleGraph.DataRow vRow = recordingMotionGraph.getRow(axis.getName()+" V", "V");
-                    SimpleGraph.DataRow aRow = recordingMotionGraph.getRow(axis.getName()+" a", "a");
-                    SimpleGraph.DataRow jRow = null;
-                    if (!profile.isConstantAcceleration()) {
-                        jRow = recordingMotionGraph.getRow(axis.getName()+" j", "j");
-                    }
                     double t0 = moveToCommand.getTimeStart();
-                    for (double ts = 0; ts < d; ts += dt) {
-                        double s = profile.getMomentaryLocation(t0+ts);
-                        double v = profile.getMomentaryVelocity(t0+ts);
-                        double a = profile.getMomentaryAcceleration(t0+ts);
-                        double j = profile.getMomentaryJerk(t0+ts);
-                        sRow.recordDataPoint(t+ts, s);
-                        vRow.recordDataPoint(t+ts, v);
-                        aRow.recordDataPoint(t+ts, a);
-                        if (jRow != null) {
-                            jRow.recordDataPoint(t+ts, j);
+                    if (t0 == 0) { 
+                        // Show the true 3rd order control motion. 
+                        MotionProfile profile = plannedMotion.getAxesProfiles()[plannedMotion.getAxisIndex(axis)];
+                        SimpleGraph.DataRow sRow = recordingMotionGraph.getRow(axis.getName(), "s");
+                        SimpleGraph.DataRow vRow = recordingMotionGraph.getRow(axis.getName()+" V", "V");
+                        SimpleGraph.DataRow aRow = recordingMotionGraph.getRow(axis.getName()+" a", "a");
+                        SimpleGraph.DataRow jRow = null;
+                        if (!profile.isConstantAcceleration()) {
+                            jRow = recordingMotionGraph.getRow(axis.getName()+" j", "j");
+                        }
+                        for (double ts = 0; ts <= plannedMotion.getTime(); ts += dt) {
+                            double s = profile.getMomentaryLocation(t0+ts);
+                            double v = profile.getMomentaryVelocity(t0+ts);
+                            double a = profile.getMomentaryAcceleration(t0+ts);
+                            sRow.recordDataPoint(t+ts, s);
+                            vRow.recordDataPoint(t+ts, v);
+                            aRow.recordDataPoint(t+ts, a);
+                            if (jRow != null) {
+                                double j = profile.getMomentaryJerk(t0+ts);
+                                jRow.recordDataPoint(t+ts, j);
+                            }
                         }
                     }
                 }

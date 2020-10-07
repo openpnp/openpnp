@@ -82,6 +82,7 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
                 RowSpec.decode("fill:default:grow"),}));
 
         JLabel lblMaximumNumberOf = new JLabel("Maximum Number of Steps");
+        lblMaximumNumberOf.setToolTipText("<html>\r\nMaximum number of steps that can be used for interpolation of one move.<br>\r\nUse a portion of your controller's maximum queue depth. <br/>\r\nIf the number is exceeded, the motion planner will fall back to a single moderated move. \r\n</html>");
         interpolationPanel.add(lblMaximumNumberOf, "2, 2, right, default");
 
         interpolationMaxSteps = new JTextField();

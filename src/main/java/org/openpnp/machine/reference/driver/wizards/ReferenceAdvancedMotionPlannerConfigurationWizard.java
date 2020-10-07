@@ -105,7 +105,7 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
         diagnosticsEnabled = new JCheckBox("");
         contentPanel.add(diagnosticsEnabled, "12, 2");
         
-        JLabel lblMotionGraph = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nLocation <span style=\"color:#00BB00\">&mdash;&mdash;</span>\r\n&nbsp;&nbsp;\r\nVelocity <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n&nbsp;&nbsp;\r\nAcceleration <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n&nbsp;&nbsp;\r\nJerk <span style=\"color:#FFBB00\">&mdash;&mdash;</span>\r\n</p>\r\n</body>\r\n</html>");
+        JLabel lblMotionGraph = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nLocation <span style=\"color:#00BB00\">&mdash;&mdash;</span>\r\n&nbsp;&nbsp;\r\nVelocity <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n&nbsp;&nbsp;\r\nAcceleration <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n&nbsp;&nbsp;\r\nJerk <span style=\"color:#DDBB00\">&mdash;&mdash;</span>\r\n</p>\r\n</body>\r\n</html>");
         contentPanel.add(lblMotionGraph, "14, 2, right, default");
         
         motionGraph = new SimpleGraphView();
