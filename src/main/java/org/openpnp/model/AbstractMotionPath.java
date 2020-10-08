@@ -102,7 +102,7 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
         double[][] unitVector = new double[size][];
         double [] junctionCosineFromPrev = new double[size];
         int [] colinearWithPrev = new int[size];
-        boolean[] simplifiedSCurve = new boolean[size];
+        boolean[] simplified = new boolean[size];
 
         for (int i = 0; i <= last; i++) {
             MotionProfile [] profiles = get(i);
@@ -112,15 +112,15 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
             }
             unitVector[i] = MotionProfile.getUnitVector(profiles);
             leadAxis[i] = MotionProfile.getLeadAxisIndex(unitVector[i]);
-            simplifiedSCurve[i] = false;
+            simplified[i] = false;
             for (int axis = 0; axis < profiles.length; axis++) {
-                simplifiedSCurve[i] |= profiles[axis].hasOption(ProfileOption.SimplifiedSCurve);
+                simplified[i] |= !profiles[axis].isSupportingUncoordinated();
             }
             if (i > 0) {
                 junctionCosineFromPrev[i] = MotionProfile.dotProduct(unitVector[i-1], unitVector[i]);
                 colinearWithPrev[i] = 0;
                 if (leadAxis[i] == leadAxis[i-1]
-                        && simplifiedSCurve[i] == simplifiedSCurve[i-1]) {
+                        && simplified[i] == simplified[i-1]) {
                     colinearWithPrev[i] = ((junctionCosineFromPrev[i] >= 1.0 - MotionProfile.eps) ? 1 
                             : (junctionCosineFromPrev[i] <= -1.0 + MotionProfile.eps) ? -1 
                                     : 0);
@@ -156,7 +156,7 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
                 iNext = i+1;
                 MotionProfile [] profiles = get(i);
                 MotionProfile [] prevProfiles = (i > 0 ? get(i-1) : null);
-                if (simplifiedSCurve[i]) {
+                if (simplified[i]) {
                     // We can only handle them as single coordinated moves for now, because they don't support acceleration != 0 in junctions. 
                     int lead = leadAxis[i];
                     if (profiles[lead].assertSolved()) {

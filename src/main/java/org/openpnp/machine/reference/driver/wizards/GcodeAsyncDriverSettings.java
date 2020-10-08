@@ -133,14 +133,14 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
     @Override
     public void createBindings() {
         IntegerConverter intConverter = new IntegerConverter();
-        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
-        //DoubleConverter doubleConverterFine = new DoubleConverter("%f");
+        //DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+        DoubleConverter doubleConverterFine = new DoubleConverter("%.6f");
         LengthConverter lengthConverter = new LengthConverter();
 
         addWrappedBinding(driver, "confirmationFlowControl", confirmationFlowControl, "selected");
         addWrappedBinding(driver, "interpolationMaxSteps", interpolationMaxSteps, "text", intConverter);
         addWrappedBinding(driver, "interpolationJerkSteps", interpolationJerkSteps, "text", intConverter);
-        addWrappedBinding(driver, "interpolationTimeStep", interpolationTimeStep, "text", doubleConverter);
+        addWrappedBinding(driver, "interpolationTimeStep", interpolationTimeStep, "text", doubleConverterFine);
         addWrappedBinding(driver, "interpolationMinStep", interpolationMinStep, "text", intConverter);
         addWrappedBinding(driver, "junctionDeviation", junctionDeviation, "text", lengthConverter);
 

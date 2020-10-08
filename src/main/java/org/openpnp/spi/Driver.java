@@ -224,6 +224,14 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
         public boolean isInterpolated() {
             return this == Simulated3rdOrderControl;
         }
+
+        public boolean isSupportingUncoordinated() {
+            return this == Simulated3rdOrderControl || this == Full3rdOrderControl;
+        }
+
+        public boolean isUnpredictable() {
+            return this.ordinal() <= EuclideanAxisLimits.ordinal();
+        }
     }
 
     /**

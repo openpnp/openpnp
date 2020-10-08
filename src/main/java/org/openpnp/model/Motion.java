@@ -90,7 +90,11 @@ public class Motion {
         /**
          * A pseudo-Motion that signals still-stand of the machine. 
          */
-        Stillstand;
+        Stillstand, 
+        /**
+         * Signaling failed interpolation. 
+         */
+        InterpolationFailed;
 
         public int flag() {
             return 1 << this.ordinal();
@@ -253,6 +257,20 @@ public class Motion {
                 }
 
                 double d = Math.abs(distance.getCoordinate(axis));
+                double effectiveSpeedDerivatives = effectiveSpeed;
+
+                int options = profileOptions();
+                if (axis.getDriver() != null) {
+                    if (axis.getDriver().getMotionControlType() == MotionControlType.SimpleSCurve) {
+                        options |= ProfileOption.SimplifiedSCurve.flag();
+                    }
+                    if (!axis.getDriver().getMotionControlType().isSupportingUncoordinated()) {
+                        options |= ProfileOption.RestrictToCoordinated.flag();
+                    }
+                    if (axis.getDriver().getMotionControlType() == MotionControlType.ToolpathFeedRate) {
+                        effectiveSpeedDerivatives = 1.0;
+                    }
+                }
 
                 double vMax = effectiveSpeed 
                         *axis.getMotionLimit(1);  
@@ -260,13 +278,13 @@ public class Motion {
                     vMax = Math.min(vMax, feedrateOverride);
                 }
 
-                double aMax = Math.pow(effectiveSpeed, 2) // speed factor must be to the power of the order of the derivative
+                double aMax = Math.pow(effectiveSpeedDerivatives, 2) // speed factor must be to the power of the order of the derivative
                         *axis.getMotionLimit(2);  
                 if (d > 0 && (axis.isRotationalOnController() ^ linearMove) && accelerationOverride != 0) {
                     aMax = Math.min(aMax, accelerationOverride);
                 }
 
-                double jMax = Math.pow(effectiveSpeed, 3) // speed factor must be to the power of the order of the derivative
+                double jMax = Math.pow(effectiveSpeedDerivatives, 3) // speed factor must be to the power of the order of the derivative
                         *axis.getMotionLimit(3);
                 if (d > 0 && (axis.isRotationalOnController() ^ linearMove) && jerkOverride != 0) {
                     jMax = Math.min(jMax, jerkOverride);
@@ -275,10 +293,6 @@ public class Motion {
                 // Compute s0 by distance rather than taking location0, because some axes may have been omitted in location. 
                 double s1 = location1.getCoordinate(axis); 
                 double s0 = s1 - distance.getCoordinate(axis);
-                int options = profileOptions();
-                if (axis.getDriver() != null && axis.getDriver().getMotionControlType() == MotionControlType.SimpleSCurve) {
-                    options |= ProfileOption.SimplifiedSCurve.flag();
-                }
                 axesProfiles[entry.getValue()] = new MotionProfile(
                         s0, s1,
                         0, 0, 0, 0, // initialize with still-stand
@@ -290,7 +304,6 @@ public class Motion {
             // As these profiles are uncoordinated, they need to be synchronized, i.e. made sure they take the same amount of time.
             MotionProfile.synchronizeProfiles(axesProfiles);
             euclideanDistance = distance.getEuclideanMetric();
-            effectiveSpeed = getNominalSpeed();
         }
         else {
             // Coordinated non-zero motion.
@@ -432,6 +445,7 @@ public class Motion {
             // Also include the given speed factor.
             effectiveSpeed = (time > 0 ? euclideanTime/time : 1.0) * Math.max(0.01, nominalSpeed);
             euclideanDistance = overallLimits[0];
+            double effectiveSpeedDerivatives = nominalSpeed;
 
             for (Entry<ControllerAxis, Integer> entry : axisIndex.entrySet()) {
                 ControllerAxis axis = entry.getKey();
@@ -455,26 +469,37 @@ public class Motion {
                         }
                     }
                 }
+
+                int options = profileOptions();
+                if (axis.getDriver() != null) {
+                    if (axis.getDriver().getMotionControlType() == MotionControlType.SimpleSCurve) {
+                    options |= ProfileOption.SimplifiedSCurve.flag();
+                    }
+                    if (!axis.getDriver().getMotionControlType().isSupportingUncoordinated()) {
+                        options |= ProfileOption.RestrictToCoordinated.flag();
+                    }
+                    if (axis.getDriver().getMotionControlType() == MotionControlType.ToolpathFeedRate) {
+                        effectiveSpeedDerivatives = 1.0;
+                    }
+                }
+
                 double vMax = 
                         effectiveSpeed 
                         *overallLimits[1]*axisFraction;  
 
                 double aMax = 
-                        Math.pow(nominalSpeed, 2) // speed factor must be to the power of the order of the derivative
+                        Math.pow(effectiveSpeedDerivatives, 2) // speed factor must be to the power of the order of the derivative
                         *overallLimits[2]*axisFraction;  
 
                 double jMax = 
-                        Math.pow(nominalSpeed, 3) // speed factor must be to the power of the order of the derivative
+                        Math.pow(effectiveSpeedDerivatives, 3) // speed factor must be to the power of the order of the derivative
                         *overallLimits[3]*axisFraction;
 
                 // Compute s0 by distance rather than taking location0, because some axes may have been omitted in location. 
                 double s1 = location1.getCoordinate(axis); 
                 double s0 = s1 - distance.getCoordinate(axis);
 
-                int options = profileOptions();
-                if (axis.getDriver() != null && axis.getDriver().getMotionControlType() == MotionControlType.SimpleSCurve) {
-                    options |= ProfileOption.SimplifiedSCurve.flag();
-                }
+
                 axesProfiles[entry.getValue()] = new MotionProfile(
                         s0, s1, 
                         0, 0, 0, 0, // initialize with still-stand
@@ -1028,16 +1053,24 @@ public class Motion {
                     // fine because we actually want to get the true peak.
                     double maxSegmentVelocity = Math.max(Math.abs(v0), Math.abs(v2));
                     maxVelocity = Math.max(maxSegmentVelocity, maxVelocity);
+                    double minSegmentAcceleration = minAcceleration;
                     Double velocity = null;
                     if (acceleration == 0) {
+                        // Velocity governed segment.
                         velocity = maxSegmentVelocity;
+                        minSegmentAcceleration = Double.POSITIVE_INFINITY;
+                        // Allow a higher acceleration to recover from any unplanned decelration. 
+                        for (ControllerAxis axis : segment.getControllerAxes()) {
+                            double aMinAxis = maxDeltaA.getCoordinate(axis)/Math.abs(segment.getCoordinate(axis)/distance);
+                            minSegmentAcceleration = Math.min(minSegmentAcceleration, aMinAxis);
+                        }
                     }
 
                     MoveToCommand command2 = new MoveToCommand(
                             location0, location2,
                             movedAxesLocation, // just the axes that are actually moved  
                             velocity, 
-                            Math.max(Math.abs(acceleration), minAcceleration),
+                            Math.max(Math.abs(acceleration), minSegmentAcceleration),
                             null, // No jerk, we're simulating it, remember?
                             t0, dtNominal, v0, v2); 
 
@@ -1087,6 +1120,7 @@ public class Motion {
                             // Uh-oh, not enough steps available for interpolation. Degrade move to moderated.
                             Logger.debug("Interpolation failed! Max. steps ("+maxSteps+") reached after "
                                     +String.format(Locale.US, "%.3f", 100*t2/time)+"% of move time/ "+probeCount+" probes. Degrading to moderated move.");
+                            setOption(MotionOption.InterpolationFailed);
                             return moderatedMoveTo(driver);
                         }
                         if (command1 == null) {
@@ -1180,13 +1214,6 @@ public class Motion {
             move.time /= factor;
             tSum += move.time;
         }
-
-//        list.get(0).feedRatePerSecond = maxVelocity;
-//        double tSum = 0;
-//        for (MoveToCommand move : list) {
-//            move.t0 = tSum;
-//            tSum += move.time;
-//        }
         return list;
     }
 
@@ -1229,7 +1256,15 @@ public class Motion {
         double t = time;
         double v0 = vEntry;
         double v7 = vExit;
-        // TODO: Do not allow loops.
+        // Do not allow reversal of velocity. Just assume motion from still-stand.
+        // This may happen due to failed interpolation. 
+        double signum = Math.signum(s);
+        if (signum != Math.signum(v0)) {
+            v0 = 0;
+        }
+        if (signum != Math.signum(v7)) {
+            v7 = 0;
+        }
 
         /* From SageMath
 # try acceleration only
@@ -1240,19 +1275,19 @@ t0 = (v - v0)/a
 t7 = (v - v7)/a
 eq=(s == t*v - (v-v0)*t0/2 - (v-v7)*t7/2)
 solve(eq, v)
-  
+
 >> [v == 1/2*(2*s - sqrt(2*t^2*v0^2 + 2*t^2*v7^2 - 4*s*t*v0 - 4*s*t*v7 + 4*s^2))/t, 
     v == 1/2*(2*s + sqrt(2*t^2*v0^2 + 2*t^2*v7^2 - 4*s*t*v0 - 4*s*t*v7 + 4*s^2))/t]
 
- */
-        double v = 1./2*(2*s + Math.signum(s)*Math.sqrt(2*Math.pow(t, 2)*Math.pow(v0, 2) + 2*Math.pow(t, 2)*Math.pow(v7, 2) - 4*s*t*v0 - 4*s*t*v7 + 4*Math.pow(s, 2)))/t;
+         */
+        double v = 1./2*(2*s + signum*Math.sqrt(2*Math.pow(t, 2)*Math.pow(v0, 2) + 2*Math.pow(t, 2)*Math.pow(v7, 2) - 4*s*t*v0 - 4*s*t*v7 + 4*Math.pow(s, 2)))/t;
         double a;
-        if (v <= vmax) {
+        if (Math.abs(v) <= vmax) {
             // Acceleration only profile, Vmax not reached.
             a = (2*v - v0 - v7)/t;
         }
         else {
-            
+
             /* From SageMath
 # try Vmax 
 var ('s t v v0 v7 a')
@@ -1262,21 +1297,20 @@ eq=(s==t*v-t0*(v-v0)/2-t7*(v-v7)/2)
 solve(eq, a)
 
 >> a == 1/2*(2*v^2 - 2*v*v0 + v0^2 - 2*v*v7 + v7^2)/(t*v - s)
-*/
-            v = vmax;
+             */
+            v = signum*vmax;
             a = 1./2*(2*Math.pow(v, 2) - 2*v*v0 + Math.pow(v0, 2) - 2*v*v7 + Math.pow(v7, 2))/(t*v - s);
         }
-        
+
         // Calculate the factor from this single lead Axis to the rate along the relevant axes 
         // (either linear or rotational axes, according to RS274NGC).  
-        List<MoveToCommand> list = new ArrayList<>(1);
         AxesLocation location0 = getLocation0();
         AxesLocation location1 = getLocation1();
         AxesLocation segment = location0.motionSegmentTo(location1).drivenBy(driver);
         double distance = segment.getRS274NGCMetric(driver, 
                 (axis) -> segment.getCoordinate(axis));
         double factor = distance/segment.getEuclideanMetric()/Math.abs(unitVector[leadAxis]);
-        list.add(new MoveToCommand(
+        MoveToCommand command = new MoveToCommand(
                 location0, location1,
                 getMovingAxesTargetLocation(driver),
                 Math.max(driver.getMinimumVelocity(), 
@@ -1284,44 +1318,46 @@ solve(eq, a)
                 Math.max(driver.getMinimumVelocity()*4, // HACK
                         Math.abs(factor*a)),
                 null, // No jerk
-                0.0, time, Math.abs(factor*vEntry), Math.abs(factor*vExit)));
+                0.0, time, Math.abs(factor*v0), Math.abs(factor*v7));
+
+        List<MoveToCommand> list = new ArrayList<>(1);
+        list.add(command);
         return list;
 
-        
-//        MotionProfile moderatedProfile = new MotionProfile(
-//                profile.getLocation(0), profile.getLocation(7),
-//                vEntry, vExit, 
-//                0, 0, // entry/exit acceleration is irrelevant for constant acceleration motion control.
-//                profile.getLocationMin(), profile.getLocationMax(),
-//                profile.getVelocityMax(),
-//                profile.getEntryAccelerationMax(), profile.getExitAccelerationMax(),
-//                0, // no jerk 
-//                0, profile.getTimeMax(), 
-//                0);
-//        moderatedProfile.assertSolved();
-//        // Now stretch it match the time of the 3rd order motion.
-//        moderatedProfile.setTimeMin(time);
-//        moderatedProfile.retimeProfile();
-//        AxesLocation location0 = getLocation0();
-//        AxesLocation location1 = getLocation1();
-//        AxesLocation segment = location0.motionSegmentTo(location1).drivenBy(driver);
-//
-//        // Calculate the factor from this single lead Axis to the rate along the relevant axes 
-//        // (either linear or rotational axes, according to RS274NGC).  
-//        double distance = segment.getRS274NGCMetric(driver, 
-//                (axis) -> segment.getCoordinate(axis));
-//        double factor = distance/segment.getEuclideanMetric()/Math.abs(unitVector[leadAxis]);
-//        List<MoveToCommand> list = new ArrayList<>(1);
-//        list.add(new MoveToCommand(
-//                location0, location1,
-//                getMovingAxesTargetLocation(driver),
-//                Math.max(driver.getMinimumVelocity(), 
-//                        factor*moderatedProfile.getProfileVelocity(MotionControlType.ConstantAcceleration)), 
-//                Math.max(driver.getMinimumVelocity()*4, // HACK
-//                        factor*moderatedProfile.getProfileAcceleration(MotionControlType.ConstantAcceleration)),
-//                null, // No jerk
-//                0.0, time, Math.abs(factor*vEntry), Math.abs(factor*vExit)));
-//        return list;
+        //        MotionProfile moderatedProfile = new MotionProfile(
+        //                profile.getLocation(0), profile.getLocation(7),
+        //                vEntry, vExit, 
+        //                0, 0, // entry/exit acceleration is irrelevant for constant acceleration motion control.
+        //                profile.getLocationMin(), profile.getLocationMax(),
+        //                profile.getVelocityMax(),
+        //                profile.getEntryAccelerationMax(), profile.getExitAccelerationMax(),
+        //                0, // no jerk 
+        //                0, profile.getTimeMax(), 
+        //                0);
+        //        moderatedProfile.assertSolved();
+        //        // Now stretch it match the time of the 3rd order motion.
+        //        moderatedProfile.setTimeMin(time);
+        //        moderatedProfile.retimeProfile();
+        //        AxesLocation location0 = getLocation0();
+        //        AxesLocation location1 = getLocation1();
+        //        AxesLocation segment = location0.motionSegmentTo(location1).drivenBy(driver);
+        //
+        //        // Calculate the factor from this single lead Axis to the rate along the relevant axes 
+        //        // (either linear or rotational axes, according to RS274NGC).  
+        //        double distance = segment.getRS274NGCMetric(driver, 
+        //                (axis) -> segment.getCoordinate(axis));
+        //        double factor = distance/segment.getEuclideanMetric()/Math.abs(unitVector[leadAxis]);
+        //        List<MoveToCommand> list = new ArrayList<>(1);
+        //        list.add(new MoveToCommand(
+        //                location0, location1,
+        //                getMovingAxesTargetLocation(driver),
+        //                Math.max(driver.getMinimumVelocity(), 
+        //                        factor*moderatedProfile.getProfileVelocity(MotionControlType.ConstantAcceleration)), 
+        //                Math.max(driver.getMinimumVelocity()*4, // HACK
+        //                        factor*moderatedProfile.getProfileAcceleration(MotionControlType.ConstantAcceleration)),
+        //                null, // No jerk
+        //                0.0, time, Math.abs(factor*vEntry), Math.abs(factor*vExit)));
+        //        return list;
     }
 
     /**
@@ -1342,7 +1378,7 @@ solve(eq, a)
                 getFeedRatePerSecond(driver),
                 getAccelerationPerSecond2(driver),
                 getJerkPerSecond3(driver),
-                null, null, null, null));
+                0.0, null, null, null));
         return list;
     }
 }

@@ -100,6 +100,7 @@ public class MotionProfile {
         SynchronizeLastMinute,
         SynchronizeStraighten, 
         Jog,
+        RestrictToCoordinated,
         SimplifiedSCurve,
         UnconstrainedExit,
         UnconstrainedEntry, 
@@ -298,6 +299,14 @@ public class MotionProfile {
 
     public boolean isSolved() {
         return hasOption(ProfileOption.Solved);
+    }
+
+    public boolean isEmpty() {
+        return s[0] == s[segments]
+                && v[0] == 0 
+                && v[segments] == 0
+                && a[0] == 0
+                && a[segments] == 0;
     }
 
     public double getProfileVelocity(MotionControlType motionControlType) {
@@ -2483,6 +2492,9 @@ solve(eq, t)            # Solve for t
         if (traceEnabled) {
             System.out.println(message);
         }
+    }
+    public boolean isSupportingUncoordinated() {
+        return !(hasOption(ProfileOption.SimplifiedSCurve) || hasOption(ProfileOption.RestrictToCoordinated));
     }
 }
 
