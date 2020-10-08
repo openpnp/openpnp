@@ -60,6 +60,9 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
     @Attribute(required = false)
     private boolean diagnosticsEnabled = false;
     @Attribute(required = false)
+    private boolean interpolationRetiming = true;
+    
+    @Attribute(required = false)
     private boolean showApproximation = true;
     
     @Element(required = false)
@@ -82,10 +85,11 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
     protected SimpleGraph motionGraph = null;
     protected SimpleGraph recordingMotionGraph = null;
     private double recordingT0;
-    private double moveTimePlanned;
-    private double moveTimeActual;
+    private double recordingT;
+    private Double moveTimePlanned;
+    private Double moveTimeActual;
+    private Double recordingMoveTimePlanned;
     private boolean interpolationFailed;
-    private double recordingMoveTimePlanned;
     private boolean recordingInterpolationFailed;
 
     public boolean isAllowContinuousMotion() {
@@ -102,6 +106,15 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
 
     public void setAllowUncoordinated(boolean allowUncoordinated) {
         this.allowUncoordinated = allowUncoordinated;
+    }
+
+    @Override
+    public boolean isInterpolationRetiming() {
+        return interpolationRetiming;
+    }
+
+    public void setInterpolationRetiming(boolean interpolationRetiming) {
+        this.interpolationRetiming = interpolationRetiming;
     }
 
     public boolean isDiagnosticsEnabled() {
@@ -178,21 +191,21 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
         this.toEndSpeed = toEndSpeed;
     }
 
-    public double getMoveTimePlanned() {
+    public Double getMoveTimePlanned() {
         return moveTimePlanned;
     }
 
-    public void setMoveTimePlanned(double moveTimePlanned) {
+    public void setMoveTimePlanned(Double moveTimePlanned) {
         Object oldValue = this.moveTimePlanned;
         this.moveTimePlanned = moveTimePlanned;
         firePropertyChange("moveTimePlanned", oldValue, moveTimePlanned);
     }
 
-    public double getMoveTimeActual() {
+    public Double getMoveTimeActual() {
         return moveTimeActual;
     }
 
-    public void setMoveTimeActual(double moveTimeActual) {
+    public void setMoveTimeActual(Double moveTimeActual) {
         Object oldValue = this.moveTimeActual;
         this.moveTimeActual = moveTimeActual;
         firePropertyChange("moveTimeActual", oldValue, moveTimeActual);
@@ -250,8 +263,8 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                 options |= MotionOption.UncoordinatedMotion.flag()
                         | MotionOption.LimitToSafeZone.flag()
                         | MotionOption.SynchronizeStraighten.flag()
-                        // | MotionOption.SynchronizeEarlyBird.flag()
-                        // | MotionOption.SynchronizeLastMinute.flag()
+                        //| MotionOption.SynchronizeEarlyBird.flag()
+                        //| MotionOption.SynchronizeLastMinute.flag()
                         ;
             }
         }
@@ -273,9 +286,6 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
             if (axis instanceof ControllerAxis) {
                 final int alphaBlend = 0x70;
                 // The s Data scale is visible and is the main scale. 
-                SimpleGraph.DataScale sScale =  motionGraph.getScale(axis.getName());
-                sScale.setColor(new Color(0, 0, 0, 64));
-                sScale.setLabelShown(true);
 
                 // Reverse order for better drawing order.
                 SimpleGraph.DataScale jScale =  motionGraph.getScale(axis.getName()+" j");
@@ -293,6 +303,10 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                 vRow.setColor(new Color(00, 0x5B, 0xD9)); // the OpenPNP blue
                 vRow = motionGraph.getRow(axis.getName()+" V", "V'");
                 vRow.setColor(new Color(00, 0x5B, 0xD9, alphaBlend)); 
+
+                SimpleGraph.DataScale sScale =  motionGraph.getScale(axis.getName());
+                sScale.setColor(new Color(0, 0, 0, 64));
+                sScale.setLabelShown(true);
 
                 SimpleGraph.DataRow sRow = motionGraph.getRow(axis.getName(), "s");
                 sRow.setColor(new Color(00, 0x77, 0x00)); 
@@ -358,6 +372,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
             if (recordingMotionGraph == null) {
                 startNewMotionGraph();
                 recordingT0 = plannedMotion.getPlannedTime0();
+                recordingT = 0;
                 recordingInterpolationFailed = false;
             }
             AxesLocation segment = moveToCommand.getLocation0().motionSegmentTo(moveToCommand.getMovedAxesLocation());
@@ -368,12 +383,12 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                     (axis) -> segment.getCoordinate(axis));
             double factorRS274NGC = 1/distance;
 
+            Double timeStart = moveToCommand.getTimeStart();
+            Double d = moveToCommand.getTimeDuration(); 
             for (ControllerAxis axis : plannedMotion.getLocation1().getAxes(driver)) {
                 MotionProfile profile = plannedMotion.getAxesProfiles()[plannedMotion.getAxisIndex(axis)];
-                Double timeStart = moveToCommand.getTimeStart();
-                if (timeStart != null && ! profile.isEmpty()) {
-                    double t = timeStart + plannedMotion.getPlannedTime0() - recordingT0;
-                    Double d = moveToCommand.getTimeDuration(); 
+                if (! profile.isEmpty()) {
+                    double t = recordingT;
                     if (showApproximation ) {
                         SimpleGraph.DataRow sRow = recordingMotionGraph.getRow(axis.getName(), "s'");
                         SimpleGraph.DataRow vRow = recordingMotionGraph.getRow(axis.getName()+" V", "V'");
@@ -464,6 +479,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
 
                     if (timeStart == 0) {
                         // First interpolation command: Show the true 3rd order control motion.
+                        double tm = plannedMotion.getPlannedTime0() - recordingT0;
                         SimpleGraph.DataRow sRow = recordingMotionGraph.getRow(axis.getName(), "s");
                         SimpleGraph.DataRow vRow = recordingMotionGraph.getRow(axis.getName()+" V", "V");
                         SimpleGraph.DataRow aRow = recordingMotionGraph.getRow(axis.getName()+" a", "a");
@@ -471,25 +487,28 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                         if (!profile.isConstantAcceleration()) {
                             jRow = recordingMotionGraph.getRow(axis.getName()+" j", "j");
                         }
-                        d = plannedMotion.getTime();
-                        for (double ts = 0; ts <= d; ts += dt) {
+                        double dm = plannedMotion.getTime();
+                        for (double ts = 0; ts <= dm; ts += dt) {
                             double s = profile.getMomentaryLocation(ts);
                             double v = profile.getMomentaryVelocity(ts);
                             double a = profile.getMomentaryAcceleration(ts);
-                            sRow.recordDataPoint(t + ts, s);
-                            vRow.recordDataPoint(t + ts, v);
-                            aRow.recordDataPoint(t + ts, a);
+                            sRow.recordDataPoint(tm + ts, s);
+                            vRow.recordDataPoint(tm + ts, v);
+                            aRow.recordDataPoint(tm + ts, a);
                             if (jRow != null) {
                                 double j = profile.getMomentaryJerk(ts);
-                                jRow.recordDataPoint(t + ts, j);
+                                jRow.recordDataPoint(tm + ts, j);
                             }
                         }
-                        recordingMoveTimePlanned = t + d;
+                        recordingMoveTimePlanned = tm + dm;
                         if (plannedMotion.hasOption(MotionOption.InterpolationFailed)) {
                             recordingInterpolationFailed = true;
                         }
                     }
                 }
+            }
+            if (moveToCommand.getTimeDuration() != null) {
+                recordingT += moveToCommand.getTimeDuration();
             }
         }
     }
@@ -499,25 +518,27 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
         super.publishDiagnostics();
         if (rearrangeGraph()) {
             setMoveTimePlanned(recordingMoveTimePlanned);
+            setMoveTimeActual(null);
             setInterpolationFailed(recordingInterpolationFailed);
             setMotionGraph(recordingMotionGraph);
             recordingMotionGraph = null;
-            recordingMoveTimePlanned = 0;
+            recordingMoveTimePlanned = null;
             recordingInterpolationFailed = false;
         }
     }
 
     public void testMotion(HeadMountable tool, boolean reverse) throws Exception {
         Location l = tool.getLocation().convertToUnits(LengthUnit.Millimeters);
+        double speed = getMachine().getSpeed();
         if (reverse) {
             if (l.getLinearDistanceTo(endLocation) > 4) {
                 MovableUtils.moveToLocationAtSafeZ(tool, endLocation);
             }
             tool.waitForCompletion(CompletionType.WaitForStillstand);
             double t0 = NanosecondTime.getRuntimeSeconds();
-            tool.moveTo(midLocation2, toEndSpeed);
-            tool.moveTo(midLocation1, toMid2Speed);
-            tool.moveTo(startLocation, toMid1Speed);
+            tool.moveTo(midLocation2, toEndSpeed*speed);
+            tool.moveTo(midLocation1, toMid2Speed*speed);
+            tool.moveTo(startLocation, toMid1Speed*speed);
             tool.waitForCompletion(CompletionType.WaitForStillstand);
             setMoveTimeActual(NanosecondTime.getRuntimeSeconds() - t0);
         }
@@ -527,9 +548,9 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
             }
             tool.waitForCompletion(CompletionType.WaitForStillstand);
             double t0 = NanosecondTime.getRuntimeSeconds();
-            tool.moveTo(midLocation1, toMid1Speed);
-            tool.moveTo(midLocation2, toMid2Speed);
-            tool.moveTo(endLocation, toEndSpeed);
+            tool.moveTo(midLocation1, toMid1Speed*speed);
+            tool.moveTo(midLocation2, toMid2Speed*speed);
+            tool.moveTo(endLocation, toEndSpeed*speed);
             tool.waitForCompletion(CompletionType.WaitForStillstand);
             setMoveTimeActual(NanosecondTime.getRuntimeSeconds() - t0);
         }

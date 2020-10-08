@@ -771,7 +771,7 @@ public class Motion {
      * @return
      * @throws Exception
      */
-    public List<MoveToCommand> interpolatedMoveToCommands(Driver driver) throws Exception {
+    public List<MoveToCommand> interpolatedMoveToCommands(Driver driver, boolean retiming) throws Exception {
         if (driver.getMotionControlType() == MotionControlType.ModeratedConstantAcceleration) {
             return moderatedMoveTo(driver);
         }
@@ -797,7 +797,7 @@ public class Motion {
         double time = getTime();
         Integer maxSteps = driver.getInterpolationMaxSteps();
         Integer maxJerkSteps = driver.getInterpolationJerkSteps();
-        Double timeStep = driver.getInterpolationTimeStep();
+        Double timeStep = driver.getInterpolationTimeStep()/getNominalSpeed();
         Integer distStep = driver.getInterpolationMinStep();
         Length junctionDeviationLength = driver.getJunctionDeviation();
 
@@ -1192,7 +1192,7 @@ public class Motion {
         for (MoveToCommand move : list) {
             timeEffective += move.getTimeDuration();
         }
-        double factor = timeEffective/time;
+        double factor = retiming ? timeEffective/time : 1.0;
         double factorSq = factor*factor;
         // Set the maximum for the whole move.
         list.get(0).feedRatePerSecond = maxVelocity;
@@ -1210,8 +1210,8 @@ public class Motion {
             if (move.accelerationPerSecond2 != null) {
                 move.accelerationPerSecond2 *= factorSq;
             }
-            move.t0 = tSum;
             move.time /= factor;
+            move.t0 = tSum;
             tSum += move.time;
         }
         return list;
@@ -1223,10 +1223,10 @@ public class Motion {
             return Double.POSITIVE_INFINITY; 
         }
         double profileAcceleration = Math.max(profile.aBound0, profile.aBound1);
-        double deltaA = profile.getAccelerationMax()/maxJerkSteps;
-        double steps = Math.max(2, Math.ceil(profileAcceleration/deltaA));
-        return MotionProfile.atol+profileAcceleration/steps;
-//        return profileAcceleration/maxJerkSteps;
+//        double deltaA = profile.getAccelerationMax()/maxJerkSteps;
+//        double steps = Math.ceil(Math.max(Math.max(2, Math.sqrt(maxJerkSteps)), profileAcceleration/deltaA));
+//        return MotionProfile.atol+profileAcceleration/steps;
+        return profileAcceleration/maxJerkSteps;
     }
 
     /**

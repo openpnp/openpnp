@@ -380,7 +380,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         AxesLocation motionSegment = plannedMotion.getLocation0().motionSegmentTo(plannedMotion.getLocation1());
         // Note, this loop will be empty if the motion is empty, i.e. if it only contains VirtualAxis movement.
         for (Driver driver : motionSegment.getAxesDrivers(machine)) {
-            for (Motion.MoveToCommand moveToCommand : plannedMotion.interpolatedMoveToCommands(driver)) {
+            for (Motion.MoveToCommand moveToCommand : plannedMotion.interpolatedMoveToCommands(driver, isInterpolationRetiming())) {
                 driver.moveTo(hm, moveToCommand);
                 recordDiagnostics(plannedMotion, moveToCommand, driver);
             }
@@ -586,6 +586,9 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         }
     }
 
+    public boolean isInterpolationRetiming() {
+        return false;
+    }
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
