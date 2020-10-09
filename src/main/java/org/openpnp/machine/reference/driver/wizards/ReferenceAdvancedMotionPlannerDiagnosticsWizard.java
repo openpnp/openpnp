@@ -71,11 +71,12 @@ public class ReferenceAdvancedMotionPlannerDiagnosticsWizard extends AbstractCon
         public void actionPerformed(ActionEvent e) {
             UiUtils.messageBoxOnException(() -> {
                 applyAction.actionPerformed(e);
+                HeadMountable selectedTool = MainFrame.get().getMachineControls().getSelectedNozzle();
                 UiUtils.submitUiMachineTask(() -> {
                     
-                    HeadMountable selectedTool = MainFrame.get().getMachineControls().getSelectedTool();
                     Location l = selectedTool.getLocation();
-                    boolean reverse = (l.getLinearDistanceTo(motionPlanner.getStartLocation()) > l.getLinearDistanceTo(motionPlanner.getEndLocation()));
+                    boolean reverse = (l.getLinearDistanceTo(motionPlanner.getStartLocation()) 
+                            > l.getLinearDistanceTo(motionPlanner.getEndLocation()));
                     motionPlanner.testMotion(selectedTool, reverse);
                 });
             });

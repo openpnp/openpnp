@@ -404,14 +404,14 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                                 double s0 = moveToCommand.getLocation0().getCoordinate(axis);
                                 double s1 = moveToCommand.getLocation1().getCoordinate(axis);
                                 double factor = (s1 - s0)*factorRS274NGC;
-                                v0 = v0* factor;
-                                v1 = v1*factor;
-                                a = a*factor;
+                                v0 *= factor;
+                                v1 *= factor;
+                                a *= factor;
                                 sRow.recordDataPoint(t, s0);
                                 sRow.recordDataPoint(t+d, s1);
                                 if (v != null && plannedMotion.getTime() == moveToCommand.getTimeDuration()) { 
                                     // Single trapezoidal move
-                                    v = v*factor;
+                                    v *= factor;
                                     double t0 = (v-v0)/a;
                                     double t1 = (v-v1)/a;
                                     double tMid = d-t0-t1;
@@ -554,6 +554,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
             tool.waitForCompletion(CompletionType.WaitForStillstand);
             setMoveTimeActual(NanosecondTime.getRuntimeSeconds() - t0);
         }
+        //tool.moveToSafeZ();
     }
 
     @Override

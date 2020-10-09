@@ -1059,7 +1059,7 @@ public class Motion {
                         // Velocity governed segment.
                         velocity = maxSegmentVelocity;
                         minSegmentAcceleration = Double.POSITIVE_INFINITY;
-                        // Allow a higher acceleration to recover from any unplanned decelration. 
+                        // Allow a higher acceleration to recover from any unplanned deceleration. 
                         for (ControllerAxis axis : segment.getControllerAxes()) {
                             double aMinAxis = maxDeltaA.getCoordinate(axis)/Math.abs(segment.getCoordinate(axis)/distance);
                             minSegmentAcceleration = Math.min(minSegmentAcceleration, aMinAxis);
@@ -1082,34 +1082,44 @@ public class Motion {
                     }
                     else {
                         // Check instant velocity change on entry.
-                        AxesLocation deltaV0 = velocity0.subtract(segmentVelocity0);
-                        for (ControllerAxis axis : deltaV0.getControllerAxes()) {
-                            if (Math.abs(deltaV0.getCoordinate(axis)) > maxDeltaV.getCoordinate(axis)) {
-                                newSegment = true;
-                                interpolationNeeded = true;
-                                break;
-                            }
-                        }
-                        if (!newSegment) {
-                            // Check instant velocity change on exit.
-                            AxesLocation deltaV2 = velocity2.subtract(segmentVelocity2);
-                            for (ControllerAxis axis : deltaV2.getControllerAxes()) {
-                                if (Math.abs(deltaV2.getCoordinate(axis)) > maxDeltaV.getCoordinate(axis)) {
+                        if (!MotionProfile.isCoordinated(axesProfiles)) {
+                            AxesLocation deltaV0 = velocity0.subtract(segmentVelocity0);
+                            for (ControllerAxis axis : deltaV0.getControllerAxes()) {
+                                if (Math.abs(deltaV0.getCoordinate(axis)) > maxDeltaV.getCoordinate(axis)) {
                                     newSegment = true;
                                     interpolationNeeded = true;
                                     break;
                                 }
                             }
-                            if (!newSegment) {
-                                // Check acceleration / simulate jerk control. 
-                                AxesLocation deltaA20 = acceleration2.subtract(acceleration0);
-                                for (ControllerAxis axis : deltaA20.getControllerAxes()) {
-                                    double da20 = Math.abs(deltaA20.getCoordinate(axis));
-                                    if (da20 > maxDeltaA.getCoordinate(axis)) {
-                                        // Acceleration delta too high.
+                        }
+                        if (!newSegment) {
+                            // Check instant velocity change on exit.
+                            if (!MotionProfile.isCoordinated(axesProfiles)) {
+                                AxesLocation deltaV2 = velocity2.subtract(segmentVelocity2);
+                                for (ControllerAxis axis : deltaV2.getControllerAxes()) {
+                                    if (Math.abs(deltaV2.getCoordinate(axis)) > maxDeltaV.getCoordinate(axis)) {
                                         newSegment = true;
                                         interpolationNeeded = true;
                                         break;
+                                    }
+                                }
+                            }
+                            if (!newSegment) {
+                                // Check acceleration / simulate jerk control. 
+                                AxesLocation deltaA20 = acceleration2.subtract(acceleration0);
+                                for (ControllerAxis axis : segment.getControllerAxes()) {
+                                    double da20 = Math.abs(deltaA20.getCoordinate(axis));
+                                    if (da20 > maxDeltaA.getCoordinate(axis)) {
+                                        // Acceleration delta too high. 
+//                                        // Check absolute acceleration (must not be too low).
+//                                        double factorAxis = Math.abs(segment.getCoordinate(axis))/distance;
+//                                        double aAxis = command2.accelerationPerSecond2*factorAxis;
+//                                        if (aAxis > maxDeltaA.getCoordinate(axis)) {
+                                            command1 = null;
+                                            newSegment = true;
+                                            interpolationNeeded = true;
+                                            break;
+//                                        }
                                     }
                                 }
                             }
@@ -1179,18 +1189,18 @@ public class Motion {
             list.add(command1);
         }
 
-        double compTime = NanosecondTime.getRuntimeSeconds() - compT0;
-        Logger.debug("Interpolation "+numSteps+" intervals, "+probeCount+" probes, "+list.size()
-        +" steps, comp time "+String.format(Locale.US, "%.3f", compTime*1000)+"ms");
-        if (!interpolationNeeded || list.size() < 2) {
+        if (list.size() < 2 || !interpolationNeeded) {
             // Interpolation collapsed.
             return moderatedMoveTo(driver);
         }
+        double compTime = NanosecondTime.getRuntimeSeconds() - compT0;
+        Logger.debug("Interpolation "+numSteps+" intervals, "+probeCount+" probes, "+list.size()
+        +" steps, comp time "+String.format(Locale.US, "%.3f", compTime*1000)+"ms");
         // The interpolation will use constant acceleration to reach the way-points, i.e. it will be slightly faster. 
         // Re-time the whole path to match the planning time exactly.
         double timeEffective = 0;
         for (MoveToCommand move : list) {
-            timeEffective += move.getTimeDuration();
+            timeEffective += move.time;
         }
         double factor = retiming ? timeEffective/time : 1.0;
         double factorSq = factor*factor;
@@ -1222,11 +1232,11 @@ public class Motion {
         if (profile.isConstantAcceleration() || maxJerkSteps < 2) {
             return Double.POSITIVE_INFINITY; 
         }
-        double profileAcceleration = Math.max(profile.aBound0, profile.aBound1);
-//        double deltaA = profile.getAccelerationMax()/maxJerkSteps;
-//        double steps = Math.ceil(Math.max(Math.max(2, Math.sqrt(maxJerkSteps)), profileAcceleration/deltaA));
-//        return MotionProfile.atol+profileAcceleration/steps;
-        return profileAcceleration/maxJerkSteps;
+        double profileAcceleration = Math.max(Math.abs(profile.aBound1), Math.abs(profile.aBound0));
+        double deltaA = profile.getAccelerationMax()/maxJerkSteps;
+        double steps = Math.max(1, Math.ceil(profileAcceleration/deltaA));
+        return MotionProfile.atol+profileAcceleration/steps;
+//        return profileAcceleration/maxJerkSteps;
     }
 
     /**

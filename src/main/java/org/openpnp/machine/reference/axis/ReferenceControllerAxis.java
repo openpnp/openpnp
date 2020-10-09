@@ -88,12 +88,15 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     private boolean limitRotation = false;
 
     /**
-     * If wrapAroundRotation is enabled the nozzle rotation will always wrap-arround the shorter way. If combined 
+     * If wrapAroundRotation is enabled the nozzle rotation will always wrap-around the shorter way. If combined 
      * with limitRotation the rotation angle will be reset on the controller to stay within +/-180° (if supported 
      * by the driver setup i.e. needs special G-Code).
      */
     @Attribute(required = false)
     private boolean wrapAroundRotation = false;
+
+    @Attribute(required = false)
+    private boolean invertLinearRotational;
 
     @Element(required = false, data = true)
     private String preMoveCommand;
@@ -141,7 +144,6 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     @Element(required = false)
     private double resolution = 0.0001; // 
 
-    private boolean invertLinearRotational;
 
     public double getResolution() {
         if (resolution <= 0.0) {
