@@ -83,9 +83,6 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
             coordinateWithMachine();
         }
         getDriver().actuate(this, on);
-        if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine();
-        }
         getMachine().fireMachineHeadActivity(head);
     }
 
@@ -101,9 +98,6 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
             coordinateWithMachine();
         }
         getDriver().actuate(this, value);
-        if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine();
-        }
         getMachine().fireMachineHeadActivity(head);
     }
     
@@ -114,9 +108,6 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
             coordinateWithMachine();
         }
         getDriver().actuate(this, value);
-        if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine();
-        }
         getMachine().fireMachineHeadActivity(head);
     }
     
@@ -127,9 +118,6 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         }
         String value = getDriver().actuatorRead(this);
         Logger.debug("{}.read(): {}", getName(), value);
-        if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine();
-        }
         getMachine().fireMachineHeadActivity(head);
         return value;
     }

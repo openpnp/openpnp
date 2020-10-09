@@ -35,8 +35,9 @@ public interface Movable extends Locatable {
 
     /**
      * @return The effective Safe Z, including any dynamic adjustment such as for parts on a Nozzle. 
+     * @throws Exception 
      */
-    Length getEffectiveSafeZ();
+    Length getEffectiveSafeZ() throws Exception;
 
     void moveToSafeZ(double speed) throws Exception;
 

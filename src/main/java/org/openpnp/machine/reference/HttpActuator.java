@@ -83,9 +83,6 @@ public class HttpActuator extends ReferenceActuator {
         Logger.debug("{}.HTTPActuate response: {} )", getName(), response);
         this.on = on;
 
-        if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine();
-        }
         getMachine().fireMachineHeadActivity(head);
     }
 

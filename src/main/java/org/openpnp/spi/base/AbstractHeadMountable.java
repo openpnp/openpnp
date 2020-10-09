@@ -233,7 +233,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     @Override 
-    public Length getEffectiveSafeZ() {
+    public Length getEffectiveSafeZ() throws Exception {
         return getSafeZ();
     }
 

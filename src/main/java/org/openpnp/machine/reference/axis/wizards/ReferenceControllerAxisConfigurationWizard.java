@@ -401,6 +401,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -429,12 +431,12 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
 
         softLimitLowEnabled = new JCheckBox("Enabled?");
         panelKinematics.add(softLimitLowEnabled, "6, 2");
+        
+                btnPositionSoftLimitLow = new JButton(positionSoftLimitLowAction);
+                panelKinematics.add(btnPositionSoftLimitLow, "8, 2");
 
         btnCaptureSoftLimitLow = new JButton(captureSoftLimitLowAction);
-        panelKinematics.add(btnCaptureSoftLimitLow, "8, 2");
-
-        btnPositionSoftLimitLow = new JButton(positionSoftLimitLowAction);
-        panelKinematics.add(btnPositionSoftLimitLow, "10, 2");
+        panelKinematics.add(btnCaptureSoftLimitLow, "10, 2");
         
         lblSafeZoneLow = new JLabel("Safe Zone Low");
         panelKinematics.add(lblSafeZoneLow, "2, 4, right, default");
@@ -446,11 +448,11 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         safeZoneLowEnabled = new JCheckBox("Enabled?");
         panelKinematics.add(safeZoneLowEnabled, "6, 4");
         
-        btnCaptureSafeZoneLow = new JButton(captureSafeZoneLowAction);
-        panelKinematics.add(btnCaptureSafeZoneLow, "8, 4");
-        
         btnPositionSafeZoneLow = new JButton(positionSafeZoneLowAction);
-        panelKinematics.add(btnPositionSafeZoneLow, "10, 4");
+        panelKinematics.add(btnPositionSafeZoneLow, "8, 4");
+        
+        btnCaptureSafeZoneLow = new JButton(captureSafeZoneLowAction);
+        panelKinematics.add(btnCaptureSafeZoneLow, "10, 4");
         
         lblSafeZoneHigh = new JLabel("Safe Zone High");
         panelKinematics.add(lblSafeZoneHigh, "2, 6, right, default");
@@ -462,11 +464,11 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         safeZoneHighEnabled = new JCheckBox("Enabled?");
         panelKinematics.add(safeZoneHighEnabled, "6, 6");
         
-        btnCaptureSafeZoneHigh = new JButton(captureSafeZoneHighAction);
-        panelKinematics.add(btnCaptureSafeZoneHigh, "8, 6");
-        
         btnPositionSafeZoneHigh = new JButton(positionSafeZoneHighAction);
-        panelKinematics.add(btnPositionSafeZoneHigh, "10, 6");
+        panelKinematics.add(btnPositionSafeZoneHigh, "8, 6");
+        
+        btnCaptureSafeZoneHigh = new JButton(captureSafeZoneHighAction);
+        panelKinematics.add(btnCaptureSafeZoneHigh, "10, 6");
 
         lblSoftLimitHigh = new JLabel("Soft Limit High");
         panelKinematics.add(lblSoftLimitHigh, "2, 8, right, default");
@@ -477,12 +479,12 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
 
         softLimitHighEnabled = new JCheckBox("Enabled?");
         panelKinematics.add(softLimitHighEnabled, "6, 8");
+        
+                btnPositionSoftLimitHigh = new JButton(positionSoftLimitHighAction);
+                panelKinematics.add(btnPositionSoftLimitHigh, "8, 8");
 
         btnCaptureSoftLimitHigh = new JButton(captureSoftLimitHighAction);
-        panelKinematics.add(btnCaptureSoftLimitHigh, "8, 8");
-
-        btnPositionSoftLimitHigh = new JButton(positionSoftLimitHighAction);
-        panelKinematics.add(btnPositionSoftLimitHigh, "10, 8");
+        panelKinematics.add(btnCaptureSoftLimitHigh, "10, 8");
 
         lblFeedrates = new JLabel("Feedrate [/s]");
         panelKinematics.add(lblFeedrates, "2, 12, right, default");

@@ -132,6 +132,8 @@ public class GcodeAsyncDriver extends GcodeDriver {
     }
     protected LinkedBlockingQueue<CommandLine> commandQueue;
 
+    private boolean waitedForCommands;
+
     public boolean isConfirmationFlowControl() {
         return confirmationFlowControl;
     }
@@ -275,6 +277,12 @@ public class GcodeAsyncDriver extends GcodeDriver {
      */
     @Override
     public void sendCommand(String command, long timeout) throws Exception {
+        if (waitedForCommands) {
+            // We had a wait for commands and caller had the last chance to receive responses.
+            waitedForCommands = false;
+            // If the caller did not get them, clear them now.
+            responseQueue.clear();
+        }
         bailOnError();
         if (command == null) {
             return;
@@ -289,6 +297,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
     @Override
     public void waitForCompletion(ReferenceHeadMountable hm, 
             CompletionType completionType) throws Exception {
+        waitedForCommands = true;
         if (completionType != CompletionType.WaitForStillstandIndefinitely 
                 && !isMotionPending()) {
             return;
@@ -302,7 +311,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
             AxesLocation location = getMomentaryLocation(
                     completionType == CompletionType.WaitForStillstandIndefinitely ?
                     -1 : getTimeoutAtMachineSpeed());
-            // TODO: Compare to current executed driver location.
+            // TODO: Compare to current executed driver location? Or set returned location as new location?
             
         }
     }

@@ -381,9 +381,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     @Override 
-    public Length getEffectiveSafeZ() {
+    public Length getEffectiveSafeZ() throws Exception {
         Length safeZ = super.getEffectiveSafeZ();
-        if (safeZ != null && enableDynamicSafeZ) { 
+        if (safeZ == null) {
+            throw new Exception("Nozzle "+getName()+" has no Z axis with Safe Zone mapped.");
+        }
+        if (enableDynamicSafeZ) { 
             // if a part is loaded, decrease (higher) safeZ
             if (part != null) {
                 safeZ = safeZ.add(part.getHeight());

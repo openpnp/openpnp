@@ -144,13 +144,14 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
         panelSettings.add(allowContinuousMotion, "4, 2");
         
         JLabel lblAllowUncoordinated = new JLabel("Allow uncoordinated?");
+        lblAllowUncoordinated.setToolTipText("<html>\r\nAllowing uncoordinated motion, will enable the planner to use advanced features<br/>\r\nsuch as overshooting, motion blending etc. This requires a driver that supports<br/>\r\nsimulated or true 3rd-order motion control (with these features on the controller).\r\n</html>");
         panelSettings.add(lblAllowUncoordinated, "2, 4, right, default");
         
         allowUncoordinated = new JCheckBox("");
         panelSettings.add(allowUncoordinated, "4, 4");
         
         lblRetime = new JLabel("Interpolation Retiming?");
-        lblRetime.setToolTipText("<html>\r\nInterpolation can only approximate the true 3rd-order motion profilesl,<br/>\r\nsome deviations are expected. Re-timing will then stretch the motion<br/>\r\nto match the original 3rd-order timing. However this will slightly reduce<br/>\r\nthe speed. By switching this off, you get the planned speeds but slightly shorter<br/>\r\nmove duration.\r\n</html>\r\n");
+        lblRetime.setToolTipText("<html>\r\nInterpolation can only approximate the true 3rd-order motion profiles,<br/>\r\nsome deviations are expected. Re-timing will stretch the motion<br/>\r\nto match the original 3rd-order timing. However this will slightly reduce<br/>\r\nthe peak feedrate. By switching this off, you get the planned peak feedrate but slightly shorter<br/>\r\nmove duration.\r\n</html>\r\n");
         panelSettings.add(lblRetime, "2, 6, right, default");
         
         interpolationRetiming = new JCheckBox("");

@@ -79,8 +79,6 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
     private JPanel panelCoordination;
     private JCheckBox coordinatedBeforeActuate;
     private JLabel lblBeforeActuation;
-    private JLabel lblAfterActuation;
-    private JCheckBox coordinatedAfterActuate;
     private JLabel lblBeforeRead;
     private JCheckBox coordinatedBeforeRead;
 
@@ -214,8 +212,6 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblBeforeActuation = new JLabel("Before Actuation?");
@@ -225,19 +221,12 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         coordinatedBeforeActuate = new JCheckBox("");
         panelCoordination.add(coordinatedBeforeActuate, "4, 2, center, bottom");
         
-        lblAfterActuation = new JLabel("After Actuation?");
-        lblAfterActuation.setToolTipText("<html>\r\nCoordinate with the machine, after the actuator was actuated, i.e. wait for the controllers <br/>\r\nto acknowledge that the actuation as well as all the pending commands (including motion)<br/>\r\nwere sent and executed. \r\n</html>");
-        panelCoordination.add(lblAfterActuation, "2, 4, right, default");
-        
-        coordinatedAfterActuate = new JCheckBox("");
-        panelCoordination.add(coordinatedAfterActuate, "4, 4");
-        
         lblBeforeRead = new JLabel("Before Read?");
         lblBeforeRead.setToolTipText("<html>\r\nCoordinate with the machine, before the actuator is read, i.e. wait for the controllers <br/>\r\nto acknowledge that all the pending commands (including motion) were sent and executed. \r\n</html>");
-        panelCoordination.add(lblBeforeRead, "2, 6, right, default");
+        panelCoordination.add(lblBeforeRead, "2, 4, right, default");
         
         coordinatedBeforeRead = new JCheckBox("");
-        panelCoordination.add(coordinatedBeforeRead, "4, 6");
+        panelCoordination.add(coordinatedBeforeRead, "4, 4");
 
         if (actuator.getHead() == null) {
             headMountablePanel.setVisible(false);
@@ -267,7 +256,6 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         addWrappedBinding(actuator, "safeZ", textFieldSafeZ, "text", lengthConverter);
 
         addWrappedBinding(actuator, "coordinatedBeforeActuate", coordinatedBeforeActuate, "selected");
-        addWrappedBinding(actuator, "coordinatedAfterActuate", coordinatedAfterActuate, "selected");
         addWrappedBinding(actuator, "coordinatedBeforeRead", coordinatedBeforeRead, "selected");
 
         addWrappedBinding(actuator, "index", indexTextField, "text", intConverter);
