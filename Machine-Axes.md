@@ -27,6 +27,12 @@ OpenPnP needs to know if this is the case, so use the switch to toggle the axis 
 
 **Home Coordinate** gives OpenPnP the initial coordinate after homing. This may include a retract distance. 
 
+**Backlash Compensation** will be treated in the [following section](Machine-Axes#backlash-compensation). For the first basic setup leave it at **None**. 
+
+**Resolution [Driver Units]** indicates the smallest step that OpenPnP should consider as a change in coordinate, also sometimes named a resolution "tick". It should be equal to a micro-step (or a practical multiple thereof). The larger the Resolution tick is, the more often OpenPnP can optimize axis moves away (especially in the small adjustments of non.squareness compensation, nozzle tip runout compensation etc.). By preventing unneeded micro axis move, OpenPnP can also prevent extra backlash compensation moves (not relevant with DirectionalCompensation). 
+
+## Backlash Compensation
+
 **Backlash Compensation** defines the method used to compensate any backlash. **Note**: The following assumes you have your axes (and driver etc.) already set up and running i.e. you should first proceed with **None**, then come back later to choose the method and calibrate. 
 
 ![Backlash Compensation](https://user-images.githubusercontent.com/9963310/95687283-e36d6f80-0c02-11eb-8d17-d3f2972c962b.png)
@@ -71,5 +77,3 @@ Backlash compensation is applied in the direction of travel. Half of the offset 
 A similar method can be used to calibrate the C (rotational) axis. Pick a very large IC and use the bottom camera. 
 
 It is not recommended (not useful) to compensate the Z axis, as nozzle tips are spring-loaded. 
-
-**Resolution [Driver Units]** indicates the smallest step that OpenPnP should consider as a change in coordinate, also sometimes named a resolution "tick". It should be equal to a micro-step (or a practical multiple thereof). The larger the Resolution tick is, the more often OpenPnP can optimize axis moves away (especially in the small adjustments of non.squareness compensation, nozzle tip runout compensation etc.). By preventing unneeded micro axis move, OpenPnP can also prevent extra backlash compensation moves (not relevant with DirectionalCompensation). 
