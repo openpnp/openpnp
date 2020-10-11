@@ -308,11 +308,9 @@ public class GcodeAsyncDriver extends GcodeDriver {
         if (completionType.isWaitingForDrivers()) {
             // Explicitly wait for the controller's acknowledgment here. 
             // This is signaled with a position report.
-            AxesLocation location = getMomentaryLocation(
-                    completionType == CompletionType.WaitForStillstandIndefinitely ?
-                    -1 : getTimeoutAtMachineSpeed());
-            // TODO: Compare to current executed driver location? Or set returned location as new location?
-            
+            getMomentaryLocation(
+                completionType == CompletionType.WaitForStillstandIndefinitely ?
+                -1 : getTimeoutAtMachineSpeed());
         }
     }
 

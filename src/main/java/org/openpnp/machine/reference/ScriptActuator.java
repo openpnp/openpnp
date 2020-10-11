@@ -31,6 +31,9 @@ public class ScriptActuator extends ReferenceActuator {
         Map<String, Object> globals = new HashMap<>();
         globals.put("actuateBoolean", on);
         this.execute(globals);
+        if (isCoordinatedAfterActuate()) {
+            coordinateWithMachine();
+        }
     }
 
     @Override
@@ -41,6 +44,9 @@ public class ScriptActuator extends ReferenceActuator {
         Map<String, Object> globals = new HashMap<>();
         globals.put("actuateDouble", value);
         this.execute(globals);
+        if (isCoordinatedAfterActuate()) {
+            coordinateWithMachine();
+        }
     }
 
     @Override

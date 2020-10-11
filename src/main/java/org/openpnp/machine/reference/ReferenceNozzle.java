@@ -28,6 +28,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
@@ -1088,8 +1089,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (safeZ == null) {
             safeZ = new Length(0, LengthUnit.Millimeters);
         }
-        ReferenceControllerAxis rawAxis = getRawAxisZ();
-        if (rawAxis != null) {
+        CoordinateAxis coordAxis = getCoordinateAxisZ();
+        if (coordAxis instanceof ReferenceControllerAxis) {
+            ReferenceControllerAxis rawAxis = (ReferenceControllerAxis) coordAxis; 
             try {
                 Length rawZ = headMountableToRawZ(rawAxis, safeZ);
                 rawAxis.setSafeZoneLow(rawZ);
@@ -1102,6 +1104,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             catch (Exception e) {
                 Logger.error(e);
             }
+        }
+        else if (coordAxis != null) {
+            coordAxis.setHomeCoordinate(safeZ);
         }
     }
 }

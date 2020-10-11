@@ -119,28 +119,24 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         }
     }
 
-    protected ReferenceControllerAxis getRawAxisZ() {
+    protected CoordinateAxis getCoordinateAxisZ() {
         AbstractAxis zAxis = getAxisZ();
         if (zAxis != null) {
             Machine machine = Configuration.get().getMachine();
             // Get the raw Z Axis.
-            CoordinateAxis rawAxis;
             try {
-                rawAxis = zAxis.getCoordinateAxes(machine).getAxis(Axis.Type.Z);
-                if (rawAxis instanceof ReferenceControllerAxis) {
-                    return (ReferenceControllerAxis)rawAxis;
-                }
+                return zAxis.getCoordinateAxes(machine).getAxis(Axis.Type.Z);
             }
             catch (Exception e) {
                 // Cannot throw in this (legacy) context. 
                 // However, this should never happen, as axis transforms cannot mix multiple Z axes together and
                 // therefore the typed axis should be unique.
                 Logger.error(e);
-                rawAxis = null;
             }
         }
         return null;
     }
+
 
     protected Length rawToHeadMountableZ(ReferenceControllerAxis rawAxis, Length z) {
         // Get the raw location, and put z in it.
@@ -169,8 +165,9 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     public Length [] getSafeZZone() {
         Length safeZLow = null;
         Length safeZHigh = null;
-        ReferenceControllerAxis rawAxis = getRawAxisZ();
-        if (rawAxis != null) {
+        CoordinateAxis coordAxis = getCoordinateAxisZ();
+        if (coordAxis instanceof ReferenceControllerAxis) {
+            ReferenceControllerAxis rawAxis = (ReferenceControllerAxis) coordAxis; 
             if (rawAxis.isSafeZoneLowEnabled()) {
                 // We have a lower Safe Z Zone limit.
                 Length z = rawAxis.getSafeZoneLow();
@@ -191,6 +188,10 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
                 safeZHigh = swap;
             }
         }
+        else if (coordAxis != null) {
+            // Just take the home coordinate as Safe Z.
+            safeZLow = safeZHigh = coordAxis.getHomeCoordinate();
+        }
         return new Length[] { safeZLow, safeZHigh};
     }
 
@@ -201,8 +202,9 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     public boolean isInSafeZZone(Length z) throws Exception {
-        ReferenceControllerAxis rawAxis = getRawAxisZ();
-        if (rawAxis != null) {
+        CoordinateAxis coordAxis = getCoordinateAxisZ();
+        if (coordAxis instanceof ReferenceControllerAxis) {
+            ReferenceControllerAxis rawAxis = (ReferenceControllerAxis) coordAxis; 
             Length rawZ = headMountableToRawZ(rawAxis, z);
             if (rawAxis.isSafeZoneLowEnabled()) {
                 // We have a lower Safe Z Zone limit.
@@ -222,6 +224,9 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
                     return false;
                 }
             }
+        }
+        else if (coordAxis != null) {
+            coordAxis.coordinatesMatch(coordAxis.getHomeCoordinate(), z);
         }
         // We're either inside the limits, no axis is mapped or the Safe Zone is not enabled.
         return true;

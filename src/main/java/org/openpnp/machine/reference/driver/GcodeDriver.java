@@ -68,7 +68,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     public enum CommandType {
         COMMAND_CONFIRM_REGEX,
         POSITION_REPORT_REGEX,
-        MOMENTARY_POSITION_REPORT_REGEX,
         COMMAND_ERROR_REGEX,
         CONNECT_COMMAND,
         ENABLE_COMMAND,
@@ -78,7 +77,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         HOME_COMMAND("Id", "Name"),
         HOME_COMPLETE_REGEX,
         SET_GLOBAL_OFFSETS_COMMAND("Id", "Name", "X", "Y", "Z", "Rotation"),
-        GET_MOMENTARY_POSITION_COMMAND,
+        GET_POSITION_COMMAND,
         @Deprecated
         PUMP_ON_COMMAND,
         @Deprecated
@@ -229,6 +228,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
     @Attribute(required = false)
     boolean usingLetterVariables = true;
+    
+    @Attribute(required = false) 
+    int infinityTimeoutMilliseconds = 300000; // 5 Minutes is considered an "eternity" for a controller.
 
     @ElementList(required = false, inline = true)
     public ArrayList<Command> commands = new ArrayList<>();
@@ -475,27 +477,27 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
     @Override
     public AxesLocation getMomentaryLocation(long timeout) throws Exception {
-        ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
-        String command = getCommand(null, CommandType.GET_MOMENTARY_POSITION_COMMAND);
+        String command = getCommand(null, CommandType.GET_POSITION_COMMAND);
         if (command == null) {
-            throw new Exception(getName()+" configuration error: missing GET_MOMENTARY_POSITION_COMMAND.");
+            throw new Exception(getName()+" configuration error: missing GET_POSITION_COMMAND.");
         }
-        if (getCommand(null, CommandType.MOMENTARY_POSITION_REPORT_REGEX) == null) {
-            throw new Exception(getName()+" configuration error: missing MOMENTARY_POSITION_REPORT_REGEX.");
+        if (getCommand(null, CommandType.POSITION_REPORT_REGEX) == null) {
+            throw new Exception(getName()+" configuration error: missing POSITION_REPORT_REGEX.");
         }
         
         // Reset the last position report.
         lastMomentaryLocation = null;
         sendGcode(command, -1);
         // Blocking queue?
-        long t1 = (timeout == -1) ?
-                Long.MAX_VALUE
-                : System.currentTimeMillis() + timeout;
+        long t1 = System.currentTimeMillis() + ((timeout == -1) ?
+                infinityTimeoutMilliseconds
+                : timeout);
         do { 
             if (lastMomentaryLocation != null) {
                 Logger.trace("Got lastMomentaryLocation");
                 return lastMomentaryLocation;
             }
+            // TODO: sync with response queue? How?
             Thread.yield();
         }
         while (System.currentTimeMillis() < t1);
@@ -893,9 +895,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     protected void waitForConfirmation(String command, long timeout, long wantedConfirmations)
             throws Exception {
         // Wait until we get the confirmations count we want.
-        long t1 = (timeout == -1) ? 
-                Long.MAX_VALUE
-                : System.currentTimeMillis() + timeout;
+        long t1 = System.currentTimeMillis() + ((timeout == -1) ? 
+                infinityTimeoutMilliseconds
+                : timeout);
         // Loop until we've timed out.
         do {
             bailOnError();
@@ -938,9 +940,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     public List<Line> receiveResponses(String regex, long timeout, 
             TimeoutAction timeoutAction)
             throws Exception {
-        long t1 = (timeout == -1) ?
-                Long.MAX_VALUE
-                : System.currentTimeMillis() + timeout;
+        long t1 = System.currentTimeMillis() + ((timeout == -1) ?
+                infinityTimeoutMilliseconds
+                : timeout);
         List<Line> responses = new ArrayList<>();
         do{ 
             responses.addAll(receiveResponses());
@@ -1083,12 +1085,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         if (regex != null && line.getLine().matches(regex)) {
             errorResponse = line;
         }
-        processPositionReport(line, CommandType.POSITION_REPORT_REGEX);
-        processPositionReport(line, CommandType.MOMENTARY_POSITION_REPORT_REGEX);
+        processPositionReport(line);
     }
 
-    protected boolean processPositionReport(Line line, CommandType positionType) {
-        String regex = getCommand(null, positionType); 
+    protected boolean processPositionReport(Line line) {
+        String regex = getCommand(null, CommandType.POSITION_REPORT_REGEX); 
         if (regex == null) {
             return false;
         }
@@ -1111,20 +1112,24 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 position = position.put(new AxesLocation(axis, new Length(d, getUnits())));
             }
             catch (IllegalArgumentException e) {
-                // Axis is not present in pattern. That's ok. 
+                // Axis is not present in pattern. That's a warning, but might not be supported by controller, so we let it go. 
+                Logger.warn("Axis {} letter {} missing in POSITION_REPORT_REGEX groups.", axis.getName(), axis.getLetter());
             }
             catch (Exception e) {
                 Logger.warn("Error processing position report for axis {}: {}", axis.getName(), e);
             }
         }
-        if (positionType == CommandType.MOMENTARY_POSITION_REPORT_REGEX) {
-            // Store the latest momentary position.
-            lastMomentaryLocation = position;
-            lastMomentaryTime = line.getTransmissionTime();
+        // Store the latest momentary position.
+        lastMomentaryLocation = position;
+        lastMomentaryTime = line.getTransmissionTime();
+
+        if (motionPending) {
+            Logger.warn("Position report cannot be processed when motion might still be pending. Waiting for completion missing/check Machine Coordination on Actuators.", 
+                    lastMomentaryLocation);
         }
         else {
             // Store the actual driver location. This is used to re-sync OpenPnP to the actual controller 
-            // location, when its axes might have moved behind its back. 
+            // location, when its axes might have moved/homed etc. behind its back. 
             position.setToDriverCoordinates(this);
         }
         return true;

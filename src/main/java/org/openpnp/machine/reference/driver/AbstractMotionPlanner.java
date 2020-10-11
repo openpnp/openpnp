@@ -36,6 +36,7 @@ import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis.BacklashCompensationMethod;
+import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
@@ -96,9 +97,14 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         for (Driver driver : getMachine().getDrivers()) {
             driver.home(getMachine());
         }
-        // Home all the axes (including virtual ones) to their homing coordinates.
+        // Home virtual axes to their homing coordinates (and check for unassigned axes).
         for (Axis axis : getMachine().getAxes()) {
-            if (axis instanceof CoordinateAxis) {
+            if (axis instanceof ControllerAxis) {
+                if (((ControllerAxis) axis).getDriver() == null) {
+                    throw new Exception("Axis "+axis.getName()+" has no driver set.");
+                }
+            }
+            else if (axis instanceof ReferenceVirtualAxis) {
                 ((CoordinateAxis) axis).setLengthCoordinate(((CoordinateAxis) axis).getHomeCoordinate());
             }
         }
@@ -516,10 +522,23 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         if (completionType.isEnforcingStillstand()) {
             // Wait for the drivers.
             waitForDriverCompletion(hm, completionType);
+            // The drivers might have reported new coordinates back. Propagate to planned axis coordinates, 
+            // applying the backlash offset in reverse.
+            AxesLocation reportedLocation = new AxesLocation(getMachine().getAxes(), 
+                (axis) -> ((axis instanceof ControllerAxis) ?
+                    ((ControllerAxis) axis).getDriverLengthCoordinate()
+                        .subtract(lastDirectionalBacklashOffset.getLengthCoordinate(axis)) :
+                        null));
+            if (!reportedLocation.matches(new AxesLocation(machine))) {
+                // Reported position has in deed changed.
+                reportedLocation.setToCoordinates();
+                // Notify heads.
+                for (Head movedHead : getMachine().getHeads()) {
+                    getMachine().fireMachineHeadActivity(movedHead);
+                }
+            }
         }
         // Apply the rotation axes wrap-around handling.
-        // NOTE: unfortunately this does only work when the machine stands still due to a 
-        // Smoothieware bug.
         wrapUpCoordinates();
         // Remove old stuff.
         clearMotionPlanOlderThan(NanosecondTime.getRuntimeSeconds() - maximumPlanHistory);

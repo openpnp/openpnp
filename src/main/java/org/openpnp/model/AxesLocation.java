@@ -510,8 +510,20 @@ public class AxesLocation {
         }
         return found;
     }
-    public ControllerAxis getAxis(Axis.Type axisType) throws Exception {
-        return getAxis(null, axisType);
+    public CoordinateAxis getAxis(Axis.Type axisType) throws Exception {
+        CoordinateAxis found = null; 
+        for (Axis axis : getAxes()) {
+            if (axis instanceof ControllerAxis 
+                    && axis.getType() == axisType) {
+                if (found != null) {
+                    // Make this future-proof: 
+                    // Getting axes by type will no longer be allowed inside motion blending applications. 
+                    throw new Exception("Axes "+found.getName()+" and "+axis.getName()+" have duplicate type "+axisType+" assigned.");
+                }
+                found = (CoordinateAxis) axis;
+            }
+        }
+        return found;
     }
     /**
      * From the AxisLocation, return the driver axis with the specified variable name. 

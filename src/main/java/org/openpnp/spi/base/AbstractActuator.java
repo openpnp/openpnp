@@ -30,6 +30,9 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
     private boolean coordinatedBeforeActuate = true;
 
     @Attribute(required = false)
+    private boolean coordinatedAfterActuate = false;
+
+    @Attribute(required = false)
     private boolean coordinatedBeforeRead = true;
 
     public AbstractActuator() {
@@ -115,6 +118,14 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
 
     public void setCoordinatedBeforeActuate(boolean coordinateBeforeActuate) {
         this.coordinatedBeforeActuate = coordinateBeforeActuate;
+    }
+
+    public boolean isCoordinatedAfterActuate() {
+        return coordinatedAfterActuate;
+    }
+
+    public void setCoordinatedAfterActuate(boolean coordinateAfterActuate) {
+        this.coordinatedAfterActuate = coordinateAfterActuate;
     }
 
     public boolean isCoordinatedBeforeRead() {
