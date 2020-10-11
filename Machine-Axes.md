@@ -37,11 +37,7 @@ OpenPnP needs to know if this is the case, so use the switch to toggle the axis 
 
 ![Backlash Compensation](https://user-images.githubusercontent.com/9963310/95687283-e36d6f80-0c02-11eb-8d17-d3f2972c962b.png)
 
-Backlash compensation is used to avoid the effects of any looseness or play in the <br/>
-mechanical linkages of the given axis.  When the actuator reverses the direction of travel, <br/>
-there is often a moment where nothing happens, because the slack from a belt or play <br/>
-from a screw or rack and pinion etc. needs to be bridged, before mechanical force can again <br/>
-be transmitted.
+Backlash compensation is used to avoid the effects of any looseness or play in the mechanical linkages of the given axis.  When the actuator reverses the direction of travel, there is often a moment where nothing happens, because the slack from a belt or play from a screw, rack&pinion etc. needs to be bridged, before mechanical force can again be transmitted.
 * **None:**
   No backlash compensation is performed. </li>
 * **OneSidedPositioning:**
@@ -51,9 +47,9 @@ be transmitted.
 * **OneSidedOptimizedPositioning:**
   Works like OneSidedPositioning except it will only perform an extra move when moving from the wrong side. Only half of the extra moves are needed.
 * **DirectionalCompensation (Experimental!):**
-Backlash compensation is applied in the direction of travel. Half of the offset is added to the actual target location. No extra moves are needed. 
-  The machine can also move more fluidly, as there is no direction change needed. 
-  However: the offset needs to precisely match the actual backlash.
+Backlash compensation is applied in the direction of travel. The offset is added to the actual target coordinate, if moving from below, no offset is added if moving from above. 
+  No extra moves are needed. The machine can also move more fluidly, as there is no direction change needed. 
+  However: the offset needs to precisely match the physical backlash.
 
 **Backlash Offset** will set the amount of backlash. To calibrate X or Y, proceed as follows:
 
@@ -62,7 +58,7 @@ Backlash compensation is applied in the direction of travel. Half of the offset 
 3. Set the Machine Controls' Distance to the lowest (0.01mm).
 4. Choose the **DirectionalCompensation** method.
 5. Start with an Offset of zero (and Apply). 
-6. Step in one direction and observe. The axis motor micro-step (or analogous, see also **Resolution [Driver Units]** below) will determine if the machine steps at all and how often. Stop, when a step was clearly visible.
+6. Step in one direction and observe. The axis motor micro-step (or analogous) and the **Resolution [Driver Units]** defined earlier, will determine if the machine steps at all and how often. Stop, when a step was clearly visible.
   If your micro-stepping is < 0.01mm i.e. so fine that each step is moving the image, then just stop anywhere.
   If your micro-stepping is a non-integral multiple of 0.01mm then there may be smaller and larger steps, stop after a smaller step.
 7. Now immediately reverse the direction. Count how many times you must step back, before the camera image starts to move in the other direction. 
