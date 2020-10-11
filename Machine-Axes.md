@@ -8,17 +8,17 @@ The coordinate system now needs to be defined in OpenPnP.
 ## Defining Axes
 In the Machine Setup Tab hierarchical view, expand the Axes branch. Most likely you will already see defined axes, either migrated from an earlier version of OpenPnP or the default set.
 
-Click on one of the linear axes:
+Click on the x or y axis:
 
 ![Linear Axis Setup](https://user-images.githubusercontent.com/9963310/95686619-452bda80-0bff-11eb-89e2-26283b7fa8d9.png) 
 
-**Type** defines the "which is which" inside the Cartesian Coordinate System. 
+**Type** defines the axis meaning inside the Cartesian Coordinate System. OpenPnP can have multiple axes of the same Type, typically multiple Z and multiple C axes for multi-nozzle machines. 
 
 ![Axis Type](https://user-images.githubusercontent.com/9963310/95687314-10ba1d80-0c03-11eb-99d9-a638aecbf31b.png)
 
 **Name** is your conceptual axis name. 
 
-**Driver** links the axis to the driver which talks to the controller that drives it. 
+**Driver** links the axis to the driver which talks to the controller that controls its motion. 
 
 **Axis Letter** gives you the letter of the axis by which it is addressed in the controller (usually a G-code letter). The letter must obviously be unique for a given driver. If you have multiple drivers, you typically have the same letter multiple times (and that is why inside OpenPnP you refer to the axis by its conceptual **Name** rather than its **Letter**). 
 
