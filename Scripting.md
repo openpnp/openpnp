@@ -292,12 +292,12 @@ Example for adapting the camera exposure:
 //
  
 import org.pmw.tinylog.Logger;
-loc = org.openpnp.util.VisionUtils.getBottomVisionCamera().getExposure();
+camExposure = org.openpnp.util.VisionUtils.getBottomVisionCamera().getExposure();
 value = 4; // put here the value you want to set. Expos values are negative but use positive here.
 
-prevExpValue = loc.getValue();
-loc.setValue(-value);
-//newExpValue = loc.getValue(); //commented to dont rummage in the camera settings memory more than need
+prevExpValue = camExposure.getValue();
+camExposure.setValue(-value);
+//newExpValue = camExposure.getValue(); //commented to dont rummage in the camera settings memory more than need
 
 //gui.setStatus(("BottomVision Exposure changed from: "+ prevExpValue) + (" to: " + newExpValue));
 gui.setStatus(("BottomVision Exposure changed from: "+ prevExpValue) + (" to: -" + value));
