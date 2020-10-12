@@ -10,7 +10,9 @@ Backlash compensation is used to avoid the effects of any looseness or play in t
 
 Backlash compensation is configured on the ReferenceControllerAxis. Refer to the [[Machine-Axes]] page for general information. This page will focus on backlash compensation only.
 
-**Note**: The following assumes you have your axes, driver etc. already set up and running. 
+**Note**: The following assumes you have your axes, driver etc. already set up and running i.e. you can jog around etc. and now you want to improve the accuracy of the machine. 
+
+![Axis Wizard](https://user-images.githubusercontent.com/9963310/95772541-31df4480-0cbd-11eb-8086-c4106e24f103.png)
 
 **Backlash Compensation** defines the method used to compensate any backlash.
 
@@ -31,7 +33,11 @@ Backlash compensation is applied in the direction of travel. The offset is added
   No extra moves are needed. The machine can also move more fluidly, as there is no direction change needed. 
   However: the offset needs to precisely match the physical backlash.
 
-**Backlash Offset** will set the amount of backlash. To calibrate X or Y, proceed as follows:
+**Backlash Offset** will set the amount of backlash. 
+
+## Backlash Offset Calibration
+
+To determine the **Backlash Offset** for your X or Y axis, proceed as follows:
 
 1. Move your down-looking camera to a location where you can precisely see even the tiniest moves (example: the homing fiducial). 
 2. Set the Camera View to **Highest Quality (best scale)** (in the context menu) and zoom in using the scroll wheel of your mouse. 
