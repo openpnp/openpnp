@@ -32,11 +32,13 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.Machine;
+import org.openpnp.util.Triplet;
 
 /**
  * Like the classic OpenPnP Location, the AxesLocation stores a set of coordinates. However AxesLocation 
@@ -232,6 +234,42 @@ public class AxesLocation {
 
     public AxesLocation put(AxesLocation other) {
         return new AxesLocation((a, b) -> (b), this, other);
+    }
+
+    /**
+     * Returns the dot product of this AxesLocation with the other, both treated as vectors.
+     *   
+     * @param other
+     * @return
+     */
+    public double dotProduct(AxesLocation other) {
+        double dot = 0;
+        for (Entry<Axis, Double> entry : this.location.entrySet()) {
+            dot += entry.getValue()*other.getCoordinate(entry.getKey());
+        }
+        return dot;
+    }
+
+    /**
+     * Returns this vector projected perpendicularly onto the other. This results in a vector that
+     * points into the same direction as the other vector and has a length that is equal to the length
+     * of this vector times the cosine of the angle between them.   
+     * 
+     * @param other
+     * @return
+     */
+    public AxesLocation along(AxesLocation other) {
+        // The dot product of two vectors is the cosine of the angle between them, times both their length. 
+        // So if we norm the other vector to its unit vector, we get the desired result.
+        double dot = dotProduct(other);
+        double norm = other.getEuclideanMetric();
+        if (norm == 0) {
+            return other.multiply(0); 
+        }
+        else {
+            double factor = dot/norm/norm; // need to norm twice, because of multiply.
+            return other.multiply(factor);
+        }
     }
 
     /**
@@ -472,8 +510,20 @@ public class AxesLocation {
         }
         return found;
     }
-    public ControllerAxis getAxis(Axis.Type axisType) throws Exception {
-        return getAxis(null, axisType);
+    public CoordinateAxis getAxis(Axis.Type axisType) throws Exception {
+        CoordinateAxis found = null; 
+        for (Axis axis : getAxes()) {
+            if (axis instanceof ControllerAxis 
+                    && axis.getType() == axisType) {
+                if (found != null) {
+                    // Make this future-proof: 
+                    // Getting axes by type will no longer be allowed inside motion blending applications. 
+                    throw new Exception("Axes "+found.getName()+" and "+axis.getName()+" have duplicate type "+axisType+" assigned.");
+                }
+                found = (CoordinateAxis) axis;
+            }
+        }
+        return found;
     }
     /**
      * From the AxisLocation, return the driver axis with the specified variable name. 
@@ -511,6 +561,34 @@ public class AxesLocation {
         return found;
     }
 
+    public boolean isInSafeZone() {
+        for (Entry<Axis, Double> entry : location.entrySet()) {
+            if (entry.getKey() instanceof ReferenceControllerAxis) {
+                ReferenceControllerAxis refAxis = (ReferenceControllerAxis)entry.getKey();
+                double coordinate = entry.getValue(); 
+                if (refAxis.isSafeZoneLowEnabled()) {
+                    double limit = refAxis.getSafeZoneLow()
+                            .convertToUnits(getUnits()).getValue();
+                    if (coordinate < limit 
+                            && ! refAxis.coordinatesMatch(coordinate, limit)) {
+                        // Definitely out.
+                        return false;
+                    }
+                }
+                if (refAxis.isSafeZoneHighEnabled()) {
+                    double limit = refAxis.getSafeZoneHigh()
+                            .convertToUnits(getUnits()).getValue();
+                    if (coordinate > limit 
+                            && ! refAxis.coordinatesMatch(coordinate, limit)) {
+                        // Definitely out.
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
     /**
      * Create a distance vector over ControllerAxes that are both contained in this and location1
      * and that are not matching in coordinates. This will return a vector with only the axes that
@@ -545,4 +623,51 @@ public class AxesLocation {
         return Math.sqrt(sumSq);
     }
 
+    /**
+     * Get the Euclidean metric i.e. the distance in N-dimensional space of the AxesLocation 
+     * using the given function. 
+     * 
+     * @param driver The driver for which the rate is calculated i.e. for the axes mapped to it.
+     * @param f The function to be applied to the AxesLocation to obtain the metric.
+     * @return a Triplet with <linear, rotational, overall> Euclidean rate.
+     */
+    public Triplet<Double, Double, Double> getEuclideanMetric(Driver driver, Function<ControllerAxis, Double> f) {
+        double linearRate = 0;
+        double rotationalRate = 0;
+        double euclideanRate = 0;
+        for (ControllerAxis axis : getAxes(driver)) {
+            double val =  f.apply(axis);
+            if (axis.isRotationalOnController()) {
+                rotationalRate += Math.pow(val, 2);
+            }
+            else {
+                linearRate += Math.pow(val, 2);
+            }
+            euclideanRate += Math.pow(val, 2);
+        }
+        linearRate = Math.sqrt(linearRate);
+        rotationalRate = Math.sqrt(rotationalRate);
+        euclideanRate = Math.sqrt(euclideanRate);
+        return new Triplet<Double, Double, Double>(linearRate, rotationalRate, euclideanRate);
+    }
+
+    /**
+     * Get the metric according to NIST RS274NGC Interpreter - Version 3, Section 2.1.2.5 (p. 7).
+     * The rate is to be interpreted over the Euclidean linear axis distance of a move 
+     * and in the absence of any linear axes, over the Euclidean angular distance of the move.
+     * @see https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=823374
+     *
+     * @param driver
+     * @param f
+     * @return
+     */
+    public Double getRS274NGCMetric(Driver driver, Function<ControllerAxis, Double> f) {
+        Triplet<Double, Double, Double> rates = getEuclideanMetric(driver, f);
+        if (rates.first != null && rates.first != 0) {
+            return rates.first; 
+        }
+        else {
+            return rates.second;
+        }        
+    }
 }

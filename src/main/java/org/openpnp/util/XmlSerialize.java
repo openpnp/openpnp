@@ -37,4 +37,24 @@ public class XmlSerialize {
         XMLDecoder xmlDecoder = new XMLDecoder(new ByteArrayInputStream(s.getBytes()));
         return xmlDecoder.readObject();
     }
+    
+    /**
+     * From https://stackoverflow.com/questions/1265282/recommended-method-for-escaping-html-in-java
+     * @param s
+     * @return
+     */
+    public static String escapeXml(String s) {
+        StringBuilder out = new StringBuilder(Math.max(16, s.length()));
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c > 127 || c == '"' || c == '\'' || c == '<' || c == '>' || c == '&') {
+                out.append("&#");
+                out.append((int) c);
+                out.append(';');
+            } else {
+                out.append(c);
+            }
+        }
+        return out.toString();
+    }
 }

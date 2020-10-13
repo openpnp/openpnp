@@ -52,6 +52,7 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.util.Collect;
 import org.openpnp.util.GcodeServer;
 import org.openpnp.util.NanosecondTime;
 import org.pmw.tinylog.Logger;
@@ -174,8 +175,10 @@ public class SimulationModeMachine extends ReferenceMachine {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard()),
-                new PropertySheetWizardAdapter(new SimulationModeMachineConfigurationWizard(this), "Simulation Mode"),};
+        return Collect.concat(super.getPropertySheets(),
+                new PropertySheet[] {
+                        new PropertySheetWizardAdapter(new SimulationModeMachineConfigurationWizard(this), "Simulation Mode")
+                });
     }
 
     public SimulationMode getSimulationMode() {
@@ -418,13 +421,22 @@ public class SimulationModeMachine extends ReferenceMachine {
                 double cameraTime = NanosecondTime.getRuntimeSeconds() - lag;
                 AxesLocation axesLocation = getMomentaryVector(machine, cameraTime, (m, time) -> m.getMomentaryLocation(time));
                 AxesLocation mappedAxes = hm.getMappedAxes(machine);
-                for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
-                    AxesLocation homingOffsets = null;
-                    if (driver instanceof NullDriver) {
-                        if (looking == Looking.Down) {
-                            homingOffsets = ((NullDriver)driver).getHomingOffsets();
+                if (looking == Looking.Down) {
+                    // This is a down-looking camera, apply the homing error. 
+                    for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
+                        if (driver instanceof NullDriver) {
+                            AxesLocation homingOffsets = ((NullDriver)driver).getHomingOffsets();
                             // Apply homing offset
                             axesLocation = axesLocation.subtract(homingOffsets);
+                        }
+                        else if (driver instanceof GcodeDriver) {
+                            ReferenceDriverCommunications comms = ((GcodeDriver) driver).getCommunications();
+                            if (comms instanceof SimulatedCommunications) {
+                                GcodeServer server = ((SimulatedCommunications) comms).getGcodeServer();
+                                AxesLocation homingOffsets = server.getHomingOffsets();
+                                // Apply homing offset
+                                axesLocation = axesLocation.subtract(homingOffsets);
+                            }
                         }
                     }
                 }

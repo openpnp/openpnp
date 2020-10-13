@@ -88,12 +88,15 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     private boolean limitRotation = false;
 
     /**
-     * If wrapAroundRotation is enabled the nozzle rotation will always wrap-arround the shorter way. If combined 
+     * If wrapAroundRotation is enabled the nozzle rotation will always wrap-around the shorter way. If combined 
      * with limitRotation the rotation angle will be reset on the controller to stay within +/-180° (if supported 
      * by the driver setup i.e. needs special G-Code).
      */
     @Attribute(required = false)
     private boolean wrapAroundRotation = false;
+
+    @Attribute(required = false)
+    private boolean invertLinearRotational;
 
     @Element(required = false, data = true)
     private String preMoveCommand;
@@ -109,6 +112,18 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
 
     @Attribute(required = false)
     private boolean softLimitHighEnabled = false;
+
+    @Element(required = false)
+    private Length safeZoneLow = new Length(0.0, LengthUnit.Millimeters);
+    
+    @Attribute(required = false)
+    private boolean safeZoneLowEnabled = false;
+
+    @Element(required = false)
+    private Length safeZoneHigh = new Length(0.0, LengthUnit.Millimeters);
+
+    @Attribute(required = false)
+    private boolean safeZoneHighEnabled = false;
 
     @Element(required = false)
     private Length feedratePerSecond = new Length(250, LengthUnit.Millimeters);
@@ -129,7 +144,6 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     @Element(required = false)
     private double resolution = 0.0001; // 
 
-    private boolean invertLinearRotational;
 
     public double getResolution() {
         if (resolution <= 0.0) {
@@ -254,6 +268,38 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
 
     public void setSoftLimitHighEnabled(boolean softLimitHighEnabled) {
         this.softLimitHighEnabled = softLimitHighEnabled;
+    }
+
+    public Length getSafeZoneLow() {
+        return safeZoneLow;
+    }
+
+    public void setSafeZoneLow(Length safeZoneLow) {
+        this.safeZoneLow = safeZoneLow;
+    }
+
+    public boolean isSafeZoneLowEnabled() {
+        return safeZoneLowEnabled;
+    }
+
+    public void setSafeZoneLowEnabled(boolean safeZoneLowEnabled) {
+        this.safeZoneLowEnabled = safeZoneLowEnabled;
+    }
+
+    public Length getSafeZoneHigh() {
+        return safeZoneHigh;
+    }
+
+    public void setSafeZoneHigh(Length safeZoneHigh) {
+        this.safeZoneHigh = safeZoneHigh;
+    }
+
+    public boolean isSafeZoneHighEnabled() {
+        return safeZoneHighEnabled;
+    }
+
+    public void setSafeZoneHighEnabled(boolean safeZoneHighEnabled) {
+        this.safeZoneHighEnabled = safeZoneHighEnabled;
     }
 
     public boolean isInvertLinearRotational() {

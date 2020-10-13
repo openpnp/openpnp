@@ -23,7 +23,6 @@ import java.io.IOException;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
-import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
@@ -35,8 +34,10 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Motion;
+import org.openpnp.model.Motion.MoveToCommand;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Axis.Type;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.base.AbstractDriver;
 import org.openpnp.util.NanosecondTime;
@@ -47,7 +48,7 @@ import org.simpleframework.xml.Attribute;
  * An example of the simplest possible driver. This driver maintains a set of coordinates for each Axis
  * that it is asked to handle and simply logs all commands sent to it.
  */
-public class NullDriver extends AbstractDriver implements ReferenceDriver {
+public class NullDriver extends AbstractDriver {
 
 
     @Attribute(required = false)
@@ -60,6 +61,8 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
      * Works like Gcode G92. Initialized with the SimulationModeMachine.getHomingError() on homing.
      */
     private AxesLocation homingOffsets = new AxesLocation();
+
+    private boolean motionPending;
 
     @Override
     public void home(ReferenceMachine machine) throws Exception {
@@ -102,11 +105,11 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
      * considerations when writing your own driver.
      */
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Motion motion)
+    public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
             throws Exception {
-        Logger.debug("moveTo({}, {}, {})", hm, motion.getLocation1(), motion.getFeedRatePerSecond(this));
+        Logger.debug("moveTo({}, {}, {})", hm, move.getLocation1(), move.getFeedRatePerSecond());
         checkEnabled();
-        AxesLocation newDriverLocation = motion.getLocation1();
+        AxesLocation newDriverLocation = move.getLocation1();
         // Take the current driver location of the given axes.
         AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this), 
                 (axis) -> (axis.getDriverLengthCoordinate()));
@@ -114,7 +117,13 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
             // Store to axes
             newDriverLocation.setToDriverCoordinates(this);
             Logger.debug("Machine new location {}", newDriverLocation);
+            motionPending = true;
         }
+    }
+
+    @Override
+    public boolean isMotionPending() {
+        return motionPending;
     }
 
     @Override
@@ -125,7 +134,18 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
                 .hasOption(Motion.MotionOption.Stillstand)) {
             Thread.sleep(1);
         }
+        motionPending = false;
     }
+
+    @Override
+    public AxesLocation getMomentaryLocation(long timeout) throws Exception {
+        ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
+        double now = NanosecondTime.getRuntimeSeconds();
+        Motion motion = machine.getMotionPlanner()
+                .getMomentaryMotion(now);
+        return motion.getMomentaryLocation(now - motion.getPlannedTime0());
+    }
+
 
     @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
@@ -207,30 +227,32 @@ public class NullDriver extends AbstractDriver implements ReferenceDriver {
 
     @Deprecated
     @Override
-    public void migrateDriver(ReferenceMachine machine) throws Exception {
+    public void migrateDriver(Machine machine) throws Exception {
         machine.addDriver(this);
-        createAxisMappingDefaults(machine);
-        // Migrate feedrates etc.
-        for (Axis axis : machine.getAxes()) {
-            if (axis instanceof ReferenceControllerAxis) {
-                double feedRateMmPerMinute = this.feedRateMmPerMinute;
-                if (axis.getType() ==Type.Rotation) { 
-                    // like in the original NullDriver simulation, rotation is at 10 x speed
-                    feedRateMmPerMinute *= 10.0;
+        if (machine instanceof ReferenceMachine) {
+            createAxisMappingDefaults((ReferenceMachine) machine);
+            // Migrate feedrates etc.
+            for (Axis axis : machine.getAxes()) {
+                if (axis instanceof ReferenceControllerAxis) {
+                    double feedRateMmPerMinute = this.feedRateMmPerMinute;
+                    if (axis.getType() ==Type.Rotation) { 
+                        // like in the original NullDriver simulation, rotation is at 10 x speed
+                        feedRateMmPerMinute *= 10.0;
+                    }
+                    // Migrate the feedrate to the axes but change to mm/s.
+                    ((ReferenceControllerAxis) axis).setFeedratePerSecond(new Length(feedRateMmPerMinute/60.0, getUnits()));
+                    // Assume 0.5s average acceleration to reach top speed. v = a*t => a = v/t
+                    ((ReferenceControllerAxis) axis).setAccelerationPerSecond2(new Length(feedRateMmPerMinute/60/0.5, getUnits()));
+                    // Switch off jerk by default.
+                    ((ReferenceControllerAxis) axis).setJerkPerSecond3(new Length(0, getUnits()));
                 }
-                // Migrate the feedrate to the axes but change to mm/s.
-                ((ReferenceControllerAxis) axis).setFeedratePerSecond(new Length(feedRateMmPerMinute/60.0, getUnits()));
-                // Assume 0.5s average acceleration to reach top speed. v = a*t => a = v/t
-                ((ReferenceControllerAxis) axis).setAccelerationPerSecond2(new Length(feedRateMmPerMinute/60/0.5, getUnits()));
-                // Switch off jerk by default.
-                ((ReferenceControllerAxis) axis).setJerkPerSecond3(new Length(0, getUnits()));
             }
+            // Switch the driver limit off, only the axes' limits remains.
+            this.feedRateMmPerMinute = 0;
+            ReferenceHead head = (ReferenceHead) machine.getDefaultHead();
+            // Use the lower left PCB fiducial as homing fiducial (but not enabling Visual Homing yet).
+            head.setHomingFiducialLocation(new Location(LengthUnit.Millimeters, 5.736, 6.112, 0, 0));
         }
-        // Switch the driver limit off, only the axes' limits remains.
-        this.feedRateMmPerMinute = 0;
-        ReferenceHead head = (ReferenceHead) machine.getDefaultHead();
-        // Use the lower left PCB fiducial as homing fiducial (but not enabling Visual Homing yet).
-        head.setHomingFiducialLocation(new Location(LengthUnit.Millimeters, 5.736, 6.112, 0, 0));
     }
 
 

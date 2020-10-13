@@ -11,7 +11,7 @@ import org.openpnp.model.Configuration;
 import org.simpleframework.xml.Element;
 
 public class ScriptActuator extends ReferenceActuator {
-    @Element
+    @Element(required=false)
     protected String scriptName = "";
     
     private void execute(Map<String, Object> globals) throws Exception {
@@ -25,21 +25,33 @@ public class ScriptActuator extends ReferenceActuator {
     
     @Override
     public void actuate(boolean on) throws Exception {
+        if (isCoordinatedBeforeActuate()) {
+            coordinateWithMachine();
+        }
         Map<String, Object> globals = new HashMap<>();
         globals.put("actuateBoolean", on);
         this.execute(globals);
+        if (isCoordinatedAfterActuate()) {
+            coordinateWithMachine();
+        }
     }
 
     @Override
     public void actuate(double value) throws Exception {
+        if (isCoordinatedBeforeActuate()) {
+            coordinateWithMachine();
+        }
         Map<String, Object> globals = new HashMap<>();
         globals.put("actuateDouble", value);
         this.execute(globals);
+        if (isCoordinatedAfterActuate()) {
+            coordinateWithMachine();
+        }
     }
 
     @Override
     public Wizard getConfigurationWizard() {
-        return new ScriptActuatorConfigurationWizard(this);
+        return new ScriptActuatorConfigurationWizard(getMachine(), this);
     }
 
     public String getScriptName() {

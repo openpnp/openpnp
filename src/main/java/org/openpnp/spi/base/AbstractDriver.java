@@ -17,10 +17,10 @@ import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Driver;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.Axis.Type;
@@ -62,6 +62,12 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
     }
 
     @Override
+    public double getMinimumVelocity() {
+        // For now just return a fixed 0.1mm/s minimum feed-rate, i.e. 6mm/min minimum F word in Gcode.
+        return 0.1;
+    }
+
+    @Override
     public Length getFeedRatePerSecond() {
         // Default implementation for feeders that don't implement an extra feed-rate. 
         // The axes' fee-rate will be used.
@@ -92,6 +98,9 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
                 ((AbstractHeadMountable)hm).setAxisY(axisY);
                 ((AbstractHeadMountable)hm).setAxisZ(axisZ);
                 ((AbstractHeadMountable)hm).setAxisRotation(axisRotation);
+                if (hm instanceof ReferenceNozzle) {
+                    ((ReferenceNozzle)hm).migrateSafeZ();
+                }
             }
             // No movable actuators mapped for these test drivers.
         }
@@ -199,5 +208,20 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
     public String getPropertySheetHolderTitle() {
         return getClass().getSimpleName() + " " + getName();
     }
+
+    public void createDefaults() throws Exception  {}
+
+    /**
+     * Migrates the driver for the new global axes implementation. 
+     * 
+     * Is marked a deprecated as it can be removed along with the old GcodeDriver Axes implementation, 
+     * once migration of users is expected to be complete.  
+     * 
+     * @param machine
+     * @throws Exception
+     */
+    @Deprecated
+    public
+    void migrateDriver(Machine machine) throws Exception {}
 }
 

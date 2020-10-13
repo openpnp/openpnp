@@ -109,6 +109,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public Driver getDriver(String id);
 
+    public MotionPlanner getMotionPlanner();
+
     /**
      * Commands all Heads to perform visual homing if available. Depending on the head configuration of the machine 
      * the home positions may not all be the same but the end result should be that any head commanded to move to a certain position
@@ -167,6 +169,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public List<Class<? extends Signaler>> getCompatibleSignalerClasses();
 
     public List<Class<? extends Driver>> getCompatibleDriverClasses();
+
+    public List<Class<? extends MotionPlanner>> getCompatibleMotionPlannerClasses();
 
     public void addAxis(Axis axis) throws Exception;
 

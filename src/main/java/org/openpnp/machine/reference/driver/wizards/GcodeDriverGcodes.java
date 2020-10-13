@@ -186,13 +186,29 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         CommandType commandType = (CommandType) comboBoxCommandType.getSelectedItem();
         return commandType;
     }
-    
+
+    private boolean hasCommand(HeadMountable hm, CommandType commandType) {
+        String text = changes.get(new ChangeKey(hm, commandType));
+        if (text == null) {
+            // If not, see if there is a command on the driver
+            Command c = driver.getCommand(hm, commandType, false);
+            if (c != null) {
+                text = c.getCommand();
+            }
+        }
+        return (text != null);
+    }
+
     private void headMountableChanged() {
         comboBoxCommandType.removeAllItems();
         HeadMountable hm = getSelectedHeadMountable();
         for (CommandType type : CommandType.values()) {
             if (hm == null || type.isHeadMountable()) {
-                comboBoxCommandType.addItem(type);
+                if (hasCommand(hm, type) || !type.isDeprecated()) {
+                    // Only if the command is set (perhaps a legacy setup) 
+                    // or if it is not deprecated, do we add it.
+                    comboBoxCommandType.addItem(type);
+                }
             }
         }
     }

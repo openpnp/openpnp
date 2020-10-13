@@ -20,7 +20,6 @@
 package org.openpnp.machine.reference;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import javax.swing.Action;
 
@@ -37,7 +36,6 @@ import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractHead;
 import org.openpnp.spi.base.AbstractHeadMountable;
@@ -132,9 +130,7 @@ public class ReferenceHead extends AbstractHead {
         if (hm instanceof ReferenceHeadMountable) {
             Location headLocation = ((AbstractHeadMountable) hm).toHeadLocation(location);
             AxesLocation axesLocation = ((AbstractHeadMountable) hm).toRaw(headLocation);
-            if (getMachine().getMotionPlanner().isValidLocation(axesLocation)) {
-                return false;
-            }
+            return (getMachine().getMotionPlanner().isValidLocation(axesLocation));
         }
         return true;
     }
@@ -146,10 +142,6 @@ public class ReferenceHead extends AbstractHead {
         if (!mappedAxes.isEmpty()) {
             AxesLocation axesLocation = hm.toRaw(location);
             machine.getMotionPlanner().moveTo(hm, axesLocation, speed, options);
-            // TODO: wait only where necessary, e.g. in vision and (perhaps) vacuum sensing.
-            machine.getMotionPlanner().waitForCompletion(hm, 
-                    Arrays.asList(options).contains(MotionOption.JogMotion) ? 
-                            CompletionType.CommandJog : CompletionType.WaitForStillstand);
             machine.fireMachineHeadActivity(this);
         }
     }

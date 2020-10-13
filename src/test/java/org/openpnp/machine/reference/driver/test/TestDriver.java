@@ -7,26 +7,26 @@ import javax.swing.Icon;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
-import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Motion;
+import org.openpnp.model.Motion.MoveToCommand;
+import org.openpnp.spi.Driver;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.Driver.MotionControlType;
 import org.openpnp.spi.base.AbstractDriver;
 import org.simpleframework.xml.Attribute;
 
-public class TestDriver extends AbstractDriver implements ReferenceDriver {
+public class TestDriver extends AbstractDriver implements Driver {
     @Attribute(required = false)
     private String dummy;
 
-    private ReferenceDriver delegate = new TestDriverDelegate();
+    private Driver delegate = new TestDriverDelegate();
 
-    public void setDelegate(ReferenceDriver delegate) {
+    public void setDelegate(Driver delegate) {
         this.delegate = delegate;
     }
 
@@ -42,16 +42,21 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Motion motion)
+    public AxesLocation getMomentaryLocation(long timeout) throws Exception {
+        return delegate.getMomentaryLocation(-1);
+    }
+
+    @Override
+    public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
             throws Exception {
         
         // Take only this driver's axes.
-        AxesLocation newDriverLocation = motion.getLocation1();
+        AxesLocation newDriverLocation = move.getLocation1();
         // Take the current driver location of the given axes.
         AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this), 
                 (axis) -> (axis.getDriverLengthCoordinate()));
         if (!oldDriverLocation.matches(newDriverLocation)) {
-            delegate.moveTo(hm, motion);
+            delegate.moveTo(hm, move);
             // Store to axes
             newDriverLocation.setToDriverCoordinates(this);
         }
@@ -72,7 +77,7 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
         delegate.setEnabled(enabled);
     }
 
-    public static class TestDriverDelegate implements ReferenceDriver {
+    public static class TestDriverDelegate implements Driver {
         @Override
         public Wizard getConfigurationWizard() {
             return null;
@@ -89,7 +94,12 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
         }
  
         @Override
-        public void moveTo(ReferenceHeadMountable hm, Motion motion)
+        public AxesLocation getMomentaryLocation(long timeout) throws Exception {
+            return null;
+        }
+
+        @Override
+        public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
                 throws Exception {
 
         }
@@ -172,11 +182,6 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
         public void waitForCompletion(ReferenceHeadMountable hm, CompletionType completionType) throws Exception {
         }
 
-        @Deprecated
-        @Override
-        public void migrateDriver(ReferenceMachine machine) throws Exception {
-        }
-
         @Override
         public boolean isUsingLetterVariables() {
             return false;
@@ -185,6 +190,16 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
         @Override
         public Length getFeedRatePerSecond() {
             return null;
+        }
+
+        @Override
+        public boolean isMotionPending() {
+            return false;
+        }
+
+        @Override
+        public double getMinimumVelocity() {
+            return 0;
         }
    }
 
@@ -244,8 +259,13 @@ public class TestDriver extends AbstractDriver implements ReferenceDriver {
 
     @Deprecated
     @Override
-    public void migrateDriver(ReferenceMachine machine) throws Exception {
+    public void migrateDriver(Machine machine) throws Exception {
         machine.addDriver(this);
-        createAxisMappingDefaults(machine);
+        createAxisMappingDefaults((ReferenceMachine) machine);
+    }
+
+    @Override
+    public boolean isMotionPending() {
+        return false;
     }
 }

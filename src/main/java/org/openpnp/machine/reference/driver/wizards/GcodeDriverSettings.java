@@ -75,10 +75,12 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         JLabel lblMotionControlType = new JLabel("Motion Control Type");
-        lblMotionControlType.setToolTipText("<html>\r\n<p>Determines how the OpenPnP MotionPlanner will plan the motion and how it will talk <br/>\r\nto the controller:</p>\r\n<ul>\r\n<li><strong>ToolpathFeedRate:</strong><br/>\r\nApply the nominal driver feed-rate limit multiplied by the speed factor to the tool-path.<br/>\r\nThe driver feed-rate must be specified. No acceleration control is applied.</li>\r\n<li><strong>EuclideanAxisLimits:</strong><br/>\r\nApply axis feed-rate, acceleration and jerk limits multiplied by the proper speed factors. <br/>\r\nThe Euclidean Metric is calculated to allow the machine to run faster in a diagonal.<br/>\r\nAll profile motion control is left to the controller. </li>  \r\n<li><strong>ConstantAcceleration:</strong><br/>\r\nApply motion planning assuming a controller with constant acceleration motion control. </li>\r\n<li><strong>SimpleSCurve:</strong><br/>\r\nApply motion planning assuming a controller with simplified S-Curve motion control. <br/>\r\nSimplified S-Curves have no constant acceleration phase, only jerk phases (e.g. TinyG, Marlin).</li>\r\n<li><strong>Full3rdOrderControl:</strong><br/>\r\nApply motion planning assuming a controller with full 3rd order motion control.</li> \r\n</html>");
+        lblMotionControlType.setToolTipText("<html>\r\n<p>Determines how the OpenPnP MotionPlanner will plan the motion and how it will talk <br/>\r\nto the controller:</p>\r\n<ul>\r\n\r\n<li><strong>ToolpathFeedRate:</strong><br/>\r\nApply the nominal driver feed-rate limit multiplied by the speed factor to the tool-path.<br/>\r\nThe driver feed-rate must be specified. No acceleration control is applied.</li>\r\n\r\n<li><strong>EuclideanAxisLimits:</strong><br/>\r\nApply axis feed-rate, acceleration and jerk limits multiplied by the proper speed factors. <br/>\r\nThe Euclidean Metric is calculated to allow the machine to run faster in a diagonal.<br/>\r\nOpenPnP only sets the speed factor maximum, ramping up and down the speed is <br/>\r\nentirely left to the controller. </li>  \r\n\r\n<li><strong>ConstantAcceleration:</strong><br/>\r\nApply motion planning assuming a controller with constant acceleration motion control. </li>\r\n\r\n<li><strong>ModeratedConstantAcceleration:</strong><br/>\r\nApply motion planning assuming a controller with constant acceleration motion control but<br/>\r\nmoderate the acceleration and velocity to resemble those of 3rd order control, resulting<br/>\r\nin a move that takes the same amount of time and has similar average acceleration. <br/>\r\nThis will already reduce vibrations a bit.</li>\r\n\r\n<li><strong>SimpleSCurve:</strong><br/>\r\nApply motion planning assuming a controller with simplified S-Curve motion control. <br/>\r\nSimplified S-Curves have no constant acceleration phase, only jerk phases (e.g. TinyG, Marlin).</li>\r\n\r\n<li><strong>Simulated3rdOrderControl:</strong><br/>\r\nApply motion planning assuming a controller with constant acceleration motion control but<br/>\r\nsimulating 3rd order control with time step interpolation. </li> \r\n\r\n<li><strong>Full3rdOrderControl:</strong><br/>\r\nApply motion planning assuming a controller with full 3rd order motion control.</li> \r\n\r\n</html>");
         settingsPanel.add(lblMotionControlType, "2, 2, right, default");
         
         motionControlType = new JComboBox(MotionControlType.values());
@@ -112,30 +114,45 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         settingsPanel.add(connectWaitTimeTf, "4, 6, fill, default");
         connectWaitTimeTf.setColumns(10);
         
+        JLabel lblLetterVariables = new JLabel("Letter Variables?");
+        lblLetterVariables.setToolTipText("Axis variables in Gcode are named using the Axis Letters rather than the Axis Type.");
+        settingsPanel.add(lblLetterVariables, "2, 8, right, default");
+        
+        letterVariables = new JCheckBox("");
+        settingsPanel.add(letterVariables, "4, 8");
+        
+        JLabel lblAllowPremoveCommands = new JLabel("Allow Pre-Move Commands?");
+        settingsPanel.add(lblAllowPremoveCommands, "6, 8, right, default");
+        
+        supportingPreMove = new JCheckBox("");
+        settingsPanel.add(supportingPreMove, "8, 8");
+        
+        JLabel lblRemoveComments = new JLabel("Remove Comments");
+        lblRemoveComments.setToolTipText("<html>\r\n<p>Remove comments from G-code to speed up transmissions <br/>\r\nto the controller.</p>\r\n<p>Note, this only works with G-code syntax style.</p>\r\n<p>Example:</p>\r\n<p><code style=\"background-color:#DDDDDD\">G1 <span style=\"color:#007700\">(move to)</span> X100 Y20 <span style=\"color:#007700\">; move to the given X, Y</span><br/></code></p>\r\n<p>is sent as:</p>\r\n<p><code style=\"background-color:#DDDDDD\">G1 X100 Y20 </code></p>\r\n</html>");
+        settingsPanel.add(lblRemoveComments, "2, 12, right, default");
+        
+        removeComments = new JCheckBox("");
+        removeComments.setToolTipText("");
+        settingsPanel.add(removeComments, "4, 12");
+        
+        JLabel lblCompressGcode = new JLabel("Compress Gcode");
+        lblCompressGcode.setToolTipText("<html>\r\n<p>Remove unneeded white-space and trailing decimal digits from Gcode<br/>\r\nto speed up transmissions to the controller.</p>\r\n<p>Note, this only works with regular Gcode syntax.</p>\r\n<p>Example:</p>\r\n<p><code style=\"background-color:#DDDDDD\">G1&nbsp;&nbsp;X100.0000     Y20.1000&nbsp;&nbsp;&nbsp;&nbsp;</code></p>\r\n<p>is compressed into:</p>\r\n<p><code style=\"background-color:#DDDDDD\">G1X100Y20.1</code></p>\r\n</html>");
+        settingsPanel.add(lblCompressGcode, "6, 12, right, default");
+        
+        compressGcode = new JCheckBox("");
+        settingsPanel.add(compressGcode, "8, 12");
+        
         JLabel lblBackslashEscapedCharacters = new JLabel("Backslash Escaped Characters?");
         lblBackslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                 + "feed, \\r for carriage return, and \\f for form feed.");
-        settingsPanel.add(lblBackslashEscapedCharacters, "2, 10, right, default");
+        settingsPanel.add(lblBackslashEscapedCharacters, "2, 14, right, default");
         
         backslashEscapedCharacters = new JCheckBox("");
         backslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                 + "feed, \\r for carriage return, and \\f for form feed.");
-        settingsPanel.add(backslashEscapedCharacters, "4, 10");
-        
-        JLabel lblLetterVariables = new JLabel("Letter Variables?");
-        lblLetterVariables.setToolTipText("Axis variables in Gcode are named using the Axis Letters rather than the Axis Type.");
-        settingsPanel.add(lblLetterVariables, "6, 10, right, default");
-        
-        letterVariables = new JCheckBox("");
-        settingsPanel.add(letterVariables, "8, 10");
-        
-        JLabel lblAllowPremoveCommands = new JLabel("Allow Pre-Move Commands?");
-        settingsPanel.add(lblAllowPremoveCommands, "2, 12, right, default");
-        
-        supportingPreMove = new JCheckBox("");
-        settingsPanel.add(supportingPreMove, "4, 12");
+        settingsPanel.add(backslashEscapedCharacters, "4, 14");
     }
 
     @Override
@@ -150,6 +167,8 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         addWrappedBinding(driver, "maxFeedRate", maxFeedRateTf, "text", intConverter);
         addWrappedBinding(driver, "timeoutMilliseconds", commandTimeoutTf, "text", intConverter);
         addWrappedBinding(driver, "connectWaitTimeMilliseconds", connectWaitTimeTf, "text", intConverter);
+        addWrappedBinding(driver, "removeComments", removeComments, "selected");
+        addWrappedBinding(driver, "compressGcode", compressGcode, "selected");
         addWrappedBinding(driver, "backslashEscapedCharactersEnabled", backslashEscapedCharacters, "selected");
         addWrappedBinding(driver, "supportingPreMove", supportingPreMove, "selected");
         addWrappedBinding(driver, "usingLetterVariables", letterVariables, "selected");
@@ -293,6 +312,10 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
     private JCheckBox supportingPreMove;
     private JCheckBox letterVariables;
     private JCheckBox backslashEscapedCharacters;
+
+    private JCheckBox removeComments;
+
+    private JCheckBox compressGcode;
 
     static class HeadMountableItem {
         private HeadMountable hm;

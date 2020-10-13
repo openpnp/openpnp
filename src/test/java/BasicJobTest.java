@@ -10,6 +10,7 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.machine.reference.driver.test.TestDriver;
 import org.openpnp.machine.reference.driver.test.TestDriver.TestDriverDelegate;
+import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
@@ -19,6 +20,7 @@ import org.openpnp.model.Job;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Motion;
+import org.openpnp.model.Motion.MoveToCommand;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
@@ -65,6 +67,10 @@ public class BasicJobTest {
         TestDriver testDriver = (TestDriver) referenceMachine.getDefaultDriver();
         BasicJobTestDriverDelegate delegate = new BasicJobTestDriverDelegate();
         testDriver.setDelegate(delegate);
+        
+        // Set feeder to Z-10 
+        ReferenceTubeFeeder feeder = (ReferenceTubeFeeder) machine.getFeeder("F1");
+        feeder.setLocation(feeder.getLocation().derive(null, null, -10.0, null));
 
         Job job = createSimpleJob();
 
@@ -78,20 +84,28 @@ public class BasicJobTest {
         delegate.expectMove("Move N2 Nozzle Change Load", n2,
                 new Location(LengthUnit.Millimeters, 50, 0, 0, 0), 1.0);
 
-        delegate.expectMove("Move N1 to F1", n1, new Location(LengthUnit.Millimeters, -10, 0, 0, 0),
+        delegate.expectMove("Move N1 to F1, Safe Z", n1, new Location(LengthUnit.Millimeters, -10, 0, 0, 0),
+                1.0);
+        delegate.expectMove("Move N1 to F1, Feeder Z", n1, new Location(LengthUnit.Millimeters, -10, 0, -10, 0),
                 1.0);
 
         delegate.expectedActuate();
 
-        delegate.expectMove("Move N2 to F1", n2, new Location(LengthUnit.Millimeters, -20, 0, 0, 0),
+        delegate.expectMove("Move N1 to F1, Safe Z", n1, new Location(LengthUnit.Millimeters, -10, 0, 0, 0),
+                1.0);
+        delegate.expectMove("Move N2 to F1, Safe Z", n2, new Location(LengthUnit.Millimeters, -20, 0, 0, 0),
+                1.0);
+        delegate.expectMove("Move N2 to F1, Feeder Z", n2, new Location(LengthUnit.Millimeters, -20, 0, -10, 0),
                 1.0);
 
         delegate.expectedActuate();
 
+        delegate.expectMove("Move N2 to F1, Safe Z", n2, new Location(LengthUnit.Millimeters, -20, 0, 0, 0),
+                1.0);
         delegate.expectMove("Move N1 to R1, Safe-Z", n1,
                 new Location(LengthUnit.Millimeters, 0, 10, 0, 45), 1.0);
         delegate.expectMove("Move N1 to R1, Z", n1,
-                new Location(LengthUnit.Millimeters, 0, 10, 0.825500, 45), 1.0);
+                new Location(LengthUnit.Millimeters, 0, 10, 0.825500 - 10, 45), 1.0);
         delegate.expectedActuate();
         delegate.expectMove("Move N1 to R1, Safe-Z", n1,
                 new Location(LengthUnit.Millimeters, 0, 10, 0, 45), 1.0);
@@ -99,11 +113,11 @@ public class BasicJobTest {
         delegate.expectMove("Move N2 to R2, Safe-Z", n2,
                 new Location(LengthUnit.Millimeters, 00, 20, 0, 90), 1.0);
         delegate.expectMove("Move N2 to R2, Z", n2,
-                new Location(LengthUnit.Millimeters, 00, 20, 0.825500, 90), 1.0);
+                new Location(LengthUnit.Millimeters, 00, 20, 0.825500 - 10, 90), 1.0);
         delegate.expectedActuate();
         delegate.expectMove("Move N2 to R2, Safe-Z", n2,
                 new Location(LengthUnit.Millimeters, 00, 20, 0, 90), 1.0);
-        delegate.expectMove("Part", c1, new Location(LengthUnit.Millimeters, 0, 0, 0, 90), 1.0);
+        delegate.expectMove("Park", c1, new Location(LengthUnit.Millimeters, 0, 0, 0, 90), 1.0);
 
         ReferencePnpJobProcessor jobProcessor = (ReferencePnpJobProcessor) machine.getPnpJobProcessor();
         machine.setEnabled(true);
@@ -124,7 +138,7 @@ public class BasicJobTest {
         board.addPlacement(createPlacement("R2", "R-0805-10K", 20, 20, 0, 90, Side.Top));
 
         BoardLocation boardLocation = new BoardLocation(board);
-        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setSide(Side.Top);
 
         job.addBoardLocation(boardLocation);
@@ -158,9 +172,9 @@ public class BasicJobTest {
         }
 
         @Override
-        public void moveTo(ReferenceHeadMountable hm, Motion motion)
+        public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
                 throws Exception {
-            AxesLocation location = motion.getLocation1();
+            AxesLocation location = move.getLocation1();
             
             System.out.println(hm + " " + location);
             if (expectedOps.isEmpty()) {
@@ -173,9 +187,9 @@ public class BasicJobTest {
                     throw new Exception("Unexpected Move " + hm + " " + location + ". Expected " + op);
                 }
 
-                ExpectedMove move = (ExpectedMove) op;
+                ExpectedMove expectedMove = (ExpectedMove) op;
 
-                if (!move.location.matches(location) || hm != move.headMountable) {
+                if (!expectedMove.location.matches(location) || hm != expectedMove.headMountable) {
                     throw new Exception("Unexpected Move " + hm + " " + location + ". Expected " + op);
                 }
             }

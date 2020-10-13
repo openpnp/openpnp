@@ -25,6 +25,7 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.Signaler;
@@ -418,6 +419,10 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
                         throw new Exception("Machine has not been started.");
                     }
                     result = callable.call();
+                    // Make sure all pending motion commands are planned and sent to the controllers. 
+                    // This does not necessarily wait for the motion to be complete physically, as this would 
+                    // be undesirable for continuous Jog commands.  
+                    getMotionPlanner().waitForCompletion(null, CompletionType.CommandJog);
                 }
                 catch (Exception e) {
                     exception = e;

@@ -1,11 +1,34 @@
+/*
+ * Copyright (C) 2020 <mark@makr.zone>
+ * inspired and based on work by
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
+ */
+
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
+import org.openpnp.model.AbstractMotionPath;
 import org.openpnp.model.MotionProfile;
 import org.openpnp.model.MotionProfile.ErrorState;
 import org.openpnp.model.MotionProfile.ProfileOption;
 import org.openpnp.spi.Driver.MotionControlType;
+import org.openpnp.util.NanosecondTime;
 
 public class AdvancedMotionTest {
 
@@ -78,6 +101,16 @@ public class AdvancedMotionTest {
                 0, 400, 700, -700, 2000, 2000,
                 0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, 0);
         testProfile("Move with entry/exit velocity/acceleration", profile, MotionProfile.ErrorState.MaxVelocityViolated);
+        // Problem move with entry/exit velocity/acceleration 
+        profile = new MotionProfile(
+                100, 110, 200, 200, 2000, 2000,
+                0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, 0);
+        testProfile("Problem move with entry/exit velocity/acceleration", profile, null);
+        // Problem move with entry/exit velocity/acceleration and min-time 
+        profile = new MotionProfile(
+                100, 110, 200, 200, 2000, 2000,
+                0, 1000, 700, 2000, 2000, 15000, profile.getTime()+0.1, Double.POSITIVE_INFINITY, 0);
+        testProfile("Problem move with entry/exit velocity/acceleration and min-time", profile, null);
         // Null moves
         profile = new MotionProfile(
                 0, 0, 0, 0, 0, 0,
@@ -97,11 +130,31 @@ public class AdvancedMotionTest {
                 0, 0, 700, -700, 2000, 2000,
                 0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, 0);
         testProfile("Overshoot", profile, null);
-        // moveToLoactionAtSafeZ() with min time (given by other axes move time) 
+
+        // Overshoot slightly prolonged
         profile = new MotionProfile(
                 0, 0, 700, -700, 2000, 2000,
+                0, 1000, 700, 2000, 2000, 15000, profile.getTime()+0.01, Double.POSITIVE_INFINITY, 0);
+        testProfile("Overshoot slightly prolonged", profile, null);
+
+        // moveToLoactionAtSafeZ() with min time (given by other axes move time) 
+        profile = new MotionProfile(
+                0, 0, 200, -200, 2000, 2000,
                 0, 1000, 700, 2000, 2000, 15000, 4.0, Double.POSITIVE_INFINITY, 0);
         testProfile("Z axis in moveToLoactionAtSafeZ() with min time", profile, null);
+
+        // Asymmetric moveToLoactionAtSafeZ() with min time (given by other axes move time) 
+        profile = new MotionProfile(
+                0, 0, 200, -100, 1000, 1750,
+                0, 1000, 700, 2000, 2000, 15000, 4.0, Double.POSITIVE_INFINITY, 0);
+        testProfile("Z axis in asymmetric moveToLoactionAtSafeZ() with min time", profile, null);
+
+        // More asymmetric moveToLoactionAtSafeZ() with min time (given by other axes move time) 
+        profile = new MotionProfile(
+                0, 0, 200, -50, 1000, 500,
+                0, 1000, 700, 2000, 2000, 15000, 4.0, Double.POSITIVE_INFINITY, 0);
+        testProfile("Z axis in more asymmetric moveToLoactionAtSafeZ() with min time", profile, null);
+
         // Twisted curve (expect MinLocationViolated)
         profile = new MotionProfile(
                 0, 0, 500, 500, 0, 0,
@@ -125,8 +178,8 @@ public class AdvancedMotionTest {
                 0, 400, 0, -20, 0, -100,
                 0, 1000, 
                 profile.getProfileVelocity(MotionControlType.Full3rdOrderControl), 
-                profile.getProfileEntryAcceleration(MotionControlType.Full3rdOrderControl), 
-                profile.getProfileExitAcceleration(MotionControlType.Full3rdOrderControl),
+                profile.getProfileAcceleration(MotionControlType.Full3rdOrderControl),
+                profile.getProfileAcceleration(MotionControlType.Full3rdOrderControl),
                 profile.getProfileJerk(MotionControlType.Full3rdOrderControl),
                 0.0, Double.POSITIVE_INFINITY, 0);
         testProfile("recheck solution", profile2, null);
@@ -188,76 +241,223 @@ public class AdvancedMotionTest {
         }
     }
 
-//  TODO: ADVANCED MOTION PLANNER 
+    private class PlannerPath extends AbstractMotionPath {
+        private final List<MotionProfile []> path = new ArrayList<>();
+        private final double jerk;
+        private final boolean sCurves;
 
-//    @Test 
-//    public void testMotionPaths() throws Exception {
-//        for (int warmup = 0; warmup < 4; warmup++) {
-//            path = new ArrayList<>();
-//            moveTo(0, 0, safeZ);
-//            // pick & place
-//            moveTo(0, 0, -15);
-//            moveTo(0, 0, safeZ);
-//            moveTo(100, 0, safeZ);
-//            moveTo(100, 0, -15);
-//            moveTo(100, 0, safeZ);
-//            moveTo(120, 0, safeZ);
-//            moveTo(120, 0, -15);
-//            moveTo(120, 0, safeZ);
-//            moveTo(124, 0, safeZ);
-//            moveTo(124, 0, -15);
-//            moveTo(124, 0, safeZ);
-//            moveTo(125, 0, safeZ);
-//            moveTo(125, 0, -15);
-//            moveTo(125, 0, safeZ);
-//            // move to push/pull feeder
-//            moveTo(200, 50, safeZ);
-//            moveTo(220, 50, safeZ-5);
-//            moveTo(220, 50, safeZ);
-//            moveTo(200, 80, safeZ);
-//            moveTo(150, 100, safeZ);
-//            moveTo(150, 120, safeZ);
-//            moveTo(300, 120, -15);
-//            moveTo(300, 150, -15);
-//            moveTo(280, 150, -15);
-//            moveTo(279, 150, -15);
-//            moveTo(275, 150, -15);
-//            moveTo(275, 150, safeZ);
-//    
-//            MotionProfile.solvePath(path);
-//        }
-//        double solvingTime = 0;
-//        for (MotionProfile [] profiles : path) {
-//            System.out.println("X:"+profiles[0]);
-//            System.out.println("Y:"+profiles[1]);
-//            System.out.println("Z:"+profiles[2]);
-//            System.out.println(" ");
-//            solvingTime += profiles[0].getSolvingTime() +profiles[1].getSolvingTime() + profiles[2].getSolvingTime();  
-//        }
-//        System.out.println("Total solving time: "+String.format("%.4f", solvingTime*1000)+" ms");
-//    }
-//
-//    List<MotionProfile []> path = new ArrayList<>();
-//    double x0 = 0;
-//    double y0 = 0;
-//    double z0 = 0;
-//    final double safeZ = -5;
-//
-//    private void moveTo(double x, double y, double z) {
-//        MotionProfile [] profiles = new MotionProfile[3];
-//        profiles[0] = new MotionProfile(
-//                x0, x, 0, 0, 0, 0,
-//                0, 1000, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, (z0 >= safeZ && z >= safeZ) ? 0 : ProfileOption.Coordinated.flag());
-//        profiles[1] = new MotionProfile(
-//                y0, y, 0, 0, 0, 0,
-//                0, 500, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, (z0 >= safeZ && z >= safeZ) ? 0 : ProfileOption.Coordinated.flag());
-//        profiles[2] = new MotionProfile(
-//                z0, z, 0, 0, 0, 0,
-//                -20, 5, 700, 2000, 2000, 15000, 0, Double.POSITIVE_INFINITY, (z0 >= safeZ && z >= safeZ) ? 0 : ProfileOption.Coordinated.flag());
-//        path.add(profiles);
-//        x0 = x;
-//        y0 = y;
-//        z0 = z;
-//    }
+        public PlannerPath(double jerk, boolean sCurves) {
+            this.jerk = jerk;
+            this.sCurves = sCurves;
+        }
 
+        public void add(MotionProfile [] profiles) {
+            path.add(profiles);
+        }
+
+        @Override
+        public int size() {
+            return path.size();
+        }
+
+        @Override
+        public MotionProfile[] get(int i) {
+            return path.get(i);
+        }
+
+        private Double x0 = null;
+        private Double y0 = null;
+        private Double z0 = null;
+
+        public void moveTo(double x, double y, double z, int nozzle) {
+            if (x0 != null && y0 != null && z0 != null) {
+                // Previous waypoint was set, add a motion.
+                MotionProfile [] profiles = new MotionProfile[3];
+                int options = (sCurves ? ProfileOption.SimplifiedSCurve.flag() : 0);
+                double zMin, zMax;
+                boolean inSafeZone = 
+                        (z0 >= safeZ && z0 <= -safeZ)
+                        && (z >= safeZ && z <= -safeZ);
+                if (nozzle == 1) {
+                    zMin = -20;
+                    zMax = 5;
+                }
+                else {
+                    zMin = -5;
+                    zMax = 20;
+                }
+                if (inSafeZone && nozzle != 0) {
+                    zMin = safeZ;
+                    zMax = -safeZ;
+                    options |= ProfileOption.SynchronizeStraighten.flag() | 
+                            ProfileOption.SynchronizeEarlyBird.flag() | 
+                            ProfileOption.SynchronizeLastMinute.flag();
+                }
+                else {
+                    options |= ProfileOption.Coordinated.flag();
+                }
+                profiles[0] = new MotionProfile(
+                        x0, x, 0, 0, 0, 0,
+                        0, 1000, 700, 2000, 2000, jerk, 0, Double.POSITIVE_INFINITY, 
+                        options);
+                profiles[1] = new MotionProfile(
+                        y0, y, 0, 0, 0, 0,
+                        0, 500, 700, 2000/2, 2000/2, jerk, 0, Double.POSITIVE_INFINITY, 
+                        options);
+                profiles[2] = new MotionProfile(
+                        z0, z, 0, 0, 0, 0,
+                        zMin, zMax, 700, 2000, 2000, jerk, 0, Double.POSITIVE_INFINITY, 
+                        options);
+
+                // Solve as a single coordinated move.
+                double [] unitVector = MotionProfile.getUnitVector(profiles);
+                int leadAxis = MotionProfile.getLeadAxisIndex(unitVector);
+                profiles[leadAxis].solve();
+                MotionProfile.coordinateProfiles(profiles);
+                // Add.
+                add(profiles);
+            }
+            // Remember last coordinates.
+            x0 = x;
+            y0 = y;
+            z0 = z;
+        }
+
+        public double getOverallTime() {
+            double time = 0;
+            for (MotionProfile [] profiles : path) {
+                time += profiles[0].getTime(); 
+            }
+            return time;
+        }
+    }
+
+    final double safeZ = -7;
+    final double za = -15;
+    final double zb = -13;
+
+    @Test 
+    public void testMotionPaths() throws Exception {
+        for (int warmup = 2; warmup >= 0; warmup--) {
+            for (PlannerPath path : new PlannerPath[] { 
+                    new PlannerPath(90000, false), new PlannerPath(90000, true),
+                    new PlannerPath(30000, false), new PlannerPath(30000, true),
+                    new PlannerPath(0, false), new PlannerPath(0, true) 
+            }) {
+
+                // pick & place, one nozzle, symmetric
+                path.moveTo(0, 0, safeZ, 1);
+                path.moveTo(0, 0, za, 1);
+                path.moveTo(0, 0, safeZ, 1);
+                path.moveTo(100, 0, safeZ, 1);
+                path.moveTo(100, 0, za, 1);
+                path.moveTo(100, 0, safeZ, 1);
+                path.moveTo(120, 0, safeZ, 1);
+                path.moveTo(120, 0, za, 1);
+                path.moveTo(120, 0, safeZ, 1);
+                path.moveTo(124, 0, safeZ, 1);
+                path.moveTo(124, 0, za, 1);
+                path.moveTo(124, 0, safeZ, 1);
+                path.moveTo(125, 0, safeZ, 1);
+                path.moveTo(125, 0, za, 1);
+                path.moveTo(125, 0, safeZ, 1);
+
+                // pick & place, one nozzle, asymmetric
+                path.moveTo(0, 50, safeZ, 1);
+                path.moveTo(0, 50, zb, 1);
+                path.moveTo(0, 50, safeZ, 1);
+                path.moveTo(100, 50, safeZ, 1);
+                path.moveTo(100, 50, za, 1);
+                path.moveTo(100, 50, safeZ, 1);
+                path.moveTo(120, 50, safeZ, 1);
+                path.moveTo(120, 50, zb, 1);
+                path.moveTo(120, 50, safeZ, 1);
+                path.moveTo(124, 50, safeZ, 1);
+                path.moveTo(124, 50, za, 1);
+                path.moveTo(124, 50, safeZ, 1);
+                path.moveTo(125, 50, safeZ, 1);
+                path.moveTo(125, 50, zb, 1);
+                path.moveTo(125, 50, safeZ, 1);
+
+                // pick & place, dual nozzle, symmetric
+                path.moveTo(0, 100, safeZ, 1);
+                path.moveTo(0, 100, za, 1);
+                path.moveTo(0, 100, safeZ, 1);
+                path.moveTo(100, 100, -safeZ, 2);
+                path.moveTo(100, 100, 15, 2);
+                path.moveTo(100, 100, -safeZ, 2);
+                path.moveTo(120, 100, safeZ, 1);
+                path.moveTo(120, 100, za, 1);
+                path.moveTo(120, 100, safeZ, 1);
+                path.moveTo(124, 100, -safeZ, 2);
+                path.moveTo(124, 100, 15, 2);
+                path.moveTo(124, 100, -safeZ, 2);
+                path.moveTo(125, 100, safeZ, 1);
+                path.moveTo(125, 100, za, 1);
+                path.moveTo(125, 100, safeZ, 1);
+
+                // pick & place, dual nozzle, asymmetric
+                path.moveTo(0, 150, safeZ, 1);
+                path.moveTo(0, 150, za, 1);
+                path.moveTo(0, 150, safeZ, 1);
+                path.moveTo(100, 150, -safeZ, 2);
+                path.moveTo(100, 150, 15, 2);
+                path.moveTo(100, 150, -safeZ, 2);
+                path.moveTo(120, 150, safeZ, 1);
+                path.moveTo(120, 150, zb, 1);
+                path.moveTo(120, 150, safeZ, 1);
+                path.moveTo(124, 150, -safeZ, 2);
+                path.moveTo(124, 150, 15, 2);
+                path.moveTo(124, 150, -safeZ, 2);
+                path.moveTo(125, 150, safeZ, 1);
+                path.moveTo(125, 150, zb, 1);
+                path.moveTo(125, 150, safeZ, 1);
+
+                // move to push/pull feeder
+                path.moveTo(200, 50, safeZ, 1);
+                path.moveTo(220, 50, safeZ-5, 1);
+                path.moveTo(220, 50, safeZ, 1);
+                path.moveTo(200, 80, safeZ, 1);
+                path.moveTo(190, 100, safeZ, 1);
+                path.moveTo(190, 120, safeZ, 1);
+                path.moveTo(300, 120, za, 1);
+                path.moveTo(300, 150, za, 1);
+                path.moveTo(280, 150, za, 1);
+                path.moveTo(279, 150, za, 1);
+                path.moveTo(275, 150, za, 1);
+                path.moveTo(275, 150, safeZ, 1);
+
+                if (warmup == 0) {
+                    System.out.println("==========================================");
+                    // Unoptimized/single moves.
+                    double unoptimizedTime = path.getOverallTime();
+                    // Solve. 
+                    double t0 = NanosecondTime.getRuntimeSeconds(); 
+                    path.solve();
+                    double solvingTime = NanosecondTime.getRuntimeSeconds() - t0; 
+                    for (MotionProfile [] profiles : path) {
+                        System.out.println("X:"+profiles[0]);
+                        System.out.println("Y:"+profiles[1]);
+                        System.out.println("Z:"+profiles[2]);
+                        System.out.println(" ");
+                    }
+                    String title = (path.jerk == 0 ? 
+                            "Constant acceleration" 
+                            : ("Jerk control: "+path.jerk+" mm/s³"))
+                            +(path.jerk > 0 && path.sCurves ? ", simplified S-Curves" : "");
+                    String message = title+": "
+                            +"total move time: "+String.format("%.3f", path.getOverallTime())+" s, "
+                            +(path.getOverallTime() == unoptimizedTime ? 
+                                    "not optimized. "
+                                    : ("from unoptimized: "+String.format("%.3f", unoptimizedTime)+" s, "
+                                            +String.format("%.2f", 100.0*(path.getOverallTime()/unoptimizedTime - 1))+" %, "
+                                            +"total solving time: "+String.format("%.3f", solvingTime)+" s"));
+                    path.validate(title);
+                    path.toSvg(message, -za);
+                    System.out.println(message);
+
+                }
+            }
+        }
+    }
 }

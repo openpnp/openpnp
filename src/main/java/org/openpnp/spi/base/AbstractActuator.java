@@ -3,13 +3,13 @@ package org.openpnp.spi.base;
 import javax.swing.Icon;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.simpleframework.xml.Attribute;
 
 public abstract class AbstractActuator extends AbstractHeadMountable implements Actuator {
@@ -25,6 +25,15 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
     
     @Attribute(required = false)
     private String driverId;
+
+    @Attribute(required = false)
+    private boolean coordinatedBeforeActuate = true;
+
+    @Attribute(required = false)
+    private boolean coordinatedAfterActuate = false;
+
+    @Attribute(required = false)
+    private boolean coordinatedBeforeRead = true;
 
     public AbstractActuator() {
         this.id = Configuration.createId("ACT");
@@ -91,8 +100,39 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
         return null;
     }
 
+    protected void coordinateWithMachine() throws Exception {
+        Configuration.get().getMachine().getMotionPlanner().waitForCompletion(null, CompletionType.WaitForStillstand);
+    }
+
     @Override
     public String read() throws Exception {
+        if (isCoordinatedBeforeRead()) {
+            coordinateWithMachine();
+        }
         return null;
+    }
+
+    public boolean isCoordinatedBeforeActuate() {
+        return coordinatedBeforeActuate;
+    }
+
+    public void setCoordinatedBeforeActuate(boolean coordinateBeforeActuate) {
+        this.coordinatedBeforeActuate = coordinateBeforeActuate;
+    }
+
+    public boolean isCoordinatedAfterActuate() {
+        return coordinatedAfterActuate;
+    }
+
+    public void setCoordinatedAfterActuate(boolean coordinateAfterActuate) {
+        this.coordinatedAfterActuate = coordinateAfterActuate;
+    }
+
+    public boolean isCoordinatedBeforeRead() {
+        return coordinatedBeforeRead;
+    }
+
+    public void setCoordinatedBeforeRead(boolean coordinateBeforeRead) {
+        this.coordinatedBeforeRead = coordinateBeforeRead;
     }
 }

@@ -20,9 +20,24 @@ public interface Movable extends Locatable {
 
     void moveTo(Location location, MotionOption... options) throws Exception;
 
+
+    /**
+     * @return The lower and upper limits of the Safe Zone as defined on the Z axis. The array elements may be null 
+     * if no axis is mapped on the Movable or no Safe Zone defined on the axis. 
+     */
+    Length[] getSafeZZone();
+
+    /**
+     * @return The lower limit of the Safe Zone as defined on the Z axis, or null if now axis is mapped
+     * on the Movable or no Safe Zone defined on the axis. 
+     */
     Length getSafeZ();
 
-    Length getEffectiveSafeZ();
+    /**
+     * @return The effective Safe Z, including any dynamic adjustment such as for parts on a Nozzle. 
+     * @throws Exception 
+     */
+    Length getEffectiveSafeZ() throws Exception;
 
     void moveToSafeZ(double speed) throws Exception;
 

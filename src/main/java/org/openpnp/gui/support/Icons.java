@@ -89,6 +89,10 @@ public class Icons {
 
     public static Icon axisCartesian = getIcon("/icons/axis-cartesian.svg");
     public static Icon axisRotation = getIcon("/icons/axis-rotate.svg");
+    public static Icon captureAxisLow = getIcon("/icons/capture-axis-low.svg");
+    public static Icon captureAxisHigh = getIcon("/icons/capture-axis-high.svg");
+    public static Icon positionAxisLow = getIcon("/icons/position-axis-low.svg");
+    public static Icon positionAxisHigh = getIcon("/icons/position-axis-high.svg");
     public static Icon driver = getIcon("/icons/driver.svg");
     
     public static Icon getIcon(String resourceName, int width, int height) {

@@ -24,6 +24,7 @@ package org.openpnp.util;
 import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -39,6 +40,7 @@ public class SimpleGraph {
 
     public static class DataScale {
         private String label;
+        public boolean labelShown;
         private Color color = null;
         private List<DataRow> dataRows = new ArrayList<>();
         private double relativePaddingTop;
@@ -61,6 +63,12 @@ public class SimpleGraph {
             return label;
         }
 
+        public boolean isLabelShown() {
+            return labelShown;
+        }
+        public void setLabelShown(boolean labelShown) {
+            this.labelShown = labelShown;
+        }
         public Color getColor() {
             return color;
         }
@@ -309,5 +317,9 @@ public class SimpleGraph {
             }
         }
         return maximum; 
+    }
+
+    public List<DataScale> getScales() {
+        return Collections.unmodifiableList(dataScales);
     }
 }

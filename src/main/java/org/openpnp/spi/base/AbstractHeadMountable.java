@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
@@ -14,6 +15,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
+import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.pmw.tinylog.Logger;
@@ -117,8 +119,126 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         }
     }
 
+    protected CoordinateAxis getCoordinateAxisZ() {
+        AbstractAxis zAxis = getAxisZ();
+        if (zAxis != null) {
+            Machine machine = Configuration.get().getMachine();
+            // Get the raw Z Axis.
+            try {
+                return zAxis.getCoordinateAxes(machine).getAxis(Axis.Type.Z);
+            }
+            catch (Exception e) {
+                // Cannot throw in this (legacy) context. 
+                // However, this should never happen, as axis transforms cannot mix multiple Z axes together and
+                // therefore the typed axis should be unique.
+                Logger.error(e);
+            }
+        }
+        return null;
+    }
+
+
+    protected Length rawToHeadMountableZ(ReferenceControllerAxis rawAxis, Length z) {
+        // Get the raw location, and put z in it.
+        AxesLocation rawLocation = getMappedAxes(Configuration.get().getMachine())
+                .put(new AxesLocation(rawAxis, z));
+        // Transform to Head coordinates.
+        Location location = toTransformed(rawLocation);
+        // From Head to HeadMountable coordinates.
+        location = toHeadMountableLocation(location);
+        return location.getLengthZ();
+    }
+
+    protected Length headMountableToRawZ(ReferenceControllerAxis rawAxis, Length z) throws Exception {
+        // Take z as HeadMountable coordinate.
+        Location location = getLocation();
+        z = z.convertToUnits(location.getUnits());
+        location = location.derive(null, null, z.getValue(), null);
+        // Transform to Head coordinates.
+        location = toHeadLocation(location);
+        // From Head to to raw coordinates.
+        AxesLocation rawLocation = toRaw(location);
+        return rawLocation.getLengthCoordinate(rawAxis);
+    }
+
+    @Override
+    public Length [] getSafeZZone() {
+        Length safeZLow = null;
+        Length safeZHigh = null;
+        CoordinateAxis coordAxis = getCoordinateAxisZ();
+        if (coordAxis instanceof ReferenceControllerAxis) {
+            ReferenceControllerAxis rawAxis = (ReferenceControllerAxis) coordAxis; 
+            if (rawAxis.isSafeZoneLowEnabled()) {
+                // We have a lower Safe Z Zone limit.
+                Length z = rawAxis.getSafeZoneLow();
+                safeZLow = rawToHeadMountableZ(rawAxis, z);
+            }
+            if (rawAxis.isSafeZoneHighEnabled()) {
+                // We have a upper Safe Z Zone limit.
+                Length z = rawAxis.getSafeZoneHigh();
+                safeZHigh = rawToHeadMountableZ(rawAxis, z);
+            }
+            // Note, Z axis transform might be negative, so upper and lower limit may be swapped.
+            // We can compare Lengths without unit conversion as they are in System units courtesy of 
+            // rawToHeadMountableZ().
+            if (safeZLow != null && safeZHigh != null 
+                    && safeZLow.getValue() > safeZHigh.getValue()) {
+                Length swap = safeZLow;
+                safeZLow = safeZHigh;
+                safeZHigh = swap;
+            }
+        }
+        else if (coordAxis != null) {
+            // Just take the home coordinate as Safe Z.
+            safeZLow = safeZHigh = coordAxis.getHomeCoordinate();
+        }
+        return new Length[] { safeZLow, safeZHigh};
+    }
+
+    @Override
+    public Length getSafeZ() {
+        Length safeZ [] = getSafeZZone();
+        return safeZ[0];
+    }
+
+    public boolean isInSafeZZone(Length z) throws Exception {
+        CoordinateAxis coordAxis = getCoordinateAxisZ();
+        if (coordAxis instanceof ReferenceControllerAxis) {
+            ReferenceControllerAxis rawAxis = (ReferenceControllerAxis) coordAxis; 
+            Length rawZ = headMountableToRawZ(rawAxis, z);
+            if (rawAxis.isSafeZoneLowEnabled()) {
+                // We have a lower Safe Z Zone limit.
+                Length limit = rawAxis.getSafeZoneLow().convertToUnits(rawZ.getUnits());
+                if (rawZ.getValue() < limit.getValue()
+                        && !rawAxis.coordinatesMatch(rawZ, limit)) {
+                    // Definitely below the Safe Zone.
+                    return false;
+                }
+            }
+            if (rawAxis.isSafeZoneHighEnabled()) {
+                // We have a upper Safe Z Zone limit.
+                Length limit = rawAxis.getSafeZoneHigh().convertToUnits(rawZ.getUnits());
+                if (rawZ.getValue() > limit.getValue()
+                        && !rawAxis.coordinatesMatch(rawZ, limit)) {
+                    // Definitely above the Safe Zone.
+                    return false;
+                }
+            }
+        }
+        else if (coordAxis != null) {
+            coordAxis.coordinatesMatch(coordAxis.getHomeCoordinate(), z);
+        }
+        // We're either inside the limits, no axis is mapped or the Safe Zone is not enabled.
+        return true;
+    }
+
+    public void setSafeZ(Length safeZ) {
+        // This is just a fake setter that seems to be needed when using addWrappedBinding(), even if the field is not editable.
+        // Safe Z must now be set/captured on the Axis. 
+    }
+
     @Override 
-    public Length getEffectiveSafeZ() {
+    public Length getEffectiveSafeZ() throws Exception {
         return getSafeZ();
     }
 
@@ -131,11 +251,24 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
 
     @Override
     public void moveToSafeZ(double speed) throws Exception {
-        Logger.debug("{}.moveToSafeZ({})", getName(), speed);
         Location l = getLocation();
-        Length safeZ = this.getEffectiveSafeZ().convertToUnits(l.getUnits());
-        l = l.derive(null, null, safeZ.getValue(), null);
-        moveTo(l, speed);
+        Length safeZ = this.getEffectiveSafeZ();
+        if (safeZ != null) {
+            Logger.debug("{}.moveToSafeZ({})", getName(), speed);
+            if (!isInSafeZZone(safeZ)) {
+                throw new Exception("Effective Safe Z coordinate "+safeZ+" is outside Safe Z Zone.");
+            }
+            safeZ = safeZ.convertToUnits(l.getUnits());
+            if (safeZ.getValue() > l.getZ() || !isInSafeZZone(l.getLengthZ())) {
+                // Only move if 
+                // a) the new effective Safe Z is higher than current Z, or 
+                // b) the current Z is outside the safe zone.
+                // The second condition must be checked for shared Z with negating transform, where the Safe Z Zone 
+                // is limited on two sides. 
+                l = l.derive(null, null, safeZ.getValue(), null);
+                moveTo(l, speed);
+            }
+        }
     }
 
     @Override

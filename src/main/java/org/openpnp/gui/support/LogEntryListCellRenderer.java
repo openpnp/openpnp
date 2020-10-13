@@ -10,6 +10,10 @@ public class LogEntryListCellRenderer extends JTextField implements ListCellRend
     @Override
     public Component getListCellRendererComponent(JList<? extends LogEntry> list, LogEntry logEntry, int index, boolean isSelected, boolean cellHasFocus) {
 
+        if (logEntry == null) {
+            return this;
+        }
+
         this.setText(logEntry.getRenderedLogEntry());
         this.setFont(new Font("Monospaced", Font.PLAIN, 13));
         this.setBorder(null);

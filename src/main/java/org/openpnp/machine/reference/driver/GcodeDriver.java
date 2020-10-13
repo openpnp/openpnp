@@ -1,6 +1,7 @@
 package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -9,8 +10,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,8 +34,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Motion;
-import org.openpnp.model.Motion.MotionOption;
+import org.openpnp.model.Motion.MoveToCommand;
 import org.openpnp.model.Named;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis.Type;
@@ -42,6 +42,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.base.AbstractAxis;
@@ -51,6 +52,7 @@ import org.openpnp.spi.base.AbstractHead.VisualHomingMethod;
 import org.openpnp.spi.base.AbstractHeadMountable;
 import org.openpnp.spi.base.AbstractSingleTransformedAxis;
 import org.openpnp.spi.base.AbstractTransformedAxis;
+import org.openpnp.util.NanosecondTime;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -62,7 +64,7 @@ import org.simpleframework.xml.core.Commit;
 import com.google.common.base.Joiner;
 
 @Root
-public class GcodeDriver extends AbstractReferenceDriver implements Named, Runnable {
+public class GcodeDriver extends AbstractReferenceDriver implements Named {
     public enum CommandType {
         COMMAND_CONFIRM_REGEX,
         POSITION_REPORT_REGEX,
@@ -75,6 +77,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         HOME_COMMAND("Id", "Name"),
         HOME_COMPLETE_REGEX,
         SET_GLOBAL_OFFSETS_COMMAND("Id", "Name", "X", "Y", "Z", "Rotation"),
+        GET_POSITION_COMMAND,
         @Deprecated
         PUMP_ON_COMMAND,
         @Deprecated
@@ -115,6 +118,20 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
 
         public boolean isHeadMountable() {
             return headMountable;
+        }
+
+        public boolean isDeprecated() {
+            try {
+                Class<CommandType> commandTypeEnum = CommandType.class;
+                Field commandType = commandTypeEnum.getField(toString());
+                return commandType.isAnnotationPresent(Deprecated.class);
+            }
+            catch (NoSuchFieldException e) {
+                return false;
+            }
+            catch (SecurityException e) {
+                return false;
+            }
         }
     }
 
@@ -196,6 +213,12 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     @Attribute(required = false)
     protected boolean backslashEscapedCharactersEnabled = false;
 
+    @Attribute(required = false)
+    protected boolean removeComments;
+
+    @Attribute(required = false)
+    protected boolean compressGcode;
+
     @Deprecated
     @Element(required = false)
     protected Location homingFiducialLocation = new Location(LengthUnit.Millimeters);
@@ -205,6 +228,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
 
     @Attribute(required = false)
     boolean usingLetterVariables = true;
+    
+    @Attribute(required = false) 
+    int infinityTimeoutMilliseconds = 300000; // 5 Minutes is considered an "eternity" for a controller.
 
     @ElementList(required = false, inline = true)
     public ArrayList<Command> commands = new ArrayList<>();
@@ -217,10 +243,44 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     @ElementList(required = false)
     protected List<Axis> axes = null;
 
-    private Thread readerThread;
-    private boolean disconnectRequested;
-    private boolean connected;
-    private LinkedBlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
+    private ReaderThread readerThread;
+    boolean disconnectRequested;
+    protected boolean connected;
+    
+    static public class Line {
+        final String line;
+        final double transmissionTime;
+
+        public Line(String line) {
+            super();
+            this.line = line;
+            this.transmissionTime = NanosecondTime.getRuntimeSeconds();
+        }
+
+        public String getLine() {
+            return line;
+        }
+
+        /**
+         * @return The real-time in seconds (since application start) when this Line was sent or received.
+         */
+        public double getTransmissionTime() {
+            return transmissionTime;
+        }
+
+        @Override
+        public String toString() {
+            return line;
+        }
+    }
+
+    protected LinkedBlockingQueue<Line> responseQueue = new LinkedBlockingQueue<>();
+    
+    protected AtomicLong receivedConfirmations = new AtomicLong();
+    protected Line errorResponse;
+    private AxesLocation lastMomentaryLocation;
+    private double lastMomentaryTime;
+    private boolean motionPending;
 
     @Commit
     public void commit() {
@@ -246,18 +306,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
 
     public synchronized void connect() throws Exception {
         getCommunications().connect();
-
         connected = false;
-        readerThread = new Thread(this);
-        readerThread.setDaemon(true);
-        readerThread.start();
 
         // Wait a bit while the controller starts up
         Thread.sleep(connectWaitTimeMilliseconds);
 
+        connectThreads();
+
         // Consume any startup messages
         try {
-            while (!sendCommand(null, 250).isEmpty()) {
+            while (!receiveResponses().isEmpty()) {
 
             }
         }
@@ -272,6 +330,19 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         sendGcode(getCommand(null, CommandType.CONNECT_COMMAND));
 
         connected = true;
+    }
+
+    /**
+     * Connect the threads used for communications.
+     * 
+     * @throws Exception
+     */
+    protected void connectThreads() throws Exception {
+        readerThread = new ReaderThread();
+        readerThread.setDaemon(true);
+        readerThread.start();
+        errorResponse = null;
+        receivedConfirmations = new AtomicLong();
     }
 
     @Override
@@ -289,7 +360,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         }
 
         if (connected && !enabled) {
-            if (!connectionKeepAlive) {
+            if (isInSimulationMode() || !connectionKeepAlive) {
                 disconnect();
             }
         }
@@ -305,25 +376,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         command = substituteVariable(command, "Id", head.getId()); 
         command = substituteVariable(command, "Name", head.getName());
         long timeout = -1;
-        List<String> responses = sendGcode(command, timeout);
+        sendGcode(command, timeout);
 
         // Check home complete response against user's regex
         String homeCompleteRegex = getCommand(null, CommandType.HOME_COMPLETE_REGEX);
         if (homeCompleteRegex != null) {
-            if (timeout == -1) {
-                timeout = Long.MAX_VALUE;
-            }
-            if (!containsMatch(responses, homeCompleteRegex)) {
-                long t = System.currentTimeMillis();
-                boolean done = false;
-                while (!done && System.currentTimeMillis() - t < timeout) {
-                    done = containsMatch(sendCommand(null, 250), homeCompleteRegex);
-                }
-                if (!done) {
-                    // Should never get here but just in case.
-                    throw new Exception("Timed out waiting for home to complete.");
-                }
-            }
+            receiveResponses(homeCompleteRegex, timeout, (responses) -> { 
+                throw new Exception("Timed out waiting for home to complete."); 
+            });
         }
 
         AxesLocation homeLocation = new AxesLocation(machine, this, (axis) -> (axis.getHomeCoordinate()));
@@ -415,6 +475,36 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
 
 
+    @Override
+    public AxesLocation getMomentaryLocation(long timeout) throws Exception {
+        String command = getCommand(null, CommandType.GET_POSITION_COMMAND);
+        if (command == null) {
+            throw new Exception(getName()+" configuration error: missing GET_POSITION_COMMAND.");
+        }
+        if (getCommand(null, CommandType.POSITION_REPORT_REGEX) == null) {
+            throw new Exception(getName()+" configuration error: missing POSITION_REPORT_REGEX.");
+        }
+        
+        // Reset the last position report.
+        lastMomentaryLocation = null;
+        sendGcode(command, -1);
+        // Blocking queue?
+        long t1 = System.currentTimeMillis() + ((timeout == -1) ?
+                infinityTimeoutMilliseconds
+                : timeout);
+        do { 
+            if (lastMomentaryLocation != null) {
+                Logger.trace("Got lastMomentaryLocation");
+                return lastMomentaryLocation;
+            }
+            // TODO: sync with response queue? How?
+            Thread.yield();
+        }
+        while (System.currentTimeMillis() < t1);
+        // Timeout expired, apply timeout action.
+        throw new Exception("Timeout waiting for response to " + command);
+    }
+
     public Command getCommand(HeadMountable hm, CommandType type, boolean checkDefaults) {
         // If a HeadMountable is specified, see if we can find a match
         // for both the HeadMountable ID and the command type.
@@ -466,13 +556,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Motion motion)
+    public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
             throws Exception {
         // Get the axes that are actually moving.
-        AxesLocation location = motion.getMovingAxesTargetLocation(this);
-        Double feedRate = motion.getFeedRatePerMinute(this);
-        Double acceleration = motion.getAccelerationPerSecond2(this);
-        Double jerk = motion.getJerkPerSecond3(this);
+        AxesLocation movedAxesLocation = move.getMovedAxesLocation();
+        AxesLocation allAxesLocation = move.getLocation1();
+        Double feedRate = move.getFeedRatePerMinute();
+        Double acceleration = move.getAccelerationPerSecond2();
+        Double jerk = move.getJerkPerSecond3();
 
         // Start composing the command, will decide later, whether we actually send it.
         String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
@@ -489,7 +580,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         command = substituteVariable(command, "FeedRate", feedRate);
         command = substituteVariable(command, "Acceleration", acceleration);
         command = substituteVariable(command, "Jerk", jerk);
-        
+
         if (this.usingLetterVariables && this.supportingPreMove) {
             throw new Exception(getName()+" configuration error: Using Letter Variables and Pre-Move Commands at the same time is not supported.");
         }
@@ -497,7 +588,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         ReferenceMachine machine = (ReferenceMachine) hm.getHead().getMachine();
         // Get a map of the axes of ...
         AxesLocation mappedAxes = (this.usingLetterVariables ?
-                motion.getLocation1()          // ... all the axes in case of using letter variables
+                allAxesLocation                // ... all the axes in case of using letter variables
                 : hm.getMappedAxes(machine))   // ... just the HeadMountable in case of using type variables
                 .drivenBy(this);               // ... but just those driven by this driver.
         // Go through all the axes variables and handle them.
@@ -506,7 +597,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             // Note, if the axis is included in the location, this means it actually changes the coordinate in resolution steps. 
             // The resolution stepping is used to suppress artificial coordinate changes due to floating point artifacts from transformations etc. 
             // If set up correctly, this also suppresses "rounded-to-nothing" moves due to MOVE_TO_COMMANDs format specifier (usually %.4f).
-            ControllerAxis axis = location.getAxisByVariable(this, variable);
+            ControllerAxis axis = movedAxesLocation.getAxisByVariable(this, variable);
             if (axis == null) {
                 // Axis not moved. Might still be forced.
 
@@ -529,8 +620,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 // The move is definitely on. 
                 doesMove = true;
                 // TODO: discuss whether we should round to axis resolution here.
-                double coordinate = motion.getLocation1().getCoordinate(axis); 
-                double previousCoordinate = axis.getCoordinate(); 
+                double coordinate = allAxesLocation.getCoordinate(axis); 
+                double previousCoordinate = axis.getDriverCoordinate(); 
                 int direction = ((Double)coordinate).compareTo(previousCoordinate);
                 // Substitute the axis variables.
                 command = substituteVariable(command, variable, coordinate);
@@ -564,55 +655,56 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
             }
         }
         if (doesMove) {
-            // We do actually send the command. 
-            List<String> responses = sendGcode(command);
-
-            // TODO: determine if it is technically possible to move this to waitForCompletion() with the 
-            // responses correctly associated. It has been discussed, that using N letter line numbers could
-            // help. 
-            // See: https://groups.google.com/g/openpnp/c/bEVZvYoXO98/m/Cc0VxGGYBwAJ
-
-            /*
-             * If moveToCompleteRegex is specified we need to wait until we match the regex in a
-             * response before continuing. We first search the initial responses from the
-             * command for the regex. If it's not found we then collect responses for up to
-             * timeoutMillis while searching the responses for the regex. As soon as it is
-             * matched we continue. If it's not matched within the timeout we throw an
-             * Exception.
-             */
-            String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
-            if (moveToCompleteRegex != null) {
-                if (!containsMatch(responses, moveToCompleteRegex)) {
-                    long t = System.currentTimeMillis();
-                    boolean done = false;
-                    while (!done && System.currentTimeMillis() - t < timeoutMilliseconds) {
-                        done = containsMatch(sendCommand(null, 250), moveToCompleteRegex);
-                    }
-                    if (!done) {
-                        throw new Exception("Timed out waiting for move to complete.");
-                    }
-                }
-            }
+            // We do actually send the command.
+            motionPending = true;
+            sendGcode(command);
         }
+    }
+
+    @Override
+    public boolean isMotionPending() {
+        return motionPending;
     }
 
     @Override
     public void waitForCompletion(ReferenceHeadMountable hm, 
             CompletionType completionType) throws Exception {
+        if (!motionPending) {
+            return;
+        }
         String command = getCommand(hm, CommandType.MOVE_TO_COMPLETE_COMMAND);
         if (command != null) {
-            sendGcode(command);
+            sendGcode(command, completionType == CompletionType.WaitForStillstandIndefinitely ?
+                    -1 : getTimeoutAtMachineSpeed());
         }
-        if (completionType.isWaitingForDrivers()) {
-            // TODO: as soon as the async writer/hand-shaking is implemented, we must explicitly
-            // wait for the controller's acknowledgment here. 
-            // This distinction does not works yet, as we always implicitly wait in sendGcode();
+
+        // TODO: determine if it is technically possible to have the responses correctly associated if this is a 
+        // multi-move. It has been discussed, that using N letter line numbers could help. 
+        // See: https://groups.google.com/g/openpnp/c/bEVZvYoXO98/m/Cc0VxGGYBwAJ
+
+        /*
+         * If moveToCompleteRegex is specified we need to wait until we match the regex in a
+         * response before continuing. We first search the initial responses from the
+         * command for the regex. If it's not found we then collect responses for up to
+         * timeoutMillis while searching the responses for the regex. As soon as it is
+         * matched we continue. If it's not matched within the timeout we throw an
+         * Exception.
+         */
+        String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
+        if (moveToCompleteRegex != null) {
+            receiveResponses(moveToCompleteRegex, completionType == CompletionType.WaitForStillstandIndefinitely ?
+                    -1 : getTimeoutAtMachineSpeed(), 
+                    (responses) -> {
+                throw new Exception("Timed out waiting for move to complete.");
+            });
         }
+        // Remember, we're now standing still.  
+        motionPending = false;
     }
 
-    private boolean containsMatch(List<String> responses, String regex) {
-        for (String response : responses) {
-            if (response.matches(regex)) {
+    private boolean containsMatch(List<Line> responses, String regex) {
+        for (Line response : responses) {
+            if (response.line.matches(regex)) {
                 return true;
             }
         }
@@ -667,9 +759,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         }
         String regex = getCommand(actuator, CommandType.ACTUATOR_READ_REGEX);
         if (command != null && regex != null) {
-            /**
-             * This driver has the command and regex defined, so it must service the command.
-             */
             command = substituteVariable(command, "Id", actuator.getId());
             command = substituteVariable(command, "Name", actuator.getName());
             command = substituteVariable(command, "Index", actuator.getIndex());
@@ -677,12 +766,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                 command = substituteVariable(command, "DoubleValue", parameter);
                 command = substituteVariable(command, "IntegerValue", (int) parameter.doubleValue());
             }
-
-            List<String> responses = sendGcode(command);
+            sendGcode(command);
+            List<Line> responses = receiveResponses(regex, timeoutMilliseconds, (r) -> {
+                throw new Exception(String.format("Actuator \"%s\" read error: No matching responses found.", actuator.getName()));
+            }); 
 
             Pattern pattern = Pattern.compile(regex);
-            for (String line : responses) {
-                Matcher matcher = pattern.matcher(line);
+            for (Line line : responses) {
+                Matcher matcher = pattern.matcher(line.getLine());
                 if (matcher.matches()) {
                     Logger.trace("actuatorRead response: {}", line);
                     try {
@@ -699,8 +790,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                     }
                 }
             }
-
-            throw new Exception(String.format("Actuator \"%s\" read error: No matching responses found.", actuator.getName()));
+            // This should not happen, as the regex is pre-matched in receiveResponses().
+            throw new Exception(String.format("Actuator \"%s\" read error: Regex matching response vanished.", actuator.getName()));
         }
         else {
             throw new Exception(String.format("Actuator \"%s\" read error: Driver configuration is missing ACTUATOR_READ_COMMAND or ACTUATOR_READ_REGEX.", actuator.getName()));
@@ -721,14 +812,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         disconnectRequested = true;
         connected = false;
 
-        try {
-            if (readerThread != null && readerThread.isAlive()) {
-                readerThread.join(3000);
-            }
-        }
-        catch (Exception e) {
-            Logger.error("disconnect()", e);
-        }
+        disconnectThreads();
 
         try {
             getCommunications().disconnect();
@@ -739,173 +823,314 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         disconnectRequested = false;
     }
 
+    /**
+     *  Disconnect the threads used for communications.
+     */
+    protected void disconnectThreads() {
+        try {
+            if (readerThread != null && readerThread.isAlive()) {
+                readerThread.join(3000);
+            }
+        }
+        catch (Exception e) {
+            Logger.error("disconnect()", e);
+        }
+    }
+
     @Override
     public void close() throws IOException {
         super.close();
     }
 
-    protected List<String> sendGcode(String gCode) throws Exception {
-        return sendGcode(gCode, timeoutMilliseconds);
+    protected void sendGcode(String gCode) throws Exception {
+        sendGcode(gCode, timeoutMilliseconds);
     }
 
-    protected List<String> sendGcode(String gCode, long timeout) throws Exception {
+    protected long getTimeoutAtMachineSpeed() {
+        return timeoutMilliseconds == -1 ?
+                timeoutMilliseconds 
+                : Math.round(timeoutMilliseconds/Math.max(0.05, Configuration.get().getMachine().getSpeed()));
+    }
+
+    protected void sendGcode(String gCode, long timeout) throws Exception {
         if (gCode == null) {
-            return new ArrayList<>();
+            return;
         }
-        List<String> responses = new ArrayList<>();
         for (String command : gCode.split("\n")) {
             command = command.trim();
             if (command.length() == 0) {
                 continue;
             }
-            responses.addAll(sendCommand(command, timeout));
+            sendCommand(command, timeout);
         }
-        return responses;
     }
 
-    public List<String> sendCommand(String command) throws Exception {
-        return sendCommand(command, timeoutMilliseconds);
+    public void sendCommand(String command) throws Exception {
+        sendCommand(command, timeoutMilliseconds);
     }
 
-    public List<String> sendCommand(String command, long timeout) throws Exception {
-        List<String> responses = new ArrayList<>();
-
-        // Read any responses that might be queued up so that when we wait
-        // for a response to a command we actually wait for the one we expect.
-        responseQueue.drainTo(responses);
-
-        Logger.debug("sendCommand({}, {})...", command, timeout);
-
-        // Send the command, if one was specified
-        if (command != null) {
-            if (backslashEscapedCharactersEnabled) {
-                command = unescape(command);
-            }
-            Logger.trace("[{}] >> {}", getCommunications().getConnectionName(), command);
-            try {
-                getCommunications().writeLine(command);
-            }
-            catch (IOException ex) {
-                Logger.error("Failed to write command: ", command);
-                disconnect();
-                Configuration.get().getMachine().setEnabled(false);
-            }
+    public void sendCommand(String command, long timeout) throws Exception {
+        // An error may have popped up in the meantime. Check and bail on it, before sending the next command. 
+        bailOnError();
+        if (command == null) {
+            return;
         }
 
-        // Collect responses till we find one with the confirmation or we timeout. Return
-        // the collected responses.
-        if (timeout == -1) {
-            timeout = Long.MAX_VALUE;
+        Logger.debug("[{}] >> {}, {}", getCommunications().getConnectionName(), command, timeout);
+        command = preProcessCommand(command);
+        // After sending this, we want one more confirmation. 
+        long wantedConfirmations = receivedConfirmations.get() + 1;
+        try {
+            // Send the command.
+            getCommunications().writeLine(command);
         }
-        long t = System.currentTimeMillis();
-        boolean found = false;
-        boolean foundError = false;
-        String errorResponse = "";
-        // Loop until we've timed out
-        while (System.currentTimeMillis() - t < timeout) {
-            // Wait to see if a response came in. We wait up until the number of millis remaining
-            // in the timeout.
-            String response = responseQueue.poll(timeout - (System.currentTimeMillis() - t),
-                    TimeUnit.MILLISECONDS);
-            // If no response yet, try again.
-            if (response == null) {
-                continue;
-            }
-            // Store the response that was received
-            responses.add(response);
-            // If the response is an ok or error we're done
-            if (response.matches(getCommand(null, CommandType.COMMAND_CONFIRM_REGEX))) {
-                found = true;
-                break;
-            }
-
-            if (getCommand(null, CommandType.COMMAND_ERROR_REGEX) != null) {
-                if (response.matches(getCommand(null, CommandType.COMMAND_ERROR_REGEX))) {
-                    foundError = true;
-                    errorResponse = response;
-                    break;
-                }
-            }
+        catch (IOException ex) {
+            Logger.error("Failed to write command: ", command);
+            disconnect();
+            Configuration.get().getMachine().setEnabled(false);
         }
-        // If a command was specified and no confirmation was found it's a timeout error.
-        if (command != null & foundError) {
-            throw new Exception("Error response from controller: " + errorResponse);
-        }
-        if (command != null && !found) {
-            throw new Exception("Timeout waiting for response to " + command);
-        }
-
-        // Read any additional responses that came in after the initial one.
-        responseQueue.drainTo(responses);
-
-        Logger.debug("sendCommand({} {}, {}) => {}",
-                new Object[] {getCommunications().getConnectionName(), command, timeout == Long.MAX_VALUE ? -1 : timeout, responses});
-        return responses;
+        waitForConfirmation(command, timeout, wantedConfirmations);
     }
 
-    public void run() {
-        while (!disconnectRequested) {
-            String line;
-            try {
-                line = getCommunications().readLine();
-                if (line == null) {
-                    // Line read failed eg. due to socket closure
-                    Logger.error("Failed to read gcode response");
-                    return;
-                }
-                line = line.trim();
-            }
-            catch (TimeoutException ex) {
-                continue;
-            }
-            catch (IOException e) {
-                Logger.error("Read error", e);
+    protected void waitForConfirmation(String command, long timeout, long wantedConfirmations)
+            throws Exception {
+        // Wait until we get the confirmations count we want.
+        long t1 = System.currentTimeMillis() + ((timeout == -1) ? 
+                infinityTimeoutMilliseconds
+                : timeout);
+        // Loop until we've timed out.
+        do {
+            bailOnError();
+            if (receivedConfirmations.get() >= wantedConfirmations) {
+                Logger.trace("[{}] confirmed {}", getCommunications().getConnectionName(), command);
                 return;
             }
-            line = line.trim();
-            Logger.trace("[{}] << {}", getCommunications().getConnectionName(), line);
-            // extract a position report, if present
-            processPositionReport(line);
-            // add to the responseQueue (even if it happens to be a position report, it might still also contain the "ok"
-            // acknowledgment e.g. on Smoothieware)
-            responseQueue.offer(line);
+            // Need to wait.
+            Thread.yield();
+        }
+        while(System.currentTimeMillis() < t1);
+        // Timeout. 
+        throw new Exception("Timeout waiting for response to " + command);
+    }
+
+    protected void bailOnError() throws Exception {
+        if (errorResponse != null) {
+            Line error = errorResponse; 
+            errorResponse = null;
+            throw new Exception("Error response from controller: " + error);
+        }
+        if (! readerThread.isAlive()) {
+            throw new Exception("IO Error on reading from the controller.");
         }
     }
 
-    private boolean processPositionReport(String line) {
-        if (getCommand(null, CommandType.POSITION_REPORT_REGEX) == null) {
+    public List<Line> receiveResponses() throws Exception {
+        bailOnError();
+        List<Line> responses = new ArrayList<>();
+        // Read any responses that might be queued up.
+        responseQueue.drainTo(responses);
+        return responses;
+    }
+
+    @FunctionalInterface
+    public interface TimeoutAction {
+        List<Line> apply(List<Line> responses) throws Exception;
+    }
+
+    public List<Line> receiveResponses(String regex, long timeout, 
+            TimeoutAction timeoutAction)
+            throws Exception {
+        long t1 = System.currentTimeMillis() + ((timeout == -1) ?
+                infinityTimeoutMilliseconds
+                : timeout);
+        List<Line> responses = new ArrayList<>();
+        do{ 
+            responses.addAll(receiveResponses());
+            if (containsMatch(responses, regex)) {
+                return responses;
+            }
+        }
+        while (System.currentTimeMillis() < t1);
+        // Timeout expired, apply timeout action.
+        return timeoutAction.apply(responses);
+    }
+
+    protected String preProcessCommand(String command) {
+        if (removeComments || compressGcode) {
+            // See http://linuxcnc.org/docs/2.4/html/gcode_overview.html
+            int col = 0;
+            boolean insideComment = false;
+            boolean decimal = false;
+            int trailingZeroes = 0;
+            StringBuilder compressedCommand = new StringBuilder();
+            for (char ch : command.toCharArray()) {
+                col++;
+                if (ch == ' ') {
+                    // Note, in Gcode, spaces are allowed in the middle of decimals.
+                    if (compressGcode) {
+                        continue;
+                    }
+                }
+                else if (ch == '(') {
+                    trailingZeroes = compressDecimal(trailingZeroes, compressedCommand);
+                    decimal = false;
+                    insideComment = true;
+                    if (removeComments) {
+                        continue;
+                    }
+                }
+                else if (ch == ')') {
+                    insideComment = false;
+                    if (removeComments) {
+                        continue;
+                    }
+                }
+                else if (insideComment) {
+                    if (removeComments) {
+                        continue;
+                    }
+                }
+                else if (ch == ';') {
+                    trailingZeroes = compressDecimal(trailingZeroes, compressedCommand);
+                    decimal = false;
+                    if (removeComments) {
+                        break;
+                    }
+                    else {
+                        // Not removed, append as is.
+                        compressedCommand.append(command.substring(col-1));
+                        break;
+                    }
+                }
+                else if (ch == '.') {
+                    decimal = true;
+                    trailingZeroes = 1; // treat the dot as a trailing zero character
+                }
+                else if (ch >= '1' && ch <= '9') {
+                    trailingZeroes = 0;
+                }
+                else if (ch == '0') {
+                    if (decimal) {
+                        trailingZeroes++;
+                    }
+                }
+                else {
+                    trailingZeroes = compressDecimal(trailingZeroes, compressedCommand);
+                    decimal = false;
+                }
+                compressedCommand.append(ch);
+            }
+            trailingZeroes = compressDecimal(trailingZeroes, compressedCommand);
+            decimal = false;
+            command = compressedCommand.toString();
+            Logger.trace("Compressed Gcode: {}", command);
+        }
+        if (backslashEscapedCharactersEnabled) {
+            command = unescape(command);
+        }
+        return command;
+    }
+
+    private int compressDecimal(int trailingZeroes, StringBuilder compressedCommand) {
+        if (compressGcode && trailingZeroes > 0) {
+            // Cut away trailing zeroes.
+            compressedCommand.delete(compressedCommand.length() - trailingZeroes, compressedCommand.length());
+        }
+        return 0;
+    }
+
+    protected class ReaderThread extends Thread {
+        @Override
+        public void run() {
+            while (!disconnectRequested) {
+                String receivedLine;
+                try {
+                    receivedLine = getCommunications().readLine();
+                    if (receivedLine == null) {
+                        // Line read failed eg. due to socket closure
+                        Logger.error("Failed to read gcode response");
+                        return;
+                    }
+                    receivedLine = receivedLine.trim();
+                }
+                catch (TimeoutException ex) {
+                    continue;
+                }
+                catch (IOException e) {
+                    Logger.error("Read error", e);
+                    return;
+                }
+                Line line = new Line(receivedLine);
+                Logger.trace("[{}] << {}", getCommunications().getConnectionName(), line);
+                // Process the response.
+                processResponse(line);
+                // Add to the responseQueue for further processing by the caller.
+                responseQueue.offer(line);
+            }
+            Logger.trace("[{}] diconnectRequested, bye-bye.", getCommunications().getConnectionName());
+        }
+    }
+
+    /**
+     * Process a received response immediately. 
+     *  
+     * @param line
+     */
+    protected void processResponse(Line line) {
+        String regex = getCommand(null, CommandType.COMMAND_CONFIRM_REGEX);
+        if (regex != null && line.getLine().matches(regex)) {
+            receivedConfirmations.incrementAndGet();
+        }
+        regex = getCommand(null, CommandType.COMMAND_ERROR_REGEX);
+        if (regex != null && line.getLine().matches(regex)) {
+            errorResponse = line;
+        }
+        processPositionReport(line);
+    }
+
+    protected boolean processPositionReport(Line line) {
+        String regex = getCommand(null, CommandType.POSITION_REPORT_REGEX); 
+        if (regex == null) {
             return false;
         }
 
-        if (!line.matches(getCommand(null, CommandType.POSITION_REPORT_REGEX))) {
+        if (!line.getLine().matches(regex)) {
             return false;
         }
 
         Logger.trace("Position report: {}", line);
         ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
         Matcher matcher =
-                Pattern.compile(getCommand(null, CommandType.POSITION_REPORT_REGEX)).matcher(line);
+                Pattern.compile(regex).matcher(line.getLine());
         matcher.matches();
-        for (org.openpnp.spi.Axis axis : machine.getAxes()) {
-            if (axis instanceof ReferenceControllerAxis) {
-                if (((ReferenceControllerAxis) axis).getDriver() == this) {
-                    try {
-                        String s = matcher.group(axis.getName());
-                        Double d = Double.valueOf(s);
-                        ((ReferenceControllerAxis) axis).setDriverCoordinate(d);
-                    }
-                    catch (IllegalArgumentException e) {
-                        // Axis is not present in pattern. That's OK. 
-                    }
-                    catch (Exception e) {
-                        Logger.warn("Error processing position report for axis {}: {}", axis.getName(), e);
-                    }
-                }
+        AxesLocation position = AxesLocation.zero;
+        for (ControllerAxis axis : new AxesLocation(machine).getAxes(this)) {
+            try {
+                String variable = axis.getLetter(); 
+                String s = matcher.group(variable);
+                Double d = Double.valueOf(s);
+                position = position.put(new AxesLocation(axis, new Length(d, getUnits())));
+            }
+            catch (IllegalArgumentException e) {
+                // Axis is not present in pattern. That's a warning, but might not be supported by controller, so we let it go. 
+                Logger.warn("Axis {} letter {} missing in POSITION_REPORT_REGEX groups.", axis.getName(), axis.getLetter());
+            }
+            catch (Exception e) {
+                Logger.warn("Error processing position report for axis {}: {}", axis.getName(), e);
             }
         }
+        // Store the latest momentary position.
+        lastMomentaryLocation = position;
+        lastMomentaryTime = line.getTransmissionTime();
 
-        for (Head head : Configuration.get().getMachine().getHeads()) {
-            machine.fireMachineHeadActivity(head);
+        if (motionPending) {
+            Logger.warn("Position report cannot be processed when motion might still be pending. Waiting for completion missing/check Machine Coordination on Actuators.", 
+                    lastMomentaryLocation);
+        }
+        else {
+            // Store the actual driver location. This is used to re-sync OpenPnP to the actual controller 
+            // location, when its axes might have moved/homed etc. behind its back. 
+            position.setToDriverCoordinates(this);
         }
         return true;
     }
@@ -1016,6 +1241,22 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         this.backslashEscapedCharactersEnabled = backslashEscapedCharactersEnabled;
     }
 
+    public boolean isRemoveComments() {
+        return removeComments;
+    }
+
+    public void setRemoveComments(boolean removeComments) {
+        this.removeComments = removeComments;
+    }
+
+    public boolean isCompressGcode() {
+        return compressGcode;
+    }
+
+    public void setCompressGcode(boolean compressGcode) {
+        this.compressGcode = compressGcode;
+    }
+
     public boolean isUsingLetterVariables() {
         return usingLetterVariables;
     }
@@ -1032,7 +1273,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
     public void setSupportingPreMove(boolean supportingPreMove) {
         this.supportingPreMove = supportingPreMove;
     }
-
 
     @Deprecated
     public Axis getLegacyAxis(HeadMountable hm, Type type) {
@@ -1180,85 +1420,100 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
 
     @Deprecated
     @Override
-    public void migrateDriver(ReferenceMachine machine) throws Exception {
+    public void migrateDriver(Machine machine) throws Exception {
         machine.addDriver(this);
-        // Legacy type variables.
-        this.usingLetterVariables = false;
-        if (machine.getDrivers().size() > 1 
-                && getName().equals("GcodeDriver")) {
-            // User has left default name. Make it a bit clearer.
-            setName("GcodeDriver "+machine.getDrivers().size());
-        }
-        if (axes != null) {
-            ReferenceLinearTransformAxis nonSquarenessAxis = null;
-            for (Axis legacyAxis : axes) {
-                ReferenceControllerAxis controllerAxis = migrateAxis(machine, legacyAxis);
-                AbstractTransformedAxis transformedAxis = null;
-                AbstractAxis axis = controllerAxis;
-                if (legacyAxis.transform != null) {
-                    transformedAxis = migrateAxis(machine, controllerAxis, legacyAxis.transform);
-                    axis = transformedAxis;
-                }
-                if (axis != null) { 
-                    if (axis.getType() == Type.X) {
-                        if (nonSquarenessFactor != 0.0) {
-                            // Migrate the non-squareness factor as a new axis transform.
-                            nonSquarenessAxis = new ReferenceLinearTransformAxis();
-                            nonSquarenessAxis.setType(axis.getType());
-                            // Take over the name and rename the input axis instead.
-                            nonSquarenessAxis.setName(axis.getName());
-                            axis.setName(axis.getName()+"-non-square");
-                            nonSquarenessAxis.setInputAxisX(axis);
-                            nonSquarenessAxis.setFactorX(1.0);
-                            machine.addAxis(nonSquarenessAxis);
-                            // make this the axis that is assigned to the HeadMountables.
-                            axis = nonSquarenessAxis;
-                        }
+        if (machine instanceof ReferenceMachine) {
+            // Legacy type variables.
+            this.usingLetterVariables = false;
+            if (machine.getDrivers().size() > 1 
+                    && getName().equals("GcodeDriver")) {
+                // User has left default name. Make it a bit clearer.
+                setName("GcodeDriver "+machine.getDrivers().size());
+            }
+            if (axes != null) {
+                ReferenceLinearTransformAxis nonSquarenessAxis = null;
+                for (Axis legacyAxis : axes) {
+                    ReferenceControllerAxis controllerAxis = migrateAxis((ReferenceMachine) machine, legacyAxis);
+                    AbstractTransformedAxis transformedAxis = null;
+                    AbstractAxis axis = controllerAxis;
+                    if (legacyAxis.transform != null) {
+                        transformedAxis = migrateAxis((ReferenceMachine) machine, controllerAxis, legacyAxis.transform);
+                        axis = transformedAxis;
                     }
-                    else if (axis.getType() == Type.Y) {
-                        if (nonSquarenessAxis != null) {
-                            nonSquarenessAxis.setInputAxisY(axis);
-                            // Note, in the original code the nonSquarenessFactor was applied transformed --> raw.
-                            // The new implementation as a TransformedAxis reverses this to raw --> transformed to unify the 
-                            // thinking. Therefore we need to invert the sign.  
-                            nonSquarenessAxis.setFactorY(-nonSquarenessFactor);
-                            // Make this a compensation transformation so it can be filtered out on demand.
-                            nonSquarenessAxis.setCompensation(true);
+                    if (axis != null) { 
+                        if (axis.getType() == Type.X) {
+                            if (nonSquarenessFactor != 0.0) {
+                                // Migrate the non-squareness factor as a new axis transform.
+                                nonSquarenessAxis = new ReferenceLinearTransformAxis();
+                                nonSquarenessAxis.setType(axis.getType());
+                                // Take over the name and rename the input axis instead.
+                                nonSquarenessAxis.setName(axis.getName());
+                                axis.setName(axis.getName()+"-non-square");
+                                nonSquarenessAxis.setInputAxisX(axis);
+                                nonSquarenessAxis.setFactorX(1.0);
+                                machine.addAxis(nonSquarenessAxis);
+                                // make this the axis that is assigned to the HeadMountables.
+                                axis = nonSquarenessAxis;
+                            }
                         }
-                    }
+                        else if (axis.getType() == Type.Y) {
+                            if (nonSquarenessAxis != null) {
+                                nonSquarenessAxis.setInputAxisY(axis);
+                                // Note, in the original code the nonSquarenessFactor was applied transformed --> raw.
+                                // The new implementation as a TransformedAxis reverses this to raw --> transformed to unify the 
+                                // thinking. Therefore we need to invert the sign.  
+                                nonSquarenessAxis.setFactorY(-nonSquarenessFactor);
+                                // Make this a compensation transformation so it can be filtered out on demand.
+                                nonSquarenessAxis.setCompensation(true);
+                            }
+                        }
 
-                    // Migrate axes on the default head. 
-                    for (Camera hm : machine.getDefaultHead().getCameras()) {
-                        migrateAssignAxis(legacyAxis, axis, hm);
-                        assignCameraVirtualAxes(machine, hm);
+                        // Migrate axes on the default head. 
+                        for (Camera hm : machine.getDefaultHead().getCameras()) {
+                            migrateAssignAxis(legacyAxis, axis, hm);
+                            assignCameraVirtualAxes((ReferenceMachine) machine, hm);
+                        }
+                        for (Nozzle hm : machine.getDefaultHead().getNozzles()) {
+                            migrateAssignAxis(legacyAxis, axis, hm);
+                        }
+                        for (Actuator hm : machine.getDefaultHead().getActuators()) {
+                            migrateAssignAxis(legacyAxis, axis, hm);
+                        }
                     }
-                    for (Nozzle hm : machine.getDefaultHead().getNozzles()) {
-                        migrateAssignAxis(legacyAxis, axis, hm);
-                    }
-                    for (Actuator hm : machine.getDefaultHead().getActuators()) {
-                        migrateAssignAxis(legacyAxis, axis, hm);
+                }
+                // lose them!
+                axes = null;
+            }
+            for (Head head : machine.getHeads()) {
+                // Migrate visual homing setting.
+                if (visualHomingEnabled) {
+                    // Assuming only one (sub-) driver will have this enabled.  
+                    // Set the legacy Visual Homing Method, @see VisualHomingMethod for more info.
+                    ((AbstractHead)head).setVisualHomingMethod(VisualHomingMethod.ResetToHomeLocation);
+                    Location homingFiducialLocation = this.homingFiducialLocation;
+                    // because squareness compensation is now properly applied to the homing fiducial location, we need to "unapply" it here.
+                    homingFiducialLocation = homingFiducialLocation
+                            .subtract(new Location(homingFiducialLocation.getUnits(), homingFiducialLocation.getY()*nonSquarenessFactor, 0, 0, 0));
+                    ((AbstractHead)head).setHomingFiducialLocation(homingFiducialLocation);
+                }
+                else {
+                    ((AbstractHead)head).setVisualHomingMethod(VisualHomingMethod.None);
+                }
+                for (Actuator actuator : head.getActuators()) {
+                    // This is not 100% foolproof. Theoretically an actuator could have been smeared across
+                    // multiple drivers e.g. ACTUATE_BOOLEAN_COMMAND in the main driver, ACTUATOR_READ_COMMAND in the
+                    // sub-driver. 
+                    // We simply no longer support that.  
+                    if (getCommand(actuator, CommandType.ACTUATE_BOOLEAN_COMMAND) != null 
+                            || getCommand(actuator, CommandType.ACTUATE_DOUBLE_COMMAND) != null 
+                            || getCommand(actuator, CommandType.ACTUATOR_READ_COMMAND) != null 
+                            || getCommand(actuator, CommandType.ACTUATOR_READ_WITH_DOUBLE_COMMAND) != null
+                            || getCommand(actuator, CommandType.ACTUATOR_READ_REGEX) != null) {
+                        actuator.setDriver(this);
                     }
                 }
             }
-            // lose them!
-            axes = null;
-        }
-        for (Head head : machine.getHeads()) {
-            // Migrate visual homing setting.
-            if (visualHomingEnabled) {
-                // Assuming only one (sub-) driver will have this enabled.  
-                // Set the legacy Visual Homing Method, @see VisualHomingMethod for more info.
-                ((AbstractHead)head).setVisualHomingMethod(VisualHomingMethod.ResetToHomeLocation);
-                Location homingFiducialLocation = this.homingFiducialLocation;
-                // because squareness compensation is now properly applied to the homing fiducial location, we need to "unapply" it here.
-                homingFiducialLocation = homingFiducialLocation
-                        .subtract(new Location(homingFiducialLocation.getUnits(), homingFiducialLocation.getY()*nonSquarenessFactor, 0, 0, 0));
-                ((AbstractHead)head).setHomingFiducialLocation(homingFiducialLocation);
-            }
-            else {
-                ((AbstractHead)head).setVisualHomingMethod(VisualHomingMethod.None);
-            }
-            for (Actuator actuator : head.getActuators()) {
+            for (Actuator actuator : machine.getActuators()) {
                 // This is not 100% foolproof. Theoretically an actuator could have been smeared across
                 // multiple drivers e.g. ACTUATE_BOOLEAN_COMMAND in the main driver, ACTUATOR_READ_COMMAND in the
                 // sub-driver. 
@@ -1271,32 +1526,19 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
                     actuator.setDriver(this);
                 }
             }
-        }
-        for (Actuator actuator : machine.getActuators()) {
-            // This is not 100% foolproof. Theoretically an actuator could have been smeared across
-            // multiple drivers e.g. ACTUATE_BOOLEAN_COMMAND in the main driver, ACTUATOR_READ_COMMAND in the
-            // sub-driver. 
-            // We simply no longer support that.  
-            if (getCommand(actuator, CommandType.ACTUATE_BOOLEAN_COMMAND) != null 
-                    || getCommand(actuator, CommandType.ACTUATE_DOUBLE_COMMAND) != null 
-                    || getCommand(actuator, CommandType.ACTUATOR_READ_COMMAND) != null 
-                    || getCommand(actuator, CommandType.ACTUATOR_READ_WITH_DOUBLE_COMMAND) != null
-                    || getCommand(actuator, CommandType.ACTUATOR_READ_REGEX) != null) {
-                actuator.setDriver(this);
+            // Migrate sub-drivers.
+            if (subDrivers != null) {
+                for (GcodeDriver gcodeDriver : subDrivers) {
+                    gcodeDriver.migrateDriver(machine);
+                }
+                // lose them!
+                subDrivers = null;
             }
-        }
-        // Migrate sub-drivers.
-        if (subDrivers != null) {
-            for (GcodeDriver gcodeDriver : subDrivers) {
-                gcodeDriver.migrateDriver(machine);
+            // Cleanup unneeded locations.
+            for (Head head : machine.getHeads()) {
+                ((AbstractHead) head).setMinLocation(null);
+                ((AbstractHead) head).setMaxLocation(null);
             }
-            // lose them!
-            subDrivers = null;
-        }
-        // Cleanup unneeded locations.
-        for (Head head : machine.getHeads()) {
-            ((AbstractHead) head).setMinLocation(null);
-            ((AbstractHead) head).setMaxLocation(null);
         }
     }
 
@@ -1326,6 +1568,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         }
         if (getLegacyAxis(hm, Type.Z) == legacyAxis) {
             ((AbstractHeadMountable)hm).setAxisZ(assignAxis);
+            if (hm instanceof ReferenceNozzle) {
+                ((ReferenceNozzle)hm).migrateSafeZ();
+            }
         }
         if (getLegacyAxis(hm, Type.Rotation) == legacyAxis) {
             ((AbstractHeadMountable)hm).setAxisRotation(assignAxis);
@@ -1408,5 +1653,4 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         @Attribute(required = false)
         private double scaleFactor = 1;
     }
-
 }

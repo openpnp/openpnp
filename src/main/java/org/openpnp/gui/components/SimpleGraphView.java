@@ -131,17 +131,23 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                     else if (yUnitFont < yUnit/2) {
                         yUnit /= 2;
                     }
-                    selectedX = null;
 
                     if (dataScale.getColor() != null) {
                         // Scale is colored -> draw it
                         g2d.setColor(dataScale.getColor());
+                        double yGap = 0.5;
+                        if (dataScale.isLabelShown()) {
+                            String text = dataScale.getLabel();
+                            //Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
+                            g2d.drawString(text, 0, (int)(yOrigin-(max.y-min.y)*yScale+fontAscent));
+                            yGap = 1.5;
+                        }
                         double yUnit0 = Math.ceil((min.y+yUnitFont*0.5)/yUnit)*yUnit;
-                        double yUnit1 = Math.floor((max.y-yUnitFont*0.5)/yUnit)*yUnit;
+                        double yUnit1 = Math.floor((max.y-yUnitFont*yGap)/yUnit)*yUnit;
 
                         if (yMouse != null) {
                             double y = (-yMouse + yOrigin)/yScale + min.y;
-                            drawYIndicator(g2d, dfm, fontAscent, w, min, yOrigin, yScale, yUnit, y,
+                            drawYIndicator(g2d, dfm, fontAscent, w, min, max, yOrigin, yScale, yUnit, y,
                                     dataScale.getColor());
                         }
                         else {
@@ -179,6 +185,7 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                                 setSelectedX((xMouse - xOrigin)/xScale + min.x);
                             }
                             if (selectedX != null) {
+                                // X indicator.
                                 String text = formatNumber(selectedX, xUnit*0.25);
                                 Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
                                 g2d.drawLine((int)(xOrigin+(selectedX-min.x)*xScale), h-1-(int)bounds.getWidth()-2, (int)(xOrigin+(selectedX-min.x)*xScale), 0);
@@ -211,13 +218,13 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                                 }
                             }
                         }
-
                     }
                     for (DataRow dataRow : dataScale.getDataRows()) {
                         Set<Double> xAxis = dataRow.getXAxis();
                         if (xAxis != null) {
                             double y0 = Double.NaN;
                             double x0 = Double.NaN;
+                            // Draw the actual curves.
                             g2d.setColor(dataRow.getColor());
                             for (double x : xAxis) {
                                 double y = dataRow.getDataPoint(x);
@@ -229,7 +236,7 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                                 y0 = y;
                             }
                             if (selectedX != null) {
-                                drawYIndicator(g2d, dfm, fontAscent, w, min, yOrigin, yScale, yUnit, 
+                                drawYIndicator(g2d, dfm, fontAscent, w, min, max, yOrigin, yScale, yUnit, 
                                         dataRow.getInterpolated(selectedX), dataRow.getColor());
                             }
                         }
@@ -245,9 +252,15 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
         }
     }
     protected void drawYIndicator(Graphics2D g2d, FontMetrics dfm, int fontAscent, int w,
-            Point2D.Double min, double yOrigin, double yScale, double yUnit, Double y,
+            Point2D.Double min, Point2D.Double max, double yOrigin, double yScale, double yUnit, Double y,
             Color color) {
         if (y == null) {
+            return;
+        }
+        if (y < min.y) {
+            return;
+        }
+        if (y > max.y) {
             return;
         }
         String text = formatNumber(y, yUnit*0.25);

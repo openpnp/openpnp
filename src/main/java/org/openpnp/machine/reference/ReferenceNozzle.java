@@ -15,6 +15,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceNozzleTip.VacuumMeasurementMethod;
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleCameraOffsetWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleCompatibleNozzleTipsWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleConfigurationWizard;
@@ -27,6 +28,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
@@ -57,8 +59,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     @Attribute(required = false)
     private boolean nozzleTipChangedOnManualFeed = false;
 
+    @Deprecated
     @Element(required = false)
-    protected Length safeZ = new Length(0, LengthUnit.Millimeters);
+    protected Length safeZ = null;
 
     @Attribute(required = false)
     private boolean enableDynamicSafeZ = false;
@@ -379,16 +382,17 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     @Override 
-    public Length getEffectiveSafeZ() {
+    public Length getEffectiveSafeZ() throws Exception {
         Length safeZ = super.getEffectiveSafeZ();
+        if (safeZ == null) {
+            throw new Exception("Nozzle "+getName()+" has no Z axis with Safe Zone mapped.");
+        }
         if (enableDynamicSafeZ) { 
             // if a part is loaded, decrease (higher) safeZ
             if (part != null) {
                 safeZ = safeZ.add(part.getHeight());
-            }
-            // make sure safeZ is never above 0
-            if (safeZ.getValue() > 0 ) {
-                safeZ.setValue(0);
+                // Note, the safeZ value will be validated in moveToSafeZ()
+                // to make sure it is not outside the Safe Z Zone.
             }
         }
         return safeZ;
@@ -691,17 +695,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     @Override
     public String toString() {
         return getName() + " " + getId();
-    }
-
-    @Override
-    public Length getSafeZ() {
-        return safeZ;
-    }
-
-    public void setSafeZ(Length safeZ) {
-        Object oldValue = this.safeZ;
-        this.safeZ = safeZ;
-        firePropertyChange("safeZ", oldValue, safeZ);
     }
 
     protected ReferenceMachine getMachine() {
@@ -1089,5 +1082,31 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
         // success
         return true;
+    }
+
+    @Deprecated
+    public void migrateSafeZ() {
+        if (safeZ == null) {
+            safeZ = new Length(0, LengthUnit.Millimeters);
+        }
+        CoordinateAxis coordAxis = getCoordinateAxisZ();
+        if (coordAxis instanceof ReferenceControllerAxis) {
+            ReferenceControllerAxis rawAxis = (ReferenceControllerAxis) coordAxis; 
+            try {
+                Length rawZ = headMountableToRawZ(rawAxis, safeZ);
+                rawAxis.setSafeZoneLow(rawZ);
+                rawAxis.setSafeZoneLowEnabled(true);
+                rawAxis.setSafeZoneHigh(rawZ);
+                rawAxis.setSafeZoneHighEnabled(true);
+                // Get rid of the old setting.
+                safeZ = null;
+            }
+            catch (Exception e) {
+                Logger.error(e);
+            }
+        }
+        else if (coordAxis != null) {
+            coordAxis.setHomeCoordinate(safeZ);
+        }
     }
 }

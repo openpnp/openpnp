@@ -58,6 +58,12 @@ public interface ControllerAxis extends LinearInputAxis, CoordinateAxis {
     
     void setDriverLengthCoordinate(Length coordinate);
 
+    /**
+     * Get the nth order motion limit in AxesLocation units (mm) per second^n.
+     * 
+     * @param order
+     * @return 
+     */
     double getMotionLimit(int order);
 
     /**

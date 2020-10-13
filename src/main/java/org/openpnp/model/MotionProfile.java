@@ -26,7 +26,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
-import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -44,7 +43,8 @@ public class MotionProfile {
     double [] a = new double[segments+1];
     double [] v = new double[segments+1];
     double [] j = new double[segments+1];
-    double [] t = new double[segments+1];
+    // Time has one more for before/after wait time in synchronized moves.
+    double [] t = new double[segments+2]; 
 
     double sMin;
     double sMax;
@@ -55,34 +55,52 @@ public class MotionProfile {
     double tMin;
     double tMax;
 
+    Double initialTime;
+
     double sEntryControl;
     double sExitControl;
+    double tEntryControl;
+    double tExitControl;
 
     static final int iterations = 80;
     static final double vtol = 2.0;      // mm/s
     static final double atol = vtol*2;   // mm/s^2
-    static final double jtol = atol*6;   // mm/s^3
+    static final double jtol = atol*4;   // mm/s^3
     static final double ttol = 0.000001; // s 
+    // As we're handling millimeters and seconds, we can use a practical eps. 
+    static final double eps = 1e-8;
 
-    private int eval;
+    int eval;
 
-    private double time;
+    double time;
 
-    private double solvingTime;
+    double solvingTime;
 
-    private double sBound0;
+    double sBound0;
+    double sBound1;
+    double tSBound0;
+    double tSBound1;
 
-    private double sBound1;
+    double vBound0;
+    double tVBound0;
+    double vBound1;
+    double tVBound1;
 
-    private double tBound0;
 
-    private double tBound1;
+    double aBound0;
+    double tABound0;
+    double aBound1;
+    double tABound1;
 
-    private int profileOptions;
+    int profileOptions;
 
     public enum ProfileOption {
-        Coordinated,
+        Coordinated, 
+        SynchronizeEarlyBird, 
+        SynchronizeLastMinute,
+        SynchronizeStraighten, 
         Jog,
+        RestrictToCoordinated,
         SimplifiedSCurve,
         UnconstrainedExit,
         UnconstrainedEntry, 
@@ -151,6 +169,12 @@ public class MotionProfile {
     public double getJerk(int segment) {
         return j[segment];
     }
+    public double getSegmentBeginTime(int segment) {
+        if (segment <= 0) {
+            return 0;
+        }
+        return t[segment] + getSegmentBeginTime(segment-1);
+    }
 
 
     public double getLocationMin() {
@@ -193,6 +217,10 @@ public class MotionProfile {
         this.aMaxExit = aMaxExit;
     }
 
+    public double getAccelerationMax() {
+        return Math.max(aMaxEntry, aMaxExit);
+    }
+
     public double getJerkMax() {
         return jMax;
     }
@@ -221,24 +249,64 @@ public class MotionProfile {
         return solvingTime;
     }
 
-    public double getLowerBoundary() {
+    public double getLowerSBoundary() {
         return sBound0;
     }
 
-    public double getHigherBoundary() {
+    public double getHigherSBoundary() {
         return sBound1;
     }
 
-    public double getLowerBoundary0Time() {
-        return tBound0;
+    public double getLowerSBoundary0Time() {
+        return tSBound0;
     }
 
-    public double getHigherBoundaryTime() {
-        return tBound1;
+    public double getHigherSBoundaryTime() {
+        return tSBound1;
+    }
+
+    public double getLowerVBoundary() {
+        return vBound0;
+    }
+
+    public double getHigherVBoundary() {
+        return vBound1;
+    }
+
+    public double getLowerVBoundary0Time() {
+        return tVBound0;
+    }
+
+    public double getHigherVBoundaryTime() {
+        return tVBound1;
+    }
+
+    public double getLowerABoundary() {
+        return aBound0;
+    }
+
+    public double getHigherABoundary() {
+        return aBound1;
+    }
+
+    public double getLowerABoundary0Time() {
+        return tABound0;
+    }
+
+    public double getHigherABoundaryTime() {
+        return tABound1;
     }
 
     public boolean isSolved() {
         return hasOption(ProfileOption.Solved);
+    }
+
+    public boolean isEmpty() {
+        return s[0] == s[segments]
+                && v[0] == 0 
+                && v[segments] == 0
+                && a[0] == 0
+                && a[segments] == 0;
     }
 
     public double getProfileVelocity(MotionControlType motionControlType) {
@@ -246,28 +314,16 @@ public class MotionProfile {
             return vMax;
         }
         else {
-            // TODO: for advanced motion planning: calculate the real maximum over the profile, for cases with entry/exit conditions and/or tMin != 0
-            return Math.abs(v[4]);
+            return Math.max(Math.abs(vBound0), Math.abs(vBound1));
         }
     }
 
-    public double getProfileEntryAcceleration(MotionControlType motionControlType) {
+    public double getProfileAcceleration(MotionControlType motionControlType) {
         if (motionControlType == MotionControlType.EuclideanAxisLimits) {
-            return aMaxEntry;
+            return Math.max(aMaxEntry, aMaxExit);
         }
         else {
-            // TODO: for advanced motion planning: calculate the real maximum over the profile, for cases with entry/exit conditions. 
-            return Math.abs(a[2]);
-        }
-    }
-
-    public double getProfileExitAcceleration(MotionControlType motionControlType) {
-        if (motionControlType == MotionControlType.EuclideanAxisLimits) {
-            return aMaxExit;
-        }
-        else {
-         // TODO: for advanced motion planning: calculate the real maximum over the profile, for cases with entry/exit conditions. 
-            return Math.abs(a[6]);
+            return Math.max(Math.abs(aBound0), Math.abs(aBound1));
         }
     }
 
@@ -285,14 +341,15 @@ public class MotionProfile {
     }
 
     protected double getMomentary(double ts, double f0, double f7, BiFunction<Integer, Double, Double> f) {
-        if (ts <= 0) {
+        if (ts <= t[0]) {
             return f0;
         }
+        ts -= t[0];
         if (ts >= time) {
             return f7;
         }
         for (int i = 1; i <= segments; i++) {
-            if (ts <= t[i]) {
+            if (ts < t[i]) {
                 return f.apply(i, ts);
             }
             ts -= t[i];
@@ -300,20 +357,26 @@ public class MotionProfile {
         return f7;
     }
 
-    public double getMomentaryLocation(double time) { // s0 + V0*t + 1/2*a0*t^2 + 1/6*j*t^3
-        return getMomentary(time, s[0], s[segments], (i, ts) -> (s[i-1] + v[i-1]*ts + 1./2*a[i-1]*Math.pow(ts, 2) + 1./6*j[i-1]*Math.pow(ts, 3)));
+    public double getMomentaryLocation(double time) { 
+        return getMomentary(time, s[0], s[segments], 
+                // s0 + V0*t + 1/2*a0*t^2 + 1/6*j*t^3
+                (i, ts) -> (s[i-1] + v[i-1]*ts + 1./2*a[i-1]*Math.pow(ts, 2) + 1./6*j[i-1]*Math.pow(ts, 3)));
     }
 
-    public double getMomentaryVelocity(double time) { // V0 + a0*t + 1/2*j*t^2
-        return getMomentary(time, v[0], v[segments], (i, ts) -> (v[i-1] + a[i-1]*ts + 1./2*j[i-1]*Math.pow(ts, 2)));
+    public double getMomentaryVelocity(double time) { 
+        return getMomentary(time, v[0], v[segments], 
+                // V0 + a0*t + 1/2*j*t^2
+                (i, ts) -> (v[i-1] + a[i-1]*ts + 1./2*j[i-1]*Math.pow(ts, 2)));
     }
 
-    public double getMomentaryAcceleration(double time) { // a0 + j*t
-        return getMomentary(time, a[0], a[segments], (i, ts) -> (a[i-1] + j[i-1]*ts));
+    public double getMomentaryAcceleration(double time) { 
+        return getMomentary(time, a[0], isConstantAcceleration() ? 0 : a[segments], 
+                // a0 + j*t
+                (i, ts) -> (a[i-1] + j[i-1]*ts));
     }
 
     public double getMomentaryJerk(double time) { 
-        return getMomentary(time, 0, 0, (i, ts) -> (j[i-1]));
+        return getMomentary(time, j[0], 0, (i, ts) -> (j[i-1]));
     }
 
     public enum ErrorState {
@@ -346,10 +409,8 @@ public class MotionProfile {
         }
     }
 
-    // As we're handling millimeters and seconds, we can use a practical eps. 
-    static final double eps = 1e-8;
     public ErrorState checkValidity() {
-        // Assert hard constraints
+        // Phase 1: Assert hard constraints
         // Assert continuity.
         double tSum = 0;
         for (int i = 0; i <= segments; i++) {
@@ -361,31 +422,42 @@ public class MotionProfile {
                     && Double.isFinite(j[i]))) {
                 return ErrorState.SolutionNotFinite;
             }
-            if (i == 0) {
-                if (t[i] != 0) {
-                    return ErrorState.NegativeSegmentTime;
-                }
+            // Check timing.
+            if (t[i] < (i == 4 ? -ttol : -eps)) {
+                return ErrorState.NegativeSegmentTime;
             }
-            else {
-                // Check timing.
-                if (t[i] < -eps) {
-                    return ErrorState.NegativeSegmentTime;
-                }
-                tSum += t[i];
+            tSum += t[i];
+            if (i > 0) {
                 // Check continuity.
-                if (mismatch(s[i], s[i-1] + v[i-1]*t[i] + 1./2*a[i-1]*Math.pow(t[i], 2) + 1./6*j[i-1]*Math.pow(t[i], 3))) {
+                if (mismatch(s[i], s[i-1] + v[i-1]*t[i] + 1./2*a[i-1]*Math.pow(t[i], 2) + 1./6*j[i-1]*Math.pow(t[i], 3), eps)) {
                     return ErrorState.LocationDiscontinuity;
                 }
-                if (mismatch(v[i], v[i-1] + a[i-1]*t[i] + 1./2*j[i-1]*Math.pow(t[i], 2))) {
+                if (mismatch(v[i], v[i-1] + a[i-1]*t[i] + 1./2*j[i-1]*Math.pow(t[i], 2), eps)) {
                     return ErrorState.VelocityDiscontinuity;
                 }
-                if (mismatch(a[i], a[i-1] + j[i-1]*t[i]) && !isConstantAcceleration()) {
+                if (!isConstantAcceleration() && mismatch(a[i], a[i-1] + j[i-1]*t[i], eps)) {
                     return ErrorState.AccelerationDiscontinuity;
                 }
             }
         }
-        // Check time sum constraints-.
-        if (mismatch(tSum, time)) {
+        tSum += t[segments+1];
+        // Check before/after dwell time.
+        if (t[0] > eps && v[0] != 0) {
+            return ErrorState.VelocityDiscontinuity;
+        }
+        if (t[segments+1] > eps && v[segments] != 0) {
+            return ErrorState.VelocityDiscontinuity;
+        }
+        if (!isConstantAcceleration()) {
+            if (t[0] > eps && a[0] != 0) {
+                return ErrorState.AccelerationDiscontinuity;
+            }
+            if (t[segments+1] > eps && a[segments] != 0) {
+                return ErrorState.AccelerationDiscontinuity;
+            }
+        }
+        // Check time sum constraints.
+        if (mismatch(tSum, time, eps)) {
             return ErrorState.TimeSumMismatch;
         }
         if (tSum < tMin - eps) {
@@ -398,10 +470,10 @@ public class MotionProfile {
         if (sBound0 < sMin - eps) {
             return ErrorState.MinLocationViolated;
         }
-        if (sBound1 > sMax - eps) {
+        if (sBound1 > sMax + eps) {
             return ErrorState.MaxLocationViolated;
         }
-        // Assert lesser constraints
+        // Phase 2 : Assert lesser constraints
         for (int i = 0; i <= segments; i++) {
             // Check constraints. 
             if (i < segments && s[i] < sMin - eps) { // With the bounds check this is redundant, but we want to double check.
@@ -427,27 +499,27 @@ public class MotionProfile {
         return null;
     }
 
-    private boolean mismatch(double a, double b) {
-        if (Math.abs(a-b) > eps) {
-            return true; // (debug point)
+    static boolean mismatch(double a, double b, double tol) {
+        if (Math.abs(a-b) > tol) {
+            return true; // (break-point)
         }
         return false;
     }
 
-    public static void validate(String label, MotionProfile profile) {
-        MotionProfile.ErrorState error = profile.checkValidity();
+    public void validate(String label) {
+        MotionProfile.ErrorState error = checkValidity();
         if (error != null) {
-            Logger.error(label+profile+" has error: "+error);
+            Logger.error(label+this+" has error: "+error);
         }
         else {
-            trace(label+": "+profile);
+            trace(label+": "+this);
         }
     }
 
     public static void validateProfiles(MotionProfile[] profiles) {
         for (int i = 0; i < profiles.length; i++) {
             MotionProfile profile = profiles[i];
-            validate("["+i+"]", profile);
+            profile.validate("["+i+"]");
         }
     }
 
@@ -479,7 +551,11 @@ public class MotionProfile {
         str.append(", tMin = ");
         str.append(String.format("%.6f", tMin));
         str.append("s, bounds s@t = ");
-        str.append(String.format("%.2f@%.4f, %.2f@%.4f", sBound0, tBound0, sBound1, tBound1));
+        str.append(String.format("%.2f@%.4f, %.2f@%.4f", sBound0, tSBound0, sBound1, tSBound1));
+        str.append(", v@t = ");
+        str.append(String.format("%.2f@%.4f, %.2f@%.4f", vBound0, tVBound0, vBound1, tVBound1));
+        str.append(", a@t = ");
+        str.append(String.format("%.2f@%.4f, %.2f@%.4f", aBound0, tABound0, aBound1, tABound1));
         str.append(", eval = ");
         str.append(eval);
         str.append(", ms = ");
@@ -498,7 +574,7 @@ public class MotionProfile {
     }
     public void solve(final int iterations, final double vtol, final double ttol) {
         double tStart = NanosecondTime.getRuntimeSeconds();
-        solveByVelocity(iterations, vtol, ttol);
+        solveForVelocity(iterations, vtol, ttol);
         // Result is now stored in the profile i.e. you can get v[4], a[2], a[6] to get the (signed) solution.
         solvingTime = NanosecondTime.getRuntimeSeconds() - tStart;
         setOption(ProfileOption.Solved);
@@ -509,30 +585,13 @@ public class MotionProfile {
         }
     }
 
-    boolean isConstantAcceleration() {
+    public boolean isConstantAcceleration() {
         return jMax == 0 || Double.isInfinite(jMax);
     }
-    public boolean solveByVelocity(final int iterations, final double vtol, final double ttol) {
+    public boolean solveForVelocity(final int iterations, final double vtol, final double ttol) {
         // Check for a null move. As we always handle all axes of the machine, we want to be fast with those.
-        if (s[0] == s[segments]
-                && v[0] == v[segments]
-                        && (isConstantAcceleration() || a[0] == a[segments])
-                                && (tMin == 0 || (v[0] == 0 && a[0] == 0))) {
-            // Null move
-            j[0] = 0;
-            for (int i = 1; i < segments; i++) {
-                s[i] = s[0];
-                v[i] = v[0];
-                a[i] = a[0];
-                j[i] = j[0];
-                t[i] = 0;
-            }
-            t[4] = tMin;
-            time = tMin;
-            sBound0 = sBound1 = s[0];
-            tBound0 = 0;
-            tBound1 = tMin;
-            return true; // -----------------> 
+        if (solveIfNullMove()) {
+            return true;
         }
 
         trace("\n### solving "+this);
@@ -559,11 +618,13 @@ public class MotionProfile {
         // Find the best solution:
         double bestTime = Double.POSITIVE_INFINITY;
         double bestVelocity = Double.NaN;
+        // HACK: for more precise solutions with near symmetric entry/exit conditions? 
+        double nearZero = 0; //(s[0] == s[segments] && (a[0] != a[segments] || v[0] != -v[segments]) ? vtol*0.1 : 0); 
 
         // Solver regions from -vMax to +vMax are split by effective entry/exit velocities and zero. 
         // Note, we do not allow solutions beyond vMax, even if the effective entry/exit velocities are beyond.
         double [] borders = new double [] {
-                -vMax, 0, vMax, Math.max(-vMax, Math.min(vMax, vEffEntry)), Math.max(-vMax, Math.min(vMax, vEffExit)) 
+                -vMax, -nearZero, 0, nearZero, vMax, Math.max(-vMax, Math.min(vMax, vEffEntry)), Math.max(-vMax, Math.min(vMax, vEffExit)) 
         };
         Arrays.sort(borders);
         int [][] regions = new int[borders.length-1][];
@@ -681,10 +742,10 @@ public class MotionProfile {
                     tResult = sResult > 0 ? Double.POSITIVE_INFINITY : Double.NEGATIVE_INFINITY;
                 }
                 // Consider valid border cases as solutions.
-                if (sResult >= -stol && (tMin == 0 || tResult >= tMin-ttol) && tResult < bestTime) {
+                else if (sResult >= -stol && (tMin == 0 || tResult >= tMin-ttol) && tResult < bestTime) {
                     bestVelocity = vPeak;
                     bestTime = tResult;
-                    trace("border case t "+vPeak+", s="+sResult+", t="+tResult);
+                    trace("border case v="+vPeak+", s="+sResult+", t="+tResult+" "+this);
                 }
             }
         }
@@ -858,7 +919,7 @@ public class MotionProfile {
         if (tMin > 0 && tMin != time) {
             if (Math.abs(time/tMin - 1) < 0.001) {
                 // The solver may have slightly approximated. Stretch the profile into the exact minimum time. 
-                if (retimeProfile(tMin)) {
+                if (retimeProfile()) {
                     trace("    retimed tMin "+tMin+" time "+time);
                 }
                 else {
@@ -871,7 +932,40 @@ public class MotionProfile {
         }
         return true;
     }
-    protected double profileSignum(double vEffEntry, double vEffExit) {
+    public boolean solveIfNullMove() {
+        if (s[0] == s[segments]
+                && v[0] == v[segments]
+                        && (isConstantAcceleration() || a[0] == a[segments])
+                        && (tMin == 0 || (v[0] == 0 && a[0] == 0))) {
+            // Null move
+            t[0] = 0;
+            j[0] = 0;
+            for (int i = 1; i < segments; i++) {
+                s[i] = s[0];
+                v[i] = v[0];
+                a[i] = a[0];
+                j[i] = j[0];
+                t[i] = 0;
+            }
+            t[segments] = 0;
+            t[segments+1] = 0;
+            j[segments] = 0;
+            t[4] = tMin;
+            time = tMin;
+            sBound0 = sBound1 = s[0];
+            tSBound0 = 0;
+            tSBound1 = tMin;
+            vBound0 = vBound1 = v[0];
+            tVBound0 = 0;
+            tVBound1 = tMin;
+            aBound0 = aBound1 = a[0];
+            tABound0 = 0;
+            tABound1 = tMin;
+            return true; // -----------------> 
+        }
+        return false;
+    }
+    public double profileSignum(double vEffEntry, double vEffExit) {
         double signum = Math.signum(s[segments]-s[0]);
         if (signum == 0) {
             // Zero displacement.
@@ -882,7 +976,7 @@ public class MotionProfile {
             }
             // TODO: if this is still zero we just assume it's completely symmetric, but this might not be true
             // if the V&a mix are not the same on entry/exit and by chance still cancel out in the effective speed. 
-            // We would need to calculate the displacement to still-stand and compare.
+            // We would need to calculate the displacement to still-stand and compare. For now, computeProfile() has to cope.
             if (signum == 0) {
                 trace("*** signum 0");
             }
@@ -934,6 +1028,8 @@ public class MotionProfile {
         boolean sAscending = sResult0 < sResult1; 
         boolean tAscending = tResult0 < tResult1; 
 
+        final double maxMagnitude = Math.min((vPeak1 - vPeak0)*0.00001, 1);
+
         for (int iter = 0; iter <= iterations; iter++) {
 
             // Compute the profile with the given velocity limit.
@@ -942,7 +1038,7 @@ public class MotionProfile {
             double sResult = sign*(s[4] - s[3]);
             double tResult = time;
             trace("vPeak = "+vPeak+" s="+sResult+" t-tMin="+(time-tMin)+" "+this);
-            double magnitude = Math.max(eps, Math.min(1.0, 0.0001*(Math.abs(s[3]-s[0])+Math.abs(s[segments]-s[4]))));
+            double magnitude = Math.max(eps, Math.min(maxMagnitude, 0.0001*(Math.abs(s[3]-s[0])+Math.abs(s[segments]-s[4]))));
             if (Math.abs(vPeak - vSecant) < magnitude*vtol) {
                 converging++;
             }
@@ -1018,10 +1114,13 @@ public class MotionProfile {
      * Recalculate the profile to make sure it takes the given amount of time.
      * @param newTime
      */
-    private boolean retimeProfile(double newTime) {
-        if (newTime != time && newTime > 0.0 && time > 0) {
+    public boolean retimeProfile() {
+        if (solveIfNullMove()) {
+            return true;
+        }
+        else if (tMin != time && tMin > 0.0 && time > 0) {
             // The derivatives need to be scaled to the power of the order of the derivative.
-            double vFactor = time/newTime; 
+            double vFactor = time/tMin; 
             double aFactor = vFactor*vFactor;
             double jFactor = aFactor*vFactor;
             for (int i = 0; i <= segments; i++) {
@@ -1030,16 +1129,20 @@ public class MotionProfile {
                 a[i] *= aFactor;
                 j[i] *= jFactor;
             }
-            time = newTime;
+            t[segments+1] /= vFactor;
+            time = tMin;
+            computeBounds();
             return true;
         }
         return false;
     }
 
-    protected void assertSolved() {
+    public boolean assertSolved() {
         if (!hasOption(ProfileOption.Solved)) {
             solve();
+            return true;
         }
+        return false;
     }
 
     public static void coordinateProfiles(MotionProfile [] profiles) {
@@ -1060,53 +1163,58 @@ public class MotionProfile {
     }
 
     public static void coordinateProfilesToLead(MotionProfile[] profiles, MotionProfile leadProfile) {
-        double leadDist = leadProfile.s[segments]-leadProfile.s[0];
         for (MotionProfile profile : profiles) { 
             if (profile != leadProfile) {
-                double factor; 
-                if (leadDist == 0) {
-                    factor = 0;
-                }
-                else {
-                    factor = (profile.s[segments]-profile.s[0])/leadDist;
-                }
-                if (factor == 0) {
-                    for (int i = 0; i <= segments; i++) {
-                        profile.t[i] = 0;
-                        profile.s[i] = profile.s[0];
-                        profile.v[i] = 0;
-                        profile.a[i] = 0;
-                        profile.j[i] = 0;
-                    }
-                    profile.t[4] = leadProfile.time;
-                }
-                else {
-                    for (int i = 0; i <= segments; i++) {
-                        profile.t[i] = leadProfile.t[i];
-                        profile.s[i] = (leadProfile.s[i] - leadProfile.s[0])*factor + profile.s[0];
-                        profile.v[i] = leadProfile.v[i]*factor;
-                        profile.a[i] = leadProfile.a[i]*factor;
-                        profile.j[i] = leadProfile.j[i]*factor;
-                    }
-                }
-                profile.time = leadProfile.time;
-                profile.tMin = leadProfile.tMin;
-                profile.computeBounds();
-                // Treat as if solved.
-                profile.eval = 0;
-                profile.solvingTime = 0;
-                profile.setOption(ProfileOption.Solved);
+                profile.coordinateProfileToLead(leadProfile);
             }
         }
+    }
+    public void coordinateProfileToLead(MotionProfile leadProfile) {
+        double leadDist = leadProfile.s[segments]-leadProfile.s[0];
+        double factor; 
+        if (leadDist == 0) {
+            factor = 0;
+        }
+        else {
+            factor = (s[segments]-s[0])/leadDist;
+        }
+        if (factor == 0) {
+            for (int i = 0; i <= segments; i++) {
+                t[i] = 0;
+                s[i] = s[0];
+                v[i] = 0;
+                a[i] = 0;
+                j[i] = 0;
+            }
+            t[4] = leadProfile.time;
+        }
+        else {
+            for (int i = 0; i <= segments; i++) {
+                t[i] = leadProfile.t[i];
+                s[i] = (leadProfile.s[i] - leadProfile.s[0])*factor + s[0];
+                v[i] = leadProfile.v[i]*factor;
+                a[i] = leadProfile.a[i]*factor;
+                j[i] = leadProfile.j[i]*factor;
+            }
+        }
+        time = leadProfile.time;
+        tMin = leadProfile.tMin;
+        computeBounds();
+        // Treat as if solved.
+        eval = 0;
+        solvingTime = 0;
+        setOption(ProfileOption.Solved);
     }
 
     public static void synchronizeProfiles(MotionProfile [] profiles) {
         // Find the maximum time.
         double maxTime = 0;
+        MotionProfile leadProfile = null;
         for (MotionProfile profile : profiles) {
             profile.assertSolved();
             if (profile.time > maxTime) {
                 maxTime = profile.time;
+                leadProfile = profile;
                 trace("    max time "+maxTime+" from "+profile);
             }
         }
@@ -1115,8 +1223,116 @@ public class MotionProfile {
         do {
             restart = false;
             for (MotionProfile profile : profiles) {
+                profile.assertSolved();
                 profile.tMin = maxTime;
                 if (profile.time != maxTime) {
+                    if (profile.hasOption(ProfileOption.SynchronizeStraighten) 
+                            && (profile.v[0] == 0 || profile.v[segments] == 0) 
+                            && (profile.isConstantAcceleration() || profile.a[0] == 0 || profile.a[segments] == 0)) {
+                        // Profile has some zero entry/exit velocity/acceleration, we can try to straighten it.
+                        if (leadProfile != null) {
+                            MotionProfile coordinated = null;
+                            // Try full coordination
+                            double leadDist = Math.abs(leadProfile.s[segments]-leadProfile.s[0]);
+                            if (leadDist > eps) {
+                                //double factor = Math.abs((coordinated.s[segments]-coordinated.s[0])/leadDist);
+                                double factor = Math.abs((profile.s[segments]-profile.s[0])/leadDist);
+                                if (factor > 0) {
+                                    double aFactor = factor;
+                                    if (leadProfile.isConstantAcceleration() && !profile.isConstantAcceleration()) {
+                                        aFactor = Math.sqrt(aFactor); 
+                                    }
+                                    else if (profile.isConstantAcceleration() && !leadProfile.isConstantAcceleration()) {
+                                        aFactor = 0.71; 
+                                    }
+                                    coordinated = new MotionProfile(profile); 
+                                    if (profile.v[0] == 0 && profile.v[segments] == 0) {
+                                        coordinated.setVelocityMax(leadProfile.getVelocityMax()*factor);
+                                    }
+                                    if (profile.isConstantAcceleration() || profile.a[0] == 0) {
+                                        coordinated.setEntryAccelerationMax(leadProfile.getEntryAccelerationMax()*aFactor);
+                                    }
+                                    if (profile.isConstantAcceleration() || profile.a[segments] == 0) {
+                                        coordinated.setExitAccelerationMax(leadProfile.getExitAccelerationMax()*aFactor);
+                                    }
+                                    if (!profile.isConstantAcceleration() && !leadProfile.isConstantAcceleration()) {
+                                        coordinated.setJerkMax(leadProfile.getJerkMax()*factor);
+                                    }
+                                    coordinated.solve();
+                                    if (coordinated.time <= maxTime && coordinated.checkValidity() == null) {
+                                        // No errors, take it.
+                                        profile.copyProfileSolution(coordinated);
+                                        continue;
+                                    }
+                                    // not valid
+                                    coordinated = null;
+                                }
+                            }
+                            // Try partial coordination. 
+                            if (profile.v[0] == 0 && (profile.isConstantAcceleration() || profile.a[0] == 0)
+                                    && leadProfile.v[0] == 0 && (leadProfile.isConstantAcceleration() || leadProfile.a[0] == 0)) {
+                                double timeFactor = profile.getSegmentBeginTime(3)/leadProfile.getSegmentBeginTime(3);
+                                timeFactor *= profile.time/maxTime;
+                                if (timeFactor > 0.0 && timeFactor < 1.0) {
+                                    coordinated = new MotionProfile(profile); 
+                                    coordinated.setEntryAccelerationMax(leadProfile.getEntryAccelerationMax()*Math.pow(timeFactor, 2));
+                                    if (!profile.isConstantAcceleration()) {
+                                        coordinated.setJerkMax(leadProfile.getJerkMax()*Math.pow(timeFactor, 3));
+                                    }
+                                }
+                            }
+                            if (profile.v[segments] == 0 && (profile.isConstantAcceleration() || profile.a[segments] == 0)
+                                    && leadProfile.v[segments] == 0 && (leadProfile.isConstantAcceleration() || leadProfile.a[segments] == 0)) {
+                                double timeFactor = 
+                                        (profile.getTime()-profile.getSegmentBeginTime(4))/
+                                        (leadProfile.getTime()-leadProfile.getSegmentBeginTime(4));
+                                timeFactor *= profile.time/maxTime;
+                                if (timeFactor > 0.0 && timeFactor < 1.0) {
+                                    if (coordinated == null) { 
+                                        coordinated = new MotionProfile(profile); 
+                                    }
+                                    coordinated.setExitAccelerationMax(leadProfile.getExitAccelerationMax()*Math.pow(timeFactor, 2));
+                                    if (!profile.isConstantAcceleration()) {
+                                        coordinated.setJerkMax(leadProfile.getJerkMax()*Math.pow(timeFactor, 3));
+                                    }
+                                }
+                            }
+                            if (coordinated != null) {
+                                coordinated.solve();
+                                if (coordinated.time <= maxTime && coordinated.checkValidity() == null) {
+                                    // No errors, take it.
+                                    profile.copyProfileSolution(coordinated);
+                                    continue;
+                                }
+                                // not valid
+                                coordinated = null;
+                            }
+                        }
+                        if (profile.v[0] == 0 && profile.v[segments] == 0 
+                                && profile.a[0] == 0 && profile.a[segments] == 0) {
+                            // No entry conditions set, we can just re-time.
+                            profile.retimeProfile();
+                            continue;
+                        }
+                    }
+                    if (profile.hasOption(ProfileOption.SynchronizeEarlyBird) 
+                            && profile.v[segments] == 0 
+                            && (profile.isConstantAcceleration() || profile.a[segments] == 0)) {
+                        // We just leave the profile as is. The axis will move to the target early and then stay put.
+                        profile.t[segments+1] += profile.tMin - profile.time;
+                        profile.time = profile.tMin;
+                        continue;
+                    }
+                    if (profile.hasOption(ProfileOption.SynchronizeLastMinute) 
+                            && profile.v[0] == 0 
+                            && (profile.isConstantAcceleration() || profile.a[0] == 0)) {
+                        // We just leave the profile as is. The axis will move to the target early and then stay put.
+                        profile.t[0] += profile.tMin - profile.time;
+                        profile.time = profile.tMin;
+                        continue;
+                    }
+
+                    // Arrived here: none of the simple solutions applicable. Re-solve with tMin.
                     profile.solve();
                     if (profile.time > maxTime) {
                         // Sometimes the solution was at/near entry/exit speeds and in these cases, it is possible
@@ -1134,577 +1350,7 @@ public class MotionProfile {
     }
 
 
-    public static void solvePath(List<MotionProfile []> path) {
-        // Preparation: some data about the path.
-        int last = path.size() - 1;
-        if (last < 0) {
-            return;
-        }
-        int [] leadAxis= new int[path.size()];
-        double[][] unitVector = new double[path.size()][];
-        double [] junctionCosineFromPrev = new double[path.size()];
-        int [] colinearWithPrev = new int[path.size()]; 
-        for (int i = 0; i <= last; i++) {
-            MotionProfile [] profiles = path.get(i);
-            unitVector[i] = getUnitVector(profiles);
-            leadAxis[i] = getLeadAxisIndex(unitVector[i]);
-            if (i > 0) {
-                junctionCosineFromPrev[i] = dotProduct(unitVector[i-1], unitVector[i]);
-                colinearWithPrev[i] = (leadAxis[i] == leadAxis[i-1] && junctionCosineFromPrev[i] >= 1.0 - eps) ? 1 : ((leadAxis[i] == leadAxis[i-1] && junctionCosineFromPrev[i] <= -1.0 + eps) ? -1 : 0);
-            }
-        }
-        int dimensions = unitVector[0].length;
-
-        trace(" ------------- PASS 1 -------------------------");
-
-        /*
-         *  Phase I: Handle all the coordinated moves.
-         *   
-         *   1. Path begin/end and corners between subsequent coordinated moves are handled as zero speed and acceleration junctions.   
-         *   2. Multiple subsequent co-linear moves are solved as one overall move with the most restrictive limits applied.
-         *      Each move is then cut out from the overall profile. Moves which reach the most restrictive V max at one 
-         *      or both ends are re-solved with their proper V max, if higher (this is not 100% optimal but not so bad for practical 
-         *      use cases).
-         *   3. Coordinated moves that are followed by an uncoordinated move are handled in two ways:
-         *       a) if there is an applicable s limit, the move is handled as if it extends to the limit and then cropped
-         *       b) if there is no applicable s limit, the move is handled as half-sided profile and then extended or cropped.
-         *      
-         *   4. Coordinated moves that are preceded by an uncoordinated move are handled as in 3. (in reverse).
-         *   5. Coordinated moves that are both preceded and followed by an uncoordinated move are handled as in 3. and 4. 
-         *      but if both are b) cases, then constant V max is assumed.
-         *   
-         *   Phase II: Handle the uncoordinated moves.
-         *   
-         *    1. Iteratively solve and synchronize uncoordinated moves that have entry and or exit V/a defined,
-         *       first from neighboring coordinated moves i.e. from Pass I, then from neighboring uncoordinated moves.
-         *       If only one side (entry or exit) is defined, solve as in Phase I's 3. or 4. 
-         *    2. For odd-numbered sequences of uncoordinated moves this will result in a final path. For even-numbered
-         *       sequences the entry/exit V/a are fused in an inverse time weighted manner.  
-         * 
-         *   Phase III: optimize path.
-         *   
-         *   1. 
-         * 
-         *   
-         */
-        int iNext;
-        boolean hasUncoordinated = false;
-        for (int i = 0; i <= last; i = iNext) {
-            iNext = i+1;
-            MotionProfile [] profiles = path.get(i);
-            MotionProfile [] prevProfiles = (i > 0 ? path.get(i-1) : null);
-            MotionProfile [] nextProfiles = (iNext <= last ? path.get(iNext) : null);
-            if (isCoordinated(profiles)) {
-                int lead = leadAxis[i];
-                // This may be a sequence of multiple co-linear moves: try create a spanning profile.
-                MotionProfile solverProfile = new MotionProfile(profiles[lead]);
-                for (int j = i+1; j <= last; j++) {
-                    MotionProfile [] seqProfiles = path.get(j);
-                    if (!(isCoordinated(seqProfiles) && colinearWithPrev[j] == 1)) {
-                        // Sequence ended.
-                        break;
-                    }
-                    if (solverProfile.getVelocityMax() < seqProfiles[lead].getVelocityMax()) {
-                        solverProfile.setVelocityMax(seqProfiles[lead].getVelocityMax());
-                    }
-                    if (solverProfile.getEntryAccelerationMax() < seqProfiles[lead].getEntryAccelerationMax()) {
-                        solverProfile.setEntryAccelerationMax(seqProfiles[lead].getEntryAccelerationMax());
-                    }
-                    if (solverProfile.getExitAccelerationMax() < seqProfiles[lead].getExitAccelerationMax()) {
-                        solverProfile.setExitAccelerationMax(seqProfiles[lead].getExitAccelerationMax());
-                    }
-                    // Extend to include this move.
-                    solverProfile.s[segments] = seqProfiles[lead].s[segments];
-                    // Also take the exit constraints (in case it's the's path exit condition). 
-                    solverProfile.v[segments] = seqProfiles[lead].v[segments];
-                    solverProfile.a[segments] = seqProfiles[lead].a[segments];
-                    // Remember how far this sequence reaches.
-                    iNext = j+1;
-                }
-                boolean expandEntry = false;
-                boolean expandExit = false;
-                if (profiles[lead].hasOption(ProfileOption.Solved)) {
-                    // This is a further refinement.
-                    if (profiles[lead].hasOption(ProfileOption.CroppedEntry)) {
-                        solverProfile.s[0] = profiles[lead].sEntryControl; 
-                    }
-                    if (profiles[lead].hasOption(ProfileOption.CroppedExit)) {
-                        solverProfile.s[segments] = profiles[lead].sExitControl; 
-                    }
-                    // Solve to boundary conditions.
-                    solverProfile.solve();
-                }
-                else {
-                    if (prevProfiles != null) {
-                        if (isCoordinated(prevProfiles)) { 
-                            // If the previous profiles are coordinated they cannot be positively co-linear, otherwise they would be in the sequence.
-                            assert(colinearWithPrev[i] != 1);
-                            // This means we have a corner. Start from zero velocity/acceleration. 
-                        }
-                        else { // Uncoordinated previous.
-                            if (unitVector[i][lead] > 0) {
-                                // Going positive, take sMin into consideration 
-                                if (Double.isFinite(prevProfiles[lead].sMin)) {
-                                    solverProfile.s[0] = prevProfiles[lead].sMin;
-                                }
-                                else {
-                                    expandEntry = true;
-                                }
-                            }
-                            else {
-                                // Going negative, take sMax into consideration 
-                                if (Double.isFinite(prevProfiles[lead].sMax)) {
-                                    solverProfile.s[0] = prevProfiles[lead].sMax;
-                                }
-                                else {
-                                    expandEntry = true;
-                                }
-                            }
-                        }
-                        solverProfile.v[0] = 0;
-                        solverProfile.a[0] = 0;
-                    }
-                    if (nextProfiles != null) {
-                        if (isCoordinated(nextProfiles)) { 
-                            // If the next profiles are coordinated they cannot be positively co-linear, otherwise they would be in the sequence.
-                            assert(colinearWithPrev[iNext] != 1);
-                            // This means we have a corner. Stop to zero velocity/acceleration. 
-                        }
-                        else { // Uncoordinated next.
-                            if (unitVector[i][lead] < 0) {
-                                // Going negative, take sMin into consideration 
-                                if (Double.isFinite(nextProfiles[lead].sMin)) {
-                                    solverProfile.s[segments] = nextProfiles[lead].sMin;
-                                }
-                                else {
-                                    expandExit = true;
-                                }
-                            }
-                            else {
-                                // Going positive, take sMax into consideration 
-                                if (Double.isFinite(nextProfiles[lead].sMax)) {
-                                    solverProfile.s[segments] = nextProfiles[lead].sMax;
-                                }
-                                else {
-                                    expandExit = true;
-                                }
-                            }
-                        }
-                        solverProfile.v[segments] = 0;
-                        solverProfile.a[segments] = 0;
-                    }
-                    if (iNext > last) { 
-                        if (solverProfile.hasOption(ProfileOption.Jog)) {    
-                            // This is the last move and a Jog, set the option to have open velocity/acceleration.
-                            expandExit = true;
-                            solverProfile.v[segments] = 0;
-                            solverProfile.a[segments] = 0;
-                        }
-                    }
-                    if (expandEntry || expandExit) {
-                        // Entry and/or exit is expanded. .
-                        solverProfile.solveByExpansion(Math.signum(unitVector[i][lead]), expandEntry, expandExit);
-                    }
-                    else {
-                        // Solve to boundary conditions.
-                        solverProfile.solve();
-                    }
-                }
-                // Cut this along the sequence.
-                double t0 = solverProfile.getForwardCrossingTime(profiles[lead].s[0], false);
-                for (int j = i; j < iNext; j++) {
-                    MotionProfile [] seqProfiles = path.get(j);
-                    double t1 = solverProfile.getForwardCrossingTime(seqProfiles[lead].s[segments], false);
-                    seqProfiles[lead].extractProfileSectionFrom(solverProfile, t0, t1);
-                    // TODO: if the extracted move has reached solverProfile.vMax on entry/exit it may be re-optimized using its higher
-                    // vMax i.e. pinching down entry/exit velocity and acceleration, can re-solve it.
-                    coordinateProfilesToLead(seqProfiles, seqProfiles[lead]);
-                    t0 = t1;
-                }
-                validateProfiles(profiles);
-            }
-            else {
-                // Clear all solved flags.
-                for (int axis = 0; axis < dimensions; axis++) {
-                    profiles[axis].clearOption(ProfileOption.Solved);
-                }
-                hasUncoordinated = true;
-            }
-        }
-
-
-
-        trace(" ------------- PASS 2 -------------------------");
-
-        while (hasUncoordinated) {
-            hasUncoordinated = false;
-            for (int i = 0; i <= last; i++) {
-                MotionProfile [] profiles = path.get(i);
-                MotionProfile [] prevProfiles = (i > 0 ? path.get(i-1) : null);
-                MotionProfile [] nextProfiles = (i < last ? path.get(i+1) : null);
-                if (!isCoordinated(profiles)) {
-                    boolean hasSolved = false;
-                    for (int axis = 0; axis < dimensions; axis++) {
-                        if (!profiles[axis].hasOption(ProfileOption.Solved)) {
-                            boolean solve = false;
-                            boolean expandEntry = true;
-                            boolean expandExit = true;
-                            double vEffEntry = 0;
-                            double vEffExit = 0;
-                            if (prevProfiles == null) {
-                                // Take path entry conditions as is.
-                                solve = true;
-                            }
-                            else if (prevProfiles[axis].hasOption(ProfileOption.Solved)) {
-                                profiles[axis].v[0] = prevProfiles[axis].v[segments];
-                                profiles[axis].a[0] = prevProfiles[axis].a[segments];
-                                vEffEntry = profiles[axis].getEffectiveEntryVelocity(profiles[axis].jMax);
-                                solve = true; 
-                            }
-                            else {
-                                expandEntry = true;
-                            }
-                            if (nextProfiles == null) {
-                                // Take path exit conditions as is.
-                                solve = true;
-                            }
-                            else if (nextProfiles[axis].hasOption(ProfileOption.Solved)) {
-                                profiles[axis].v[segments] = nextProfiles[axis].v[0];
-                                profiles[axis].a[segments] = nextProfiles[axis].a[0];
-                                vEffExit = profiles[axis].getEffectiveExitVelocity(profiles[axis].jMax);
-                                solve = true; 
-                            }
-                            else {
-                                expandExit = true;
-                            }
-                            if (solve && (expandEntry || expandExit)) {
-                                // Entry and/or exit expansion, solve using an overreaching profile.
-                                MotionProfile solverProfile = new MotionProfile(profiles[axis]);
-                                double signum = solverProfile.profileSignum(vEffEntry, vEffExit);
-                                if (expandEntry) {
-                                    if (signum > 0) {
-                                        // Going positive, take sMin into consideration 
-                                        if (prevProfiles != null && Double.isFinite(prevProfiles[axis].sMin)) {
-                                            solverProfile.s[0] = prevProfiles[axis].sMin;
-                                            // We got a limit, do not expand after all.
-                                            expandEntry = false;
-                                        }
-                                    }
-                                    else if (signum < 0) {
-                                        // Going negative, take sMax into consideration 
-                                        if (prevProfiles != null && Double.isFinite(prevProfiles[axis].sMax)) {
-                                            solverProfile.s[0] = prevProfiles[axis].sMax;
-                                            // We got a limit, do not expand after all.
-                                            expandEntry = false;
-                                        }
-                                    }
-                                    solverProfile.v[0] = 0;
-                                    solverProfile.a[0] = 0;
-                                }
-                                if (expandExit) {
-                                    if (signum < 0) {
-                                        // Going negative, take sMin into consideration 
-                                        if (nextProfiles != null && Double.isFinite(nextProfiles[axis].sMin)) {
-                                            solverProfile.s[segments] = nextProfiles[axis].sMin;
-                                            // We got a limit, do not expand after all.
-                                            expandExit = false;
-                                        }
-                                    }
-                                    else if (signum > 0) {
-                                        // Going positive, take sMax into consideration 
-                                        if (nextProfiles != null && Double.isFinite(nextProfiles[axis].sMax)) {
-                                            solverProfile.s[segments] = nextProfiles[axis].sMax;
-                                            // We got a limit, do not expand after all.
-                                            expandExit = false;
-                                        }
-                                    }
-                                    solverProfile.v[segments] = 0;
-                                    solverProfile.a[segments] = 0;
-                                }
-                                if  (signum != 0 && (expandEntry || expandExit)) {
-                                    // Still expanding, do it.
-                                    solverProfile.solveByExpansion(signum, expandEntry, expandExit);
-                                    double t0 = solverProfile.getForwardCrossingTime(profiles[axis].s[0], false);
-                                    double t1 = solverProfile.getForwardCrossingTime(profiles[axis].s[segments], false);
-                                    profiles[axis].extractProfileSectionFrom(solverProfile, t0, t1);
-                                }
-                                else {
-                                    // Solve with given entry/exit conditions.
-                                    profiles[axis].solve();
-                                }
-                                hasSolved = true;
-                            }
-                            else if (solve) {
-                                // Solve with given entry/exit conditions.
-                                profiles[axis].solve();
-                                hasSolved = true;
-                            }
-                            else {
-                                // Remember for another pass.
-                                hasUncoordinated = true;
-                            }
-                        }
-                    }
-                    if (hasSolved) {
-                        synchronizeProfiles(profiles);
-                        validateProfiles(profiles);
-                    }
-                }
-            }
-        }
-
-
-        //
-        //        // Pass 2: Greedy backward motion, unconstrained.
-        //        MotionProfile [] nextProfiles = null;
-        //        for (int i = last; i >= 0; i--) {
-        //            MotionProfile [] profiles = path.get(i);
-        //            if (i > 0) {
-        //                prevProfiles = path.get(i-1);
-        //            }
-        //            else {
-        //                prevProfiles = null;
-        //            }
-        //            if (isCoordinated(profiles)) {
-        //                int lead = leadAxis[i];
-        //                profiles[lead].setOption(ProfileOption.UnconstrainedEntry);
-        //                if (nextProfiles != null) {
-        //
-        //                    if (isCoordinated(nextProfiles)) { 
-        //                        if (colinearWithPrev[i+1] == 0) {
-        //                            // Corner between coordinated profiles. End with zero velocity/acceleration. 
-        //                            profiles[lead].v[segments] = 0;
-        //                            profiles[lead].a[segments] = 0;
-        //                        }
-        //                        else {
-        //                            // Co-linear profiles. Ride-through, but limit to forward unconstrained.
-        //                            double vUnit = 0;
-        //                            double aUnit = 0;
-        //                            if (unitVector[i][lead] != 0.0) {
-        //                                vUnit = Math.max(0, Math.min(profiles[lead].v[segments]/unitVector[i][lead], nextProfiles[lead].v[0]/unitVector[i][lead]));
-        //                                aUnit = Math.max(0, Math.min(profiles[lead].a[segments]/unitVector[i][lead], nextProfiles[lead].a[0]/unitVector[i][lead]));
-        //                            }
-        //                            // Set the exit constraint from minimum.
-        //                            profiles[lead].v[segments] = unitVector[i][lead]*vUnit;
-        //                            profiles[lead].a[segments] = unitVector[i][lead]*aUnit;
-        //                        }
-        //                    }
-        //                    /*
-        //                    else { // Uncoordinated next.
-        //                        // As a crude first guess, just take the unsynchronized maximum axis speed.
-        //                        double vUnitMax = 0;
-        //                        double aUnitMax = 0;
-        //                        for (int axis = 0; axis < unitVector[i].length; axis++) {
-        //                            if (unitVector[i][axis] != 0.0) {
-        //                                vUnitMax = Math.max(vUnitMax, Math.min(profiles[lead].v[segments]/unitVector[i][axis], nextProfiles[axis].v[0]/unitVector[i][axis]));
-        //                                aUnitMax = Math.max(aUnitMax, Math.min(profiles[lead].a[segments]/unitVector[i][axis], nextProfiles[axis].a[0]/unitVector[i][axis]));
-        //                            }
-        //                        }
-        //                        // Set the exit constraint from maximum.
-        //                        profiles[lead].v[segments] = unitVector[i][lead]*vUnitMax;
-        //                        profiles[lead].a[segments] = unitVector[i][lead]*aUnitMax;
-        //                    }
-        //                     */
-        //
-        //
-        //
-        //                    //                    // Because this is coordinated, determine the minimum unit speed.
-        //                    //                    double vUnitMin = Double.POSITIVE_INFINITY;
-        //                    //                    double aUnitMin = Double.POSITIVE_INFINITY;
-        //                    //                    for (int axis = 0; axis < unitVector[i].length; axis++) {
-        //                    //                        if (unitVector[i][axis] != 0.0) {
-        //                    //                            vUnitMin = Math.min(vUnitMin, nextProfiles[axis].v[0]/unitVector[i][axis]);
-        //                    //                            aUnitMin = Math.min(aUnitMin, nextProfiles[axis].a[0]/unitVector[i][axis]);
-        //                    //                        }
-        //                    //                    }
-        //                    //                    // Don't allow bouncing from coordinated moves.
-        //                    //                    vUnitMin = Math.max(0, Math.min(profiles[lead].vMax, vUnitMin));
-        //                    //                    aUnitMin = Math.max(0, Math.min(profiles[lead].aMaxEntry, aUnitMin));
-        //                    //                    // Set the exit constraint from the previous profile.
-        //                    //                    profiles[lead].v[segments] = unitVector[i][lead]*vUnitMin;
-        //                    //                    profiles[lead].a[segments] = unitVector[i][lead]*aUnitMin;
-        //                }
-        //                if (prevProfiles == null) {
-        //                    // Must start from path entry velocity/acceleration. Clear the unconstrained flag
-        //                    profiles[lead].clearOption(ProfileOption.UnconstrainedEntry);
-        //                }
-        //                else if (isCoordinated(prevProfiles) && colinearWithPrev[i] == 0) {
-        //                    // Goes into coordinated move. Must stop.  
-        //                    profiles[lead].v[0] = 0;
-        //                    profiles[lead].a[0] = 0;
-        //                    // Clear the unconstrained flag
-        //                    profiles[lead].clearOption(ProfileOption.UnconstrainedEntry);
-        //                }
-        //                // Remove options from pass 1.
-        //                profiles[lead].tMin = 0;
-        //                profiles[lead].clearOption(ProfileOption.UnconstrainedExit);
-        //                profiles[lead].solve();
-        //                // Clear the option for posterity.
-        //                profiles[lead].clearOption(ProfileOption.UnconstrainedEntry);
-        //                coordinateProfilesToLead(profiles, profiles[lead]);
-        //                validateProfiles(profiles);
-        //            }
-        //            else { // Uncoordinated.
-        //                for (int axis = 0; axis < unitVector[i].length; axis++) {
-        //                    profiles[axis].setOption(ProfileOption.UnconstrainedEntry);
-        //                    if (nextProfiles != null) {
-        //                        // Set the exit constraints from the next profile, but limited (can be lower than next segment).
-        //                        profiles[axis].v[segments] =  Math.max(-profiles[axis].vMax, Math.min(profiles[axis].vMax, nextProfiles[axis].v[0]));
-        //                        profiles[axis].a[segments] =  Math.max(-profiles[axis].aMaxExit, Math.min(profiles[axis].aMaxExit, nextProfiles[axis].a[0]));
-        //                    } 
-        //
-        //                    if (prevProfiles == null) {
-        //                        // Must start from still-stand. Clear the unconstrained flag
-        //                        profiles[axis].clearOption(ProfileOption.UnconstrainedEntry);
-        //                    }
-        //                    else if (profiles[axis].s[0] == profiles[axis].s[segments] && dotProduct(unitVector[i], unitVector[i]) > 0) {
-        //                        // No displacement, but vector not empty. We want reflection.
-        //                        profiles[axis].v[0] = -profiles[axis].v[segments];
-        //                        profiles[axis].a[0] = profiles[axis].a[segments];
-        //                        profiles[axis].clearOption(ProfileOption.UnconstrainedEntry);
-        //                    }                    //                    else if (profiles[axis].s[0] == profiles[axis].s[segments]
-        //                    //                            && Math.abs(profiles[axis].getEffectiveEntryVelocity(profiles[axis].jMax) 
-        //                    //                                    + profiles[axis].getEffectiveExitVelocity(profiles[axis].jMax)) < vtol*2) {
-        //                    //                        // Within tolerance, re-apply reflection case
-        //                    //                        profiles[axis].v[0] = -profiles[axis].v[segments];
-        //                    //                        profiles[axis].a[0] = profiles[axis].a[segments];
-        //                    //                    }
-        //                    //                    else if (isCoordinated(prevProfiles)) {
-        //                    //                        // Set the entry constraints from the previous profile, but limited (can be lower than next segment).
-        //                    //                        profiles[axis].v[0] =  
-        //                    //                                Math.max(-profiles[axis].vMax, Math.min(profiles[axis].vMax, 
-        //                    //                                        Math.max(-prevProfiles[axis].vMax, Math.min(prevProfiles[axis].vMax,
-        //                    //                                                prevProfiles[axis].v[segments]))));
-        //                    //                        profiles[axis].a[0] =  
-        //                    //                                Math.max(-profiles[axis].aMaxEntry, Math.min(profiles[axis].aMaxEntry, 
-        //                    //                                        Math.max(-prevProfiles[axis].aMaxExit, Math.min(prevProfiles[axis].aMaxExit, 
-        //                    //                                                prevProfiles[axis].a[segments]))));
-        //                    //                        // Clear the unconstrained flag
-        //                    //                        profiles[axis].clearOption(ProfileOption.UnconstrainedEntry);
-        //                    //                    }
-        //                    // Remove option from pass 1.
-        //                    profiles[axis].tMin = 0;
-        //                    profiles[axis].clearOption(ProfileOption.UnconstrainedExit);
-        //                    profiles[axis].solve();
-        //                    // Clear the option for posterity.
-        //                    profiles[axis].clearOption(ProfileOption.UnconstrainedEntry);
-        //                }
-        //                // DO NOT: synchronizeProfiles(profiles);
-        //                validateProfiles(profiles);
-        //            }
-        //            nextProfiles = profiles;
-        //        }
-        //
-        //        trace(" ------------- PASS 3 -------------------------");
-        //
-        //        // Pass 3: Mend the two greedy strategies together:
-        //        // For two consecutive coordinated moves this means taking the minimum of both junction speeds.
-        //        // For two consecutive uncoordinated moves we take the blend i.e. the mean of both junction speeds.
-        //        // For mixed coordinated/uncoordinated moves this means taking the one governed by the coordinated move.
-        //        for (int i = 0; i <= last; i++) {
-        //            MotionProfile [] profiles = path.get(i);
-        //            if (i < last) {
-        //                nextProfiles = path.get(i+1);
-        //            }
-        //            else {
-        //                nextProfiles = null;
-        //            }
-        //            if (isCoordinated(profiles)) {
-        //                int lead = leadAxis[i];
-        //                if (nextProfiles != null) {
-        //                    // Coordinated is dominant by default. 
-        //                    double vNew = profiles[lead].v[segments];
-        //                    double aNew = profiles[lead].a[segments];
-        //                    if (isCoordinated(nextProfiles) && colinearWithPrev[i+1] == 1) {
-        //                        // Next is also coordinated and co-linear. Take (signed) minimum.
-        //                        double signum = Math.signum(unitVector[i][lead]); 
-        //                        vNew = signum*Math.min(signum*profiles[lead].v[segments], signum*nextProfiles[lead].v[0]);
-        //                        aNew = signum*Math.min(signum*profiles[lead].a[segments], signum*nextProfiles[lead].a[0]);
-        //                    }
-        //                    if (profiles[lead].v[segments] != vNew
-        //                            || profiles[lead].a[segments] != aNew) {
-        //                        profiles[lead].v[segments] = vNew;
-        //                        profiles[lead].a[segments] = aNew;
-        //                        profiles[lead].clearOption(ProfileOption.Solved);
-        //                    }
-        //
-        //                }
-        //                if (! profiles[lead].hasOption(ProfileOption.Solved)) {
-        //                    // Remove options from pass 1, 2.
-        //                    profiles[lead].tMin = 0;
-        //                    profiles[lead].clearOption(ProfileOption.UnconstrainedEntry);
-        //                    profiles[lead].clearOption(ProfileOption.UnconstrainedExit);
-        //                    profiles[lead].solve();
-        //                    coordinateProfilesToLead(profiles, profiles[lead]);
-        //                }
-        //                // Continuity on all axes.
-        //                if (nextProfiles != null) {
-        //                    for (int axis = 0; axis < unitVector[i].length; axis++) {
-        //                        if (nextProfiles[axis].v[0] != profiles[axis].v[segments]
-        //                                || nextProfiles[axis].a[0] != profiles[axis].a[segments]) {
-        //                            nextProfiles[axis].v[0] = profiles[axis].v[segments];
-        //                            nextProfiles[axis].a[0] = profiles[axis].a[segments];
-        //                            nextProfiles[axis].clearOption(ProfileOption.Solved);
-        //                        }
-        //                    }
-        //                }
-        //            }
-        //            else { // Uncoordinated.
-        //                for (int axis = 0; axis < unitVector[i].length; axis++) {
-        //                    if (nextProfiles != null) {
-        //                        double vNew = profiles[axis].v[segments];
-        //                        double aNew = profiles[axis].a[segments];
-        //                        if (isCoordinated(nextProfiles)) {
-        //                            // Coordinated is dominant.
-        //                            vNew = nextProfiles[axis].v[0];
-        //                            aNew = nextProfiles[axis].a[0];
-        //                        }
-        //                        else {
-        //                            // Two Uncoordinated. Take blend.
-        //                            double ratio;
-        //                            if (profiles[axis].time == 0) {
-        //                                ratio = 1;
-        //                            }
-        //                            else if (nextProfiles[axis].time == 0) {
-        //                                ratio = 0;
-        //                            }
-        //                            else {
-        //                                double w0 = 1/Math.sqrt(profiles[axis].time);
-        //                                double w1 = 1/Math.sqrt(nextProfiles[axis].time);
-        //                                ratio = w0/(w0+w1);
-        //                            }
-        //                            vNew = profiles[axis].v[segments]*ratio + nextProfiles[axis].v[0]*(1-ratio);
-        //                            aNew = profiles[axis].a[segments]*ratio + nextProfiles[axis].a[0]*(1-ratio);
-        //                        }
-        //                        if (profiles[axis].v[segments] != vNew
-        //                                || profiles[axis].a[segments] != aNew) {
-        //                            profiles[axis].v[segments] = vNew;
-        //                            profiles[axis].a[segments] = aNew;
-        //                        }
-        //                        if (nextProfiles[axis].v[0] != vNew
-        //                                || nextProfiles[axis].a[0] != aNew) {
-        //                            nextProfiles[axis].v[0] = vNew;
-        //                            nextProfiles[axis].a[0] = aNew;
-        //                        }
-        //                    }
-        //                    // Remove options from pass 1, 2.
-        //                    profiles[axis].tMin = 0;
-        //                    profiles[axis].clearOption(ProfileOption.UnconstrainedEntry);
-        //                    profiles[axis].clearOption(ProfileOption.UnconstrainedExit);
-        //                    profiles[axis].solve();
-        //                }
-        //
-        //                synchronizeProfiles(profiles);
-        //            }
-        //            validateProfiles(profiles);
-        //        }
-
-        if (svgEnabled) {
-            pathToSvg(path);
-        }
-    }
-
-    protected void solveByExpansion(double signum, boolean expandEntry, boolean expandExit) {
+    public void solveByExpansion(double signum, boolean expandEntry, boolean expandExit) {
         computeProfile(signum*vMax, getEffectiveEntryVelocity(jMax), getEffectiveExitVelocity(jMax), tMin);
         if (expandEntry) {
             double overlap = expandExit ? 0 : signum*Math.max(0, signum*(s[0]-s[4]));
@@ -1728,8 +1374,6 @@ public class MotionProfile {
         setOption(ProfileOption.Solved);
     }
 
-
-
     /**
      * Extract the (fractional) segments from solvedProfile between t0 and t1 and save them in this profile. 
      * The displacement between t0 and t1 must match s[0] and s[7] of this profile i.e. the t0 and t7
@@ -1739,42 +1383,49 @@ public class MotionProfile {
      * @param t0
      * @param t7
      */
-    protected void extractProfileSectionFrom(MotionProfile solvedProfile, double t0, double t7) {
+    public void extractProfileSectionFrom(MotionProfile solvedProfile, double t0, double t7) {
         if (t0 == 0 && t7 == solvedProfile.time) {
             // Full 1:1 profile extraction.
             copyProfileSolution(solvedProfile);
         }
         else {
-            // Extract a partial profile. 
+            // Extract a partial profile.
+            // Assert the given t0 t1 match in location.
+            assert Math.abs(solvedProfile.getMomentaryLocation(t0)-s[0]) < eps;
+            assert Math.abs(solvedProfile.getMomentaryLocation(t7)-s[7]) < eps;
+            // Assert we're not in a stretched profile.
+            assert t[0] == 0;
+            assert t[segments+1] == 0;
+            // Get border values.
             double v0 = solvedProfile.getMomentaryVelocity(t0);
             double a0 = solvedProfile.getMomentaryAcceleration(t0);
-            double j0 = solvedProfile.getMomentaryJerk(t0);
+            //double j0 = solvedProfile.getMomentaryJerk(t0);
             double v7 = solvedProfile.getMomentaryVelocity(t7);
             double a7 = solvedProfile.getMomentaryAcceleration(t7);
-            double j7 = solvedProfile.getMomentaryJerk(t7);
+            //double j7 = solvedProfile.getMomentaryJerk(t7);
             double tSeg = 0;
             double tEntrySlack = 0;
             double tExitSlack = 0;
             for (int seg = 0; seg <= segments; seg++) {
                 double tSegEnd = tSeg + solvedProfile.t[seg]; 
                 if (tSegEnd <= t0) {
-                    // Segment ends before the cut. 
+                    // Segment ends before the in cut. 
                     s[seg] = s[0];
                     v[seg] = v0;
-                    a[seg] = a0;
-                    j[seg] = j0;
+                    a[seg] = solvedProfile.isConstantAcceleration() ? solvedProfile.a[seg] : a0; // jumps
+                    j[seg] = solvedProfile.j[seg]; // jumps
                     t[seg] = 0;
                     if (seg == 4) {
                         tEntrySlack += solvedProfile.t[seg];
                     }
                 }
                 else if (tSegEnd >= t7) {
-                    // Segment ends after the cut. 
+                    // Segment ends after the out cut. 
                     s[seg] = s[7];
                     v[seg] = v7;
                     a[seg] = a7;
-                    // The beginning of the segment may overlap.
-                    t[seg] = Math.max(0, t7 - tSeg);
+                    // The beginning and/or the end of the segment may overlap.
+                    t[seg] = Math.max(solvedProfile.t[seg] - Math.max(0, t0 - tSeg) - (tSegEnd - t7), 0);
                     j[seg] = 0;
                     if (seg == 4) {
                         tExitSlack += solvedProfile.t[seg] - t[seg];
@@ -1787,7 +1438,7 @@ public class MotionProfile {
                     a[seg] = solvedProfile.a[seg];
                     j[seg] = solvedProfile.j[seg];
                     // Only a part of the segment may be in the cut.
-                    t[seg] = solvedProfile.t[seg] + Math.min(0, tSeg - t0);
+                    t[seg] = solvedProfile.t[seg] - Math.max(0, t0 - tSeg);
                     if (seg == 4) {
                         tEntrySlack += solvedProfile.t[seg] - t[seg];
                     }
@@ -1807,6 +1458,7 @@ public class MotionProfile {
                 setOption(ProfileOption.CroppedEntry);
                 double sSlack = solvedProfile.v[4]*tEntrySlack;
                 sEntryControl = solvedProfile.s[0] + sSlack;
+                tEntryControl = t0 - tEntrySlack; 
             }
             if (t7 == solvedProfile.time) {
                 // This is extracted at the end, inherit unconstrained exit option. 
@@ -1818,6 +1470,7 @@ public class MotionProfile {
                 setOption(ProfileOption.CroppedExit);
                 double sSlack = solvedProfile.v[4]*tExitSlack;
                 sExitControl = solvedProfile.s[segments] - sSlack;
+                tExitControl = solvedProfile.time - t7 - tExitSlack;
             }
         }
     }
@@ -1836,10 +1489,22 @@ public class MotionProfile {
             t[seg] = template.t[seg];
         }
         time = template.time;
+
         sBound0 = template.sBound0;
         sBound1 = template.sBound1;
-        tBound0 = template.tBound0;
-        tBound1 = template.tBound1;
+        tSBound0 = template.tSBound0;
+        tSBound1 = template.tSBound1;
+
+        vBound0 = template.vBound0;
+        vBound1 = template.vBound1;
+        tVBound0 = template.tVBound0;
+        tVBound1 = template.tVBound1;
+
+        aBound0 = template.aBound0;
+        aBound1 = template.aBound1;
+        tABound0 = template.tABound0;
+        tABound1 = template.tABound1;
+
         // Only flags important to the solution are copied.
         if (template.hasOption(ProfileOption.UnconstrainedEntry)) {
             setOption(ProfileOption.UnconstrainedEntry);
@@ -1865,7 +1530,7 @@ public class MotionProfile {
         return lead;
     }
 
-    protected static double dotProduct(double[] unitVector1, double[] unitVector2) {
+    public static double dotProduct(double[] unitVector1, double[] unitVector2) {
         double dot = 0;
         for (int i = 0; i < unitVector1.length; i++) {
             dot += unitVector1[i]*unitVector2[i];
@@ -1897,9 +1562,9 @@ public class MotionProfile {
         return unitVector;
     }
 
-    protected static boolean isCoordinated(MotionProfile[] profile1) {
-        if (profile1.length > 0) {
-            return profile1[0].hasOption(ProfileOption.Coordinated);
+    public static boolean isCoordinated(MotionProfile[] profile) {
+        if (profile.length > 0) {
+            return profile[0].hasOption(ProfileOption.Coordinated);
         }
         return false;
     }
@@ -1918,49 +1583,53 @@ public class MotionProfile {
         }
         double dVEntry =  (vPeak - v[0]);
         double dVExit =  (v[7] - vPeak);
-        
+
+        // Delete any waits before/after.
+        t[0] = 0;
+        t[segments+1] = 0;
+
         if (isConstantAcceleration()) {
             // Use a simple constant acceleration profile.
             j[0] = 0;
             // Acceleration jumps right up so we need to change a[0]
             a[0] = signumEntry*aMaxEntry;
             double tAccelEntry = dVEntry/a[0];
-            t[1] = tAccelEntry*0.5;
-            v[1] = v[0] + a[0]*t[1];
-            s[1] = s[0] + v[0]*t[1] + 1./2*a[0]*Math.pow(t[1], 2); 
+            t[1] = 0;
+            v[1] = v[0];
+            s[1] = s[0]; 
 
-            t[2] = 0;
+            t[2] = tAccelEntry;
             j[2] = 0;
             a[1] = a[0];
-            v[2] = v[1];
-            s[2] = s[1];
+            v[2] = vPeak;
+            s[2] = s[1] + v[1]*t[2] + 1./2*a[1]*Math.pow(t[2], 2);
 
-            t[3] = tAccelEntry*0.5;
+            t[3] = 0;
             j[3] = 0;
             a[2] = a[1];
             v[3] = vPeak;
-            s[3] = s[2] + v[2]*t[1] + 1./2*a[2]*Math.pow(t[1], 2); 
+            s[3] = s[2]; 
             a[3] = 0;
 
             // Reverse exit ramp.
             j[6] = 0;
             a[6] = -signumExit*aMaxExit;
             double tAccelExit = dVExit/a[6];
-            t[7] = tAccelExit*0.5;
-            v[6] = v[7] - a[6]*t[7];
-            s[6] = s[7] - v[7]*t[7] + 1./2*a[6]*Math.pow(t[7], 2); 
+            t[7] = 0;
+            v[6] = v[7];
+            s[6] = s[7]; 
 
-            t[6] = 0;
+            t[6] = tAccelExit;
             j[5] = 0;
             a[5] = a[6];
-            v[5] = v[6];
-            s[5] = s[6];
+            v[5] = vPeak;
+            s[5] = s[6] - v[6]*t[6] + 1./2*a[6]*Math.pow(t[6], 2);
 
-            t[5] = tAccelExit*0.5;
+            t[5] = 0;
             j[4] = 0;
             a[4] = a[5];
             v[4] = vPeak;
-            s[4] = s[5] - v[5]*t[5] + 1./2*a[4]*Math.pow(t[5], 2);
+            s[4] = s[5];
         }
         else if (hasOption(ProfileOption.SimplifiedSCurve)) {
             // We must limit acceleration on very short moves then apply jerk for equivalent avg. constant acceleration.
@@ -2016,13 +1685,13 @@ public class MotionProfile {
             t[7] = -a[6]/j[6];
             v[6] = v[7] + 1./2*j[6]*Math.pow(t[7], 2);
             s[6] = s[7] - v[7]*t[7] - 1./6*j[6]*Math.pow(t[7], 3);
-            
+
             j[5] = 0;
             t[6] = 0;
             a[5] = a[6];
             v[5] = v[6];
             s[5] = s[6];
-            
+
             j[4] = -j[6];
             t[5] = t[7];
             a[4] = 0;
@@ -2179,32 +1848,224 @@ public class MotionProfile {
             j[7] = 0;
             t[7] = 0;
         }
+
+        if (tMin > 0 && v[4] == 0.0   
+                && s[4] != s[3] && Math.abs(s[4] - s[3]) < vtol*5*tMin 
+                && !hasOption(ProfileOption.SimplifiedSCurve)) {
+            // Minimum time, zero velocity move and ramps almost but not quite meet. Try to mend it by capping the entry/exit acceleration. 
+            if (j[0] != 0 && j[1] == 0) {
+                // Third order solution needed. By symmetry we use the average velocity and determine the needed 
+                // lengthening dt. 
+                double t2 = t[2];
+                double vm = v[1] + a[1]*t2*0.5;
+                double dt = (s[4] - s[3])/vm;
+                if (dt > 0 && dt < tMin) {
+                    double js = j[0];
+                    double as = a[2];
+                    // Now solve for the time t that the capped acceleration takes place. 
+
+                    /* Sage Math            
+var('a2 t j t2 dt')
+dv=a2*t-j*((t-t2)/2)^2  # Velocity difference with symmetrical jerk 
+a=a2-j*(t-t2)/2         # Acceleration at the jerk tangent is the capped acceleration
+eq=(dt==dv/a-t)         # The time difference dt with the capped acceleration vs. the original
+solve(eq, t)            # Solve for t
+
+                >>
+[t == -(dt*j + sqrt(dt^2*j^2 + 2*dt*j^2*t2 + j^2*t2^2 + 4*a2*dt*j))/j, 
+ t == -(dt*j - sqrt(dt^2*j^2 + 2*dt*j^2*t2 + j^2*t2^2 + 4*a2*dt*j))/j]
+                     */
+                    double sqrtTerm = Math.sqrt(Math.pow(dt, 2)*Math.pow(js, 2) + 2*dt*Math.pow(js, 2)*t2 + Math.pow(js, 2)*Math.pow(t2, 2) + 4*as*dt*js);
+                    double[] tS = new double[] { 
+                            -(dt*js + sqrtTerm)/js,
+                            -(dt*js - sqrtTerm)/js 
+                    };
+                    for (double ts : tS) {
+                        double dth = (ts-t2)/2;
+                        if (dth > 0 && dth < t[1]+eps && dth < t[3]+eps) {
+                            // Phase 1
+                            t[1] -= dth;
+                            a[1] = a[0] + j[0]*t[1];
+                            v[1] = v[0] + a[0]*t[1] + 1./2*j[0]*Math.pow(t[1], 2);
+                            s[1] = s[0] + v[0]*t[1] + 1./2*a[0]*Math.pow(t[1], 2) + 1./6*j[0]*Math.pow(t[1], 3); 
+
+                            // Phase 3 backward
+                            t[3] -= dth;
+                            s[3] = s[4]; // mend it
+                            a[2] = a[3] - j[2]*t[3];
+                            v[2] = v[3] - a[3]*t[3] + 1./2*j[2]*Math.pow(t[3], 2);
+                            s[2] = s[3] - v[3]*t[3] + 1./2*a[3]*Math.pow(t[3], 2) - 1./6*j[2]*Math.pow(t[3], 3);
+
+                            // Time to mend.
+                            t[2] = (v[2] - v[1])/a[1];
+                        }
+                    }
+                }
+            }
+            else if (isConstantAcceleration()) {
+                // Constant acceleration solution.
+                double ts = t[1] + t[2] + t[3];
+                if (ts > eps) {
+                    double vm = (s[3] - s[0])/ts;
+                    double dt = (s[4] - s[3])/vm;
+                    if (dt > 0 && dt < tMin) {
+                        ts += dt;
+                        double as = (v[3] - v[0])/ts;
+                        a[0] = as;
+                        t[1] = 0;
+                        a[1] = as;
+                        v[1] = v[0];
+                        s[1] = s[0];
+
+                        t[2] = ts;
+                        a[2] = as;
+                        v[2] = v[3]; 
+                        s[2] = s[4]; // mend it
+
+                        t[3] = 0;
+                        a[3] = 0;
+                        s[3] = s[4]; // mend it 
+                    }
+                }
+            }
+            if (s[4] != s[3]) {
+                // Not mended in the entry ramp, try the exit ramp.
+                if (j[6] != 0 && j[5] == 0) {
+                    // Third order solution needed.
+                    double t6 = t[6];
+                    double vm = v[5] + a[5]*t6*0.5;
+                    double dt = (s[4] - s[3])/vm;
+                    if (dt > 0 && dt < tMin) {
+                        double js = j[6];
+                        double as = -a[6];
+                        double sqrtTerm = Math.sqrt(Math.pow(dt, 2)*Math.pow(js, 2) + 2*dt*Math.pow(js, 2)*t6 + Math.pow(js, 2)*Math.pow(t6, 2) + 4*as*dt*js);
+                        double[] tS = new double[] { 
+                                -(dt*js + sqrtTerm)/js,
+                                -(dt*js - sqrtTerm)/js
+                        };
+                        for (double ts : tS) {
+                            double dth = (ts-t6)/2;
+                            if (dth > 0 && dth < t[7]+eps && dth < t[5]+eps) {
+                                // Phase 7 backward
+                                t[7] -= dth;
+                                a[6] = a[7] - j[6]*t[7];
+                                v[6] = v[7] - a[7]*t[7] + 1./2*j[6]*Math.pow(t[7], 2);
+                                s[6] = s[7] - v[7]*t[7] + 1./2*a[7]*Math.pow(t[7], 2) - 1./6*j[6]*Math.pow(t[7], 3); 
+
+                                // Phase 5
+                                t[5] -= dth;
+                                s[4] = s[3]; // mend it
+                                a[5] = a[4] + j[4]*t[5];
+                                v[5] = v[4] + a[4]*t[5] + 1./2*j[4]*Math.pow(t[5], 2);
+                                s[5] = s[4] + v[4]*t[5] + 1./2*a[4]*Math.pow(t[5], 2) + 1./6*j[4]*Math.pow(t[5], 3);
+
+                                // Time to mend.
+                                t[6] = (v[6] - v[5])/a[5];
+                            }
+                        }
+                    }
+                }
+                else if (isConstantAcceleration()) {
+                    // Constant acceleration solution.
+                    double ts = t[7] + t[6] + t[5];
+                    if (ts > eps) {
+                        double vm = (s[7] - s[4])/ts;
+                        double dt = (s[4] - s[3])/vm;
+                        if (dt > 0 && dt < tMin) {
+                            ts += dt;
+                            double as = (v[7] - v[4])/ts;
+                            t[7] = 0;
+                            a[6] = as;
+                            v[6] = v[7];
+                            s[6] = s[7];
+
+                            t[6] = ts;
+                            a[5] = as;
+                            v[5] = v[4]; 
+                            s[5] = s[3]; // mend it
+
+                            t[5] = 0;
+                            a[4] = as;
+                            s[4] = s[3]; // mend it 
+                        }
+                    }
+                }
+            }
+        }
+        if (!(hasOption(ProfileOption.UnconstrainedEntry)
+                ||hasOption(ProfileOption.UnconstrainedExit)
+                ||hasOption(ProfileOption.SimplifiedSCurve)
+                ||isConstantAcceleration())) {
+            // This is a regular 3rd order profile. 
+            if (Math.signum(j[2]) != Math.signum(j[4])) {
+                // We have a sign reversal ramp, i.e. both accelerate or decelerate.  
+                double tOverlap = 0;
+                if (v[4] == 0.0 && Math.abs(s[3] - s[4]) < eps) {
+                    // Velocity and s diff zero. Take up the whole jerk time.
+                    t[4] = 0;
+                    tOverlap = Math.min(t[3], t[5]);
+                    if (tMin > 0) {
+                        time = Arrays.stream(t).sum();
+                        // Restrict to minimum time violation.
+                        tOverlap = Math.min(tOverlap, time - tMin);
+                    }
+                }
+                else {
+                    // Velocity not zero, take s overlap time.
+                    t[4] = (s[4] - s[3])/v[4];
+                    tOverlap = -t[4];
+                }
+                if (tOverlap > 0 && Double.isFinite(tOverlap)) {
+                    // tOverlap > 0 means that s overlaps in the middle, i.e. the profile is invalid. This may happen due to the jerk phases in the middle that 
+                    // work against each other in sign reversal ramps.  
+                    // We need to fuse the ramp together, i.e. create a constant acceleration segment instead of the two jerk phases to/from constant velocity.
+                    // We can deduce from symmetry, that the time spent with constant acceleration is half the time spend with two jerk phases to constant velocity.
+                    // So to eliminate the s overlap we must eliminate twice the overlap time. Therefore, we remove tOverlap from both jerk phases.  
+                    if (t[3]+eps > tOverlap && t[5]+eps > tOverlap) {
+                        t[3] -= tOverlap;
+                        j[3] = 0;
+                        a[3] = a[2] + j[2]*t[3];
+                        v[3] = v[2] + a[2]*t[3] + 1./2*j[2]*Math.pow(t[3], 2);
+                        s[3] = s[2] + v[2]*t[3] + 1./2*a[2]*Math.pow(t[3], 2) + 1./6*j[2]*Math.pow(t[3], 3);
+
+                        t[4] = tOverlap;
+                        a[4] = a[3];
+                        v[4] = v[3] + a[3]*t[4];
+                        s[4] = s[3] + v[3]*t[4] + 1./2*a[3]*Math.pow(t[4], 2);
+
+                        t[5] -= tOverlap;
+                    }
+                }
+            }
+        }
+
         computeTime(tMin);
         computeBounds();
         eval++;
     }
 
     protected void computeTime(double tMin) {
-        if (v[4] == 0.0 && Math.abs(s[3] - s[4]) < eps) {
-            t[4] = 0;
+        boolean adjustMinTime = false;
+        if (a[3] == 0) { 
+            // Not a fused profile, calculate the cruising time.
+            if (v[4] == 0.0 && Math.abs(s[3] - s[4]) < eps) {
+                t[4] = 0;
+                adjustMinTime = true;
+            }
+            else {
+                t[4] = (s[4] - s[3])/v[4];
+            }
         }
-        else {
-            t[4] = (s[4] - s[3])/v[4];
-        }
-        time = 0;
-        for (double ti : this.t) {
-            time += ti;
-        }
-        if (tMin > time && v[4] == 0 && Math.abs(s[3] - s[4]) < eps) {
+        time = Arrays.stream(t).sum();
+        if (adjustMinTime && (tMin > time)) {
             // Zero velocity profile -> can adapt minimum time directly 
-            // (important for moveToLocationAtSafeZ() "dome" scenario).
             t[4] = tMin - time;
             time = tMin;
         }
     }
 
     public Double getForwardCrossingTime(double sCross, boolean halfProfile) {
-        double tSeg = 0;
+        double tSeg = t[0];
         if (halfProfile) {
             // Check if we're beyond half the profile anyway.
             double signum = Math.signum(v[4]);
@@ -2226,7 +2087,7 @@ public class MotionProfile {
     }
 
     public Double getBackwardCrossingTime(double sCross, boolean halfProfile) {
-        double tSeg = time;
+        double tSeg = time - t[segments+1];
         if (halfProfile) {
             // Check if we're beyond half the profile anyway.
             double signum = Math.signum(v[4]);
@@ -2251,7 +2112,16 @@ public class MotionProfile {
         double ti = t[i];
         double j = this.j[i-1];
 
-        if (Math.abs(s[i-1] - sCross) < eps) {
+        if (!forward && Math.abs(s[i] - sCross) < eps) {
+            // Match, make sure to get exactly the time, if last segment. 
+            if (i == segments) {
+                return time;
+            }
+            else {
+                return tSeg + ti;
+            }
+        }
+        else if (Math.abs(s[i-1] - sCross) < eps) {
             // Match, make sure to return the exactly 0.0, if first segment. 
             if (i == 1) {
                 return 0.0;
@@ -2260,7 +2130,7 @@ public class MotionProfile {
                 return tSeg;
             }
         }
-        else if (Math.abs(s[i] - sCross) < eps) {
+        else if (forward && Math.abs(s[i] - sCross) < eps) {
             // Match, make sure to get exactly the time, if last segment. 
             if (i == segments) {
                 return time;
@@ -2357,7 +2227,7 @@ public class MotionProfile {
             double y = f.apply(x);
             double dydt = g.apply(x);
 
-            if (Math.abs(dydt) < vtol) {
+            if (Math.abs(dydt) < ttol) {
                 // Stop if the denominator is too small
                 return null;
             }
@@ -2406,19 +2276,29 @@ public class MotionProfile {
         // Calculate the bounds
         if (s[0] <= s[segments]) {
             sBound0 = s[0];
-            tBound0 = 0.0;
+            tSBound0 = 0;
             sBound1 = s[segments];
-            tBound1 = time;
+            tSBound1 = time;
         }
         else {
             sBound0 = s[segments];
-            tBound0 = time;
+            tSBound0 = time;
             sBound1 = s[0];
-            tBound1 = 0.0;
+            tSBound1 = 0;
         }
+        vBound0 = v[0];
+        vBound1 = v[0];
+        tVBound0 = 0;
+        tVBound1 = 0;
+        aBound0 = a[0];
+        aBound1 = a[0];
+        tABound0 = 0;
+        tABound1 = 0;
+
         double tSeg = 0;
         for (int i = 1; i <= segments; i++) {
-            // Find the velocity crossing zero, that my be an extreme for s.
+            // Find the velocity crossing zero, that may be an extreme for s
+            // and the acceleration crossing zero, that may be an extreme for v.
             if (j[i-1] != 0) {
                 // 3rd order segment.
                 double dt = Math.sqrt(Math.pow(a[i-1], 2) - 2*v[i-1]*j[i-1]);
@@ -2428,32 +2308,73 @@ public class MotionProfile {
                         double sExtreme = s[i-1] + v[i-1]*tCross + 1./2*a[i-1]*Math.pow(tCross, 2) + 1./6*j[i-1]*Math.pow(tCross, 3);
                         if (sExtreme < sBound0) {
                             sBound0 = sExtreme;
-                            tBound0 = tSeg + tCross;
+                            tSBound0 = tSeg + tCross;
                         }
                         if (sExtreme > sBound1) {
                             sBound1 = sExtreme;
-                            tBound1 = tSeg + tCross;
+                            tSBound1 = tSeg + tCross;
                         }
+                    }
+                }
+                double tCross = -a[i-1]/j[i-1];
+                if (tCross >= 0 && tCross <= t[i]) {
+                    // Zero-crossing inside the period, maybe an extreme.
+                    double vExtreme = v[i-1] + a[i-1]*tCross + 1./2*j[i-1]*Math.pow(tCross, 2);
+                    if (vExtreme < vBound0) {
+                        vBound0 = vExtreme;
+                        tVBound0 = tSeg + tCross;
+                    }
+                    if (vExtreme > sBound1) {
+                        vBound1 = vExtreme;
+                        tVBound1 = tSeg + tCross;
                     }
                 }
             }
             else if (a[i] != 0) {
                 // 2nd order segment.
-                double tCross = -v[i-1]/a[i];
+                double tCross = -v[i-1]/a[i-1];
                 if (tCross >= 0 && tCross <= t[i]) {
                     // Zero-crossing inside the period, maybe an extreme.
                     double sExtreme = s[i-1] + v[i-1]*tCross + 1./2*a[i-1]*Math.pow(tCross, 2);
                     if (sExtreme < sBound0) {
                         sBound0 = sExtreme;
-                        tBound0 = tSeg + tCross;
+                        tSBound0 = tSeg + tCross;
                     }
                     if (sExtreme > sBound1) {
                         sBound1 = sExtreme;
-                        tBound1 = tSeg + tCross;
+                        tSBound1 = tSeg + tCross;
                     }
                 }
             }
             tSeg += t[i];
+
+            // Just in case we missed them numerically, take the node extremes into consideration.
+            if (s[i] < sBound0) {
+                sBound0 = s[i];
+                tSBound0 = tSeg;
+            }
+            if (s[i] > sBound1) {
+                sBound1 = s[i];
+                tSBound1 = tSeg;
+            }
+
+            if (v[i] < vBound0) {
+                vBound0 = v[i];
+                tVBound0 = tSeg;
+            }
+            if (v[i] > vBound1) {
+                vBound1 = v[i];
+                tVBound1 = tSeg;
+            }
+
+            if (a[i] < aBound0) {
+                aBound0 = a[i];
+                tABound0 = tSeg;
+            }
+            if (a[i] > aBound1) {
+                aBound1 = a[i];
+                tABound1 = tSeg;
+            }
         }
     }
 
@@ -2488,67 +2409,6 @@ public class MotionProfile {
         }
     }
 
-    static public void pathToSvg(List<MotionProfile []> path) {
-        // Calculate the effective entry/exit velocity after jerk to acceleration 0.
-        StringBuilder svg = new StringBuilder();
-        svg.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + 
-                "<svg xmlns=\"http://www.w3.org/2000/svg\"\n" + 
-                "  xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n" + 
-                "  version=\"1.1\" baseProfile=\"full\"\n" + 
-                "  width=\"100%\" height=\"100%\" \n"+
-                "  viewBox=\""+-100+" "+-250+" "+600+" "+300+"\">\r\n");
-        svg.append("<title>Path");
-        svg.append("</title>\n");
-        double dt = 0.0005;
-        double d = 0.5;
-        double orthy = Math.sin(Math.toRadians(30));
-        double orthx = Math.cos(Math.toRadians(30));
-        double sy = -1;
-        double shad = 0.0;
-
-        for (MotionProfile [] profiles : path) {
-            double x0 = 0;
-            double y0 = 0;
-            double z0 = 0;
-
-            for (double t = 0; t <= Math.min(10, profiles[0].time); t+= dt) {
-                double x = profiles[0].getMomentaryLocation(t);
-                double y = profiles[1].getMomentaryLocation(t);
-                double z = profiles[2].getMomentaryLocation(t)+15;
-                if (t > 0) {
-                    svg.append("<line x1=\""+(x+orthx*y+shad*z)+"\" y1=\""+(y+shad*z)*orthy*sy+"\" x2=\""+(x0+orthx*y0+shad*z0)+"\" y2=\""+(y0+shad*z0)*orthy*sy+"\" stroke-linecap=\"round\" style=\"stroke-width: "+d+"; stroke:grey;\"/>\n");
-                    svg.append("<line x1=\""+(x+orthx*y)+"\" y1=\""+(y*orthy+z)*sy+"\" x2=\""+(x0+orthx*y0)+"\" y2=\""+(y0*orthy+z0)*sy+"\" stroke-linecap=\"round\" style=\"stroke-width: "+d+"; stroke:red;\"/>\n");
-                }
-                x0 = x;
-                y0 = y;
-                z0 = z;
-            }
-
-            for (int i : new int[] { 0, segments } ) {
-                double x = profiles[0].s[i];
-                double y = profiles[1].s[i];
-                double z = profiles[2].s[i]+15;
-                double r = 0.5*d;  
-                svg.append("<circle cx=\""+(x+orthx*y+shad*z)+"\" cy=\""+(y+shad*z)*orthy*sy+"\" r=\""+r+"\" style=\"stroke-width: "+d+"; stroke:grey; fill:none;\"/>\n");
-                svg.append("<circle cx=\""+(x+orthx*y)+"\" cy=\""+(y*orthy+z)*sy+"\" r=\""+r+"\" style=\"stroke-width: "+d+"; stroke:red; fill:none;\"/>\n");
-            }
-        }
-
-        svg.append("</svg>\n");
-        try {
-            File file = File.createTempFile("profile-path-", ".svg");
-            try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
-                out.println(svg.toString());
-            }
-            catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }            
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }            
-    }
-
     public void toSvg() {
         // Calculate the effective entry/exit velocity after jerk to acceleration 0.
         int eval = this.eval;
@@ -2564,7 +2424,7 @@ public class MotionProfile {
                 "  xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n" + 
                 "  version=\"1.1\" baseProfile=\"full\"\n" + 
                 "  width=\"100%\" height=\"100%\" preserveAspectRatio=\"none\"\n"+
-                "  viewBox=\""+(-vMax)+" "+1.2*sy+" "+((+vMax)-(-vMax))+" "+(-2.4*sy)+"\">\r\n");
+                "  viewBox=\""+(-vMax-d)+" "+1.2*sy+" "+((+vMax)-(-vMax)+2*d)+" "+(-2.4*sy+2*d)+"\">\r\n");
         svg.append("<title>Profile s[0]="+s[0]+" s[7]="+s[7]+" v[0]="+v[0]+" v[7]="+v[7]+" tMin="+tMin);
         svg.append("</title>\n");
         double vPrev = (-vMax);
@@ -2615,6 +2475,7 @@ public class MotionProfile {
             File file = File.createTempFile("profile-solver-", ".svg");
             try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
                 out.println(svg.toString());
+                System.out.println(file.toURI());
             }
             catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -2632,6 +2493,8 @@ public class MotionProfile {
             System.out.println(message);
         }
     }
-
+    public boolean isSupportingUncoordinated() {
+        return !(hasOption(ProfileOption.SimplifiedSCurve) || hasOption(ProfileOption.RestrictToCoordinated));
+    }
 }
 

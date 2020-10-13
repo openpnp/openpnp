@@ -193,6 +193,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
                 panelSafeZ.add(lblSafeZ, "1, 1, right, center");
         
                 textFieldSafeZ = new JTextField();
+                textFieldSafeZ.setEditable(false);
                 panelSafeZ.add(textFieldSafeZ, "3, 1, fill, top");
                 textFieldSafeZ.setColumns(10);
                 

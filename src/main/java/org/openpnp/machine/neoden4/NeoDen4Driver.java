@@ -16,10 +16,11 @@ import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Motion;
+import org.openpnp.model.Motion.MoveToCommand;
 import org.openpnp.model.Named;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
 import org.pmw.tinylog.Logger;
@@ -27,7 +28,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Root;
 
 @Root
-public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
+public class NeoDen4Driver extends AbstractReferenceDriver {
     // So, turns out it's just CRC16-CCITT
     // https://www.embeddedrelated.com/showthread/msp430/29689-1.php
     static short checksumLookupTable[] = {0, (short) 0x1021, (short) 0x2042, (short) 0x3063, (short) 0x4084,
@@ -122,7 +123,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     double x = 0, y = 0;
     double z1 = 0, z2 = 0, z3 = 0, z4 = 0;
     double c1 = 0, c2 = 0, c3 = 0, c4 = 0;
-    
+
+    private boolean motionPending;
 
     private ReferenceActuator getOrCreateActuatorInHead(ReferenceHead head, String actuatorName) throws Exception {
         ReferenceActuator a = (ReferenceActuator) head.getActuatorByName(actuatorName);
@@ -382,6 +384,12 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         throw new Exception("Not supported in this driver");
     }
 
+    @Override
+    public AxesLocation getMomentaryLocation(long timeout) throws Exception {
+        // TODO: if the driver can do it, please implement. 
+        throw new Exception("Not supported in this driver");
+    }
+
     private void moveXy(double x, double y) throws Exception {
         write(0x48);
         expect(0x05);
@@ -486,15 +494,14 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Motion motion)
+    public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
             throws Exception {
-        AxesLocation location = motion.getLocation1();
-        double feedRate = motion.getFeedRatePerSecond(this);
+        AxesLocation location = move.getLocation1();
+        double feedRate = move.getFeedRatePerSecond();
         // Reconstruct speed factor from "virtual" feed-rate assuming the default 
         // 250mm/s axes feedrate.
         
-        // TODO: better solution. 
-        
+        // TODO: better solution than just assuming 250. 
         double speed = Math.max(0.0, Math.min(1.0, feedRate/250.0));
         
         double x = location.getCoordinate(location.getAxis(this, Axis.Type.X), units);
@@ -592,12 +599,19 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
         
         // Store the new location to the axes.
         location.setToDriverCoordinates(this);
+        motionPending = true;
+    }
+
+    @Override
+    public boolean isMotionPending() {
+        return motionPending;
     }
 
     @Override
     public void waitForCompletion(ReferenceHeadMountable hm, 
             CompletionType completionType) throws Exception {
-        // TODO Auto-generated method stub
+        // TODO implement
+        motionPending = false;
     }
 
     @Override
@@ -924,16 +938,18 @@ public class NeoDen4Driver extends AbstractReferenceDriver implements Named {
 
     @Deprecated
     @Override
-    public void migrateDriver(ReferenceMachine machine) throws Exception {
+    public void migrateDriver(Machine machine) throws Exception {
         machine.addDriver(this);
-        createAxisMappingDefaults(machine);
-        AxesLocation homeLocation = new AxesLocation(machine, this, (axis) -> ( axis.getHomeCoordinate() ));
-        for (ControllerAxis axis : homeLocation.getAxes(this)) {
-            if (axis.getType() == Axis.Type.X) {
-                ((ControllerAxis) axis).setHomeCoordinate(new Length(homeCoordinateX, getUnits()));
-            }
-            else if (axis.getType() == Axis.Type.Y) {
-                ((ControllerAxis) axis).setHomeCoordinate(new Length(homeCoordinateY, getUnits()));
+        if (machine instanceof ReferenceMachine) {
+            createAxisMappingDefaults((ReferenceMachine) machine);
+            AxesLocation homeLocation = new AxesLocation(machine, this, (axis) -> ( axis.getHomeCoordinate() ));
+            for (ControllerAxis axis : homeLocation.getAxes(this)) {
+                if (axis.getType() == Axis.Type.X) {
+                    ((ControllerAxis) axis).setHomeCoordinate(new Length(homeCoordinateX, getUnits()));
+                }
+                else if (axis.getType() == Axis.Type.Y) {
+                    ((ControllerAxis) axis).setHomeCoordinate(new Length(homeCoordinateY, getUnits()));
+                }
             }
         }
     }
