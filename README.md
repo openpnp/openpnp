@@ -18,8 +18,7 @@ OpenPnP is stable and in wide use. It is still under heavy development and new f
 If you would like to keep up with our progress you can
 [Watch this project on GitHub](http://github.com/openpnp/openpnp), check out
 [our Twitter](http://twitter.com/openpnp), [join the discussion group](http://groups.google.com/group/openpnp),
-or come chat with us on (Discord)[https://discord.gg/EmsrFVx] or Freenode IRC at #openpnp. If you don't have an IRC client,
-you can [use this web based one](http://webchat.freenode.net/?channels=openpnp)
+or come chat with us on [Discord](https://discord.gg/EmsrFVx).
 
 ## Contributing
 
