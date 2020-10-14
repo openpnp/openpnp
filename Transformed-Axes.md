@@ -30,8 +30,6 @@ The **Type** will restrict the input axes to the same **Type** i.e. only the coo
 
 **Map Point A** and **Map Point B** define the two mapped coordinate points. To explain let's make a few examples:
 
-## Examples / Templates
-
 ### Negate an Axis
 
 The zero point (origin) of the axis remains the same, but the unit 1 is mapped to unit -1, so proportionally any coordinate is mapped to its negative value. 
