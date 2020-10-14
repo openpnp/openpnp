@@ -7,7 +7,7 @@ Because Motion Control is such a fundamental function inside OpenPnP, the featur
 
 It is one design goal of the Advanced Motion Control feature set to be _optional_ in OpenPnP and to provide a continuous experience for those who don't want to use it. Almost all the setting of a previous OpenPnP machine configuration should automatically be migrated to the new version. The machine should work the same way as before. 
 
-Some of the new features are visible in the GUI, such as the [[Machine-Axes]]/[[Axis-Mapping]] setup that was formerly done by hacking the `machine.xml` file. Some features have moved to different parts of the GUI such as [[Backlash-Compensation]]. But all the really "advanced" features are initially inactive or even hidden to keep it simple. This guide aims to document these features so you can enable them step-by-step. 
+Some of the new features are visible in the GUI, such as [[Machine-Axes]]/[[Mapping-Axes]] that was formerly done by hacking the `machine.xml` file. Some features have moved to different parts of the GUI such as [[Backlash-Compensation]]. But all the really "advanced" features are initially inactive or even hidden to keep it simple. This guide aims to document these features so you can enable them step-by-step. 
 
 Note: as long as Advanced Motion Control is only available in the testing version and the older OpenPnP 2.0 versions are still in use, this guide also acts as a repository for instructions that have completely changed from the previous ways. Some parts may later be incorporated into existing Wiki pages to replace or augment existing instructions. 
 
@@ -22,7 +22,7 @@ OpenPnP should migrate all but the most exotic machine setups automatically from
 
    ![GcodeDriver Migration](https://user-images.githubusercontent.com/9963310/96035272-1746d000-0e63-11eb-8ff8-94f3a0c7a67d.png)
 
-3. The Axes are now in the GUI (formerly a proprietary part of the GcodeDriver). This guide assumes that you checked them out and read about the setup as needed for your machine. See the [[Machine-Axes]], [[Transformed-Axes]], [[Linear-Transformed-Axes]] pages and the part about [[Backlash-Compensation]].
+3. The Axes are now in the GUI (formerly a proprietary part of the GcodeDriver). This guide assumes that you checked them out and read about the setup as needed for your machine. See the [[Machine-Axes]], [[Transformed-Axes]], [[Linear-Transformed-Axes]] pages plus the parts about [[Mapping-Axes]] and [[Backlash-Compensation]].
 
 4. Make sure you have assigned the correct **Axis Letter** to each controller axis as described in the [[Controller Settings|Machine-Axes#controller-settings]].
 
@@ -97,7 +97,7 @@ to the controller:
 
 **Letter Variables** changes the Gcode variable names (the {_var_ } markers) from the stock 4-axis `X`, `Y`, `Z`, `Rotation` to the actual controller Axis Letters, i.e. `X`, `Y`, `Z`, `A`, `B`, `C` etc. simplifying commands. Allows defining commands for all the axes of the controller at once. Different `MOVE_TO_COMMAND`s for different Head Mountables are no longer needed. The motion planner can now move all the axes at once (not just 4), which is needed for some "motion blending" applications. 
 
-**Allow Pre-Move Commands?** must obviously be switched off for all-axis **Letter Variables**. The switch hides the pre-move command fields on the axes and allows some of the more advanced motion control features. 
+**Allow Pre-Move Commands?** must obviously be switched off for all-axis **Letter Variables**. Switching it off hides the pre-move command fields on the [[controller axes|Machine-Axes#referencecontrolleraxis]] and allows some of the more advanced motion control features. 
 
 **Remove Comments?** removes all Gcode comments from the command strings sent to the controller. Safes bandwidth, which is relevant for **Simulated3rdOrderControl** mode, where the motion path interpolation creates a high volume of commands per time. 
 
