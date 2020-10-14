@@ -100,6 +100,10 @@ Select the camera in the selected Tools. Then make sure to have the pick locatio
 
 You can switch back and forth without losing coordinates.
 
+### Virtual Axis / Settings
+
+Aside from the basic Type and Name (explained for the [ReferenceControllerAxis](#reference-controller-axis)), only the **Home Coordinate** needs to be set as the initial position of the axis. This also doubles as Safe Z for this axis, i.e. if you press the Z axis **P** button in the Machine Controls it goes to this coordinate. 
+
 ## Other Axes
 
 Aside from the Machine Axes, discussed here, there are other types of axes, documented on their respective separate pages:
