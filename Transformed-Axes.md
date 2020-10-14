@@ -20,9 +20,9 @@ Create an axis in the Machine Setup tab.
 
 ![ReferenceMappedAxis](https://user-images.githubusercontent.com/9963310/95984469-87cdfc80-0e23-11eb-9f43-2a83b906632e.png)
 
-**Type** and **Name** are the same as in the [[ReferenceControllerAxis|Machine-Axes#referencecontrolleraxis]]. 
+**Type** and **Name** are the same as in the [[ReferenceControllerAxis|Machine-Axes#properties]]. 
 
-The **Type** will restrict the input axes to the same **Type**. Only the coordinates are mapped, the axis dimension (in space) remains the same. 
+The **Type** will restrict the input axes to the same **Type** i.e. only the coordinates are mapped, the geometric axis itself (dimension in space) remains the same. 
 
 ### Axis Mapping
 
@@ -56,7 +56,24 @@ The following example adds 100mm to all the raw axis coordinates:
 
 ### Scale an Axis
 
-As a fantasy example, assume you have salvaged a controller from a printer that works in [Twips](https://en.wikipedia.org/wiki/Twip). We therefore need to map 1440 twips to one inch but in Millimeters (25.4mm):
+As a fantasy example, assume you have salvaged a controller from a printer that works in [Twips](https://en.wikipedia.org/wiki/Twip). We therefore need to map 1440 twips to one inch but in the Driver's length unit Millimeters (25.4mm):
 
 ![Scaled Axis](https://user-images.githubusercontent.com/9963310/95990392-bcde4d00-0e2b-11eb-82d7-97d6c6337412.png)
+
+## ReferenceCamCounterClockwiseAxis
+
+The ReferenceCamCounterClockwiseAxis is used to transform shared Z axis that work in a seesaw or rocker configuration. 
+
+![Cam Counter-Clockwise](https://user-images.githubusercontent.com/9963310/95992296-19426c00-0e2e-11eb-98d1-ddfdbdfd5f04.png) 
+
+**Type** and **Name** are the same as in the [[ReferenceControllerAxis|Machine-Axes#properties]]. 
+
+The **Type** will restrict the input axes to the same **Type** i.e. only the coordinates are mapped, the geometric axis itself (dimension in space) remains the same. 
+
+**Input Axis** denotes the axis where the raw input coordinate is taken from. 
+
+**Cam Radius** is the important parameter of this transformation. It defines the leverage with which the angular motion of the motor translates into the linear motion of the two nozzles that are typically attached to precision linear rails. One nozzle is pressed down, while the other is typically pulled up using a spring. 
+
+**Cam Wheel Radius** and **Cam Wheel Gap** are physical properties of the mechanics. However, they both just add a constant offset to the transformation. Because we relate the target Z coordinate to the nozzle **tip** rather than the **back** of the nozzle where the cam wheel pushes it, such an offset is not purposeful and you will simply end up compensating for it in the nozzle offset. Leave both at zero.
+
 
