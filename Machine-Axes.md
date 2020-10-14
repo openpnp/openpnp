@@ -83,22 +83,24 @@ The ReferenceVirtualAxis is a virtual stand-in for a real machine axis. There is
 
 ![Virtual Axis](https://user-images.githubusercontent.com/9963310/95973525-1175ce00-0e14-11eb-9c3b-c37ade63eadd.png)
 
-Its purpose is to store or prepare a coordinate for Z and C while working with the camera as the selected tool in the Machine Controls. 
+Its purpose is to store or prepare a coordinate for Z or C while working with the camera as the selected tool in the Machine Controls. 
 
 ![Virtual Machine Controls](https://user-images.githubusercontent.com/9963310/95972631-fa82ac00-0e12-11eb-8cbd-7df0018b6677.png) 
 
-### Example
+### Use Case Example
 Assume you have moved your nozzle to the pick location of a feeder. The nozzle tip is right over the part. The Z axis of the nozzle now gives you the Z of the feeder. 
 
 But it's hard to judge the X/Y precisely from the side, and you have no idea of the rotation (C) of the part.
 
-![Move Camera to Nozzle](https://user-images.githubusercontent.com/9963310/95973733-513cb580-0e14-11eb-8233-5e660b863365.png) Use the **Move Camera to Nozzle** button to move the camera over the part. Doing so will go to Safe Z first, so the Z you carefully adjusted would be lost, if it weren't for the **Z virtual axis** of the camera that now safeguards the Z coordinate. 
+![Move Camera to Nozzle](https://user-images.githubusercontent.com/9963310/95973733-513cb580-0e14-11eb-8233-5e660b863365.png) Use the **Move Camera to Nozzle** button to move the camera over the part. Doing so will go to Safe Z first, so the Z you carefully adjusted would be lost, if it weren't for the **Z virtual axis** of the camera that is then set to the former Z coordinate to safeguard. 
 
-Select the camera in the selected Tools. Then make sure to have the pick location of the feeder in the crosshairs of the camera, so the X and Y are also precisely set. There is no real/physical C axis on a camera but it does still make sense to use the C machine controls to rotate the crosshairs until they align nicely with the part in the camera view. This is done using the **C virtual axis**. 
+In the Machine Controls, select the camera. Then make sure to have the pick location of the feeder in the crosshairs of the camera, so the X and Y are also precisely set. There is no real/physical C axis on a camera but it does still make sense to use the C machine controls to rotate the crosshairs until they align nicely with the part in the camera view. This is done using the **C virtual axis**. 
 
 ![Move Nozzle to Camera](https://user-images.githubusercontent.com/9963310/95973794-6580b280-0e14-11eb-98b1-8be29a4a5673.png) Now you can use the **Move Nozzle to Camera** button to move the nozzle back to the to the former camera coordinates, so not only X and Y are now applied to the nozzle, but also the safeguarded Z from before and the adjusted C. 
 
-You can switch back and forth without losing coordinates.
+You can switch back and forth without losing coordinates. Capturing either the Nozzle or the Camera using the usual button (below) will get all the coordinates, thanks to the virtual axes. 
+
+![Capture Buttons](https://user-images.githubusercontent.com/9963310/95981648-45a2bc00-0e1f-11eb-8493-73a13a5d3b91.png)
 
 ### Virtual Axis / Settings
 
@@ -107,11 +109,6 @@ Aside from the basic Type and Name (explained for the [ReferenceControllerAxis](
 ## Other Axes
 
 Aside from the Machine Axes, discussed here, there are other types of axes, documented on their respective separate pages:
+
 * To use shared axes, typically the shared Z of a multi-nozzle machine, you can use [[Transformed-Axes]]. 
-* To compensate/calibrate for mechanical imprefections of the machine, use [[Linear-Transformed-Axes]].
-
-
-
-
-
-
+* To compensate/calibrate for mechanical imperfections of the machine, use [[Linear-Transformed-Axes]].
