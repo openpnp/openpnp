@@ -2,13 +2,9 @@
 
 The ReferenceLinearTransformAxis is a multi-input axis transformation. It can take the coordinates of several inut axes and create one transformed output coordinate. 
 
-In OpenPnP the typical use case is to compensate for non-squareness of the machine, i.e. when the axes are mechanically not perfectly 90° to each other. On this page we will most just explore this problem.
+In OpenPnP the typical use case is to compensate for non-squareness of the machine, i.e. when the axes are mechanically not perfectly 90° to each other. On this page we will mostly just explore this problem.
 
-However, non-squareness compensation is just one possibility out of many. Multiple ReferenceLinearTransformAxis can be combined to create a full [Affine Transformation](https://en.wikipedia.org/wiki/Affine_transformation). From the Wikipedia:
-
-> Examples of affine transformations include translation, scaling, homothety, similarity, reflection, rotation, shear mapping, and compositions of them in any combination and sequence. 
-
-So if your problem is one of those, some pointers are at the end. 
+However, non-squareness compensation is just one possibility out of many. Multiple ReferenceLinearTransformAxis can be combined to create a full [Affine Transformation](https://en.wikipedia.org/wiki/Affine_transformation). Some pointers [at the end](#rotate-the-machine-table).
 
 ## ReferenceLinearTransformAxis
 
