@@ -83,11 +83,15 @@ The ReferenceVirtualAxis is a virtual stand-in for a real machine axis. There is
 
 ![Virtual Axis](https://user-images.githubusercontent.com/9963310/95973525-1175ce00-0e14-11eb-9c3b-c37ade63eadd.png)
 
+### Virtual Axis / Settings
+
+Aside from the basic Type and Name (explained for the [ReferenceControllerAxis](#reference-controller-axis)), only the **Home Coordinate** needs to be set as the initial position of the axis. This also doubles as Safe Z for this axis, i.e. if you press the Z axis **P** button in the Machine Controls it goes to this coordinate. 
+
+### Use Case / Example
 Its purpose is to store or prepare a coordinate for Z or C while working with the camera as the selected tool in the Machine Controls. 
 
 ![Virtual Machine Controls](https://user-images.githubusercontent.com/9963310/95972631-fa82ac00-0e12-11eb-8cbd-7df0018b6677.png) 
 
-### Use Case Example
 Assume you have moved your nozzle to the pick location of a feeder. The nozzle tip is right over the part. The Z axis of the nozzle now gives you the Z of the feeder. 
 
 But it's hard to judge the X/Y precisely from the side, and you have no idea of the rotation (C) of the part.
@@ -102,9 +106,6 @@ You can switch back and forth without losing coordinates. Capturing either the N
 
 ![Capture Buttons](https://user-images.githubusercontent.com/9963310/95981648-45a2bc00-0e1f-11eb-8493-73a13a5d3b91.png)
 
-### Virtual Axis / Settings
-
-Aside from the basic Type and Name (explained for the [ReferenceControllerAxis](#reference-controller-axis)), only the **Home Coordinate** needs to be set as the initial position of the axis. This also doubles as Safe Z for this axis, i.e. if you press the Z axis **P** button in the Machine Controls it goes to this coordinate. 
 
 ## Other Axes
 
