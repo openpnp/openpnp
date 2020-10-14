@@ -80,7 +80,7 @@ The **Type** will restrict the input axes to the same **Type** i.e. only the coo
 
 The ReferenceCamCounterClockwiseAxis is really easy. It just takes its sibling ReferenceCamCounterClockwiseAxis as input, the actual transformation is already parametrized there.
 
-![Cam Clockwise](https://user-images.githubusercontent.com/9963310/95994347-7808e500-0e30-11eb-9d85-f39405f5ea18.png)
+![Cam Clockwise](https://user-images.githubusercontent.com/9963310/95995093-56f4c400-0e31-11eb-8b15-f90cd5e171d7.png)
 
 ## Other Axes
 
