@@ -40,6 +40,8 @@ This mapping can be used for a Rack&Pinion shared Z axis a.k.a. [Peter's Head](h
 
 ![Peters Head](https://user-images.githubusercontent.com/9963310/95987574-e8f7cf00-0e27-11eb-9d89-4a538268eea3.png)
 
+Image: [Pick and place head dual nozzle by Betz Technik](https://www.betztechnik.ca/store/p34/Pick_and_Place_head_-_dual_nozzle_-_OpenPnP_compatible.html#).
+
 ### Reverse an Axis
 
 If for some reason you have an axis that goes the wrong way, you can reverse it by mapping the axis coordinate maximum to the coordinate minimum and vice versa. The coordinates stay positive.
