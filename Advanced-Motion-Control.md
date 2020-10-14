@@ -1,15 +1,15 @@
 ## What is it?
-Advanced Motion Control is the chosen label for a feature-set that aims at improving Motion Control. Because Motion Control is such a fundamental function inside OpenPnP (and because it is not new but only advanced), the feature-set has touched many parts in a Machine Setup: Axes, Drivers, Nozzles, Cameras, Actuators and the new Motion Planners. To put it all together, this page must also touch and connect many of these topics. 
+Advanced Motion Control is just a label for a new feature-set that aims at improving OpenPnP Motion Control. Better Motion Control should improve the precision and sometimes the speed of operations through improvements such as jerk control (against vibrations) and path smoothing, asynchronous operation etc. to improve speed (sometimes just a trade-off for jerk control). 
 
-Note: this guide assumes some minimal capabilities in the G-code motion controller. It is best to check out this guide first, before ripping up half your configuration. 
+Because Motion Control is such a fundamental function inside OpenPnP, the feature-set has touched many parts in a Machine Setup: Axes, Drivers, Nozzles, Cameras, Actuators and the new Motion Planners. To put it all together, this page must also touch and connect many of these topics. 
 
 ## Optional and Step-by-Step
 
-It is one design goal of the Advanced Motion Control feature set to be _optional _in OpenPnP and to provide a continuous experience for those who don't want to use it. Almost all the setting of a previous OpenPnP machine configuration should automatically be migrated to the new version. The machine should work the same way as before. 
+It is one design goal of the Advanced Motion Control feature set to be _optional_ in OpenPnP and to provide a continuous experience for those who don't want to use it. Almost all the setting of a previous OpenPnP machine configuration should automatically be migrated to the new version. The machine should work the same way as before. 
 
-Some features are still clearly visible in the GUI, such as the GUI-based [[Machine-Axes]]/[[Axis-Mapping]] setup that was formerly done by hacking the `machine.xml` file. Some features have moved to different parts of the GUI such as [[Backlash-Compensation]]. But all the really "advanced" features are initially inactive or even hidden. This guide aims to document these features so you can enable them step-by-step. 
+Some of the new features are visible in the GUI, such as the [[Machine-Axes]]/[[Axis-Mapping]] setup that was formerly done by hacking the `machine.xml` file. Some features have moved to different parts of the GUI such as [[Backlash-Compensation]]. But all the really "advanced" features are initially inactive or even hidden to keep it simple. This guide aims to document these features so you can enable them step-by-step. 
 
-Note: as long as Advanced Motion Control is only available in the testing version and the older OpenPnP 2.0 versions are still in use, this guide also acts as a repository for instructions that have completely changed from the previous ways. Some parts may later be incorporated into existing Wiki pages to replace obsolete instructions. 
+Note: as long as Advanced Motion Control is only available in the testing version and the older OpenPnP 2.0 versions are still in use, this guide also acts as a repository for instructions that have completely changed from the previous ways. Some parts may later be incorporated into existing Wiki pages to replace or augment existing instructions. 
 
 ## Migration from a previous Version 
 
@@ -23,7 +23,9 @@ OpenPnP should migrate all but the most exotic machine setups automatically from
    ![GcodeDriver Migration](https://user-images.githubusercontent.com/9963310/96035272-1746d000-0e63-11eb-8ff8-94f3a0c7a67d.png)
 
 3. The Axes are now in the GUI (formerly a proprietary part of the GcodeDriver). This guide assumes that you checked them out and read about the setup as needed for your machine. See the [[Machine-Axes]], [[Transformed-Axes]], [[Linear-Transformed-Axes]] pages and the part about [[Backlash-Compensation]].
+
 4. Make sure you have assigned the correct **Axis Letter** to each controller axis as described in the [[Controller Settings|Machine-Axes#controller-settings]].
+
 5. Go to each of the GcodeDrivers and create a **Default** `MOVE_TO_COMMAND` that moves **all** the axes of your controller **at once**, using the **Axis Letters** as the variable names. Add the acceleration command in front. Make sure to move any G-code letter inside the curly brackets (including the `F` letter, formerly outside). Remove any `Backlash` variables and extra commands if present (best to start fresh):
 
     `{Acceleration:M204 S%.2f} G1 {X:X%.2f} {Y:Y%.2f} {Z:Z%.2f} {A:A%.2f} {B:B%.2f} {FeedRate:F%.2f} ; move to target`
@@ -48,15 +50,84 @@ OpenPnP should migrate all but the most exotic machine setups automatically from
 
 11. Test the machine. Jog around a bit.
 
-### Replace existing GcodeDrivers with the GcodeAsyncDriver
+
+## GcodeDriver new Settings 
+
+![GcodeDriver new Settings](https://user-images.githubusercontent.com/9963310/96040839-347f9c80-0e6b-11eb-915b-4da9fa11f39d.png)
+
+**Motion Control Type** Determines how the OpenPnP MotionPlanner will plan the motion and how it will talk 
+to the controller:
+* **ToolpathFeedRate:**
+
+  Apply the nominal driver feed-rate limit multiplied by the speed factor to the tool-path. No acceleration control is applied. Behaves like earlier versions of OpenPnP.
+
+  Note: The driver feed-rate must be specified. 
+
+* **EuclideanAxisLimits:**
+
+  Apply axis feed-rate, acceleration and jerk limits multiplied by the proper speed factors.
+
+  The Euclidean Metric is calculated to allow the machine to run faster in a diagonal, as long as the driver's **Max Feed Rate** does not limit it. Remove the driver's limit (set to 0) for best speed. 
+
+  OpenPnP only sets the maximum limits. It is left to the controller to find the maximum rates it can reach for the length of the move. 
+
+* **ConstantAcceleration:**
+
+   Apply motion planning assuming a controller with constant acceleration motion control. The maximum feed-rate is calculated and set.
+
+* **ModeratedConstantAcceleration:**
+
+   Apply motion planning assuming a controller with constant acceleration motion control but moderate the acceleration and velocity to resemble those of 3rd order control, resulting in a move that takes the same amount of time and has similar average acceleration. 
+
+   This will reduce vibrations to a degree.
+
+* **SimpleSCurve:**
+
+   Apply motion planning assuming a controller with simplified S-Curve motion control. 
+
+   Simplified S-Curves have no constant acceleration phase, only jerk phases. Examples are TinyG and Marlin (if enabled). Slow for longer moves.
+
+* **Simulated3rdOrderControl:**
+
+   Apply motion planning assuming a controller with constant acceleration motion control but simulating 3rd order control with time step interpolation.
+
+* **Full3rdOrderControl:**
+
+    Apply motion planning assuming a controller with full 3rd order motion control. No such controller is currently known. 
+
+**Letter Variables** changes the Gcode variable names (the {_var_ } markers) from the stock 4-axis `X`, `Y`, `Z`, `Rotation` to the actual controller Axis Letters, i.e. `X`, `Y`, `Z`, `A`, `B`, `C` etc. simplifying commands. Allows defining commands for all the axes of the controller at once. Different `MOVE_TO_COMMAND`s for different Head Mountables are no longer needed. The motion planner can now move all the axes at once (not just 4), which is needed for some "motion blending" applications. 
+
+**Allow Pre-Move Commands?** must obviously be switched off for all-axis **Letter Variables**. The switch hides the pre-move command fields on the axes and allows some of the more advanced motion control features. 
+
+**Remove Comments?** removes all Gcode comments from the command strings sent to the controller. Safes bandwidth, which is relevant for **Simulated3rdOrderControl** mode, where the motion path interpolation creates a high volume of commands per time. 
+
+**Compress Gcode?** removes all unnecessary characters from the Gcode command, such as all whitespace, trailing floating point-zeros etc., again to safe bandwidth.
+
+## Use the GcodeAsyncDriver instead of the GcodeDriver
+
+The GcodeAsyncDriver can improve the performance of sending commands to the controller. All commands are prepared and then only put into an outgoing queue. The queued commands are sent to the controller using a separate writer thread. OpenPnP no longer waits for a command to be acknowledged by the controller. Instead, the two sides can fully work in parallel. Multiple GcodeAsyncDrivers can also fully work in parallel. Only when there is a real functional need, are the participants waiting for each other. 
+
+Only the GcodeAsyncDriver allows you to use the **Simulated3rdOrderControl** mode, where a high volume of commands must be sent to the controller at great speed. 
+
+**Caution**: Be aware that using the asynchronous driver(s) changes the behavior of the machine. There is no longer a strict ping-pong between OpenPnP and the controller(s). Things can now happen in parallel. This is especially critical, if you are using multiple controllers. They no longer wait for each other, unless explicitly told to. Be careful when testing the machine for the first times, including the homing cycle. 
+
+Perhaps switch off **Home after Enable** in the Machine:
+
+![Home after Enabled](https://user-images.githubusercontent.com/9963310/96040265-4a409200-0e6a-11eb-8c2d-7d6850e9fb09.png)
+
+### For new Drivers
+
+![Create GcodeAsyncDriver](https://user-images.githubusercontent.com/9963310/96038934-2f6d1e00-0e68-11eb-8736-12018f01a8fd.png)
+
+### For existing GcodeDrivers 
 
 1. Close OpenPnP. 
 2. Open the `machine.xml` found [here](https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located).
 3. Search and replace GcodeDriver with GcodeAsyncDriver. Save.
 4. Restart OpenPnP.
 
+### Advanced Settings
 
+![GcodeAsyncDriver Settings](https://user-images.githubusercontent.com/9963310/96043416-34819b80-0e6f-11eb-9b6d-238573aabe11.png)
 
-## GcodeDriver new and moved Settings
-
-Many of the GcodeDriver settings have moved to new locations in the Machine Setup. 
+--- WORK IN PROGRESS ---
