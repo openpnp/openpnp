@@ -72,7 +72,9 @@ Advanced multi-axis Affine transformations are beyond the scope of this page. Us
 
 From the Wikipedia, [Affine transformations](https://en.wikipedia.org/wiki/Transformation_matrix#Affine_transformations).
 
-## Other Axes
+## See also
 
 * [[Machine-Axes]]
 * [[Transformed-Axes]]
+* [[Mapping Axes]]
+
