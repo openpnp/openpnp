@@ -14,6 +14,8 @@ Click on one of the existing axes or create a new one using the
 
 ## ReferenceControllerAxis
 
+The ReferenceControllerAxis is the primary controller-attached axis of a machine.
+
 ![Linear Axis Setup](https://user-images.githubusercontent.com/9963310/95686619-452bda80-0bff-11eb-89e2-26283b7fa8d9.png) 
 
 ### Properties
@@ -55,7 +57,7 @@ Within the soft limits, you can define the **Safe Zone Low** and **Safe Zone Hig
 
 The **Safe Zone** can be the same value for **Low** and **High**, defining a single **Safe Z** height. Or it can be a range, to give OpenPnP more freedom to optimize its operation. 
 
-Multi-nozzle machines often share one physical Z axis to make two Nozzles move in a counterweight, seesaw or rocker configuration (more on that later). If you want your **Safe Z** at the perfect balance-point of the two Nozzles, choose the mid-point of the Z axis as the **Safe Z** height, i.e. **Low/High** at the same value. You should also use this setting as a starting point, if you are still in the process of defining the axes for the first time (chicken egg problem). 
+Multi-nozzle machines often share one physical Z axis to make two Nozzles move in a counterweight, seesaw or rocker configuration ([more on that later](#)). If you want your **Safe Z** at the perfect balance-point of the two Nozzles, choose the mid-point of the Z axis as the **Safe Z** height, i.e. **Low/High** at the same value. You should also use this setting as a starting point, if you are still in the process of defining the axes for the first time (chicken egg problem). 
 
 If your machine is already setup, you can revisit the Z axis and optimize. The Nozzles may have a lot of Z headroom, i.e. it is quite slow to move them all the way to the balance-point. So you can choose individual **Safe Z** heights for the Nozzles and set them as the **Safe Zone Low** and **High** limits respectively (you will see which is which when you Jog them up and down). OpenPnP is then free to optimize and only lift the nozzle up as far as needed. But be prepared for the laid-back/untidy "hanging nozzle style" ;-) 
 
@@ -74,3 +76,38 @@ When OpenPnP is performing a move with several axes involved (e.g. a diagonal pl
 **Acceleration [/s²]** sets the [acceleration](https://simple.wikipedia.org/wiki/Acceleration) limit (maximum change of velocity per unit of time). In many cases this is more important than the speed limit, as the speed limit is only ever reached in very long moves. 
 
 **Jerk [/s³]** sets the [jerk](https://simple.wikipedia.org/wiki/Jerk) limit (maximum change of acceleration per unit of time). If left at zero, no jerk control will be used. Without jerk control, the acceleration will be switched on and off instantaneous, creating vibrations and wear and tear. OpenPnP has several options to use jerk control, even if your controller does not natively have the capability (see [[Advanced-Motion-Control]]).
+
+## ReferenceVirtualAxis
+
+The ReferenceVirtualAxis is a virtual stand-in for a real machine axis. There is typically a virtual Z and C assigned to the down-looking Camera. 
+
+![Virtual Axis](https://user-images.githubusercontent.com/9963310/95973525-1175ce00-0e14-11eb-9c3b-c37ade63eadd.png)
+
+Its purpose is to store or prepare a coordinate for Z and C while working with the camera as the selected tool in the Machine Controls. 
+
+![Virtual Machine Controls](https://user-images.githubusercontent.com/9963310/95972631-fa82ac00-0e12-11eb-8cbd-7df0018b6677.png) 
+
+### Example
+Assume you have moved your nozzle to the pick location of a feeder. The nozzle tip is right over the part. The Z axis of the nozzle now gives you the Z of the feeder. 
+
+But it's hard to judge the X/Y precisely from the side, and you have no idea of the rotation (C) of the part.
+
+![Move Camera to Nozzle](https://user-images.githubusercontent.com/9963310/95973733-513cb580-0e14-11eb-8233-5e660b863365.png) Use the **Move Camera to Nozzle** button to move the camera over the part. Doing so will go to Safe Z first, so the Z you carefully adjusted would be lost, if it weren't for the **Z virtual axis** of the camera that now safeguards the Z coordinate. 
+
+Select the camera in the selected Tools. Then make sure to have the pick location of the feeder in the crosshairs of the camera, so the X and Y are also precisely set. There is no real/physical C axis on a camera but it does still make sense to use the C machine controls to rotate the crosshairs until they align nicely with the part in the camera view. This is done using the **C virtual axis**. 
+
+![Move Nozzle to Camera](https://user-images.githubusercontent.com/9963310/95973794-6580b280-0e14-11eb-98b1-8be29a4a5673.png) Now you can use the **Move Nozzle to Camera** button to move the nozzle back to the to the former camera coordinates, so not only X and Y are now applied to the nozzle, but also the safeguarded Z from before and the adjusted C. 
+
+You can switch back and forth without losing coordinates.
+
+## Other Axes
+
+Aside from the Machine Axes, discussed here, there are other types of axes, documented on their respective separate pages:
+* To use shared axes, typically the shared Z of a multi-nozzle machine, you can use [[Transformed-Axes]]. 
+* To compensate/calibrate for mechanical imprefections of the machine, use [[Linear-Transformed-Axes]].
+
+
+
+
+
+
