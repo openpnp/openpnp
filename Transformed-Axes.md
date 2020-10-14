@@ -36,7 +36,7 @@ The zero point (origin) of the axis remains the same, but the unit 1 is mapped t
 
 ![Negate](https://user-images.githubusercontent.com/9963310/95986818-dcbf4200-0e26-11eb-82a2-c91fb1866b10.png)
 
-This mapping can be used for a Rack&Pinion shared Z axis a.k.a. [Peter's Head](https://www.betztechnik.ca/store/p34/Pick_and_Place_head_-_dual_nozzle_-_OpenPnP_compatible.html#). If one Nozzle goes up (+Z), the other goes down (-Z).
+This mapping can be used for a Rack&Pinion shared Z axis a.k.a. "Peter's Head". If one Nozzle goes up (+Z), the other goes down (-Z).
 
 ![Peters Head](https://user-images.githubusercontent.com/9963310/95987574-e8f7cf00-0e27-11eb-9d89-4a538268eea3.png)
 
