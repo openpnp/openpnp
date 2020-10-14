@@ -6,4 +6,4 @@ The [[Machine-Axes]], [[Transformed-Axes]] and [[Linear-Transformed-Axes]] you c
 
 ![Assigning Virtual Axes](https://user-images.githubusercontent.com/9963310/96020598-8f56cb00-0e4e-11eb-9b67-dabd73a5f2cf.png)
 
-That's all. For those of you remembering the needed `machine.xml` hacking, this might almost appear too simple. 
+That's all. For those of you remembering the old `machine.xml` hacking, this might almost appear too simple. 
