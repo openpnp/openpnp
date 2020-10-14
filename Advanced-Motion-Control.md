@@ -24,9 +24,11 @@ OpenPnP should migrate all but the most exotic machine setups automatically from
 
 3. The Axes are now in the GUI (formerly a proprietary part of the GcodeDriver). This guide assumes that you checked them out and read about the setup as needed for your machine. See the [[Machine-Axes]], [[Transformed-Axes]], [[Linear-Transformed-Axes]] pages and the part about [[Backlash-Compensation]].
 4. Make sure you have assigned the correct **Axis Letter** to each controller axis as described in the [[Controller Settings|Machine-Axes#controller-settings]].
-5. Go to each of the GcodeDrivers and create a **Default** `MOVE_TO_COMMAND` that moves **all** the axes of your controller **at once**, using the **Axis Letters** as the variable names. Add the acceleration command in front. Make sure to move any G-code letter inside the curly brackets (including the `F` letter, formerly outside). Remove any `Backlash` variables and extra commands if present. Best to start fresh:
+5. Go to each of the GcodeDrivers and create a **Default** `MOVE_TO_COMMAND` that moves **all** the axes of your controller **at once**, using the **Axis Letters** as the variable names. Add the acceleration command in front. Make sure to move any G-code letter inside the curly brackets (including the `F` letter, formerly outside). Remove any `Backlash` variables and extra commands if present (best to start fresh):
 
     `{Acceleration:M204 S%.2f} G1 {X:X%.2f} {Y:Y%.2f} {Z:Z%.2f} {A:A%.2f} {B:B%.2f} {FeedRate:F%.2f} ; move to target`
+
+    ![Gcode Editing](https://user-images.githubusercontent.com/9963310/96037872-abfefd00-0e66-11eb-9639-46ba5dfa13fb.png)
 
 6. Remove any `MOVE_TO_COMMAND`s from the other Head Mountables. They are no longer needed.
 
@@ -44,7 +46,7 @@ OpenPnP should migrate all but the most exotic machine setups automatically from
 
     `^ok C: X:(?<X>-?\d+\.\d+) Y:(?<Y>-?\d+\.\d+) Z:(?<Z>-?\d+\.\d+) A:(?<A>-?\d+\.\d+) B:(?<B>-?\d+\.\d+).*`
 
-
+11. Test the machine. Jog around a bit.
 
 ### Replace existing GcodeDrivers with the GcodeAsyncDriver
 
