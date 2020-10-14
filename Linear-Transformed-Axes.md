@@ -57,7 +57,7 @@ Using a trusted precision square or a large millimeter paper, you should be able
 This is just one example, fixing the X/Y non-squareness using a compensation in X. If you prefer, you could also compensate in Y. If your machine table is uneven, compensate in Z. Any axis can be transformed, even in combination. 
 
 ## Rotate the Machine Table
-Just to show off what it can do, the following would rotate your machine table by 45° :-)
+Just to show off what it can do, the following would rotate your X-Y plane by -45° around Z :-)
 
 ![Rotate X](https://user-images.githubusercontent.com/9963310/96012041-fe7af200-0e43-11eb-8ffc-dc99d541938c.png)
 ![Rotate Y](https://user-images.githubusercontent.com/9963310/96011777-a8a64a00-0e43-11eb-8ba3-16e3e6682347.png)
