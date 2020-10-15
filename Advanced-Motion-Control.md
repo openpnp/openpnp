@@ -10,20 +10,18 @@ Advanced Motion Control aims to improve these areas:
 * Making features such as [[Axis Mapping|Mapping-Axes]], [[Backlash-Compensation]], [[Visual-Homing]], [[Non-Squareness Compensation|Linear-Transformed-Axes#use-case--non-squareness-compensation]] etc. available for all types of drivers (formerly just the GcodeDriver).
 * Allowing multiple drivers of mixed types. 
 * Simpler and more unified G-code configuration of axes in (multiple) drivers. 
-* Better control of speed factors: no longer just control maximum feed-rates, but also [[acceleration (and optionally jerk)|Machine-Axes#kinematic-settings--rate-limits]]. 
-* Operations at reduced speeds perform much gentler, improving handling delicate parts, nozzle tip changing, [[mechanical feeder  operation|ReferencePushPullFeeder]], etc.
-* Separate control of (nozzle) rotation rate limits for (much needed) higher angular speeds.
-* Add jerk control to ...
+* Better control of speed factors: properly controls the _average_ speed, including acceleration/deceleration phases. A move at 50% takes exactly twice as long, regardles of how short or long the move is. Formerly, just the maximum feed-rate was limited, often having no effect, as it was never reached on short moves. 
+* Operations at reduced speed factor perform much gentler due to reduced acceleration (and jerk). Improves handling delicate parts, nozzle tip changing, [[mechanical feeder operation|ReferencePushPullFeeder]], etc.
+* Per axis [[feed-rate, acceleration (and optionally jerk) limits|Machine-Axes#kinematic-settings--rate-limits]]. Allows separate control of (nozzle) rotation rate limits for (much needed) higher angular speeds.
+* Added jerk control to ...
 * ... reduce vibrations, therefore reduce needed camera settling times but also improve pick and place accuracy. 
 * ... prevent any slipping of parts on the nozzle (for cheap DIY vacuum systems).
 * ... allow for higher peak acceleration without stalling steppers, improving the speed of long moves.
-* Employ paralellized operation and asynchronous communication between OpenPnP and (multiple) controllers to improve throughput and reduce delays.
-* (Experimental) Add motion blending, to improve speed.
-* Add graphical diagnostics for Motion Planning as a basis for _fact based_ machine optimization. 
+* Paralellized operation and asynchronous communication between OpenPnP and (multiple) controllers to improve throughput and reduce delays.
+* (Experimental) Motion Blending, to improve speed.
+* Graphical diagnostics for Motion Planning as a basis for _fact based_ machine optimization. 
 
-On one hand, adding jerk control does reduce the motion speed of the machine per se. 
-
-On the other hand, some of that loss can be regained through shorter [[Camera Settling]] times and it turns out (somewhat unexpectedly) through much improved pick accuracy, needing fewer bottom vision alignment passes or even allowing the elimination of bottom vision altogether for some parts (e.g. small passives). Other features clearly improve the speed, with the best improvment (motion blending) still being experimental. 
+On one hand, adding jerk control does reduce the motion speed of the machine per se. On the other hand, due to reduced vibrations, some of that loss can be regained through shorter [[Camera Settling]] times and it turns out (somewhat unexpectedly) through much improved pick accuracy, needing fewer bottom vision alignment passes or even allowing the elimination of bottom vision altogether for some parts (e.g. small passives). Other features clearly improve the speed, with the most promising improvment (Motion Blending) still being experimental. 
 
 ![AdvancedMotionAnimation](https://user-images.githubusercontent.com/9963310/95627544-ab3c2480-0a7c-11eb-8d36-d6921ecf7423.gif)
 
@@ -85,7 +83,7 @@ OpenPnP should migrate all but the most exotic machine setups automatically from
 
 ![GcodeDriver new Settings](https://user-images.githubusercontent.com/9963310/96040839-347f9c80-0e6b-11eb-915b-4da9fa11f39d.png)
 
-**Motion Control Type** Determines how the OpenPnP MotionPlanner will plan the motion and how it will talk 
+**Motion Control Type** determines how the OpenPnP MotionPlanner will plan the motion and how it will talk 
 to the controller:
 * **ToolpathFeedRate:**
 
@@ -158,6 +156,52 @@ Perhaps switch off **Home after Enable** in the Machine:
 
 ### Advanced Settings
 
-![GcodeAsyncDriver Settings](https://user-images.githubusercontent.com/9963310/96043416-34819b80-0e6f-11eb-9b6d-238573aabe11.png)
+The GcodeAsyncDriver adds the new **Advanced Settings** tab:
 
---- WORK IN PROGRESS ---
+![GcodeAsyncDriver Settings](https://user-images.githubusercontent.com/9963310/96152186-8f1d0500-0f0c-11eb-93a3-4ebdd8f6577e.png)
+
+### Settings
+
+**Confirmation Flow Control** forces OpenPnP to wait for an "OK" by the controller, before sending the next command. This only concerns the writer thread, i.e. it does not block any of the other activities and threads of OpenPnP. More G-code commands can still be created and queued in parallel. 
+
+If you switch this off, make sure you have flow-control in the communications. For serial port communication you need to select a **Flow Control**:
+
+![Serial Port Flow Control](https://user-images.githubusercontent.com/9963310/96151994-51b87780-0f0c-11eb-8bf6-771492d04862.png)
+
+**RtsCts** has been confirmed to work on Smoothieware over USB. You can then switch off **Confirmation Flow Control** for even better throughput.
+
+### Interpolation 
+
+The interpolation settings determine how the **Simulated3rdOrderControl** is approximated (see the [Motion Control Type](#gcodedriver-new-settings)). 
+
+**Maximum Number of Steps** limits the number of interpolation steps per move. If this number is exceeded, the interpolation will fail, and the **Motion Control Type** will fall-back to **ModeratedConstantAcceleration**. A debug-message will be logged.
+
+This number must correspond to queue depth of your controller and best leave some steps free for look-ahead into subsequent moves. Smoothieware can be tuned in the `config.txt`. I was able to increase it from 32 to 48: 
+
+`    planner_queue_size      48 # DO NOT CHANGE THIS UNLESS YOU KNOW EXACTLY WHAT YOUR ARE DOING`
+
+Other controllers have a fixed queue size, Duet3D 3 is currently at 40, but it is already discussed that this will be increased dramatically in the future, there is plenty of RAM and computing power available. 
+
+**Maximum Number of Jerk Steps** limits the number of interpolation steps used to ramp up and down acceleration. 
+
+True 3rd order Motion Control (a.k.a. Jerk Control) would ramp up acceleration smoothly. On a constant acceleration controller this is simulated by a step-wise ramp. The graphical [[Motion-Planner-Diagnostics]] illustrates how this is done. Stronger lines indicate the planned jerk controlled motion, lighter lines indicate the interpolated constant acceleration motion: 
+
+![Simulated Jerk Control](https://user-images.githubusercontent.com/9963310/96153482-0dc67200-0f0e-11eb-8d6e-fe7ac8a249eb.png)
+
+Note: the maximum number of steps is only used if the maximum acceleration limit is reached. Sometimes an extra step is added when the feed-rate limit is reached. 
+
+**Minimum Time Step** determines the smallest possible interpolation interval. Generated interpolation steps will be multiples of this. Be aware that setting a very small interval will increase computation time. 
+
+**Minimum Axis Resolution Ticks** effectively sets the minimum distance of one step. There is a practical limit when the steps start to collapse into very few micro-steps (or analog) of the axis motors (see the axis [[Resolution|Machine-Axes#controller-settings]]). Because axes can have dramatically different scalar resolutions (especially between linear and rotary axes) this limit is given as a number of resolution ticks. At least one axis must move so many ticks per interpolation step. 
+
+**Maximum Junction Deviation** is a somewhat artificial maximum allowed elastic deviation of the machine given as a length (_s_). 
+
+For Motion Blending, we are generating curved trajectories. Interpolation uses a polygon to approximate the curve. But this means that in the corners (junctions) of the polygon, there is a "jolt" where the machine instantly changes its direction slightly. As it is physically impossible to change the direction of a moving mass instantly (against inertia), the machine will simply _have to_ react elastically. The moving mass will overshoot and then be drawn back on course by elastic forces. We just assume (hope) this happens mostly in the electromagnetic forces of the motors. For a stepper motor, the maximum allowed deviation is in the order of one full-step, before steps are lost, therefore we need to limit the junction deviation accordingly. 
+
+The following image illustrates the effects (exagerated):
+
+![junction-deviation](https://user-images.githubusercontent.com/9963310/96157974-44eb5200-0f13-11eb-9e97-371bd5dfb17d.png) 
+
+OpenPnP takes each maximum axis acceleration into consideration to see how far the green trajectory deviates (the acceleration drawing the axis back on course). It can then deduce a per-axis maximum allowed instant velocity change. Interpolation steps are generated, before this threshold is exceeded. 
+
+All the above parameters are subject to the speed factor applied to the move. The idea is to generate the same interpolation regardless of speed, so we can examine it in "slow motion". 
