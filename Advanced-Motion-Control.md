@@ -31,7 +31,7 @@ Whether the machine will be slower or faster in the end, probably depends on the
 
 It is one design goal of the Advanced Motion Control feature set to be _optional_ in OpenPnP and to provide a continuous experience for those who don't want to use it. Almost all the setting of a previous OpenPnP machine configuration should automatically be migrated to the new version. The machine should work the same way as before. 
 
-Some of the new features are visible in the GUI, such as [[Machine-Axes]]/[[Mapping-Axes]] that was formerly done by hacking the `machine.xml` file. Some features have moved to different parts of the GUI such as [[Backlash-Compensation]]. But all the really "advanced" features are initially inactive or even hidden to keep it simple. This guide aims to document these features so you can enable them step-by-step. 
+Some of the new features are visible in the GUI, such as [[Machine Axes]] / [[Axis Mapping|Mapping-Axes]] that was formerly done by hacking the `machine.xml` file. Some features have moved to different parts of the GUI such as [[Backlash-Compensation]]. But all the really "advanced" features are initially inactive or even hidden to keep it simple. This guide aims to document these features so you can enable them step-by-step. 
 
 Note: as long as Advanced Motion Control is only available in the testing version and the older OpenPnP 2.0 versions are still in use, this guide also acts as a repository for instructions that have completely changed from the previous ways. Some parts may later be incorporated into existing Wiki pages to replace or complement existing instructions. 
 
@@ -184,7 +184,7 @@ Other controllers have a fixed queue size, Duet3D 3 is currently at 40, but it i
 
 **Maximum Number of Jerk Steps** limits the number of interpolation steps used to ramp up and down acceleration. 
 
-True 3rd order Motion Control (a.k.a. Jerk Control) would ramp up acceleration smoothly. On a constant acceleration controller this is simulated by a step-wise ramp. The graphical [[Motion-Planner-Diagnostics]] illustrates how this is done. Stronger lines indicate the planned jerk controlled motion, lighter lines indicate the interpolated constant acceleration motion: 
+True 3rd order Motion Control (a.k.a. Jerk Control) would ramp up acceleration smoothly. On a constant acceleration controller this is simulated by a step-wise ramp. The graphical diagnostics of the [[Motion-Planner]] illustrates how this is done. Stronger lines indicate the planned jerk controlled motion, lighter lines indicate the interpolated constant acceleration motion: 
 
 ![Simulated Jerk Control](https://user-images.githubusercontent.com/9963310/96153482-0dc67200-0f0e-11eb-8d6e-fe7ac8a249eb.png)
 
