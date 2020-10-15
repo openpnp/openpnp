@@ -1,7 +1,33 @@
 ## What is it?
-Advanced Motion Control is just a label for a new feature-set that aims at improving OpenPnP Motion Control. Better Motion Control should improve the precision and sometimes the speed of operations through improvements such as jerk control (against vibrations) and path smoothing, asynchronous operation etc. to improve speed (sometimes just a trade-off for jerk control). 
+Advanced Motion Control is just a summary label for a new feature-set that aims at improving OpenPnP Motion Control. Better Motion Control should improve the precision and sometimes the speed of operations through various improvements.
 
 Because Motion Control is such a fundamental function inside OpenPnP, the feature-set has touched many parts in a Machine Setup: Axes, Drivers, Nozzles, Cameras, Actuators and the new Motion Planners. To put it all together, this page must also touch and connect many of these topics. 
+
+## Feature List
+Advanced Motion Control aims to improve these areas:
+
+* Simpler all-GUI setup of [[Machine-Axes]], [[Transformed-Axes]] and their [[assignment to Nozzles, Cameras etc.|Mapping-Axes]] (no more `machine.xml` hacking).
+* Making features such as [[Axis Mapping|Mapping-Axes]], [[Backlash-Compensation]], [[Visual-Homing]], [[Non-Squareness Compensation|Linear-Transformed-Axes#use-case--non-squareness-compensation]] etc. available for all types of drivers (formerly just the GcodeDriver).
+* Allowing multiple drivers of mixed types. 
+* Simpler and more unified G-code configuration of axes in (multiple) drivers. 
+* Better control of speed factors: no longer just control maximum feed-rates, but also [[acceleration (and optionally jerk)|Machine-Axes#kinematic-settings--rate-limits]]. 
+* Operations at reduced speeds perform much gentler, improving handling delicate parts, nozzle tip changing, [[mechanical feeder  operation|ReferencePushPullFeeder]], etc.
+* Separate control of (nozzle) rotation rate limits for (much needed) higher angular speeds.
+* Add jerk control to ...
+* ... reduce vibrations, therefore reduce needed camera settling times but also improve pick and place accuracy. 
+* ... prevent any slipping of parts on the nozzle (for cheap DIY vacuum systems).
+* ... allow for higher peak acceleration without stalling steppers, improving the speed of long moves.
+* Employ paralellized operation and asynchronous communication between OpenPnP and (multiple) controllers to improve throughput and reduce delays.
+* (Experimental) Add motion blending, to improve speed.
+* Add graphical diagnostics for Motion Planning as a basis for _fact based_ machine optimization. 
+
+On one hand, adding jerk control does reduce the motion speed of the machine per se. 
+
+On the other hand, some of that loss can be regained through shorter [[Camera Settling]] times and it turns out (somewhat unexpectedly) through much improved pick accuracy, needing fewer bottom vision alignment passes or even allowing the elimination of bottom vision altogether for some parts (e.g. small passives). Other features clearly improve the speed, with the best improvment (motion blending) still being experimental. 
+
+![AdvancedMotionAnimation](https://user-images.githubusercontent.com/9963310/95627544-ab3c2480-0a7c-11eb-8d36-d6921ecf7423.gif)
+
+Whether the machine will be slower or faster in the end, probably depends on the machine, the controller, the parts etc. but it seems that accuracy and reliability of operations will benefit for sure. 
 
 ## Optional and Step-by-Step
 
@@ -9,7 +35,7 @@ It is one design goal of the Advanced Motion Control feature set to be _optional
 
 Some of the new features are visible in the GUI, such as [[Machine-Axes]]/[[Mapping-Axes]] that was formerly done by hacking the `machine.xml` file. Some features have moved to different parts of the GUI such as [[Backlash-Compensation]]. But all the really "advanced" features are initially inactive or even hidden to keep it simple. This guide aims to document these features so you can enable them step-by-step. 
 
-Note: as long as Advanced Motion Control is only available in the testing version and the older OpenPnP 2.0 versions are still in use, this guide also acts as a repository for instructions that have completely changed from the previous ways. Some parts may later be incorporated into existing Wiki pages to replace or augment existing instructions. 
+Note: as long as Advanced Motion Control is only available in the testing version and the older OpenPnP 2.0 versions are still in use, this guide also acts as a repository for instructions that have completely changed from the previous ways. Some parts may later be incorporated into existing Wiki pages to replace or complement existing instructions. 
 
 ## Migration from a previous Version 
 
