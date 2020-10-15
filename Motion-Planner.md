@@ -28,17 +28,25 @@ See the GcodeAsyncDriver's [[Interpolation settings|Advanced-Motion-Control#inte
 
 ![Simulated Jerk Control](https://user-images.githubusercontent.com/9963310/96153482-0dc67200-0f0e-11eb-8d6e-fe7ac8a249eb.png)
 
-### Motion Path Optimization
+### Motion Path Planning
 
 The ReferenceAdvancedMotionPlanner will first just record the motion that OpenPnP wants to do. Nothing is planned or executed yet. At some point it will be a functional necessity for OpenPnP to make sure the machine is at the target location. One example is wanting to do Computer Vision, obviously the camera needs to be at the target location before it can take a picture. OpenPnP will then ask the Motion Planner to wait for motion completion, which triggers motion planning, execution and finally truly waiting for its completion. 
 
-In the meantime there may have been several moves recorded, creating a motion path. The ReferenceAdvancedMotionPlanner will now try to optimize how this path is executed. One thing the planner despises are corners (often 90° in OpenPnP). Corners mean the machine must come to a complete still-stand and then start accelerating from scratch. 
+In the meantime there may have been several moves recorded, creating a motion path. The controller will now get all the path commands at once, which will allow it to use look-ahead planning and doing subsequent steps as fast as possible without any communications ping-pong in between moves. This alone will increase speed for slow or laggy connections. 
 
-In OpenPnP, the typical application is the Move-to-Location-at-Safe-Z pattern. The Nozzle is down for a pick or place, then goes up to Safe Z, moves over the target location and then plunges down in Z to pick or place again. The NullMotionPlanner would generate the first rectangular path. The ReferenceAdvancedMotionPlanner optimizes that path to look more like the second path. Because of the rounded, overshooting curves, the machine does not need to stop at any time. Instead, it can speed through the whole path in one fluid motion.
+But the real winner comes now.
+
+### Motion Blending (Experimental!)
+
+Having recorded a sequence of moves, the ReferenceAdvancedMotionPlanner is now free to optimize and plan its execution, rearranging and even modiyfing moves within the machine constraints. 
+
+One thing the planner despises are corners. Corners (often 90° in OpenPnP) mean the machine must come to (almost) a complete still-stand and then start accelerating from scratch. In OpenPnP, the typical application is the Move-to-Location-at-Safe-Z pattern. The Nozzle is down for a pick or place, then goes up to Safe Z, moves over the target location and then plunges down in Z to pick or place again. 
+
+The NullMotionPlanner would generate a rectangular path, like the first one shown below. The ReferenceAdvancedMotionPlanner optimizes that path to look more like the second one. Because of the rounded, overshooting curves, the machine does not need to slow down much at any time. Instead, it can speed through the whole path in one fluid motion!
 
 ![Move-to-Location-at-Safe-Z](https://user-images.githubusercontent.com/9963310/96170324-bc28e200-0f23-11eb-8099-d78cb9ffe1b9.png)
 
-OpenPnP has the notion of a Safe Zone (see the [[Safe Zone axis limits|Machine-Axes#kinematic-settings--axis-limits]]) with no obstacles. The motion planners are free to "play" in this Safe Zone as they like. ReferenceAdvancedMotionPlanner uses this to let the Z axis overshoot, the the X/Y axis is already free to start moving, even before the Z axis has come to a stop. The same happens at re-entry, in reverse order. The planner can effectively overlap or blend the deceleration phase of Z with the acceleration phase of X/Y, hence the name "Motion Blending".  
+OpenPnP has the notion of a Safe Zone (see the [[Safe Zone axis limits|Machine-Axes#kinematic-settings--axis-limits]]) where no obstacles are allowed, so collisions can be excluded. The motion planners is therefore free to "play" anywhere in this Safe Zone. This is exploited to let the Z axis overshoot, the X/Y axis is already free to start moving, even before the Z axis has come to a stop. The same happens at re-entry, in reverse order. The planner can effectively overlap _or blend_ the deceleration phase of Z with the acceleration phase of X/Y (and vice versa), hence the name "Motion Blending".  
 
 ![AdvancedMotionAnimation](https://user-images.githubusercontent.com/9963310/95627544-ab3c2480-0a7c-11eb-8d36-d6921ecf7423.gif)
 
@@ -54,7 +62,7 @@ If you have the ReferenceAdvancedMotionPlanner selected, the **Motion Planner** 
 
 **Allow continuous motion?** will enable path recording and will defer planning and execution until there is functional requirement to wait for motion completion. **Caution**: When enabling this on an existing machine, be aware that this may change its behavior. There might be constellation when this requires changes in G-code. Be careful! 
 
-**Allow uncoordinate?** will enable curved motion in the Save Zone. If you want Motion Blending, you must enable this.
+**Allow uncoordinated?** will enable curved motion in the Save Zone. If you want Motion Blending, you must enable this.
 
 **Interpolation Retiming?** the interpolation works using a **velocity over space** polygonal approximation. The straight lines of the polygon used to approximate the curve are acting like "shortcuts". This means that the resulting move is slightly faster than its planned counterpart. By enabling this switch, the interpolated move will be stretched in time, to match the planned time again. Conversely, this will slightly lower the peak velocity when compared to the planned peak velocity. 
 
@@ -64,11 +72,17 @@ You can define a test motion with 4 locations and speed factors to test the moti
 
 ## Motion Planner Diagnostics
 
-If you have the ReferenceAdvancedMotionPlanner selected, the **Motion Planner Diagnostics** tab will be available. The graphical diagnostics plot the movement of all participating axes over time. You get Location, Velocity, Acceleration and Jerk both for the planned motion (strong lines) and their interpolation (light lines). Move the mouse over the graphs to read of values from the plots. 
+If you have the ReferenceAdvancedMotionPlanner selected, the **Motion Planner Diagnostics** tab will be available. The graphical diagnostics plot the movement of all participating axes over time. You get Location, Velocity, Acceleration and Jerk both for the planned motion (strong lines) and their interpolation (light lines). Move the mouse over the graphs to read off values from the plots. 
 
-The following example shows a move with Motion Blending. It is clearly visible, how the Z axis movement blends with the X axis movement over time.
+The following example shows a move with Motion Blending. It is clearly visible, how the Z axis motion _blends_ with the X axis movement over time.
 
 ![Motion Planer Diagnostics](https://user-images.githubusercontent.com/9963310/96174107-1e381600-0f29-11eb-8e0a-9a4bd160963b.png)
 
--- WORK IN PROGRESS --
+**Enabled?** switches diagnostics on. This might add a slight CPU load penalty.  
+
+The **Test** button plays the **Test Motion** defined on the previous tab. It does it forward/backward, alternating.
+
+**Planned [s]** indicates how long the move would take as planned, in seconds. This is always available. 
+
+**Actual** indicated the time the move actually took, as measured, including all the overhead. Note, this is only available for the **Test Motion**. In the example screenshot you see how the move took longer than planned. This is due to Smoothieware not offering a queue size that is large enough. Motion Blending has not been proven in practice yet. (see the [pull-request for more information about this](https://github.com/openpnp/openpnp/pull/1061)).
 
