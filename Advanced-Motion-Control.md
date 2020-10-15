@@ -12,7 +12,7 @@ Advanced Motion Control aims to improve these areas:
 * Simpler and more unified G-code configuration of axes in (multiple) drivers. 
 * Better control of speed factors: properly controls the _average_ speed, including acceleration/deceleration phases. A move at 50% takes exactly twice as long, regardles of how short or long the move is. Formerly, just the maximum feed-rate was limited, often having no effect, as it was never reached on short moves. 
 * Operations at reduced speed factor perform much gentler due to reduced acceleration (and jerk). Improves handling delicate parts, nozzle tip changing, [[mechanical feeder operation|ReferencePushPullFeeder]], etc.
-* Per axis [[feed-rate, acceleration (and optionally jerk) limits|Machine-Axes#kinematic-settings--rate-limits]]. Allows separate control of (nozzle) rotation rate limits for (much needed) higher angular speeds.
+* Per axis [[feed-rate, acceleration (and optionally jerk) limits|Machine-Axes#kinematic-settings--rate-limits]]. Most importantly, this allows separate control of (nozzle) rotation rate limits for higher angular speeds.
 * Added jerk control to ...
 * ... reduce vibrations, therefore reduce needed camera settling times but also improve pick and place accuracy. 
 * ... prevent any slipping of parts on the nozzle (for cheap DIY vacuum systems).
