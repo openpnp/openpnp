@@ -60,7 +60,7 @@ OpenPnP should migrate all but the most exotic machine setups automatically from
 
     `{Acceleration:M204 S%.2f} G1 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {A:A%.4f} {B:B%.4f} {FeedRate:F%.2f} ; move to target`
 
-    **NOTE**: all these are Smoothieware examples.
+    **NOTE**: the example commands shown here are for Smoothieware. Other controller's might differ. 
 
 6. Remove any `MOVE_TO_COMMAND`s from the other Head Mountables. They are no longer needed.
 
