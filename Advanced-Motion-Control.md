@@ -7,7 +7,7 @@ Because Motion Control is such a fundamental function inside OpenPnP, the featur
 Advanced Motion Control aims to improve these areas:
 
 * Simpler all-GUI setup of [[Machine-Axes]], [[Transformed-Axes]] and their [[assignment to Nozzles, Cameras etc.|Mapping-Axes]] (no more `machine.xml` hacking).
-* Making features such as [[Axis Mapping|Mapping-Axes]], [[Backlash-Compensation]], [[Visual-Homing]], [[Non-Squareness Compensation|Linear-Transformed-Axes#use-case--non-squareness-compensation]] etc. available for all types of drivers (formerly just the GcodeDriver).
+* Making features such as [[Axis Mapping|Mapping-Axes]], [[Backlash Compensation]], [[Visual Homing]], [[Non-Squareness Compensation|Linear-Transformed-Axes#use-case--non-squareness-compensation]] etc. available for all types of drivers (formerly just the GcodeDriver).
 * Allowing multiple drivers of mixed types. 
 * Simpler and more unified G-code configuration of axes in (multiple) drivers. 
 * Better control of speed factors: properly controls the _average_ speed, including acceleration/deceleration phases. A move at 50% takes exactly twice as long, regardles of how short or long the move is. Formerly, just the maximum feed-rate was limited, often having no effect, as it was never reached on short moves. 
@@ -46,7 +46,7 @@ OpenPnP should migrate all but the most exotic machine setups automatically from
 
    ![GcodeDriver Migration](https://user-images.githubusercontent.com/9963310/96035272-1746d000-0e63-11eb-8ff8-94f3a0c7a67d.png)
 
-3. The Axes are now in the GUI (formerly a proprietary part of the GcodeDriver). This guide assumes that you checked them out and read about the setup as needed for your machine. See the [[Machine-Axes]], [[Transformed-Axes]], [[Linear-Transformed-Axes]] pages plus the parts about [[Mapping-Axes]] and [[Backlash-Compensation]].
+3. The Axes are now in the GUI (formerly a proprietary part of the GcodeDriver). This guide assumes that you checked them out and read about the setup as needed for your machine. See the [[Machine Axes]], [[Transformed Axes]], [[Linear Transformed Axes]] pages plus the parts about [[Mapping Axes]] and [[Backlash-Compensation]].
 
 4. Make sure you have assigned the correct **Axis Letter** to each controller axis as described in the [[Controller Settings|Machine-Axes#controller-settings]].
 
