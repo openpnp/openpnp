@@ -44,15 +44,29 @@ OpenPnP has the notion of a Safe Zone (see the [[Safe Zone axis limits|Machine-A
 
 The actual result will be illustrated in the [Motion Planner Diagnostics](#motion-planner-diagnostics) section, below. 
 
-## Motion Planner Settings
+## Motion Planner 
+
+### Settings
 
 If you have the ReferenceAdvancedMotionPlanner selected, the **Motion Planner** tab will be available.
 
 ![Motion Planner Settings](https://user-images.githubusercontent.com/9963310/96173504-41ae9100-0f28-11eb-8e0f-c5367da7dfe0.png) 
 
--- WORK IN PROGRESS --
+**Allow continuous motion?** will enable path recording and will defer planning and execution until there is functional requirement to wait for motion completion. **Caution**: When enabling this on an existing machine, be aware that this may change its behavior. There might be constellation when this requires changes in G-code. Be careful! 
+
+**Allow uncoordinate?** will enable curved motion in the Save Zone. If you want Motion Blending, you must enable this.
+
+**Interpolation Retiming?** the interpolation works using a **velocity over space** polygonal approximation. The straight lines of the polygon used to approximate the curve are acting like "shortcuts". This means that the resulting move is slightly faster than its planned counterpart. By enabling this switch, the interpolated move will be stretched in time, to match the planned time again. Conversely, this will slightly lower the peak velocity when compared to the planned peak velocity. 
+
+### Test Motion 
+
+You can define a test motion with 4 locations and speed factors to test the motion planner in a repeatable way. Press the **Test** button on the **Motion Planner Diagnostics** tab to do so.
 
 ## Motion Planner Diagnostics
+
+If you have the ReferenceAdvancedMotionPlanner selected, the **Motion Planner Diagnostics** tab will be available. The graphical diagnostics plot the movement of all participating axes over time. You get Location, Velocity, Acceleration and Jerk both for the planned motion (strong lines) and their interpolation (light lines). Move the mouse over the graphs to read of values from the plots. 
+
+The following example shows a move with Motion Blending. It is clearly visible, how the Z axis movement blends with the X axis movement over time.
 
 ![Motion Planer Diagnostics](https://user-images.githubusercontent.com/9963310/96174107-1e381600-0f29-11eb-8e0a-9a4bd160963b.png)
 
