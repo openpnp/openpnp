@@ -82,11 +82,6 @@ The ReferenceCamCounterClockwiseAxis is really easy. It just takes its sibling R
 
 ![Cam Clockwise](https://user-images.githubusercontent.com/9963310/95995093-56f4c400-0e31-11eb-8b15-f90cd5e171d7.png)
 
-## Other Axes
-
-* Learn the basics about [[Machine-Axes]].
-* To compensate/calibrate for mechanical imperfections of the machine, use [[Linear-Transformed-Axes]].
-
 ___
 
 ## Advanced Motion Control Topics
