@@ -6,7 +6,7 @@ Only the GcodeAsyncDriver allows you to use the **Simulated3rdOrderControl** mod
 
 ## Using the GcodeAsyncDriver instead of the GcodeDriver
 ___
-**Caution**: Be aware that using asynchronous drivers changes the behavior of the machine. There is no longer a strict ping-pong between OpenPnP and the controller(s). Things will now happen in parallel, this is **especially critical, if you are using multiple controllers**. They no longer wait for each other, unless explicitly told to. Be careful when testing the machine for the first times, including the homing cycle. For initial migration, it is recommended to switch off **Home after Enable** in the Machine:
+**Caution**: Be aware that using asynchronous drivers changes the behavior of the machine. There is no longer a strict ping-pong between OpenPnP and the controller(s). Things will now happen in parallel, even between multiple controllers. Be careful when testing the machine for the first few times, including the homing cycle. For initial migration, it is recommended to switch off **Home after Enable** in the Machine:
 
 ![Home after enable off](https://user-images.githubusercontent.com/9963310/96225353-3f345180-0f91-11eb-9d10-db23fc4418f5.png)
 
