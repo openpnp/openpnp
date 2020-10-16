@@ -26,7 +26,7 @@ Plus you can still use _some_ of the features offered by the [[Advanced Motion C
 
 The ReferenceAdvancedMotionPlanner can perform full 3rd order Motion Planning a.k.a. Jerk Control. However, most common controllers don't support this. Using time-stepped interpolation, the ReferenceAdvancedMotionPlanner can then still simulate Jerk Control on these constant acceleration controllers.
 
-See the GcodeAsyncDriver's [[Interpolation settings|GcodeAsyncDriver#interpolation]].
+See the GcodeAsyncDriver's [[Interpolation settings|GcodeAsyncDriver#interpolation]] for more details.
 
 ![Simulated Jerk Control](https://user-images.githubusercontent.com/9963310/96153482-0dc67200-0f0e-11eb-8d6e-fe7ac8a249eb.png)
 
