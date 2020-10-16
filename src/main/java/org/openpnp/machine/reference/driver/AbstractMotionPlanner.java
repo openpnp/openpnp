@@ -532,7 +532,8 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                         null));
             AxesLocation currentLocation = new AxesLocation(reportedLocation.getControllerAxes(),
                     (axis) -> axis.getLengthCoordinate());
-            if (!reportedLocation.matches(currentLocation)) {
+            AxesLocation diff = reportedLocation.motionSegmentTo(currentLocation);
+            if (!diff.matches(AxesLocation.zero)) {
                 Logger.debug("Reported location changes current location from "+currentLocation+" to "+reportedLocation);
                 // Reported position has in deed changed.
                 reportedLocation.setToCoordinates();

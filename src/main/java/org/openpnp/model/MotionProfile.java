@@ -1321,6 +1321,7 @@ public class MotionProfile {
                         // We just leave the profile as is. The axis will move to the target early and then stay put.
                         profile.t[segments+1] += profile.tMin - profile.time;
                         profile.time = profile.tMin;
+                        profile.computeBounds();
                         continue;
                     }
                     if (profile.hasOption(ProfileOption.SynchronizeLastMinute) 
@@ -1329,6 +1330,7 @@ public class MotionProfile {
                         // We just leave the profile as is. The axis will move to the target early and then stay put.
                         profile.t[0] += profile.tMin - profile.time;
                         profile.time = profile.tMin;
+                        profile.computeBounds();
                         continue;
                     }
 
@@ -2295,7 +2297,7 @@ solve(eq, t)            # Solve for t
         tABound0 = 0;
         tABound1 = 0;
 
-        double tSeg = 0;
+        double tSeg = t[0];
         for (int i = 1; i <= segments; i++) {
             // Find the velocity crossing zero, that may be an extreme for s
             // and the acceleration crossing zero, that may be an extreme for v.
@@ -2324,7 +2326,7 @@ solve(eq, t)            # Solve for t
                         vBound0 = vExtreme;
                         tVBound0 = tSeg + tCross;
                     }
-                    if (vExtreme > sBound1) {
+                    if (vExtreme > vBound1) {
                         vBound1 = vExtreme;
                         tVBound1 = tSeg + tCross;
                     }
