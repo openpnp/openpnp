@@ -1,6 +1,6 @@
 ## What is it?
 
-The ReferenceLinearTransformAxis is a multi-input axis transformation. It can take the coordinates of several inut axes and create one transformed output coordinate. 
+The ReferenceLinearTransformAxis is a multi-input axis transformation. It can take the coordinates of several input axes and create one transformed output coordinate. 
 
 In OpenPnP the typical use case is to compensate for non-squareness of the machine, i.e. when the axes are mechanically not perfectly 90° to each other. On this page we will mostly just explore this problem.
 
