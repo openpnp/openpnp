@@ -4,7 +4,7 @@ The ReferenceLinearTransformAxis is a multi-input axis transformation. It can ta
 
 In OpenPnP the typical use case is to compensate for non-squareness of the machine, i.e. when the axes are mechanically not perfectly 90° to each other. On this page we will mostly just explore this problem.
 
-However, non-squareness compensation is just one possibility out of many. Multiple ReferenceLinearTransformAxis can be combined to create a full [Affine Transformation](https://en.wikipedia.org/wiki/Affine_transformation). Some pointers [at the end](#rotate-the-machine-table).
+However, non-squareness compensation is just one possibility out of many. Multiple ReferenceLinearTransformAxis can be combined to create a full [Affine Transformation](https://en.wikipedia.org/wiki/Affine_transformation). Some pointers [at the end](#other-uses).
 
 ## ReferenceLinearTransformAxis
 
@@ -58,14 +58,16 @@ This is just one example, fixing the X/Y non-squareness using a compensation in 
 
 The created axis must now be used **instead of the physical axis** in the [[Axis Mapping|Mapping Axes]].
 
-## Other uses: Rotate the Machine Table
+## Other uses
+
+### Rotate the Machine Table
 
 Just to show off what it can do, the following would rotate your X-Y plane by -45° around Z :-)
 
 ![Rotate X](https://user-images.githubusercontent.com/9963310/96012041-fe7af200-0e43-11eb-8ffc-dc99d541938c.png)
 ![Rotate Y](https://user-images.githubusercontent.com/9963310/96011777-a8a64a00-0e43-11eb-8ba3-16e3e6682347.png)
 
-## Advanced Applications
+### Advanced Applications
 
 Advanced multi-axis Affine transformations are beyond the scope of this page. Use external tools to compute the **Factors** and **Offsets**. 
 
