@@ -346,7 +346,6 @@ public class PartsPanel extends JPanel implements WizardContainer {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
                 Part part = getSelection();
                 Feeder feeder = null;
                 // find a feeder to feed
@@ -358,13 +357,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 if (feeder == null) {
                     throw new Exception("No valid feeder found for " + part.getId());
                 }
-                // feed the chosen feeder
-                feeder.feed(nozzle);
-                // pick the part
-                Location pickLocation = feeder.getPickLocation();
-                MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
-                nozzle.pick(part);
-                nozzle.moveToSafeZ();
+                // Perform the whole Job like pick cycle as in the FeedersPanel. 
+                FeedersPanel.pickFeeder(feeder);
             });
         }
     };

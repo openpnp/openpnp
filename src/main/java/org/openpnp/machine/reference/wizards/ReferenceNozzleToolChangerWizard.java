@@ -74,7 +74,7 @@ public class ReferenceNozzleToolChangerWizard extends AbstractConfigurationWizar
         chckbxChangerEnabled = new JCheckBox("");
         panelChanger.add(chckbxChangerEnabled, "4, 2");
         
-        lblChangeOnManual = new JLabel("Change On Manual Feed?");
+        lblChangeOnManual = new JLabel("Change On Manual Pick?");
         panelChanger.add(lblChangeOnManual, "2, 4, right, default");
         
         chckbxChangeOnManualFeed = new JCheckBox("");

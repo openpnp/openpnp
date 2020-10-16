@@ -443,11 +443,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             // Nozzle tip is on different nozzle - unload it from there first.  
             nt.getNozzleAttachedTo().unloadNozzleTip();
         }
-        
-        if (changerEnabled) {
-            unloadNozzleTip();
-            if (!nt.isUnloadedNozzleTipStandin()) {
 
+        unloadNozzleTip();
+
+        double speed = getHead().getMachine().getSpeed();
+        if (!nt.isUnloadedNozzleTipStandin()) {
+            if (changerEnabled) {
                 Logger.debug("{}.loadNozzleTip({}): Start", getName(), nozzleTip.getName());
 
                 try {
@@ -456,14 +457,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     globals.put("nozzle", this);
                     globals.put("nozzleTip", nt);
                     Configuration.get()
-                                 .getScripting()
-                                 .on("NozzleTip.BeforeLoad", globals);
+                    .getScripting()
+                    .on("NozzleTip.BeforeLoad", globals);
                 }
                 catch (Exception e) {
                     Logger.warn(e);
                 }
-
-                double speed = getHead().getMachine().getSpeed();
 
                 Logger.debug("{}.loadNozzleTip({}): moveTo Start Location",
                         new Object[] {getName(), nozzleTip.getName()});
@@ -491,18 +490,20 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
                 // bert start
                 if (tcPostThreeActuator !=null) {
-                	tcPostThreeActuator.actuate(true);
+                    tcPostThreeActuator.actuate(true);
                 }
                 //bert stop
-                
-                Logger.debug("{}.loadNozzleTip({}): moveTo End Location",
-                        new Object[] {getName(), nozzleTip.getName()});
-                moveTo(nt.getChangerEndLocation(), nt.getChangerMid2ToEndSpeed() * speed);
-                moveToSafeZ(getHead().getMachine().getSpeed());
+            }
 
-                Logger.debug("{}.loadNozzleTip({}): Finished",
-                        new Object[] {getName(), nozzleTip.getName()});
+            Logger.debug("{}.loadNozzleTip({}): moveTo End Location",
+                    new Object[] {getName(), nozzleTip.getName()});
+            moveTo(nt.getChangerEndLocation(), nt.getChangerMid2ToEndSpeed() * speed);
+            moveToSafeZ(getHead().getMachine().getSpeed());
 
+            Logger.debug("{}.loadNozzleTip({}): Finished",
+                    new Object[] {getName(), nozzleTip.getName()});
+
+            if (changerEnabled) {
                 try {
                     Map<String, Object> globals = new HashMap<>();
                     globals.put("head", getHead());
@@ -519,17 +520,30 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
         this.nozzleTip = nt;
         currentNozzleTipId = nozzleTip.getId();
+        firePropertyChange("nozzleTip", null, getNozzleTip());
+        ((ReferenceMachine) head.getMachine()).fireMachineHeadActivity(head);
+
+        if (!nt.isUnloadedNozzleTipStandin()) {
+            if (!changerEnabled) {
+                if (this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded(this) 
+                        || this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeInJobNeeded(this)) {
+                    Logger.debug("{}.loadNozzleTip() nozzle tip {} calibration reset", getName(), this.nozzleTip.getName());
+                    // can't automatically recalibrate with manual change - reset() for now
+                    this.nozzleTip.getCalibration().reset(this);
+                }
+                throw new Exception("Manual NozzleTip "+nt.getName()+" load on Nozzle "+getName()+" required!");
+            }
+        }
+
         if (this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded(this)) {
             Logger.debug("{}.loadNozzleTip() nozzle tip {} calibration needed", getName(), this.nozzleTip.getName());
             this.nozzleTip.getCalibration().calibrate(this);
         }
         else if (this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeInJobNeeded(this)) {
             Logger.debug("{}.loadNozzleTip() nozzle tip {} calibration reset", getName(), this.nozzleTip.getName());
-            // is will be recalibrated by the job - just reset() for now
+            // it will be recalibrated by the job - just reset() for now
             this.nozzleTip.getCalibration().reset(this);
         }
-        firePropertyChange("nozzleTip", null, getNozzleTip());
-        ((ReferenceMachine) head.getMachine()).fireMachineHeadActivity(head);
     }
 
     @Override
@@ -621,7 +635,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         ((ReferenceMachine) head.getMachine()).fireMachineHeadActivity(head);
 
         if (!changerEnabled) {
-            throw new Exception("Manual NozzleTip change required!");
+            throw new Exception("Manual NozzleTip "+nt.getName()+" unload from Nozzle "+getName()+" required!");
         }
         // May need to calibrate the "unloaded" nozzle tip stand-in i.e. the naked nozzle tip holder. 
         ReferenceNozzleTip calibrationNozzleTip = this.getCalibrationNozzleTip();
