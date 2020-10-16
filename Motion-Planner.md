@@ -37,9 +37,9 @@ In the meantime there may have been several moves recorded, creating a motion pa
 But the real winner comes now.
 
 ### Motion Blending 
-__
+___
 Experimental!
-__
+___
 
 Having recorded a sequence of moves, the ReferenceAdvancedMotionPlanner is now free to optimize and plan its execution, rearranging and even modiyfing moves within the machine constraints. 
 
