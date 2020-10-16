@@ -208,9 +208,6 @@ public class SimpleGraph {
                 data.put(x, y);
                 dirty = true;
             }
-            else {
-                dirty = true;
-            }
         }
         public Double getDataPoint(double x) {
             return data.get(x);
