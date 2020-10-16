@@ -14,7 +14,7 @@ The Motion Planner type can be chosen on the machine.
 
 The NullMotionPlanner will execute moves one by one. It will wait for each move to complete, before allowing OpenPnP to go on. The machine will always move from complete still-stand in a straight line to complete still-stand, again. This is a very simple and robust model that is equally simple to understand. It is therefore still a valid and attractive choice for those who want to **keep it simple**.
 
-Plus you can still use _some_ of the features offered by the [[Advanced Motion Control]] package, like better axis centric speed control and [[new GcodeDriver settings|Advanced-Motion-Control#gcodedriver-new-settings]].
+Plus you can still use _some_ of the features offered by the [[Advanced Motion Control]] package, like better axis centric speed control and [[new GcodeDriver settings|GcodeAsyncDriver#gcodedriver-new-settings]].
 
 ## ReferenceAdvancedMotionPlanner
 
@@ -24,7 +24,7 @@ Plus you can still use _some_ of the features offered by the [[Advanced Motion C
 
 The ReferenceAdvancedMotionPlanner can perform full 3rd order Motion Planning a.k.a. Jerk Control. However, most common controllers don't support this. Using time-stepped interpolation, the ReferenceAdvancedMotionPlanner can then still simulate Jerk Control on these constant acceleration controllers.
 
-See the GcodeAsyncDriver's [[Interpolation settings|Advanced-Motion-Control#interpolation]].
+See the GcodeAsyncDriver's [[Interpolation settings|GcodeAsyncDriver#interpolation]].
 
 ![Simulated Jerk Control](https://user-images.githubusercontent.com/9963310/96153482-0dc67200-0f0e-11eb-8d6e-fe7ac8a249eb.png)
 
@@ -87,5 +87,5 @@ The **Test** button plays the **Test Motion** defined on the previous tab. It do
 
 **Planned [s]** indicates how long the move would take as planned, in seconds. This is always available. 
 
-**Actual** indicated the time the move actually took, as measured, including all the overhead. Note, this is only available for the **Test Motion**. In the example screenshot you see how the move took longer than planned. This is due to Smoothieware not offering a queue size that is large enough. Motion Blending has not been proven in practice yet. (see the [pull-request for more information about this](https://github.com/openpnp/openpnp/pull/1061)).
+**Actual** indicated the time the move actually took, as measured, including all the overhead. Note, this is only available for the **Test Motion**. In the example screenshot you see how the move took longer than planned. This is due to Smoothieware not offering a queue size that is large enough. Motion Blending has not been proven in practice yet (see the [pull-request for more information about this](https://github.com/openpnp/openpnp/pull/1061)).
 
