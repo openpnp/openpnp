@@ -34,9 +34,11 @@ See the GcodeAsyncDriver's [[Interpolation settings|GcodeAsyncDriver#interpolati
 
 The ReferenceAdvancedMotionPlanner will first just record the motion that OpenPnP wants to do. Nothing is planned or executed yet. At some point it will be a functional necessity for OpenPnP to make sure the machine is at the target location. One example is wanting to do Computer Vision, obviously the camera needs to be at the target location before it can take a picture. OpenPnP will then ask the Motion Planner to wait for motion completion, which triggers motion planning, execution and finally truly waiting for its completion. 
 
-In the meantime there may have been several moves recorded, creating a motion path. The controller will now get all the path commands at once, which will allow it to use look-ahead planning and doing subsequent steps as fast as possible without any communications ping-pong in between moves. This alone will increase speed for slow or laggy connections. 
+In the meantime there may have been several moves recorded, creating a motion path. The controller will now get all the path commands at once, which will allow it to use look-ahead planning and doing subsequent steps as fast as possible without any communications ping-pong in between moves. This alone will increase speed for slow or laggy connections. But the real winner will be [Motion Blending](#motion-blending), explained in the next section.
 
-But the real winner comes now.
+OpenPnP will automatically detect, when there are multiple or different drivers/controller involved from move to move. It is obvious, that OpenPnP needs to wait for the first move to complete, before the next move is allowed to proceed. For example: a Z axis on controller A must have finished moving up, before the X, Y axes on controller B are allowed to move (interlock). This will effectively break up the motion path and its planning into multiple parts.
+
+It follows that the full potential of advanced Motion Planning will only be exploited, if all the relevant axes (X, Y, Z, C) are on a single coordinating controller. This is especially true for the following feature. 
 
 ### Motion Blending 
 ___
@@ -55,11 +57,13 @@ OpenPnP has the notion of a Safe Zone (see the [[Safe Zone axis limits|Machine-A
 
 ![AdvancedMotionAnimation](https://user-images.githubusercontent.com/9963310/95627544-ab3c2480-0a7c-11eb-8d36-d6921ecf7423.gif)
 
-The motion planning will be illustrated in the [Motion Planner Diagnostics](#motion-planner-diagnostics) section, below. 
+A blending example will be graphically illustrated in the [Motion Planner Diagnostics](#motion-planner-diagnostics) section, below. 
 
 See the GcodeAsyncDriver's [[Interpolation settings|GcodeAsyncDriver#interpolation]] for the important **Junction Deviation** setting used in Motion Blending.
 
 Also make sure you use the **DirectionalCompensation** method (or **None**) selected in [[Backlash-Compensation]]. Otherwise, this won't work due to small direction changes triggered by [[Backlash-Compensation]] in the corners. 
+
+Finally, it must be repeated that this only works if all the moving axes are attached to the same driver/controller (see the discussion in [Motion Path Planning](#motion-path-planning)). 
 
 ## Motion Planner 
 
