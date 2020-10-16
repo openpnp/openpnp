@@ -1,6 +1,6 @@
 ## What is it?
 
-The GcodeAsyncDriver can improve the performance of sending commands to the controller. All commands are prepared and then only put into an outgoing queue. The queued commands are sent to the controller using a separate writer thread. OpenPnP no longer waits for a command to be acknowledged by the controller. Instead, the two sides can fully work in parallel. This also means that multiple GcodeAsyncDrivers now can also fully work in parallel to each other and to OpenPnP. Only when there is a real functional need, are the participants waiting for each other. 
+The GcodeAsyncDriver can improve the performance of sending commands to the controller. All commands are prepared and then only put into an outgoing queue. The queued commands are sent to the controller using a separate writer thread. OpenPnP no longer waits for a command to be acknowledged by the controller. Instead, the two sides can fully work in parallel. This also means that _multiple_ GcodeAsyncDrivers now can fully work in parallel with each other _and_ with OpenPnP. Only when there is a real functional need, are the participants waiting for each other. 
 
 Only the GcodeAsyncDriver allows you to use the **Simulated3rdOrderControl** mode (see [below](#gcodedriver-new-settings)), where a high volume of commands must be sent to the controller at great speed. 
 
