@@ -33,7 +33,9 @@ Backlash compensation is applied in the direction of travel. The offset is added
   No extra moves are needed. The machine can also move more fluidly, as there is no direction change needed. 
   However: the offset needs to precisely match the physical backlash.
 
-**Backlash Offset** will set the amount of backlash. 
+**Backlash Offset** sets the amount of backlash. 
+
+**Backlash Speed Factor** determines the speed factor of the final approach move in OneSided methods.
 
 ## Backlash Offset Calibration
 
