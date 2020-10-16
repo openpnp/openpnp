@@ -59,3 +59,19 @@ To determine the **Backlash Offset** for your X or Y axis, proceed as follows:
 A similar method can be used to calibrate the C (rotational) axis. Pick a very large IC and use the bottom camera. 
 
 It is not recommended (not useful) to compensate the Z axis, as nozzle tips are spring-loaded. 
+
+___
+
+## Advanced Motion Control Topics
+
+### Motion Control
+- [[Advanced Motion Control]]
+- [[GcodeAsyncDriver]]
+- [[Motion Planner]]
+
+### Machine Axes
+- [[Machine Axes]]
+- [[Backlash-Compensation]]
+- [[Transformed Axes]]
+- [[Linear Transformed Axes]]
+- [[Mapping Axes]] 
