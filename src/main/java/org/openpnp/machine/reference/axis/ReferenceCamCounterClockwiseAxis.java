@@ -43,10 +43,10 @@ public class ReferenceCamCounterClockwiseAxis extends AbstractSingleTransformedA
     private Length camRadius = new Length(24.0, LengthUnit.Millimeters);
 
     @Element(required = false)
-    private Length camWheelRadius = new Length(9.5, LengthUnit.Millimeters);
+    private Length camWheelRadius = new Length(0, LengthUnit.Millimeters);
 
     @Element(required = false)
-    private Length camWheelGap = new Length(2, LengthUnit.Millimeters);
+    private Length camWheelGap = new Length(0, LengthUnit.Millimeters);
 
     public ReferenceCamCounterClockwiseAxis() {
         super();

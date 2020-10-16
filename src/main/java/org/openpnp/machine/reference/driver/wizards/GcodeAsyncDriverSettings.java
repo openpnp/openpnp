@@ -48,7 +48,7 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         JPanel interpolationPanel = new JPanel();
-        interpolationPanel.setBorder(new TitledBorder(null, "Interpolation Motion Control", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        interpolationPanel.setBorder(new TitledBorder(null, "Interpolation", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(interpolationPanel);
         interpolationPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -121,7 +121,7 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
         interpolationPanel.add(junctionDeviation, "4, 10, fill, default");
         junctionDeviation.setColumns(10);
 
-        JLabel lblConfirmationFlowControl = new JLabel("Confimation Flow Control");
+        JLabel lblConfirmationFlowControl = new JLabel("Confimation Flow Control?");
         lblConfirmationFlowControl.setToolTipText("<html>\r\n<p>The communication with the controller is flow-controlled by awaiting the \"ok\"<br/>\r\nbefore sending the next command. </p>\r\n<p>This is slower than other types of flow control such as RTS/CTS on a serial connection, so <br/>\r\nthe latter should be preferred.</p>\r\n</html>");
         settingsPanel.add(lblConfirmationFlowControl, "2, 2, right, default");
 

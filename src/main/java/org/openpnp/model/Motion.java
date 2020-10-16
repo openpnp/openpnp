@@ -224,6 +224,9 @@ public class Motion {
         // Create a distance vector that has only axes mentioned in location that at the same time 
         // do not match coordinates with location0.
         AxesLocation distance = location0.motionSegmentTo(location1);
+        AxesLocation axesMoved = new AxesLocation(distance.getAxes(), 
+                (axis) -> location1.getLengthCoordinate(axis));
+        AxesLocation location1 = location0.put(axesMoved);
         final int motionLimitsOrder = 3;
         if (distance.isEmpty() || hasOption(MotionOption.UncoordinatedMotion)) {
             // Zero distance or uncoordinated motion. Axes constraints simply apply directly.
@@ -261,7 +264,8 @@ public class Motion {
 
                 int options = profileOptions();
                 if (axis.getDriver() != null) {
-                    if (axis.getDriver().getMotionControlType() == MotionControlType.SimpleSCurve) {
+                    if (axis.getMotionLimit(3) != 0 
+                            && axis.getDriver().getMotionControlType() == MotionControlType.SimpleSCurve) {
                         options |= ProfileOption.SimplifiedSCurve.flag();
                     }
                     if (!axis.getDriver().getMotionControlType().isSupportingUncoordinated()) {
@@ -472,8 +476,9 @@ public class Motion {
 
                 int options = profileOptions();
                 if (axis.getDriver() != null) {
-                    if (axis.getDriver().getMotionControlType() == MotionControlType.SimpleSCurve) {
-                    options |= ProfileOption.SimplifiedSCurve.flag();
+                    if (axis.getMotionLimit(3) != 0 
+                            && axis.getDriver().getMotionControlType() == MotionControlType.SimpleSCurve) {
+                        options |= ProfileOption.SimplifiedSCurve.flag();
                     }
                     if (!axis.getDriver().getMotionControlType().isSupportingUncoordinated()) {
                         options |= ProfileOption.RestrictToCoordinated.flag();
@@ -643,7 +648,7 @@ public class Motion {
                 .convertToUnits(driver.getUnits()).getValue()
                 *getNominalSpeed();
         if (defaultFeedrate == 0.0) {
-            defaultFeedrate  = null;
+            defaultFeedrate = null;
         }
         if (driver.getMotionControlType() == MotionControlType.ToolpathFeedRate) {
             return defaultFeedrate;

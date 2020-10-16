@@ -22,10 +22,11 @@ package org.openpnp.machine.reference.wizards;
 import java.awt.Color;
 
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.border.EtchedBorder;
+import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
@@ -40,7 +41,6 @@ import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;
-import org.openpnp.spi.LinearInputAxis;
 import org.openpnp.spi.base.AbstractAxis;
 import org.openpnp.spi.base.AbstractMachine;
 
@@ -49,8 +49,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.SwingConstants;
-import javax.swing.JComboBox;
 
 @SuppressWarnings("serial")
 public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWizard {
@@ -248,7 +246,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         
         CellConstraints cc = new CellConstraints();
         lblDwellTime = new JLabel("Note: Total Dwell Time is the sum of Nozzle Dwell Time plus the Nozzle Tip Dwell Time.");
-        panelChanger.add(lblDwellTime, "2, 6, 7, 1");
+        panelChanger.add(lblDwellTime, "2, 6, 9, 1, fill, default");
     }
 
     @Override

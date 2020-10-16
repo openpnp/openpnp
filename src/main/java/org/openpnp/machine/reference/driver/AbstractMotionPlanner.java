@@ -47,6 +47,7 @@ import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.Motion.MoveToCommand;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Axis.Type;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Driver;
@@ -89,8 +90,6 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
     @Override
     public synchronized void home() throws Exception {
-        // Make sure we're on the same page with the controller and wait for still-stand.
-        waitForCompletion(null, CompletionType.WaitForStillstand);
         // Reset lastDirectionalBacklashOffset (we don't actually know it after homing, but it will be known after the first move).
         lastDirectionalBacklashOffset = new AxesLocation();
         // Home all the drivers with their respective mapped axes (can be an empty map). 
@@ -108,6 +107,8 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 ((CoordinateAxis) axis).setLengthCoordinate(((CoordinateAxis) axis).getHomeCoordinate());
             }
         }
+        // Make sure we're on the same page with the controller and wait for still-stand.
+        waitForCompletion(null, CompletionType.WaitForStillstandIndefinitely);
     }
 
     @Override
@@ -529,7 +530,11 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                     ((ControllerAxis) axis).getDriverLengthCoordinate()
                         .subtract(lastDirectionalBacklashOffset.getLengthCoordinate(axis)) :
                         null));
-            if (!reportedLocation.matches(new AxesLocation(machine))) {
+            AxesLocation currentLocation = new AxesLocation(reportedLocation.getControllerAxes(),
+                    (axis) -> axis.getLengthCoordinate());
+            AxesLocation diff = reportedLocation.motionSegmentTo(currentLocation);
+            if (!diff.matches(AxesLocation.zero)) {
+                Logger.debug("Reported location changes current location from "+currentLocation+" to "+reportedLocation);
                 // Reported position has in deed changed.
                 reportedLocation.setToCoordinates();
                 // Notify heads.
@@ -560,8 +565,10 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                     if (anglePresent != angleWrappedAround) {
                         refAxis.getDriver().setGlobalOffsets(getMachine(), 
                                 new AxesLocation(refAxis, angleWrappedAround));
-                        // This also reflects in the motion planner's coordinate.
-                        refAxis.setCoordinate(refAxis.getDriverCoordinate());
+                        // This also reflects in the motion planner's coordinate, but account for any 
+                        // directional backlash offset.
+                        refAxis.setLengthCoordinate(refAxis.getDriverLengthCoordinate()
+                                .subtract(lastDirectionalBacklashOffset.getLengthCoordinate(refAxis)));
                     }
                 }
             }

@@ -381,13 +381,14 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
             // (either linear or rotational axes, according to RS274NGC).  
             double distance = segment.getRS274NGCMetric(driver, 
                     (axis) -> segment.getCoordinate(axis));
-            double factorRS274NGC = 1/distance;
+            double factorRS274NGC = (distance != 0 ? 1/distance : 1);
 
             Double timeStart = moveToCommand.getTimeStart();
             Double d = moveToCommand.getTimeDuration(); 
             for (ControllerAxis axis : plannedMotion.getLocation1().getAxes(driver)) {
                 MotionProfile profile = plannedMotion.getAxesProfiles()[plannedMotion.getAxisIndex(axis)];
-                if (! profile.isEmpty()) {
+                if (recordingMotionGraph.getRow(axis.getName(), "s'").size() > 0 
+                        || ! profile.isEmpty()) {
                     double t = recordingT;
                     if (showApproximation ) {
                         SimpleGraph.DataRow sRow = recordingMotionGraph.getRow(axis.getName(), "s'");
@@ -468,11 +469,15 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                             d = plannedMotion.getTime();
                             sRow.recordDataPoint(t, profile.getMomentaryLocation(0));
                             sRow.recordDataPoint(t+d, profile.getMomentaryLocation(d));
-                            vRow.recordDataPoint(t+d*0.45, profile.getVelocityMax());
-                            vRow.recordDataPoint(t+d*0.55, profile.getVelocityMax());
+                            if (vRow.size() == 0) {
+                                vRow.recordDataPoint(t+d*0.45, profile.getVelocityMax());
+                                vRow.recordDataPoint(t+d*0.55, profile.getVelocityMax());
+                            }
                             if (! profile.isConstantAcceleration()) {
-                                aRow.recordDataPoint(t+d*0.2, profile.getAccelerationMax());
-                                aRow.recordDataPoint(t+d*0.3, profile.getAccelerationMax());
+                                if (aRow.size() == 0) {
+                                    aRow.recordDataPoint(t+d*0.2, profile.getAccelerationMax());
+                                    aRow.recordDataPoint(t+d*0.3, profile.getAccelerationMax());
+                                }
                             }
                         }
                     }

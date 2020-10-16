@@ -93,7 +93,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
     private int maxCommandsQueued = 1000;
 
     @Attribute(required=false)
-    private boolean confirmationFlowControl = false;
+    private boolean confirmationFlowControl = true;
 
     @Attribute(required = false)
     private int interpolationMaxSteps = 32;
@@ -113,7 +113,6 @@ public class GcodeAsyncDriver extends GcodeDriver {
     @Override
     public void home(ReferenceMachine machine) throws Exception {
         super.home(machine);
-        waitForCompletion(null, CompletionType.WaitForStillstandIndefinitely);
     }
 
     private WriterThread writerThread;
