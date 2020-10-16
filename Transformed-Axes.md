@@ -84,5 +84,21 @@ The ReferenceCamCounterClockwiseAxis is really easy. It just takes its sibling R
 
 ## Other Axes
 
-* Go back to the [[Machine-Axes]].
-* Next are the [[Linear-Transformed-Axes]]
+* Learn the basics about [[Machine-Axes]].
+* To compensate/calibrate for mechanical imperfections of the machine, use [[Linear-Transformed-Axes]].
+
+___
+
+## Advanced Motion Control Topics
+
+### Motion Control
+- [[Advanced Motion Control]]
+- [[GcodeAsyncDriver]]
+- [[Motion Planner]]
+
+### Machine Axes
+- [[Machine Axes]]
+- [[Backlash-Compensation]]
+- [[Transformed Axes]]
+- [[Linear Transformed Axes]]
+- [[Mapping Axes]] 
