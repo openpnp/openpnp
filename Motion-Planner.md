@@ -55,7 +55,11 @@ OpenPnP has the notion of a Safe Zone (see the [[Safe Zone axis limits|Machine-A
 
 ![AdvancedMotionAnimation](https://user-images.githubusercontent.com/9963310/95627544-ab3c2480-0a7c-11eb-8d36-d6921ecf7423.gif)
 
-The actual result will be illustrated in the [Motion Planner Diagnostics](#motion-planner-diagnostics) section, below. 
+The motion planning will be illustrated in the [Motion Planner Diagnostics](#motion-planner-diagnostics) section, below. 
+
+See the GcodeAsyncDriver's [[Interpolation settings|GcodeAsyncDriver#interpolation]] for the important **Junction Deviation** setting used in Motion Blending.
+
+Also make sure you use the **DirectionalCompensation** method (or **None**) selected in [[Backlash-Compensation]]. Otherwise, this won't work due to small direction changes triggered by [[Backlash-Compensation]] in the corners. 
 
 ## Motion Planner 
 
