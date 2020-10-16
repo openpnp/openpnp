@@ -135,3 +135,7 @@ The following image illustrates the effects (exagerated):
 OpenPnP takes each maximum axis acceleration into consideration to see how far the green trajectory deviates (the acceleration drawing the axis back on course). It can then deduce a per-axis maximum allowed instant velocity change. Interpolation steps are generated, before this threshold is exceeded. 
 
 All the above parameters are subject to the speed factor applied to the move. The idea is to generate the same interpolation regardless of speed, so we can examine it in "slow motion". 
+
+## Next Step
+
+Configure the [[Motion Planner]].
