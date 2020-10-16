@@ -8,10 +8,8 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.TimeoutException;
 
-import org.openpnp.machine.reference.driver.ReferenceDriverCommunications.LineEndingType;
 import org.openpnp.spi.Driver;
 import org.openpnp.util.GcodeServer;
-import org.simpleframework.xml.Attribute;
 
 /**
  * A base class for basic TCP based Drivers. Includes functions for connecting,
@@ -98,7 +96,7 @@ public class SimulatedCommunications extends ReferenceDriverCommunications {
             throw ex;
         }
     }
-    
+
     public int read() throws TimeoutException, IOException {
         try {
             return input.read();
@@ -110,13 +108,18 @@ public class SimulatedCommunications extends ReferenceDriverCommunications {
             throw ex;
         }
     }
-    
+
     public void write(int d) throws IOException {
         output.write(d);
     }
 
     public void setDriver(Driver driver) {
         this.driver = driver;
+    }
+
+    @Override
+    public void writeBytes(byte[] data) throws IOException {
+        output.write(data, 0, data.length);
     }
 }
 
