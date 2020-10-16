@@ -88,7 +88,7 @@ Among other things, the **Motion Control Type** determines how OpenPnP controls 
 
 ![Ineffective-Feedrate-Limit](https://user-images.githubusercontent.com/9963310/96266933-8b9a8400-0fc7-11eb-88c0-737ddaa0e0ee.gif)
 
-However, with the other **Motion Control Type**s, the velocity that is effectively reached is properly scaled with the Speed [%] or speed factor. Conversely, the move duration is scaled inverse-proportionally (1/factor), e.g. a 50% speed move takes _twice_ as long:
+However, with the other **Motion Control Type**s, the velocity that is effectively reached is properly scaled with the Speed [%] or speed factor. The move duration is scaled inverse-proportionally (1/factor), e.g. a 50% speed move takes exactly _twice_ as long:
 
 ![Effective-Feedrate-Limit](https://user-images.githubusercontent.com/9963310/96274469-cead2500-0fd0-11eb-8626-ea42324f8680.gif)
 
