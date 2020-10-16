@@ -56,6 +56,10 @@ Using a trusted precision square or a large millimeter paper, you should be able
 
 This is just one example, fixing the X/Y non-squareness using a compensation in X. If you prefer, you could also compensate in Y. If your machine table is uneven, compensate in Z. Any axis can be transformed, even in combination. 
 
+## Using the Linear Transformed Axis
+
+The created axis must now be used **instead of the physical axis** in the [[Axis Mapping|Mapping Axes]].
+
 ## Rotate the Machine Table
 Just to show off what it can do, the following would rotate your X-Y plane by -45° around Z :-)
 
@@ -72,9 +76,7 @@ Advanced multi-axis Affine transformations are beyond the scope of this page. Us
 
 From the Wikipedia, [Affine transformations](https://en.wikipedia.org/wiki/Transformation_matrix#Affine_transformations).
 
-## Using the Linear Transformed Axis
 
-The created axis must now be used **instead of the physical axis** when it comes to [[Mapping Axes]].
 
 ___
 
