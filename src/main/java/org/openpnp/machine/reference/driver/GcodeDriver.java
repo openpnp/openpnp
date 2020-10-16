@@ -355,7 +355,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 sendGcode(getCommand(null, CommandType.ENABLE_COMMAND));
             }
             else {
-                sendGcode(getCommand(null, CommandType.DISABLE_COMMAND));
+                try {
+                    sendGcode(getCommand(null, CommandType.DISABLE_COMMAND));
+                }
+                catch (Exception e) {
+                    // When the connection is lost, we have IO errors. We should still be able to go on
+                    // disabling the machine.
+                    Logger.warn(e);
+                }
             }
         }
 

@@ -513,7 +513,7 @@ public class AxesLocation {
     public CoordinateAxis getAxis(Axis.Type axisType) throws Exception {
         CoordinateAxis found = null; 
         for (Axis axis : getAxes()) {
-            if (axis instanceof ControllerAxis 
+            if (axis instanceof CoordinateAxis 
                     && axis.getType() == axisType) {
                 if (found != null) {
                     // Make this future-proof: 

@@ -381,7 +381,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
             // (either linear or rotational axes, according to RS274NGC).  
             double distance = segment.getRS274NGCMetric(driver, 
                     (axis) -> segment.getCoordinate(axis));
-            double factorRS274NGC = 1/distance;
+            double factorRS274NGC = (distance != 0 ? 1/distance : 1);
 
             Double timeStart = moveToCommand.getTimeStart();
             Double d = moveToCommand.getTimeDuration(); 

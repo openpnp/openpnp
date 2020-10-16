@@ -204,8 +204,13 @@ public class SimpleGraph {
         }
 
         public void recordDataPoint(double x, double y) {
-            data.put(x, y);
-            dirty = true;
+            if (Double.isFinite(x) && Double.isFinite(y)) {
+                data.put(x, y);
+                dirty = true;
+            }
+            else {
+                dirty = true;
+            }
         }
         public Double getDataPoint(double x) {
             return data.get(x);
