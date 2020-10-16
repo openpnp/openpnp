@@ -100,7 +100,7 @@ These are the most important configurations:
 
 * [[Nozzle tip tool changer|Setup-and-Calibration:-Nozzle-Setup#nozzle-tip-changer]] speed factors. 
 * [[Parts|User-Manual#parts]] speed factors.
-* [[ReferencePushPullFeeder]] and ReferenceLeverFeeder feeder actuation speed factors.
+* [[ReferencePushPullFeeder|ReferencePushPullFeeder#push-pull-motion]] and ReferenceLeverFeeder feeder actuation speed factors.
 * [[BlindsFeeder]] cover opening/closing speed factors.
 * [[Backlash-Compensation]] speed factor (one-sided methods).
 
