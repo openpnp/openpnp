@@ -82,6 +82,27 @@ to the controller:
 
 **Compress Gcode?** removes all unnecessary characters from the Gcode command, such as all whitespace, trailing floating point-zeros etc., again to safe bandwidth.
 
+## Control of Speed Factors
+
+Among other things, the **Motion Control Type** determines how OpenPnP controls speeds. The **ToolpathFeedRate** (same behavior as previous versions of OpenPnP) simply scales the maximum driver feed-rate with the Speed [%] or speed factor. If a move is short, it will never reach the set feed-rate limit, so the speed factor is completely ineffective ([[using Motion Planner Diagnostics for illustration|Motion-Planner#motion-planner-diagnostics]]):
+
+![Ineffective-Feedrate-Limit](https://user-images.githubusercontent.com/9963310/96266933-8b9a8400-0fc7-11eb-88c0-737ddaa0e0ee.gif)
+
+However, with the other **Motion Control Type**s, the velocity that is effectively reached is properly scaled with the Speed [%] or speed factor. Conversely, the move duration is properly scaled with the reciprocal, e.g. a 50% speed move takes twice as long:
+
+![Effective-Feedrate-Limit](https://user-images.githubusercontent.com/9963310/96274469-cead2500-0fd0-11eb-8626-ea42324f8680.gif)
+
+This is done by also controlling acceleration (and possibly jerk) limits. The acceleration limit is scaled with the speed factor to the power of 2, the jerk limit (if applicable) with the factor to the power of 3. So a 50% speed move has only 25% of the accleration and a mere 12.5% of the jerk, also resulting in a much smoother/gentler motion, due to very strong attenuation of vibrations. 
+
+Therefore, if you migrate an existing machine setup and then change the **Motion Control Type**, you will need to revisit the various speed factors. Because the moves are now much smoother/gentler, you can get away with higher speed factors. Check the the following configurations:
+
+* [[Nozzle tip tool changer|Setup-and-Calibration:-Nozzle-Setup#nozzle-tip-changer]] speed factors. 
+* [[Parts|User-Manual#parts]] speed factors.
+* [[ReferencePushPullFeeder]] and ReferenceLeverFeeder feeder actuation speed factors.
+* [[BlindsFeeder]] cover opening speed factors.
+* [[Backlash-Compensation]] speed factor (One-Sided methods only).
+
+
 ## GcodeAsyncDriver specific Settings
 
 ### Advanced Settings
@@ -114,7 +135,7 @@ Other controllers have a fixed queue size, Duet3D 3 is currently at 40, but it i
 
 **Maximum Number of Jerk Steps** limits the number of interpolation steps used to ramp up and down acceleration. 
 
-True 3rd order Motion Control (a.k.a. Jerk Control) would ramp up acceleration smoothly. On a constant acceleration controller this is simulated by a step-wise ramp. The graphical diagnostics of the [[Motion-Planner]] illustrates how this is done. Stronger lines indicate the planned jerk controlled motion, lighter lines indicate the interpolated constant acceleration motion: 
+True 3rd order Motion Control (a.k.a. Jerk Control) would ramp up acceleration smoothly. On a constant acceleration controller this is simulated by a step-wise ramp. The [[Motion Planner Diagnostics|Motion-Planner#motion-planner-diagnostics]] illustrate how this is done. Stronger lines indicate the planned jerk controlled motion, lighter lines indicate the interpolated constant acceleration motion: 
 
 ![Simulated Jerk Control](https://user-images.githubusercontent.com/9963310/96153482-0dc67200-0f0e-11eb-8d6e-fe7ac8a249eb.png)
 
