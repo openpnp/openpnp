@@ -20,7 +20,7 @@ Create an axis in the Machine Setup tab.
 
 **Type** and **Name** are the same as in the [[ReferenceControllerAxis|Machine-Axes#properties]]. 
 
-The **Type** will determine which type of axis is output. 
+In this case, **Type** determines which type of axis is output. 
 
 ### Linear Transformation
 
@@ -28,7 +28,7 @@ We are defining this transformation as a **forward transformation** here, as it 
 
 Of course, OpenPnP will internally derive the _reverse_ transformation, from a desired true geometry coordinate, _back_ to the coordinates of the mechanical axes. But you don't need to know anything about that. For the math guys: yes, it does create and invert the [augmented Affine Transformation Matrix](https://en.wikipedia.org/wiki/Transformation_matrix#Affine_transformations). 
 
-Input axes **X**, **Y**, **Z** and **Rotation** can be selected.
+**X**, **Y**, **Z** and **Rotation** input axes can be selected.
 
 Each of the input coordinates taken from the input axes are then multiplied by a certain **Factor**. For the principal axis (the one corresponding to the **Type**), the **Factor** is often `1`. 
 
@@ -36,9 +36,9 @@ All these terms are then summed up.
 
 Finally, an **Offset** is added.
 
-If this is a compensation transformation, i.e. repairing a mechanical imperfection rather than applying a genuinely wanted transformation, you can tell OpenPnP so, by switching on **Compensation?**. The switch can help it with certain optimizations and for proper simulation. 
+**Compensation?** tells OpenPnP if this is a compensation transformation i.e. repairing a mechanical imperfection rather than applying a genuinely wanted transformation. The switch can help OpenPnP with certain optimizations and for proper simulation. 
 
-### Use Case : Non-Squareness Compensation
+## Use Case : Non-Squareness Compensation
 
 No mechanical machine is _ever_ perfectly square. Many times this is irrelevant for the application at hand. However, inexpensive (DIY) machines are prone to exhibit some noticeable non-squareness that may matter for Pick&Place accuracy. So instead of buying much more expensive hardware, let's use a piece of clever software and some brains to compensate. The following illustration shows the problem and steps to solve it: 
 
