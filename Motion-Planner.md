@@ -6,7 +6,9 @@ The Motion Planner type can be chosen on the machine.
 
 ![Machine Motion Planner](https://user-images.githubusercontent.com/9963310/96167234-63efe100-0f1f-11eb-94d1-fa317a9c83a1.png)
 
+___
 **CAUTION**: when you select a different type and press **Apply**, the specific settings of the former planner will be lost!
+___
 
 ## NullMotionPlanner
 
@@ -38,7 +40,7 @@ But the real winner comes now.
 
 ### Motion Blending 
 ___
-Experimental!
+This is still **EXPERIMENTAL**! There is currently no controller that has proven powerful enough for practical use with this. Smoothieware can demonstrate the principle at reduced speed or for small paths, but its internal move queue turns out too small for complex and fast moves. I have high hopes for the [Duet3D 3 controller](https://www.duet3d.com/Duet3Mainboard6HC) that has a much more powerful MCU with plenty of RAM. Duet3D kindly donated a controller to me, I will now explore this feature further. Many others have announced more powerful controllers in the OpenPnP user group, so this feature is now ready for _your_ experiments! 
 ___
 
 Having recorded a sequence of moves, the ReferenceAdvancedMotionPlanner is now free to optimize and plan its execution, rearranging and even modiyfing moves within the machine constraints. 
@@ -87,5 +89,5 @@ The **Test** button plays the **Test Motion** defined on the previous tab. It do
 
 **Planned [s]** indicates how long the move would take as planned, in seconds. This is always available. 
 
-**Actual** indicated the time the move actually took, as measured, including all the overhead. Note, this is only available for the **Test Motion**. In the example screenshot you see how the move took longer than planned. This is due to Smoothieware not offering a queue size that is large enough. Motion Blending has not been proven in practice yet (see the [pull-request for more information about this](https://github.com/openpnp/openpnp/pull/1061)).
+**Actual** indicated the time the move actually took, as measured, including all the overhead. Note, this is only available for the **Test Motion**. In the example screenshot you see how the move took longer than planned. This is due to Smoothieware not offering a queue size that is large enough (RAM too small). Smoothie can therefore not look ahead far enough into the future, therefore it will cautiously decelerate too soon (like driving in fog). See the intro in the [Motion Blending](#motion-blending) section.
 
