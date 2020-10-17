@@ -53,7 +53,7 @@ A rotational axis has no Limits but two more checkboxes.
 
 Fortunately, if **Limit to ±180°** and **Wrap around** are combined, the axis coordinate is reset to its -180° ... +180° equivalent coordinate after the wrap-around move. Therefore the angle will not wind up. 
 
-Note: the GcodeDriver must have the configure `SET_GLOBAL_OFFSETS_COMMAND` set. See the [[migration guide|Advanced-Motion-Control#migration-from-a-previous-version]]. The controller must support using G92 (or equivalent) on the fly, i.e. while the previous move command may still be in the process of being executed. For Smoothieware, you must use [my special PnP firmware](https://makr.zone/smoothieware-new-firmware-for-pnp/500/) for this to work correctly ([reasons explained here](https://github.com/Smoothieware/Smoothieware/pull/1487)). 
+Note: the GcodeDriver must have the `SET_GLOBAL_OFFSETS_COMMAND` configured. See the [[migration guide|Advanced-Motion-Control#migration-from-a-previous-version]]. The controller must support using G92 (or equivalent) on the fly, i.e. while the previous move command may still be in the process of being executed (if not, add M400 before the G92, but be aware that this disrupts fluid motion). For Smoothieware, you must use [my special PnP firmware](https://makr.zone/smoothieware-new-firmware-for-pnp/500/) for this to work correctly ([reasons explained here](https://github.com/Smoothieware/Smoothieware/pull/1487)). 
 
 ### Kinematic Settings / Axis Limits
 
