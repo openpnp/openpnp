@@ -95,7 +95,7 @@ When OpenPnP is performing a move with several axes involved (e.g. a diagonal pl
 
 **Important**: you need to set these limits **at or below** the limits configured for the controller. Otherwise you will get very strange result, as the motion planning is then completely useless. 
 
-In Smoothieware, look at values like these (divide by 60 where mm/min). See the [guide](http://smoothieware.org/configuration-options): 
+In case of Smoothieware, look for values like these (divide by 60 where mm/min). See the [Smoothie guide](http://smoothieware.org/configuration-options): 
 
 <pre>
 x_axis_max_speed                             50000            # mm/min
