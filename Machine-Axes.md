@@ -93,6 +93,16 @@ When OpenPnP is performing a move with several axes involved (e.g. a diagonal pl
 
 **Jerk [/s³]** sets the [jerk](https://simple.wikipedia.org/wiki/Jerk) limit (maximum change of acceleration per unit of time). If left at zero, no jerk control will be used. Without jerk control, the acceleration will be switched on and off instantaneous, creating vibrations and wear and tear. OpenPnP has several options to use jerk control, even if your controller does not natively have the capability (see [[Advanced-Motion-Control]]).
 
+**Important**: you need to set these limits **at or below** the limits configured for the controller. Otherwise you will get very strange result, as the motion planning is then completely useless. 
+
+In Smoothieware, look at values like these (divide by 60 where mm/min). See the [guide](http://smoothieware.org/configuration-options): 
+
+<pre>
+x_axis_max_speed                             50000            # mm/min
+alpha_max_rate                               50000            # mm/min actuator max speed
+alpha_acceleration                           5000.0           # mm/sec^2
+</pre>
+
 ## ReferenceVirtualAxis
 
 The ReferenceVirtualAxis is a virtual stand-in for a real machine axis. There is typically a virtual Z and C assigned to the down-looking Camera. 
