@@ -41,6 +41,20 @@ OpenPnP needs to know if this is the case, so use the switch to toggle the axis 
 
 **Resolution [Driver Units]** indicates the smallest step that OpenPnP should consider as a change in coordinate, also sometimes named a resolution "tick". It should be equal to a micro-step (or a practical multiple thereof). The larger the Resolution tick is, the more often OpenPnP can optimize axis moves away (especially in the small adjustments of non.squareness compensation, nozzle tip runout compensation etc.). By preventing unneeded micro axis move, OpenPnP can also prevent extra backlash compensation moves (not relevant with DirectionalCompensation). 
 
+### Controller Settings (Rotational Axis)
+
+A rotational axis has no Limits but two more checkboxes. 
+
+![Rotation Axis](https://user-images.githubusercontent.com/9963310/96336707-02945300-1082-11eb-9095-0e7c6985d65d.png)
+
+**Limit to ±180°** keeps the rotation within the range -180° ... +180°. Instead of e.g. going to 190°, it would go to the equvalent -170° position. Some retrofitted machines have physically limited axes where this setting can be helpful. 
+
+**Wrap around** will always go the shorter way around to the desired angle. Instead of e.g. going from 270° to 30° (-240° turn) it will go to the equvalent 390° position (+120° turn). This may result in the angle winding up to very large numbers. In some contexts the machine will then unwind all at once, possibly causing undue strain on the vacuum tube coupling. 
+
+Fortunately, if **Limit to ±180°** and **Wrap around** are combined, the axis coordinate is reset to its -180° ... +180° equivalent coordinate after the wrap-around move. Therefore the angle will not wind up. 
+
+Note: the GcodeDriver must have the configure `SET_GLOBAL_OFFSETS_COMMAND` set. See the [[migration guide|Advanced-Motion-Control#migration-from-a-previous-version]]. The controller must support using G92 (or equivalent) on the fly, i.e. while the previous move command may still be in the process of being executed. For Smoothieware, you must use [my special PnP firmware](https://makr.zone/smoothieware-new-firmware-for-pnp/500/) for this to work correctly ([reasons explained here](https://github.com/Smoothieware/Smoothieware/pull/1487)). 
+
 ### Kinematic Settings / Axis Limits
 
 **Soft Limit Low** and **Soft Limit High** bracket the valid range of the axis. OpenPnP will refuse a move to a Location if it leads outside this range. 
