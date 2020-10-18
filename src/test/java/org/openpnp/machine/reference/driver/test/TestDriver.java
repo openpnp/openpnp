@@ -42,8 +42,8 @@ public class TestDriver extends AbstractDriver implements Driver {
     }
 
     @Override
-    public AxesLocation getMomentaryLocation(long timeout) throws Exception {
-        return delegate.getMomentaryLocation(-1);
+    public AxesLocation getReportedLocation(long timeout) throws Exception {
+        return delegate.getReportedLocation(-1);
     }
 
     @Override
@@ -94,7 +94,7 @@ public class TestDriver extends AbstractDriver implements Driver {
         }
  
         @Override
-        public AxesLocation getMomentaryLocation(long timeout) throws Exception {
+        public AxesLocation getReportedLocation(long timeout) throws Exception {
             return null;
         }
 

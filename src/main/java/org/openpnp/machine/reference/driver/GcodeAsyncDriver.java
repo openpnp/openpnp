@@ -297,8 +297,8 @@ public class GcodeAsyncDriver extends GcodeDriver {
     public void waitForCompletion(ReferenceHeadMountable hm, 
             CompletionType completionType) throws Exception {
         waitedForCommands = true;
-        if (completionType != CompletionType.WaitForStillstandIndefinitely 
-                && !isMotionPending()) {
+        if (!(completionType.isUnconditionalCoordination() 
+                || isMotionPending())) {
             return;
         }
         // Issue the M400 in the super class.
@@ -307,7 +307,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
         if (completionType.isWaitingForDrivers()) {
             // Explicitly wait for the controller's acknowledgment here. 
             // This is signaled with a position report.
-            getMomentaryLocation(
+            getReportedLocation(
                 completionType == CompletionType.WaitForStillstandIndefinitely ?
                 -1 : getTimeoutAtMachineSpeed());
         }

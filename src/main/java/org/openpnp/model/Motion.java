@@ -984,7 +984,7 @@ public class Motion {
             double t2 = i*dt;
             boolean special = (i == numSteps);
             // Snap to a any special interval.
-            while (!motionIntervals.isEmpty() && motionIntervals.first() < t2+dt) {
+            while (!motionIntervals.isEmpty() && motionIntervals.first() <= t2+dt*.5) {
                 t2 = motionIntervals.first();
                 motionIntervals.remove(t2);
                 special = true;

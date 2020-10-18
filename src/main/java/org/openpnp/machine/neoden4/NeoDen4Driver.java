@@ -385,7 +385,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     }
 
     @Override
-    public AxesLocation getMomentaryLocation(long timeout) throws Exception {
+    public AxesLocation getReportedLocation(long timeout) throws Exception {
         // TODO: if the driver can do it, please implement. 
         throw new Exception("Not supported in this driver");
     }

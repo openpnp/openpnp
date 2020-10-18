@@ -544,6 +544,17 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         btnCaptureSoftLimitHigh.setVisible(!showRotationSettings);
         btnPositionSoftLimitLow.setVisible(!showRotationSettings);
         btnPositionSoftLimitHigh.setVisible(!showRotationSettings);
+
+        lblSafeZoneLow.setVisible(!showRotationSettings);
+        lblSafeZoneHigh.setVisible(!showRotationSettings);
+        safeZoneLow.setVisible(!showRotationSettings);
+        safeZoneHigh.setVisible(!showRotationSettings);
+        safeZoneLowEnabled.setVisible(!showRotationSettings);
+        safeZoneHighEnabled.setVisible(!showRotationSettings);
+        btnCaptureSafeZoneLow.setVisible(!showRotationSettings);
+        btnCaptureSafeZoneHigh.setVisible(!showRotationSettings);
+        btnPositionSafeZoneLow.setVisible(!showRotationSettings);
+        btnPositionSafeZoneHigh.setVisible(!showRotationSettings);
     }
 
     @Override

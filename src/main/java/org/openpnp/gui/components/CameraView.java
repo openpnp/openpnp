@@ -1615,9 +1615,10 @@ public class CameraView extends JComponent implements CameraListener {
     private MouseWheelListener mouseWheelListener = new MouseWheelListener() {
         @Override
         public void mouseWheelMoved(MouseWheelEvent e) {
-            zoom -= e.getPreciseWheelRotation() * Math.max(zoomIncPerMouseWheelTick,
+            double zoomInc = Math.max(zoomIncPerMouseWheelTick,
                     // When best-scale is selected, we can only zoom by 1.0 or faster.
-                    renderingQuality == RenderingQuality.BestScale ? 1.0 : 0); 
+                    renderingQuality == RenderingQuality.BestScale ? 1.0 : 0);
+            zoom = (Math.round(zoom/zoomInc) - e.getPreciseWheelRotation()) * zoomInc; 
             zoom = Math.max(zoom, 1.0d);
             zoom = Math.min(zoom, 100d);
             calculateScalingData();

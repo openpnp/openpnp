@@ -278,7 +278,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     
     protected AtomicLong receivedConfirmations = new AtomicLong();
     protected Line errorResponse;
-    private AxesLocation lastMomentaryLocation;
+    private AxesLocation lastReportedLocation;
     private double lastMomentaryTime;
     private boolean motionPending;
 
@@ -483,7 +483,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
 
     @Override
-    public AxesLocation getMomentaryLocation(long timeout) throws Exception {
+    public AxesLocation getReportedLocation(long timeout) throws Exception {
         String command = getCommand(null, CommandType.GET_POSITION_COMMAND);
         if (command == null) {
             throw new Exception(getName()+" configuration error: missing GET_POSITION_COMMAND.");
@@ -493,16 +493,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         }
         
         // Reset the last position report.
-        lastMomentaryLocation = null;
+        lastReportedLocation = null;
         sendGcode(command, -1);
         // Blocking queue?
         long t1 = System.currentTimeMillis() + ((timeout == -1) ?
                 infinityTimeoutMilliseconds
                 : timeout);
         do { 
-            if (lastMomentaryLocation != null) {
-                Logger.trace("Got lastMomentaryLocation");
-                return lastMomentaryLocation;
+            if (lastReportedLocation != null) {
+                Logger.trace("Got lastReportedLocation");
+                return lastReportedLocation;
             }
             // TODO: sync with response queue? How?
             Thread.yield();
@@ -676,7 +676,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Override
     public void waitForCompletion(ReferenceHeadMountable hm, 
             CompletionType completionType) throws Exception {
-        if (!motionPending) {
+        if (!(completionType.isUnconditionalCoordination() 
+                || isMotionPending())) {
             return;
         }
         String command = getCommand(hm, CommandType.MOVE_TO_COMPLETE_COMMAND);
@@ -1127,12 +1128,12 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             }
         }
         // Store the latest momentary position.
-        lastMomentaryLocation = position;
+        lastReportedLocation = position;
         lastMomentaryTime = line.getTransmissionTime();
 
         if (motionPending) {
-            Logger.warn("Position report cannot be processed when motion might still be pending. Waiting for completion missing/check Machine Coordination on Actuators.", 
-                    lastMomentaryLocation);
+            Logger.warn("Position report cannot be processed when motion might still be pending. Missing Machine Coordination on Actuators?", 
+                    lastReportedLocation);
         }
         else {
             // Store the actual driver location. This is used to re-sync OpenPnP to the actual controller 

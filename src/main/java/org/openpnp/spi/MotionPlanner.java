@@ -142,18 +142,30 @@ public interface MotionPlanner extends PropertySheetHolder {
          */
         WaitForStillstand,
         
+        
         /**
-         * Wait forever.
+         * Like WaitForStillStand but the wait will also be done, if no motion is thought to be pending (used when it is though 
+         * that the machine might have moved through custom Actuator Gcode (Contract Z Probing is one example). 
+         */
+        WaitForUnconditionalCoordination,
+        
+        /**
+         * Like WaitForFullCoordination but wait "forever".
          */
         WaitForStillstandIndefinitely;
 
         public boolean isEnforcingStillstand() {
-            return isWaitingForDrivers() || this == CommandStillstand;
+            return this.ordinal() >= CommandStillstand.ordinal();
         }
 
         public boolean isWaitingForDrivers() {
-            return this == WaitForStillstand || this == WaitForStillstandIndefinitely;
+            return this.ordinal() >= WaitForStillstand.ordinal();
         }
+
+        public boolean isUnconditionalCoordination() {
+            return this.ordinal() >= WaitForUnconditionalCoordination.ordinal();
+        }
+
     }
 
     /**

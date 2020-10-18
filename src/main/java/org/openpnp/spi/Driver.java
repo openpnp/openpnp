@@ -93,7 +93,7 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
      * @return
      * @throws Exception
      */
-    public AxesLocation getMomentaryLocation(long timeout) throws Exception;
+    public AxesLocation getReportedLocation(long timeout) throws Exception;
 
     /**
      * @return true if a motion is still assumed to be pending, i.e. waitForCompletion() has not yet been called.  

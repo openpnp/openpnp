@@ -26,26 +26,26 @@ public class ScriptActuator extends ReferenceActuator {
     @Override
     public void actuate(boolean on) throws Exception {
         if (isCoordinatedBeforeActuate()) {
-            coordinateWithMachine();
+            coordinateWithMachine(false);
         }
         Map<String, Object> globals = new HashMap<>();
         globals.put("actuateBoolean", on);
         this.execute(globals);
         if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine();
+            coordinateWithMachine(true);
         }
     }
 
     @Override
     public void actuate(double value) throws Exception {
         if (isCoordinatedBeforeActuate()) {
-            coordinateWithMachine();
+            coordinateWithMachine(false);
         }
         Map<String, Object> globals = new HashMap<>();
         globals.put("actuateDouble", value);
         this.execute(globals);
         if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine();
+            coordinateWithMachine(true);
         }
     }
 
