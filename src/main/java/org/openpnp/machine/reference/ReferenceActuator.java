@@ -80,11 +80,11 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     public void actuate(boolean on) throws Exception {
         Logger.debug("{}.actuate({})", getName(), on);
         if (isCoordinatedBeforeActuate()) {
-            coordinateWithMachine();
+            coordinateWithMachine(false);
         }
         getDriver().actuate(this, on);
         if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine();
+            coordinateWithMachine(true);
         }
         getMachine().fireMachineHeadActivity(head);
     }
@@ -98,11 +98,11 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     public void actuate(double value) throws Exception {
         Logger.debug("{}.actuate({})", getName(), value);
         if (isCoordinatedBeforeActuate()) {
-            coordinateWithMachine();
+            coordinateWithMachine(false);
         }
         getDriver().actuate(this, value);
         if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine();
+            coordinateWithMachine(true);
         }
         getMachine().fireMachineHeadActivity(head);
     }
@@ -111,11 +111,11 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     public void actuate(String value) throws Exception {
         Logger.debug("{}.actuate({})", getName(), value);
         if (isCoordinatedBeforeActuate()) {
-            coordinateWithMachine();
+            coordinateWithMachine(false);
         }
         getDriver().actuate(this, value);
         if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine();
+            coordinateWithMachine(true);
         }
         getMachine().fireMachineHeadActivity(head);
     }
@@ -123,12 +123,12 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     @Override
     public String read() throws Exception {
         if (isCoordinatedBeforeRead()) {
-            coordinateWithMachine();
+            coordinateWithMachine(false);
         }
         String value = getDriver().actuatorRead(this);
         Logger.debug("{}.read(): {}", getName(), value);
         if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine();
+            coordinateWithMachine(true);
         }
         getMachine().fireMachineHeadActivity(head);
         return value;
@@ -137,7 +137,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     @Override
     public String read(double parameter) throws Exception {
         if (isCoordinatedBeforeRead()) {
-            coordinateWithMachine();
+            coordinateWithMachine(false);
         }
         String value = getDriver().actuatorRead(this, parameter);
         Logger.debug("{}.readWithDouble({}): {}", getName(), parameter, value);

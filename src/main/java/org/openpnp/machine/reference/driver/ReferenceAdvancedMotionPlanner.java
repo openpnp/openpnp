@@ -91,6 +91,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
     private Double recordingMoveTimePlanned;
     private boolean interpolationFailed;
     private boolean recordingInterpolationFailed;
+    private AxesLocation recordingLocation0;
 
     public boolean isAllowContinuousMotion() {
         return allowContinuousMotion;
@@ -367,13 +368,14 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
     protected void recordDiagnostics(Motion plannedMotion, MoveToCommand moveToCommand, Driver driver) {
         super.recordDiagnostics(plannedMotion, moveToCommand, driver);
         if (diagnosticsEnabled) {
-            final double tick = 1e-9;
+            final double tick = 1e-8;
             final double dt = Math.min(0.001, plannedMotion.getTime()/1000 + 1e-6); // 1ms or 1/1000 of whole motion 
             if (recordingMotionGraph == null) {
                 startNewMotionGraph();
                 recordingT0 = plannedMotion.getPlannedTime0();
                 recordingT = 0;
                 recordingInterpolationFailed = false;
+                recordingLocation0 = plannedMotion.getLocation0();
             }
             AxesLocation segment = moveToCommand.getLocation0().motionSegmentTo(moveToCommand.getMovedAxesLocation());
 
@@ -385,6 +387,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
 
             Double timeStart = moveToCommand.getTimeStart();
             Double d = moveToCommand.getTimeDuration(); 
+            AxesLocation recordingLocation1 = recordingLocation0.put(moveToCommand.getMovedAxesLocation());
             for (ControllerAxis axis : plannedMotion.getLocation1().getAxes(driver)) {
                 MotionProfile profile = plannedMotion.getAxesProfiles()[plannedMotion.getAxisIndex(axis)];
                 if (recordingMotionGraph.getRow(axis.getName(), "s'").size() > 0 
@@ -402,13 +405,15 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                             Double a = moveToCommand.getAccelerationPerSecond2();
                             if (v0 != null && v1 != null && a != null) {
                                 // Approximated constant acceleration move. Reconstruct Profile.
-                                double s0 = moveToCommand.getLocation0().getCoordinate(axis);
-                                double s1 = moveToCommand.getLocation1().getCoordinate(axis);
+                                double s0 = recordingLocation0.getCoordinate(axis);
+                                double s1 = recordingLocation1.getCoordinate(axis);
                                 double factor = (s1 - s0)*factorRS274NGC;
                                 v0 *= factor;
                                 v1 *= factor;
                                 a *= factor;
-                                sRow.recordDataPoint(t, s0);
+                                if (t == 0) {
+                                    sRow.recordDataPoint(t, s0);
+                                }
                                 sRow.recordDataPoint(t+d, s1);
                                 if (v != null && plannedMotion.getTime() == moveToCommand.getTimeDuration()) { 
                                     // Single trapezoidal move
@@ -416,11 +421,18 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                                     double t0 = (v-v0)/a;
                                     double t1 = (v-v1)/a;
                                     double tMid = d-t0-t1;
-                                    if ((t0 > tick || t1 > tick) && tMid > -tick*2) {
+                                    if (tMid < tick) {
+                                        if (t0 > t1) {
+                                            t0 = d-t1-tick;
+                                        } else {
+                                            t1 = d-t0-tick;
+                                        }
+                                    }
+                                    if ((t0 > 2*tick || t1 > 2*tick) && tMid > -tick*2) {
                                         // Valid Trapezoidal.
                                         vRow.recordDataPoint(t+t0, v);
                                         vRow.recordDataPoint(t+d-t1, v);
-                                        if (t0 > tick) {
+                                        if (t0 > tick*2) {
                                             aRow.recordDataPoint(t, a);
                                             aRow.recordDataPoint(t+t0-tick, a);
                                         }
@@ -428,7 +440,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                                             aRow.recordDataPoint(t+t0, 0);
                                             aRow.recordDataPoint(t+d-t1, 0);
                                         }
-                                        if (t1 > tick) {
+                                        if (t1 > tick*2) {
                                             aRow.recordDataPoint(t+d-t1+tick, -a);
                                             aRow.recordDataPoint(t+d, -a);
                                         }
@@ -466,7 +478,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                         }
                         else if (timeStart == 0 && driver.getMotionControlType().isUnpredictable()) {
                             // No approximation possible due to driver setting. Just connect s and show limits to illustrate.
-                            d = plannedMotion.getTime();
+                            d = plannedMotion.getTime()-tick;
                             sRow.recordDataPoint(t, profile.getMomentaryLocation(0));
                             sRow.recordDataPoint(t+d, profile.getMomentaryLocation(d));
                             if (vRow.size() == 0) {
@@ -515,6 +527,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
             if (moveToCommand.getTimeDuration() != null) {
                 recordingT += moveToCommand.getTimeDuration();
             }
+            recordingLocation0 = recordingLocation1; 
         }
     }
 

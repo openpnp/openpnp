@@ -100,14 +100,17 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
         return null;
     }
 
-    protected void coordinateWithMachine() throws Exception {
-        Configuration.get().getMachine().getMotionPlanner().waitForCompletion(null, CompletionType.WaitForStillstand);
+    protected void coordinateWithMachine(boolean unconditional) throws Exception {
+        Configuration.get().getMachine().getMotionPlanner()
+        .waitForCompletion(null, unconditional ? 
+                CompletionType.WaitForUnconditionalCoordination
+                : CompletionType.WaitForStillstand);
     }
 
     @Override
     public String read() throws Exception {
         if (isCoordinatedBeforeRead()) {
-            coordinateWithMachine();
+            coordinateWithMachine(false);
         }
         return null;
     }
