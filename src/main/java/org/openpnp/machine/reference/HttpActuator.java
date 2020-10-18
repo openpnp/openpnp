@@ -47,7 +47,7 @@ public class HttpActuator extends ReferenceActuator {
     public void actuate(boolean on) throws Exception {
         Logger.debug("{}.actuate({})", getName(), on);
         if (isCoordinatedBeforeActuate()) {
-            coordinateWithMachine();
+            coordinateWithMachine(false);
         }
         // getDriver().actuate(this, on);
         URL obj = null;
@@ -84,7 +84,7 @@ public class HttpActuator extends ReferenceActuator {
         this.on = on;
 
         if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine();
+            coordinateWithMachine(true);
         }
         getMachine().fireMachineHeadActivity(head);
     }
