@@ -68,7 +68,7 @@ OpenPnP should migrate all but the most exotic machine setups automatically from
 
 8. Delete any `POST_VISION_HOME_COMMAND`.
 
-9. Create a `GET_POSITION_COMMAND`. The command must report all axes (for Smoothieware, try M114.2 if it does not work and/or use [my special firmware](https://makr.zone/smoothieware-new-firmware-for-pnp/500/)).
+9. Create a `GET_POSITION_COMMAND`. The command must report all axes (for Smoothieware, you must use [my special firmware](https://makr.zone/smoothieware-new-firmware-for-pnp/500/)).
 
     `M114 ; get position`
 
