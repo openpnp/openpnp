@@ -87,7 +87,7 @@ You can define a test motion with 4 locations and speed factors to test the moti
 
 If you have the ReferenceAdvancedMotionPlanner selected, the **Motion Planner Diagnostics** tab will be available. The graphical diagnostics plot the movement of all participating axes over time. You get Location, Velocity, Acceleration and Jerk both for the planned motion (strong lines) and their interpolation (light lines). Move the mouse over the graphs to read off values from the plots. 
 
-The following example shows a move with Motion Blending. It is clearly visible, how the Z axis motion _blends_ with the X axis movement over time.
+The following example shows a move with Motion Blending. It is clearly visible, how the Z axis motion _blends_ with the X axis motion over time.
 
 ![Motion Planer Diagnostics](https://user-images.githubusercontent.com/9963310/96174107-1e381600-0f29-11eb-8e0a-9a4bd160963b.png)
 
