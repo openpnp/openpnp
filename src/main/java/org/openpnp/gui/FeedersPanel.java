@@ -22,6 +22,8 @@ package org.openpnp.gui;
 import java.awt.BorderLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
+import java.awt.Component;
+import java.awt.Color;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -52,6 +54,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.events.BoardLocationSelectedEvent;
@@ -74,6 +77,8 @@ import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.Job;
+import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
@@ -158,14 +163,55 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
             @Override
             public void changedUpdate(DocumentEvent e) {
-                search();
-            }
-        });
-        panel_1.add(searchTextField);
-        searchTextField.setColumns(15);
-        
-        
-        table = new AutoSelectTextTable(tableModel);
+				search();
+			}
+		});
+		panel_1.add(searchTextField);
+		searchTextField.setColumns(15);
+
+		table = new AutoSelectTextTable(tableModel);
+
+		table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+			// cells are grayed if the feeder is not used by any enabled placement.
+			@Override
+			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+					boolean hasFocus, int row, int column) {
+				final Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row,
+						column);
+				if (!isSelected) {
+					String partId = (String) tableModel.getValueAt(row, 2);
+					Job job = mainFrame.getJobTab().getJob();
+					boolean bFound = false;
+
+					for (BoardLocation boardLocation : job.getBoardLocations()) {
+						// Only check enabled boards
+						if (!boardLocation.isEnabled()) {
+							continue;
+						}
+
+						for (Placement placement : boardLocation.getBoard().getPlacements()) {
+							// Ignore placements that aren't placements
+							if (placement.getType() != Placement.Type.Placement) {
+								continue;
+							}
+							if (!placement.isEnabled()) {
+								continue;
+							}
+
+							if (placement.getPart().getId() == partId) {
+								bFound = true;
+								break;
+							}
+						}
+						if (bFound) {
+							break;
+						}
+					}
+					c.setBackground(bFound ? Color.WHITE : new Color(230, 230, 230));
+				}
+				return c;
+			}
+		});
         tableSorter = new TableRowSorter<>(tableModel);
         table.getColumnModel().moveColumn(1,  2);
 
@@ -444,6 +490,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             MessageBoxes.errorBox(JOptionPane.getFrameForComponent(FeedersPanel.this),
                     "Feeder Error", e);
         }
+    }
+    
+    public void updateView() {
+    	tableModel.fireTableChanged(null);
     }
 
     public Action newFeederAction = new AbstractAction() {
