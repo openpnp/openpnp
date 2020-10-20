@@ -17,20 +17,16 @@ public class TcpServer {
 		try {
 			server = new ServerSocket(port);
 		} catch (IOException e) {
-			System.err.println("Le port " + port + " est déjà utilisé ! ");
+			System.err.println("Port " + port + " already in use.");
 		}
 		
-		// Toujours dans un thread à part vu qu'il est dans une boucle infinie
 		Thread t = new Thread(new Runnable() {
 			public void run() {
 				while (isRunning == true) {
 
 					try {
-						// On attend une connexion d'un client
 						Socket client = server.accept();
 
-						// Une fois reçue, on la traite dans un thread séparé
-						System.out.println("Connexion cliente reçue.");
 						ClientProcessor clientProcessor = new ClientProcessor(client, jobPanel, jogControlsPanel);
 						Thread t = new Thread(clientProcessor);
 						t.start();
