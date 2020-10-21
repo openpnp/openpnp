@@ -20,7 +20,7 @@ Refer to the Duet3D Wiki on how to upgrade:
 
 ## Marlin 2.0
 
-OpenPnP user Bill made a Marlin 2.0 fork with advanced axis support. Further information there.
+OpenPnP user Bill made a Marlin 2.0 port to Teensy 4.1 with advanced axis support. More information there:
 
 * [Bill's Marlin 2.0 fork](https://github.com/bilsef/Marlin/tree/Teensy4.1_PnP_6axis)
 
