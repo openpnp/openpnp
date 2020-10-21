@@ -39,10 +39,10 @@ Note: as long as Advanced Motion Control is only available in the testing versio
 
 OpenPnP should migrate all but the most exotic machine setups automatically from previous OpenPnP 2.0 versions. After the migration, follow these initial steps to prepare for the Advanced Motion Control features:
 
-1. Upgrade your [[controller firmware|Motion-Controller-Firmwares]] if necessary. 
-
-2. If you use more than four axes on one controller: check out if you can use it **without** pre-move commands (the `T` letter commands used to switch between extruder `E` axes). [[Smoothieware, Duet3D, Bill's fork of Marlin 2.0|Motion-Controller-Firmwares]] and possibly others can be used with proper axis letters `A`, `B`, `C` instead. 
+1. If you use more than four axes on one controller: check out if you can use it **without** pre-move commands (the `T` letter commands used to switch between extruder `E` axes). [[Smoothieware, Duet3D, Bill's fork of Marlin 2.0|Motion-Controller-Firmwares]] and possibly others can be used with proper axis letters `A`, `B`, `C` instead. 
 **Warning**: if this is not the case, only a limited number of advanced features will be available. **This guide assumes you do not have pre-move commands!** 
+
+2. Upgrade your [[controller firmware|Motion-Controller-Firmwares]] if necessary. 
 
 3. Go to each of your GcodeDrivers, enable **Letter Variables?** and disable **Pre-Move Commands?** (other settings will be explained later).
 
