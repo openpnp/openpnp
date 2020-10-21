@@ -17,3 +17,20 @@ Refer to the Duet3D Wiki on how to upgrade:
 * [Duet 2 Installing and Updating Firmware](https://duet3d.dozuki.com/Wiki/Installing_and_Updating_Firmware)
 
 * [Duet 3 Installing and Updating Firmware](https://duet3d.dozuki.com/Wiki/Getting_Started_With_Duet_3#Section_Updating_Duet_3_main_board_firmware)
+
+
+___
+
+## Advanced Motion Control Topics
+
+### Motion Control
+- [[Advanced Motion Control]]
+- [[GcodeAsyncDriver]]
+- [[Motion Planner]]
+
+### Machine Axes
+- [[Machine Axes]]
+- [[Backlash-Compensation]]
+- [[Transformed Axes]]
+- [[Linear Transformed Axes]]
+- [[Mapping Axes]] 
