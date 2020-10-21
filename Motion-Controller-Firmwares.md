@@ -18,6 +18,12 @@ Refer to the Duet3D Wiki on how to upgrade:
 
 * [Duet 3 Installing and Updating Firmware](https://duet3d.dozuki.com/Wiki/Getting_Started_With_Duet_3#Section_Updating_Duet_3_main_board_firmware)
 
+### Marlin 2.0
+
+OpenPnP user Bill made a Marlin 2.0 fork with advanced axis support. 
+
+* [Bill's Marlin 2.0 fork](https://github.com/bilsef/Marlin/tree/Teensy4.1_PnP_6axis)
+
 
 ___
 
