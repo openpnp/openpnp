@@ -10,6 +10,7 @@ ___
 
 ![Home after enable off](https://user-images.githubusercontent.com/9963310/96225353-3f345180-0f91-11eb-9d10-db23fc4418f5.png)
 
+Some of the advanced Features require upgraded controller firmware. Please refer to the [[Motion Controller Firmwares]] page. 
 ___
 
 ### For new Drivers
