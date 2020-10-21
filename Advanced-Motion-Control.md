@@ -39,18 +39,20 @@ Note: as long as Advanced Motion Control is only available in the testing versio
 
 OpenPnP should migrate all but the most exotic machine setups automatically from previous OpenPnP 2.0 versions. After the migration, follow these initial steps to prepare for the Advanced Motion Control features:
 
-1. If you use more than four axes on one controller: check out if you can use it **without** pre-move commands (the `T` letter commands used to switch between extruder `E` axes). Smoothieware, Duet3D, [Bill's fork of Marlin 2.0](https://github.com/bilsef/Marlin/tree/Teensy4.1_PnP_6axis) and possibly others can be used with proper axis letters `A`, `B`, `C` instead. 
+1. Upgrade your [[controller firmware|Motion-Controller-Firmwares]] if necessary. 
+
+2. If you use more than four axes on one controller: check out if you can use it **without** pre-move commands (the `T` letter commands used to switch between extruder `E` axes). Smoothieware, Duet3D, [Bill's fork of Marlin 2.0](https://github.com/bilsef/Marlin/tree/Teensy4.1_PnP_6axis) and possibly others can be used with proper axis letters `A`, `B`, `C` instead. 
 **Warning**: if this is not the case, only a limited number of advanced features will be available. **This guide assumes you do not have pre-move commands!** 
 
-2. Go to each of your GcodeDrivers, enable **Letter Variables?** and disable **Pre-Move Commands?** (other settings will be explained later).
+3. Go to each of your GcodeDrivers, enable **Letter Variables?** and disable **Pre-Move Commands?** (other settings will be explained later).
 
    ![GcodeDriver Migration](https://user-images.githubusercontent.com/9963310/96035272-1746d000-0e63-11eb-8ff8-94f3a0c7a67d.png)
 
-3. The Axes are now in the GUI (formerly a proprietary part of the GcodeDriver). This guide assumes that you checked them out and read about the setup as needed for your machine. See the [[Machine Axes]], [[Transformed Axes]], [[Linear Transformed Axes]] pages plus the parts about [[Mapping Axes]] and [[Backlash-Compensation]].
+4. The Axes are now in the GUI (formerly a proprietary part of the GcodeDriver). This guide assumes that you checked them out and read about the setup as needed for your machine. See the [[Machine Axes]], [[Transformed Axes]], [[Linear Transformed Axes]] pages plus the parts about [[Mapping Axes]] and [[Backlash-Compensation]].
 
-4. Make sure you have assigned the correct **Axis Letter** to each controller axis as described in the [[Controller Settings|Machine-Axes#controller-settings]].
+5. Make sure you have assigned the correct **Axis Letter** to each controller axis as described in the [[Controller Settings|Machine-Axes#controller-settings]].
 
-5. Go to each of the GcodeDrivers and create a **Default** `MOVE_TO_COMMAND` that moves **all** the axes of your controller **at once**, using the **Axis Letters** as the variable names. 
+6. Go to each of the GcodeDrivers and create a **Default** `MOVE_TO_COMMAND` that moves **all** the axes of your controller **at once**, using the **Axis Letters** as the variable names. 
 
     ![Gcode Editing](https://user-images.githubusercontent.com/9963310/96037872-abfefd00-0e66-11eb-9639-46ba5dfa13fb.png)
 
@@ -60,23 +62,23 @@ OpenPnP should migrate all but the most exotic machine setups automatically from
 
     **NOTE**: the example commands shown here are for Smoothieware. They might differ on other controllers. 
 
-6. Remove any `MOVE_TO_COMMAND`s from the other Head Mountables. They are no longer needed.
+7. Remove any `MOVE_TO_COMMAND`s from the other Head Mountables. They are no longer needed.
 
-7. Create a **Default** `SET_GLOBAL_OFFSETS_COMMAND`, again for all the axes of that controller at once and using the **Axis Letters** as the variable names:
+8. Create a **Default** `SET_GLOBAL_OFFSETS_COMMAND`, again for all the axes of that controller at once and using the **Axis Letters** as the variable names:
 
     `G92 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {A:A%.4f} {B:B%.4f} ; reset coordinates in the controller` 
 
-8. Delete any `POST_VISION_HOME_COMMAND`.
+9. Delete any `POST_VISION_HOME_COMMAND`.
 
-9. Create a `GET_POSITION_COMMAND`. The command must report all axes (for Smoothieware, you must use [my special firmware](https://makr.zone/smoothieware-new-firmware-for-pnp/500/)).
+10. Create a `GET_POSITION_COMMAND`. The command must report all axes (for Smoothieware, you must use [my special firmware](https://makr.zone/smoothieware-new-firmware-for-pnp/500/)).
 
     `M114 ; get position`
 
-10. Create or change the `POSITION_REPORT_REGEX`, again for all the axes of that controller at once and using the **Axis Letters** as the regex group names:
+11. Create or change the `POSITION_REPORT_REGEX`, again for all the axes of that controller at once and using the **Axis Letters** as the regex group names:
 
     `^*.X:(?<X>-?\d+\.\d+) Y:(?<Y>-?\d+\.\d+) Z:(?<Z>-?\d+\.\d+) A:(?<A>-?\d+\.\d+) B:(?<B>-?\d+\.\d+).*`
 
-11. Test the machine. Jog around a bit.
+12. Test the machine. Jog around a bit.
 
 ## Next step
 
