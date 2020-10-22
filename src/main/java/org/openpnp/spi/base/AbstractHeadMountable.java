@@ -12,6 +12,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Solutions;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
@@ -102,8 +103,8 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         }
     }
 
-    public  void setAxis(AbstractAxis axis) {
-        switch (axis.getType()) {
+    public  void setAxis(AbstractAxis axis, Axis.Type type) {
+        switch (type) {
             case X:
                 setAxisX(axis);
                 break;
@@ -117,6 +118,10 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
                 setAxisRotation(axis);
                 break;
         }
+    }
+
+    public  void setAxis(AbstractAxis axis) {
+        setAxis(axis, axis.getType());
     }
 
     protected CoordinateAxis getCoordinateAxisZ() {

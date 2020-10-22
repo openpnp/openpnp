@@ -11,8 +11,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.openpnp.Main;
+import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.model.AxesLocation;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Motion;
@@ -26,7 +29,7 @@ public class GcodeServer extends Thread {
     final Map<String, String> commandResponses = new HashMap<>();
     final ServerSocket serverSocket;
     Driver driver;
-    SimulationModeMachine machine;
+    ReferenceMachine machine;
     /**
      * The simulated visual homing offsets are applied to what the simulated down camera sees.
      * Works like Gcode G92. Initialized with the SimulationModeMachine.getHomingError() on homing.
@@ -52,7 +55,7 @@ public class GcodeServer extends Thread {
 
     /**
      * Create a GcodeServer listening on a random port. The chosen port can be
-     * retrived by calling GcodeServer.getListenerPort().
+     * retrieved by calling GcodeServer.getListenerPort().
      * @throws Exception
      */
     public GcodeServer() throws Exception {
@@ -76,13 +79,13 @@ public class GcodeServer extends Thread {
     }
 
     public void setDriver(Driver driver) {
-        this.machine = SimulationModeMachine.getSimulationModeMachine();
+        this.machine = (ReferenceMachine) Configuration.get().getMachine();
         this.driver = driver;
     }
 
     public AxesLocation getMachineLocation() {
         if (machineLocation == null) {
-            machineLocation = new AxesLocation(machine).drivenBy(getDriver());
+            machineLocation = new AxesLocation(machine).drivenBy(driver);
         }
         return machineLocation;
     }
@@ -109,6 +112,7 @@ public class GcodeServer extends Thread {
             catch (Exception e) {
             }
         }
+        Logger.debug("Socket port "+getListenerPort()+" bye-bye.");
     }
 
     enum Gcode {
@@ -133,6 +137,7 @@ public class GcodeServer extends Thread {
         G4(0), G10(0), G28(0), G30(0), G53(0), G92(0), M1nn(0), 
         // Smoothie plus
         M114(0),
+        M115(0),
         M204(12),
         M400(0);
 
@@ -186,7 +191,7 @@ public class GcodeServer extends Thread {
         }
 
         public void run() {
-            while (true) {
+            while (!serverSocket.isClosed()) {
                 try {
                     String input = read();
                     if (input != null) {
@@ -231,6 +236,7 @@ public class GcodeServer extends Thread {
             }
             catch (Exception e) {
             }
+            Logger.debug("Worker port "+getListenerPort()+" bye-bye.");
         }
 
 
@@ -502,7 +508,7 @@ public class GcodeServer extends Thread {
                     StringBuilder response = new StringBuilder();
                     AxesLocation reportedLocation = machineLocation;
                     if (m114Word.getNumberFraction() == 0) {
-                        response.append("ok S:");
+                        response.append("ok C:");
                     }
                     else if (m114Word.getNumberFraction() == 1) {
                         response.append("ok WCS:");
@@ -523,6 +529,19 @@ public class GcodeServer extends Thread {
                     setResponse(response.toString());
                 }
 
+                GcodeWord m115Word = getCodeWord(Gcode.M115, commandWords);
+                if (m115Word != null) {
+                    int axes = 0;
+                    int paxes = 0;
+                    for (ControllerAxis axis1 :  getMachineLocation().getControllerAxes()) {
+                        axes++;
+                        if (!axis1.isRotationalOnController()) {
+                            paxes++;
+                        }
+                    }
+                    setResponse("FIRMWARE_NAME:GcodeServer, FIRMWARE_URL:http%3A//openpnp.org, X-SOURCE_CODE_URL:https%3A//github.com/openpnp/openpnp, FIRMWARE_VERSION:"+Main.getVersion()+", "
+                            +"X-FIRMWARE_BUILD_DATE:Oct 23 2020 00:00:00, X-AXES:"+axes+", X-PAXES:"+paxes+"\nok");
+                }
 
                 // Acceleration
                 GcodeWord m204Word = getCodeWord(Gcode.M204, commandWords);
@@ -617,7 +636,13 @@ public class GcodeServer extends Thread {
                     if (g28Word != null) {
                         // Handle homing like a move. 
                         // But restore the simulated homing error.
-                        Location homingError = machine.getHomingError();
+                        Location homingError;
+                        if (machine instanceof SimulationModeMachine) {
+                            homingError = ((SimulationModeMachine) machine).getHomingError();
+                        }
+                        else {
+                            homingError = new Location(AxesLocation.getUnits());
+                        }
                         homingOffsets = new AxesLocation(machine, getDriver(), (axis) 
                                 -> (axis.getType() == Axis.Type.X ? homingError.getLengthX() :
                                     axis.getType() == Axis.Type.Y ? homingError.getLengthY() : 

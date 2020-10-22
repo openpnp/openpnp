@@ -241,6 +241,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblIpAddress = new JLabel("IP Address");
+        lblIpAddress.setToolTipText("IP address or host-name. Set to \"GcodeServer\" for an internally simulated Controller.");
         panelTcp.add(lblIpAddress, "2, 2, right, default");
 
         ipAddressTextField = new JTextField(17);

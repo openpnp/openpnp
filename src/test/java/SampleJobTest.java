@@ -38,7 +38,7 @@ public class SampleJobTest {
      * quasi real-time to be conclusive as a test. Takes about 2 min.
      * 
      */
-    final public static boolean imperfectMachine = false; 
+    final public static boolean imperfectMachine = true; 
 
     /**
      * Loads the pnp-test job that is included in the samples and attempts to run it within a test
@@ -99,6 +99,7 @@ public class SampleJobTest {
         Job job = Configuration.get().loadJob(jobFile);
 
         machine.setEnabled(true);
+        machine.home();
         jobProcessor.initialize(job);
         while (jobProcessor.next());
         // camera.stopContinuousCapture(encoder);

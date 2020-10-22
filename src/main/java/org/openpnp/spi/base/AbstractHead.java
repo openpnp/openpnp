@@ -10,6 +10,7 @@ import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Solutions;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
@@ -373,5 +374,13 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     public void setHomingFiducialLocation(Location homingFiducialLocation) {
         this.homingFiducialLocation = homingFiducialLocation;
+    }
+
+    @Override
+    public void findIssues(List<Solutions.Issue> issues) {
+        // Recurse into HeadMountables.
+        for (HeadMountable hm : getHeadMountables()) {
+            hm.findIssues(issues);
+        }
     }
 }

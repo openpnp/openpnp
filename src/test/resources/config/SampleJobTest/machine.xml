@@ -1,11 +1,13 @@
 <openpnp-machine>
    <machine class="org.openpnp.machine.reference.SimulationModeMachine" speed="1.0" simulation-mode="DynamicImperfectionsMachine" simulated-non-squareness-factor="0.02" simulated-runout-phase="60.0" simulated-camera-noise="100" simulated-camera-lag="0.01" simulated-vibration-amplitude="0.06" simulated-vibration-duration="0.1">
       <axes>
-         <axis class="org.openpnp.machine.reference.axis.ReferenceControllerAxis" id="AXS160eec8a16c57c98" name="X-non-square" type="X" driver-id="DRV160eec8a15990f38" limit-rotation="true" wrap-around-rotation="true" soft-limit-low-enabled="true" soft-limit-high-enabled="true">
+         <axis class="org.openpnp.machine.reference.axis.ReferenceControllerAxis" id="AXS160eec8a16c57c98" name="X-non-square" type="X" driver-id="DRV160eec8a15990f38" letter="X" backlash-compensation-method="None" backlash-speed-factor="0.1" limit-rotation="true" wrap-around-rotation="true" invert-linear-rotational="false" soft-limit-low-enabled="true" soft-limit-high-enabled="true" safe-zone-low-enabled="false" safe-zone-high-enabled="false">
             <home-coordinate value="1.0" units="Millimeters"/>
             <backlash-offset value="0.0" units="Millimeters"/>
             <soft-limit-low value="-2.02" units="Millimeters"/>
             <soft-limit-high value="213.124" units="Millimeters"/>
+            <safe-zone-low value="0.0" units="Millimeters"/>
+            <safe-zone-high value="0.0" units="Millimeters"/>
             <feedrate-per-second value="1000.0" units="Millimeters"/>
             <acceleration-per-second-2 value="4000.0" units="Millimeters"/>
             <jerk-per-second-3 value="16000.0" units="Millimeters"/>
@@ -14,31 +16,37 @@
          <axis class="org.openpnp.machine.reference.axis.ReferenceLinearTransformAxis" id="AXS160eec8e1016a79c" name="X" type="X" input-axis-X-id="AXS160eec8a16c57c98" input-axis-Y-id="AXS160eec8a16d00578" factor-x="1.0" factor-y="0.02" factor-z="0.0" factor-rotation="0.0" compensation="true">
             <offset value="0.0" units="Millimeters"/>
          </axis>
-         <axis class="org.openpnp.machine.reference.axis.ReferenceControllerAxis" id="AXS160eec8a16d00578" name="Y" type="Y" driver-id="DRV160eec8a15990f38" limit-rotation="true" wrap-around-rotation="true" soft-limit-low-enabled="false" soft-limit-high-enabled="false">
+         <axis class="org.openpnp.machine.reference.axis.ReferenceControllerAxis" id="AXS160eec8a16d00578" name="Y" type="Y" driver-id="DRV160eec8a15990f38" letter="Y" backlash-compensation-method="None" backlash-speed-factor="0.1" limit-rotation="true" wrap-around-rotation="true" invert-linear-rotational="false" soft-limit-low-enabled="false" soft-limit-high-enabled="false" safe-zone-low-enabled="false" safe-zone-high-enabled="false">
             <home-coordinate value="0.0" units="Millimeters"/>
             <backlash-offset value="0.0" units="Millimeters"/>
             <soft-limit-low value="0.0" units="Millimeters"/>
             <soft-limit-high value="0.0" units="Millimeters"/>
+            <safe-zone-low value="0.0" units="Millimeters"/>
+            <safe-zone-high value="0.0" units="Millimeters"/>
             <feedrate-per-second value="1000.0" units="Millimeters"/>
             <acceleration-per-second-2 value="4000.0" units="Millimeters"/>
             <jerk-per-second-3 value="16000.0" units="Millimeters"/>
             <resolution>1.0E-4</resolution>
          </axis>
-         <axis class="org.openpnp.machine.reference.axis.ReferenceControllerAxis" id="AXS160eec8a16d12a0c" name="ZN1" type="Z" driver-id="DRV160eec8a15990f38" limit-rotation="true" wrap-around-rotation="true" soft-limit-low-enabled="true" soft-limit-high-enabled="true">
+         <axis class="org.openpnp.machine.reference.axis.ReferenceControllerAxis" id="AXS160eec8a16d12a0c" name="ZN1" type="Z" driver-id="DRV160eec8a15990f38" letter="Z" backlash-compensation-method="None" backlash-speed-factor="0.1" limit-rotation="true" wrap-around-rotation="true" invert-linear-rotational="false" soft-limit-low-enabled="true" soft-limit-high-enabled="true" safe-zone-low-enabled="true" safe-zone-high-enabled="true">
             <home-coordinate value="0.0" units="Millimeters"/>
             <backlash-offset value="0.0" units="Millimeters"/>
             <soft-limit-low value="-12.0" units="Millimeters"/>
             <soft-limit-high value="1.0" units="Millimeters"/>
+            <safe-zone-low value="0.0" units="Millimeters"/>
+            <safe-zone-high value="0.0" units="Millimeters"/>
             <feedrate-per-second value="1000.0" units="Millimeters"/>
             <acceleration-per-second-2 value="4000.0" units="Millimeters"/>
             <jerk-per-second-3 value="0.0" units="Millimeters"/>
             <resolution>1.0E-4</resolution>
          </axis>
-         <axis class="org.openpnp.machine.reference.axis.ReferenceControllerAxis" id="AXS160eec8a16d193e8" name="RotationN1" type="Rotation" driver-id="DRV160eec8a15990f38" limit-rotation="true" wrap-around-rotation="true" soft-limit-low-enabled="false" soft-limit-high-enabled="false">
+         <axis class="org.openpnp.machine.reference.axis.ReferenceControllerAxis" id="AXS160eec8a16d193e8" name="RotationN1" type="Rotation" driver-id="DRV160eec8a15990f38" letter="C" backlash-compensation-method="None" backlash-speed-factor="0.1" limit-rotation="true" wrap-around-rotation="true" invert-linear-rotational="false" soft-limit-low-enabled="false" soft-limit-high-enabled="false" safe-zone-low-enabled="false" safe-zone-high-enabled="false">
             <home-coordinate value="0.0" units="Millimeters"/>
             <backlash-offset value="0.0" units="Millimeters"/>
             <soft-limit-low value="0.0" units="Millimeters"/>
             <soft-limit-high value="0.0" units="Millimeters"/>
+            <safe-zone-low value="0.0" units="Millimeters"/>
+            <safe-zone-high value="0.0" units="Millimeters"/>
             <feedrate-per-second value="7200.0" units="Millimeters"/>
             <acceleration-per-second-2 value="14400.0" units="Millimeters"/>
             <jerk-per-second-3 value="36000.0" units="Millimeters"/>
@@ -64,7 +72,7 @@
                </nozzle>
             </nozzles>
             <actuators>
-               <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="A1" name="A1" index="0">
+               <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="A1" name="A1" coordinated-before-actuate="true" coordinated-after-actuate="false" coordinated-before-read="true" index="0">
                   <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
                   <safe-z value="0.0" units="Millimeters"/>
                </actuator>
@@ -696,8 +704,19 @@
             <board-location-tolerance value="5.0" units="Millimeters"/>
          </tolerances>
       </fiducial-locator>
-      <motion-planner class="org.openpnp.machine.reference.driver.NullMotionPlanner" maximum-plan-history="60.0"/>
+      <motion-planner class="org.openpnp.machine.reference.driver.ReferenceAdvancedMotionPlanner" maximum-plan-history="60.0" allow-continuous-motion="true" allow-uncoordinated="false" diagnostics-enabled="false" interpolation-retiming="true" show-approximation="true" to-mid-1-speed="1.0" to-mid-2-speed="1.0" to-end-speed="1.0">
+         <start-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+         <mid-location-1 units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+         <mid-location-2 units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+         <end-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+      </motion-planner>
       <home-after-enabled>true</home-after-enabled>
+      <dismissed-solutions class="java.util.HashSet">
+         <string>6d6a9e325eb7ed332e954f9cd758150243689b1c</string>
+         <string>1688589df3148be162e3c444351658e6305c6982</string>
+         <string>c452d7759436c221ec26e5891d8444300481fd50</string>
+         <string>2d22f0764bb103b7be57062b9a35c591ca25465c</string>
+      </dismissed-solutions>
       <simulated-runout value="0.4" units="Millimeters"/>
       <homing-error units="Millimeters" x="1.0" y="2.0" z="0.0" rotation="0.0"/>
       <pick-and-place-checking>true</pick-and-place-checking>

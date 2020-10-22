@@ -22,6 +22,7 @@
 package org.openpnp.spi.base;
 
 import org.openpnp.model.AxesLocation;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Axis;
@@ -81,13 +82,13 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
 
     @Override
     public Length getHomeCoordinate() {
-        return homeCoordinate;
+        return convertToSytem(homeCoordinate);
     }
 
     @Override
     public void setHomeCoordinate(Length homeCoordinate) {
         Object oldValue = this.homeCoordinate;
-        this.homeCoordinate = homeCoordinate;
+        this.homeCoordinate = convertFromSytem(homeCoordinate);
         firePropertyChange("homeCoordinate", oldValue, homeCoordinate);
     }
 
@@ -125,4 +126,26 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
     }
     
     protected abstract long getResolutionTicks(double coordinate);
+
+    protected Length convertToSytem(Length length) {
+        if (type == Axis.Type.Rotation) {
+            // This is actually an angle, not a length, just take it at it numerical  value
+            // and present in system units, so no conversion will take place.
+            return new Length(length.getValue(), Configuration.get().getSystemUnits());
+        }
+        else {
+            return length;
+        }
+    }
+
+    protected Length convertFromSytem(Length length) {
+        if (type == Axis.Type.Rotation) {
+            // This is actually an angle, not a length, just take it at it numerical value
+            // and store as neutral mm.
+            return new Length(length.getValue(), AxesLocation.getUnits());
+        }
+        else {
+            return length;
+        }
+    }
 }

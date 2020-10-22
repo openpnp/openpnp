@@ -22,11 +22,16 @@ package org.openpnp.machine.reference;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.Action;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.marek.MarekNozzle;
@@ -76,7 +81,11 @@ import org.openpnp.machine.reference.signaler.SoundSignaler;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
+import org.openpnp.machine.reference.wizards.ReferenceMachineSolutionsWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Issue;
+import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
@@ -96,6 +105,7 @@ import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.openpnp.util.Collect;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.core.Commit;
 
 public class ReferenceMachine extends AbstractMachine {
@@ -115,9 +125,14 @@ public class ReferenceMachine extends AbstractMachine {
     @Element(required = false)
     private boolean homeAfterEnabled = false;
 
+    @ElementList(required = false)
+    Set<String> dismissedSolutions = new HashSet<>();
+
     private boolean enabled;
 
     private boolean isHomed = false;
+
+    private Solutions solutions = new Solutions();
 
     private List<Class<? extends Axis>> registeredAxisClasses = new ArrayList<>();
 
@@ -168,26 +183,50 @@ public class ReferenceMachine extends AbstractMachine {
     public void setEnabled(boolean enabled) throws Exception {
         Logger.debug("setEnabled({})", enabled);
         if (enabled) {
+            List<Driver> enabledDrivers = new ArrayList<>();
             try {
                 for (Driver driver : getDrivers()) {
                     driver.setEnabled(true);
+                    enabledDrivers.add(driver);
                 }
                 this.enabled = true;
             }
             catch (Exception e) {
+                // In a multi-driver machine, we must make sure its all-or-nothing, 
+                // like a roll-back in a database -> if one fails, disable the others again.
+                // We want reverse disabling order.
+                Collections.reverse(enabledDrivers);
+                for (Driver driver : enabledDrivers) {
+                    try {
+                        driver.setEnabled(false);
+                    }
+                    catch (Exception e1) {
+                        Logger.warn(e1);
+                    }
+                }
                 fireMachineEnableFailed(e.getMessage());
                 throw e;
             }
             fireMachineEnabled();
         }
         else {
-            try {
-                for (Driver driver : getDrivers()) {
+            // In a multi-driver machine, we must try to disable all drivers even if one throws.
+            Exception e = null;
+            List<Driver> enabledDrivers = new ArrayList<>();
+            enabledDrivers.addAll(getDrivers());
+            // We want reverse disabling order.
+            Collections.reverse(enabledDrivers);
+            for (Driver driver : enabledDrivers) {
+                try {
                     driver.setEnabled(false);
                 }
-                this.enabled = false;
+                catch (Exception e1) {
+                    Logger.warn(e1);
+                    e = e1;
+                }
             }
-            catch (Exception e) {
+            this.enabled = false;
+            if (e != null) {
                 fireMachineDisableFailed(e.getMessage());
                 throw e;
             }
@@ -247,7 +286,10 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return Collect.concat(new PropertySheet[] { new PropertySheetWizardAdapter(getConfigurationWizard()) },
+        return Collect.concat(new PropertySheet[] { 
+                    new PropertySheetWizardAdapter(getConfigurationWizard()),
+                    new PropertySheetWizardAdapter(new ReferenceMachineSolutionsWizard(this), "Issues & Solutions")
+                },
                 getMotionPlanner().getPropertySheets());
     }
 
@@ -349,6 +391,8 @@ public class ReferenceMachine extends AbstractMachine {
 
     private List<Class<? extends PartAlignment>> registeredAlignmentClasses = new ArrayList<>();
 
+    protected MotionPlanner mootionPlanner;
+
     @Override
     public void home() throws Exception {
         Logger.debug("homing machine");
@@ -423,10 +467,105 @@ public class ReferenceMachine extends AbstractMachine {
         return this.isHomed;
     }
 
+    public Solutions getSolutions() {
+        return solutions;
+    }
+
     @Override
     public void setHomed(boolean isHomed) {
         Logger.debug("setHomed({})", isHomed);
         this.isHomed = isHomed;
         firePropertyChange("homed", null, this.isHomed);
+    }
+
+    @Override
+    public void findIssues(List<Solutions.Issue> issues) {
+        if (getMotionPlanner() instanceof NullMotionPlanner) {
+            issues.add(new Solutions.Issue(
+                    this, 
+                    "Advanced Motion Planner not set. Accept or Dismiss to continue.", 
+                    "Change to ReferenceAdvancedMotionPlanner", 
+                    Solutions.Severity.Fundamental,
+                    "https://github.com/openpnp/openpnp/wiki/Motion-Planner#choosing-a-motion-planner") {
+                final MotionPlanner oldMotionPlanner =  ReferenceMachine.this.getMotionPlanner();
+
+                @Override
+                public void setState(Solutions.State state) throws Exception {
+                    if (confirmStateChange(state)) {
+                        if ((state == Solutions.State.Solved)) {
+                            setMotionPlanner(new ReferenceAdvancedMotionPlanner());
+                        } 
+                        else {
+                            setMotionPlanner(oldMotionPlanner);
+                        }
+                        // Reselect the tree path to reload the wizard with potentially different property sheets. 
+                        MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
+                        super.setState(state);
+                    }
+                }
+            });
+        }
+        super.findIssues(issues);
+    }
+
+    public void setSolutionsIssues(List<Issue> issues) {
+        if (issues.size() == 0) {
+            issues.add(new Solutions.Issue(
+                    this, 
+                    "No issues detected.", 
+                    "", 
+                    Solutions.Severity.Information,
+                    null));
+        }
+        // Go through the issues and set initially dismissed ones.
+        // Also install listeners to update the dismissedTroubleshooting.
+        for (Issue issue : issues) {
+            if (isSolutionsIssueDismissed(issue)) {
+                issue.setInitiallyDismissed();
+            }
+            issue.addPropertyChangeListener("state", e -> {
+                if (e.getOldValue() == Solutions.State.Dismissed) {
+                    setSolutionsIssueDismissed(issue, false);
+                }
+                if (issue.getState() == Solutions.State.Dismissed) {
+                    setSolutionsIssueDismissed(issue, true);
+                }
+                int row = solutions.getIssues().indexOf(issue);
+                solutions.fireTableRowsUpdated(row, row);
+            });
+        }
+        // Sort by state (initially only Open and Dismissed possible) and place Fundamentals first.
+        issues.sort(new Comparator<Issue>() {
+            @Override
+            public int compare(Issue o1, Issue o2) {
+                int d = o1.getState().ordinal() - o2.getState().ordinal();
+                if (d != 0) {
+                    return d;
+                }
+                if (o1.getSeverity() == Severity.Fundamental && o2.getSeverity() != Severity.Fundamental) {
+                    return -1;
+                }
+                else if (o2.getSeverity() == Severity.Fundamental) {
+                    return 1;
+                }
+                else {
+                    return 0;
+                }
+            }
+        });
+        // Finally set the issues.
+        getSolutions().setIssues(issues);
+    }
+
+    public boolean isSolutionsIssueDismissed(Issue issue) {
+        return dismissedSolutions.contains(issue.getFingerprint());
+    }
+    public void setSolutionsIssueDismissed(Issue issue, boolean dismissed) {
+        if (dismissed) {
+            dismissedSolutions.add(issue.getFingerprint()); 
+        }
+        else {
+            dismissedSolutions.remove(issue.getFingerprint());
+        }
     }
 }

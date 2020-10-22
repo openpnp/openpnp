@@ -59,6 +59,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import java.awt.Color;
 
 @SuppressWarnings("serial")
 public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConfigurationWizard {
@@ -250,6 +251,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
             });
         }
     };    
+    private JLabel lblNotMmmin;
 
     public ReferenceControllerAxisConfigurationWizard(ReferenceControllerAxis axis) {
         super(axis);
@@ -492,6 +494,10 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         feedratePerSecond = new JTextField();
         panelKinematics.add(feedratePerSecond, "4, 12, fill, default");
         feedratePerSecond.setColumns(10);
+        
+        lblNotMmmin = new JLabel("Not [/min]");
+        lblNotMmmin.setForeground(Color.RED);
+        panelKinematics.add(lblNotMmmin, "6, 12, 5, 1");
 
         lblAccelerations = new JLabel("Acceleration [/s²]");
         panelKinematics.add(lblAccelerations, "2, 14, right, default");

@@ -818,6 +818,36 @@ public class Motion {
         // Sanity.
         distStep = Math.max(3, distStep);
 
+        // Determine per axis maximum delta a for Jerk Control simulation.
+        AxesLocation maxDeltaA = new AxesLocation(location0.getAxes(driver),
+                (axis) -> new Length(
+                        computeMaxDeltaA(maxJerkSteps, axis), 
+                        AxesLocation.getUnits()));
+
+        boolean simpleSymmetricMove = (/*MotionProfile.isCoordinated(axesProfiles) 
+                &&*/ getMomentaryVelocity(0).matches(AxesLocation.zero)
+                && getMomentaryVelocity(time).matches(AxesLocation.zero)
+                && getMomentaryAcceleration(time).matches(AxesLocation.zero)
+                && getMomentaryAcceleration(time).matches(AxesLocation.zero)
+                && getMomentaryJerk(0).matches(getMomentaryJerk(time-MotionProfile.ttol)));
+        if (simpleSymmetricMove) {
+            AxesLocation jerk = getMomentaryJerk(0);
+            double wantedTimeStep = Double.POSITIVE_INFINITY;
+            for (ControllerAxis axis : maxDeltaA.getControllerAxes()) {
+                double da = maxDeltaA.getCoordinate(axis);
+                double j = Math.abs(jerk.getCoordinate(axis));
+                if (Double.isFinite(da) && j > 0) {
+                    wantedTimeStep = Math.min(wantedTimeStep, da/j);
+                }
+            }
+            int numStepsNew = (int) Math.ceil(2*time/wantedTimeStep);
+            if (numStepsNew < 4) {
+                // No interpolation needed, or move too short for interpolation. Just execute as one moderated moveTo. 
+                return moderatedMoveTo(driver);
+            }
+            numSteps = Math.min(numSteps, numStepsNew);
+        }
+
         // Converting Junction Deviation (per axis) to allowable instant delta V
         //   s = 1/2 a t²
         //     = 1/2 a (dV/a)²
@@ -829,11 +859,6 @@ public class Motion {
         AxesLocation maxDeltaV = new AxesLocation(location0.getAxes(driver),
                 (axis) -> new Length(
                         1./2*Math.sqrt(2)*Math.sqrt(junctionDeviation*axesProfiles[getAxisIndex(axis)].getAccelerationMax()), 
-                        AxesLocation.getUnits()));
-        // Determine per axis maximum delta a.
-        AxesLocation maxDeltaA = new AxesLocation(location0.getAxes(driver),
-                (axis) -> new Length(
-                        computeMaxDeltaA(maxJerkSteps, axis), 
                         AxesLocation.getUnits()));
 
         /*
@@ -875,6 +900,7 @@ public class Motion {
         // Collect special intervals.
         TreeSet<Double> intervals = new TreeSet<>();
         TreeSet<Double> intervalsExtremes = new TreeSet<>();
+        TreeSet<Double> motionIntervals = new TreeSet<>();
         intervals.add(0.);
         for (MotionProfile profile : axesProfiles) {
             // Add all the profile times.
@@ -893,14 +919,13 @@ public class Motion {
             }
         }
         // Filter the intervals.
-        TreeSet<Double> motionIntervals = new TreeSet<>();
         double tPrev = -1; 
         int constantV = 0;
         double tConstantA = Double.NaN;
         int constantA = 0;
         for (Double t : intervals) {
             if (t > tPrev + MotionProfile.eps) {
-//                Logger.debug("candidate interval t="+t);
+                //                Logger.debug("candidate interval t="+t);
                 AxesLocation velocity = getMomentaryVelocity(t);
                 AxesLocation acceleration = getMomentaryAcceleration(t+MotionProfile.eps);
                 AxesLocation jerk = getMomentaryJerk(t+MotionProfile.eps);
@@ -1114,7 +1139,7 @@ public class Motion {
                                 AxesLocation deltaA20 = acceleration2.subtract(acceleration0);
                                 for (ControllerAxis axis : segment.getControllerAxes()) {
                                     double da20 = Math.abs(deltaA20.getCoordinate(axis));
-                                    if (da20 > maxDeltaA.getCoordinate(axis)) {
+                                    if (da20*1.02 > maxDeltaA.getCoordinate(axis)) {
                                         // Acceleration delta too high. 
 //                                        // Check absolute acceleration (must not be too low).
 //                                        double factorAxis = Math.abs(segment.getCoordinate(axis))/distance;
@@ -1239,8 +1264,8 @@ public class Motion {
         }
         double profileAcceleration = Math.max(Math.abs(profile.aBound1), Math.abs(profile.aBound0));
         double deltaA = profile.getAccelerationMax()/maxJerkSteps;
-        double steps = Math.max(1, Math.ceil(profileAcceleration/deltaA));
-        return MotionProfile.atol+profileAcceleration/steps;
+        double steps = Math.max(1, Math.round(profileAcceleration/deltaA));
+        return profileAcceleration/steps*0.999;
 //        return profileAcceleration/maxJerkSteps;
     }
 

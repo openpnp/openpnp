@@ -1532,6 +1532,10 @@ public class MotionProfile {
         return lead;
     }
 
+    public static int getLeadAxisIndex(MotionProfile[] profiles) {
+        return getLeadAxisIndex(getUnitVector(profiles));
+    }
+
     public static double dotProduct(double[] unitVector1, double[] unitVector2) {
         double dot = 0;
         for (int i = 0; i < unitVector1.length; i++) {
@@ -1540,33 +1544,33 @@ public class MotionProfile {
         return dot;
     }
 
-    public static double[] getUnitVector(MotionProfile[] profile) {
+    public static double[] getUnitVector(MotionProfile[] profiles) {
         double [] unitVector;
-        unitVector = new double[profile.length];
+        unitVector = new double[profiles.length];
         double sumSq = 0;
-        for (int i = 0; i < profile.length; i++) {
+        for (int i = 0; i < profiles.length; i++) {
             double d;
-            unitVector[i] = d = profile[i].s[segments] - profile[i].s[0];
+            unitVector[i] = d = profiles[i].s[segments] - profiles[i].s[0];
             sumSq += d*d;
         }
         double n = Math.sqrt(sumSq);
         if (n > 0) { 
-            for (int i = 0; i < profile.length; i++) {
+            for (int i = 0; i < profiles.length; i++) {
 
                 unitVector[i] /= n;
             }
         }
         else {
-            for (int i = 0; i < profile.length; i++) {
+            for (int i = 0; i < profiles.length; i++) {
                 unitVector[i] = 0;
             }   
         }
         return unitVector;
     }
 
-    public static boolean isCoordinated(MotionProfile[] profile) {
-        if (profile.length > 0) {
-            return profile[0].hasOption(ProfileOption.Coordinated);
+    public static boolean isCoordinated(MotionProfile[] profiles) {
+        if (profiles.length > 0) {
+            return profiles[0].hasOption(ProfileOption.Coordinated);
         }
         return false;
     }

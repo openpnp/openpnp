@@ -74,6 +74,10 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
         return new Length(0, getUnits());
     }
 
+    @Override
+    public String toString() {
+        return getName();
+    }
 
     protected void createAxisMappingDefaults(ReferenceMachine machine) throws Exception {
         if (machine.getAxes().size() == 0) {

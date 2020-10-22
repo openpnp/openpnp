@@ -23,6 +23,7 @@ package org.openpnp.spi;
 
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Motion;
+import org.openpnp.model.Solutions;
 import org.openpnp.model.Motion.MotionOption;
 
 /**
@@ -77,7 +78,7 @@ import org.openpnp.model.Motion.MotionOption;
  * </p>
  * 
  */
-public interface MotionPlanner extends PropertySheetHolder {
+public interface MotionPlanner extends PropertySheetHolder, Solutions.Subject {
 
     /**
      * Perform the homing operation. This calls the home() methods of the underlying 

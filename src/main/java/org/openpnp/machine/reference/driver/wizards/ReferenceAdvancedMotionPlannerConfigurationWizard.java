@@ -99,6 +99,7 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
     private JTextField textFieldEndRotation;
     private JLabel lblRetime;
     private JCheckBox interpolationRetiming;
+    private JPanel panel_1;
 
 
     public ReferenceAdvancedMotionPlannerConfigurationWizard(ReferenceAdvancedMotionPlanner motionPlanner) {
@@ -128,32 +129,32 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
                 ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.PREF_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-        
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.PREF_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+
         JLabel lblContinuousMotion = new JLabel("Allow continous motion?");
         lblContinuousMotion.setToolTipText("<html>\r\n<p>Often, OpenPnP directs the controller(s) to execute motion that involves multiple<br/>\r\nsegments. For example, consider a move to Safe Z, followed by a move over the target <br/>\r\nlocation, followed by a move to lower the the nozzle down to pick or place a part. </p> \r\n<p>If the motion planner and/or the motion controller get these commands as one<br/>\r\nsequence, they can apply certain optimizations to them. There are also no delays<br/>\r\nintroduced when communicating back and forth. Furthermore, the planning can go <br/>\r\nahead in parallel while the controller is still executing the last commands.</p>\r\n<p>By allowing continuous motion, you enable these optimizations. However, the <br/>\r\nMachine setup i.e. Gcode, custom scripts etc. must be configured in awareness that the <br/>\r\nplanner no longer waits for motion to complete each time, unless explicitly told to. </p>\r\n</html>");
         panelSettings.add(lblContinuousMotion, "2, 2, right, default");
-        
+
         allowContinuousMotion = new JCheckBox("");
         panelSettings.add(allowContinuousMotion, "4, 2");
-        
+
         JLabel lblAllowUncoordinated = new JLabel("Allow uncoordinated?");
         lblAllowUncoordinated.setToolTipText("<html>\r\nAllowing uncoordinated motion, will enable the planner to use advanced features<br/>\r\nsuch as overshooting, motion blending etc. This requires a driver that supports<br/>\r\nsimulated or true 3rd-order motion control (with these features on the controller).\r\n</html>");
         panelSettings.add(lblAllowUncoordinated, "2, 4, right, default");
-        
+
         allowUncoordinated = new JCheckBox("");
         panelSettings.add(allowUncoordinated, "4, 4");
-        
+
         lblRetime = new JLabel("Interpolation Retiming?");
         lblRetime.setToolTipText("<html>\r\nInterpolation can only approximate the true 3rd-order motion profiles,<br/>\r\nsome deviations are expected. Re-timing will stretch the motion<br/>\r\nto match the original 3rd-order timing. However this will slightly reduce<br/>\r\nthe peak feedrate. By switching this off, you get the planned peak feedrate but slightly shorter<br/>\r\nmove duration.\r\n</html>\r\n");
         panelSettings.add(lblRetime, "2, 6, right, default");
-        
+
         interpolationRetiming = new JCheckBox("");
         panelSettings.add(interpolationRetiming, "4, 6, right, top");
 
@@ -173,17 +174,17 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         Machine myMachine = null;
         try {
@@ -192,7 +193,7 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
         catch (Exception e){
             Logger.error(e, "Cannot determine Name of machine.");
         }
-        
+
         lblX = new JLabel("X");
         panel.add(lblX, "4, 2, center, default");
 
@@ -201,41 +202,41 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
 
         lblZ = new JLabel("Z");
         panel.add(lblZ, "8, 2, center, default");
-        
+
         lblRotation = new JLabel("Rotation");
         panel.add(lblRotation, "10, 2, center, default");
-        
+
         textFieldStartRotation = new JTextField();
         panel.add(textFieldStartRotation, "10, 4, fill, default");
         textFieldStartRotation.setColumns(10);
-        
+
         lblSpeed1 = new JLabel("Speed 1 ↔ 2");
         panel.add(lblSpeed1, "8, 5, right, default");
-        
+
         toMid1Speed = new JTextField();
         toMid1Speed.setToolTipText("Speed between First location and Second location");
         panel.add(toMid1Speed, "10, 5, fill, default");
         toMid1Speed.setColumns(5);
-        
+
         textFieldMidRotation1 = new JTextField();
         panel.add(textFieldMidRotation1, "10, 6, fill, default");
         textFieldMidRotation1.setColumns(10);
-        
+
         lblSpeed2 = new JLabel("Speed 2 ↔ 3");
         panel.add(lblSpeed2, "8, 7, right, default");
-        
+
         toMid2Speed = new JTextField();
         toMid2Speed.setToolTipText("Speed between Second location and Third location");
         toMid2Speed.setColumns(5);
         panel.add(toMid2Speed, "10, 7, fill, default");
-        
+
         textFieldMidRotation2 = new JTextField();
         panel.add(textFieldMidRotation2, "10, 8, fill, default");
         textFieldMidRotation2.setColumns(10);
-        
+
         lblSpeedEnd = new JLabel("Speed 3 ↔ 4");
         panel.add(lblSpeedEnd, "8, 9, right, default");
-        
+
         lblStartLocation = new JLabel("First Location");
         panel.add(lblStartLocation, "2, 4, right, default");
 
@@ -275,26 +276,26 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
                 textFieldMidY1, textFieldMidZ1, (JTextField) null);
         midLocation1ButtonsPanel.setShowPositionToolNoSafeZ(true);
         panel.add(midLocation1ButtonsPanel, "12, 6, fill, default");
-        
+
         lblMiddleLocation2 = new JLabel("Third Location");
         panel.add(lblMiddleLocation2, "2, 8, right, default");
-        
+
         textFieldMidX2 = new JTextField();
         textFieldMidX2.setColumns(10);
         panel.add(textFieldMidX2, "4, 8, fill, default");
-        
+
         textFieldMidY2 = new JTextField();
         textFieldMidY2.setColumns(10);
         panel.add(textFieldMidY2, "6, 8, fill, default");
-        
+
         textFieldMidZ2 = new JTextField();
         textFieldMidZ2.setColumns(10);
         panel.add(textFieldMidZ2, "8, 8, fill, default");
-        
+
         midLocation2ButtonsPanel = new LocationButtonsPanel(textFieldMidX2, textFieldMidY2, textFieldMidZ2, (JTextField) null);
         midLocation2ButtonsPanel.setShowPositionToolNoSafeZ(true);
         panel.add(midLocation2ButtonsPanel, "12, 8, fill, default");
-        
+
         toEndSpeed = new JTextField();
         toEndSpeed.setToolTipText("Speed between Third location and Last location");
         toEndSpeed.setColumns(5);
@@ -314,7 +315,7 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
         textFieldEndZ = new JTextField();
         panel.add(textFieldEndZ, "8, 10, fill, default");
         textFieldEndZ.setColumns(10);
-        
+
         textFieldEndRotation = new JTextField();
         panel.add(textFieldEndRotation, "10, 10, fill, default");
         textFieldEndRotation.setColumns(10);
@@ -324,7 +325,7 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
         endLocationButtonsPanel.setShowPositionToolNoSafeZ(true);
         panel.add(endLocationButtonsPanel, "12, 10, fill, default");
     }
-    
+
     @Override
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
@@ -390,12 +391,12 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
                 lengthConverter);
         addWrappedBinding(endLocation, "rotation", textFieldEndRotation, "text",
                 doubleConverter);
-        
+
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldStartY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldStartZ);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldStartRotation);
-        
+
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(toMid1Speed);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldMidX1);

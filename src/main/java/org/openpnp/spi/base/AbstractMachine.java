@@ -14,15 +14,18 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.Icon;
 
+import org.openpnp.machine.reference.axis.ReferenceLinearTransformAxis;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Solutions;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.MotionPlanner.CompletionType;
@@ -111,6 +114,45 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @Override
     public Axis getAxis(String id) {
         return axes.get(id);
+    }
+
+    /**
+     * Find a default machine axis by type. This is just an educated guess that is good as a default assignment
+     * to be reviewed by the user.
+     * 
+     * @param type
+     * @return
+     */
+    public AbstractAxis getDefaultAxis(Axis.Type type) {
+        // Look for a controller axis.
+        AbstractAxis defaultAxis = null;
+        for (Axis axis : getAxes()) {
+            if (axis.getType() == type && axis instanceof AbstractControllerAxis) {
+                defaultAxis = (AbstractAxis) axis;
+                break;
+            }
+        }
+        if (defaultAxis != null) {
+            if (type != Axis.Type.Z) {
+                // Unless it's Z, we look for transforms on top.
+                for (Axis axis : getAxes()) {
+                    if (axis instanceof AbstractSingleTransformedAxis 
+                            && ((AbstractSingleTransformedAxis)axis).getInputAxis() == defaultAxis) {
+                        defaultAxis = (AbstractAxis) axis;
+                        break;
+                    }
+                }
+            }
+            // Look for linear transforms on top-
+            for (Axis axis : getAxes()) {
+                if (axis instanceof ReferenceLinearTransformAxis 
+                        && ((ReferenceLinearTransformAxis)axis).getPrimaryInputAxis() == defaultAxis) {
+                    defaultAxis = (AbstractAxis) axis;
+                    break;
+                }
+            }
+        }
+        return defaultAxis;
     }
 
     @Override
@@ -239,6 +281,14 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         int index = axes.indexOf(axis);
         if (axes.remove(axis)) {
             fireIndexedPropertyChange("axes", index, axis, null);
+            // Purge it out of Head-Mountables.
+            for (Head head : getHeads()) {
+                for (HeadMountable hm : head.getHeadMountables()) {
+                    if (hm.getAxis(axis.getType()) == axis) {
+                        ((AbstractHeadMountable)hm).setAxis(null, axis.getType());
+                    }
+                }
+            }
         }
     }
 
@@ -532,5 +582,35 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
             }
         }
         return null;
+    }
+
+    @Override
+    public void findIssues(List<Solutions.Issue> issues) {
+        // MotionPlanner.
+        getMotionPlanner().findIssues(issues);
+        // Recurse into axes.
+        for (Axis axis : getAxes()) {
+            axis.findIssues(issues);
+        }
+        // Recurse into heads
+        for (Head head : getHeads()) {
+            head.findIssues(issues);
+        }
+        // Recurse into machine cameras.  
+        for (Camera camera : getCameras()) {
+            camera.findIssues(issues);
+        }
+        // Recurse into machine actuators.  
+        for (Actuator actuator : getActuators()) {
+            actuator.findIssues(issues);
+        }
+        // Recurse into drivers.  
+        for (Driver driver : getDrivers()) {
+            driver.findIssues(issues);
+        }
+        // Recurse into feeders.  
+        for (Feeder feeder : getFeeders()) {
+            feeder.findIssues(issues);
+        }
     }
 }

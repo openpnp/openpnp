@@ -25,6 +25,7 @@ import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 import org.openpnp.model.Named;
 import org.openpnp.model.Part;
+import org.openpnp.model.Solutions;
 
 
 
@@ -33,7 +34,7 @@ import org.openpnp.model.Part;
  * feeder, a tray handler, a single part in a specific location or anything else that can be used as
  * a pick source.
  */
-public interface Feeder extends Identifiable, Named, WizardConfigurable, PropertySheetHolder {
+public interface Feeder extends Identifiable, Named, WizardConfigurable, PropertySheetHolder, Solutions.Subject {
     /**
      * Return true is the Feeder is currently enabled and can be considered in Job planning.
      * 
