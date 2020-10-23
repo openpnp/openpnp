@@ -82,9 +82,11 @@ The default pipeline is described below:
 
   ![HSV Model](https://user-images.githubusercontent.com/9963310/96978029-335f0700-151e-11eb-9833-802249f8b7ef.png)
 
-* The following animation quickly shows you how to initially set or fix an HSV mask, using the mouse to probe image pixels. First we probe green pixels and look at the first channel (the `H` as in "hue") of the `HSV(full)` indicator on the status line to _include_ what is green. Then we _exclude_ parts that are too bright (the pins) looking at the third value (the `V` as in "value" i.e. brightness) of the `HSV(full)` indicator on the status line. Finally, we _exclude_ the parts that are too dark (background stuff, the IC body), using the same method (use refresh with the Shift key held down to restart the animation). 
+* The following animation quickly shows you how to initially set or fix an HSV mask, using the mouse to probe image pixels. First we probe green pixels and look at the first channel (the `H` as in "hue") of the `HSV(full)` indicator on the status line to _include_ what is green. Then we _exclude_ parts that are too bright (the pins) looking at the third value (the `V` as in "value" i.e. brightness) of the `HSV(full)` indicator on the status line. Finally, we _exclude_ the parts that are too dark (background stuff, the IC body), using the same method. 
 
   ![MaskHSVSetup](https://user-images.githubusercontent.com/9963310/96976803-8e8ffa00-151c-11eb-8db1-edc0626316c7.gif)
+  
+  (Refresh the browser with Shift held down to restart the animation)
 
 # FAQ
 
