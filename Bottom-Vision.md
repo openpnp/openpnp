@@ -74,9 +74,17 @@ The default pipeline is described below:
 * Much of the purpose of the vision pipeline is to filter the image so that the only thing that is visible is the part you are interested in. The various Mask stages and Thresholds can help with this.
 * Switch off the camera's auto-exposure. Otherwise, this will never be stable and repeatable. If your camera does not allow that, chose a different model. Seriously.
 * You should set your Camera's exposure, so you the [dynamic range](https://en.wikipedia.org/wiki/Dynamic_range) includes the brightest parts of the image without [clipping](https://en.wikipedia.org/wiki/Clipping_(photography)). We need to be able to distinguish the bright tones. Use the shiniest part to set this up. The image will be rather dark for humans, but it is fine for machine vision. 
-* The following animation quickly shows you how to initially set or fix a faulty threshold using the mouse to probe image pixels. Look at the third (the `V`) value of the `HSV(full)` indicator on the status line (this will work both for color and grayscale images). Probe the pixels that should be _excluded_ and probe the pixels that should be _included_, then set the threshold to a value in between:
+* The following animation quickly shows you how to initially set or fix a threshold, using the mouse to probe image pixels. Look at the third (the `V`) brightness value of the `HSV(full)` indicator on the status line (this will work both for color and grayscale images). Probe the pixels that should be _excluded_ and probe the pixels that should be _included_, then set the threshold to a value in between:
 
   ![BottomVisionThreshold](https://user-images.githubusercontent.com/9963310/96963951-e1ac8180-1509-11eb-87c5-630dec575931.gif)
+
+* If you have green color Juki nozzle tips you can use the MaskHSV stage to mask the green parts reliably. Make yourself familiar with the HSV model ([from the Wikipedia](https://en.wikipedia.org/wiki/HSL_and_HSV)). 
+
+  ![HSV Model](https://user-images.githubusercontent.com/9963310/96978029-335f0700-151e-11eb-9833-802249f8b7ef.png)
+
+* The following animation quickly shows you how to initially set or fix an HSV mask, using the mouse to probe image pixels. First we look at the first (the `H` as in "hue") indicator on the status line to _include_ what is green. Then we _exclude_ parts that are too bright (the pins). We look at the third value (the `V` as in "value" i.e. brightness) of the `HSV(full)` indicator on the status line. Finally, we _exclude_ the parts that are too dark (background stuff, the IC body), using the same method. 
+
+  ![MaskHSVSetup](https://user-images.githubusercontent.com/9963310/96976803-8e8ffa00-151c-11eb-8db1-edc0626316c7.gif)
 
 # FAQ
 
