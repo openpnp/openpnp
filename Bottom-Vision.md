@@ -72,6 +72,9 @@ The default pipeline is described below:
 # Tips
 
 * Much of the purpose of the vision pipeline is to filter the image so that the only thing that is visible is the part you are interested in. The various Mask stages and Thresholds can help with this.
+* The following animation quickly shows you how to fix a threshold using the mouse to probe image pixels:
+
+  ![BottomVisionThreshold](https://user-images.githubusercontent.com/9963310/96963951-e1ac8180-1509-11eb-87c5-630dec575931.gif)
 
 # FAQ
 
