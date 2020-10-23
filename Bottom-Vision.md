@@ -86,7 +86,7 @@ The default pipeline is described below:
 
   ![MaskHSVSetup](https://user-images.githubusercontent.com/9963310/96976803-8e8ffa00-151c-11eb-8db1-edc0626316c7.gif)
   
-  (Refresh the browser with Shift held down to restart the animation)
+  Use the context menu to display the image, holding down the Shift key to start the animation from the beginning.
 
 # FAQ
 
