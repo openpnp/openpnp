@@ -74,7 +74,7 @@ The default pipeline is described below:
 * Much of the purpose of the vision pipeline is to filter the image so that the only thing that is visible is the part you are interested in. The various Mask stages and Thresholds can help with this.
 * Switch off the camera's auto-exposure. Otherwise, this will never be stable and repeatable. If your camera does not allow that, chose a different model. Seriously.
 * You should set your Camera's exposure, so you the [dynamic range](https://en.wikipedia.org/wiki/Dynamic_range) includes the brightest parts of the image without [clipping](https://en.wikipedia.org/wiki/Clipping_(photography)). We need to be able to distinguish the bright tones. Use the shiniest part to set this up. The image will be rather dark for humans, but it is fine for machine vision. 
-* The following animation quickly shows you how to initially set or fix a faulty threshold using the mouse to probe image pixels. Look at the `V` values of the `HSV(full)` indicator on the status line (this will work both for color and grayscale images). Probe the pixels that should be _excluded_ and probe the pixels that should be _included_, then set the threshold to a value in between:
+* The following animation quickly shows you how to initially set or fix a faulty threshold using the mouse to probe image pixels. Look at the third (the `V`) value of the `HSV(full)` indicator on the status line (this will work both for color and grayscale images). Probe the pixels that should be _excluded_ and probe the pixels that should be _included_, then set the threshold to a value in between:
 
   ![BottomVisionThreshold](https://user-images.githubusercontent.com/9963310/96963951-e1ac8180-1509-11eb-87c5-630dec575931.gif)
 
