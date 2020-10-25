@@ -47,7 +47,6 @@ import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.Motion.MoveToCommand;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Axis.Type;
-import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Driver;

@@ -89,6 +89,7 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
 
         setCommunicationsType(communicationsType);
         setConnectionKeepAlive(connectionKeepAlive);
+        tcp.setDriver(this);
     }
     
     @Override
@@ -129,7 +130,7 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
         this.communicationsType = communicationsType;
     }
     
-    public boolean getConnectionKeepAlive() {
+    public boolean isConnectionKeepAlive() {
     	return connectionKeepAlive;
     }
     

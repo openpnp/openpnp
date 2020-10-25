@@ -34,6 +34,8 @@ import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.Head;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.PropertySheetHolder;
@@ -153,8 +155,23 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
+            String message = "";
+            for (Head head : Configuration.get().getMachine().getHeads()) {
+                for (HeadMountable hm : head.getHeadMountables()) {
+                    if (hm.getAxis(AbstractAxis.this.getType()) == AbstractAxis.this) {
+                        message += "<li>"+hm.getClass().getSimpleName()+" "+hm.getName()+"</li>";    
+                    }
+                 }
+            }
+            if (message != "") {
+                message = "<html><p>Axis currently assigned in:</p><ul>"+message+"</ul>"
+                        +"<p>Are you sure you want to delete " + getName() + "?</p></html>";
+            }
+            else {
+                message = "Are you sure you want to delete " + getName() + "?";
+            }
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
-                    "Are you sure you want to delete " + getName() + "?",
+                    message,
                     "Delete " + getName() + "?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 Configuration.get().getMachine().removeAxis(AbstractAxis.this);

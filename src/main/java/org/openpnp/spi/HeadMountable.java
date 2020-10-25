@@ -3,9 +3,10 @@ package org.openpnp.spi;
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 import org.openpnp.model.Named;
+import org.openpnp.model.Solutions;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 
-public interface HeadMountable extends MovableMountable, Identifiable, Named {
+public interface HeadMountable extends MovableMountable, Identifiable, Named, Solutions.Subject {
     /**
      * Gets the Head that this HeadMountable is attached to. If it is not attached to a Head this
      * method returns null.

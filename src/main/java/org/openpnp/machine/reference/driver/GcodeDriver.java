@@ -1,6 +1,8 @@
 package org.openpnp.machine.reference.driver;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +38,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Motion.MoveToCommand;
 import org.openpnp.model.Named;
+import org.openpnp.model.Solutions;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.Camera;
@@ -219,6 +222,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Attribute(required = false)
     protected boolean compressGcode;
 
+    @Attribute(required = false)
+    protected boolean loggingGcode;
+
     @Deprecated
     @Element(required = false)
     protected Location homingFiducialLocation = new Location(LengthUnit.Millimeters);
@@ -230,7 +236,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     boolean usingLetterVariables = true;
     
     @Attribute(required = false) 
-    int infinityTimeoutMilliseconds = 300000; // 5 Minutes is considered an "eternity" for a controller.
+    int infinityTimeoutMilliseconds = 60000; // 1 Minute is considered an "eternity" for a controller.
+
+    @Attribute(required = false) 
+    String detectedFirmware = null; 
 
     @ElementList(required = false, inline = true)
     public ArrayList<Command> commands = new ArrayList<>();
@@ -281,6 +290,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     private AxesLocation lastReportedLocation;
     private double lastMomentaryTime;
     private boolean motionPending;
+
+    private PrintWriter gcodeLogger;
 
     @Commit
     public void commit() {
@@ -501,7 +512,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 : timeout);
         do { 
             if (lastReportedLocation != null) {
-                Logger.trace("Got lastReportedLocation");
+                Logger.trace("{} got lastReportedLocation {}", getName(), lastReportedLocation);
                 return lastReportedLocation;
             }
             // TODO: sync with response queue? How?
@@ -509,7 +520,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         }
         while (System.currentTimeMillis() < t1);
         // Timeout expired, apply timeout action.
-        throw new Exception("Timeout waiting for response to " + command);
+        throw new Exception(getName()+" timeout waiting for response to " + command);
     }
 
     public Command getCommand(HeadMountable hm, CommandType type, boolean checkDefaults) {
@@ -829,6 +840,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             Logger.error("disconnect()", e);
         }
         disconnectRequested = false;
+
+        closeGcodeLogger();
     }
 
     /**
@@ -886,6 +899,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
         Logger.debug("[{}] >> {}, {}", getCommunications().getConnectionName(), command, timeout);
         command = preProcessCommand(command);
+        if (command == "") {
+            return;
+        }
+
         // After sending this, we want one more confirmation. 
         long wantedConfirmations = receivedConfirmations.get() + 1;
         try {
@@ -893,7 +910,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             getCommunications().writeLine(command);
         }
         catch (IOException ex) {
-            Logger.error("Failed to write command: ", command);
+            Logger.error("{} failed to write command {}", getCommunications().getConnectionName(), command);
             disconnect();
             Configuration.get().getMachine().setEnabled(false);
         }
@@ -902,6 +919,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
     protected void waitForConfirmation(String command, long timeout, long wantedConfirmations)
             throws Exception {
+        if (getCommand(null, CommandType.COMMAND_CONFIRM_REGEX) == null) {
+            throw new Exception(getName()+" configuration error: COMMAND_CONFIRM_REGEX missing");
+        }
         // Wait until we get the confirmations count we want.
         long t1 = System.currentTimeMillis() + ((timeout == -1) ? 
                 infinityTimeoutMilliseconds
@@ -918,17 +938,17 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         }
         while(System.currentTimeMillis() < t1);
         // Timeout. 
-        throw new Exception("Timeout waiting for response to " + command);
+        throw new Exception(getCommunications().getConnectionName()+" timeout waiting for response to "+command);
     }
 
     protected void bailOnError() throws Exception {
         if (errorResponse != null) {
             Line error = errorResponse; 
             errorResponse = null;
-            throw new Exception("Error response from controller: " + error);
+            throw new Exception(getCommunications().getConnectionName()+" error response from controller: " + error);
         }
-        if (! readerThread.isAlive()) {
-            throw new Exception("IO Error on reading from the controller.");
+        if (readerThread == null || !readerThread.isAlive()) {
+            throw new Exception(getCommunications().getConnectionName()+" IO Error on reading from the controller.");
         }
     }
 
@@ -961,6 +981,23 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         while (System.currentTimeMillis() < t1);
         // Timeout expired, apply timeout action.
         return timeoutAction.apply(responses);
+    }
+
+    public String receiveSingleResponse(String regex) throws Exception {
+        List<Line> responses = receiveResponses(regex, getTimeoutMilliseconds(), (r) -> {
+            throw new Exception(String.format("\"%s\" read error: No matching responses found.", regex));
+        });
+        if (responses == null) {
+            return null;   
+        }
+        Pattern pattern = Pattern.compile(regex);
+        for (Line line : responses) {
+            Matcher matcher = pattern.matcher(line.getLine());
+            if (matcher.matches()) {
+                return line.getLine();
+            }
+        }
+        return null;
     }
 
     protected String preProcessCommand(String command) {
@@ -1035,6 +1072,25 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         }
         if (backslashEscapedCharactersEnabled) {
             command = unescape(command);
+        }
+        if (isLoggingGcode()) {
+
+            if (gcodeLogger == null) { 
+                File file;
+                try {
+                    file = Configuration.get().createResourceFile(getClass(), "log", ".g");
+                    gcodeLogger = new PrintWriter(file.getAbsolutePath());
+                }
+                catch (IOException e) {
+                    Logger.warn("Cannot open Gcode log", e);
+                }
+            }
+            if (gcodeLogger != null) {
+                gcodeLogger.println(command);
+            }
+        }
+        else {
+            closeGcodeLogger();
         }
         return command;
     }
@@ -1280,6 +1336,79 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
     public void setSupportingPreMove(boolean supportingPreMove) {
         this.supportingPreMove = supportingPreMove;
+    }
+
+    public boolean isLoggingGcode() {
+        return loggingGcode;
+    }
+
+    public void setLoggingGcode(boolean loggingGcode) {
+        if (this.loggingGcode != loggingGcode) {
+            this.loggingGcode = loggingGcode;
+            closeGcodeLogger();
+        }
+    }
+
+    public String getDetectedFirmware() {
+        return detectedFirmware;
+    }
+
+    public void setDetectedFirmware(String detectedFirmware) {
+        Object oldValue = this.detectedFirmware;
+        this.detectedFirmware = detectedFirmware;
+        firePropertyChange("detectedFirmware", oldValue, detectedFirmware);
+    }
+
+    protected void closeGcodeLogger() {
+        if (gcodeLogger != null) {
+            gcodeLogger.close();
+            gcodeLogger = null;
+        }
+    }
+
+    /**
+     * Detect the Firmware running on a controller using the M115 command. 
+     * We want to do this very early in the machine setup, so the machine may not even be ready to be enabled.
+     * Instead just connect/disconnect.
+     * @param preserveOldValue TODO
+     * 
+     * @throws Exception
+     */
+    public void detectFirmware(boolean preserveOldValue) throws Exception {
+        if (!preserveOldValue) {
+            setDetectedFirmware(null);
+        }
+        boolean wasConnected = connected;
+        if (!wasConnected) {
+            connect();
+        }
+        try {
+            sendCommand("M115");
+            String firmware = receiveSingleResponse("^FIRMWARE.*");
+            if (firmware != null) {
+                setDetectedFirmware(firmware);
+            }
+        }
+        finally {
+            if (!wasConnected) {
+                disconnect();
+            }
+        }
+    }
+
+    /**
+     * @return true if this is a true Gcode speaking driver/controller rather than some other text protocol. 
+     * The heuristic is simply to look for a G90 command.
+     */
+    public boolean isSpeakingGcode() {
+        String command = getCommand(null, CommandType.CONNECT_COMMAND);
+        return command != null && command.contains("G90");
+    }
+
+    @Override
+    public void findIssues(List<Solutions.Issue> issues) {
+        super.findIssues(issues);
+        new GcodeDriverSolutions(this).findIssues(issues);
     }
 
     @Deprecated

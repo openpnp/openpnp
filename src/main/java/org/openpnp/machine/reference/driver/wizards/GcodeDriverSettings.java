@@ -1,5 +1,6 @@
 package org.openpnp.machine.reference.driver.wizards;
 
+import java.awt.Cursor;
 import java.awt.FileDialog;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -21,6 +22,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.MainFrame;
@@ -36,6 +38,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Driver.MotionControlType;
+import org.openpnp.util.UiUtils;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.simpleframework.xml.Serializer;
@@ -44,6 +47,11 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.JTextArea;
+import javax.swing.JButton;
+import java.awt.SystemColor;
+import java.awt.event.ActionListener;
+import java.awt.Font;
 
 public class GcodeDriverSettings extends AbstractConfigurationWizard {
     private final GcodeDriver driver;
@@ -62,7 +70,9 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
@@ -75,7 +85,13 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("default:grow"),}));
         
         JLabel lblMotionControlType = new JLabel("Motion Control Type");
         lblMotionControlType.setToolTipText("<html>\r\n<p>Determines how the OpenPnP MotionPlanner will plan the motion and how it will talk <br/>\r\nto the controller:</p>\r\n<ul>\r\n\r\n<li><strong>ToolpathFeedRate:</strong><br/>\r\nApply the nominal driver feed-rate limit multiplied by the speed factor to the tool-path.<br/>\r\nThe driver feed-rate must be specified. No acceleration control is applied.</li>\r\n\r\n<li><strong>EuclideanAxisLimits:</strong><br/>\r\nApply axis feed-rate, acceleration and jerk limits multiplied by the proper speed factors. <br/>\r\nThe Euclidean Metric is calculated to allow the machine to run faster in a diagonal.<br/>\r\nOpenPnP only sets the speed factor maximum, ramping up and down the speed is <br/>\r\nentirely left to the controller. </li>  \r\n\r\n<li><strong>ConstantAcceleration:</strong><br/>\r\nApply motion planning assuming a controller with constant acceleration motion control. </li>\r\n\r\n<li><strong>ModeratedConstantAcceleration:</strong><br/>\r\nApply motion planning assuming a controller with constant acceleration motion control but<br/>\r\nmoderate the acceleration and velocity to resemble those of 3rd order control, resulting<br/>\r\nin a move that takes the same amount of time and has similar average acceleration. <br/>\r\nThis will already reduce vibrations a bit.</li>\r\n\r\n<li><strong>SimpleSCurve:</strong><br/>\r\nApply motion planning assuming a controller with simplified S-Curve motion control. <br/>\r\nSimplified S-Curves have no constant acceleration phase, only jerk phases (e.g. TinyG, Marlin).</li>\r\n\r\n<li><strong>Simulated3rdOrderControl:</strong><br/>\r\nApply motion planning assuming a controller with constant acceleration motion control but<br/>\r\nsimulating 3rd order control with time step interpolation. </li> \r\n\r\n<li><strong>Full3rdOrderControl:</strong><br/>\r\nApply motion planning assuming a controller with full 3rd order motion control.</li> \r\n\r\n</html>");
@@ -151,6 +167,42 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                 + "feed, \\r for carriage return, and \\f for form feed.");
         settingsPanel.add(backslashEscapedCharacters, "4, 12");
+        
+        JLabel lblLogGcode = new JLabel("Log Gcode?");
+        lblLogGcode.setToolTipText("Log the generated Gcode into a separate file in the .openpnp2 driver subdirectory.");
+        settingsPanel.add(lblLogGcode, "6, 12, right, default");
+        
+        loggingGcode = new JCheckBox("");
+        settingsPanel.add(loggingGcode, "8, 12");
+        
+        JButton btnDetectFirmware = new JButton("Detect Firmware");
+        btnDetectFirmware.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                detectedFirmware.setText("Detecting...");
+                SwingUtilities.invokeLater(() -> {
+                    UiUtils.messageBoxOnException(() -> driver.detectFirmware(false));
+                    setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                });
+            }
+        });
+        
+        JLabel label_1 = new JLabel(" ");
+        settingsPanel.add(label_1, "10, 14");
+        settingsPanel.add(btnDetectFirmware, "2, 16");
+        
+        detectedFirmware = new JTextArea();
+        detectedFirmware.setForeground(SystemColor.textInactiveText);
+        detectedFirmware.setWrapStyleWord(true);
+        detectedFirmware.setLineWrap(true);
+        detectedFirmware.setEditable(false);
+        detectedFirmware.setFont(new Font("Dialog", Font.PLAIN, 11));
+        detectedFirmware.setBackground(SystemColor.control);
+        detectedFirmware.setEditable(false);
+        settingsPanel.add(detectedFirmware, "4, 16, 7, 3, fill, fill");
+        
+        JLabel label = new JLabel(" ");
+        settingsPanel.add(label, "2, 18");
     }
 
     @Override
@@ -170,6 +222,8 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         addWrappedBinding(driver, "backslashEscapedCharactersEnabled", backslashEscapedCharacters, "selected");
         addWrappedBinding(driver, "supportingPreMove", supportingPreMove, "selected");
         addWrappedBinding(driver, "usingLetterVariables", letterVariables, "selected");
+        addWrappedBinding(driver, "loggingGcode", loggingGcode, "selected");
+        addWrappedBinding(driver, "detectedFirmware", detectedFirmware, "text");
         
         ComponentDecorators.decorateWithAutoSelect(maxFeedRateTf);
         ComponentDecorators.decorateWithAutoSelect(commandTimeoutTf);
@@ -314,6 +368,10 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
     private JCheckBox removeComments;
 
     private JCheckBox compressGcode;
+
+    private JCheckBox loggingGcode;
+
+    private JTextArea detectedFirmware;
 
     static class HeadMountableItem {
         private HeadMountable hm;

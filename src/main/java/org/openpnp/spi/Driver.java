@@ -29,6 +29,7 @@ import org.openpnp.model.Identifiable;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Named;
+import org.openpnp.model.Solutions;
 import org.openpnp.model.Motion.MoveToCommand;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 
@@ -43,7 +44,7 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
  * different from previous versions of OpenPnP where the driver did much more. 
  * 
  */
- public interface Driver extends Identifiable, Named, Closeable, WizardConfigurable, PropertySheetHolder {
+ public interface Driver extends Identifiable, Named, Closeable, WizardConfigurable, PropertySheetHolder, Solutions.Subject {
     /**
      * @return The LengthUnit used by the controller that is driven by this driver. 
      */

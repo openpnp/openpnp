@@ -25,6 +25,7 @@ import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.Named;
+import org.openpnp.model.Solutions;
 
 
 /**
@@ -33,7 +34,7 @@ import org.openpnp.model.Named;
  * moved by moving any one of it's components. When any attached component is moved in (at least) X
  * or Y, it is expected that all components attached to the Head also move in the same axes.
  */
-public interface Head extends Identifiable, Named, WizardConfigurable, PropertySheetHolder {
+public interface Head extends Identifiable, Named, WizardConfigurable, PropertySheetHolder, Solutions.Subject {
     /**
      * Get a list of Nozzles that are attached to this head.
      * 

@@ -153,8 +153,8 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         JButton btnCopyGcodeProfile = new JButton(copyProfileToClipboardAction);
         importExportPanel.add(btnCopyGcodeProfile, "2, 4");
         
-        JButton btnResetToDefaults = new JButton(resetToDefaultAction);
-        importExportPanel.add(btnResetToDefaults, "2, 8");
+//        JButton btnResetToDefaults = new JButton(resetToDefaultAction);
+//        importExportPanel.add(btnResetToDefaults, "2, 8");
 
         headMountableChanged();
         commandTypeChanged();

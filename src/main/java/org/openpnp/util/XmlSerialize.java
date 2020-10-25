@@ -51,7 +51,11 @@ public class XmlSerialize {
                 out.append("&#");
                 out.append((int) c);
                 out.append(';');
-            } else {
+            } 
+            else if (c == '\n') {
+                out.append("<br/>");
+            }
+            else {
                 out.append(c);
             }
         }

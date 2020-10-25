@@ -22,6 +22,9 @@
 package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -30,13 +33,24 @@ import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.driver.wizards.GcodeAsyncDriverSettings;
 import org.openpnp.model.AxesLocation;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.spi.Driver;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.util.Collect;
+import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.CvStage;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.convert.AnnotationStrategy;
+import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.stream.Format;
+import org.simpleframework.xml.stream.HyphenStyle;
+import org.simpleframework.xml.stream.Style;
 
 /**
  * The GcodeAsyncDriver extends the GcodeDriver for asynchronous communication with the controller. 
@@ -217,7 +231,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
             CommandLine lastCommand = null;
             // Get the copy that is valid for this thread. 
             LinkedBlockingQueue<CommandLine> commandQueue = GcodeAsyncDriver.this.commandQueue;
-            
+
             long wantedConfirmations = 0;
             while (!disconnectRequested) {
                 CommandLine command;
@@ -249,7 +263,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
                     Logger.trace("[{}] >> {}", getCommunications().getConnectionName(), command);
                 }
                 catch (IOException e) {
-                    Logger.error("Write error", e);
+                    Logger.error("Write error on {}: {}", getCommunications().getConnectionName(), e);
                     return;
                 }
                 catch (Exception e) {
@@ -266,8 +280,8 @@ public class GcodeAsyncDriver extends GcodeDriver {
     @Override
     protected void bailOnError() throws Exception {
         super.bailOnError();
-        if (! writerThread.isAlive()) {
-            throw new Exception("IO Error on writing to the controller.");
+        if (writerThread == null || ! writerThread.isAlive()) {
+            throw new Exception(getCommunications().getConnectionName()+" IO Error on writing to the controller.");
         }
     }
     /**
@@ -308,8 +322,8 @@ public class GcodeAsyncDriver extends GcodeDriver {
             // Explicitly wait for the controller's acknowledgment here. 
             // This is signaled with a position report.
             getReportedLocation(
-                completionType == CompletionType.WaitForStillstandIndefinitely ?
-                -1 : getTimeoutAtMachineSpeed());
+                    completionType == CompletionType.WaitForStillstandIndefinitely ?
+                            -1 : getTimeoutAtMachineSpeed());
         }
     }
 

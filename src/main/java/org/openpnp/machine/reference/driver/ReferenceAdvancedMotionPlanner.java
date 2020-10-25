@@ -23,7 +23,9 @@ package org.openpnp.machine.reference.driver;
 
 import java.awt.Color;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -37,6 +39,8 @@ import org.openpnp.model.Motion;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.Motion.MoveToCommand;
 import org.openpnp.model.MotionProfile;
+import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
@@ -85,13 +89,14 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
     protected SimpleGraph motionGraph = null;
     protected SimpleGraph recordingMotionGraph = null;
     private double recordingT0;
-    private double recordingT;
+    private Map<Driver, Double> recordingT = new HashMap<>();
+    private Map<Driver, AxesLocation> recordingLocation0 = new HashMap<>();
+
     private Double moveTimePlanned;
     private Double moveTimeActual;
     private Double recordingMoveTimePlanned;
     private boolean interpolationFailed;
     private boolean recordingInterpolationFailed;
-    private AxesLocation recordingLocation0;
 
     public boolean isAllowContinuousMotion() {
         return allowContinuousMotion;
@@ -373,9 +378,11 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
             if (recordingMotionGraph == null) {
                 startNewMotionGraph();
                 recordingT0 = plannedMotion.getPlannedTime0();
-                recordingT = 0;
                 recordingInterpolationFailed = false;
-                recordingLocation0 = plannedMotion.getLocation0();
+                for (Driver driver0 : getMachine().getDrivers()) {
+                    recordingT.put(driver0, 0.);
+                    recordingLocation0.put(driver0, plannedMotion.getLocation0());
+                }
             }
             AxesLocation segment = moveToCommand.getLocation0().motionSegmentTo(moveToCommand.getMovedAxesLocation());
 
@@ -387,12 +394,12 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
 
             Double timeStart = moveToCommand.getTimeStart();
             Double d = moveToCommand.getTimeDuration(); 
-            AxesLocation recordingLocation1 = recordingLocation0.put(moveToCommand.getMovedAxesLocation());
+            AxesLocation recordingLocation1 = recordingLocation0.get(driver).put(moveToCommand.getMovedAxesLocation());
             for (ControllerAxis axis : plannedMotion.getLocation1().getAxes(driver)) {
                 MotionProfile profile = plannedMotion.getAxesProfiles()[plannedMotion.getAxisIndex(axis)];
                 if (recordingMotionGraph.getRow(axis.getName(), "s'").size() > 0 
                         || ! profile.isEmpty()) {
-                    double t = recordingT;
+                    double t = recordingT.get(driver);
                     if (showApproximation ) {
                         SimpleGraph.DataRow sRow = recordingMotionGraph.getRow(axis.getName(), "s'");
                         SimpleGraph.DataRow vRow = recordingMotionGraph.getRow(axis.getName()+" V", "V'");
@@ -405,7 +412,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                             Double a = moveToCommand.getAccelerationPerSecond2();
                             if (v0 != null && v1 != null && a != null) {
                                 // Approximated constant acceleration move. Reconstruct Profile.
-                                double s0 = recordingLocation0.getCoordinate(axis);
+                                double s0 = recordingLocation0.get(driver).getCoordinate(axis);
                                 double s1 = recordingLocation1.getCoordinate(axis);
                                 double factor = (s1 - s0)*factorRS274NGC;
                                 v0 *= factor;
@@ -524,10 +531,11 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                     }
                 }
             }
+            // Remember were we were.
             if (moveToCommand.getTimeDuration() != null) {
-                recordingT += moveToCommand.getTimeDuration();
+                recordingT.put(driver, recordingT.get(driver) + moveToCommand.getTimeDuration());
             }
-            recordingLocation0 = recordingLocation1; 
+            recordingLocation0.put(driver, recordingLocation1); 
         }
     }
 
@@ -549,7 +557,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
         Location l = tool.getLocation().convertToUnits(LengthUnit.Millimeters);
         double speed = getMachine().getSpeed();
         if (reverse) {
-            if (l.getLinearDistanceTo(endLocation) > 4) {
+            if (l.getXyzcDistanceTo(endLocation) > 0.1) {
                 MovableUtils.moveToLocationAtSafeZ(tool, endLocation);
             }
             tool.waitForCompletion(CompletionType.WaitForStillstand);
@@ -561,7 +569,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
             setMoveTimeActual(NanosecondTime.getRuntimeSeconds() - t0);
         }
         else {
-            if (l.getLinearDistanceTo(startLocation) > 4) {
+            if (l.getXyzcDistanceTo(startLocation) > 0.1) {
                 MovableUtils.moveToLocationAtSafeZ(tool, startLocation);
             }
             tool.waitForCompletion(CompletionType.WaitForStillstand);
@@ -586,5 +594,27 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                 new PropertySheetWizardAdapter(getConfigurationWizard(), "Motion Planner"),
                 new PropertySheetWizardAdapter(new ReferenceAdvancedMotionPlannerDiagnosticsWizard(this), "Motion Planner Diagnostics"),
                 };
+    }
+
+    @Override
+    public void findIssues(List<Solutions.Issue> issues) {
+        super.findIssues(issues);
+        if (!isAllowContinuousMotion()) {
+            issues.add(new Solutions.Issue(
+                    this, 
+                    "Use continuous motion. OpenPnP will only wait for the machine when really needed.", 
+                    "Enable Continuous Motion.", 
+                    Severity.Suggestion.Suggestion,
+                    "https://github.com/openpnp/openpnp/wiki/Motion-Planner#motion-planner") {
+
+                @Override
+                public void setState(Solutions.State state) throws Exception {
+                    if (confirmStateChange(state)) {
+                        setAllowContinuousMotion((state == Solutions.State.Solved));
+                        super.setState(state);
+                    }
+                }
+            });
+        }
     }
 }

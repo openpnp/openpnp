@@ -23,14 +23,15 @@ package org.openpnp.spi;
 
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Named;
+import org.openpnp.model.Solutions;
 
 /**
- * An Axis can be any coordinate dimension, either a raw machine controller axis or a 
+ * An Axis can be any coordinate dimension, either a raw machine controller axis or 
  * a Cartesian linear coordinate dimension or a rotary coordinate dimension to be transformed 
  * into a raw axis. Furthermore there are virtual axes to store coordinate states. 
  *  
  */
-public interface Axis extends Identifiable, Named, WizardConfigurable, PropertySheetHolder {
+public interface Axis extends Identifiable, Named, WizardConfigurable, PropertySheetHolder, Solutions.Subject {
     public enum Type {
         X,
         Y,

@@ -21,11 +21,16 @@
 
 package org.openpnp.machine.reference.axis;
 
+import java.util.List;
+
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.axis.wizards.ReferenceControllerAxisConfigurationWizard;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Issue;
+import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.base.AbstractControllerAxis;
 import org.simpleframework.xml.Attribute;
@@ -76,7 +81,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
 
     @Element(required = false)
     private Length backlashOffset = new Length(0.0, LengthUnit.Millimeters);
-    
+
     @Attribute(required = false) 
     private double backlashSpeedFactor = 0.1; 
 
@@ -103,7 +108,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
 
     @Element(required = false)
     private Length softLimitLow = new Length(0.0, LengthUnit.Millimeters);
-    
+
     @Attribute(required = false)
     private boolean softLimitLowEnabled = false;
 
@@ -115,7 +120,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
 
     @Element(required = false)
     private Length safeZoneLow = new Length(0.0, LengthUnit.Millimeters);
-    
+
     @Attribute(required = false)
     private boolean safeZoneLowEnabled = false;
 
@@ -167,27 +172,27 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     public Length getFeedratePerSecond() {
-        return feedratePerSecond;
+        return convertToSytem(feedratePerSecond);
     }
 
     public void setFeedratePerSecond(Length feedratePerSecond) {
-        this.feedratePerSecond = feedratePerSecond;
+        this.feedratePerSecond = convertFromSytem(feedratePerSecond);
     }
 
     public Length getAccelerationPerSecond2() {
-        return accelerationPerSecond2;
+        return convertToSytem(accelerationPerSecond2);
     }
 
     public void setAccelerationPerSecond2(Length accelerationPerSecond2) {
-        this.accelerationPerSecond2 = accelerationPerSecond2;
+        this.accelerationPerSecond2 = convertFromSytem(accelerationPerSecond2);
     }
 
     public Length getJerkPerSecond3() {
-        return jerkPerSecond3;
+        return convertToSytem(jerkPerSecond3);
     }
 
     public void setJerkPerSecond3(Length jerkPerSecond3) {
-        this.jerkPerSecond3 = jerkPerSecond3;
+        this.jerkPerSecond3 = convertFromSytem(jerkPerSecond3);
     }
 
     public String getPreMoveCommand() {
@@ -207,11 +212,11 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     public Length getBacklashOffset() {
-        return backlashOffset;
+        return convertToSytem(backlashOffset);
     }
 
     public void setBacklashOffset(Length backlashOffset) {
-        this.backlashOffset = backlashOffset;
+        this.backlashOffset = convertFromSytem(backlashOffset);
     }
 
     public double getBacklashSpeedFactor() {
@@ -311,11 +316,6 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     @Override
-    public Wizard getConfigurationWizard() {
-        return new ReferenceControllerAxisConfigurationWizard(this);
-    }
-
-    @Override
     public double getMotionLimit(int order) {
         if (order == 1) {
             return getFeedratePerSecond().convertToUnits(AxesLocation.getUnits()).getValue();
@@ -337,5 +337,93 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     @Override
     public boolean isRotationalOnController() {
         return getType() == Axis.Type.Rotation ^ invertLinearRotational;
+    }
+
+    @Override
+    public Wizard getConfigurationWizard() {
+        return new ReferenceControllerAxisConfigurationWizard(this);
+    }
+
+    @Override
+    public void findIssues(List<Issue> issues) {
+        super.findIssues(issues);
+
+        if (getType() == Type.Rotation) {
+            if (!isWrapAroundRotation()) {
+                issues.add(new Solutions.Issue(
+                        this, 
+                        "Rotation can be optimized by wrapping-around the shorter way. Best combined with Limit ±180°.", 
+                        "Enable Wrap Around.", 
+                        Severity.Suggestion,
+                        "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        if (confirmStateChange(state)) {
+                            setWrapAroundRotation((state == Solutions.State.Solved));
+                            super.setState(state);
+                        }
+                    }
+                });
+            }
+            if (!isLimitRotation()) {
+                issues.add(new Solutions.Issue(
+                        this, 
+                        "Rotation can be optimized by limiting angles to ±180°. Best combined with Wrap Around.", 
+                        "Enable Limit ±180°.", 
+                        Severity.Suggestion,
+                        "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        if (confirmStateChange(state)) {
+                            setLimitRotation((state == Solutions.State.Solved));
+                            super.setState(state);
+                        }
+                    }
+                });
+            }
+        }
+        if (getLetter().isEmpty()) {
+            issues.add(new Solutions.PlainIssue(
+                    this, 
+                    "Axis letter is missing. Assign the letter to continue.", 
+                    "Please assign the correct controller axis letter.", 
+                    Severity.Fundamental,
+                    "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
+        }
+        else if (getLetter().equals("E")) {
+            if (!getDriver().isSupportingPreMove()) {
+                issues.add(new Solutions.PlainIssue(
+                    this, 
+                    "Avoid axis letter E, if possible. Use proper rotation axes instead.", 
+                    "Check if your controller supports proper axes A B C instead of E.", 
+                    Severity.Warning,
+                    "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version"));
+            }
+        }
+        final BacklashCompensationMethod oldBacklashCompensationMethod = 
+                getBacklashCompensationMethod();
+        if (oldBacklashCompensationMethod != BacklashCompensationMethod.None
+                && oldBacklashCompensationMethod != BacklashCompensationMethod.DirectionalCompensation) {
+            issues.add(new Solutions.Issue(
+                    this, 
+                    "New directonal backlash compensation method improves performance and allows fluid motion.", 
+                    "Set axis to DirectionalCompensation.", 
+                    Severity.Suggestion,
+                    "https://github.com/openpnp/openpnp/wiki/Backlash-Compensation") {
+
+                @Override
+                public void setState(Solutions.State state) throws Exception {
+                    if (confirmStateChange(state)) {
+                        setBacklashCompensationMethod(
+                                (state == Solutions.State.Solved) ?  
+                                        BacklashCompensationMethod.DirectionalCompensation 
+                                        : oldBacklashCompensationMethod);
+                        super.setState(state);
+                    }
+                }
+            });
+        }
     }
 }
