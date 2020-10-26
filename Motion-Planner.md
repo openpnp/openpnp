@@ -54,6 +54,10 @@ OpenPnP will automatically complete Motion Paths in these cases:
 
 The **Machine Coordination** options tell OpenPnP when to coordinate the machine/motion with the actuator. The **After Actuation** option is disabled by default. It can be enabled, if OpenPnP must coordinate _after_ the actuation. This will also update the machine location, if it has changed behind its back. This can happen through custom actuator motion or probing Gcode. For example it is used for the [[Contact Probing Nozzle]]'s probing actuator. 
 
+## Custom Scripts
+
+Custom Scripts now need to explicitly complete a `moveTo()` with a `waitForCompletion()` if they want it to be executed and waited for. Please [refer to this discussion](https://groups.google.com/d/msg/openpnp/j7fuo0e9VVM/FfL2h0wMBAAJ).
+
 ### Motion Blending 
 ___
 This is still **EXPERIMENTAL**! There is currently no controller that has proven powerful enough for practical use with this. Smoothieware can demonstrate the principle at reduced speed or for small paths, but its internal move queue turns out too small for complex and fast moves. I have high hopes for the [Duet3D 3 controller](https://www.duet3d.com/Duet3Mainboard6HC) that has a much more powerful MCU with plenty of RAM. Duet3D kindly donated a controller to me, I will now explore this feature further. Many others have announced more powerful controllers in the OpenPnP user group, so this feature is now ready for _your_ experiments! 
