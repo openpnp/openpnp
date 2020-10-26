@@ -36,9 +36,23 @@ The ReferenceAdvancedMotionPlanner will first just record the motion that OpenPn
 
 In the meantime there may have been several moves recorded, creating a motion path. The controller will now get all the path commands at once, which will allow it to use look-ahead planning and doing subsequent steps as fast as possible without any communications ping-pong in between moves. This alone will increase speed for slow or laggy connections. But the real winner will be [Motion Blending](#motion-blending), explained in the next section.
 
-OpenPnP will automatically detect, when there are multiple or different drivers/controller involved from move to move. It is obvious, that OpenPnP needs to wait for the first move to complete, before the next move is allowed to proceed. For example: a Z axis on controller A must have finished moving up, before the X, Y axes on controller B are allowed to move (interlock). This will effectively break up the motion path and its planning into multiple parts.
+OpenPnP will automatically detect, when there are multiple or different drivers/controller involved from move to move. It is obvious, that OpenPnP needs to wait for the first move to complete, before the next move is allowed to proceed. For example: a Z axis on controller A must have finished moving up, before the X, Y axes on controller B are allowed to move (interlock). This will effectively break up the motion path and its planning into multiple parts. It follows that the full potential of advanced Motion Planning will only be exploited, if all the relevant axes (X, Y, Z, C) are on a single coordinating controller.  
 
-It follows that the full potential of advanced Motion Planning will only be exploited, if all the relevant axes (X, Y, Z, C) are on a single coordinating controller. This is especially true for the following feature. 
+OpenPnP will automatically complete Motion Paths in these cases:
+
+* After homing
+* Before Camera settle
+* Before actuating an Actuator (option that is enabled by default)
+* After actuating an Actuator (option that is disabled by default)
+* Before reading an Actuator (option that is enabled by default)
+* Between moves that contain axes from different and/or multiple drivers (interlock).
+* After the Machine Thread has finished a task.
+
+### Actuator Machine Coordination
+
+![Actuator Machine Coordination](https://user-images.githubusercontent.com/9963310/97218401-eeaac880-17c8-11eb-8cf8-f51ec1f5730b.png)
+
+The **Machine Coordination** options tell OpenPnP when to coordinate the machine/motion with the actuator. The **After Actuation** option is disabled by default. It can be enabled, if OpenPnP must coordinate _after_ the actuation. This will also update the machine location, if it has changed behind its back. This can happen through custom actuator motion or probing Gcode. For example it is used for the [[Contact Probing Nozzle]]'s probing actuator. 
 
 ### Motion Blending 
 ___
