@@ -54,7 +54,7 @@ OpenPnP will automatically complete Motion Paths in these cases:
 
 The **Machine Coordination** options tell OpenPnP when to coordinate the machine/motion with the actuator. The **After Actuation** option is disabled by default. It can be enabled, if OpenPnP must coordinate _after_ the actuation. This will also update the machine location, if it has changed behind its back. This can happen through custom actuator motion or probing Gcode. For example it is used for the [[Contact Probing Nozzle]]'s probing actuator. 
 
-## Custom Scripts
+### Custom Scripts
 
 Custom Scripts now need to explicitly complete a `moveTo()` with a `waitForCompletion()` if they want it to be executed and waited for. Please [refer to this discussion](https://groups.google.com/d/msg/openpnp/j7fuo0e9VVM/FfL2h0wMBAAJ).
 
