@@ -56,7 +56,43 @@ The **Machine Coordination** options tell OpenPnP when to coordinate the machine
 
 ### Custom Scripts
 
-Custom Scripts now need to explicitly complete a `moveTo()` with a `waitForCompletion()` if they want it to be executed and waited for. Please [refer to this discussion](https://groups.google.com/d/msg/openpnp/j7fuo0e9VVM/FfL2h0wMBAAJ).
+Custom Scripts now need to explicitly complete a `moveTo()` with a `waitForCompletion()` if they want it to be immediately executed and waited for. 
+
+Example:
+
+`cam.moveTo(location);`
+
+`cam.waitForCompletion(org.openpnp.spi.MotionPlanner.CompletionType.WaitForStillstand);`
+
+There are several options for the CompletionType:
+
+* **CommandJog:** 
+  The motion path is executed, assuming an unfinished motion sequence (e.g. when Jogging). 
+  More specifically, the motion planner's deceleration to still-stand will not be enforced, it is entirely 
+  up to the controller. If a subsequent motion command arrives soon enough, there might be no (or less) deceleration
+  between the moves.
+
+  If the driver supports asynchronous execution, this does not wait for the driver to physically complete. 
+
+* **CommandStillstand:** 
+  The motion plan is executed, finishing in still-stand.
+
+  If the driver supports asynchronous execution, this does not wait for the driver to physically complete.
+  
+* **WaitForStillstand:** 
+  The motion plan is executed, finishing in still-stand.
+
+  This does always wait for the controller(s) to complete i.e. the caller can be sure the machine has physically arrived 
+  at the final location. For the [[GcodeAsyncDriver]] this will also bring OpenPnP back into location sync when coordinates 
+  have chnaged through actuator custom Gcode, like relative moves, Z probing or similar.
+
+* **WaitForUnconditionalCoordination:**  
+  Like WaitForStillStand but it will also be done, if no motion is registered as pending. This is used when the machine 
+  might have moved through custom script Gcode etc. 
+
+* **WaitForStillstandIndefinitely:** 
+  Like WaitForFullCoordination but wait "forever" i.e. with very long timeout. Used e.g. for homing.
+
 
 ### Motion Blending 
 ___
