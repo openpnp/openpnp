@@ -72,23 +72,23 @@ There are several options for the CompletionType:
   up to the controller. If a subsequent motion command arrives soon enough, there might be no (or less) deceleration
   between the moves.
 
-  If the driver supports asynchronous execution, this does not wait for the driver to physically complete. 
+  If the driver supports asynchronous execution, this does not wait for the machine to physically complete. 
 
 * **CommandStillstand:** 
-  The motion plan is executed, finishing in still-stand.
+  The motion path is executed, finishing in still-stand.
 
-  If the driver supports asynchronous execution, this does not wait for the driver to physically complete.
+  If the driver supports asynchronous execution, this does not wait for the machine to physically complete.
   
 * **WaitForStillstand:** 
-  The motion plan is executed, finishing in still-stand.
+  The motion path is executed, finishing in still-stand.
 
   This does always wait for the controller(s) to complete i.e. the caller can be sure the machine has physically arrived 
   at the final location. For the [[GcodeAsyncDriver]] this will also bring OpenPnP back into location sync when coordinates 
-  have chnaged through actuator custom Gcode, like relative moves, Z probing or similar.
+  have changed through actuator custom Gcode (relative moves, Z-contact-probing or similar).
 
 * **WaitForUnconditionalCoordination:**  
   Like WaitForStillStand but it will also be done, if no motion is registered as pending. This is used when the machine 
-  might have moved through custom script Gcode etc. 
+  might have moved through custom (scripted) Gcode etc. 
 
 * **WaitForStillstandIndefinitely:** 
   Like WaitForFullCoordination but wait "forever" i.e. with very long timeout. Used e.g. for homing.
