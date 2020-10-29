@@ -1,6 +1,27 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2020-10-29
+
+## Advanced Motion Control
+
+- Simpler all-GUI setup of machine axes, axis transformations and their assignment to Nozzles, 
+  Cameras etc. (no more machine.xml hacking).
+- Making features such as Axis Mapping, Backlash Compensation, Visual Homing, Non-Squareness 
+  Compensation etc. available for all types of drivers (formerly just the GcodeDriver).
+- Allowing multiple drivers of mixed types.
+- Better control of speed factors: properly control the average speed, including 
+  acceleration/deceleration phases. A move at 50% takes exactly twice as long, regardles of 
+  how short or long the move is. 
+- Simulated Jerk Control to reduce vibrations, prevent slipping of parts on nozzles, etc.
+- Experimental: Motion Blending.
+- Asynchronous communication between OpenPnP and (multiple) controllers. Decoupled and 
+  paralellized operation. 
+- Graphical diagnostics for Motion Planning as a basis for fact based machine optimization.
+- Issues & Solutions system to automatically solve machine specific setup and migration 
+  issues, enable advanced features, generate firmware-adapted Gcode commands and regular 
+  expressions. 
+
 # 2020-06-23
 
 ## Actuator API Change (Non-Breaking)

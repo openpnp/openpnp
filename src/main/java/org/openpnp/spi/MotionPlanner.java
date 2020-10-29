@@ -142,16 +142,13 @@ public interface MotionPlanner extends PropertySheetHolder, Solutions.Subject {
          * at the final location.  
          */
         WaitForStillstand,
-        
-        
         /**
          * Like WaitForStillStand but the wait will also be done, if no motion is thought to be pending (used when it is though 
-         * that the machine might have moved through custom Actuator Gcode (Contract Z Probing is one example). 
+         * that the machine might have moved through custom Actuator Gcode, the ContactProbeNozzle Probe actuator is one example). 
          */
         WaitForUnconditionalCoordination,
-        
         /**
-         * Like WaitForFullCoordination but wait "forever".
+         * Like WaitForFullCoordination but wait "forever" i.e. with very long timeout. Used e.g. for homing.
          */
         WaitForStillstandIndefinitely;
 

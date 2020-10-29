@@ -56,6 +56,7 @@ import org.openpnp.spi.base.AbstractHeadMountable;
 import org.openpnp.spi.base.AbstractSingleTransformedAxis;
 import org.openpnp.spi.base.AbstractTransformedAxis;
 import org.openpnp.util.NanosecondTime;
+import org.openpnp.util.Triplet;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -582,6 +583,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         Double feedRate = move.getFeedRatePerMinute();
         Double acceleration = move.getAccelerationPerSecond2();
         Double jerk = move.getJerkPerSecond3();
+        AxesLocation segment = move.getLocation0().motionSegmentTo(allAxesLocation);
+
+        double driverDistance = movedAxesLocation.getEuclideanMetric(this, (axis) -> 
+            movedAxesLocation.getLengthCoordinate(axis).convertToUnits(getUnits()).getValue() - axis.getDriverCoordinate()).third;
 
         // Start composing the command, will decide later, whether we actually send it.
         String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
@@ -598,10 +603,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         command = substituteVariable(command, "FeedRate", feedRate);
         command = substituteVariable(command, "Acceleration", acceleration);
         command = substituteVariable(command, "Jerk", jerk);
-
-        if (this.usingLetterVariables && this.supportingPreMove) {
-            throw new Exception(getName()+" configuration error: Using Letter Variables and Pre-Move Commands at the same time is not supported.");
-        }
 
         ReferenceMachine machine = (ReferenceMachine) hm.getHead().getMachine();
         // Get a map of the axes of ...
@@ -638,7 +639,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 // The move is definitely on. 
                 doesMove = true;
                 // TODO: discuss whether we should round to axis resolution here.
-                double coordinate = allAxesLocation.getCoordinate(axis); 
+                double coordinate = allAxesLocation.getLengthCoordinate(axis)
+                        .convertToUnits(getUnits()).getValue(); 
                 double previousCoordinate = axis.getDriverCoordinate(); 
                 int direction = ((Double)coordinate).compareTo(previousCoordinate);
                 // Substitute the axis variables.
@@ -659,6 +661,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                         sendGcode(preMoveCommand);
                     }
                 }
+                // Axis specific jerk limits are needed on TinyG.
+                double axisDistance = coordinate - previousCoordinate;
+                double axisJerk = (jerk != null ? jerk : 0)*Math.abs(axisDistance)/driverDistance;
+                command = substituteVariable(command, variable+"Jerk", axisJerk > 1 ? axisJerk : null);
+                command = substituteVariable(command, variable+"JerkMupm3", axisJerk > 4.63 ? axisJerk*1e-6*Math.pow(60, 3) : null); // TinyG: Megaunits/min^3 
                 // Store the new driver coordinate on the axis.
                 axis.setDriverCoordinate(coordinate);
             }
@@ -670,6 +677,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 command = substituteVariable(command, "BacklashOffset"+variable, null);
                 command = substituteVariable(command, variable+"Decreasing", null);
                 command = substituteVariable(command, variable+"Increasing", null);
+                command = substituteVariable(command, variable+"Jerk", null);
+                command = substituteVariable(command, variable+"JerkMupm3", null);  
             }
         }
         if (doesMove) {
@@ -920,7 +929,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     protected void waitForConfirmation(String command, long timeout, long wantedConfirmations)
             throws Exception {
         if (getCommand(null, CommandType.COMMAND_CONFIRM_REGEX) == null) {
-            throw new Exception(getName()+" configuration error: COMMAND_CONFIRM_REGEX missing");
+           Logger.warn(getName()+" configuration error: COMMAND_CONFIRM_REGEX missing. Not waiting for confirmation.");
+           return;
         }
         // Wait until we get the confirmations count we want.
         long t1 = System.currentTimeMillis() + ((timeout == -1) ? 
@@ -1382,6 +1392,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         if (!wasConnected) {
             connect();
         }
+        
         try {
             sendCommand("M115");
             String firmware = receiveSingleResponse("^FIRMWARE.*");
@@ -1398,11 +1409,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
     /**
      * @return true if this is a true Gcode speaking driver/controller rather than some other text protocol. 
-     * The heuristic is simply to look for a G90 command.
+     * In the absence of a detected firmware, the heuristic is simply to look for a G90 command.
      */
     public boolean isSpeakingGcode() {
-        String command = getCommand(null, CommandType.CONNECT_COMMAND);
-        return command != null && command.contains("G90");
+        if (getDetectedFirmware() != null) {
+            return true;
+        }
+        else {
+            String command = getCommand(null, CommandType.CONNECT_COMMAND);
+            return command != null && command.contains("G90");
+        }
     }
 
     @Override

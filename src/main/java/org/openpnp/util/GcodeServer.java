@@ -242,6 +242,7 @@ public class GcodeServer extends Thread {
 
         protected class GcodeWord {
             final char letter;
+            final boolean dollar;
             int number = 0;
             int signum = 0;
             int digits = 0;
@@ -260,9 +261,10 @@ public class GcodeServer extends Thread {
                 return signum*((double)number)/decimal;
             }
 
-            public GcodeWord(char letter) {
+            public GcodeWord(char letter, boolean dollar) {
                 super();
                 this.letter = letter;
+                this.dollar = dollar;
             }
 
             public void recognizeCode() {
@@ -291,6 +293,9 @@ public class GcodeServer extends Thread {
             public int getModalGroup() {
                 return code != null ? code.modalGroup : -1;   
             }
+            public boolean isDollar() {
+                return dollar;
+            }
         }
 
         public void interpretGcode(String input) throws Exception {
@@ -300,12 +305,16 @@ public class GcodeServer extends Thread {
             GcodeWord currentWord = null;
             int col = 0;
             boolean insideComment = false;
+            boolean isDollar = true;
             List<GcodeWord> commandWords = new ArrayList<>();
             for (char ch : input.toCharArray()) {
                 col++;
                 if (ch == ' ') {
                     continue;
                 }
+                else if (ch == '$') {
+                    isDollar = true;
+                } 
                 else if (ch == '(') {
                     if (insideComment) {
                         throw new Exception("Nested comment at "+col+": "+input);
@@ -328,11 +337,15 @@ public class GcodeServer extends Thread {
                     continue;
                 }
                 else if (ch == ';') {
+                    // Comment ends parsing
                     break;
                 }
                 else if (Character.toUpperCase(ch) >= 'A' && Character.toUpperCase(ch) <= 'Z') {
-                    commandWords = handleGcodeWord(currentWord, commandWords);
-                    currentWord = new GcodeWord(Character.toUpperCase(ch));
+                    // Finalize the running word.
+                    commandWords = finalizeGcodeWord(currentWord, commandWords);
+                    // And start a new one.
+                    currentWord = new GcodeWord(Character.toUpperCase(ch), isDollar);
+                    isDollar = false;
                 }
                 else if (currentWord == null) {
                     // the remaining character are only allowed inside a word 
@@ -368,13 +381,15 @@ public class GcodeServer extends Thread {
                     }
                 }
             }
-            commandWords = handleGcodeWord(currentWord, commandWords);
+            // Finalize the last word.
+            commandWords = finalizeGcodeWord(currentWord, commandWords);
+            // Now simulate the Gcode command-.
             simulateGcode(commandWords);
             // Send Response.
             write(response);
         }
 
-        public List<GcodeWord> handleGcodeWord(GcodeWord currentWord,
+        public List<GcodeWord> finalizeGcodeWord(GcodeWord currentWord,
                 List<GcodeWord> commandWords) throws Exception {
             if (currentWord != null) {
                 // Finish the last word.
@@ -630,11 +645,13 @@ public class GcodeServer extends Thread {
                 // Motion.
                 GcodeWord g0Word = getCodeWord(Gcode.G0, commandWords);
                 GcodeWord g1Word = getCodeWord(Gcode.G1, commandWords);
+                GcodeWord hWord = getLetterWord('H', commandWords);
                 GcodeWord g28Word = getCodeWord(Gcode.G28, commandWords);
                 if (g0Word != null || g1Word != null || g28Word != null) {
                     double speed = 1.0;
-                    if (g28Word != null) {
-                        // Handle homing like a move. 
+                    if (g28Word != null || hWord != null && hWord.isDollar()) {
+                        // Homing command.
+                        // Handle like a move. 
                         // But restore the simulated homing error.
                         Location homingError;
                         if (machine instanceof SimulationModeMachine) {
@@ -651,7 +668,8 @@ public class GcodeServer extends Thread {
                         speed = 0.5;
                         if (axesGiven.isEmpty()) {
                             // G28 has not axes, use preset homing coordinates.
-                            axesLocation = new AxesLocation(machineLocation.getAxes(getDriver()), (a) -> a.getHomeCoordinate());
+                            axesLocation = new AxesLocation(machineLocation.getAxes(getDriver()), 
+                                    (a) -> a.getHomeCoordinate());
                         }
                         else {
                             // If we're in relative mode, we still want this absolute.
