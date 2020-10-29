@@ -802,14 +802,16 @@ public class Motion {
         double time = getTime();
         Integer maxSteps = driver.getInterpolationMaxSteps();
         Integer maxJerkSteps = driver.getInterpolationJerkSteps();
-        Double timeStep = driver.getInterpolationTimeStep()/getNominalSpeed();
+        Double timeStep = driver.getInterpolationTimeStep();
         Integer distStep = driver.getInterpolationMinStep();
         Length junctionDeviationLength = driver.getJunctionDeviation();
 
         if (maxSteps == null || maxJerkSteps == null || timeStep == null || distStep == null || junctionDeviationLength == null) {
-            throw new Exception("Driver does not support move interpolation.");
+            throw new Exception("Driver does not support move interpolation. Please refer to Issues & Solutions.");
         }
 
+        // Apply the speed factor to interpolation to get the same number of steps. 
+        timeStep /= getNominalSpeed();
         int numSteps = (int)Math.floor(time/timeStep/2)*2;
         if (numSteps < 4) {
             // No interpolation, or move too short for interpolation. Just execute as one moderated moveTo. 

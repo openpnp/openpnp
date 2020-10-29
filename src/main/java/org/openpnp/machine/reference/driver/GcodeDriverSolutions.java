@@ -91,40 +91,181 @@ class GcodeDriverSolutions implements Solutions.Subject {
                 return; // No further troubleshooting until this is decided.
             }
         }
-        if (gcodeDriver.isSupportingPreMove()) {
+
+        boolean modePAxis = false;
+        boolean grblSyntax = false;
+        boolean tinyG = false;
+        if (machine.isEnabled() 
+                && gcodeDriver.isSpeakingGcode()) {
+            try {
+                gcodeDriver.detectFirmware(true);
+            }
+            catch (Exception e) {
+                Logger.warn(gcodeDriver.getName()+" failure to detect firmware", e);
+            }
+        }
+        if (gcodeDriver.getDetectedFirmware() == null) {
             issues.add(new Solutions.Issue(
                     gcodeDriver, 
-                    "Disallow Pre-Move Commands for advanced features. Accept or Dismiss to continue.", 
-                    "Disable Allow Letter Pre-Move Commands.", 
-                    Severity.Fundamental,
-                    "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version") {
+                    "Firmware was not dected ("+
+                            (machine.isEnabled() ? 
+                                    (gcodeDriver.isSpeakingGcode() ? "failure, check log" : "controller may not speak Gcode") 
+                                    : "machine is disabled")+"). The M115 command must be supported by the controller.", 
+                            "Retry the detection by connecting to the controller.", 
+                            Severity.Fundamental,
+                    "https://www.reprap.org/wiki/G-code#M115:_Get_Firmware_Version_and_Capabilities") {
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {
                     if (confirmStateChange(state)) {
-                        gcodeDriver.setSupportingPreMove(!(state == Solutions.State.Solved));
+                        if (state == Solutions.State.Solved) {
+                            gcodeDriver.detectFirmware(false);
+                        }
                         super.setState(state);
                     }
                 }
             });
         }
-        else if (!gcodeDriver.isUsingLetterVariables()) {
-            issues.add(new Solutions.Issue(
-                    gcodeDriver, 
-                    "Use Axis Letter Variables for simpler use and advanced features.", 
-                    "Enable Letter Variables.", 
-                    Severity.Fundamental,
-                    "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version") {
-
-                @Override
-                public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        gcodeDriver.setUsingLetterVariables((state == Solutions.State.Solved));
-                        super.setState(state);
-                    }
+        else {
+            if (gcodeDriver.getDetectedFirmware().contains("Smoothieware")) {
+                grblSyntax = (gcodeDriver.getDetectedFirmware().contains("X-GRBL_MODE:1"));
+                // TODO: regex to parse the number
+                if (gcodeDriver.getDetectedFirmware().contains("X-PAXES:5") 
+                        || gcodeDriver.getDetectedFirmware().contains("X-PAXES:6") 
+                        || gcodeDriver.getDetectedFirmware().contains("13bbd1fa")/* first release had no X-PAXES variable*/ ) { 
+                    modePAxis = true;
                 }
-            });
+                else {
+                    issues.add(new Solutions.PlainIssue(
+                            gcodeDriver, 
+                            "There is a better Smoothieware firmware available. "+gcodeDriver.getDetectedFirmware(), 
+                            "Please upgrade to the special PnP version. See info link.", 
+                            Severity.Error, 
+                            "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#smoothieware"));
+                }
+            }
+            else if (gcodeDriver.getDetectedFirmware().contains("Duet 3")) {
+                issues.add(new Solutions.PlainIssue(
+                        gcodeDriver, 
+                        "The Duet3D firmware is being improved for OpenPnP. "+gcodeDriver.getDetectedFirmware(), 
+                        "Follow the progress on the linked web page.", 
+                        Severity.Information, 
+                        "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#duet"));
+            }
+            else if (gcodeDriver.getDetectedFirmware().contains("Marlin")) {
+                // TODO: regex to parse the number
+                if (gcodeDriver.getDetectedFirmware().contains("AXIS_COUNT:4")
+                        ||gcodeDriver.getDetectedFirmware().contains("AXIS_COUNT:5")
+                        ||gcodeDriver.getDetectedFirmware().contains("AXIS_COUNT:6")) { 
+                    modePAxis = true;
+                }
+                else {
+                    issues.add(new Solutions.PlainIssue(
+                            gcodeDriver, 
+                            "There is a better Marlin firmware available. "+gcodeDriver.getDetectedFirmware(), 
+                            "Please upgrade to the special PnP version. See info link.", 
+                            Severity.Error, 
+                            "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#marlin-20"));
+                }
+            }
+            else if (gcodeDriver.getDetectedFirmware().contains("TinyG")) {
+                // Having a response already means we have a new firmware.
+                tinyG = true;
+            }
+            else if (gcodeDriver.getDetectedFirmware().contains("GcodeServer")) {
+                // Built-in.
+            }
+
+            else { 
+                issues.add(new Solutions.PlainIssue(
+                        gcodeDriver, 
+                        "Unknown firmware. "+gcodeDriver.getDetectedFirmware(), 
+                        "Check out firmwares known to be well supported. See info link.", 
+                        Severity.Warning, 
+                        "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares"));
+            }
         }
+
+        boolean hasAxes = !gcodeDriver.getAxisVariables(machine).isEmpty();
+        if (hasAxes) { 
+            if (gcodeDriver.isSupportingPreMove()) {
+                issues.add(new Solutions.Issue(
+                        gcodeDriver, 
+                        "Disallow Pre-Move Commands for advanced features. Accept or Dismiss to continue.", 
+                        "Disable Allow Letter Pre-Move Commands.", 
+                        Severity.Fundamental,
+                        "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version") {
+
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        if (confirmStateChange(state)) {
+                            gcodeDriver.setSupportingPreMove(!(state == Solutions.State.Solved));
+                            super.setState(state);
+                        }
+                    }
+                });
+            }
+            else if (!gcodeDriver.isUsingLetterVariables()) {
+                issues.add(new Solutions.Issue(
+                        gcodeDriver, 
+                        "Use Axis Letter Variables for simpler use and advanced features.", 
+                        "Enable Letter Variables.", 
+                        Severity.Fundamental,
+                        "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version") {
+
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        if (confirmStateChange(state)) {
+                            gcodeDriver.setUsingLetterVariables((state == Solutions.State.Solved));
+                            super.setState(state);
+                        }
+                    }
+                });
+            }
+            
+            final MotionControlType oldMotionControlType = gcodeDriver.getMotionControlType();
+            final MotionControlType newMotionControlType = tinyG ? 
+                    MotionControlType.SimpleSCurve : MotionControlType.ModeratedConstantAcceleration;
+            if (gcodeDriver.getMotionControlType().isUnpredictable() 
+                    || (tinyG && newMotionControlType != oldMotionControlType)) {
+                issues.add(new Solutions.Issue(
+                        gcodeDriver, 
+                        (tinyG ? "Choose "+newMotionControlType.name()+" for proper TinyG operation." : 
+                                "Choose an advanced Motion Control Type for your controller type."), 
+                        "Set to "+newMotionControlType.name()+".", 
+                        (tinyG ? Severity.Error : Severity.Suggestion),
+                        "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
+                    
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        if (confirmStateChange(state)) {
+                            gcodeDriver.setMotionControlType((state == Solutions.State.Solved) ? 
+                                    newMotionControlType : oldMotionControlType);
+                            super.setState(state);
+                        }
+                    }
+                });
+            }
+            else if (gcodeDriver.getMaxFeedRate() > 0) {
+                issues.add(new Solutions.Issue(
+                        gcodeDriver, 
+                        "Axis velocity limited by driver Maximum Feed Rate. ", 
+                        "Remove driver Maximum Feed Rate.", 
+                        Severity.Suggestion,
+                        "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
+                    final int oldMaxFeedRate = gcodeDriver.getMaxFeedRate();
+
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        if (confirmStateChange(state)) {
+                            gcodeDriver.setMaxFeedRate((state == Solutions.State.Solved) ? 0 : oldMaxFeedRate);
+                            super.setState(state);
+                        }
+                    }
+                });
+            }
+        }
+
         if (gcodeDriver.isSpeakingGcode() && !gcodeDriver.isCompressGcode()) {
             issues.add(new Solutions.Issue(
                     gcodeDriver, 
@@ -159,64 +300,28 @@ class GcodeDriverSolutions implements Solutions.Subject {
                 }
             });
         }
-        if (gcodeDriver.getAxisVariables(machine).isEmpty()) {
-            // Skip this section.
-        }
-        else if (gcodeDriver.getMotionControlType().isUnpredictable()) {
-            issues.add(new Solutions.Issue(
-                    gcodeDriver, 
-                    "Choose an advanced Motion Control Type.", 
-                    "Set at least to "+MotionControlType.ModeratedConstantAcceleration.toString()+".", 
-                    Severity.Suggestion,
-                    "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
-                final MotionControlType oldMotionControlType = gcodeDriver.getMotionControlType();
+        
+        if (gcodeDriver.communicationsType.equals("serial") && gcodeDriver.serial != null) {
+            final FlowControl oldFlowControl = gcodeDriver.serial.getFlowControl();
+            final FlowControl newFlowControl = FlowControl.RtsCts; 
+            if (oldFlowControl != newFlowControl) {
+                issues.add(new Solutions.Issue(
+                        gcodeDriver, 
+                        "Serial Port Flow Control recommended.", 
+                        "Set "+newFlowControl.name()+" Flow Control on Serial Port.", 
+                        gcodeDriver.serial.getFlowControl() == FlowControl.Off ? Severity.Warning : Severity.Suggestion,
+                        "https://en.wikipedia.org/wiki/Flow_control_(data)#Hardware_flow_control") {
 
-                @Override
-                public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        gcodeDriver.setMotionControlType((state == Solutions.State.Solved) ? 
-                                MotionControlType.ModeratedConstantAcceleration : oldMotionControlType);
-                        super.setState(state);
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        if (confirmStateChange(state)) {
+                            gcodeDriver.serial.setFlowControl((state == Solutions.State.Solved) ? 
+                                    newFlowControl : oldFlowControl);
+                            super.setState(state);
+                        }
                     }
-                }
-            });
-        }
-        else if (gcodeDriver.getMaxFeedRate() > 0) {
-            issues.add(new Solutions.Issue(
-                    gcodeDriver, 
-                    "Axis velocity limited by driver Maximum Feed Rate. ", 
-                    "Remove driver Maximum Feed Rate.", 
-                    Severity.Suggestion,
-                    "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
-                final int oldMaxFeedRate = gcodeDriver.getMaxFeedRate();
-
-                @Override
-                public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        gcodeDriver.setMaxFeedRate((state == Solutions.State.Solved) ? 0 : oldMaxFeedRate);
-                        super.setState(state);
-                    }
-                }
-            });
-        }
-        if (gcodeDriver.communicationsType.equals("serial") && gcodeDriver.serial != null && gcodeDriver.serial.getFlowControl() != FlowControl.RtsCts) {
-            issues.add(new Solutions.Issue(
-                    gcodeDriver, 
-                    "Serial Port Flow Control recommended.", 
-                    "Set RTS/CTS Flow Control on Serial Port.", 
-                    gcodeDriver.serial.getFlowControl() == FlowControl.Off ? Severity.Warning : Severity.Suggestion,
-                    "https://en.wikipedia.org/wiki/Flow_control_(data)#Hardware_flow_control") {
-                final FlowControl oldFlowControl = gcodeDriver.serial.getFlowControl();
-
-                @Override
-                public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        gcodeDriver.serial.setFlowControl((state == Solutions.State.Solved) ? 
-                                FlowControl.RtsCts : oldFlowControl);
-                        super.setState(state);
-                    }
-                }
-            });
+                });
+            }
         }
         if (gcodeDriver.isConnectionKeepAlive()) {
             issues.add(new Solutions.Issue(
@@ -236,147 +341,57 @@ class GcodeDriverSolutions implements Solutions.Subject {
             });
         }
 
-        //String [] reportedAxes = gcodeDriver.getAxisVariables(machine)
-                //.toArray(new String[gcodeDriver.getAxisVariables(machine).size()]);
-        
-        
-        boolean modePAxis = false;
-        if (machine.isEnabled() 
-                && gcodeDriver.isSpeakingGcode()) {
-            try {
-                gcodeDriver.detectFirmware(true);
-            }
-            catch (Exception e) {
-                Logger.warn(gcodeDriver.getName()+" failure to detect firmware", e);
-            }
-        }
-        if (gcodeDriver.getDetectedFirmware() == null) {
-            issues.add(new Solutions.Issue(
-                    gcodeDriver, 
-                    "Firmware was not dected ("+
-                            (machine.isEnabled() ? 
-                                    (gcodeDriver.isSpeakingGcode() ? "failure, check log" : "controller may not speak Gcode") 
-                                    : "machine is disabled")+"). The M115 command must be supported by the controller.", 
-                            "Retry the detection by connecting to the controller.", 
-                            Severity.Fundamental,
-                    "https://www.reprap.org/wiki/G-code#M115:_Get_Firmware_Version_and_Capabilities") {
-
-                @Override
-                public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        gcodeDriver.detectFirmware(false);
-                        super.setState(state);
-                    }
-                }
-            });
-        }
-        else {
-            if (gcodeDriver.getDetectedFirmware().contains("Smoothieware")) {
-                if (!(gcodeDriver.getDetectedFirmware().contains("X-PAXES:5") 
-                        || gcodeDriver.getDetectedFirmware().contains("X-PAXES:6") 
-                        || gcodeDriver.getDetectedFirmware().contains("13bbd1fa")/* first release had no X-PAXES variable*/ )) { 
-                    issues.add(new Solutions.PlainIssue(
-                            gcodeDriver, 
-                            "The Smoothieware firmware is outdated. "+gcodeDriver.getDetectedFirmware(), 
-                            "Please upgrade your firmware.", 
-                            Severity.Error, 
-                            "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#smoothieware"));
-                }
-                else {
-                    modePAxis = true;
-                    // Check rotation axes have the linear switch set.
-                    for (ControllerAxis axis : new AxesLocation(machine)
-                            .drivenBy(gcodeDriver).getControllerAxes()) {
-                        if (axis.isRotationalOnController()) {
-                            final boolean oldInvertLinearRotational = ((ReferenceControllerAxis) axis).isInvertLinearRotational();
-                            issues.add(new Solutions.Issue(
-                                    axis, 
-                                    "Axis should be treated as a linear for detected Smoothieware firmware (PAXIS).", 
-                                    (oldInvertLinearRotational ? "Disable" : "Enable")+" Switch Linear ↔ Rotational.", 
-                                    Severity.Error,
-                                    "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings") {
-
-                                @Override
-                                public void setState(Solutions.State state) throws Exception {
-                                    if (confirmStateChange(state)) {
-                                        ((ReferenceControllerAxis) axis).setInvertLinearRotational(
-                                                (state == Solutions.State.Solved) ^ oldInvertLinearRotational);
-                                        super.setState(state);
-                                    }
-                                }
-                            });
-                        }
-                    }
-                }
-            }
-            else if (gcodeDriver.getDetectedFirmware().contains("Duet 3")) {
-                issues.add(new Solutions.PlainIssue(
-                        gcodeDriver, 
-                        "The Duet3D firmware is being improved for OpenPnP. "+gcodeDriver.getDetectedFirmware(), 
-                        "Follow the progress on the linked web page.", 
-                        Severity.Information, 
-                        "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#duet"));
-            }
-            else if (gcodeDriver.getDetectedFirmware().contains("GcodeServer")) {
-                // Built-in.
-            }
-            else { 
-                issues.add(new Solutions.PlainIssue(
-                        gcodeDriver, 
-                        "Unknown firmware. "+gcodeDriver.getDetectedFirmware(), 
-                        "Check out firmwares known to be well supported.", 
-                        Severity.Warning, 
-                        "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares"));
-            }
-        }
         boolean lettersOk = gcodeDriver.isUsingLetterVariables();
         for (ControllerAxis axis : new AxesLocation(machine)
                 .drivenBy(gcodeDriver).getControllerAxes()) {
             // Note: some of the axis solutions are handled in the axes themselves. 
-            if (Math.abs(axis.getMotionLimit(1)*2 - axis.getMotionLimit(2)) < 0.1) {
-                // HACK: migration sets the acceleration as twice the feed-rate, that's your "signal" that the user has not yet
-                // tuned them.
-                Solutions.PlainIssue axisIssue = new Solutions.PlainIssue(
-                        axis, 
-                        "Feed-rate, acceleration, jerk etc. can now be set individually per axis.", 
-                        "Tune your machine axes for best speed and acceleration.", 
-                        Severity.Suggestion,
-                        "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--rate-limits") {
-
-                    @Override
-                    public void setState(Solutions.State state) throws Exception {
-                        // This is just a checklist item. Mark as dismissed for next time.
-                        machine.setSolutionsIssueDismissed(this, state == Solutions.State.Solved);
-                        super.setState(state);
-                    }
-                };
-                //if (!machine.isSolutionsIssueDismissed(axisIssue)) {
-                issues.add(axisIssue);
-                //}
-            }
             if (axis.getLetter().isEmpty()) {
                 lettersOk = false;
             }
-            else if (axis instanceof ReferenceControllerAxis && "XYZABC".contains(axis.getLetter()) && !modePAxis) {
-                boolean rotational = "ABC".contains(axis.getLetter());
-                if (rotational ^ axis.isRotationalOnController()) {
-                    final boolean oldInvertLinearRotational = ((ReferenceControllerAxis) axis).isInvertLinearRotational();
-                    issues.add(new Solutions.Issue(
-                            axis, 
-                            "Axis should be treated as "+(rotational ? "rotational" : "linear")+" according to its letter.", 
-                            (oldInvertLinearRotational ? "Disable" : "Enable")+" Switch Linear ↔ Rotational.", 
-                            Severity.Warning,
-                            "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+            else if (axis instanceof ReferenceControllerAxis) {
+                if (modePAxis) { 
+                    // Check rotation axes have the linear switch set.
+                    if (axis.isRotationalOnController()) {
+                        final boolean oldInvertLinearRotational = ((ReferenceControllerAxis) axis).isInvertLinearRotational();
+                        issues.add(new Solutions.Issue(
+                                axis, 
+                                "Axis should be treated as a linear for detected firmware (all-primary axes mode).", 
+                                (oldInvertLinearRotational ? "Disable" : "Enable")+" Switch Linear ↔ Rotational.", 
+                                Severity.Error,
+                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings") {
 
-                        @Override
-                        public void setState(Solutions.State state) throws Exception {
-                            if (confirmStateChange(state)) {
-                                ((ReferenceControllerAxis) axis).setInvertLinearRotational(
-                                        (state == Solutions.State.Solved) ^ oldInvertLinearRotational);
-                                super.setState(state);
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                if (confirmStateChange(state)) {
+                                    ((ReferenceControllerAxis) axis).setInvertLinearRotational(
+                                            (state == Solutions.State.Solved) ^ oldInvertLinearRotational);
+                                    super.setState(state);
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
+                } 
+                else if("XYZABC".contains(axis.getLetter())) {
+                    boolean rotational = "ABC".contains(axis.getLetter());
+                    if (rotational ^ axis.isRotationalOnController()) {
+                        final boolean oldInvertLinearRotational = ((ReferenceControllerAxis) axis).isInvertLinearRotational();
+                        issues.add(new Solutions.Issue(
+                                axis, 
+                                "Axis should be treated as "+(rotational ? "rotational" : "linear")+" according to its letter.", 
+                                (oldInvertLinearRotational ? "Disable" : "Enable")+" Switch Linear ↔ Rotational.", 
+                                Severity.Warning,
+                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                if (confirmStateChange(state)) {
+                                    ((ReferenceControllerAxis) axis).setInvertLinearRotational(
+                                            (state == Solutions.State.Solved) ^ oldInvertLinearRotational);
+                                    super.setState(state);
+                                }
+                            }
+                        });
+                    }
                 }
             }
         }
@@ -390,21 +405,61 @@ class GcodeDriverSolutions implements Solutions.Subject {
                 switch (commandType) {
                     case CONNECT_COMMAND:
                         if (command == null) {
-                            commandBuilt = "G21 ; Set millimeters mode \n"+
-                                    "G90 ; Set absolute positioning mode";
+                            commandBuilt = 
+                                    "G21 ; Set millimeters mode \n"
+                                            +"G90 ; Set absolute positioning mode";
+                            if (tinyG) {
+                                commandBuilt = 
+                                        "$ex=2\n" // RtsCts
+                                                +"$sv=0\n" // Non-verbose
+                                                +commandBuilt;
+                            }
                         }
                         break;
                     case COMMAND_CONFIRM_REGEX:
-                        commandBuilt = "^ok.*";
+                        if (tinyG) {
+                            commandBuilt = "^tinyg .* ok.*";
+                        }
+                        else {
+                            commandBuilt = "^ok.*";
+                        }
+                        break;
+                    case COMMAND_ERROR_REGEX:
+                        if (tinyG) {
+                            commandBuilt = "^tinyg .* err:.*";
+                        }
+                        else {
+                            //commandBuilt = "^!!*";
+                        }
                         break;
                     case HOME_COMMAND:
                         if (command == null) {
-                            commandBuilt = "G28 ; Home all axes";
+                            if (grblSyntax) {
+                                commandBuilt = "$H ; Home all axes";
+                            }
+                            else if (tinyG) {
+                                commandBuilt = "G28.2 ; Home all axes";
+                            }
+                            else {
+                                commandBuilt = "G28 ; Home all axes";
+                            }
                         }
                         break;
                     case MOVE_TO_COMMAND:
-                        if (!gcodeDriver.getAxisVariables(machine).isEmpty()) {
-                            commandBuilt = "{Acceleration:M204 S%.2f} G1 "; 
+                        if (hasAxes) {
+                            if (tinyG) { 
+                                // Apply jerk limits per axis. 
+                                commandBuilt = "M201.3 ";
+                                for (String variable : gcodeDriver.getAxisVariables(machine)) {
+                                    commandBuilt += "{"+variable+"Jerk:"+variable+"%.0f} ";
+                                }
+                                commandBuilt += "\n";
+                            }
+                            else {
+                                // Apply acceleration limit.
+                                commandBuilt = "{Acceleration:M204 S%.2f} ";
+                            }
+                            commandBuilt += "G1 ";
                             for (String variable : gcodeDriver.getAxisVariables(machine)) {
                                 commandBuilt += "{"+variable+":"+variable+"%.4f} ";
                             }
@@ -416,13 +471,14 @@ class GcodeDriverSolutions implements Solutions.Subject {
                         disallowHeadMountables = true;
                         break;
                     case MOVE_TO_COMPLETE_COMMAND:
+                        // This is provided even if there are no axes on the driver. M400 may still be useful for actuator coordination.
                         if (command == null 
                         && gcodeDriver.getCommand(null, CommandType.MOVE_TO_COMPLETE_REGEX) == null) {
                             commandBuilt = "M400 ; Wait for moves to complete before returning";
                         }
                         break;
                     case SET_GLOBAL_OFFSETS_COMMAND:
-                        if (!gcodeDriver.getAxisVariables(machine).isEmpty()) {
+                        if (hasAxes) {
                             commandBuilt = "G92 "; 
                             for (String variable : gcodeDriver.getAxisVariables(machine)) {
                                 commandBuilt += "{"+variable+":"+variable+"%.4f} ";
@@ -439,7 +495,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                         }
                         break;
                     case GET_POSITION_COMMAND:
-                        if (!gcodeDriver.getAxisVariables(machine).isEmpty()) {
+                        if (hasAxes) {
                             commandBuilt = "M114 ; get position"; 
                         }
                         else if (command != null) {
@@ -447,7 +503,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                         }
                         break;
                     case POSITION_REPORT_REGEX:
-                        if (!gcodeDriver.getAxisVariables(machine).isEmpty()) {
+                        if (hasAxes) {
                             // We need to parse the report in standard Gcode axis order. This might not cover all the controllers, but it's what we can do.
                             final String[] cgodeAxisLetters = new String[] { "X", "Y", "Z", "U", "V", "W", "A", "B", "C", "D", "E" };
                             commandBuilt = "^.*";

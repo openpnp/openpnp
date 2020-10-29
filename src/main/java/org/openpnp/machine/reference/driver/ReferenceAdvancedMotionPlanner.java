@@ -88,9 +88,9 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
     // Transient data
     protected SimpleGraph motionGraph = null;
     protected SimpleGraph recordingMotionGraph = null;
-    private double recordingT0;
+    private Double recordingT0;
     private Map<Driver, Double> recordingT = new HashMap<>();
-    private Map<Driver, AxesLocation> recordingLocation0 = new HashMap<>();
+    private AxesLocation recordingLocation0 = AxesLocation.zero;
 
     private Double moveTimePlanned;
     private Double moveTimeActual;
@@ -381,8 +381,8 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                 recordingInterpolationFailed = false;
                 for (Driver driver0 : getMachine().getDrivers()) {
                     recordingT.put(driver0, 0.);
-                    recordingLocation0.put(driver0, plannedMotion.getLocation0());
                 }
+                recordingLocation0 = plannedMotion.getLocation0();
             }
             AxesLocation segment = moveToCommand.getLocation0().motionSegmentTo(moveToCommand.getMovedAxesLocation());
 
@@ -394,7 +394,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
 
             Double timeStart = moveToCommand.getTimeStart();
             Double d = moveToCommand.getTimeDuration(); 
-            AxesLocation recordingLocation1 = recordingLocation0.get(driver).put(moveToCommand.getMovedAxesLocation());
+            AxesLocation recordingLocation1 = recordingLocation0.put(moveToCommand.getMovedAxesLocation());
             for (ControllerAxis axis : plannedMotion.getLocation1().getAxes(driver)) {
                 MotionProfile profile = plannedMotion.getAxesProfiles()[plannedMotion.getAxisIndex(axis)];
                 if (recordingMotionGraph.getRow(axis.getName(), "s'").size() > 0 
@@ -412,7 +412,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                             Double a = moveToCommand.getAccelerationPerSecond2();
                             if (v0 != null && v1 != null && a != null) {
                                 // Approximated constant acceleration move. Reconstruct Profile.
-                                double s0 = recordingLocation0.get(driver).getCoordinate(axis);
+                                double s0 = recordingLocation0.getCoordinate(axis);
                                 double s1 = recordingLocation1.getCoordinate(axis);
                                 double factor = (s1 - s0)*factorRS274NGC;
                                 v0 *= factor;
@@ -535,7 +535,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
             if (moveToCommand.getTimeDuration() != null) {
                 recordingT.put(driver, recordingT.get(driver) + moveToCommand.getTimeDuration());
             }
-            recordingLocation0.put(driver, recordingLocation1); 
+            recordingLocation0 = recordingLocation1; 
         }
     }
 

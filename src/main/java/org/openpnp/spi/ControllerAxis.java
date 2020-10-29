@@ -43,12 +43,15 @@ public interface ControllerAxis extends LinearInputAxis, CoordinateAxis {
 
     public void setLetter(String designator);
 
+    /**
+     * @return Driver length units.
+     */
     public LengthUnit getUnits();
 
     /**
-     * @return The driver coordinate in length units as determined by getUnits(). This is the coordinate
-     * that was last sent to the controller. It may not yet reflect the physical machine position. Only
-     * after a MotionController.waitForCompletion() can you be sure that the machine is in sync.    
+     * @return The driver coordinate in driver units. This is the coordinate that was last sent to the controller. 
+     * It may not yet reflect the physical machine position. Only after a MotionPlanner.waitForCompletion() can you 
+     * be sure that the machine is in sync.    
      */
     double getDriverCoordinate();
     

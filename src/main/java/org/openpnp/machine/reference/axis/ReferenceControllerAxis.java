@@ -348,6 +348,57 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     public void findIssues(List<Issue> issues) {
         super.findIssues(issues);
 
+        if (getLetter().isEmpty()) {
+            issues.add(new Solutions.PlainIssue(
+                    this, 
+                    "Axis letter is missing. Assign the letter to continue.", 
+                    "Please assign the correct controller axis letter.", 
+                    Severity.Fundamental,
+                    "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
+        }
+        else if (getLetter().equals("E")) {
+            if (!getDriver().isSupportingPreMove()) {
+                issues.add(new Solutions.PlainIssue(
+                        this, 
+                        "Avoid axis letter E, if possible. Use proper rotation axes instead.", 
+                        "Check if your controller supports proper axes A B C instead of E.", 
+                        Severity.Warning,
+                        "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version"));
+            }
+        }
+        final BacklashCompensationMethod oldBacklashCompensationMethod = 
+                getBacklashCompensationMethod();
+        if (oldBacklashCompensationMethod != BacklashCompensationMethod.None
+                && oldBacklashCompensationMethod != BacklashCompensationMethod.DirectionalCompensation) {
+            issues.add(new Solutions.Issue(
+                    this, 
+                    "New directonal backlash compensation method improves performance and allows fluid motion.", 
+                    "Set axis to DirectionalCompensation.", 
+                    Severity.Suggestion,
+                    "https://github.com/openpnp/openpnp/wiki/Backlash-Compensation") {
+
+                @Override
+                public void setState(Solutions.State state) throws Exception {
+                    if (confirmStateChange(state)) {
+                        setBacklashCompensationMethod(
+                                (state == Solutions.State.Solved) ?  
+                                        BacklashCompensationMethod.DirectionalCompensation 
+                                        : oldBacklashCompensationMethod);
+                        super.setState(state);
+                    }
+                }
+            });
+        }
+        if (Math.abs(getMotionLimit(1)*2 - getMotionLimit(2)) < 0.1) {
+            // HACK: migration sets the acceleration to twice the feed-rate, that's our "signal" that the user has not yet
+            // tuned them.
+            issues.add(new Solutions.PlainIssue(
+                    this, 
+                    "Feed-rate, acceleration, jerk etc. can now be set individually per axis.", 
+                    "Tune your machine axes for best speed and acceleration.", 
+                    Severity.Suggestion,
+                    "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--rate-limits"));
+        }
         if (getType() == Type.Rotation) {
             if (!isWrapAroundRotation()) {
                 issues.add(new Solutions.Issue(
@@ -383,47 +434,6 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                     }
                 });
             }
-        }
-        if (getLetter().isEmpty()) {
-            issues.add(new Solutions.PlainIssue(
-                    this, 
-                    "Axis letter is missing. Assign the letter to continue.", 
-                    "Please assign the correct controller axis letter.", 
-                    Severity.Fundamental,
-                    "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
-        }
-        else if (getLetter().equals("E")) {
-            if (!getDriver().isSupportingPreMove()) {
-                issues.add(new Solutions.PlainIssue(
-                    this, 
-                    "Avoid axis letter E, if possible. Use proper rotation axes instead.", 
-                    "Check if your controller supports proper axes A B C instead of E.", 
-                    Severity.Warning,
-                    "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version"));
-            }
-        }
-        final BacklashCompensationMethod oldBacklashCompensationMethod = 
-                getBacklashCompensationMethod();
-        if (oldBacklashCompensationMethod != BacklashCompensationMethod.None
-                && oldBacklashCompensationMethod != BacklashCompensationMethod.DirectionalCompensation) {
-            issues.add(new Solutions.Issue(
-                    this, 
-                    "New directonal backlash compensation method improves performance and allows fluid motion.", 
-                    "Set axis to DirectionalCompensation.", 
-                    Severity.Suggestion,
-                    "https://github.com/openpnp/openpnp/wiki/Backlash-Compensation") {
-
-                @Override
-                public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        setBacklashCompensationMethod(
-                                (state == Solutions.State.Solved) ?  
-                                        BacklashCompensationMethod.DirectionalCompensation 
-                                        : oldBacklashCompensationMethod);
-                        super.setState(state);
-                    }
-                }
-            });
         }
     }
 }
