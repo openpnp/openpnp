@@ -24,6 +24,12 @@ OpenPnP user Bill made a Marlin 2.0 port to Teensy 4.1 with advanced axis suppor
 
 * [Bill's Marlin 2.0 fork](https://github.com/bilsef/Marlin/tree/Teensy4.1_PnP_6axis)
 
+## TinyG 
+
+[TinyG](https://synthetos.com/project/tinyg) is often used for Pick & Place because it comes with the Liteplacer kit. Some features have been added to TinyG to make it more like other controllers and to optimize its use with OpenPnP: 
+
+* Follow [the discussion](https://groups.google.com/d/msg/openpnp/veyVAwqS0do/Zsn73noGBQAJ).
+* See the [proposed changes (Pull Request)](https://github.com/openpnp/openpnp/pull/1072).
 
 ___
 
