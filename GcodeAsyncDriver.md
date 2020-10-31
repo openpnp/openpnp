@@ -111,17 +111,21 @@ These are the most important configurations:
 
 The GcodeAsyncDriver adds the new **Advanced Settings** tab:
 
-![GcodeAsyncDriver Settings](https://user-images.githubusercontent.com/9963310/96152186-8f1d0500-0f0c-11eb-93a3-4ebdd8f6577e.png)
+![GcodeAsyncDrivre Settings](https://user-images.githubusercontent.com/9963310/97790888-fa352f80-1bcc-11eb-8798-846b5df13e22.png)
 
 ### Settings
 
-**Confirmation Flow Control** forces OpenPnP to wait for an "OK" by the controller, before sending the next command. This only concerns the writer thread, i.e. it does not block any of the other activities and threads of OpenPnP. More G-code commands can still be created and queued in parallel. 
+**Confirmation Flow Control** forces OpenPnP to wait for an "OK" by the controller, before sending the next command. This only concerns the communications writer thread, i.e. it does not block any of the other activities and threads of OpenPnP. More G-code commands can still be prepared and queued in parallel. 
 
-If you switch this off, make sure you have flow-control in the communications. For serial port communication you need to select a **Flow Control**:
+**Location Confirmation** enables a position report from the controller whenever motion has completed. If the position has changed behind the back of OpenPnP, the reported location will be updated. This may happen after the homing cycle, with the [[Contact Probing Nozzle]] where the Z was probed, through custom Gcode in Actuators or Scripts etc. 
+
+One of the two options must always be enabled, otherwise OpenPnP wouldn't know when the controller is finished with its commands. Full asynchronous/parallelized operation is only achieved with **Location Confirmation** _enabled_ and **Confirmation Flow Control** _disabled_. The position report response will be used as a signal for OpenPnP to know when the machine has reached a position and is now standing still. 
+
+If you switch **Confirmation Flow Control** off, make sure you have flow-control in the communications. For serial port communications you need to select one of the active **Flow Control** choices:
 
 ![Serial Port Flow Control](https://user-images.githubusercontent.com/9963310/96151994-51b87780-0f0c-11eb-8bf6-771492d04862.png)
 
-**RtsCts** has been confirmed to work on Smoothieware over USB. You can then switch off **Confirmation Flow Control** for even better throughput.
+**RtsCts** has been confirmed to work for [[the tested controllers|Motion-Controller-Firmwares]] over USB. 
 
 ### Interpolation 
 
