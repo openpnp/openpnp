@@ -1,3 +1,19 @@
+## Controllers and Firmwares for Advanced Motion Control
+
+This page list Controllers and Firmwares that are known to be compatible with Advanced Motion Control features. Other controller may also support the needed features. Beyond basic motion control capabilities, the following are key features:
+
+1. The controller provides a [`M115`](https://www.reprap.org/wiki/G-code#M115:_Get_Firmware_Version_and_Capabilities) firmware report command. This is used to automatically detect the type of the firmware in OpenPnP. Some automated setup can then be provided by the [[Issues and Solutions]] system. 
+
+2. The controller can manage extra axes (`A`, `B`, `C` etc.) as true axes, with simultaneous motion. Controllers/firmwares that only support switching "extruder" `E` axes with `T` multiplex commands are not valid. Any mixing of axes must be correctly supported, including all aspects of feed rate and acceleration limiting according to the [NIST RS274/NGC Interpreter – Version 3 standard](https://www.nist.gov/publications/nist-rs274ngc-interpreter-version-3), more specifically section "2.1.2.5 Feed Rate", or better. 
+
+3. The controller can report axes positions, including extra axes (`A`, `B`, `C` etc.), typically with the [`M114`](https://www.reprap.org/wiki/G-code#M114:_Get_Current_Position) command.
+
+4. The controller can reset axes positions, including extra axes (`A`, `B`, `C` etc.), typically with the [`G92`](https://www.reprap.org/wiki/G-code#G92:_Set_Position) command. 
+
+5. `G92` must work correctly when motion is still pending. Either by implicitly waiting for still-stand or (better!) by allowing on-the-fly offsetting. 
+
+6. The controller can wait for motion completion, typically with the [`M400`](https://www.reprap.org/wiki/G-code#M400:_Wait_for_current_moves_to_finish) command. Any further commands sent after the `M400` must be suspended until motion completion. The controller must only acknowledge the command, when motion is complete i.e. the "ok" response must be suspended until then, providing blocking synchronization to OpenPnP. 
+
 ## Smoothieware
 
 A special Smoothieware firmware for OpenPnP is available. It contains some bug-fixes and features that are crucial for use with OpenPnP but are not present/accepted in the official Smoothieware firmware. The firmware and more details are available here:
