@@ -1,6 +1,8 @@
 ## Controllers and Firmwares for Advanced Motion Control
 
-This page list Controllers and Firmwares that are known to be compatible with Advanced Motion Control features. Other controller may also support the needed features. Beyond basic motion control capabilities, the following are key features:
+This page list Controllers and Firmwares that are known to be compatible with Advanced Motion Control features. Other controllers may also support the needed features, if you think your controller can do it, please [contact us in the user group](https://groups.google.com/forum/#!forum/openpnp). 
+
+Beyond basic motion control capabilities, the following are key features:
 
 1. The controller provides a [`M115`](https://www.reprap.org/wiki/G-code#M115:_Get_Firmware_Version_and_Capabilities) firmware report command. This is used to automatically detect the type of the firmware in OpenPnP. Some automated setup can then be provided by the [[Issues and Solutions]] system. 
 
