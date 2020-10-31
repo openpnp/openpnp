@@ -338,6 +338,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         }
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
         List<Head> movedHeads = new ArrayList<>();
+        boolean first = true;
         for (Motion plannedMotion : executionPlan) {
             if (!plannedMotion.hasOption(MotionOption.Stillstand)) {
                 // Put into timed plan.
@@ -351,7 +352,9 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 ReferenceHeadMountable  hm = (ReferenceHeadMountable) plannedMotion.getHeadMountable();
                 if (hm != null) {
                     movedHeads.add(hm.getHead());
-                    executeMoveTo(machine, hm, plannedMotion);
+                    if (executeMoveTo(machine, hm, plannedMotion, first)) {
+                        first = false;
+                    }
                 }
             }
         }
@@ -379,18 +382,29 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
      * @param machine
      * @param hm
      * @param plannedMotion
+     * @param firstAfterCoordination 
+     * @return true if a driver move was executed.
      * @throws Exception
      */
-    protected void executeMoveTo(ReferenceMachine machine, ReferenceHeadMountable hm,
-            Motion plannedMotion) throws Exception {
+    protected boolean executeMoveTo(ReferenceMachine machine, ReferenceHeadMountable hm,
+            Motion plannedMotion, boolean firstAfterCoordination) throws Exception {
         AxesLocation motionSegment = plannedMotion.getLocation0().motionSegmentTo(plannedMotion.getLocation1());
         // Note, this loop will be empty if the motion is empty, i.e. if it only contains VirtualAxis movement.
+        boolean firstDriver = true;
         for (Driver driver : motionSegment.getAxesDrivers(machine)) {
-            for (Motion.MoveToCommand moveToCommand : plannedMotion.interpolatedMoveToCommands(driver, isInterpolationRetiming())) {
+            for (Motion.MoveToCommand moveToCommand : plannedMotion
+                    .interpolatedMoveToCommands(driver, isInterpolationRetiming())) {
                 driver.moveTo(hm, moveToCommand);
-                recordDiagnostics(plannedMotion, moveToCommand, driver);
+                try {
+                    recordDiagnostics(plannedMotion, moveToCommand, driver, firstAfterCoordination, firstDriver);
+                }
+                catch (Exception e) {
+                    Logger.error(driver.getName()+" diagnostics failed: {}", e);
+                }
             }
+            firstDriver = false;
         }
+        return !firstDriver;
     }
 
     /**
@@ -398,9 +412,11 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
      * 
      * @param plannedMotion
      * @param moveToCommand
-     * @param driver TODO
+     * @param driver 
+     * @param firstAfterCoordination 
+     * @param firstDriver
      */
-    protected void recordDiagnostics(Motion plannedMotion, MoveToCommand moveToCommand, Driver driver) {
+    protected void recordDiagnostics(Motion plannedMotion, MoveToCommand moveToCommand, Driver driver, boolean firstAfterCoordination, boolean firstDriver) {
     }
 
     protected void publishDiagnostics() {

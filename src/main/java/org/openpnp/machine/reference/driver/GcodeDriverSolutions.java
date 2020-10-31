@@ -64,6 +64,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
     @Override
     public void findIssues(List<Solutions.Issue> issues) {
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
+        boolean hasAxes = !gcodeDriver.getAxisVariables(machine).isEmpty();
         if (!(gcodeDriver instanceof GcodeAsyncDriver)) {
             Solutions.Issue issue = new Solutions.Issue(
                     gcodeDriver, 
@@ -93,10 +94,10 @@ class GcodeDriverSolutions implements Solutions.Subject {
         }
 
         boolean modePAxis = false;
+        boolean smoothie = false;
         boolean grblSyntax = false;
         boolean tinyG = false;
-        if (machine.isEnabled() 
-                && gcodeDriver.isSpeakingGcode()) {
+        if (machine.isEnabled() && gcodeDriver.isSpeakingGcode()) {
             try {
                 gcodeDriver.detectFirmware(true);
             }
@@ -128,6 +129,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
         }
         else {
             if (gcodeDriver.getDetectedFirmware().contains("Smoothieware")) {
+                smoothie = true;
                 grblSyntax = (gcodeDriver.getDetectedFirmware().contains("X-GRBL_MODE:1"));
                 // TODO: regex to parse the number
                 if (gcodeDriver.getDetectedFirmware().contains("X-PAXES:5") 
@@ -186,7 +188,34 @@ class GcodeDriverSolutions implements Solutions.Subject {
             }
         }
 
-        boolean hasAxes = !gcodeDriver.getAxisVariables(machine).isEmpty();
+        if (gcodeDriver instanceof GcodeAsyncDriver) {
+            boolean locationConfirmation = ((GcodeAsyncDriver)gcodeDriver).isReportedLocationConfirmation();
+            if (hasAxes ^ locationConfirmation) {
+                issues.add(new Solutions.Issue(
+                        gcodeDriver, 
+                        (hasAxes ? 
+                                "Switch to Location Confirmation for full asynchronous operation and extra features in homing, contact probing, etc."
+                                :"Switch to Confirmation Flow Control (controller has no axes)."),
+                        (hasAxes ? 
+                                "Enable Location Confirmation, Disable Confirmation Flow Control."
+                                :"Disable Location Confirmation, Enable Confirmation Flow Control."), 
+                        Severity.Suggestion,
+                        "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#advanced-settings") {
+
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        if (confirmStateChange(state)) {
+                            ((GcodeAsyncDriver) gcodeDriver)
+                            .setReportedLocationConfirmation(hasAxes ^ !(state == Solutions.State.Solved));
+                            ((GcodeAsyncDriver) gcodeDriver)
+                            .setConfirmationFlowControl(hasAxes ^ (state == Solutions.State.Solved));
+                            super.setState(state);
+                        }
+                    }
+                });
+            }
+        }
+
         if (hasAxes) { 
             if (gcodeDriver.isSupportingPreMove()) {
                 issues.add(new Solutions.Issue(
@@ -222,7 +251,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                     }
                 });
             }
-            
+
             final MotionControlType oldMotionControlType = gcodeDriver.getMotionControlType();
             final MotionControlType newMotionControlType = tinyG ? 
                     MotionControlType.SimpleSCurve : MotionControlType.ModeratedConstantAcceleration;
@@ -235,7 +264,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                         "Set to "+newMotionControlType.name()+".", 
                         (tinyG ? Severity.Error : Severity.Suggestion),
                         "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
-                    
+
                     @Override
                     public void setState(Solutions.State state) throws Exception {
                         if (confirmStateChange(state)) {
@@ -300,7 +329,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                 }
             });
         }
-        
+
         if (gcodeDriver.communicationsType.equals("serial") && gcodeDriver.serial != null) {
             final FlowControl oldFlowControl = gcodeDriver.serial.getFlowControl();
             final FlowControl newFlowControl = FlowControl.RtsCts; 
@@ -411,8 +440,8 @@ class GcodeDriverSolutions implements Solutions.Subject {
                             if (tinyG) {
                                 commandBuilt = 
                                         "$ex=2\n" // RtsCts
-                                                +"$sv=0\n" // Non-verbose
-                                                +commandBuilt;
+                                        +"$sv=0\n" // Non-verbose
+                                        +commandBuilt;
                             }
                         }
                         break;
@@ -477,6 +506,12 @@ class GcodeDriverSolutions implements Solutions.Subject {
                             commandBuilt = "M400 ; Wait for moves to complete before returning";
                         }
                         break;
+                    case MOVE_TO_COMPLETE_REGEX:
+                        if (command != null && tinyG) {
+                            // Make it obsolete with the new (detected) firmware.
+                            commandBuilt = "";
+                        }
+                        break;
                     case SET_GLOBAL_OFFSETS_COMMAND:
                         if (hasAxes) {
                             commandBuilt = "G92 "; 
@@ -509,6 +544,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                             commandBuilt = "^.*";
                             int axisIndex = 0;
                             int lastAxisIndex = 26;
+                            String pattern = "";
                             for (String axisLetter: cgodeAxisLetters) {
                                 for (String variable : gcodeDriver.getAxisVariables(machine)) {
                                     if (variable.equals(axisLetter)) {
@@ -517,6 +553,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                                             commandBuilt += ".*";
                                         }
                                         commandBuilt += variable+":(?<"+variable+">-?\\d+\\.\\d+) ";
+                                        pattern += variable+" ";
                                         lastAxisIndex = axisIndex;
                                     }
                                 }
@@ -524,6 +561,17 @@ class GcodeDriverSolutions implements Solutions.Subject {
                             }
                             commandBuilt = commandBuilt.trim();
                             commandBuilt += ".*";
+                            if (gcodeDriver.getReportedAxes() != null 
+                                    && !gcodeDriver.getReportedAxes().matches(commandBuilt)) {
+                                issues.add(new Solutions.PlainIssue(
+                                        gcodeDriver, 
+                                        "The driver does not report axes in the expected "+pattern+" pattern: "+gcodeDriver.getReportedAxes(), 
+                                        (smoothie ? "Check axis letters and make sure use a proper 6-axis configuration without extruders."
+                                                : "Check axis letters and make sure the controller is capable to use extra axes (i.e. not extruders)."), 
+                                        Severity.Error,
+                                        (smoothie ? "http://smoothieware.org/6axis" 
+                                                : "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares")));
+                            }
                         }
                         else if (command != null) {
                             commandBuilt = "";

@@ -51,6 +51,8 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import javax.swing.JTextField;
 import java.awt.Color;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 @SuppressWarnings("serial")
 public class ReferenceAdvancedMotionPlannerDiagnosticsWizard extends AbstractConfigurationWizard {
@@ -73,10 +75,12 @@ public class ReferenceAdvancedMotionPlannerDiagnosticsWizard extends AbstractCon
                 applyAction.actionPerformed(e);
                 HeadMountable selectedTool = MainFrame.get().getMachineControls().getSelectedTool();
                 UiUtils.submitUiMachineTask(() -> {
-                    
+                    if (motionPlanner.getInitialLocation(false) == null) {
+                        throw new Exception("Test Motion undefined. Please go to the Motion Planner tab and define/enable the Test Motion locations.");
+                    }
                     Location l = selectedTool.getLocation();
-                    boolean reverse = (l.getXyzcDistanceTo(motionPlanner.getStartLocation()) 
-                            > l.getXyzcDistanceTo(motionPlanner.getEndLocation()));
+                    boolean reverse = (l.getXyzcDistanceTo(motionPlanner.getInitialLocation(true)) 
+                            < l.getXyzcDistanceTo(motionPlanner.getInitialLocation(false)));
                     motionPlanner.testMotion(selectedTool, reverse);
                 });
             });

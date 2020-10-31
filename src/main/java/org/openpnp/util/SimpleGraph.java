@@ -45,7 +45,7 @@ public class SimpleGraph {
         private List<DataRow> dataRows = new ArrayList<>();
         private double relativePaddingTop;
         private double relativePaddingBottom;
-
+        private boolean symmetricIfSigned;
 
         public void addDataRow(DataRow dataRow) {
             dataRows.add(dataRow);
@@ -86,6 +86,12 @@ public class SimpleGraph {
         }
         public void setRelativePaddingBottom(double relativePaddingBottom) {
             this.relativePaddingBottom = relativePaddingBottom;
+        }
+        public boolean isSymmetricIfSigned() {
+            return symmetricIfSigned;
+        }
+        public void setSymmetricIfSigned(boolean symmetricIfSigned) {
+            this.symmetricIfSigned = symmetricIfSigned;
         }
 
         public Point2D.Double getMinimum() {
@@ -190,6 +196,7 @@ public class SimpleGraph {
     public static class DataRow {
         private String label;
         private Color color;
+        private int displayCycleMask = 1; // Displayed on mask 1
         private TreeMap<Double, Double> data = new TreeMap<>();
 
         // housekeeping
@@ -284,6 +291,14 @@ public class SimpleGraph {
         }
         public void setColor(Color color) {
             this.color = color;
+        }
+
+        public int getDisplayCycleMask() {
+            return displayCycleMask;
+        }
+
+        public void setDisplayCycleMask(int displayCycleMask) {
+            this.displayCycleMask = displayCycleMask;
         }
     }
 
