@@ -52,6 +52,8 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
     private Integer xMouse;
     private Integer yMouse;
     private Double selectedX;
+    private int displayCycle = -1;//all displayed
+    private int displayCycleMask;
 
     public SimpleGraphView() {
         addMouseMotionListener(this);
@@ -67,6 +69,17 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
     }
     public void setGraph(SimpleGraph graph) {
         this.graph = graph;
+        displayCycleMask = 0;
+        if (graph != null) {
+            for (DataScale dataScale : graph.getDataScales()) {
+                for (DataRow dataRow : dataScale.getDataRows()) {
+                    if (dataRow.size() >= 2) {
+                        displayCycleMask |= dataRow.getDisplayCycleMask();
+                    }
+                }
+            }
+        }
+        displayCycle = displayCycleMask;
         repaint();
     }
 
@@ -101,6 +114,7 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         Font font = getFont();
@@ -115,6 +129,12 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
             for (DataScale dataScale : graph.getDataScales()) {
                 Point2D.Double min = graph.getMinimum(dataScale);
                 Point2D.Double max = graph.getMaximum(dataScale);
+                if (dataScale.isSymmetricIfSigned()) {
+                    if (min != null && max != null && min.y < 0.0 && max.y > 0) {
+                        max.y = Math.max(max.y, -min.y);
+                        min.y = Math.min(-max.y, min.y);
+                    }
+                }
                 if (min != null && max != null && (max.y-min.y) > 0.0 && (max.x-min.x) > 0.0) {
                     double xOrigin = (w-1)*graph.getRelativePaddingLeft();
                     double xScale = (w-1)*(1.0-graph.getRelativePaddingLeft()-graph.getRelativePaddingRight())/(max.x-min.x);
@@ -219,25 +239,59 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                             }
                         }
                     }
+                    // Draw the actual curves.
                     for (DataRow dataRow : dataScale.getDataRows()) {
-                        Set<Double> xAxis = dataRow.getXAxis();
-                        if (xAxis != null) {
-                            double y0 = Double.NaN;
-                            double x0 = Double.NaN;
-                            // Draw the actual curves.
-                            g2d.setColor(dataRow.getColor());
-                            for (double x : xAxis) {
-                                double y = dataRow.getDataPoint(x);
-                                if (!Double.isNaN(x0)) {
-                                    g2d.drawLine((int)(xOrigin+(x0-min.x)*xScale), (int)(yOrigin-(y0-min.y)*yScale), 
-                                            (int)(xOrigin+(x-min.x)*xScale), (int)(yOrigin-(y-min.y)*yScale));
+                        if ((dataRow.getDisplayCycleMask() & displayCycle) != 0) {
+                            Set<Double> xAxis = dataRow.getXAxis();
+                            if (xAxis != null) {
+                                // Convert to pixel coordinates
+                                int size = dataRow.size();
+                                if (size >= 2) {
+                                    double [] xfPlot = new double [size]; 
+                                    double [] yfPlot = new double [size];
+                                    int i = 0;
+                                    for (double x : xAxis) {
+                                        double y = dataRow.getDataPoint(x);
+                                        xfPlot[i] = xOrigin+(x-min.x)*xScale; 
+                                        yfPlot[i] = yOrigin-(y-min.y)*yScale;
+                                        i++;
+                                    }
+                                    // Analyze the curve and only plot relevant curve points.
+                                    int [] xPlot = new int [size]; 
+                                    int [] yPlot = new int [size];
+                                    int s = 0;
+                                    // Always add first point.
+                                    xPlot[s] = (int) xfPlot[0];
+                                    yPlot[s] = (int) yfPlot[0];
+                                    s++;
+                                    for (i = 1; i < size-1; i++) {
+                                        double dx0 = xfPlot[i]-xfPlot[i-1];
+                                        double dy0 = yfPlot[i]-yfPlot[i-1];
+                                        double dx1 = xfPlot[i+1]-xfPlot[i];
+                                        double dy1 = yfPlot[i+1]-yfPlot[i];
+                                        double n0 = Math.sqrt(dx0*dx0+dy0*dy0); 
+                                        double n1 = Math.sqrt(dx1*dx1+dy1*dy1); 
+                                        double cosine = ((dx0*dx1) + (dy0*dy1))/n0/n1;
+                                        if (cosine < 0.99 
+                                                || Math.abs(xfPlot[i]-xPlot[s-1]) > 12 || Math.abs(yfPlot[i]-yPlot[s-1]) > 1.5) {
+                                            // Corner point or relevant change.
+                                            xPlot[s] = (int) xfPlot[i];
+                                            yPlot[s] = (int) yfPlot[i];
+                                            s++;
+                                        }
+                                    }
+                                    // Always add last point.
+                                    xPlot[s] = (int) xfPlot[size-1];
+                                    yPlot[s] = (int) yfPlot[size-1];
+                                    s++;
+                                    // Draw as polyline.
+                                    g2d.setColor(dataRow.getColor());
+                                    g2d.drawPolyline(xPlot, yPlot, s);
+                                    if (selectedX != null) {
+                                        drawYIndicator(g2d, dfm, fontAscent, w, min, max, yOrigin, yScale, yUnit, 
+                                                dataRow.getInterpolated(selectedX), dataRow.getColor());
+                                    }
                                 }
-                                x0 = x;
-                                y0 = y;
-                            }
-                            if (selectedX != null) {
-                                drawYIndicator(g2d, dfm, fontAscent, w, min, max, yOrigin, yScale, yUnit, 
-                                        dataRow.getInterpolated(selectedX), dataRow.getColor());
                             }
                         }
                     }
@@ -289,6 +343,13 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
     }
     @Override
     public void mouseClicked(MouseEvent e) {
+        if (displayCycleMask != 0) {
+            displayCycle--;
+            while ((displayCycle & displayCycleMask) == 0) {
+                displayCycle--;
+            }
+        }
+        repaint();
     }
     @Override
     public void mousePressed(MouseEvent e) {

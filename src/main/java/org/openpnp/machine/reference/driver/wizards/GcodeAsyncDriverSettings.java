@@ -19,6 +19,10 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import java.awt.Component;
+import javax.swing.Box;
+import java.awt.event.ItemListener;
+import java.awt.event.ItemEvent;
 
 public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
     private final GcodeDriver driver;
@@ -28,6 +32,7 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
     private JTextField interpolationMaxSteps;
     private JTextField junctionDeviation;
     private JTextField interpolationJerkSteps;
+    private JCheckBox reportedLocationConfirmation;
 
     public GcodeAsyncDriverSettings(GcodeAsyncDriver driver) {
         this.driver = driver;
@@ -45,6 +50,8 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         JPanel interpolationPanel = new JPanel();
@@ -126,7 +133,28 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
         settingsPanel.add(lblConfirmationFlowControl, "2, 2, right, default");
 
         confirmationFlowControl = new JCheckBox("");
+        confirmationFlowControl.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                if (!confirmationFlowControl.isSelected()) {
+                    reportedLocationConfirmation.setSelected(true);
+                }
+            }
+        });
         settingsPanel.add(confirmationFlowControl, "4, 2");
+
+        JLabel lblRequestLocation = new JLabel("Location Confirmation?");
+        lblRequestLocation.setToolTipText("<html>Request the controller to report the location after a motion has completed.<br/>\r\nIf it has changed, the internal OpenPnP location is updated. The location report is <br/>\r\nalso used to synchronize OpenPnP when confirmation flow control is disabled.<br/>\r\nAt least on of the two options need to be enabled. Location Confirmation allows<br/>\r\nmore extensive asynchronous operation. \r\n</html>\r\n");
+        settingsPanel.add(lblRequestLocation, "2, 4, right, default");
+
+        reportedLocationConfirmation = new JCheckBox("");
+        reportedLocationConfirmation.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                if (!reportedLocationConfirmation.isSelected()) {
+                    confirmationFlowControl.setSelected(true);
+                }
+            }
+        });
+        settingsPanel.add(reportedLocationConfirmation, "4, 4");
 
     }
 
@@ -138,6 +166,7 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
         LengthConverter lengthConverter = new LengthConverter();
 
         addWrappedBinding(driver, "confirmationFlowControl", confirmationFlowControl, "selected");
+        addWrappedBinding(driver, "reportedLocationConfirmation", reportedLocationConfirmation, "selected");
         addWrappedBinding(driver, "interpolationMaxSteps", interpolationMaxSteps, "text", intConverter);
         addWrappedBinding(driver, "interpolationJerkSteps", interpolationJerkSteps, "text", intConverter);
         addWrappedBinding(driver, "interpolationTimeStep", interpolationTimeStep, "text", doubleConverterFine);

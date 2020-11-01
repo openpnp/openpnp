@@ -114,7 +114,9 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
             leadAxis[i] = MotionProfile.getLeadAxisIndex(unitVector[i]);
             simplified[i] = false;
             for (int axis = 0; axis < profiles.length; axis++) {
-                simplified[i] |= !profiles[axis].isSupportingUncoordinated();
+                if (!profiles[axis].isEmpty()) {
+                    simplified[i] |= !profiles[axis].isSupportingUncoordinated();
+                }
             }
             if (i > 0) {
                 junctionCosineFromPrev[i] = MotionProfile.dotProduct(unitVector[i-1], unitVector[i]);

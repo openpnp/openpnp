@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
@@ -239,8 +240,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Attribute(required = false) 
     int infinityTimeoutMilliseconds = 60000; // 1 Minute is considered an "eternity" for a controller.
 
-    @Attribute(required = false) 
+    @Element(required = false, data=true) 
     String detectedFirmware = null; 
+
+    @Element(required = false, data=true) 
+    String reportedAxes = null; 
 
     @ElementList(required = false, inline = true)
     public ArrayList<Command> commands = new ArrayList<>();
@@ -285,11 +289,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     protected LinkedBlockingQueue<Line> responseQueue = new LinkedBlockingQueue<>();
-    
-    protected AtomicLong receivedConfirmations = new AtomicLong();
+    protected LinkedBlockingQueue<AxesLocation> reportedLocationsQueue = new LinkedBlockingQueue<>();
+    protected LinkedBlockingQueue<Line> receivedConfirmationsQueue = new LinkedBlockingQueue<>();
+
     protected Line errorResponse;
-    private AxesLocation lastReportedLocation;
-    private double lastMomentaryTime;
     private boolean motionPending;
 
     private PrintWriter gcodeLogger;
@@ -354,7 +357,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         readerThread.setDaemon(true);
         readerThread.start();
         errorResponse = null;
-        receivedConfirmations = new AtomicLong();
+        receivedConfirmationsQueue = new LinkedBlockingQueue<>();
+        reportedLocationsQueue = new LinkedBlockingQueue<>();
     }
 
     @Override
@@ -503,24 +507,19 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         if (getCommand(null, CommandType.POSITION_REPORT_REGEX) == null) {
             throw new Exception(getName()+" configuration error: missing POSITION_REPORT_REGEX.");
         }
-        
-        // Reset the last position report.
-        lastReportedLocation = null;
+
+        // TODO: true queued reporting. For now it is sufficient to poll one for one.
+        reportedLocationsQueue.clear();
         sendGcode(command, -1);
-        // Blocking queue?
-        long t1 = System.currentTimeMillis() + ((timeout == -1) ?
-                infinityTimeoutMilliseconds
-                : timeout);
-        do { 
-            if (lastReportedLocation != null) {
-                Logger.trace("{} got lastReportedLocation {}", getName(), lastReportedLocation);
-                return lastReportedLocation;
-            }
-            // TODO: sync with response queue? How?
-            Thread.yield();
+        if (timeout == -1) {
+            timeout = infinityTimeoutMilliseconds;
         }
-        while (System.currentTimeMillis() < t1);
-        // Timeout expired, apply timeout action.
+        AxesLocation lastReportedLocation = reportedLocationsQueue.poll(timeout, TimeUnit.MILLISECONDS);
+        if (lastReportedLocation != null) {
+            Logger.trace("{} got lastReportedLocation {}", getName(), lastReportedLocation);
+            return lastReportedLocation;
+        }
+        // Timeout expired.
         throw new Exception(getName()+" timeout waiting for response to " + command);
     }
 
@@ -913,7 +912,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         }
 
         // After sending this, we want one more confirmation. 
-        long wantedConfirmations = receivedConfirmations.get() + 1;
+        // TODO: true queued reporting. For now it is sufficient to poll one for one.
+        receivedConfirmationsQueue.clear();
         try {
             // Send the command.
             getCommunications().writeLine(command);
@@ -923,31 +923,25 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             disconnect();
             Configuration.get().getMachine().setEnabled(false);
         }
-        waitForConfirmation(command, timeout, wantedConfirmations);
+        waitForConfirmation(command, timeout);
     }
 
-    protected void waitForConfirmation(String command, long timeout, long wantedConfirmations)
+    protected Line waitForConfirmation(String command, long timeout)
             throws Exception {
         if (getCommand(null, CommandType.COMMAND_CONFIRM_REGEX) == null) {
            Logger.warn(getName()+" configuration error: COMMAND_CONFIRM_REGEX missing. Not waiting for confirmation.");
-           return;
+           return null;
         }
-        // Wait until we get the confirmations count we want.
-        long t1 = System.currentTimeMillis() + ((timeout == -1) ? 
-                infinityTimeoutMilliseconds
-                : timeout);
-        // Loop until we've timed out.
-        do {
-            bailOnError();
-            if (receivedConfirmations.get() >= wantedConfirmations) {
-                Logger.trace("[{}] confirmed {}", getCommunications().getConnectionName(), command);
-                return;
-            }
-            // Need to wait.
-            Thread.yield();
+
+        if (timeout == -1) {
+            timeout = infinityTimeoutMilliseconds;
         }
-        while(System.currentTimeMillis() < t1);
-        // Timeout. 
+        Line receivedConfirmation = receivedConfirmationsQueue.poll(timeout, TimeUnit.MILLISECONDS);
+        if (receivedConfirmation != null) {
+            Logger.trace("[{}] confirmed {}", getCommunications().getConnectionName(), command);
+            return receivedConfirmation;
+        }
+        // Timeout expired.
         throw new Exception(getCommunications().getConnectionName()+" timeout waiting for response to "+command);
     }
 
@@ -978,14 +972,20 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     public List<Line> receiveResponses(String regex, long timeout, 
             TimeoutAction timeoutAction)
             throws Exception {
-        long t1 = System.currentTimeMillis() + ((timeout == -1) ?
-                infinityTimeoutMilliseconds
-                : timeout);
+        if (timeout == -1) {
+            timeout = infinityTimeoutMilliseconds;
+        }
+        long t1 = System.currentTimeMillis() + timeout;
         List<Line> responses = new ArrayList<>();
         do{ 
             responses.addAll(receiveResponses());
             if (containsMatch(responses, regex)) {
                 return responses;
+            }
+            Line response = responseQueue.poll(Math.max(1, t1 - System.currentTimeMillis()), TimeUnit.MILLISECONDS);
+            if (response != null) {
+                responses.add(response);
+                continue;
             }
         }
         while (System.currentTimeMillis() < t1);
@@ -1153,7 +1153,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     protected void processResponse(Line line) {
         String regex = getCommand(null, CommandType.COMMAND_CONFIRM_REGEX);
         if (regex != null && line.getLine().matches(regex)) {
-            receivedConfirmations.incrementAndGet();
+            receivedConfirmationsQueue.add(line);
         }
         regex = getCommand(null, CommandType.COMMAND_ERROR_REGEX);
         if (regex != null && line.getLine().matches(regex)) {
@@ -1194,12 +1194,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             }
         }
         // Store the latest momentary position.
-        lastReportedLocation = position;
-        lastMomentaryTime = line.getTransmissionTime();
+        reportedLocationsQueue.add(position);
 
         if (motionPending) {
             Logger.warn("Position report cannot be processed when motion might still be pending. Missing Machine Coordination on Actuators?", 
-                    lastReportedLocation);
+                    position);
         }
         else {
             // Store the actual driver location. This is used to re-sync OpenPnP to the actual controller 
@@ -1363,6 +1362,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         return detectedFirmware;
     }
 
+    public String getReportedAxes() {
+        return reportedAxes;
+    }
+
+    public void setReportedAxes(String reportedAxes) {
+        Object oldValue = this.reportedAxes;
+        this.reportedAxes = reportedAxes;
+        firePropertyChange("reportedAxes", oldValue, reportedAxes);
+    }
+
     public void setDetectedFirmware(String detectedFirmware) {
         Object oldValue = this.detectedFirmware;
         this.detectedFirmware = detectedFirmware;
@@ -1377,16 +1386,19 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     /**
-     * Detect the Firmware running on a controller using the M115 command. 
+     * Detect the firmware running on a controller using the M115 command. Also discover axes with M114. 
+     * 
      * We want to do this very early in the machine setup, so the machine may not even be ready to be enabled.
-     * Instead just connect/disconnect.
-     * @param preserveOldValue TODO
+     * Instead just connect/disconnect this single driver.
+     * 
+     * @param preserveOldValue preserve the old value if the detection fails.  
      * 
      * @throws Exception
      */
     public void detectFirmware(boolean preserveOldValue) throws Exception {
         if (!preserveOldValue) {
             setDetectedFirmware(null);
+            setReportedAxes(null);
         }
         boolean wasConnected = connected;
         if (!wasConnected) {
@@ -1398,6 +1410,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             String firmware = receiveSingleResponse("^FIRMWARE.*");
             if (firmware != null) {
                 setDetectedFirmware(firmware);
+            }
+            if (!getAxisVariables((ReferenceMachine) Configuration.get().getMachine()).isEmpty()) {
+                sendCommand("M114");
+                String reportedAxes = receiveSingleResponse(".*[XYZABCDEUVW]:-?\\d+\\.\\d+.*");
+                if (reportedAxes != null) {
+                    setReportedAxes(reportedAxes);
+                }
+            }
+            else {
+                setReportedAxes("");
             }
         }
         finally {

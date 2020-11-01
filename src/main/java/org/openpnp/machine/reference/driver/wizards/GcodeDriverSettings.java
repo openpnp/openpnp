@@ -52,6 +52,7 @@ import javax.swing.JButton;
 import java.awt.SystemColor;
 import java.awt.event.ActionListener;
 import java.awt.Font;
+import javax.swing.SwingConstants;
 
 public class GcodeDriverSettings extends AbstractConfigurationWizard {
     private final GcodeDriver driver;
@@ -91,7 +92,11 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                RowSpec.decode("default:grow"),}));
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
         
         JLabel lblMotionControlType = new JLabel("Motion Control Type");
         lblMotionControlType.setToolTipText("<html>\r\n<p>Determines how the OpenPnP MotionPlanner will plan the motion and how it will talk <br/>\r\nto the controller:</p>\r\n<ul>\r\n\r\n<li><strong>ToolpathFeedRate:</strong><br/>\r\nApply the nominal driver feed-rate limit multiplied by the speed factor to the tool-path.<br/>\r\nThe driver feed-rate must be specified. No acceleration control is applied.</li>\r\n\r\n<li><strong>EuclideanAxisLimits:</strong><br/>\r\nApply axis feed-rate, acceleration and jerk limits multiplied by the proper speed factors. <br/>\r\nThe Euclidean Metric is calculated to allow the machine to run faster in a diagonal.<br/>\r\nOpenPnP only sets the speed factor maximum, ramping up and down the speed is <br/>\r\nentirely left to the controller. </li>  \r\n\r\n<li><strong>ConstantAcceleration:</strong><br/>\r\nApply motion planning assuming a controller with constant acceleration motion control. </li>\r\n\r\n<li><strong>ModeratedConstantAcceleration:</strong><br/>\r\nApply motion planning assuming a controller with constant acceleration motion control but<br/>\r\nmoderate the acceleration and velocity to resemble those of 3rd order control, resulting<br/>\r\nin a move that takes the same amount of time and has similar average acceleration. <br/>\r\nThis will already reduce vibrations a bit.</li>\r\n\r\n<li><strong>SimpleSCurve:</strong><br/>\r\nApply motion planning assuming a controller with simplified S-Curve motion control. <br/>\r\nSimplified S-Curves have no constant acceleration phase, only jerk phases (e.g. TinyG, Marlin).</li>\r\n\r\n<li><strong>Simulated3rdOrderControl:</strong><br/>\r\nApply motion planning assuming a controller with constant acceleration motion control but<br/>\r\nsimulating 3rd order control with time step interpolation. </li> \r\n\r\n<li><strong>Full3rdOrderControl:</strong><br/>\r\nApply motion planning assuming a controller with full 3rd order motion control.</li> \r\n\r\n</html>");
@@ -193,16 +198,24 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         
         detectedFirmware = new JTextArea();
         detectedFirmware.setForeground(SystemColor.textInactiveText);
+        detectedFirmware.setBackground(SystemColor.control);
         detectedFirmware.setWrapStyleWord(true);
         detectedFirmware.setLineWrap(true);
         detectedFirmware.setEditable(false);
         detectedFirmware.setFont(new Font("Dialog", Font.PLAIN, 11));
-        detectedFirmware.setBackground(SystemColor.control);
-        detectedFirmware.setEditable(false);
-        settingsPanel.add(detectedFirmware, "4, 16, 7, 3, fill, fill");
+        settingsPanel.add(detectedFirmware, "4, 16, 7, 5, fill, fill");
         
         JLabel label = new JLabel(" ");
         settingsPanel.add(label, "2, 18");
+        
+        reportedAxes = new JTextArea();
+        reportedAxes.setForeground(SystemColor.textInactiveText);
+        reportedAxes.setBackground(SystemColor.control);
+        reportedAxes.setWrapStyleWord(true);
+        reportedAxes.setLineWrap(true);
+        reportedAxes.setEditable(false);
+        reportedAxes.setFont(new Font("Dialog", Font.PLAIN, 11));
+        settingsPanel.add(reportedAxes, "4, 22, 7, 1, fill, fill");
     }
 
     @Override
@@ -224,6 +237,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         addWrappedBinding(driver, "usingLetterVariables", letterVariables, "selected");
         addWrappedBinding(driver, "loggingGcode", loggingGcode, "selected");
         addWrappedBinding(driver, "detectedFirmware", detectedFirmware, "text");
+        addWrappedBinding(driver, "reportedAxes", reportedAxes, "text");
         
         ComponentDecorators.decorateWithAutoSelect(maxFeedRateTf);
         ComponentDecorators.decorateWithAutoSelect(commandTimeoutTf);
@@ -372,6 +386,8 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
     private JCheckBox loggingGcode;
 
     private JTextArea detectedFirmware;
+
+    private JTextArea reportedAxes;
 
     static class HeadMountableItem {
         private HeadMountable hm;

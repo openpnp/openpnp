@@ -66,7 +66,7 @@ import org.simpleframework.xml.stream.Style;
  * While the GcodeDriver (through its on-by-one hand-shaking) knows when each and every command is 
  * acknowledged by the controller, the GcodeAsyncDriver does not. The responses (mostly a stream of 
  * "ok"s) are too generic to reliably detect how many and which commands have been acknowledged. Sometimes 
- * controllers will also output additional unsolicitated messages. GcodeAsyncDriver must therefore find a new 
+ * controllers will also output additional unsolicited messages. GcodeAsyncDriver must therefore find a new 
  * way to implement hand-shaking when (and only when) it is really needed. Most importantly this is the case 
  * when OpenPnP wants to wait for the machine to physically have completed a motion sequence. GcodeAsyncDriver 
  * will therefore issue specific reporting commands where needed, making the responses uniquely recognizable, 
@@ -109,6 +109,9 @@ public class GcodeAsyncDriver extends GcodeDriver {
     @Attribute(required=false)
     private boolean confirmationFlowControl = true;
 
+    @Attribute(required=false)
+    private boolean reportedLocationConfirmation = true;
+
     @Attribute(required = false)
     private int interpolationMaxSteps = 32;
 
@@ -116,10 +119,10 @@ public class GcodeAsyncDriver extends GcodeDriver {
     private int interpolationJerkSteps = 4; // relative to max acceleration
 
     @Attribute(required = false)
-    private double interpolationTimeStep = 0.01;
+    private double interpolationTimeStep = 0.001;
 
     @Attribute(required = false)
-    private int interpolationMinStep = 8;
+    private int interpolationMinStep = 16;
 
     @Element(required = false)
     private Length junctionDeviation = new Length(0.02, LengthUnit.Millimeters);
@@ -146,13 +149,26 @@ public class GcodeAsyncDriver extends GcodeDriver {
     protected LinkedBlockingQueue<CommandLine> commandQueue;
 
     private boolean waitedForCommands;
+    private boolean confirmationComplete;
 
     public boolean isConfirmationFlowControl() {
         return confirmationFlowControl;
     }
 
     public void setConfirmationFlowControl(boolean confirmationFlowControl) {
+        Object oldValue = confirmationFlowControl;
         this.confirmationFlowControl = confirmationFlowControl;
+        firePropertyChange("confirmationFlowControl", oldValue, confirmationFlowControl);
+    }
+
+    public boolean isReportedLocationConfirmation() {
+        return reportedLocationConfirmation;
+    }
+
+    public void setReportedLocationConfirmation(boolean reportedLocationConfirmation) {
+        Object oldValue = reportedLocationConfirmation;
+        this.reportedLocationConfirmation = reportedLocationConfirmation;
+        firePropertyChange("reportedLocationConfirmation", oldValue, reportedLocationConfirmation);
     }
 
     @Override 
@@ -228,11 +244,10 @@ public class GcodeAsyncDriver extends GcodeDriver {
 
         @Override
         public void run() {
-            CommandLine lastCommand = null;
             // Get the copy that is valid for this thread. 
             LinkedBlockingQueue<CommandLine> commandQueue = GcodeAsyncDriver.this.commandQueue;
+            CommandLine lastCommand = null;
 
-            long wantedConfirmations = 0;
             while (!disconnectRequested) {
                 CommandLine command;
                 try {
@@ -249,18 +264,27 @@ public class GcodeAsyncDriver extends GcodeDriver {
                     if (confirmationFlowControl && lastCommand != null) {
                         try {
                             // Before we can send the new command, make sure the wanted confirmation count of the last command was received.
-                            waitForConfirmation(lastCommand.toString(), lastCommand.getTimeout(), wantedConfirmations);
+                            waitForConfirmation(lastCommand.toString(), lastCommand.getTimeout());
                         }
                         finally {
                             // Whatever happens, never wait for this one again.
                             lastCommand = null;
                         }
                     }
-                    // Set up the wanted confirmations for next time.
-                    wantedConfirmations = receivedConfirmations.get() + 1;
-                    lastCommand = command;
-                    getCommunications().writeLine(command.line);
-                    Logger.trace("[{}] >> {}", getCommunications().getConnectionName(), command);
+                    if (command.line != null) {
+                        // Set up the wanted confirmations for next time.
+                        lastCommand = command;
+                        receivedConfirmationsQueue.clear();
+                        getCommunications().writeLine(command.line);
+                        Logger.trace("[{}] >> {}", getCommunications().getConnectionName(), command);
+                    }
+                    else {
+                        confirmationComplete = true;
+                        synchronized(GcodeAsyncDriver.this) {
+                            GcodeAsyncDriver.this.notify();
+                        }
+                        //Logger.trace("[{}] confirmation released.", getCommunications().getConnectionName());
+                    }
                 }
                 catch (IOException e) {
                     Logger.error("Write error on {}: {}", getCommunications().getConnectionName(), e);
@@ -317,13 +341,33 @@ public class GcodeAsyncDriver extends GcodeDriver {
         }
         // Issue the M400 in the super class.
         super.waitForCompletion(hm, completionType);
-        // Then make sure we get a uniquely recognizable confirmation. 
         if (completionType.isWaitingForDrivers()) {
-            // Explicitly wait for the controller's acknowledgment here. 
-            // This is signaled with a position report.
-            getReportedLocation(
-                    completionType == CompletionType.WaitForStillstandIndefinitely ?
-                            -1 : getTimeoutAtMachineSpeed());
+            // Explicitly wait for the controller's acknowledgment here.
+            long timeout = (completionType == CompletionType.WaitForStillstandIndefinitely ?
+                    infinityTimeoutMilliseconds : getTimeoutAtMachineSpeed());
+            if (reportedLocationConfirmation) {
+                // Then make sure we get a uniquely recognizable confirmation. 
+                // Confirmation is signaled with a position report.
+                getReportedLocation(timeout);
+            }
+            else {
+                // Normal confirmation report wanted. We queue a null command to drain the queue and confirm 
+                // the last real command. 
+                confirmationComplete = false;
+                CommandLine commandLine = new CommandLine(null, 1);
+                commandQueue.offer(commandLine, writerQueueTimeout, TimeUnit.MILLISECONDS);
+                while (!confirmationComplete) {
+                    try {
+                        synchronized(this) { 
+                            wait(timeout);
+                        }
+                    }
+                    catch (InterruptedException e) {
+                        Logger.warn(getName() +" was interrupted while waiting for completion.", e);
+                    }
+                }
+            }
+            Logger.trace("{} confirmation complete.", getName());
         }
     }
 
