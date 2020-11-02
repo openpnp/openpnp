@@ -44,7 +44,6 @@ import org.simpleframework.xml.Element;
 
 public class ReferenceActuator extends AbstractActuator implements ReferenceHeadMountable {
 
-
     @Element
     private Location headOffsets = new Location(LengthUnit.Millimeters);
 
@@ -55,6 +54,8 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     @Element(required = false)
     protected Length safeZ = null;
 
+    protected Object lastActuationValue;
+    
     public ReferenceActuator() {
     }
 
@@ -78,15 +79,26 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     @Override
     public void actuate(boolean on) throws Exception {
-        Logger.debug("{}.actuate({})", getName(), on);
         if (isCoordinatedBeforeActuate()) {
             coordinateWithMachine(false);
         }
+        Logger.debug("{}.actuate({})", getName(), on);
         getDriver().actuate(this, on);
+        setLastActuationValue(on);
         if (isCoordinatedAfterActuate()) {
             coordinateWithMachine(true);
         }
         getMachine().fireMachineHeadActivity(head);
+    }
+
+    @Override
+    public Object getLastActuationValue() {
+        return lastActuationValue;
+    }
+    protected void setLastActuationValue(Object lastActuationValue) {
+        Object oldValue = this.lastActuationValue;
+        this.lastActuationValue = lastActuationValue;
+        firePropertyChange("lastActuationValue", oldValue, lastActuationValue);
     }
 
     @Override
@@ -96,11 +108,12 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     @Override
     public void actuate(double value) throws Exception {
-        Logger.debug("{}.actuate({})", getName(), value);
         if (isCoordinatedBeforeActuate()) {
             coordinateWithMachine(false);
         }
+        Logger.debug("{}.actuate({})", getName(), value);
         getDriver().actuate(this, value);
+        setLastActuationValue(value);
         if (isCoordinatedAfterActuate()) {
             coordinateWithMachine(true);
         }
@@ -109,11 +122,12 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     
     @Override
     public void actuate(String value) throws Exception {
-        Logger.debug("{}.actuate({})", getName(), value);
         if (isCoordinatedBeforeActuate()) {
             coordinateWithMachine(false);
         }
+        Logger.debug("{}.actuate({})", getName(), value);
         getDriver().actuate(this, value);
+        setLastActuationValue(value);
         if (isCoordinatedAfterActuate()) {
             coordinateWithMachine(true);
         }
@@ -147,6 +161,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     @Override
     public void home() throws Exception {
+        setLastActuationValue(null);
     }
 
     @Override
@@ -166,7 +181,15 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
+        if (getInterlockMonitor() == null) {
+            return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
+        }
+        else {
+            return new PropertySheet[] {
+                    new PropertySheetWizardAdapter(getConfigurationWizard()),
+                    new PropertySheetWizardAdapter(getInterlockMonitor().getConfigurationWizard(this), "Axis Interlock")
+            };
+        }
     }
 
     @Override
@@ -196,7 +219,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
             }
         }
     };
-    
+
     @Override
     public String toString() {
         return getName();

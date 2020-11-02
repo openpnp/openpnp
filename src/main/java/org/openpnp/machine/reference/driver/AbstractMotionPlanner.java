@@ -32,6 +32,7 @@ import javax.swing.Icon;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.ActuatorInterlockMonitor;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
@@ -45,6 +46,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Motion;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.Motion.MoveToCommand;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.ControllerAxis;
@@ -143,6 +145,12 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
         // Make sure we don't collide axes across multiple drivers.
         interlockMotionAcrossDrivers(hm, currentLocation, newLocation);
+        // Perform InterlockActuator before-move actuations.
+        for (Actuator actuator : hm.getHead().getActuators()) {
+            if (actuator.getInterlockMonitor() != null) {
+                actuator.getInterlockMonitor().interlockActuation(actuator, currentLocation, newLocation, true, speed);
+            }
+        }
 
         // Create the motion commands needed for backlash compensation if enabled.
         createBacklashCompensatedMotion(hm, speed, currentLocation, newLocation, options);
@@ -151,6 +159,13 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         for (Axis axis : axesLocation.getAxes()) {
             if (axis instanceof CoordinateAxis) {
                 ((CoordinateAxis) axis).setLengthCoordinate(newLocation.getLengthCoordinate(axis));
+            }
+        }
+
+        // Perform InterlockActuator after-move actuations.
+        for (Actuator actuator : hm.getHead().getActuators()) {
+            if (actuator.getInterlockMonitor() != null) {
+                actuator.getInterlockMonitor().interlockActuation(actuator, currentLocation, newLocation, false, speed);
             }
         }
     }
@@ -358,7 +373,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 }
             }
         }
-        // Publish recorded DIagnostics
+        // Publish recorded Diagnostics
         publishDiagnostics();
         // Notify heads.
         for (Head movedHead : movedHeads) {
@@ -601,14 +616,6 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         if (!mappedAxes.isEmpty()) {
             for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
                 driver.waitForCompletion((ReferenceHeadMountable) hm, completionType);
-            }
-            if (hm != null) {
-                machine.fireMachineHeadActivity(hm.getHead());
-            }
-            else {
-                for (Head head : machine.getHeads()) {
-                    machine.fireMachineHeadActivity(head);
-                }
             }
         }
     }

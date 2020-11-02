@@ -66,19 +66,15 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     @Attribute(required = false)
     private boolean enableDynamicSafeZ = false;
 
-    /**
-     * TODO Deprecated in favor of vacuumActuatorName. Remove Jan 1, 2021.
-     */
-    @Deprecated
     @Element(required = false)
-    protected String vacuumSenseActuatorName;
-    
+    protected String vacuumSenseActuatorName = ".migrate";
+
     @Element(required = false)
-    protected String vacuumActuatorName;
+    protected String vacuumActuatorName = ".migrate";
 
     @Element(required = false)
     protected String blowOffActuatorName;
-    
+
     /**
      * If limitRotation is enabled the nozzle will reverse directions when commanded to rotate past
      * 180 degrees. So, 190 degrees becomes -170 and -190 becomes 170.
@@ -97,15 +93,18 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             }
         });
     }
-    
+
     @Commit
     public void commit() {
-        /**
-         * Backwards compatibility to change from vacuumSenseActuatorName to vacuumActuatorName.
-         */
-        if (vacuumActuatorName == null) {
+        // Migration of these has gone back and forth, cumbersome resolution needed. 
+        if (vacuumSenseActuatorName.equals(".migrate")) {
+            if (vacuumActuatorName.equals(".migrate")) {
+                vacuumActuatorName = null;
+            }
+            vacuumSenseActuatorName = vacuumActuatorName;
+        }
+        else if (vacuumActuatorName.equals(".migrate")) {
             vacuumActuatorName = vacuumSenseActuatorName;
-            vacuumSenseActuatorName = null;
         }
     }
 
@@ -155,6 +154,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         firePropertyChange("headOffsets", oldValue, headOffsets);
         // Changing a head offset invalidates the nozzle tip calibration.
         ReferenceNozzleTipCalibration.resetAllNozzleTips();
+    }
+
+    public String getVacuumSenseActuatorName() {
+        return vacuumSenseActuatorName;
+    }
+
+    public void setVacuumSenseActuatorName(String vacuumSenseActuatorName) {
+        this.vacuumSenseActuatorName = vacuumSenseActuatorName;
     }
 
     public String getVacuumActuatorName() {
@@ -355,9 +362,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated(this)) {
             Location correctionOffset = calibrationNozzleTip.getCalibration().getCalibratedOffset(this, location.getRotation());
             location = location.subtract(correctionOffset);
-            Logger.debug("{}.transformToHeadLocation({}, ...) runout compensation: {}", getName(), location, correctionOffset);
+            Logger.trace("{}.transformToHeadLocation({}, ...) runout compensation: {}", getName(), location, correctionOffset);
         } else {
-            Logger.debug("{}.transformToHeadLocation({}, ...)", getName(), location);
+            Logger.trace("{}.transformToHeadLocation({}, ...)", getName(), location);
         }
         return location;
     }
@@ -740,7 +747,15 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         return false;
     }
    
-    
+
+    protected Actuator getVacuumSenseActuator() throws Exception {
+        Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
+        if (actuator == null) {
+            throw new Exception(String.format("Can't find vacuum sense actuator %s", vacuumSenseActuatorName));
+        }
+        return actuator;
+    }
+
     protected Actuator getVacuumActuator() throws Exception {
         Actuator actuator = getHead().getActuatorByName(vacuumActuatorName);
         if (actuator == null) {
@@ -748,7 +763,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
         return actuator;
     }
-    
+
     protected Actuator getBlowOffActuator() throws Exception {
         Actuator actuator = getHead().getActuatorByName(blowOffActuatorName);
         if (actuator == null) {
@@ -800,7 +815,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     protected double readVacuumLevel() throws Exception {
-        return Double.parseDouble(getVacuumActuator().read());
+        return Double.parseDouble(getVacuumSenseActuator().read());
     }
 
     protected boolean isPartOnGraphEnabled() {

@@ -691,7 +691,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                 setDiagnosticsEnabled(true);
                 setRecordingMotionLocked(true); 
                 double t0 = NanosecondTime.getRuntimeSeconds();
-                if (mid2LocationEnabled) {
+                if (mid2LocationEnabled && midLocation2 != initialLocation) {
                     if (!toEndSafeZ) {
                         tool.moveTo(midLocation2, toEndSpeed*speed);
                     }
@@ -699,7 +699,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                         MovableUtils.moveToLocationAtSafeZ(tool, midLocation2, toEndSpeed*speed);
                     }
                 }
-                if (mid1LocationEnabled) {
+                if (mid1LocationEnabled && midLocation1 != initialLocation) {
                     if (!toMid2SafeZ) {
                         tool.moveTo(midLocation1, toMid2Speed*speed);
                     }
@@ -726,7 +726,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                 setDiagnosticsEnabled(true);
                 setRecordingMotionLocked(true); 
                 double t0 = NanosecondTime.getRuntimeSeconds();
-                if (mid1LocationEnabled) {
+                if (mid1LocationEnabled && midLocation1 != initialLocation) {
                     if (!toMid1SafeZ) {
                         tool.moveTo(midLocation1, toMid1Speed*speed);
                     }
@@ -734,7 +734,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                         MovableUtils.moveToLocationAtSafeZ(tool, midLocation1, toMid1Speed*speed);
                     }
                 }
-                if (mid2LocationEnabled) {
+                if (mid2LocationEnabled && midLocation2 != initialLocation) {
                     if (!toMid2SafeZ) {
                         tool.moveTo(midLocation2, toMid2Speed*speed);
                     }
@@ -757,7 +757,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
         finally {
             // Switch off diagnostics for move to Safe Z.
             setDiagnosticsEnabled(false);
-            tool.moveToSafeZ(0.1);
+            tool.moveToSafeZ(0.2);
             tool.waitForCompletion(CompletionType.CommandJog);
             setDiagnosticsEnabled(wasDiagnosticsEnabled);
             // Unlock and publish.
@@ -780,9 +780,6 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
             else if (mid1LocationEnabled) {
                 location = midLocation1;
             }
-            else if (startLocationEnabled) {
-                location = startLocation;
-            }
         }
         else {
             if (startLocationEnabled) {
@@ -793,9 +790,6 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
             }
             else if (mid2LocationEnabled) {
                 location = midLocation2;
-            }
-            else if (endLocationEnabled) {
-                location = endLocation;
             }
         }
         return location;

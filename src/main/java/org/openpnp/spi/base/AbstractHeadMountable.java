@@ -154,7 +154,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         return location.getLengthZ();
     }
 
-    protected Length headMountableToRawZ(ReferenceControllerAxis rawAxis, Length z) throws Exception {
+    protected Length headMountableToRawZ(CoordinateAxis axisZ, Length z) throws Exception {
         // Take z as HeadMountable coordinate.
         Location location = getLocation();
         z = z.convertToUnits(location.getUnits());
@@ -163,7 +163,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         location = toHeadLocation(location);
         // From Head to to raw coordinates.
         AxesLocation rawLocation = toRaw(location);
-        return rawLocation.getLengthCoordinate(rawAxis);
+        return rawLocation.getLengthCoordinate(axisZ);
     }
 
     @Override
@@ -208,33 +208,8 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
 
     public boolean isInSafeZZone(Length z) throws Exception {
         CoordinateAxis coordAxis = getCoordinateAxisZ();
-        if (coordAxis instanceof ReferenceControllerAxis) {
-            ReferenceControllerAxis rawAxis = (ReferenceControllerAxis) coordAxis; 
-            Length rawZ = headMountableToRawZ(rawAxis, z);
-            if (rawAxis.isSafeZoneLowEnabled()) {
-                // We have a lower Safe Z Zone limit.
-                Length limit = rawAxis.getSafeZoneLow().convertToUnits(rawZ.getUnits());
-                if (rawZ.getValue() < limit.getValue()
-                        && !rawAxis.coordinatesMatch(rawZ, limit)) {
-                    // Definitely below the Safe Zone.
-                    return false;
-                }
-            }
-            if (rawAxis.isSafeZoneHighEnabled()) {
-                // We have a upper Safe Z Zone limit.
-                Length limit = rawAxis.getSafeZoneHigh().convertToUnits(rawZ.getUnits());
-                if (rawZ.getValue() > limit.getValue()
-                        && !rawAxis.coordinatesMatch(rawZ, limit)) {
-                    // Definitely above the Safe Zone.
-                    return false;
-                }
-            }
-        }
-        else if (coordAxis != null) {
-            coordAxis.coordinatesMatch(coordAxis.getHomeCoordinate(), z);
-        }
-        // We're either inside the limits, no axis is mapped or the Safe Zone is not enabled.
-        return true;
+        Length rawZ = headMountableToRawZ(coordAxis, z);
+        return coordAxis.isInSafeZone(rawZ);
     }
 
     public void setSafeZ(Length safeZ) {

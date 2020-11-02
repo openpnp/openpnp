@@ -3,14 +3,18 @@ package org.openpnp.spi.base;
 import javax.swing.Icon;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.machine.reference.ActuatorInterlockMonitor;
+import org.openpnp.machine.reference.ActuatorInterlockMonitor.InterlockType;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Actuator.InterlockMonitor;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 
 public abstract class AbstractActuator extends AbstractHeadMountable implements Actuator {
     @Attribute
@@ -19,10 +23,16 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
     @Attribute(required = false)
     protected String name;
 
+    @Attribute(required = false)
+    protected boolean interlockActuator;
+
+    @Element(required = false)
+    private InterlockMonitor interlockMonitor;
+
     protected Head head;
 
     private Driver driver;
-    
+
     @Attribute(required = false)
     private String driverId;
 
@@ -115,6 +125,7 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
         return null;
     }
 
+    @Override
     public boolean isCoordinatedBeforeActuate() {
         return coordinatedBeforeActuate;
     }
@@ -123,6 +134,7 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
         this.coordinatedBeforeActuate = coordinateBeforeActuate;
     }
 
+    @Override
     public boolean isCoordinatedAfterActuate() {
         return coordinatedAfterActuate;
     }
@@ -131,11 +143,43 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
         this.coordinatedAfterActuate = coordinateAfterActuate;
     }
 
+    @Override
     public boolean isCoordinatedBeforeRead() {
         return coordinatedBeforeRead;
     }
 
     public void setCoordinatedBeforeRead(boolean coordinateBeforeRead) {
         this.coordinatedBeforeRead = coordinateBeforeRead;
+    }
+
+    public boolean isInterlockActuator() {
+        return interlockActuator;
+    }
+
+    public void setInterlockActuator(boolean interlockActuator) {
+        boolean oldValue = this.interlockActuator;
+        this.interlockActuator = interlockActuator;
+        firePropertyChange("interlockActuator", oldValue, interlockActuator);
+        if (oldValue != interlockActuator) {
+            if (interlockActuator) {
+                if (interlockMonitor == null) {
+                    setInterlockMonitor(new ActuatorInterlockMonitor()); 
+                }
+            }
+            else {
+                if (interlockMonitor != null) {
+                    setInterlockMonitor(null);
+                }
+            }
+        }
+    }
+
+    @Override
+    public InterlockMonitor getInterlockMonitor() {
+        return interlockMonitor;
+    }
+
+    public void setInterlockMonitor(InterlockMonitor interlockMonitor) {
+        this.interlockMonitor = interlockMonitor;
     }
 }

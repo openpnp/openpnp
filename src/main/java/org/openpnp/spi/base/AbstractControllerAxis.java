@@ -22,16 +22,12 @@
 package org.openpnp.spi.base;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
-import org.openpnp.spi.HeadMountable;
-import org.openpnp.util.MovableUtils;
 import org.simpleframework.xml.Attribute;
 
 public abstract class AbstractControllerAxis extends AbstractCoordinateAxis implements ControllerAxis {
@@ -144,31 +140,4 @@ public abstract class AbstractControllerAxis extends AbstractCoordinateAxis impl
         this.letter = letter;
         firePropertyChange("letter", oldValue, letter);
     }
-
-    /**
-     * Tries to move the axis to the specified raw coordinate in a safe way. 
-     * 
-     * @param coordinate
-     * @throws Exception
-     */
-    public void moveAxis(Length coordinate) throws Exception {
-        // To be safe we need to go through a HeadMountable and the full motion stack.
-        // Find one that maps the axis.
-        HeadMountable axisMover = null;
-        for (HeadMountable hm : Configuration.get().getMachine().getDefaultHead().getHeadMountables()) {
-            if (hm.getMappedAxes(Configuration.get().getMachine()).contains(this)) {    
-                axisMover = hm;
-                break;
-            }
-        }
-        if (axisMover == null) {
-            throw new Exception("The axis "+getName()+" is not mapped to any HeadMountables. Can't move safely.");
-        }
-        axisMover.moveToSafeZ();
-        AxesLocation axesLocation = axisMover.toRaw(axisMover.toHeadLocation(axisMover.getLocation()))
-                .put(new AxesLocation(this, coordinate));
-        Location location = axisMover.toHeadMountableLocation(axisMover.toTransformed(axesLocation));
-        MovableUtils.moveToLocationAtSafeZ(axisMover, location);
-    }
-
 }

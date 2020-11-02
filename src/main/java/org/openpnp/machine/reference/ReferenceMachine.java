@@ -34,7 +34,6 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.marek.MarekNozzle;
 import org.openpnp.machine.neoden4.NeoDen4Driver;
 import org.openpnp.machine.neoden4.Neoden4Camera;
 import org.openpnp.machine.rapidplacer.RapidFeeder;
@@ -350,7 +349,6 @@ public class ReferenceMachine extends AbstractMachine {
         List<Class<? extends Nozzle>> l = new ArrayList<>();
         l.add(ReferenceNozzle.class);
         l.add(ContactProbeNozzle.class);
-        l.add(MarekNozzle.class);
         return l;
     }
 
@@ -396,10 +394,12 @@ public class ReferenceMachine extends AbstractMachine {
     @Override
     public void home() throws Exception {
         Logger.debug("homing machine");
-        
-        // if one rehomes, the isHomed flag has to be removed
-        this.setHomed(false);
-        
+
+        if (isHomed()) {
+            // if one rehomes, the isHomed flag has to be removed
+            this.setHomed(false);
+        }
+
         getMotionPlanner().home();
         super.home();
 
@@ -473,7 +473,7 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Override
     public void setHomed(boolean isHomed) {
-        Logger.debug("setHomed({})", isHomed);
+        Logger.info("setHomed({})", isHomed);
         this.isHomed = isHomed;
         firePropertyChange("homed", null, this.isHomed);
     }

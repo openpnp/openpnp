@@ -497,7 +497,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         
         lblNotMmmin = new JLabel("Not [/min]");
         lblNotMmmin.setForeground(Color.RED);
-        panelKinematics.add(lblNotMmmin, "6, 12, 5, 1");
+        panelKinematics.add(lblNotMmmin, "6, 12");
 
         lblAccelerations = new JLabel("Acceleration [/s²]");
         panelKinematics.add(lblAccelerations, "2, 14, right, default");

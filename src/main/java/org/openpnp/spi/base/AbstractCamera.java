@@ -464,7 +464,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
                 lastSettleMat = mat;
 
                 long t = System.currentTimeMillis();
-                Logger.debug("autoSettleAndCapture t="+(t-t0)+" auto settle score: " + result);
+                Logger.trace("autoSettleAndCapture t="+(t-t0)+" auto settle score: " + result);
 
                 // If the image changed at least a bit (due to noise) and less than our
                 // threshold, we have a winner. The check for > 0 is to ensure that we're not just
@@ -664,7 +664,8 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         return img;
     }
 
-    public BufferedImage settleAndCapture() {
+    @Override
+    public BufferedImage settleAndCapture() throws Exception {
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("camera", this);
@@ -673,15 +674,10 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         catch (Exception e) {
             Logger.warn(e);
         }
-        
+
         // Make sure the camera (or its subject) stands still.
-        try {
-            waitForCompletion(CompletionType.WaitForStillstand);
-        }
-        catch (Exception e1) {
-            Logger.warn("waitForCompletion() failed. Continuing anyway.");
-        }
-        
+        waitForCompletion(CompletionType.WaitForStillstand);
+
         if (settleMethod == null) {
             // Method undetermined, probably created a new camera (no @Commit handler)
             settleMethod = SettleMethod.FixedTime;

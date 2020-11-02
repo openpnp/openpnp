@@ -150,7 +150,6 @@ public class ReferenceHead extends AbstractHead {
         if (!mappedAxes.isEmpty()) {
             AxesLocation axesLocation = hm.toRaw(location);
             machine.getMotionPlanner().moveTo(hm, axesLocation, speed, options);
-            machine.fireMachineHeadActivity(this);
         }
     }
 

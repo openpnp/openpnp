@@ -17,6 +17,7 @@ public class LogEntryListModel extends AbstractListModel<LogEntry> implements Wr
 
     private List<LogEntry> originalLogEntries = new ArrayList<>();
     private List<LogEntry> filteredLogEntries = new ArrayList<>(originalLogEntries);
+    private List<LogEntry> newLogEntries = new ArrayList<>();
     private HashSet<LogEntryFilter> filters = new HashSet<>();
 
     public static class LogEntryFilter {
@@ -64,7 +65,12 @@ public class LogEntryListModel extends AbstractListModel<LogEntry> implements Wr
 
     @Override
     public synchronized LogEntry getElementAt(int index) {
-        return filteredLogEntries.get(index);
+        // This check is needed to exclude race conditions in heavily threaded logging, i.e. calls to getSize()
+        // followed by getElementAt() are not atomic. 
+        if (index < filteredLogEntries.size()) {
+            return filteredLogEntries.get(index);
+        }
+        return null;
     }
 
     public synchronized void addFilter(LogEntryFilter filter) {
@@ -89,8 +95,7 @@ public class LogEntryListModel extends AbstractListModel<LogEntry> implements Wr
 
     @Override
     public synchronized void write(LogEntry logEntry) throws Exception {
-        originalLogEntries.add(logEntry);
-        trim();
+        newLogEntries.add(logEntry);
     }
 
     public synchronized void clear() {
@@ -107,10 +112,22 @@ public class LogEntryListModel extends AbstractListModel<LogEntry> implements Wr
         SwingUtilities.invokeLater(() -> fireContentsChanged(this, 0, filteredLogEntries.size() - 1));
     }
 
-    private synchronized void trim() {
-        if (originalLogEntries.size() > LINE_LIMIT) {
-            originalLogEntries.subList(0, originalLogEntries.size() - LINE_LIMIT).clear();
+    public synchronized boolean isRefreshNeeded() {
+        return !newLogEntries.isEmpty();
+    }
+
+    public synchronized void refresh() {
+        if (newLogEntries.size() > LINE_LIMIT) {
+            // New Log entries alone already surpass the limit. 
+            newLogEntries.subList(0, newLogEntries.size() - LINE_LIMIT).clear();
+            originalLogEntries.clear();
         }
+        else if (originalLogEntries.size() + newLogEntries.size() > LINE_LIMIT) {
+            // Make space for the new log entries.
+            originalLogEntries.subList(0, Math.max(0, originalLogEntries.size() - newLogEntries.size() - LINE_LIMIT)).clear();
+        }
+        originalLogEntries.addAll(newLogEntries);
+        newLogEntries.clear();
         filter();
     }
 
