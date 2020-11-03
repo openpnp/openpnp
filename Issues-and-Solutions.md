@@ -9,6 +9,7 @@ Hence, the Issues & Solutions system was born. The OpenPnP Machine Setup now has
 4. Accept solutions, explore them and undo them, if you don't like them.
 5. Significantly lowers the required expertise of users. Solutions even generate machine-specific, ready-to-use Gcode commands and regular expressions.
 6. Removes the last requirements for `machine.xml` hacking.
+7. Each issue/solution is accompanied by an Info page, often linking to this Wiki.
 
 ## Machine Issues & Solutions
 
