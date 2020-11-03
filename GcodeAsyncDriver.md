@@ -115,7 +115,7 @@ The GcodeAsyncDriver adds the new **Advanced Settings** tab:
 
 ### Settings
 
-**Confirmation Flow Control** forces OpenPnP to wait for an "OK" by the controller, before sending the next command. This only concerns the communications writer thread, i.e. it does not block any of the other activities and threads of OpenPnP. More G-code commands can still be prepared and queued in parallel. 
+**Confirmation Flow Control** forces OpenPnP to wait for an "ok" by the controller, before sending the next command. This only concerns the communications writer thread, i.e. unlike the GcodeDriver (without the "Async") it does not block any of the other activities and threads of OpenPnP. More G-code commands can still be prepared and queued in parallel. 
 
 **Location Confirmation** enables a position report from the controller whenever motion has completed. If the position has changed behind the back of OpenPnP, the reported location will be updated. This may happen after the homing cycle, with the [[Contact Probing Nozzle]] where the Z was probed, through custom Gcode in Actuators or Scripts etc. 
 
