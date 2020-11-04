@@ -125,7 +125,7 @@ Finally, it must be repeated that this only works if all the moving axes are att
 
 If you have the ReferenceAdvancedMotionPlanner selected, the **Motion Planner** tab will be available.
 
-![Motion Planner Settings](https://user-images.githubusercontent.com/9963310/96173504-41ae9100-0f28-11eb-8e0f-c5367da7dfe0.png) 
+![Motion Planner Settings](https://user-images.githubusercontent.com/9963310/98091935-5bd3f300-1e86-11eb-9ead-9aa8251c5398.png)
 
 **Allow continuous motion?** will enable path recording and will defer planning and execution until there is functional requirement to wait for motion completion. **Caution**: When enabling this on an existing machine, be aware that this may change its behavior. There might be constellation when this requires changes in G-code. Be careful! 
 
@@ -135,7 +135,9 @@ If you have the ReferenceAdvancedMotionPlanner selected, the **Motion Planner** 
 
 ### Test Motion 
 
-You can define a test motion with 4 locations and speed factors to test the motion planner in a repeatable way. Press the **Test** button on the **Motion Planner Diagnostics** tab to do so.
+You can define a test motion with 4 locations and speed factors to test the motion planner in a repeatable way. Be extremely cautious when switching off the **Safe Z?** between locations. OpenPnP will then move in a straight line from location to location with no regard to any obstacles.
+
+Press the **Test** button on the **Motion Planner Diagnostics** tab to execute the Test Motion.
 
 ## Motion Planner Diagnostics
 
