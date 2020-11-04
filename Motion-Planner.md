@@ -147,7 +147,7 @@ The following example shows a move with Motion Blending. It is clearly visible, 
 
 ![Motion Planer Diagnostics](https://user-images.githubusercontent.com/9963310/96174107-1e381600-0f29-11eb-8e0a-9a4bd160963b.png)
 
-**Enabled?** switches diagnostics on. This might add a slight CPU load penalty.  
+**Diagnostics?** switches diagnostics on. This might add a slight CPU load penalty.  
 
 The **Test** button plays the **Test Motion** defined on the previous tab. It does it forward/backward, alternating.
 
