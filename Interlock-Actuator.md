@@ -1,7 +1,7 @@
 ## What is it?
 The InterlockActuator interlocks with axis movement. It can actuate itself according to specific axis positions or movements. Or it can read itself to confirm the safety of axis movement or lock against it, avoiding potentially dangerous machine situations. 
 
-Use cases:
+Example use cases:
 * Actuate pneumatic nozzles up/down based on a virtual Z axis. 
 * Prevent X, Y movement as long as a sensor indicates that the nozzles are not retracted.
 * Prevent X, Y movement as long as a sensor indicates that a drag pin is not retracted, when it should.
@@ -9,6 +9,8 @@ Use cases:
 * Unlock a machine door when axes are parked. 
 * Prevent axis movement when a door is sensed unlocked. 
 * Signal a moving machine (safety indicator).
+
+Many more are possible.
 
 ## Creating an InterlockActuator
 In the Machine Setup go to the Head and add a new InterlockActuator:
