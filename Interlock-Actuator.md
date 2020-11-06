@@ -35,29 +35,29 @@ In the Machine Setup go to the Head and add a new InterlockActuator:
 
 * **None**: The Actuator is effectively inactive.
 
-* **Signal Axes Moving**: Signals itself boolean ON whenever one or more of the given **Axes (1-4)** are moving. 
+* **Signal Axes Moving**: Signals itself boolean ON whenever _one or more_ of the given **Axes (1-4)** are moving. 
 
-* **Signal Axes Standing Still**: Signals itself boolean ON whenever one _all_ of the given **Axes (1-4)** are standing still. 
+* **Signal Axes Standing Still**: Signals itself boolean ON whenever _all_ of the given **Axes (1-4)** are standing still. 
 
-* **Signal Axes Inside Safe Zone**: Signals itself boolean ON whenever all of the given **Axes (1-4)** are _inside_ their respective Safe Zones. See the [[Axis Safe Zone configuration for more information|Machine-Axes#kinematic-settings--axis-limits]]. This is typically used with a single Z axis and its Safe Z Zone. 
+* **Signal Axes Inside Safe Zone**: Signals itself boolean ON whenever _all_ of the given **Axes (1-4)** are _inside_ their respective Safe Zones. See the [[Axis Safe Zone configuration for more information|Machine-Axes#kinematic-settings--axis-limits]]. This is typically used with a single Z axis and its Safe Z Zone. 
 
-* **Signal Axes Outside Safe Zone**: Signals itself boolean ON whenever one or more of the given **Axes (1-4)** are _outside_ their respective Safe Zones. 
+* **Signal Axes Outside Safe Zone**: Signals itself boolean ON whenever _one or more_ of the given **Axes (1-4)** are _outside_ their respective Safe Zones. 
 
-* **Signal Axes Parked**: Signals itself boolean ON whenever all of the given **Axes (1-4)** are in their Park position. This is the position the machine goes to, when pressing the corresponding `[P]` buttons on the Machine Controls. 
+* **Signal Axes Parked**: Signals itself boolean ON whenever _all_ of the given **Axes (1-4)** are in their Park position. This is the position the machine goes to, when pressing the corresponding `[P]` buttons on the Machine Controls. 
 
-* **Signal Axes Unparked**: Signals itself boolean ON whenever one or more of the given **Axes (1-4)** are _not_ in their Park position.  
+* **Signal Axes Unparked**: Signals itself boolean ON whenever _one or more_ of the given **Axes (1-4)** are _not_ in their Park position.  
 
 * **Confirm in Range Before Axes Move**: Before one or more of the given **Axes (1-4)** are about to be moved, the actuator reads itself as a numeric value (floating point value) and compares the reading to the **Confirmation range**. Two extra fields appear, where you can enter the lower and upper limits of the range. If the reading is within that range, the axis move is allowed. Otherwise, the current Job or user Action will be interrupted. 
 
   ![Confirmation Range](https://user-images.githubusercontent.com/9963310/98393188-3ba85d80-2059-11eb-92d2-623cb08cd226.png)
 
-* **Confirm in Range After Axes Move**: After one or more of the given **Axes (1-4)** have been moved, the actuator reads itself as a numeric value (floating point value) and compares the reading to the **Confirmation range**. If the reading is within that range, further operation is allowed. Otherwise, the current Job or user Action will be interrupted. 
+* **Confirm in Range After Axes Move**: After _one or more_ of the given **Axes (1-4)** have been moved, the actuator reads itself as a numeric value (floating point value) and compares the reading to the **Confirmation range**. If the reading is within that range, further operation is allowed. Otherwise, the current Job or user Action will be interrupted. 
 
-* **Confirm Match Before Axes Move**: Before one or more of the given **Axes (1-4)** are about to be moved, the actuator reads itself as a text value and compares the reading to the **Confirmation pattern**. Two extra fields appear, where you can enter the pattern and the option to match it using [Regular Expressions syntax](https://en.wikipedia.org/wiki/Regular_expression). If the reading is a match, the axis move is allowed. Otherwise, the current Job or user Action will be interrupted. 
+* **Confirm Match Before Axes Move**: Before _one or more_ of the given **Axes (1-4)** are about to be moved, the actuator reads itself as a text value and compares the reading to the **Confirmation pattern**. Two extra fields appear, where you can enter the pattern and the option to match it using [Regular Expressions syntax](https://en.wikipedia.org/wiki/Regular_expression). If the reading is a match, the axis move is allowed. Otherwise, the current Job or user Action will be interrupted. 
 
   ![Confirmation Pattern](https://user-images.githubusercontent.com/9963310/98394542-38ae6c80-205b-11eb-990e-48aea81dd7d6.png)
 
-* **Confirm Match After Axes Move**: After one or more of the given **Axes (1-4)** have been moved, the actuator reads itself as a text value and compares the reading to the **Confirmation pattern**. If the reading is a match, further operation is allowed. Otherwise, the current Job or user Action will be interrupted. 
+* **Confirm Match After Axes Move**: After _one or more_ of the given **Axes (1-4)** have been moved, the actuator reads itself as a text value and compares the reading to the **Confirmation pattern**. If the reading is a match, further operation is allowed. Otherwise, the current Job or user Action will be interrupted. 
 
 ### Interlock Conditions
 
