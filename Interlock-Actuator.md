@@ -45,8 +45,6 @@ In the Machine Setup go to the Head and add a new InterlockActuator:
 
 * **Signal Axes Unparked**: Signals itself boolean ON whenever one or more of the given **Axes (1-4)** are _not_ in their Park position.  
 
-* **Signal Axes Unparked**: Signals itself boolean ON whenever one or more of the given **Axes (1-4)** are _not_ in their Park position.  
-
 * **Confirm in Range Before Axes Move**: Before one or more of the given **Axes (1-4)** are about to be moved, the actuator reads itself as a numeric value (floating point value) and compares the reading to the **Confirmation range**. Two extra fields appear, where you can enter the lower and upper limits of the range. If the reading is within that range, the axis move is allowed. Otherwise, the current Job or user Action will be interrupted. 
 
   ![Confirmation Range](https://user-images.githubusercontent.com/9963310/98393188-3ba85d80-2059-11eb-92d2-623cb08cd226.png)
@@ -59,7 +57,31 @@ In the Machine Setup go to the Head and add a new InterlockActuator:
 
 * **Confirm Match After Axes Move**: After one or more of the given **Axes (1-4)** have been moved, the actuator reads itself as a text value and compares the reading to the **Confirmation pattern**. If the reading is a match, further operation is allowed. Otherwise, the current Job or user Action will be interrupted. 
 
+### Interlock Conditions
 
+The interlock function described above is _subject to_ the conditions you can define here. 
+
+**Boolean Actuator** determines which actuator's last actuation state to consider as a precondition to apply the interlock function. As soon as you select an actuator, an additional field appears to select the state wanted for the interlock to happen. When OpenPnP is started or after a homing operation, the actuation state is considered unknown. You can choose to include or exclude the unknown state:  
+
+![Condition State](https://user-images.githubusercontent.com/9963310/98395354-6ba53000-205c-11eb-8624-ba4791171ea9.png)
+
+The two **Speed [%]** range limits determine under which machine speed range the interlock should apply. If the interlock is preventing potentially dangerous moves, you can still allow it to be overridden under low Speed [%]. 
+
+![Speed Range](https://user-images.githubusercontent.com/9963310/98395737-fd14a200-205c-11eb-8291-afe001405e9e.png)
+
+## Useful Configuration Examples
+
+### Pneumatic Nozzles
+
+![Pneumatic Z](https://user-images.githubusercontent.com/9963310/98396119-89bf6000-205d-11eb-879d-a108bef3e59b.png)
+
+Use this configuration to create a pneumatic nozzle (formerly known as a "Marek Nozzle"). Create a [[virtual Z axis|Machine-Axes#referencevirtualaxis]] and assign it to the Nozzle. Then create the InterlockActuator shown here to actuate the pneumatic valve to physically move as soon as the virtual axis reaches its Safe Z coordinate (which in case of a virtual axis is the same as the home coordinate).
+
+### Safety Confirmation Sensor on a Z Axis
+
+![Check Z Up](https://user-images.githubusercontent.com/9963310/98396529-2550d080-205e-11eb-9fd5-ee2ac5b7b102.png)
+
+Use this configuration to prohibit any movement of the X, Y, C axes when the actuator reads itself outside the given confirmation range. 
 
 
 
