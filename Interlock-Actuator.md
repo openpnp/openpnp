@@ -97,7 +97,7 @@ Use this configuration to prohibit any movement of the X, Y, C axes when the Int
 
 ![Drag Pin Confirm](https://user-images.githubusercontent.com/9963310/98399736-29cbb800-2063-11eb-8ff3-57e94c8a3d78.png)
 
-Assume you have a DRAG_PIN actuator that engages the drag pin. Use this configuration to prohibit any movement of the X, Y, C axes when the InterlockActuator reads itself not matching the confirmation pattern. The interlock is subject to the DRAG_PIN actuator being switched off. This is obviously needed to allow the drag move itself. The example interlock makes an exception for very slow movement. This might be useful in order to try and gently de-block a stuck pin. 
+Assume you have a DRAG_PIN actuator that engages the drag pin. Use this configuration to prohibit any movement of the X, Y axes when the InterlockActuator reads itself not matching the confirmation pattern. The interlock is subject to the DRAG_PIN actuator being switched off. This is obviously needed to allow the drag move itself. The example interlock makes an exception for very slow movement. This might be useful in order to try and gently de-block a stuck pin. 
 
 ### Handling a Safety Machine Door
 
