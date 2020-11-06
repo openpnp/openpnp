@@ -81,7 +81,18 @@ Use this configuration to create a pneumatic nozzle (formerly known as a "Marek 
 
 ![Check Z Up](https://user-images.githubusercontent.com/9963310/98396529-2550d080-205e-11eb-9fd5-ee2ac5b7b102.png)
 
-Use this configuration to prohibit any movement of the X, Y, C axes when the actuator reads itself outside the given confirmation range. 
+Use this configuration to prohibit any movement of the X, Y, C axes when the InterlockActuator reads itself outside the given confirmation range. 
 
+### Safety Confirmation Sensor on a Drag Pin
 
+![Drag Pin Confirm](https://user-images.githubusercontent.com/9963310/98399736-29cbb800-2063-11eb-8ff3-57e94c8a3d78.png)
+
+Assume you have a DRAG_PIN actuator that engages the drag pin. Use this configuration to prohibit any movement of the X, Y, C axes when the InterlockActuator reads itself not matching the confirmation pattern. The interlock is subject to the DRAG_PIN actuator being switched off. This is obviously needed to allow the drag move itself. The example interlock makes an exception for very slow movement. This might be useful in order to try and gently de-block a stuck pin. 
+
+### Handling a Safety Machine Door
+
+a) ![Door Closed](https://user-images.githubusercontent.com/9963310/98400604-96938200-2064-11eb-9777-342bbcbebb66.png)
+ b) ![Signal Parked](https://user-images.githubusercontent.com/9963310/98400561-824f8500-2064-11eb-8b07-e804a64ea16f.png)
+
+The two InterlockActuators work together to a) only allow motion with a closed door confirmed by a sensor and b) unlock the door only when the axes are parked.  
 
