@@ -8,7 +8,7 @@ Example use cases:
 * Confirm that motion has completed without any faults (steps lost fault signal etc.).
 * Unlock a machine door when axes are parked. 
 * Prevent axis movement when a door is sensed unlocked. 
-* Signal a moving machine (safety indicator).
+* Signal a moving machine [e.g. for a Stack Light](https://en.wikipedia.org/wiki/Stack_light).
 
 Many more are possible.
 
