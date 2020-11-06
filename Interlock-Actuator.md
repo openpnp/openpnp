@@ -71,7 +71,7 @@ The two **Speed [%]** range limits determine under which machine speed range the
 
 ![Speed Range](https://user-images.githubusercontent.com/9963310/98395737-fd14a200-205c-11eb-8291-afe001405e9e.png)
 
-## Machine Coordination Considerations
+### Machine Coordination 
 
 The actuation and readings of an InterlockActuator must naturally be coordinated to the machine motion. This is configured with **Machine Coordination** [[(explained in more detail here)|Motion-Planner#actuator-machine-coordination]]. Usually the default settings are fine. 
 
