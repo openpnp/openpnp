@@ -49,10 +49,15 @@ In the Machine Setup go to the Head and add a new InterlockActuator:
 
 * **Confirm in Range Before Axes Move**: Before one or more of the given **Axes (1-4)** are about to be moved, the actuator reads itself as a numeric value (floating point value) and compares the reading to the **Confirmation range**. Two extra fields appear, where you can enter the lower and upper limits of the range. If the reading is within that range, the axis move is allowed. Otherwise, the current Job or user Action will be interrupted. 
 
-![Confirmation Range](https://user-images.githubusercontent.com/9963310/98393188-3ba85d80-2059-11eb-92d2-623cb08cd226.png)
+  ![Confirmation Range](https://user-images.githubusercontent.com/9963310/98393188-3ba85d80-2059-11eb-92d2-623cb08cd226.png)
 
 * **Confirm in Range After Axes Move**: After one or more of the given **Axes (1-4)** have been moved, the actuator reads itself as a numeric value (floating point value) and compares the reading to the **Confirmation range**. If the reading is within that range, further operation is allowed. Otherwise, the current Job or user Action will be interrupted. 
 
+* **Confirm Match Before Axes Move**: Before one or more of the given **Axes (1-4)** are about to be moved, the actuator reads itself as a text value and compares the reading to the **Confirmation pattern**. Two extra fields appear, where you can enter the pattern and the option to match it using [Regular Expressions syntax](https://en.wikipedia.org/wiki/Regular_expression). If the reading is a match, the axis move is allowed. Otherwise, the current Job or user Action will be interrupted. 
+
+  ![Confirmation Pattern](https://user-images.githubusercontent.com/9963310/98394542-38ae6c80-205b-11eb-990e-48aea81dd7d6.png)
+
+* **Confirm Match After Axes Move**: After one or more of the given **Axes (1-4)** have been moved, the actuator reads itself as a text value and compares the reading to the **Confirmation pattern**. If the reading is a match, further operation is allowed. Otherwise, the current Job or user Action will be interrupted. 
 
 
 
