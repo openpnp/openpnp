@@ -75,7 +75,7 @@ The two **Speed [%]** range limits determine under which machine speed range the
 
 The actuation and readings of an InterlockActuator must naturally be coordinated to the machine motion. This is configured with **Machine Coordination** [[(explained in more detail here)|Motion-Planner#actuator-machine-coordination]]. Usually the default settings are fine. 
 
-![Machine Coordination](https://user-images.githubusercontent.com/9963310/98402881-5209e580-2068-11eb-9834-9a078893b4dc.png)
+![Machine Coordination](https://user-images.githubusercontent.com/9963310/98403934-048e7800-206a-11eb-988e-212ac69e887e.png)
 
 It must be mentioned that InterlockActuators will interrupt continuous [[Motion Path Planning|Motion-Planner#motion-path-planning]] resulting in a performance penalty and possibly preventing advanced optimizations such as [[Motion Blending|Motion-Planner#motion-blending]]. Therefore, these should only be used when necessary. 
 
