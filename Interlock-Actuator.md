@@ -1,7 +1,7 @@
 ## What is it?
 The InterlockActuator interlocks with axis movement. It can actuate itself according to specific axis positions or movements. Or it can read itself to confirm the safety of axis movement or lock against it, avoiding potentially dangerous machine situations. 
 
-Example use cases:
+Example use cases (some are [documented below](#useful-configuration-examples)):
 * Actuate pneumatic nozzles up/down based on a virtual Z axis. 
 * Prevent X, Y movement as long as a sensor indicates that the nozzles are not retracted.
 * Prevent X, Y movement as long as a sensor indicates that a drag pin is not retracted, when it should.
@@ -87,7 +87,10 @@ It must be mentioned that InterlockActuators will interrupt continuous [[Motion 
 
 Use this configuration to create a pneumatic nozzle (formerly known as a "Marek Nozzle"). Create a [[virtual Z axis|Machine-Axes#referencevirtualaxis]] and assign it to the nozzle. Then create the InterlockActuator shown here to actuate ON the pneumatic valve to physically move up the nozzle when the virtual axis is about to move to its Safe Z coordinate (actuation _before_ the move). It will actuate OFF to move the Nozzle down when the virtual Z axis has completed a move that leaves the Safe Z coordinate (actuation _after_ the move). 
 
-**Notes:** In case of a  [[virtual axis|Machine-Axes#referencevirtualaxis]] the Safe Z coordinate is the same as the home coordinate. The _before/after_ move characteristic is only relevant if other axes than Z are moved at the same time, for example a diagonal move, in a nozzle tip changing move. You should then of course be aware of the order and timing with which these physical movements happen. You might want to enable the [Machine Coordination](#machine-coordination) **After Actuation** option, if the pneumatic action takes a considerable amount of time to complete and its completion is acknowledged by the controller's flow-control, `M400` or similar.
+**Notes:** 
+* In case of a  [[virtual axis|Machine-Axes#referencevirtualaxis]] the Safe Z coordinate is the same as the home coordinate. 
+* The _before/after_ move characteristic is only relevant if other axes than Z are moved at the same time, for example a diagonal move, in a nozzle tip changing move. You should then of course be aware of the order and timing with which these physical movements happen. 
+* You might want to enable the [Machine Coordination](#machine-coordination) **After Actuation** option, if the pneumatic action takes a considerable amount of time to complete and its completion is acknowledged by the controller's flow-control, `M400` or similar.
 
 ### Safety Confirmation Sensor on a Z Axis
 
