@@ -39,7 +39,7 @@ In the Machine Setup go to the Head and add a new InterlockActuator:
 
 * **Signal Axes Standing Still**: Signals itself boolean ON whenever _all_ of the given **Axes (1-4)** are standing still. 
 
-* **Signal Axes Inside Safe Zone**: Signals itself boolean ON when _all_ of the given **Axes (1-4)** are moving _inside_ their respective Safe Zones. See the [[Axis Safe Zone configuration for more information|Machine-Axes#kinematic-settings--axis-limits]]. This is typically used with a single Z axis and its Safe Z Zone (see the [example below](pneumatic-nozzles)). The actuation happens before the move if it goes into the Safe Zone. The actuation happens after the move, if it goes away from the Safe Zone. 
+* **Signal Axes Inside Safe Zone**: Signals itself boolean ON when _all_ of the given **Axes (1-4)** are moving _inside_ their respective Safe Zones. See the [[Axis Safe Zone configuration for more information|Machine-Axes#kinematic-settings--axis-limits]]. This is typically used with a single Z axis and its Safe Z Zone (see the [example below](#pneumatic-nozzles)). The actuation happens before the move if it goes into the Safe Zone. The actuation happens after the move, if it goes away from the Safe Zone. 
 
 * **Signal Axes Outside Safe Zone**: Signals itself boolean ON when _one or more_ of the given **Axes (1-4)** are moving _outside_ their respective Safe Zones. 
 
