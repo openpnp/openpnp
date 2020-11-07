@@ -85,7 +85,11 @@ It must be mentioned that InterlockActuators will interrupt continuous [[Motion 
 
 ![Pneumatic Z](https://user-images.githubusercontent.com/9963310/98396119-89bf6000-205d-11eb-879d-a108bef3e59b.png)
 
-Use this configuration to create a pneumatic nozzle (formerly known as a "Marek Nozzle"). Create a [[virtual Z axis|Machine-Axes#referencevirtualaxis]] and assign it to the Nozzle. Then create the InterlockActuator shown here to actuate the pneumatic valve to physically move as soon as the virtual axis reaches its Safe Z coordinate (which in case of a virtual axis is the same as the home coordinate).
+Use this configuration to create a pneumatic nozzle (formerly known as a "Marek Nozzle"). Create a [[virtual Z axis|Machine-Axes#referencevirtualaxis]] and assign it to the nozzle. Then create the InterlockActuator shown here to actuate ON the pneumatic valve to physically move up the nozzle when the virtual axis is about to move to its Safe Z coordinate (_before_ the move). It will actuate OFF when the virtual Z axis has completed a move to leave the Safe Z coordinate (_after_ the move). 
+
+Note, in case of a  [[virtual axis|Machine-Axes#referencevirtualaxis]] the Safe Z coordinate is the same as the home coordinate. The _before/after_ move characteristic is only relevant if other axes than Z are moved at the same time, for example a diagonal move, in a nozzle tip changing move. You should then of course be aware of the order in which these physical event happen. 
+
+You might want to enable the [[Machine Coordination|#machine-coordination]] **After Actuation** option, if the pneumatic action takes a considerable amount of time to complete and its completion is acknowledged by the controller's flow-control, `M400` or similar.
 
 ### Safety Confirmation Sensor on a Z Axis
 
