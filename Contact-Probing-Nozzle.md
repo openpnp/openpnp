@@ -38,9 +38,11 @@ An example (for Smoothieware) could be:
 {False:M400         ; Wait until machine has stopped }
 {False:M114.2       ; Report current realtime position, as M114 does not report rotation }
 ```
-Note, we are using M400 followed by M114.2 instead of plain M114 because Smoothieware does not report the rotation axis with M114. That's an ugly HACK, I will try to find a better solution soon. 
+Note, we are using M400 followed by M114.2 instead of plain M114 because Smoothieware does not report the rotation axis with M114. That's an ugly HACK. 
 
-You need to define the POSITION_REPORT_REGEX to read back the probed Z i.e. to get OpenPNP back in sync with the machine position after probing. 
+**Preview**: this has been resolved in the [[Advanced Motion Control]] version of OpenPnP 2.0 (currently the [Testing Version](https://openpnp.org/test-downloads/)) and improved [[Motion Controller Firmwares]]. 
+
+For now, you need to define the POSITION_REPORT_REGEX to read back the probed Z i.e. to get OpenPNP back in sync with the machine position after probing. 
 
 ![grafik](https://user-images.githubusercontent.com/9963310/69497644-d149ec00-0edf-11ea-9af8-089f69e3eaac.png)
 
