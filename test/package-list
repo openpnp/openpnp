@@ -12,7 +12,6 @@ org.openpnp.gui.tablemodel
 org.openpnp.gui.wizards
 org.openpnp.imgur
 org.openpnp.logging
-org.openpnp.machine.marek
 org.openpnp.machine.neoden4
 org.openpnp.machine.neoden4.wizards
 org.openpnp.machine.rapidplacer
