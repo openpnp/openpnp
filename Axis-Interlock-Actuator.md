@@ -1,5 +1,5 @@
 ## What is it?
-The InterlockActuator interlocks with axis movement. It can actuate itself according to specific axis positions or movements. Or it can read itself to confirm the safety of axis movement or lock against it, avoiding potentially dangerous machine situations. 
+An axis interlock actuator can interfere with axis movement. It can actuate itself according to specific axis positions or movements. Or it can read itself to confirm the safety of axis movement or lock against it, avoiding potentially dangerous machine situations. 
 
 Example use cases (some are [documented below](#useful-configuration-examples)):
 * Actuate pneumatic nozzles up/down based on a virtual Z axis. 
@@ -31,7 +31,7 @@ A new **Axis Interlock** Wizard tab will appear.
 
 **Interlock Type** determines the central function of the actuator. 
 
-![Interlock Type](https://user-images.githubusercontent.com/9963310/98391311-c471ca00-2056-11eb-88ce-85f303b3f158.png)
+![Interlock Type](https://user-images.githubusercontent.com/9963310/98463868-e4bc9880-21be-11eb-82c8-1bf68c61fe63.png)
 
 * **None**: The Actuator is effectively inactive.
 
