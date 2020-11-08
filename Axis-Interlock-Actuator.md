@@ -1,5 +1,5 @@
 ## What is it?
-An axis interlock actuator can interfere with axis movement. It can actuate itself according to specific axis positions or movements. Or it can read itself to confirm the safety of axis movement or lock against it, avoiding potentially dangerous machine situations. 
+An axis interlock actuator can automatically act when axis movement happens. It can actuate itself according to specific axis positions or movements, or it can read itself to confirm the safety of axis movement and lock against it, avoiding potentially dangerous machine situations. 
 
 Example use cases (some are [documented below](#useful-configuration-examples)):
 * Actuate pneumatic nozzles up/down based on a virtual Z axis. 
@@ -13,7 +13,7 @@ Example use cases (some are [documented below](#useful-configuration-examples)):
 Many more are possible.
 
 ## Creating an Actuator for Axis Interlock
-In the Machine Setup go to the Head and add a new Actuator using the `+` button. Any of the Actuator implementation can be chosen. Refer to the [[Setup and Calibration: Actuators]] page for more information about how the actuators are set up. This page will only discuss the extra Axis Interlock function.
+In the Machine Setup go to the Head and add a new Actuator using the `+` button. Any of the Actuator implementation can be used for axis interlock functions. Refer to the [[Setup and Calibration: Actuators]] page for more information about how the actuators are set up. This page will only discuss the extra Axis Interlock functionality.
 
 ![Creating an Interlock Actuator](https://user-images.githubusercontent.com/9963310/98463289-6f4ec900-21ba-11eb-969b-2b20a9265c07.png)
 
@@ -109,5 +109,5 @@ Assume you have a DRAG_PIN actuator that engages the drag pin. Use this configur
 a) ![Door Sensor](https://user-images.githubusercontent.com/9963310/98463785-429cb080-21be-11eb-8c2a-ef8d93357116.png)
  b) ![Door Lock](https://user-images.githubusercontent.com/9963310/98463814-8394c500-21be-11eb-837f-aa640bf3525c.png)
 
-The two interlocking actuators work together to a) only allow motion with a closed door confirmed by a sensor and b) lock the door as soon as the axes move away from being parked.  
+The two axis interlock actuators work together to a) only allow motion with a closed door confirmed by a sensor and b) lock the door as soon as the axes move away from being parked.  
 
