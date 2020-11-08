@@ -12,22 +12,22 @@ Example use cases (some are [documented below](#useful-configuration-examples)):
 
 Many more are possible.
 
-## Creating an InterlockActuator
-In the Machine Setup go to the Head and add a new InterlockActuator:
+## Creating an Actuator for Axis Interlock
+In the Machine Setup go to the Head and add a new Actuator using the `+` button. Any of the Actuator implementation can be chosen. Refer to the [[Setup and Calibration: Actuators]] page for more information about how the actuators are set up. This page will only discuss the extra Axis Interlock function.
 
-![Creating an Interlock Actuator](https://user-images.githubusercontent.com/9963310/98390153-482ab700-2055-11eb-9ca5-557f82dd2e91.png)
+![Creating an Interlock Actuator](https://user-images.githubusercontent.com/9963310/98463289-6f4ec900-21ba-11eb-969b-2b20a9265c07.png)
+
+Enable the **Axis Interlock** functionality and press Apply.
+
+![Enabling the Axis Interlock](https://user-images.githubusercontent.com/9963310/98463375-1e8ba000-21bb-11eb-91fd-5c23bade7c9c.png)
+
+A new **Axis Interlock** Wizard tab will appear. 
 
 ## General Configuration 
 
-![General Configuration](https://user-images.githubusercontent.com/9963310/98390535-cc7d3a00-2055-11eb-9095-ec8ac97056bf.png)
+![General Configuration](https://user-images.githubusercontent.com/9963310/98463419-73c7b180-21bb-11eb-93ec-66dcb58cd22f.png)
 
-### Properties
-
-**Driver** determines on which driver (i.e. the connected controller) the actuator is actuated or read. 
-
-**Name** sets the name, by which the Actuator is identified (keep it stable, because Actuators are often referenced by name from other machine components). 
-
-### Interlock Actuation
+### Axis Interlock
 
 **Interlock Type** determines the central function of the actuator. 
 
@@ -65,7 +65,7 @@ The interlock function described above is _subject to_ the conditions you can de
 
 **Boolean Actuator** determines which actuator's last actuation state to consider as a precondition to apply the interlock function. As soon as you select an actuator, an additional field appears to select the state wanted for the interlock to happen. When OpenPnP is started or after a homing operation, the actuation state is considered unknown. You can choose to include or exclude the unknown state:  
 
-![Condition State](https://user-images.githubusercontent.com/9963310/98395354-6ba53000-205c-11eb-8624-ba4791171ea9.png)
+![Condition State](https://user-images.githubusercontent.com/9963310/98463636-ea18e380-21bc-11eb-9f35-0e79cbdb7a5a.png)
 
 The two **Speed [%]** range limits determine under which machine speed range the interlock should apply. If the interlock is preventing potentially dangerous moves, you can still allow it to be overridden under low Speed [%]. 
 
@@ -83,7 +83,7 @@ It must be mentioned that InterlockActuators will interrupt continuous [[Motion 
 
 ### Pneumatic Nozzles
 
-![Pneumatic Z](https://user-images.githubusercontent.com/9963310/98396119-89bf6000-205d-11eb-879d-a108bef3e59b.png)
+![Pneumatic Z](https://user-images.githubusercontent.com/9963310/98463670-25b3ad80-21bd-11eb-96bf-3f56d9fab4a1.png)
 
 Use this configuration to create a pneumatic nozzle (formerly known as a "Marek Nozzle"). Create a [[virtual Z axis|Machine-Axes#referencevirtualaxis]] and assign it to the nozzle. Then create the InterlockActuator shown here to actuate ON the pneumatic valve to physically move up the nozzle when the virtual axis is about to move to its Safe Z coordinate (actuation _before_ the move). It will actuate OFF to move the Nozzle down when the virtual Z axis has completed a move that leaves the Safe Z coordinate (actuation _after_ the move). 
 
@@ -94,20 +94,20 @@ Use this configuration to create a pneumatic nozzle (formerly known as a "Marek 
 
 ### Safety Confirmation Sensor on a Z Axis
 
-![Check Z Up](https://user-images.githubusercontent.com/9963310/98396529-2550d080-205e-11eb-9fd5-ee2ac5b7b102.png)
+![Check Z Up](https://user-images.githubusercontent.com/9963310/98463707-8642ea80-21bd-11eb-8138-6d573e14144e.png)
 
 Use this configuration to prohibit any movement of the X, Y, C axes when the InterlockActuator reads itself outside the given confirmation range. 
 
 ### Safety Confirmation Sensor on a Drag Pin
 
-![Drag Pin Confirm](https://user-images.githubusercontent.com/9963310/98399736-29cbb800-2063-11eb-8ff3-57e94c8a3d78.png)
+![Drag Pin Confirm](https://user-images.githubusercontent.com/9963310/98463716-a7a3d680-21bd-11eb-9972-07e405a58e02.png)
 
 Assume you have a DRAG_PIN actuator that engages the drag pin. Use this configuration to prohibit any movement of the X, Y axes when the InterlockActuator reads itself not matching the confirmation pattern. The interlock is subject to the DRAG_PIN actuator being switched off. This is obviously needed to allow the drag move itself. The example interlock makes an exception for very slow movement. This might be useful in order to try and gently de-block a stuck pin. 
 
 ### Handling a Safety Machine Door
 
-a) ![Door Closed](https://user-images.githubusercontent.com/9963310/98400604-96938200-2064-11eb-9777-342bbcbebb66.png)
- b) ![Signal Parked](https://user-images.githubusercontent.com/9963310/98400561-824f8500-2064-11eb-8b07-e804a64ea16f.png)
+a) ![Door Sensor](https://user-images.githubusercontent.com/9963310/98463785-429cb080-21be-11eb-8c2a-ef8d93357116.png)
+ b) ![Door Lock](https://user-images.githubusercontent.com/9963310/98463814-8394c500-21be-11eb-837f-aa640bf3525c.png)
 
-The two InterlockActuators work together to a) only allow motion with a closed door confirmed by a sensor and b) unlock the door only when the axes are parked.  
+The two interlocking actuators work together to a) only allow motion with a closed door confirmed by a sensor and b) lock the door as soon as the axes move away from being parked.  
 
