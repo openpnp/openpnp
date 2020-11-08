@@ -25,10 +25,14 @@ import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.CoordinateAxis;
+import org.openpnp.spi.Head;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Locatable.LocationOption;
+import org.openpnp.util.MovableUtils;
 import org.simpleframework.xml.Element;
 
 /**
@@ -148,4 +152,39 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
             return length;
         }
     }
+
+    /**
+     * Tries to move the axis to the specified raw coordinate in a safe way. 
+     * 
+     * @param coordinate
+     * @throws Exception
+     */
+    public void moveAxis(Length coordinate) throws Exception {
+        // To be safe we need to go through a HeadMountable and the full motion stack.
+        // Find one that maps the axis.
+        HeadMountable axisMover = getDefaultHeadMountable();
+        if (axisMover == null) {
+            throw new Exception("The axis "+getName()+" is not mapped to any HeadMountables. Can't move safely.");
+        }
+        axisMover.moveToSafeZ();
+        AxesLocation axesLocation = axisMover.toRaw(axisMover.toHeadLocation(axisMover.getLocation()))
+                .put(new AxesLocation(this, coordinate));
+        Location location = axisMover.toHeadMountableLocation(axisMover.toTransformed(axesLocation));
+        MovableUtils.moveToLocationAtSafeZ(axisMover, location);
+    }
+
+    /**
+     * @return The first HeadMountable that has this axis assigned. Used to capture and safely position an axis.
+     */
+    public HeadMountable getDefaultHeadMountable() {
+        for (Head head : Configuration.get().getMachine().getHeads()) {
+            for (HeadMountable hm : head.getHeadMountables()) {
+                if (hm.getMappedAxes(Configuration.get().getMachine()).contains(this)) {    
+                    return hm;
+                }
+            }
+        }
+        return null;
+    }
+
 }

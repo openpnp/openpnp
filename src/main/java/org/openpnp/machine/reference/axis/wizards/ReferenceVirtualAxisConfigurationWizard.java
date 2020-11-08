@@ -69,7 +69,7 @@ public class ReferenceVirtualAxisConfigurationWizard extends AbstractAxisConfigu
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         RowSpec.decode("bottom:default:grow"),}));
 
-        JLabel lblHomeCoordinate = new JLabel("Home Coordinate");
+        JLabel lblHomeCoordinate = new JLabel("Home / Safe Z");
         panelTransformation.add(lblHomeCoordinate, "2, 2, right, default");
 
         homeCoordinate = new JTextField();

@@ -705,10 +705,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     -1 : getTimeoutAtMachineSpeed());
         }
 
-        // TODO: determine if it is technically possible to have the responses correctly associated if this is a 
-        // multi-move. It has been discussed, that using N letter line numbers could help. 
-        // See: https://groups.google.com/g/openpnp/c/bEVZvYoXO98/m/Cc0VxGGYBwAJ
-
         /*
          * If moveToCompleteRegex is specified we need to wait until we match the regex in a
          * response before continuing. We first search the initial responses from the
@@ -716,6 +712,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
          * timeoutMillis while searching the responses for the regex. As soon as it is
          * matched we continue. If it's not matched within the timeout we throw an
          * Exception.
+         * 
+         * AFAIK, this was used on TinyG and it is now obsolete with new firmware :  
+         * https://makr.zone/tinyg-new-g-code-commands-for-openpnp-use/577/
          */
         String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
         if (moveToCompleteRegex != null) {
@@ -1078,7 +1077,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             trailingZeroes = compressDecimal(trailingZeroes, compressedCommand);
             decimal = false;
             command = compressedCommand.toString();
-            Logger.trace("Compressed Gcode: {}", command);
+            //Logger.trace("Compressed Gcode: {}", command);
         }
         if (backslashEscapedCharactersEnabled) {
             command = unescape(command);
@@ -1141,7 +1140,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 // Add to the responseQueue for further processing by the caller.
                 responseQueue.offer(line);
             }
-            Logger.trace("[{}] diconnectRequested, bye-bye.", getCommunications().getConnectionName());
+            Logger.trace("[{}] disconnectRequested, bye-bye.", getCommunications().getConnectionName());
         }
     }
 
@@ -1427,6 +1426,22 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 disconnect();
             }
         }
+    }
+
+    public String getFirmwareProperty(String name, String defaultValue) {
+        if (detectedFirmware == null) {
+            return defaultValue;
+        }
+        Pattern pattern = Pattern.compile("([A-Za-z0-9_\\-]+):?([^,]+)?");
+        Matcher matcher = pattern.matcher(detectedFirmware);
+        while (matcher.find()) {
+            if (name.equals(matcher.group(1))) {
+                String value = matcher.group(2).trim();
+                value = value.replace("%3A", ":");
+                return value;
+            }
+        }
+        return defaultValue;
     }
 
     /**

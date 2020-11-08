@@ -297,7 +297,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
                     //Logger.error("[{}] {}", getCommunications().getConnectionName(), e);
                 }
             }
-            Logger.trace("[{}] diconnectRequested, bye-bye.", getCommunications().getConnectionName());
+            Logger.trace("[{}] disconnectRequested, bye-bye.", getCommunications().getConnectionName());
         }
     }
 

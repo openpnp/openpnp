@@ -8,6 +8,7 @@ import org.openpnp.Scripting;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ScriptActuatorConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
 
 public class ScriptActuator extends ReferenceActuator {
@@ -28,9 +29,11 @@ public class ScriptActuator extends ReferenceActuator {
         if (isCoordinatedBeforeActuate()) {
             coordinateWithMachine(false);
         }
+        Logger.debug("{}.actuate({})", getName(), on);
         Map<String, Object> globals = new HashMap<>();
         globals.put("actuateBoolean", on);
         this.execute(globals);
+        setLastActuationValue(on);
         if (isCoordinatedAfterActuate()) {
             coordinateWithMachine(true);
         }
@@ -41,9 +44,11 @@ public class ScriptActuator extends ReferenceActuator {
         if (isCoordinatedBeforeActuate()) {
             coordinateWithMachine(false);
         }
+        Logger.debug("{}.actuate({})", getName(), value);
         Map<String, Object> globals = new HashMap<>();
         globals.put("actuateDouble", value);
         this.execute(globals);
+        setLastActuationValue(value);
         if (isCoordinatedAfterActuate()) {
             coordinateWithMachine(true);
         }

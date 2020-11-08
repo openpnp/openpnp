@@ -75,7 +75,8 @@ public class ReferenceAdvancedMotionPlannerDiagnosticsWizard extends AbstractCon
                 applyAction.actionPerformed(e);
                 HeadMountable selectedTool = MainFrame.get().getMachineControls().getSelectedTool();
                 UiUtils.submitUiMachineTask(() -> {
-                    if (motionPlanner.getInitialLocation(false) == null) {
+                    if (motionPlanner.getInitialLocation(false) == null
+                            || motionPlanner.getInitialLocation(true) == null) {
                         throw new Exception("Test Motion undefined. Please go to the Motion Planner tab and define/enable the Test Motion locations.");
                     }
                     Location l = selectedTool.getLocation();

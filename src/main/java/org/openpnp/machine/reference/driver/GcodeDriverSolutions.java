@@ -93,7 +93,8 @@ class GcodeDriverSolutions implements Solutions.Subject {
             }
         }
 
-        boolean modePAxis = false;
+        Integer firmwareAxesCount = null;
+        Integer firmwarePrimaryAxesCount = null;
         boolean smoothie = false;
         boolean grblSyntax = false;
         boolean tinyG = false;
@@ -128,14 +129,13 @@ class GcodeDriverSolutions implements Solutions.Subject {
             });
         }
         else {
-            if (gcodeDriver.getDetectedFirmware().contains("Smoothieware")) {
+            if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("Smoothieware")) {
                 smoothie = true;
-                grblSyntax = (gcodeDriver.getDetectedFirmware().contains("X-GRBL_MODE:1"));
-                // TODO: regex to parse the number
-                if (gcodeDriver.getDetectedFirmware().contains("X-PAXES:5") 
-                        || gcodeDriver.getDetectedFirmware().contains("X-PAXES:6") 
-                        || gcodeDriver.getDetectedFirmware().contains("13bbd1fa")/* first release had no X-PAXES variable*/ ) { 
-                    modePAxis = true;
+                grblSyntax = (gcodeDriver.getFirmwareProperty("X-GRBL_MODE", "").contentEquals("1"));
+                firmwareAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-AXES", "0"));
+                firmwarePrimaryAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-PAXES", "3"));
+                if (firmwarePrimaryAxesCount == firmwareAxesCount) {
+                    // OK.
                 }
                 else {
                     issues.add(new Solutions.PlainIssue(
@@ -155,11 +155,9 @@ class GcodeDriverSolutions implements Solutions.Subject {
                         "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#duet"));
             }
             else if (gcodeDriver.getDetectedFirmware().contains("Marlin")) {
-                // TODO: regex to parse the number
-                if (gcodeDriver.getDetectedFirmware().contains("AXIS_COUNT:4")
-                        ||gcodeDriver.getDetectedFirmware().contains("AXIS_COUNT:5")
-                        ||gcodeDriver.getDetectedFirmware().contains("AXIS_COUNT:6")) { 
-                    modePAxis = true;
+                firmwareAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("AXIS_COUNT", "0"));
+                if (firmwareAxesCount > 3) { 
+                    firmwarePrimaryAxesCount = firmwareAxesCount;
                 }
                 else {
                     issues.add(new Solutions.PlainIssue(
@@ -378,7 +376,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                 lettersOk = false;
             }
             else if (axis instanceof ReferenceControllerAxis) {
-                if (modePAxis) { 
+                if (firmwarePrimaryAxesCount != null && firmwarePrimaryAxesCount == firmwareAxesCount) { 
                     // Check rotation axes have the linear switch set.
                     if (axis.isRotationalOnController()) {
                         final boolean oldInvertLinearRotational = ((ReferenceControllerAxis) axis).isInvertLinearRotational();
@@ -482,6 +480,8 @@ class GcodeDriverSolutions implements Solutions.Subject {
                                 for (String variable : gcodeDriver.getAxisVariables(machine)) {
                                     commandBuilt += "{"+variable+"Jerk:"+variable+"%.0f} ";
                                 }
+                                // This needs a new-line: "It is an error to put a G-code from group 1 and a G-code from group 0 on the same line if both of
+                                // them use axis words." (RS274/NGC Interpreter - Version 3, §3.4)
                                 commandBuilt += "\n";
                             }
                             else {
@@ -635,6 +635,13 @@ class GcodeDriverSolutions implements Solutions.Subject {
         return serializer;
     }
 
+    /**
+     * Convert an existing GcodeDriver to a GcodeAsyncDriver while keeping all settings and 
+     * Axis/Actuator assignments. 
+     * 
+     * @param gcodeDriver
+     * @throws Exception
+     */
     public static void convertToAsync(GcodeDriver gcodeDriver) throws Exception {
         // Serialize the GcodeDriver
         Serializer serOut = createSerializer();

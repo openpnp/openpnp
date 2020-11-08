@@ -312,11 +312,26 @@ public class AxesLocation {
      */
     public LinkedHashSet<ControllerAxis> getAxes(Driver driver) {
         LinkedHashSet<ControllerAxis> axes = new LinkedHashSet<>();
+        for (ControllerAxis axis : getAxes(ControllerAxis.class)) {
+            if (driver == null || ((ControllerAxis) axis).getDriver() == driver) {
+                axes.add((ControllerAxis) axis);
+            }
+        }
+        return axes;
+    }
+
+    /**
+     * Get those axes from the AxesLocation that are of the given axisClass.
+     * 
+     * @param axisClass
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public <T extends Axis> LinkedHashSet<T> getAxes(Class<T> axisClass) {
+        LinkedHashSet<T> axes = new LinkedHashSet<>();
         for (Axis axis : getAxes()) {
-            if (axis instanceof ControllerAxis) {
-                if (driver == null || ((ControllerAxis) axis).getDriver() == driver) {
-                    axes.add((ControllerAxis) axis);
-                }
+            if (axisClass.isInstance(axis)) {
+                axes.add((T) axis);
             }
         }
         return axes;
@@ -329,7 +344,7 @@ public class AxesLocation {
      * @return
      */
     public LinkedHashSet<ControllerAxis> getControllerAxes() {
-        return getAxes(null);
+        return getAxes(ControllerAxis.class);
     }
 
     public boolean contains(Axis axis) {
@@ -353,13 +368,11 @@ public class AxesLocation {
      * @return
      */
     public boolean matches(AxesLocation other) {
-        for (Axis axis : getAxes()) {
-            if (axis instanceof ControllerAxis) {
-                if (!((ControllerAxis) axis).coordinatesMatch(
-                        this.getLengthCoordinate(axis), 
-                        other.getLengthCoordinate(axis))) {
-                    return false;
-                }
+        for (CoordinateAxis axis : getAxes(CoordinateAxis.class)) {
+            if (!axis.coordinatesMatch(
+                    this.getLengthCoordinate(axis), 
+                    other.getLengthCoordinate(axis))) {
+                return false;
             }
         }
         return true;
@@ -377,12 +390,11 @@ public class AxesLocation {
      * Set this AxesLocation to the axes as the current (planned) location.  
      */
     public void setToCoordinates() {
-        for (Axis axis : getAxes()) {
-            if (axis instanceof CoordinateAxis) {
-                ((CoordinateAxis) axis).setCoordinate(getCoordinate(axis));
-            }
+        for (CoordinateAxis axis : getAxes(CoordinateAxis.class)) {
+            axis.setCoordinate(getCoordinate(axis));
         }
     }
+
     /**
      * Set this AxesLocation to the axes of the given driver as the current driver location.  
      * 
@@ -512,15 +524,14 @@ public class AxesLocation {
     }
     public CoordinateAxis getAxis(Axis.Type axisType) throws Exception {
         CoordinateAxis found = null; 
-        for (Axis axis : getAxes()) {
-            if (axis instanceof CoordinateAxis 
-                    && axis.getType() == axisType) {
+        for (CoordinateAxis axis : getAxes(CoordinateAxis.class)) {
+            if (axis.getType() == axisType) {
                 if (found != null) {
                     // Make this future-proof: 
                     // Getting axes by type will no longer be allowed inside motion blending applications. 
                     throw new Exception("Axes "+found.getName()+" and "+axis.getName()+" have duplicate type "+axisType+" assigned.");
                 }
-                found = (CoordinateAxis) axis;
+                found = axis;
             }
         }
         return found;
@@ -562,28 +573,9 @@ public class AxesLocation {
     }
 
     public boolean isInSafeZone() {
-        for (Entry<Axis, Double> entry : location.entrySet()) {
-            if (entry.getKey() instanceof ReferenceControllerAxis) {
-                ReferenceControllerAxis refAxis = (ReferenceControllerAxis)entry.getKey();
-                double coordinate = entry.getValue(); 
-                if (refAxis.isSafeZoneLowEnabled()) {
-                    double limit = refAxis.getSafeZoneLow()
-                            .convertToUnits(getUnits()).getValue();
-                    if (coordinate < limit 
-                            && ! refAxis.coordinatesMatch(coordinate, limit)) {
-                        // Definitely out.
-                        return false;
-                    }
-                }
-                if (refAxis.isSafeZoneHighEnabled()) {
-                    double limit = refAxis.getSafeZoneHigh()
-                            .convertToUnits(getUnits()).getValue();
-                    if (coordinate > limit 
-                            && ! refAxis.coordinatesMatch(coordinate, limit)) {
-                        // Definitely out.
-                        return false;
-                    }
-                }
+        for (CoordinateAxis axis : getAxes(CoordinateAxis.class)) {
+            if (! axis.isInSafeZone(getLengthCoordinate(axis))) {
+                return false;
             }
         }
         return true;

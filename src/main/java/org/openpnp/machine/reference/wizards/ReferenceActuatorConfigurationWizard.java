@@ -57,7 +57,7 @@ public class ReferenceActuatorConfigurationWizard extends AbstractActuatorConfig
         contentPanel.add(panelProperties);
         panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {

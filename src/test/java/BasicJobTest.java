@@ -238,6 +238,9 @@ public class BasicJobTest {
                 // The expected location must be converted into raw coordinates, but it is already a head location.  
                 // Therefore, don't do this:  Location headLocation = headMountable.toHeadLocation(location);
                 this.location = headMountable.toRaw(location);
+                // Only controller coordinates (no virtual ones).
+                this.location = new AxesLocation(this.location.getControllerAxes(),
+                        (axis) -> this.location.getLengthCoordinate(axis));
                 this.speed = speed;
                 this.description = description;
             }

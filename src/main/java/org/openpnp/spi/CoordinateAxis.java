@@ -75,4 +75,6 @@ public interface CoordinateAxis extends Axis {
     public Length getHomeCoordinate();
 
     public void setHomeCoordinate(Length homeCoordinate);
+
+    public boolean isInSafeZone(Length coordinate);
 }

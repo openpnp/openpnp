@@ -373,8 +373,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         
         this.x = homeLocation.getCoordinate(homeLocation.getAxis(this, Axis.Type.X), units);
         this.y = homeLocation.getCoordinate(homeLocation.getAxis(this, Axis.Type.Y), units);
-
-        machine.fireMachineHeadActivity(machine.getDefaultHead());
     }
 
     @Override

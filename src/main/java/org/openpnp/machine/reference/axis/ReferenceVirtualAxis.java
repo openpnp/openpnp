@@ -58,4 +58,12 @@ public class ReferenceVirtualAxis extends AbstractCoordinateAxis implements Coor
     protected long getResolutionTicks(double coordinate) {
         return Math.round(coordinate/0.0001);
     }
+
+    @Override
+    public boolean isInSafeZone(Length coordinate) {
+        coordinate = coordinate.convertToUnits(AxesLocation.getUnits());
+        Length homeCoordinate = getHomeCoordinate().convertToUnits(AxesLocation.getUnits());
+        return coordinatesMatch(coordinate, homeCoordinate)
+                || coordinate.getValue() > homeCoordinate.getValue();
+    }
 }

@@ -67,7 +67,7 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
     public SimpleGraph getGraph() {
         return graph;
     }
-    public void setGraph(SimpleGraph graph) {
+    public synchronized void setGraph(SimpleGraph graph) {
         this.graph = graph;
         displayCycleMask = 0;
         if (graph != null) {
@@ -111,7 +111,7 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
     }
 
     @Override
-    public void paintComponent(Graphics g) {
+    public synchronized void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);

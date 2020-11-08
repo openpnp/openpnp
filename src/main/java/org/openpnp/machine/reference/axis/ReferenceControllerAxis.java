@@ -340,6 +340,30 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     @Override
+    public boolean isInSafeZone(Length coordinate) {
+        if (isSafeZoneLowEnabled()) {
+            // We have a lower Safe Z Zone limit.
+            Length limit = getSafeZoneLow().convertToUnits(coordinate.getUnits());
+            if (coordinate.getValue() < limit.getValue()
+                    && !coordinatesMatch(coordinate, limit)) {
+                // Definitely below the Safe Zone.
+                return false;
+            }
+        }
+        if (isSafeZoneHighEnabled()) {
+            // We have a upper Safe Z Zone limit.
+            Length limit = getSafeZoneHigh().convertToUnits(coordinate.getUnits());
+            if (coordinate.getValue() > limit.getValue()
+                    && !coordinatesMatch(coordinate, limit)) {
+                // Definitely above the Safe Zone.
+                return false;
+            }
+        }
+        // We're either inside the limits, or the Safe Zone is not enabled.
+        return true;
+    }
+
+    @Override
     public Wizard getConfigurationWizard() {
         return new ReferenceControllerAxisConfigurationWizard(this);
     }

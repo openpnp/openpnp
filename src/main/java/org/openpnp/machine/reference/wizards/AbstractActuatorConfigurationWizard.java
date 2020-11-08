@@ -22,26 +22,27 @@ package org.openpnp.machine.reference.wizards;
 import java.awt.Color;
 
 import javax.swing.BoxLayout;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.AxesComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
-import org.openpnp.gui.support.DriversComboBoxModel;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.NamedConverter;
+import org.openpnp.machine.reference.ActuatorInterlockMonitor;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;
-import org.openpnp.spi.Driver;
 import org.openpnp.spi.base.AbstractAxis;
 import org.openpnp.spi.base.AbstractMachine;
 
@@ -49,8 +50,8 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JComboBox;
-import javax.swing.JCheckBox;
+import java.awt.event.ItemListener;
+import java.awt.event.ItemEvent;
 
 @SuppressWarnings("serial")
 public abstract class AbstractActuatorConfigurationWizard extends AbstractConfigurationWizard {
@@ -84,6 +85,10 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
     private JLabel lblBeforeRead;
     private JCheckBox coordinatedBeforeRead;
 
+    private boolean reloadWizard;
+    private JLabel lblAxisInterlock;
+    private JCheckBox interlockActuator;
+
     public AbstractActuatorConfigurationWizard(AbstractMachine machine, ReferenceActuator actuator) {
         this.actuator = actuator;
         createUi(machine);
@@ -100,7 +105,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 "Coordinate System", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         panelOffsets.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -110,6 +115,8 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -162,15 +169,31 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         locationRotation = new JTextField();
         panelOffsets.add(locationRotation, "10, 6, fill, default");
         locationRotation.setColumns(10);
+        
+        lblAxisInterlock = new JLabel("Axis Interlock?");
+        lblAxisInterlock.setToolTipText("Enable to get an extra Wizard tab to configure an Axis Interlocking Actuator");
+        panelOffsets.add(lblAxisInterlock, "2, 8, right, default");
+        
+        interlockActuator = new JCheckBox("");
+        interlockActuator.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                reloadWizard = true;
+            }
+        });
+        panelOffsets.add(interlockActuator, "4, 8");
 
         panelSafeZ = new JPanel();
         headMountablePanel.add(panelSafeZ);
         panelSafeZ.setBorder(new TitledBorder(null, "Safe Z", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
-        panelSafeZ.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelSafeZ.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblSafeZ = new JLabel("Safe Z");
         panelSafeZ.add(lblSafeZ, "2, 2, right, default");
@@ -185,7 +208,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         contentPanel.add(generalPanel);
         generalPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
@@ -205,12 +228,10 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 TitledBorder.TOP, null, null));
         panelCoordination.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -264,6 +285,8 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         addWrappedBinding(headOffsets, "lengthZ", locationZ, "text", lengthConverter);
         addWrappedBinding(headOffsets, "rotation", locationRotation, "text", doubleConverter);
 
+        addWrappedBinding(actuator, "interlockActuator", interlockActuator, "selected");
+
         addWrappedBinding(actuator, "safeZ", textFieldSafeZ, "text", lengthConverter);
 
         addWrappedBinding(actuator, "coordinatedBeforeActuate", coordinatedBeforeActuate, "selected");
@@ -278,5 +301,17 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationZ);
         ComponentDecorators.decorateWithAutoSelect(locationRotation);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
+
+        // Reset
+        reloadWizard = false;
+    }
+
+    @Override
+    protected void saveToModel() {
+        super.saveToModel();
+        if (reloadWizard) {
+            // Reselect the tree path to reload the wizard with potentially different property sheets. 
+            MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
+        }
     }
 }
