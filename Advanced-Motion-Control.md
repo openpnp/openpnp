@@ -37,10 +37,12 @@ Note: as long as Advanced Motion Control is only available in the testing versio
 
 ## Migration from a previous Version 
 
-OpenPnP should migrate all but the most exotic machine setups automatically from previous OpenPnP 2.0 versions. After the migration, the machine should work mostly as before. But this also means, you're missing out on most of the new features. Because the new advanced features can be a bit daunting to configure, a new Issues & Solutions system has been created. You can use it to automatically setup most of the new features. The system will take your special machine configuration fully into consideration. 
+OpenPnP should migrate all but the most exotic machine setups automatically from previous OpenPnP 2.0 versions. After the migration, the machine should work mostly as before. But this also means, you're missing out on most of the new features. Because the new advanced features can be a bit daunting to configure, a new [[Issues and Solutions]] system has been created. You can use it to automatically setup most of the new features. The system will take your special machine configuration fully into consideration. 
 
-Check out the [[Issues and Solutions]] page. 
+____
 
+**First Stop**: Check out the [[Issues and Solutions]] page. 
+____
 To complement the automatic system, the following background informations details the needed changes to prepare for Advanced Motion Control features:
 
 1. If you use more than four axes on one controller: check out if you can use it **without** pre-move commands (the `T` letter commands used to switch between extruder `E` axes). [[Smoothieware, Duet3D, Bill's fork of Marlin 2.0|Motion-Controller-Firmwares]] and possibly others can be used with proper axis letters `A`, `B`, `C` instead. 
