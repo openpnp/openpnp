@@ -8,7 +8,7 @@ This page list Controllers and Firmwares that are known to be compatible with [[
 
 The following requirements apply for controllers with axes attached. These are of course _in addition_ to basic homing and motion commands [`G1`](https://www.reprap.org/wiki/G-code#G0_.26_G1:_Move):
 
-2. The controller can manage extra axes (`A`, `B`, `C` etc.) as true axes, with simultaneous motion. Controllers/firmwares that only support switching "extruder" `E` axes with `T` multiplex commands are not valid. Any mixing of axes must be correctly supported, including all aspects of feed rate and acceleration limiting according to the [NIST RS274/NGC Interpreter – Version 3 standard](https://www.nist.gov/publications/nist-rs274ngc-interpreter-version-3), more specifically section "2.1.2.5 Feed Rate", or better. 
+2. The controller can manage extra axes (`A`, `B`, `C` etc.) as true axes, with simultaneous motion. Controllers/firmwares that only support switching "extruder" `E` axes with `T` [multiplex commands](https://www.reprap.org/wiki/G-code#T:_Select_Tool) are not valid. Any mixing of axes must be correctly supported, including all aspects of feed rate and acceleration limiting according to the [NIST RS274/NGC Interpreter – Version 3 standard](https://www.nist.gov/publications/nist-rs274ngc-interpreter-version-3), more specifically section "2.1.2.5 Feed Rate", or better. 
 
 3. The controller can report axes positions, including extra axes (`A`, `B`, `C` etc.), typically with the [`M114`](https://www.reprap.org/wiki/G-code#M114:_Get_Current_Position) command.
 
