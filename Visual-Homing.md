@@ -1,7 +1,7 @@
 ## What is it?
 Having a stable [[coordinate system|Machine-Axes#the-openpnp-coordinate-system]] early in the machine setup process is very important as all the locations you are capturing are referenced to it. Whenever the coordinate system changes/shifts, all these stored locations often become invalid and need to painstakingly be recaptured. 
 
-Visual Homing allows you to reference your machine's X and Y axes to a [fiducial](https://en.wikipedia.org/wiki/Fiducial_marker#Printed_circuit_boards) on the machine table. This is often a more stable reference than axis mechanical/optical end switches, especially while you are still modifying and optimizing your machine. 
+Visual Homing allows you to reference your machine's X and Y axes to a [fiducial](https://en.wikipedia.org/wiki/Fiducial_marker#Printed_circuit_boards) on the machine table. This is often a more stable reference than axis end-switches, especially while you are still modifying and optimizing your machine or when the end-switch mounting is very "DIY" such as in [Liteplacer's "one screw is enough" way](https://www.liteplacer.com/gantry-back-plate-step-4-left-side-limit-switch/).  
 
 ## Mounting a Fiducial
 
