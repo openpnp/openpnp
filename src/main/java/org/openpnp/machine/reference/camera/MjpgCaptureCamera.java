@@ -154,6 +154,7 @@ public class MjpgCaptureCamera extends ReferenceCamera implements Runnable {
             System.err.println("Unknown error communicating with MJPG stream at " + mjpgURL + ": "
                     + e.toString());
             e.printStackTrace();
+            stop();
         }
     }
 
@@ -177,8 +178,7 @@ public class MjpgCaptureCamera extends ReferenceCamera implements Runnable {
 
 
     @Override
-    public BufferedImage internalCapture() {
-
+    public synchronized BufferedImage internalCapture() {
         int image_size = 0;
         String inputLine;
         lineBuilder.flush();
@@ -210,7 +210,13 @@ public class MjpgCaptureCamera extends ReferenceCamera implements Runnable {
                         String content_len_string =
                                 inputLine.substring(CONTENT_LENGTH_STRING.length());
                         content_len_string = content_len_string.replaceAll("(\\r|\\n)", "");
-                        image_size = Integer.parseInt(content_len_string);
+                        try {
+                            image_size = Integer.parseInt(content_len_string);
+                        }
+                        catch (Exception e) {
+                            System.err.println("Invalid image size");
+                            return null;
+                        }
                     }
                     lineBuilder.getBuffer()
                                .setLength(0);
@@ -312,5 +318,19 @@ public class MjpgCaptureCamera extends ReferenceCamera implements Runnable {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         return null;
+    }
+
+    @Override
+    public void close() throws IOException {
+        super.close();
+        if (thread != null) {
+            thread.interrupt();
+            try {
+                thread.join(3000);
+            }
+            catch (Exception e) {
+
+            }
+        }
     }
 }
