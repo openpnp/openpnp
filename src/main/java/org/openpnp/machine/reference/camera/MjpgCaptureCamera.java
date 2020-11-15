@@ -24,14 +24,15 @@ package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeSupport;
-import java.net.URL;
-import java.net.URLConnection;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.URL;
+import java.net.URLConnection;
 
 import javax.imageio.ImageIO;
+
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
@@ -59,16 +60,16 @@ public class MjpgCaptureCamera extends ReferenceCamera implements Runnable {
     @Attribute(required = false)
     private int height = 720;
 
-    private InputStream mjpgStream; //BufferedInputStream mjpgStream;
+    private InputStream mjpgStream; // BufferedInputStream mjpgStream;
     private StringWriter lineBuilder;
-    
+
     private Thread thread;
     private boolean dirty = false;
 
-    //private static final String BOUNDARY_PREFIX = "--";
-    //private static final String CONTENT_TYPE_STRING = "Content-Type: ";
+    // private static final String BOUNDARY_PREFIX = "--";
+    // private static final String CONTENT_TYPE_STRING = "Content-Type: ";
     private static final String CONTENT_LENGTH_STRING = "Content-Length: ";
-    
+
 
     public MjpgCaptureCamera() {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.04233, 0.04233, 0, 0));
@@ -76,7 +77,7 @@ public class MjpgCaptureCamera extends ReferenceCamera implements Runnable {
             setURL(mjpgURL);
         }
         catch (Exception e) {
-            
+
         }
     }
 
@@ -87,7 +88,7 @@ public class MjpgCaptureCamera extends ReferenceCamera implements Runnable {
     public void setDirty(boolean dirty) {
         this.dirty = dirty;
     }
-    
+
     public String getMjpgURL() {
         return mjpgURL;
     }
@@ -97,10 +98,11 @@ public class MjpgCaptureCamera extends ReferenceCamera implements Runnable {
         setDirty(true);
         initialize();
     }
-    
+
+    @Override
     @SuppressWarnings("unused")
     @Commit
-	protected void commit() throws Exception {
+    protected void commit() throws Exception {
         setURL(mjpgURL);
     }
 
@@ -132,14 +134,14 @@ public class MjpgCaptureCamera extends ReferenceCamera implements Runnable {
     }
 
     private synchronized void start() {
-        
+
         try {
             URL url = new URL(mjpgURL);
             URLConnection urlcon = url.openConnection();
             urlcon.setConnectTimeout(3000);
             urlcon.setReadTimeout(1000);
-            
-            mjpgStream = urlcon.getInputStream(); //new BufferedInputStream(url.openStream());
+
+            mjpgStream = urlcon.getInputStream(); // new BufferedInputStream(url.openStream());
             lineBuilder = new StringWriter(256);
 
             if (thread == null) {
@@ -147,8 +149,10 @@ public class MjpgCaptureCamera extends ReferenceCamera implements Runnable {
                 thread.setDaemon(true);
                 thread.start();
             }
-        } catch (Exception e) {
-            System.err.println("Unknown error communicating with MJPG stream at " + mjpgURL + ": " + e.toString());
+        }
+        catch (Exception e) {
+            System.err.println("Unknown error communicating with MJPG stream at " + mjpgURL + ": "
+                    + e.toString());
             e.printStackTrace();
         }
     }
@@ -178,125 +182,121 @@ public class MjpgCaptureCamera extends ReferenceCamera implements Runnable {
         int image_size = 0;
         String inputLine;
         lineBuilder.flush();
-        lineBuilder.getBuffer().setLength(0);
+        lineBuilder.getBuffer()
+                   .setLength(0);
 
         // Read header until we know how big the next image will be
-        while (image_size == 0) 
-        {
-        	int next_byte = 0;
+        while (image_size == 0) {
+            int next_byte = 0;
             try {
                 next_byte = mjpgStream.read();
             }
-            catch (IOException e)
-            {
+            catch (IOException e) {
                 System.err.println("IOException reading from MJPG stream: " + e.toString());
                 e.printStackTrace();
                 return null;
             }
 
-            if (next_byte == -1)
-            {
+            if (next_byte == -1) {
                 System.err.println("Could not read header from MJPG stream: " + mjpgURL);
                 return null;
             }
-            else
-            {
+            else {
                 lineBuilder.write(next_byte);
-                if (next_byte == '\n')
-                {
+                if (next_byte == '\n') {
                     inputLine = lineBuilder.toString();
-                    if (inputLine.startsWith(CONTENT_LENGTH_STRING))
-                    {
+                    if (inputLine.startsWith(CONTENT_LENGTH_STRING)) {
                         // pull the number of bytes out of the content length string
-                    	String content_len_string = inputLine.substring(CONTENT_LENGTH_STRING.length());
-                    	content_len_string = content_len_string.replaceAll("(\\r|\\n)", "");
-                    	image_size = Integer.parseInt(content_len_string);
-                    }       
-                    lineBuilder.getBuffer().setLength(0);
+                        String content_len_string =
+                                inputLine.substring(CONTENT_LENGTH_STRING.length());
+                        content_len_string = content_len_string.replaceAll("(\\r|\\n)", "");
+                        image_size = Integer.parseInt(content_len_string);
+                    }
+                    lineBuilder.getBuffer()
+                               .setLength(0);
                 }
             }
         }
 
-        // We got what we needed from the header, now just read the steam until we see a 255 which is the beginning of the JPG image
+        // We got what we needed from the header, now just read the steam until we see a 255 which
+        // is the beginning of the JPG image
         try {
             while (mjpgStream.read() != 255) {
             }
-        } catch (IOException e)
-        {
-            System.err.println("Incomplete header in MJPG stream: " + mjpgURL + "\r\n" + e.toString());
+        }
+        catch (IOException e) {
+            System.err.println(
+                    "Incomplete header in MJPG stream: " + mjpgURL + "\r\n" + e.toString());
             e.printStackTrace();
             return null;
         }
 
         // Read the jpg image and create a BufferedImage
-        byte[] jpg_buffer = new byte[image_size+1];
+        byte[] jpg_buffer = new byte[image_size + 1];
         jpg_buffer[0] = (byte) 255;
         int write_cursor = 1;
         boolean got_image = false;
         boolean done = false;
-        
+
         try {
-            while(!done)
-            {
-                int bytes_read = mjpgStream.read(jpg_buffer,write_cursor,image_size-write_cursor);
-                if (bytes_read > 0)
-                {
+            while (!done) {
+                int bytes_read =
+                        mjpgStream.read(jpg_buffer, write_cursor, image_size - write_cursor);
+                if (bytes_read > 0) {
                     write_cursor += bytes_read;
-                    got_image = (write_cursor>=image_size);
+                    got_image = (write_cursor >= image_size);
                     done = got_image;
                 }
-                else
-                {
+                else {
                     // got -1 (EOF)
                     done = true;
                 }
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
 
-        if (got_image)
-        {
-	        ByteArrayInputStream jpg_stream = new ByteArrayInputStream(jpg_buffer);
-	        BufferedImage frame = null;
-	        try {
-	            frame = ImageIO.read(jpg_stream);
-	        }
-	        catch (IOException e)
-	        {
-	            System.err.println("Invalid JPG frame in MJPG steram: " + mjpgURL + "\r\n" + e.toString());
-	            e.printStackTrace();
-	        }
-	
-	        return frame;
+        if (got_image) {
+            ByteArrayInputStream jpg_stream = new ByteArrayInputStream(jpg_buffer);
+            BufferedImage frame = null;
+            try {
+                frame = ImageIO.read(jpg_stream);
+            }
+            catch (IOException e) {
+                System.err.println(
+                        "Invalid JPG frame in MJPG steram: " + mjpgURL + "\r\n" + e.toString());
+                e.printStackTrace();
+            }
+
+            return frame;
         }
-        else
-        {
+        else {
             System.err.println("Incomplete JPG frame in MJPG steram: " + mjpgURL);
-        	return null;
+            return null;
         }
     }
 
+    @Override
     public void run() {
-        
-        while(!Thread.interrupted())
-        {
+
+        while (!Thread.interrupted()) {
             try {
                 BufferedImage image = internalCapture();
                 if (image != null) {
                     broadcastCapture(image);
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 e.printStackTrace();
             }
             try {
                 Thread.sleep(10);
             }
-            catch (InterruptedException e)
-            {
+            catch (InterruptedException e) {
                 break;
             }
-        } 
+        }
     }
 
     @Override

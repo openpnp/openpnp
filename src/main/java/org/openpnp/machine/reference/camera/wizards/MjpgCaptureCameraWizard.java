@@ -2,6 +2,7 @@ package org.openpnp.machine.reference.camera.wizards;
 
 
 import java.awt.Color;
+
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -19,8 +20,8 @@ import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
 public class MjpgCaptureCameraWizard extends AbstractConfigurationWizard {
-    
-	private final MjpgCaptureCamera camera;
+
+    private final MjpgCaptureCamera camera;
     private JPanel panelGeneral;
 
     public MjpgCaptureCameraWizard(MjpgCaptureCamera camera) {
@@ -30,28 +31,17 @@ public class MjpgCaptureCameraWizard extends AbstractConfigurationWizard {
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
                 "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-        panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+        panelGeneral.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblIP = new JLabel("Camera IP Address and Port Number");
         panelGeneral.add(lblIP, "2, 2, right, default");
@@ -67,13 +57,13 @@ public class MjpgCaptureCameraWizard extends AbstractConfigurationWizard {
 
     @Override
     public void createBindings() {
-        
-    	// Should always be last so that it doesn't trigger multiple camera reloads.
+
+        // Should always be last so that it doesn't trigger multiple camera reloads.
         addWrappedBinding(camera, "mjpgURL", ipTextField, "text");
 
         ComponentDecorators.decorateWithAutoSelect(ipTextField);
     }
-    
+
     @Override
     protected void loadFromModel() {
         super.loadFromModel();
