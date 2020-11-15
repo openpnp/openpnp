@@ -17,8 +17,6 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-// http://www.walking-productions.com/notslop/2010/04/20/motion-jpeg-in-flash-and-java/
-// https://github.com/BITPlan/com.bitplan.mjpegstreamer/tree/master/src/main/java/com/bitplan/mjpegstreamer
 
 package org.openpnp.machine.reference.camera;
 
