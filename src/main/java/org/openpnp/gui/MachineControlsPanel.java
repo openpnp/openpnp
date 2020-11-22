@@ -224,6 +224,7 @@ public class MachineControlsPanel extends JPanel {
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         comboBoxHeadMountable = new JComboBox();
+        comboBoxHeadMountable.setMaximumRowCount(20);
         comboBoxHeadMountable.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
