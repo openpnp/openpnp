@@ -15,7 +15,7 @@ Runout can come from both the nozzle tip or the nozzle it is attached to. The ca
 # What is the Bottom Camera Location and how can it vary between nozzles?
 In order to be able to precisely align parts in Bottom Vision, the true location of the bottom camera in relation to the nozzle tip must be known. For a first rough setup, [the location of the bottom camera must be set up manually](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Bottom-Camera-Setup#set-camera-location).
 
-However it can be quite difficult to set the _precise_ center of the nozzle tip using the naked eye, especially if the nozzle tip or the nozzle has runout. While the first location setup needs to be done manually, the Nozzle Tip Calibration can automatically improve that for you. 
+However it can be quite difficult to set the _precise_ center of the nozzle tip using the naked eye, especially if the nozzle tip or the nozzle has runout. While the first location setup needs to be done manually, the Nozzle Tip Calibration can then automatically improve the precision for you. 
 
 For a multi-nozzle machine, things might even get a bit more complicated, especially if your bottom camera does not have a focal plane that exactly matches the surface plane of the PCB. The nozzle Z axes might not be perfectly parallel and can introduce a slight offset. The following exagerated illustration shows how this might happen:
 
