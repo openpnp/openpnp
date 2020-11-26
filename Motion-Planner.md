@@ -119,6 +119,8 @@ Also make sure you use the **DirectionalCompensation** method (or **None**) sele
 
 Finally, it must be repeated that this only works if all the moving axes are attached to the same driver/controller (see the discussion in [Motion Path Planning](#motion-path-planning)). 
 
+![AdvancedMotionAnimation](https://makr.zone/wp-content/uploads/2020/10/ShortMotionBlend.gif)
+
 ## Motion Planner 
 
 ### Settings
