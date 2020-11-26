@@ -173,6 +173,7 @@ Example:
  */
  var upCamLights = machine.getActuatorByName("UpCamLights");
  var downCamLights = machine.getActuatorByName("DownCamLights");
+ var camera = machine.defaultHead.defaultCamera;
 
 if (camera.looking == Packages.org.openpnp.spi.Camera.Looking.Up) {
 	upCamLights.actuate(true);
