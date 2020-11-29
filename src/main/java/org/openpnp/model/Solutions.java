@@ -65,7 +65,7 @@ public class Solutions extends AbstractTableModel {
         Warning(new Color(255, 220, 157)),
         Error(new Color(255, 157, 157)),
         None(new Color(255, 255, 255)), 
-        Fundamental(new Color(255, 157, 157));
+        Fundamental(new Color(200, 220, 255));
 
         private Color color;
 
