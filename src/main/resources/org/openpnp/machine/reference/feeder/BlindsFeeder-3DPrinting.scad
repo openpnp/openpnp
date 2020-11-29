@@ -18,6 +18,8 @@
  * 
  * For more information about OpenPnP visit http://openpnp.org
  */
+ 
+ debug_view = true;
 
 // Include the BlindsFeeder Library. 
 // To learn the details about available parameters, please read the extensive comments in the library file. 
@@ -91,6 +93,6 @@ BlindsFeeder(
     // The arrayed tape definitions.
     arrayed_tapes=           [tape0402,  tape0603,  tapeSOT3,  tape12mm,  trayQLPF64],
     
-    debug = false
+    debug = $preview && debug_view
 );
 

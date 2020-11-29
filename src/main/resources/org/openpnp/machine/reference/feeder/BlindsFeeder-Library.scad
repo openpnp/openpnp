@@ -171,6 +171,8 @@ module BlindsFeeder(
     // Thickness of the overhang.
     overhang_thickness=layer_height*3,
     
+    // Are the cover blinds normally closed, i.e. when the cover is aligned with the base on -X side?
+    cover_normally_closed=false,
     // Cover thickness. Should be sturdy enough but still quite flexible. 
     cover_thickness=layer_height*2,
     // How deep the cover is V-slotted into the side wall.
@@ -689,7 +691,7 @@ module BlindsFeeder(
                                 if (blinds) translate([0,0,0]) union() {
                                     // pocket blinds
                                     for (i = [0:pocket_count-1]) { 
-                                        x=i*pocket_pitch+pocket_d;
+                                        x=(i+(cover_normally_closed ? 0.5 : 0))*pocket_pitch+pocket_d;
                                         translate([x-pocket_pitch*0.25*(blinds_opening_ratio)-nozzle_play, 
                                             (pocket_left+pocket_right)*0.5-pocket_width*0.5-nozzle_play, -e])
                                             cube([pocket_pitch*0.5*blinds_opening_ratio+2*nozzle_play, pocket_width+2*nozzle_play, 
