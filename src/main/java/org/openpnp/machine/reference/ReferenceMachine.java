@@ -44,6 +44,7 @@ import org.openpnp.machine.reference.axis.ReferenceLinearTransformAxis;
 import org.openpnp.machine.reference.axis.ReferenceMappedAxis;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.machine.reference.camera.ImageCamera;
+import org.openpnp.machine.reference.camera.MjpgCaptureCamera;
 import org.openpnp.machine.reference.camera.OnvifIPCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
@@ -341,6 +342,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(ImageCamera.class);
         l.add(SwitcherCamera.class);
         l.add(SimulatedUpCamera.class);
+        l.add(MjpgCaptureCamera.class);
         return l;
     }
 
