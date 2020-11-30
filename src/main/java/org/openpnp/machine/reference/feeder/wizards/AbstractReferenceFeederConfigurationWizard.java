@@ -108,6 +108,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         comboBoxPart = new JComboBox();
+        comboBoxPart.setMaximumRowCount(20);
         try {
             comboBoxPart.setModel(new PartsComboBoxModel());
         }

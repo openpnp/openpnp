@@ -345,8 +345,10 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 
     public void setReferenceHoleLocation(Location referenceHoleLocation) {
+        Object oldValue = this.referenceHoleLocation;
         this.referenceHoleLocation = convertToLocalLocation(referenceHoleLocation);
         visionLocation = null;
+        firePropertyChange("referenceHoleLocation", oldValue, this.referenceHoleLocation);
     }
 
     public Location getLastHoleLocation() {
@@ -354,8 +356,10 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 
     public void setLastHoleLocation(Location lastHoleLocation) {
+        Object oldValue = this.lastHoleLocation;
         this.lastHoleLocation = convertToLocalLocation(lastHoleLocation);
         visionLocation = null;
+        firePropertyChange("lastHoleLocation", oldValue, this.lastHoleLocation);
     }
 
     public Location getVisionLocation() {

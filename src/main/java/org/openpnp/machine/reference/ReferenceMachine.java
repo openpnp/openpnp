@@ -32,7 +32,9 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.marek.MarekNozzle;
 import org.openpnp.machine.neoden4.Neoden4Camera;
+import org.openpnp.machine.rapidplacer.RapidFeeder;
 import org.openpnp.machine.reference.camera.ImageCamera;
+import org.openpnp.machine.reference.camera.MjpgCaptureCamera;
 import org.openpnp.machine.reference.camera.OnvifIPCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
@@ -45,9 +47,9 @@ import org.openpnp.machine.reference.feeder.BlindsFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceDragFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceFeederGroup;
-import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceLeverFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceLoosePartFeeder;
+import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceRotatedTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceSlotAutoFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
@@ -231,6 +233,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(ReferenceFeederGroup.class);
         l.add(SchultzFeeder.class);
         l.add(SlotSchultzFeeder.class);
+        l.add(RapidFeeder.class);
         l.addAll(registeredFeederClasses);
         return l;
     }
@@ -246,6 +249,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(ImageCamera.class);
         l.add(SwitcherCamera.class);
         l.add(SimulatedUpCamera.class);
+        l.add(MjpgCaptureCamera.class);
         return l;
     }
 

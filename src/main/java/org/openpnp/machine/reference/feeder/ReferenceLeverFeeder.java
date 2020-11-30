@@ -264,9 +264,6 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
         // Move the camera to be in focus over the pick location.
         // head.moveTo(head.getX(), head.getY(), z, head.getC());
 
-        // Settle the camera
-        Thread.sleep(camera.getSettleTimeMs());
-
         VisionProvider visionProvider = camera.getVisionProvider();
 
         Rectangle aoi = getVision().getAreaOfInterest();

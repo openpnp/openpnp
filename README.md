@@ -18,8 +18,7 @@ OpenPnP is stable and in wide use. It is still under heavy development and new f
 If you would like to keep up with our progress you can
 [Watch this project on GitHub](http://github.com/openpnp/openpnp), check out
 [our Twitter](http://twitter.com/openpnp), [join the discussion group](http://groups.google.com/group/openpnp),
-or come chat with us on Freenode IRC at #openpnp. If you don't have an IRC client,
-you can [use this web based one](http://webchat.freenode.net/?channels=openpnp)
+or come chat with us on [Discord](https://discord.gg/EmsrFVx).
 
 ## Contributing
 
@@ -28,7 +27,6 @@ you can [use this web based one](http://webchat.freenode.net/?channels=openpnp)
 [![Bugs](https://img.shields.io/github/issues-raw/openpnp/openpnp/bug.svg?label=bugs&colorB=D9472F)](https://github.com/openpnp/openpnp/labels/bug)
 [![Feature Requests](https://img.shields.io/github/issues-raw/openpnp/openpnp/feature-request.svg?label=feature-requests&colorB=bfd4f2)](https://github.com/openpnp/openpnp/labels/feature-request)
 [![Enhancements](https://img.shields.io/github/issues-raw/openpnp/openpnp/enhancement.svg?label=enhancements&colorB=0052cc)](https://github.com/openpnp/openpnp/labels/enhancement)
-[![SourceSpy Dashboard](https://sourcespy.com/shield.svg)](https://sourcespy.com/github/openpnpopenpnp/)
 
 
 Before starting work on a pull request, please read: https://github.com/openpnp/openpnp/wiki/Developers-Guide#contributing

@@ -45,15 +45,11 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
-import org.openpnp.machine.reference.ReferenceMachine;
-import org.openpnp.machine.reference.ReferenceNozzleTip;
-import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.feeder.wizards.BlindsFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
 import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
@@ -254,11 +250,11 @@ public class BlindsFeeder extends ReferenceFeeder {
     public Location getUncalibratedPickLocation(double pocketNumber)  {
         recalculateGeometry();
         // Calculate the pick location in local feeder coordinates. 
-        Length feederX = pocketPitch.multiply(pocketNumber-1.0).convertToUnits(getLocation().getUnits()).add(pocketDistance);
-        Length feederY = pocketCenterline.convertToUnits(getLocation().getUnits());
+        Length feederX = pocketPitch.multiply(pocketNumber-1.0).convertToUnits(location.getUnits()).add(pocketDistance);
+        Length feederY = pocketCenterline.convertToUnits(location.getUnits());
 
-        Location feederLocation = new Location(getLocation().getUnits(), feederX.getValue(), feederY.getValue(), 
-                getLocation().getZ(), getPickRotationInTape());
+        Location feederLocation = new Location(location.getUnits(), feederX.getValue(), feederY.getValue(), 
+                location.getZ(), getPickRotationInTape());
         Location machineLocation = transformFeederToMachineLocation(feederLocation);
         return machineLocation;
     } 
@@ -1133,7 +1129,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         // definition. The same meaning is adopted in the OpenPNP ReferenceStripFeeder. 
         // 
         // This means that we need to rotate by 180 degrees from our feeder local coordinate system. 
-        return getLocation().getRotation() + 180.;
+        return location.getRotation() + 180.;
     }
 
     public static class NozzleAndTipForPushing {
@@ -1280,7 +1276,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             throw new Exception("Feeder " + getName() + ": has no cover to actuate.");
         }
         else {
-            if (getLocation().getZ() == 0.0) {
+            if (location.getZ() == 0.0) {
                 throw new Exception("Feeder " + getName() + " Part Z not set.");
             }
 
@@ -1297,28 +1293,6 @@ public class BlindsFeeder extends ReferenceFeeder {
                 throw new Exception("Feeder " + getName() + ": current nozzle tip "+nozzleTip.getId()+
                         " has push diameter not set. Check the nozzle tip configuration.");
             }
-            
-            // HACK: get backlash compensation from GcodeDriver. No point in adding a general interface as this 
-            // should not be on the driver in the first place.
-            Length backlashOffset = new Length(0.0, getFiducial2Location().getUnits());
-            double backlashOpen = 0.0;
-            double backlashClose = 0.0;
-            ReferenceMachine referenceMachine;
-            if (Configuration.get().getMachine() instanceof ReferenceMachine) {
-                referenceMachine = (ReferenceMachine)Configuration.get().getMachine();
-                if (referenceMachine.getDriver() instanceof GcodeDriver) {
-                    GcodeDriver gcodeDriver = (GcodeDriver)referenceMachine.getDriver();
-                    Location backlashVector = new Location(gcodeDriver.getUnits(), 
-                            gcodeDriver.getBacklashOffsetX(), 
-                            gcodeDriver.getBacklashOffsetY(), 
-                            0.0, 0.0);
-                    Location unitVectorX =  getFiducial1Location().unitVectorTo(getFiducial2Location());
-                    // dot product is backlash offset perpendicularly projected onto the feeder X axis 
-                    backlashOffset = unitVectorX.dotProduct(backlashVector);
-                    backlashOpen = backlashOffset.getValue() > 0.0 ? 1.0 : 0.0;
-                    backlashClose = backlashOffset.getValue() < 0.0 ? 1.0 : 0.0;
-                }
-            }
 
             assertCalibration();
 
@@ -1328,34 +1302,30 @@ public class BlindsFeeder extends ReferenceFeeder {
                         edgeOpenDistance.multiply(-1.0)
                         .subtract(sprocketPitch.multiply(0.5)) // go half sprocket too far back
                         .subtract(nozzleTipDiameter.multiply(0.5))
-                        .subtract(backlashOffset.multiply(backlashOpen))
                         : 
                             edgeClosedDistance
                             .add(tapeLength) 
                             .add(sprocketPitch.multiply(0.5)) // go half sprocket too far
                             .add(nozzleTipDiameter.multiply(0.5)))
-                            .subtract(backlashOffset.multiply(backlashClose))
-                        .convertToUnits(getLocation().getUnits());
+                        .convertToUnits(location.getUnits());
                 Length feederX1 = (openState ? 
                         edgeOpenDistance.multiply(-1.0)
-                        .subtract(nozzleTipDiameter.multiply(0.5)) 
-                        .subtract(backlashOffset.multiply(backlashOpen))
+                        .subtract(nozzleTipDiameter.multiply(0.5))
                         : 
                             edgeClosedDistance
                             .add(tapeLength)
                             .add(nozzleTipDiameter.multiply(0.5)))
-                            .subtract(backlashOffset.multiply(backlashClose))
-                        .convertToUnits(getLocation().getUnits());
+                        .convertToUnits(location.getUnits());
                 Length feederY = pocketCenterline
-                        .convertToUnits(getLocation().getUnits());
-                Length feederZ = getLocation().getLengthZ().add(pushZOffset);
+                        .convertToUnits(location.getUnits());
+                Length feederZ = location.getLengthZ().add(pushZOffset);
 
-                Location feederLocation0 = new Location(getLocation().getUnits(), 
+                Location feederLocation0 = new Location(location.getUnits(), 
                         feederX0.getValue(), 
                         feederY.getValue(), 
                         feederZ.getValue(), 
                         getPickRotationInTape());
-                Location feederLocation1 = new Location(getLocation().getUnits(), 
+                Location feederLocation1 = new Location(location.getUnits(), 
                         feederX1.getValue(), 
                         feederY.getValue(), 
                         feederZ.getValue(), 
@@ -1383,21 +1353,21 @@ public class BlindsFeeder extends ReferenceFeeder {
                             coverPosition
                             .subtract(pocketPitch.multiply(0.5))  
                             .subtract(nozzleTipDiameter.multiply(1)))
-                        .convertToUnits(getLocation().getUnits());
+                        .convertToUnits(location.getUnits());
                 Length feederX1 = pickFeederLocation.getLengthX()
                         .add(pocketPitch.multiply(0.5))
                         .subtract(nozzleTipDiameter.multiply(0.5))
-                        .convertToUnits(getLocation().getUnits());
+                        .convertToUnits(location.getUnits());
                 Length feederY = pickFeederLocation.getLengthY()
-                        .convertToUnits(getLocation().getUnits());
-                Length feederZ = getLocation().getLengthZ().subtract(pushZOffset);
+                        .convertToUnits(location.getUnits());
+                Length feederZ = location.getLengthZ().subtract(pushZOffset);
 
-                Location feederLocation0 = new Location(getLocation().getUnits(), 
+                Location feederLocation0 = new Location(location.getUnits(), 
                         feederX0.getValue(), 
                         feederY.getValue(), 
                         feederZ.getValue(), 
                         getPickRotationInTape());
-                Location feederLocation1 = new Location(getLocation().getUnits(), 
+                Location feederLocation1 = new Location(location.getUnits(), 
                         feederX1.getValue(), 
                         feederY.getValue(), 
                         feederZ.getValue(), 
