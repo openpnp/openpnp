@@ -171,7 +171,7 @@ module BlindsFeeder(
     // Thickness of the overhang.
     overhang_thickness=layer_height*3,
     
-    // Are the cover blinds normally closed, i.e. when the cover is aligned with the base on -X side?
+    // Are the cover blinds normally closed when the cover is aligned with the base on -X side?
     cover_normally_closed=false,
     // Cover thickness. Should be sturdy enough but still quite flexible. 
     cover_thickness=layer_height*2,
@@ -196,8 +196,10 @@ module BlindsFeeder(
 
     // Want to print the flanges around the tray? (setting false is just for debugging)
     flange=true,
-    // Flange at the ends of the tapes.
-    flange_length=0,
+    // Flange at the begin of the tapes.
+    flange_length_begin=0,
+    // Flange at the end of the tapes.
+    flange_length_end=0,
     // Flange at the sides of the arrayed tapes. 
     flange_width=5,
     // Thickness of a border on the flange to reinforce it.
@@ -228,7 +230,7 @@ module BlindsFeeder(
     nozzle_push_upper_diameter=5,
 
     // Version tag to be printed on the feeder. 
-    version_tag="v126",
+    version_tag="v127",
     // If debug is set true, it places the cover on the tray in the opened state.
     // It is automatically disabled when rendering. 
     debug=false 
@@ -407,16 +409,24 @@ module BlindsFeeder(
                     if (tray && flange) {
                         difference() {
                             union() {
-                                if (flange_length > 0) {
+                                if (flange_length_begin > 0) {
                                     thickness= min(tape_thickness+pocket_portrusion, flange_thickness);
                                     // simple flange around the tray 
-                                    translate([-flange_length, -0.5*tape_width-wall_width, 0]) {
-                                        cube([flange_length*2+tape_length+e, tape_width+wall_width*2+e, floor_thickness]);
+                                    translate([-flange_length_begin, -0.5*tape_width-wall_width, 0]) {
+                                        cube([flange_length_begin+e, tape_width+wall_width*2+e, floor_thickness]);
                                         translate([0, 0, floor_thickness-e])
                                             cube([flange_bar, tape_width+wall_width*2+e, thickness+e]);
-                                        translate([flange_length*2+tape_length-flange_bar, 0, floor_thickness-e])
+                                    }
+                                }
+                                if (flange_length_end > 0) {
+                                    thickness= min(tape_thickness+pocket_portrusion, flange_thickness);
+                                    translate([tape_length-e, -0.5*tape_width-wall_width, 0]) {
+                                        cube([flange_length_end+e, tape_width+wall_width*2+e, floor_thickness]);
+                                        translate([flange_length_end-flange_bar, 0, floor_thickness-e])
                                             cube([flange_bar, tape_width+wall_width*2+e, thickness+e]);
                                     }
+                                }
+                                if (flange_length_begin > 0 || flange_length_end > 0) {
                                     if (blinds && drag_holes) {
                                         // drag hole support
                                         translate([-pocket_pitch*0.75-extension_size*0.5, 
@@ -440,16 +450,15 @@ module BlindsFeeder(
                             difference() {
                                 union()  {
                                     // flange
-                                    translate([-flange_length, flange_offset, 0]) {
-                                        cube([flange_length*2+tape_length+e, flange_width+e, floor_thickness]);
+                                    translate([-flange_length_begin, flange_offset, 0]) {
+                                        cube([flange_length_begin+flange_length_end+tape_length+e, flange_width+e, floor_thickness]);
                                         translate([0, 0, floor_thickness-e])
                                             cube([flange_bar, flange_width+e, flange_thickness+e]);
-                                        translate([tape_length+2*flange_length-flange_bar, 0, floor_thickness-e])
+                                        translate([tape_length+flange_length_begin+flange_length_end-flange_bar, 0, floor_thickness-e])
                                             cube([flange_bar, flange_width+e, flange_thickness+e]);
                                         translate([flange_bar-e, 0, floor_thickness-e])
-                                            cube([tape_length+2*(flange_length-flange_bar+e), 
+                                            cube([tape_length+flange_length_begin+flange_length_end-2*(flange_bar+e), 
                                                 flange_bar, flange_thickness+e]);
-                                        
                                     }
                                     // text
                                     translate([tape_length*0.5, flange_offset+flange_width*0.5, floor_thickness-e]) 
@@ -492,14 +501,14 @@ module BlindsFeeder(
                             difference() {
                                 union() {
                                     // flange
-                                    translate([-flange_length, 0.5*tape_width+wall_width, 0]) {
-                                        cube([flange_length*2+tape_length+e, flange_width, floor_thickness]);
+                                    translate([-flange_length_begin, 0.5*tape_width+wall_width, 0]) {
+                                        cube([flange_length_begin+tape_length+flange_length_end+e, flange_width, floor_thickness]);
                                         translate([0, 0, floor_thickness-e])
                                             cube([flange_bar, flange_width+e, flange_thickness+e]);
-                                        translate([tape_length+2*flange_length-flange_bar, 0, floor_thickness-e])
+                                        translate([tape_length+flange_length_begin+flange_length_end-flange_bar, 0, floor_thickness-e])
                                             cube([flange_bar, flange_width+e, flange_thickness+e]);
                                         translate([flange_bar-e, flange_width-flange_bar, floor_thickness-e])
-                                            cube([tape_length+2*(flange_length-flange_bar+e), 
+                                            cube([tape_length+flange_length_begin+flange_length_end-2*(flange_bar+e), 
                                             flange_bar, flange_thickness+e]);
                                     }
                                 }

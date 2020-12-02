@@ -93,6 +93,6 @@ BlindsFeeder(
     // The arrayed tape definitions.
     arrayed_tapes=           [tape0402,  tape0603,  tapeSOT3,  tape12mm,  trayQLPF64],
     
-    debug = $preview && debug_view
+    debug = debug_view
 );
 
