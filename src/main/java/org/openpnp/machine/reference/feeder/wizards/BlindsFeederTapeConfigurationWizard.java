@@ -338,7 +338,7 @@ public class BlindsFeederTapeConfigurationWizard extends AbstractConfigurationWi
         panelCover.add(btnCloseAll, "14, 8");
 
         lblEdgeBeginDistance = new JLabel("Edge Distance Open");
-        lblEdgeBeginDistance.setToolTipText("Distance from first sprocket to the edge used for opening the cover (fiducial 1 side).");
+        lblEdgeBeginDistance.setToolTipText("Distance from sprocket to the edge used for opening the cover (default: 2mm).");
         panelCover.add(lblEdgeBeginDistance, "2, 10, right, default");
 
         textFieldEdgeOpeningDistance = new JTextField();
@@ -346,7 +346,7 @@ public class BlindsFeederTapeConfigurationWizard extends AbstractConfigurationWi
         textFieldEdgeOpeningDistance.setColumns(10);
 
         lblEdgeEnd = new JLabel("Edge Distance Closed");
-        lblEdgeEnd.setToolTipText("Distance from last sprocket to the edge used for closing the cover (fiducial 2 side).");
+        lblEdgeEnd.setToolTipText("Distance from sprocket to the edge used for closing the cover (default: 2mm).");
         panelCover.add(lblEdgeEnd, "8, 10, right, default");
 
         textFieldEdgeClosingDistance = new JTextField();

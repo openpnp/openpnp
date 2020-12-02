@@ -67,6 +67,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
+import org.openpnp.util.OcrUtil;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -389,15 +390,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         comboBoxWrongPartAction = new JComboBox(ReferencePushPullFeeder.OcrWrongPartAction.values());
         panelVisionEnabled.add(comboBoxWrongPartAction, "4, 8");
 
-        // Compose a font list of the system, the one currently selected, even if the system does not know it (yet), and the empty selection 
-        List<String> systemFontList = Arrays.asList(GraphicsEnvironment.getLocalGraphicsEnvironment()
-                .getAvailableFontFamilyNames()); 
-        List<String> fontList = new ArrayList<>();
-        if (!systemFontList.contains(feeder.getOcrFontName())) {
-            fontList.add(feeder.getOcrFontName());
-        }
-        fontList.add("");
-        fontList.addAll(systemFontList);
+        List<String> fontList = OcrUtil.createFontSelectionList(feeder.getOcrFontName(), true);
 
         lblOcrFontName = new JLabel("OCR Font Name");
         lblOcrFontName.setToolTipText("<html>Name of the OCR font to be recognized.<br/>\r\nMonospace fonts work much better, allow lower resolution and therefore faster <br/>\r\noperation. Use a font where all the used characters are easily distinguishable.<br/>\r\nFonts with clear separation between glyphs are much preferred.</html>");

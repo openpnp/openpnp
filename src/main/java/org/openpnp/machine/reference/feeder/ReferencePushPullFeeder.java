@@ -30,6 +30,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import javax.swing.Action;
 import javax.swing.JOptionPane;
@@ -65,6 +66,7 @@ import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.OcrUtil;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.TravellingSalesman;
 import org.openpnp.util.VisionUtils;
@@ -1109,7 +1111,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         pipeline.setProperty("regionOfInterest", getOcrRegion());
         pipeline.setProperty("fontName", getOcrFontName());
         pipeline.setProperty("fontSizePt", getOcrFontSizePt());
-        pipeline.setProperty("alphabet", getConsolidatedOcrAlphabet(null));
+        pipeline.setProperty("alphabet", OcrUtil.getConsolidatedPartsAlphabet(null, ""));
     }
 
     protected void setupOcr(Camera camera, CvPipeline pipeline) {
@@ -1159,25 +1161,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     public enum FindFeaturesMode {
         FromPickLocationGetHoles,
         CalibrateHoles
-    }
-
-    protected String getConsolidatedOcrAlphabet(Part compatiblePart) {
-        // from all the compatible parts in the system, create the alphabet for OCR operation
-        Set<Character> characterSet = new HashSet<>(); 
-        for (Part part : Configuration.get().getParts()) {
-            if (compatiblePart == null || compatiblePartPackages(part, compatiblePart)) {
-                for (char ch : part.getId().toCharArray()) {
-                    characterSet.add(ch);
-                }
-            }
-        }
-        StringBuilder alphabet = new StringBuilder();
-        for (char ch : characterSet) {
-            if (ch != ' ') {
-                alphabet.append(ch);
-            }
-        }
-        return alphabet.toString();
     }
 
     public class FindFeatures {

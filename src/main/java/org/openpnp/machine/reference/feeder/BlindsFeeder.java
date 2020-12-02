@@ -31,7 +31,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.Action;
 
@@ -46,13 +48,16 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
+import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.OcrWrongPartAction;
 import org.openpnp.machine.reference.feeder.wizards.BlindsFeederConfigurationWizard;
 import org.openpnp.machine.reference.feeder.wizards.BlindsFeederTapeConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.model.Point;
+import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
@@ -64,6 +69,7 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.openpnp.util.HslColor;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.OcrUtil;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.TravellingSalesman;
 import org.openpnp.util.VisionUtils;
@@ -71,6 +77,9 @@ import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.Ransac.Line;
 import org.openpnp.vision.SimpleHistogram;
 import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.CvStage.Result;
+import org.openpnp.vision.pipeline.stages.SimpleOcr;
+import org.openpnp.vision.pipeline.stages.SimpleOcr.OcrModel;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -152,7 +161,31 @@ public class BlindsFeeder extends ReferenceFeeder {
     private Length pushZOffset = new Length(0.25, LengthUnit.Millimeters); 
 
     @Attribute(required = false)
-    private double pushSpeed = 0.025;
+    private double pushSpeed = 0.1;
+
+    public enum OcrAction {
+        None,
+        ChangePart
+    }
+    @Attribute(required = false) 
+    private OcrAction ocrAction = OcrAction.None;
+
+    @Element(required = false)
+    private Length ocrMargin = new Length(12, LengthUnit.Millimeters); 
+
+    @Attribute(required = false) 
+    private String ocrFontName = "Liberation Mono";
+
+    @Attribute(required = false) 
+    private double ocrFontSizePt = 7.0;
+
+    public enum OcrTextOrientation {
+        AwayFromTape,
+        TowardsTape
+    };
+    @Attribute(required = false) 
+    private OcrTextOrientation ocrTextOrientation = OcrTextOrientation.AwayFromTape;
+
 
     // These internal setting are not on the GUI but can be changed in the XML.
     @Attribute(required = false)
@@ -163,6 +196,9 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     @Attribute(required = false)
     private double pocketPosToleranceMm = 0.1;
+
+    @Attribute(required = false) 
+    private double ascentFromFontSize = 2.2;
 
     // Transient state
     private Length coverPosition = new Length(Double.NaN, LengthUnit.Millimeters);
@@ -271,6 +307,10 @@ public class BlindsFeeder extends ReferenceFeeder {
         return this.getFeedCount()+this.getFirstPocket()-1;
     }
 
+    private boolean isBlindsReversed() {
+        return ocrAction != OcrAction.None;
+    }
+
     public boolean isCoverOpenState(boolean openState) {
         if (coverType == CoverType.NoCover) {
             // with no cover it is always open
@@ -282,7 +322,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         }
         if (coverType == CoverType.BlindsCover) {
             double positionError = Math.abs(coverPosition.subtract(pocketDistance).convertToUnits(LengthUnit.Millimeters).getValue());
-            return (positionError < pocketPosToleranceMm) == openState;
+            return (positionError < pocketPosToleranceMm) ^ isBlindsReversed() == openState;
         }
         if (coverType == CoverType.PushCover) {
             return (coverPosition.getValue() > 0.0) == openState;
@@ -346,6 +386,64 @@ public class BlindsFeeder extends ReferenceFeeder {
         setFeedCount(getFeedCount() + 1);
     }
 
+    private void setupOcr(Camera camera, CvPipeline pipeline) {
+        if (getOcrAction() != OcrAction.None) {
+            pipeline.setProperty("regionOfInterest", getOcrRegion(camera));
+            pipeline.setProperty("fontName", getOcrFontName());
+            pipeline.setProperty("fontSizePt", getOcrFontSizePt());
+            pipeline.setProperty("alphabet", OcrUtil.getConsolidatedPartsAlphabet(null, ""));
+        }
+        else {
+            pipeline.setProperty("regionOfInterest", null);
+            pipeline.setProperty("fontName", null);
+            pipeline.setProperty("fontSizePt", null);
+            pipeline.setProperty("alphabet", ""); // empty alphabet switches OCR off
+        }
+    }
+
+    private RegionOfInterest getOcrRegion(Camera camera) {
+        // By default we take the camera Y to define the ROI. Allow for roughly two lines of text one above 
+        // one below the camera-defined centerline.   
+        Location feederLocation = transformMachineToFeederLocation(camera.getLocation());
+        Length ascent = new Length(getOcrFontSizePt()*ascentFromFontSize/72.0, LengthUnit.Inches);
+        return getOcrRegion(camera, feederLocation.getLengthY().subtract(ascent), 
+                feederLocation.getLengthY().add(ascent)); 
+    }
+
+    private RegionOfInterest getOcrRegion(Camera camera, Length feederY0, Length feederY1) {
+        double ocrMarginMm = getOcrMargin().convertToUnits(LengthUnit.Millimeters).getValue();
+        double feederY0Mm = feederY0.convertToUnits(LengthUnit.Millimeters).getValue();
+        double feederY1Mm = feederY1.convertToUnits(LengthUnit.Millimeters).getValue();
+        // Create the feeder relative ROI for OCR, i.e. in the negative X margin area of the feeder.
+        Location [] feederLocations;
+        if (getOcrTextOrientation() == OcrTextOrientation.AwayFromTape) {
+            // Feeder is to the left. Scanning top, down.
+            feederLocations = new Location[] {
+                    new Location(LengthUnit.Millimeters, -2, feederY0Mm, 0, 0),
+                    new Location(LengthUnit.Millimeters, -2-ocrMarginMm, feederY0Mm, 0, 0),
+                    new Location(LengthUnit.Millimeters, -2, feederY1Mm, 0, 0)
+            };
+        }
+        else {
+            // Feeder is to the right. Scanning bottom up. 
+            feederLocations = new Location[] {
+                    new Location(LengthUnit.Millimeters, -2-ocrMarginMm, feederY1Mm, 0, 0),
+                    new Location(LengthUnit.Millimeters, -2, feederY1Mm, 0, 0),
+                    new Location(LengthUnit.Millimeters, -2-ocrMarginMm, feederY0Mm, 0, 0)
+            };
+        }
+        // Transform all into camera offset locations.
+        int i = 0;
+        Location [] cameraOffsets = new Location[feederLocations.length];
+        for (Location feederLocation : feederLocations) {
+            Location machineLocation = transformFeederToMachineLocation(feederLocation);
+            cameraOffsets[i++] = machineLocation.subtract(camera.getLocation());
+        }
+        // Create the ROI.
+        RegionOfInterest roi = new RegionOfInterest(cameraOffsets[0], cameraOffsets[1], cameraOffsets[2], true);
+        return roi;
+    }
+
     public class FindFeatures {
         private Camera camera;
         private CvPipeline pipeline;
@@ -359,6 +457,8 @@ public class BlindsFeeder extends ReferenceFeeder {
         private double pocketPositionMm;
         private double pocketPitchMm;
         private double pocketCenterlineMm;
+
+        private SimpleOcr.OcrModel detectedOcrModel;
 
         public FindFeatures(Camera camera, CvPipeline pipeline, final long showResultMilliseconds) {
             this.camera = camera;
@@ -522,6 +622,12 @@ public class BlindsFeeder extends ReferenceFeeder {
                 if (results == null /*???|| results.isEmpty()*/) {
                     throw new Exception("Feeder " + getName() + ": No features found.");
                 }
+
+                Result ocrStageResult = pipeline.getResult("OCR"); 
+                if (ocrStageResult != null) {
+                    detectedOcrModel = (SimpleOcr.OcrModel) ocrStageResult.model;
+                }
+
                 // in accordance with EIA-481 etc. we use millimeters.
                 Location mmScale = camera.getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters);
                 // TODO: configurable?
@@ -837,6 +943,12 @@ public class BlindsFeeder extends ReferenceFeeder {
                 setPocketCenterline(new Length(findFeaturesResults.getPocketCenterlineMm(), LengthUnit.Millimeters));
                 setPocketPitch(new Length(findFeaturesResults.getPocketPitchMm(), LengthUnit.Millimeters));
                 setPocketSize(new Length(findFeaturesResults.getPocketSizeMm(), LengthUnit.Millimeters));
+                
+                if (getOcrAction() != OcrAction.None) {
+                    OcrModel detectedOcrModel = findFeaturesResults.detectedOcrModel;
+                    Logger.trace("OCR text "+detectedOcrModel.getText());
+                    triggerOcrAction(detectedOcrModel, getOcrAction());
+                }
             }
         }
         else  {
@@ -847,6 +959,41 @@ public class BlindsFeeder extends ReferenceFeeder {
             Location cameraLocation = camera.getLocation();
             Location feederLocation = transformMachineToFeederLocation(cameraLocation).convertToUnits(LengthUnit.Millimeters);
             setPocketCenterline(new Length(Math.round(feederLocation.getY()), LengthUnit.Millimeters));
+        }
+    }
+
+    public void triggerOcrAction(OcrModel detectedOcrModel, OcrAction ocrAction) throws Exception {
+        String ocrText = detectedOcrModel.getText();
+        // Undo any forced line-breaking, marked by "\" at the end of the line.
+        ocrText = ocrText.replace("\\\n", "");
+        int pos = ocrText.indexOf('\n');
+        if (pos >= 0) {
+            ocrText = ocrText.substring(0, pos);
+        }
+        // TODO: check if parts can contain ' ' 
+        pos = ocrText.indexOf(' ');
+        if (pos >= 0) {
+            ocrText = ocrText.substring(0, pos);
+        }
+        Configuration cfg = Configuration.get();
+        Part ocrPart = cfg.getPart(ocrText);
+        if (ocrPart == null) {
+            throw new Exception("OCR could not identify/find part id in feeder "+getName()
+            +", OCR detected part id "+ocrText+" (avg. score="+detectedOcrModel.getAvgScore()+")");
+        }
+        Part currentPart = getPart();
+        if (currentPart == null) {
+            // No part set yet 
+            Logger.trace("[ReferencePushPullFeeder] OCR detected part in feeder "+getId()+", OCR part "+ocrPart.getId());
+            setPart(ocrPart);
+        }
+        else if (ocrPart != null && ocrPart != currentPart) {
+            // Wrong part selected in feeder
+            Logger.trace("OCR detected wrong part in slot of feeder "+getName()
+            +", current part "+currentPart.getId()+" != OCR part "+ocrPart.getId());
+            if (ocrAction == OcrAction.ChangePart) {
+                setPart(ocrPart);
+            }
         }
     }
 
@@ -884,7 +1031,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         Location cameraOpenPosition = getPickLocation(cameraPocket);
         Location cameraClosedPosition = getPickLocation(cameraPocket-0.5);
 
-        double damping = 1.0;
+        double factor = isBlindsReversed() ? -1.0 : 1.0;
 
         // Close cover to start with a known opposite position.
         actuateCover(false);
@@ -908,7 +1055,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             }
             // Apply the error to the edge.
             setEdgeOpenDistance(getEdgeOpenDistance()
-                    .add(offsetOpen.multiply(damping)));
+                    .add(offsetOpen.multiply(factor)));
 
             // Close the cover.
             actuateCover(false);
@@ -926,7 +1073,8 @@ public class BlindsFeeder extends ReferenceFeeder {
                 offsetClosed = offsetClosed.add(pocketPitch);
             }
             // Apply the error to the edge.
-            setEdgeClosedDistance(getEdgeClosedDistance().subtract(offsetClosed.multiply(damping)));
+            setEdgeClosedDistance(getEdgeClosedDistance()
+                    .subtract(offsetClosed.multiply(factor)));
 
             // Test against half the tolerance used for the "check open" test.
             if (Math.abs(offsetOpen.getValue()) < pocketPosToleranceMm*0.5
@@ -1296,7 +1444,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
             if (coverType == CoverType.BlindsCover) {
                 // Calculate the motion for the cover to be pushed in feeder local coordinates. 
-                Length feederX0 = (openState ? 
+                Length feederX0 = (openState ^ isBlindsReversed() ? 
                         edgeOpenDistance.multiply(-1.0)
                         .subtract(sprocketPitch.multiply(0.5)) // go half sprocket too far back
                         .subtract(nozzleTipDiameter.multiply(0.5))
@@ -1306,7 +1454,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                             .add(sprocketPitch.multiply(0.5)) // go half sprocket too far
                             .add(nozzleTipDiameter.multiply(0.5)))
                         .convertToUnits(location.getUnits());
-                Length feederX1 = (openState ? 
+                Length feederX1 = (openState  ^ isBlindsReversed() ? 
                         edgeOpenDistance.multiply(-1.0)
                         .subtract(nozzleTipDiameter.multiply(0.5))
                         : 
@@ -1627,6 +1775,11 @@ public class BlindsFeeder extends ReferenceFeeder {
                 }
                 setCalibrated(feeder.calibrated);
                 setVisionEnabled(feeder.visionEnabled);
+                setOcrAction(feeder.getOcrAction());
+                setOcrMargin(feeder.getOcrMargin());
+                setOcrFontName(feeder.getOcrFontName());
+                setOcrFontSizePt(feeder.getOcrFontSizePt());
+                setOcrTextOrientation(feeder.getOcrTextOrientation());
             }
             finally {
                 isUpdating = false;
@@ -1712,6 +1865,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             }
             pipeline.setProperty("camera", camera);
             pipeline.setProperty("feeder", this);
+            setupOcr(camera, pipeline);
 
             /* TODO: read the override property in the FilterContours stage
              * 
@@ -2092,6 +2246,45 @@ public class BlindsFeeder extends ReferenceFeeder {
         firePropertyChange("feedersTotal", oldValue, feedersTotal);
     }
 
+    public OcrAction getOcrAction() {
+        return ocrAction;
+    }
+
+    public void setOcrAction(OcrAction ocrAction) {
+        this.ocrAction = ocrAction;
+    }
+
+    public Length getOcrMargin() {
+        return ocrMargin;
+    }
+
+    public void setOcrMargin(Length ocrMargin) {
+        this.ocrMargin = ocrMargin;
+    }
+
+    public String getOcrFontName() {
+        return ocrFontName;
+    }
+
+    public void setOcrFontName(String ocrFontName) {
+        this.ocrFontName = ocrFontName;
+    }
+
+    public double getOcrFontSizePt() {
+        return ocrFontSizePt;
+    }
+
+    public void setOcrFontSizePt(double ocrFontSizePt) {
+        this.ocrFontSizePt = ocrFontSizePt;
+    }
+
+    public OcrTextOrientation getOcrTextOrientation() {
+        return ocrTextOrientation;
+    }
+
+    public void setOcrTextOrientation(OcrTextOrientation ocrTextOrientation) {
+        this.ocrTextOrientation = ocrTextOrientation;
+    }
 
     @Override
     public String toString() {

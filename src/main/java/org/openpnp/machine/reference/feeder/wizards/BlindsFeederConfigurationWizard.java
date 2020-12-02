@@ -27,6 +27,7 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.PrintWriter;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -57,11 +58,13 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.feeder.BlindsFeeder;
+import org.openpnp.machine.reference.feeder.BlindsFeeder.OcrAction;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.util.OcrUtil;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
@@ -71,6 +74,8 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import java.awt.event.ItemListener;
+import java.awt.event.ItemEvent;
 
 @SuppressWarnings("serial")
 public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard {
@@ -296,8 +301,18 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -305,20 +320,70 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         lblUseVision = new JLabel("Use Fiducial Vision?");
         lblUseVision.setToolTipText("<html><p>Use vision for fiducial calibration when the feeder is first used. </p>\r\n<p>Even if fiducial vision is disabled, vision will still be used for setup and <br />\r\ncover open checking</p><html>");
-        panelVision.add(lblUseVision, "2, 2");
+        panelVision.add(lblUseVision, "2, 2, right, default");
 
         JButton btnEditPipeline = new JButton(editPipelineAction);
 
         chckbxUseVision = new JCheckBox("");
         panelVision.add(chckbxUseVision, "4, 2");
-        panelVision.add(btnEditPipeline, "2, 4");
+        
+        lblOcrAction = new JLabel("OCR Action");
+        panelVision.add(lblOcrAction, "2, 4, right, default");
+        
+        ocrAction = new JComboBox(BlindsFeeder.OcrAction.values());
+        ocrAction.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                adaptDialog();
+            }
+        });
+        panelVision.add(ocrAction, "4, 4, fill, default");
+        
+        lblOcrMargin = new JLabel("OCR Margin");
+        panelVision.add(lblOcrMargin, "6, 4, right, default");
+        
+        ocrMargin = new JTextField();
+        panelVision.add(ocrMargin, "8, 4, fill, default");
+        ocrMargin.setColumns(10);
+        
+        List<String> fontList = OcrUtil.createFontSelectionList(feeder.getOcrFontName(), true);
+        lblOcrFontName = new JLabel("OCR Font");
+        panelVision.add(lblOcrFontName, "2, 6, right, default");
+        ocrFontName = new JComboBox(fontList.toArray());
+        lblOcrFontName.setToolTipText("<html>Name of the OCR font to be recognized.<br/>\r\nMonospace fonts work much better, allow lower resolution and therefore faster <br/>\r\noperation. Use a font where all the used characters are easily distinguishable.<br/>\r\nFonts with clear separation between glyphs are much preferred.</html>");
+        panelVision.add(ocrFontName, "4, 6, fill, default");
+        
+        lblFontSizept = new JLabel("Font Size [pt]");
+        panelVision.add(lblFontSizept, "6, 6, right, default");
+        
+        ocrFontSizePt = new JTextField();
+        panelVision.add(ocrFontSizePt, "8, 6, fill, default");
+        ocrFontSizePt.setColumns(10);
+        
+        lblOcrTextOrientation = new JLabel("OCR Text Orientation");
+        panelVision.add(lblOcrTextOrientation, "2, 8, right, default");
+        
+        ocrTextOrientation = new JComboBox(BlindsFeeder.OcrTextOrientation.values());
+        panelVision.add(ocrTextOrientation, "4, 8, fill, default");
+
+        panelVision.add(btnEditPipeline, "2, 12");
 
         JButton btnResetPipeline = new JButton(resetPipelineAction);
 
         btnPipelineToAllFeeders = new JButton(setPipelineToAllAction);
         btnPipelineToAllFeeders.setText("Set Pipeline to all");
-        panelVision.add(btnPipelineToAllFeeders, "4, 4");
-        panelVision.add(btnResetPipeline, "6, 4");
+        panelVision.add(btnPipelineToAllFeeders, "4, 12");
+        panelVision.add(btnResetPipeline, "6, 12");
+    }
+
+    protected void adaptDialog() {
+        BlindsFeeder.OcrAction action = (OcrAction) ocrAction.getSelectedItem();
+        boolean ocrEnabled = (action != OcrAction.None);
+        lblOcrMargin.setVisible(ocrEnabled);
+        ocrMargin.setVisible(ocrEnabled);
+        lblOcrFontName.setVisible(ocrEnabled);
+        ocrFontName.setVisible(ocrEnabled);
+        lblFontSizept.setVisible(ocrEnabled);
+        ocrFontSizePt.setVisible(ocrEnabled);
     }
 
     @Override
@@ -351,8 +416,14 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         addWrappedBinding(fiducial3Location, "lengthX", textFieldFiducial3X, "text", lengthConverter);
         addWrappedBinding(fiducial3Location, "lengthY", textFieldFiducial3Y, "text", lengthConverter);
 
-        addWrappedBinding(feeder, "visionEnabled", chckbxUseVision, "selected");
         addWrappedBinding(feeder, "normalize", chckbxNormalize, "selected");
+
+        addWrappedBinding(feeder, "visionEnabled", chckbxUseVision, "selected");
+        addWrappedBinding(feeder, "ocrAction", ocrAction, "selectedItem");
+        addWrappedBinding(feeder, "ocrMargin", ocrMargin, "text", lengthConverter);
+        addWrappedBinding(feeder, "ocrFontName", ocrFontName, "selectedItem");
+        addWrappedBinding(feeder, "ocrFontSizePt", ocrFontSizePt, "text", doubleConverter);
+        addWrappedBinding(feeder, "ocrTextOrientation", ocrTextOrientation, "selectedItem");
 
         ComponentDecorators.decorateWithAutoSelect(textFieldLocationRotation);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPartZ);
@@ -363,6 +434,9 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial2Y);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial3X);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial3Y);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(ocrMargin);
+
+        adaptDialog();
     }
 
     public HeadMountable getTool() throws Exception {
@@ -493,6 +567,16 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
             });
         }
     };
+    private JLabel lblOcrAction;
+    private JComboBox ocrAction;
+    private JLabel lblOcrMargin;
+    private JTextField ocrMargin;
+    private JLabel lblOcrFontName;
+    private JComboBox ocrFontName;
+    private JLabel lblFontSizept;
+    private JTextField ocrFontSizePt;
+    private JLabel lblOcrTextOrientation;
+    private JComboBox ocrTextOrientation;
 
     private void calibrateFiducials() {
         UiUtils.submitUiMachineTask(() -> {
