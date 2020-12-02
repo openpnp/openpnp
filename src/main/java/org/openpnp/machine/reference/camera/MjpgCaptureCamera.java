@@ -288,6 +288,7 @@ public class MjpgCaptureCamera extends ReferenceCamera implements Runnable {
             try {
                 BufferedImage image = internalCapture();
                 if (image != null) {
+                    image = transformImage(image);
                     broadcastCapture(image);
                 }
             }

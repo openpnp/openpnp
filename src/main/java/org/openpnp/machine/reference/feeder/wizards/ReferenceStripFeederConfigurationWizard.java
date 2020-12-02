@@ -175,7 +175,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
         comboBoxPart.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                updatePartInfo();            
+                updatePartInfo(e);            
             }
         });
         
@@ -413,16 +413,15 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndZ);
     }
 
-    private void updatePartInfo()
+    private void updatePartInfo(ActionEvent e)
     {
         int count = 0;
-        List<Board> boards = Configuration.get().getBoards();
-        for (int i=0; i<boards.size(); i++)    {
-            Board board = boards.get(i);
-            List<Placement> placements = board.getPlacements();
-            for (int p=0; p<placements.size(); p++)
+    	Part feeder_part =(Part)comboBoxPart.getSelectedItem(); 
+    
+        for (Board board: Configuration.get().getBoards())    {
+            for (Placement p : board.getPlacements())
             {
-                if (placements.get(p).getPart() == feeder.getPart())
+                if (p.getPart() == feeder_part)
                 {
                     count++;
                 }
