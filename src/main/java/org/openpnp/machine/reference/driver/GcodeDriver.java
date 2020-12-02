@@ -450,7 +450,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 ControllerAxis axis = axesLocation.getAxisByVariable(this, variable);
                 if (axis != null) {
                     if (hasVariable(command, variable)) {
-                        double coordinate = axesLocation.getCoordinate(axis, getUnits());
+                        double coordinate;
+                        if (axis.getType() == Type.Rotation) {
+                            // Never convert rotation to driver units.
+                            coordinate = axesLocation.getCoordinate(axis);
+                        }
+                        else {
+                            coordinate = axesLocation.getCoordinate(axis, getUnits());
+                        }
                         command = substituteVariable(command, variable, coordinate);
                         command = substituteVariable(command, variable+"L", 
                                 axis.getLetter());
@@ -582,8 +589,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         Double feedRate = move.getFeedRatePerMinute();
         Double acceleration = move.getAccelerationPerSecond2();
         Double jerk = move.getJerkPerSecond3();
-        AxesLocation segment = move.getLocation0().motionSegmentTo(allAxesLocation);
-
         double driverDistance = movedAxesLocation.getEuclideanMetric(this, (axis) -> 
             movedAxesLocation.getLengthCoordinate(axis).convertToUnits(getUnits()).getValue() - axis.getDriverCoordinate()).third;
 
@@ -638,8 +643,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 // The move is definitely on. 
                 doesMove = true;
                 // TODO: discuss whether we should round to axis resolution here.
-                double coordinate = allAxesLocation.getLengthCoordinate(axis)
-                        .convertToUnits(getUnits()).getValue(); 
+                double coordinate;
+                if (axis.getType() == Type.Rotation) {
+                    // Never convert rotation to driver units.
+                    coordinate = allAxesLocation.getCoordinate(axis);
+                }
+                else {
+                    coordinate = allAxesLocation.getCoordinate(axis, getUnits());
+                }
                 double previousCoordinate = axis.getDriverCoordinate(); 
                 int direction = ((Double)coordinate).compareTo(previousCoordinate);
                 // Substitute the axis variables.
@@ -1182,7 +1193,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 String variable = axis.getLetter(); 
                 String s = matcher.group(variable);
                 Double d = Double.valueOf(s);
-                position = position.put(new AxesLocation(axis, new Length(d, getUnits())));
+                if (axis.getType() == Type.Rotation) {
+                    // Rotation axis is not converted from driver units.
+                    position = position.put(new AxesLocation(axis, new Length(d, AxesLocation.getUnits())));
+                }
+                else {
+                    position = position.put(new AxesLocation(axis, new Length(d, getUnits())));
+                }
             }
             catch (IllegalArgumentException e) {
                 // Axis is not present in pattern. That's a warning, but might not be supported by controller, so we let it go. 
