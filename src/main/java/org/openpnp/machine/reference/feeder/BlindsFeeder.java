@@ -43,9 +43,11 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.BlindsFeederConfigurationWizard;
+import org.openpnp.machine.reference.feeder.wizards.BlindsFeederTapeConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -59,6 +61,7 @@ import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.openpnp.util.HslColor;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
@@ -2103,6 +2106,14 @@ public class BlindsFeeder extends ReferenceFeeder {
     @Override
     public String getPropertySheetHolderTitle() {
         return getClass().getSimpleName() + " " + getName();
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration"),
+                new PropertySheetWizardAdapter(new BlindsFeederTapeConfigurationWizard(this), "Tape & Cover"),
+                };
     }
 
     @Override
