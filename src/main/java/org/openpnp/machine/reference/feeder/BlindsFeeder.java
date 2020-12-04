@@ -31,9 +31,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.swing.Action;
 
@@ -48,9 +46,8 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
-import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.OcrWrongPartAction;
+import org.openpnp.machine.reference.feeder.wizards.BlindsFeederArrayConfigurationWizard;
 import org.openpnp.machine.reference.feeder.wizards.BlindsFeederConfigurationWizard;
-import org.openpnp.machine.reference.feeder.wizards.BlindsFeederTapeConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -66,7 +63,6 @@ import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.openpnp.util.HslColor;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OcrUtil;
@@ -1780,6 +1776,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 setOcrFontName(feeder.getOcrFontName());
                 setOcrFontSizePt(feeder.getOcrFontSizePt());
                 setOcrTextOrientation(feeder.getOcrTextOrientation());
+                setPipeline(feeder.getPipeline());
             }
             finally {
                 isUpdating = false;
@@ -1844,8 +1841,30 @@ public class BlindsFeeder extends ReferenceFeeder {
         return pipeline;
     }
 
+    public void setPipeline(CvPipeline pipeline) {
+        CvPipeline oldValue = this.pipeline;
+        this.pipeline = pipeline;
+        if (oldValue != pipeline) {
+            firePropertyChange("pipeline", oldValue, pipeline);
+            updateConnectedFeedersFromThis();
+        }
+    }
+
     public void resetPipeline() {
-        pipeline = createDefaultPipeline();
+        setPipeline(createDefaultPipeline());
+    }
+
+    public void setOcrSettingsToAllFeeders() {
+        // Update all the BlindsFeeder instances' OCR settings from this one.
+        for (BlindsFeeder feeder : getAllBlindsFeeders()) {
+            if (feeder != this) {
+                setOcrAction(feeder.getOcrAction());
+                setOcrMargin(feeder.getOcrMargin());
+                setOcrFontName(feeder.getOcrFontName());
+                setOcrFontSizePt(feeder.getOcrFontSizePt());
+                setOcrTextOrientation(feeder.getOcrTextOrientation());
+            }
+        }
     }
 
     public void setPipelineToAllFeeders() throws CloneNotSupportedException {
@@ -1889,8 +1908,6 @@ public class BlindsFeeder extends ReferenceFeeder {
             throw new Error(e);
         }
     }
-
-
 
     public boolean isCalibrating() {
         return calibrating;
@@ -1948,11 +1965,9 @@ public class BlindsFeeder extends ReferenceFeeder {
         }
     }
 
-
     public Location getFiducial2Location() {
         return fiducial2Location;
     }
-
 
     public void setFiducial2Location(Location fiducial2Location) {
         Location oldValue = this.fiducial2Location;
@@ -1984,11 +1999,9 @@ public class BlindsFeeder extends ReferenceFeeder {
         }
     }
 
-
     public Location getFiducial3Location() {
         return fiducial3Location;
     }
-
 
     public void setFiducial3Location(Location fiducial3Location) {
         Location oldValue = this.fiducial3Location;
@@ -2000,11 +2013,9 @@ public class BlindsFeeder extends ReferenceFeeder {
         }
     }
 
-
     public boolean isNormalize() {
         return normalize;
     }
-
 
     public void setNormalize(boolean normalize) {
         boolean oldValue = this.normalize;
@@ -2015,7 +2026,6 @@ public class BlindsFeeder extends ReferenceFeeder {
             firePropertyChange("normalize", oldValue, normalize);
         }
     }
-
 
     public Length getTapeLength() {
         return tapeLength;
@@ -2157,7 +2167,6 @@ public class BlindsFeeder extends ReferenceFeeder {
     public void setVisionEnabled(boolean visionEnabled) {
         boolean oldValue = this.visionEnabled;
         this.visionEnabled = visionEnabled;
-        firePropertyChange("visionEnabled", oldValue, visionEnabled);
         if (oldValue != visionEnabled) {
             firePropertyChange("visionEnabled", oldValue, visionEnabled);
             this.updateConnectedFeedersFromThis();
@@ -2251,7 +2260,12 @@ public class BlindsFeeder extends ReferenceFeeder {
     }
 
     public void setOcrAction(OcrAction ocrAction) {
+        OcrAction oldValue = this.ocrAction;
         this.ocrAction = ocrAction;
+        if (oldValue != ocrAction) {
+            firePropertyChange("ocrAction", oldValue, ocrAction);
+            this.updateConnectedFeedersFromThis();
+        }
     }
 
     public Length getOcrMargin() {
@@ -2259,7 +2273,12 @@ public class BlindsFeeder extends ReferenceFeeder {
     }
 
     public void setOcrMargin(Length ocrMargin) {
+        Length oldValue = this.ocrMargin;
         this.ocrMargin = ocrMargin;
+        if (oldValue != ocrMargin) {
+            firePropertyChange("ocrMargin", oldValue, ocrMargin);
+            this.updateConnectedFeedersFromThis();
+        }
     }
 
     public String getOcrFontName() {
@@ -2267,7 +2286,12 @@ public class BlindsFeeder extends ReferenceFeeder {
     }
 
     public void setOcrFontName(String ocrFontName) {
+        String oldValue = this.ocrFontName;
         this.ocrFontName = ocrFontName;
+        if (oldValue != ocrFontName) {
+            firePropertyChange("ocrFontName", oldValue, ocrFontName);
+            this.updateConnectedFeedersFromThis();
+        }
     }
 
     public double getOcrFontSizePt() {
@@ -2275,7 +2299,12 @@ public class BlindsFeeder extends ReferenceFeeder {
     }
 
     public void setOcrFontSizePt(double ocrFontSizePt) {
+        double oldValue = this.ocrFontSizePt;
         this.ocrFontSizePt = ocrFontSizePt;
+        if (oldValue != ocrFontSizePt) {
+            firePropertyChange("ocrFontSizePt", oldValue, ocrFontSizePt);
+            this.updateConnectedFeedersFromThis();
+        }
     }
 
     public OcrTextOrientation getOcrTextOrientation() {
@@ -2283,7 +2312,12 @@ public class BlindsFeeder extends ReferenceFeeder {
     }
 
     public void setOcrTextOrientation(OcrTextOrientation ocrTextOrientation) {
+        OcrTextOrientation oldValue = this.ocrTextOrientation;
         this.ocrTextOrientation = ocrTextOrientation;
+        if (oldValue != ocrTextOrientation) {
+            firePropertyChange("ocrTextOrientation", oldValue, ocrTextOrientation);
+            this.updateConnectedFeedersFromThis();
+        }
     }
 
     @Override
@@ -2305,7 +2339,7 @@ public class BlindsFeeder extends ReferenceFeeder {
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration"),
-                new PropertySheetWizardAdapter(new BlindsFeederTapeConfigurationWizard(this), "Tape & Cover"),
+                new PropertySheetWizardAdapter(new BlindsFeederArrayConfigurationWizard(this), "Feeder Array"),
                 };
     }
 
