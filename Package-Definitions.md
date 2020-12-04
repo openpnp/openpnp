@@ -155,3 +155,31 @@ To use one of these packages in your system just copy the definition to your cli
    <compatible-nozzle-tip-ids class="java.util.ArrayList"/>
 </package>
 ```
+## TSSOP-20
+```
+<package version="1.1" id="TSSOP-20" pick-vacuum-level="0.0" place-blow-off-level="0.0">
+   <footprint units="Millimeters" body-width="4.4" body-height="6.9">
+      <pad name="1" x="-2.75" y="2.925" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+      <pad name="2" x="-2.75" y="2.275" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+      <pad name="3" x="-2.75" y="1.625" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+      <pad name="4" x="-2.75" y="0.975" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+      <pad name="5" x="-2.75" y="0.325" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+      <pad name="6" x="-2.75" y="-0.325" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+      <pad name="7" x="-2.75" y="-0.975" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+      <pad name="8" x="-2.75" y="-1.625" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+      <pad name="9" x="-2.75" y="-2.275" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+      <pad name="10" x="-2.75" y="-2.925" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+      <pad name="11" x="2.75" y="-2.925" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+      <pad name="12" x="2.75" y="-2.275" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+      <pad name="13" x="2.75" y="-1.625" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+      <pad name="14" x="2.75" y="-0.975" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+      <pad name="15" x="2.75" y="-0.325" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+      <pad name="16" x="2.75" y="0.325" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+      <pad name="17" x="2.75" y="0.975" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+      <pad name="18" x="2.75" y="1.625" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+      <pad name="19" x="2.75" y="2.275" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+      <pad name="20" x="2.75" y="2.925" width="1.0" height="0.3" rotation="0.0" roundness="0.0"/>
+   </footprint>
+   <compatible-nozzle-tip-ids class="java.util.ArrayList"/>
+</package>
+```
