@@ -131,3 +131,27 @@ To use one of these packages in your system just copy the definition to your cli
    <compatible-nozzle-tip-ids class="java.util.ArrayList"/>
 </package>
 ```
+## SOP-16
+```
+<package version="1.1" id="SOP-16" pick-vacuum-level="0.0" place-blow-off-level="0.0">
+   <footprint units="Millimeters" body-width="4.0" body-height="10.0">
+      <pad name="1" x="-2.5" y="4.445" width="1.2" height="0.6" rotation="0.0" roundness="0.0"/>
+      <pad name="2" x="-2.5" y="3.175" width="1.2" height="0.6" rotation="0.0" roundness="0.0"/>
+      <pad name="3" x="-2.5" y="1.905" width="1.2" height="0.6" rotation="0.0" roundness="0.0"/>
+      <pad name="4" x="-2.5" y="0.635" width="1.2" height="0.6" rotation="0.0" roundness="0.0"/>
+      <pad name="5" x="-2.5" y="-0.635" width="1.2" height="0.6" rotation="0.0" roundness="0.0"/>
+      <pad name="6" x="-2.5" y="-1.905" width="1.2" height="0.6" rotation="0.0" roundness="0.0"/>
+      <pad name="7" x="-2.5" y="-3.175" width="1.2" height="0.6" rotation="0.0" roundness="0.0"/>
+      <pad name="8" x="-2.5" y="-4.445" width="1.2" height="0.6" rotation="0.0" roundness="0.0"/>
+      <pad name="9" x="2.5" y="-4.445" width="1.2" height="0.6" rotation="0.0" roundness="0.0"/>
+      <pad name="10" x="2.5" y="-3.175" width="1.2" height="0.6" rotation="0.0" roundness="0.0"/>
+      <pad name="11" x="2.5" y="-1.905" width="1.2" height="0.6" rotation="0.0" roundness="0.0"/>
+      <pad name="12" x="2.5" y="-0.635" width="1.2" height="0.6" rotation="0.0" roundness="0.0"/>
+      <pad name="13" x="2.5" y="0.635" width="1.2" height="0.6" rotation="0.0" roundness="0.0"/>
+      <pad name="14" x="2.5" y="1.905" width="1.2" height="0.6" rotation="0.0" roundness="0.0"/>
+      <pad name="15" x="2.5" y="3.175" width="1.2" height="0.6" rotation="0.0" roundness="0.0"/>
+      <pad name="16" x="2.5" y="4.445" width="1.2" height="0.6" rotation="0.0" roundness="0.0"/>
+   </footprint>
+   <compatible-nozzle-tip-ids class="java.util.ArrayList"/>
+</package>
+```
