@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 <mark@makr.zone>
+ * Copyright (C) 2020 <mark@makr.zone>
  * 
  * This file is part of OpenPnP.
  * 
@@ -22,7 +22,6 @@ package org.openpnp.util;
 import java.awt.GraphicsEnvironment;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,6 +29,8 @@ import java.util.function.Function;
 
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
+import org.openpnp.spi.Feeder;
+import org.openpnp.vision.pipeline.stages.SimpleOcr.OcrModel;
 
 public class OcrUtil {
     /**
@@ -80,5 +81,60 @@ public class OcrUtil {
             }
         }
         return alphabet.toString();
+    }
+    /**
+     * Identify an OCR detected part. This will automatically fuse line breaks, determine whether spaces are allowed 
+     * and allow for partial matches in the typical form *-pattern (for redundant package prefixes etc.), but checking
+     * for ambiguity.  
+     * 
+     * @param detectedOcrModel
+     * @param feeder
+     * @return
+     * @throws Exception
+     */
+    public static Part identifyDetectedPart(OcrModel detectedOcrModel, Feeder feeder) throws Exception {
+        String ocrText = detectedOcrModel.getText();
+        Configuration cfg = Configuration.get();
+        // Undo any forced line-breaking, marked by "\" at the end of the line.
+        ocrText = ocrText.replace("\\\n", "");
+        int pos = ocrText.indexOf('\n');
+        if (pos >= 0) {
+            ocrText = ocrText.substring(0, pos);
+        }
+        pos = ocrText.indexOf(' ');
+        if (pos >= 0) {
+            boolean allowSpace = false;
+            for (Part part : cfg.getParts()) {
+                if (part.getId().contains(" ")) {
+                    allowSpace = true;
+                    break;
+                }
+            }
+            if (!allowSpace) {
+                ocrText = ocrText.substring(0, pos);
+            }
+        }
+        Part ocrPart = null;
+        for (Part part : cfg.getParts()) {
+            if (part.getId().equals(ocrText)) {
+                // Direct match
+                ocrPart = part;
+                break;
+            }
+            else if (part.getId().endsWith("-"+ocrText)) { 
+                // Partial match
+                if (ocrPart != null) {
+                    // Uh-oh, ambiguous!
+                    throw new Exception("OCR part id "+ocrText+" on feeder "+feeder.getName()
+                    +" matches multiple parts "+ocrPart.getId()+" and "+part.getId());
+                }
+                ocrPart = part;
+            }
+        }
+        if (ocrPart == null) {
+            throw new Exception("OCR could not identify/find part id on feeder "+feeder.getName()
+            +", OCR detected part id "+ocrText+" (avg. score="+detectedOcrModel.getAvgScore()+")");
+        }
+        return ocrPart;
     }
 }

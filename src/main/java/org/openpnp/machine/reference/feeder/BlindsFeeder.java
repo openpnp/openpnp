@@ -167,7 +167,7 @@ public class BlindsFeeder extends ReferenceFeeder {
     private OcrAction ocrAction = OcrAction.None;
 
     @Element(required = false)
-    private Length ocrMargin = new Length(12, LengthUnit.Millimeters); 
+    private Length ocrMargin = new Length(20, LengthUnit.Millimeters); 
 
     @Attribute(required = false) 
     private String ocrFontName = "Liberation Mono";
@@ -387,7 +387,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             pipeline.setProperty("regionOfInterest", getOcrRegion(camera));
             pipeline.setProperty("fontName", getOcrFontName());
             pipeline.setProperty("fontSizePt", getOcrFontSizePt());
-            pipeline.setProperty("alphabet", OcrUtil.getConsolidatedPartsAlphabet(null, ""));
+            pipeline.setProperty("alphabet", OcrUtil.getConsolidatedPartsAlphabet(null, "\\"));
         }
         else {
             pipeline.setProperty("regionOfInterest", null);
@@ -696,21 +696,21 @@ public class BlindsFeeder extends ReferenceFeeder {
                                         && mmSize.getX()/mmSize.getY() < fidAspect 
                                         && mmSize.getY()/mmSize.getX() < fidAspect) {
                                     fiducials.add(result);
-                                    Logger.debug("[BlindsFeeder] accepted fiducal candidate: result {}, mmSize {}", 
+                                    Logger.debug("accepted fiducal candidate: result {}, mmSize {}", 
                                             result, mmSize);
                                 }
                                 else {
-                                    Logger.debug("[BlindsFeeder] dismissed fiducal candidate: result {}, mmSize {}", 
+                                    Logger.debug("dismissed fiducal candidate: result {}, mmSize {}", 
                                             result, mmSize);
                                 }
                             }
                             else {
-                                Logger.debug("[BlindsFeeder] dismissed fiducal candidate: result {}, angle {}", 
+                                Logger.debug("dismissed fiducal candidate: result {}, angle {}", 
                                         result, angle);
                             }
                         }
                         else {
-                            Logger.debug("[BlindsFeeder] dismissed fiducal candidate: result {}, center {}", 
+                            Logger.debug("dismissed fiducal candidate: result {}, center {}", 
                                     result, center);
                         }
                         if (positionTolerant || Math.abs(cameraFeederY - center.getY()) < positionTolerance) {
@@ -734,26 +734,26 @@ public class BlindsFeeder extends ReferenceFeeder {
                                             }
                                         }
                                         blinds.add(result);
-                                        Logger.debug("[BlindsFeeder] accepted pocket candidate: result {}, mmSize {}", 
+                                        Logger.debug("accepted pocket candidate: result {}, mmSize {}", 
                                                 result, mmSize);
                                     }
                                     else {
-                                        Logger.debug("[BlindsFeeder] dismissed pocket candidate: result {}, mmSize {}", 
+                                        Logger.debug("dismissed pocket candidate: result {}, mmSize {}", 
                                                 result, mmSize);
                                     }
                                 }
                                 else {
-                                    Logger.debug("[BlindsFeeder] dismissed pocket candidate: result {}, angle {}", 
+                                    Logger.debug("dismissed pocket candidate: result {}, angle {}", 
                                             result, angle);
                                 }
                             }
                             else {
-                                Logger.debug("[BlindsFeeder] dismissed pocket candidate: result {}, X {}", 
+                                Logger.debug("dismissed pocket candidate: result {}, X {}", 
                                         result, center.getX());
                             }
                         }
                         else {
-                            Logger.debug("[BlindsFeeder] dismissed pocket candidate: result {}, Y {}", 
+                            Logger.debug("dismissed pocket candidate: result {}, Y {}", 
                                     result, center.getY());
                         }
                     }
@@ -785,7 +785,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 double bestUpperY = histogramUpper.getMaximumKey();
                 pocketSizeMm = bestUpperY - bestLowerY;
                 pocketCenterlineMm = Math.round((bestUpperY + bestLowerY)*0.5);
-                Logger.debug("[BlindsFeeder] histogram in Y: pocketCenterlineMm {}, pocketSizeMm {}", 
+                Logger.debug("histogram in Y: pocketCenterlineMm {}, pocketSizeMm {}", 
                         pocketCenterlineMm, pocketSizeMm);
 
                 lines = new ArrayList<>();
@@ -816,7 +816,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                     previous = location;
                 }
                 pocketPitchMm = histogramPitch.getMaximumKey();
-                Logger.debug("[BlindsFeeder] histogram in pitch: pocketPitchMm {}", 
+                Logger.debug("histogram in pitch: pocketPitchMm {}", 
                         pocketPitchMm);
 
                 // Try to determine the pocket position from feeder zero X.
@@ -841,7 +841,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                     }
                 }
                 pocketPositionMm = histogramDistance.getMaximumKey();
-                Logger.debug("[BlindsFeeder] histogram position: pocketPositionMm {} using pitch {}", 
+                Logger.debug("histogram position: pocketPositionMm {} using pitch {}", 
                         pocketPositionMm, pocketPitchPosMm);
 
                 if (!Double.isNaN(pocketPositionMm)) {
@@ -959,28 +959,11 @@ public class BlindsFeeder extends ReferenceFeeder {
     }
 
     public void triggerOcrAction(OcrModel detectedOcrModel, OcrAction ocrAction) throws Exception {
-        String ocrText = detectedOcrModel.getText();
-        // Undo any forced line-breaking, marked by "\" at the end of the line.
-        ocrText = ocrText.replace("\\\n", "");
-        int pos = ocrText.indexOf('\n');
-        if (pos >= 0) {
-            ocrText = ocrText.substring(0, pos);
-        }
-        // TODO: check if parts can contain ' ' 
-        pos = ocrText.indexOf(' ');
-        if (pos >= 0) {
-            ocrText = ocrText.substring(0, pos);
-        }
-        Configuration cfg = Configuration.get();
-        Part ocrPart = cfg.getPart(ocrText);
-        if (ocrPart == null) {
-            throw new Exception("OCR could not identify/find part id in feeder "+getName()
-            +", OCR detected part id "+ocrText+" (avg. score="+detectedOcrModel.getAvgScore()+")");
-        }
+        Part ocrPart = OcrUtil.identifyDetectedPart(detectedOcrModel, this);
         Part currentPart = getPart();
         if (currentPart == null) {
             // No part set yet 
-            Logger.trace("[ReferencePushPullFeeder] OCR detected part in feeder "+getId()+", OCR part "+ocrPart.getId());
+            Logger.trace("OCR detected part in feeder "+getId()+", OCR part "+ocrPart.getId());
             setPart(ocrPart);
         }
         else if (ocrPart != null && ocrPart != currentPart) {
@@ -1108,7 +1091,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 RotatedRect bestFiducial = fiducials.get(0);
                 Location bestFiducialLocation = VisionUtils.getPixelLocation(camera, bestFiducial.center.x, bestFiducial.center.y);
                 double mmDistance = bestFiducialLocation.getLinearLengthTo(location).convertToUnits(LengthUnit.Millimeters).getValue();
-                Logger.debug("[BlindsFeeder] bestFiducialLocation: {}, mmDistance {}", 
+                Logger.debug("bestFiducialLocation: {}, mmDistance {}", 
                         bestFiducialLocation, mmDistance);
 
                 // update location
@@ -1206,7 +1189,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 new CoverActuation [] { CoverActuation.Manual, CoverActuation.CheckOpen, CoverActuation.OpenOnFirstUse, CoverActuation.OpenOnJobStart }, 
                 openState); 
         if (feederList.size() == 0) {
-            throw new Exception("[BlindsFeeder] No feeders found to "+(openState ? "open." : "close."));
+            throw new Exception("No feeders found to "+(openState ? "open." : "close."));
         }
         actuateListedFeederCovers(preferredNozzle, feederList, openState, false);
     }

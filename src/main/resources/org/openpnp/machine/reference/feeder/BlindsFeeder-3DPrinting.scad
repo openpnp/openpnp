@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 makr@makr.zone
+ * Copyright (C) 2019-2020 makr@makr.zone
  *
  * This 3D printed feeder is inteded to be used together with the "BlindsFeeder" feeder in OpenPNP. 
  *
@@ -20,6 +20,7 @@
  */
  
  debug_view = true;
+ label_view = false;
 
 // Include the BlindsFeeder Library. 
 // To learn the details about available parameters, please read the extensive comments in the library file. 
@@ -83,16 +84,29 @@ trayQLPF64 = TapeDefinition(
 // Create the feeder array with these tape definitions.
 // Note the BlindsFeeder has a myriad of parameters you can tweak, the ones used here are just the most important. 
 // See the Library file to learn more. 
-BlindsFeeder(
-    // Tape length from feeder edge to edge, usually multiples of 4mm. 
-    // Other values are supported if you manually adjust the edge distance in the OpenPNP feeder.
-    tape_length=84,
+rotate([0, 0, 180]) BlindsFeeder(
+    // Tape length from feeder edge to edge (not including the margin), usually multiples of 4mm. 
+    // Other values are supported if you manually adjust the default 2mm edge distance in the OpenPNP feeder.
+    tape_length=100,
     
-    // Number of lanes per tape definition.  
-    arrayed_tape_lanes=      [1,         1,         1,         1,         1],
-    // The arrayed tape definitions.
-    arrayed_tapes=           [tape0402,  tape0603,  tapeSOT3,  tape12mm,  trayQLPF64],
+    // For OCR, add a margin at the begin of the tape.
+    margin_length_begin=20,
+    // For OCR, blinds are closed when the cover is flush with tape begin.
+    blinds_closed_when_flush=true,
     
-    debug = debug_view
+    // Define the lanes.
+    arrayed_tape_lanes=      [
+        LaneDefinition(1, tape0402,   ["R0402-1K"]), 
+        LaneDefinition(1, tape0402,   ["R0402-100K"]), 
+        LaneDefinition(1, tape0603,   ["C0603-10uF"]), 
+        LaneDefinition(1, tapeSOT3,   ["SOT23_HV-\\","DMN24H3d5L"]), 
+        LaneDefinition(1, tape12mm,   ["CSD16340Q3"]), 
+        LaneDefinition(1, trayQLPF64, ["C1810_HV-\\", "4.7nF"]), 
+        ],
+    
+    label=label_view,
+    tray=(! label_view),
+    cover=(! label_view),
+    debug=debug_view
 );
 
