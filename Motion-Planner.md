@@ -165,6 +165,8 @@ ___
 - [[Advanced Motion Control]]
 - [[GcodeAsyncDriver]]
 - [[Motion Planner]]
+- [[Visual Homing]]
+- [[Motion Controller Firmwares]]
 
 ### Machine Axes
 - [[Machine Axes]]
@@ -172,4 +174,7 @@ ___
 - [[Transformed Axes]]
 - [[Linear Transformed Axes]]
 - [[Mapping Axes]] 
+- [[Axis Interlock Actuator]]
 
+### General
+- [[Issues and Solutions]]
