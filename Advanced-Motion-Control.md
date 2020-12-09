@@ -109,5 +109,5 @@ ___
 - [[Mapping Axes]] 
 - [[Axis Interlock Actuator]]
 
-## General
+### General
 - [[Issues and Solutions]]
