@@ -15,8 +15,26 @@ Hence, the Issues & Solutions system was born. The OpenPnP Machine Setup now has
 
 ![Issues and Solutions](https://user-images.githubusercontent.com/9963310/97119015-c611c880-170d-11eb-93d4-fa91e353eb26.png)
 
-For a quick and dirty Demo, [watch the video](https://youtu.be/VVaZo6BfhOM).
+For a quick Demo, [watch the video](https://youtu.be/VVaZo6BfhOM).
 
+___
 
+## Advanced Motion Control Topics
 
- 
+### Motion Control
+- [[Advanced Motion Control]]
+- [[GcodeAsyncDriver]]
+- [[Motion Planner]]
+- [[Visual Homing]]
+- [[Motion Controller Firmwares]]
+
+### Machine Axes
+- [[Machine Axes]]
+- [[Backlash-Compensation]]
+- [[Transformed Axes]]
+- [[Linear Transformed Axes]]
+- [[Mapping Axes]] 
+- [[Axis Interlock Actuator]]
+
+### General
+- [[Issues and Solutions]]
