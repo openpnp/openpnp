@@ -79,3 +79,24 @@ With the new method you can rest assured that axis transformations such as [[Non
 
 * **ResetToHomeLocation**: after mechanical homing, OpenPnP will move the camera to the Fiducial Location using the mechanical coordinate system. Computer Vision will then pin the fiducial down precisely. Afterwards this location is reset to the X and Y axis **Home Coordinates**. See the [[Machine Axis Controller Settings for how to set the Homing Coordinate|Machine-Axes#controller-settings]]. These are raw coordinates so axis transformations such as [[Non-Squareness Compensation|Linear-Transformed-Axes#use-case--non-squareness-compensation]] will not be applied, the coordinates may therefore appear differently in OpenPnP's DRO. 
 
+___
+
+## Advanced Motion Control Topics
+
+### Motion Control
+- [[Advanced Motion Control]]
+- [[GcodeAsyncDriver]]
+- [[Motion Planner]]
+- [[Visual Homing]]
+- [[Motion Controller Firmwares]]
+
+### Machine Axes
+- [[Machine Axes]]
+- [[Backlash-Compensation]]
+- [[Transformed Axes]]
+- [[Linear Transformed Axes]]
+- [[Mapping Axes]] 
+- [[Axis Interlock Actuator]]
+
+### General
+- [[Issues and Solutions]]
