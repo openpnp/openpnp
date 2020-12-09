@@ -7,7 +7,6 @@ The [[Machine-Axes]], [[Transformed-Axes]] and [[Linear-Transformed-Axes]] you c
 ![Assigning Virtual Axes](https://user-images.githubusercontent.com/9963310/96020598-8f56cb00-0e4e-11eb-9b67-dabd73a5f2cf.png)
 
 That's all. For those of you who remember the old `machine.xml` hacking days, this might almost appear too simple ;-) 
-
 ___
 
 ## Advanced Motion Control Topics
@@ -16,6 +15,8 @@ ___
 - [[Advanced Motion Control]]
 - [[GcodeAsyncDriver]]
 - [[Motion Planner]]
+- [[Visual Homing]]
+- [[Motion Controller Firmwares]]
 
 ### Machine Axes
 - [[Machine Axes]]
@@ -23,3 +24,7 @@ ___
 - [[Transformed Axes]]
 - [[Linear Transformed Axes]]
 - [[Mapping Axes]] 
+- [[Axis Interlock Actuator]]
+
+### General
+- [[Issues and Solutions]]
