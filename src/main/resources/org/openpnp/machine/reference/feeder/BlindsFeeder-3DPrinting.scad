@@ -39,7 +39,7 @@ tape0402 = TapeDefinition(
     pocket_pitch=2,
     pocket_width=2.25,
     tape_play=-0.03,
-    cover_play=0.14);
+    cover_play=0.08);
 
 tape0603 = TapeDefinition(
     tape_width=8,
@@ -47,7 +47,7 @@ tape0603 = TapeDefinition(
     pocket_pitch=4,
     pocket_width=2.5,
     tape_play=-0.0,
-    cover_play=0.1);
+    cover_play=0.05);
 
 tapeSOT3 = TapeDefinition(
     tape_width=8,
@@ -56,7 +56,7 @@ tapeSOT3 = TapeDefinition(
     pocket_pitch=4,
     pocket_width=4,
     tape_play=0.05,
-    cover_play=0.1,
+    cover_play=0.05,
     blinds=false);
 
 tape12mm = TapeDefinition(
@@ -66,7 +66,7 @@ tape12mm = TapeDefinition(
     pocket_pitch=8,
     pocket_width=5,
     tape_play=0.1,
-    cover_play=0.1,
+    cover_play=0.05,
     sprocket_thorns=2);
     
 trayQLPF64 = TapeDefinition(
@@ -76,7 +76,7 @@ trayQLPF64 = TapeDefinition(
     pocket_width=12.1,
     pocket_length=12.1,
     tape_play=0.1,
-    cover_play=0.1,
+    cover_play=0.05,
     blinds=false,
     sprocket_thorns=0);
 
@@ -94,12 +94,12 @@ rotate([0, 0, 180]) BlindsFeeder(
     // For OCR, blinds are closed when the cover is flush with tape begin.
     blinds_closed_when_flush=true,
     
-    // Define the lanes.
+    // Define the lanes with number, tape definitinon, part label (String array with multiple lines).
     arrayed_tape_lanes=      [
         LaneDefinition(1, tape0402,   ["R0402-1K"]), 
         LaneDefinition(1, tape0402,   ["R0402-100K"]), 
         LaneDefinition(1, tape0603,   ["C0603-10uF"]), 
-        LaneDefinition(1, tapeSOT3,   ["SOT23_HV-\\","DMN24H3d5L"]), 
+        LaneDefinition(1, tapeSOT3,   ["SOT23_HV-\\","DMN24H3D5L"]), 
         LaneDefinition(1, tape12mm,   ["CSD16340Q3"]), 
         LaneDefinition(1, trayQLPF64, ["C1810_HV-\\", "4.7nF"]), 
         ],

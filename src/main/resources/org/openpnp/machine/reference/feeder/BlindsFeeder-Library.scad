@@ -247,6 +247,7 @@ module BlindsFeeder(
     // OCR Font 
     ocr_font="Liberation Mono",
     ocr_font_size=6, // pt 
+    ocr_padding = 0.6,
 
     // Version tag to be printed on the feeder. 
     version_tag="v127",
@@ -429,14 +430,18 @@ module BlindsFeeder(
                 color("black") if (label || $preview) {
                     pt_scale=25.4/72.0;
                     font_scale=16/21; // There seems no way but to empirically scale this :-(
-                    // Create corners of label.
+                    // Create outline and header of label.
                     if (first && lane_i == 0) {
-                        translate([0, -1-margin_width]) square([1, 1]);
-                        translate([-margin_length_begin-1, -1-margin_width]) square([1, 1]);
-                        
+                        border=0.2;
                         across = arrayed_width(arrayed_tape_lanes, wall_width, 
                             len(arrayed_tape_lanes)-1);
-                        translate([-1, 1.25-margin_width]) {
+                        difference() {
+                            translate([-margin_length_begin-border, -border-margin_width]) 
+                                square([margin_length_begin+2*border, across+2*(margin_width+border)]);
+                            translate([-margin_length_begin, -margin_width]) 
+                                square([margin_length_begin, across+2*margin_width]);
+                        }
+                        translate([-ocr_padding, ocr_padding+0.2-margin_width]) {
                             rotate(180) {
                                 text(str("=", tape_length, "-", tape_length-tape_net, "=", 
                                     across, "+", margin_width), 
@@ -444,14 +449,10 @@ module BlindsFeeder(
                             }
                         }
                     }
-                    if (last && lane_i == 0) {
-                        translate([0, tape_lanes*(tape_width+wall_width*2)+margin_width]) square([1, 1]);
-                        translate([-margin_length_begin-1, tape_lanes*(tape_width+wall_width*2)+margin_width]) square([1, 1]);
-                    }
                     
                     for (part_line = [0:len(part)]) {
                         dy = (part_line-1)*ocr_font_size*pt_scale/font_scale;
-                        translate([-1, lane*(tape_width+wall_width*2)+(pocket_left+pocket_right)*0.5+dy]) {
+                        translate([-ocr_padding, lane*(tape_width+wall_width*2)+(pocket_left+pocket_right)*0.5+dy]) {
                             rotate(180) {
                                 text(part[part_line], font=ocr_font, size=ocr_font_size*pt_scale*font_scale, halign="left", valign="top");
                             }
