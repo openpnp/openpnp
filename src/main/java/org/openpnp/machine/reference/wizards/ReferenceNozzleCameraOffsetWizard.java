@@ -37,10 +37,8 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
     private JTextField nozzleMarkLocationX, nozzleMarkLocationY, nozzleMarkLocationZ;
     private JTextField nozzleOffsetLocationX, nozzleOffsetLocationY, nozzleOffsetLocationZ;
     private JCheckBox chckbxIncludeZ;
-    private JTextField textFieldSafeZ;
     private JLabel nozzleMarkLocationZLabel;
     private JLabel nozzleOffsetZLabel;
-    private JLabel lblSafeZ;
 
     private ReferenceNozzle nozzle;
     private MutableLocationProxy nozzleMarkLocation, nozzleOffsetLocation;
@@ -156,9 +154,6 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
         chckbxIncludeZ = new JCheckBox("");
         panel.add(chckbxIncludeZ);
         
-        JLabel lblWarningOnlyFor = new JLabel("<html><span style=\"color:red\">Note:</span> If you include it, the Wizard will also adjust your Safe Z to the new offset.</html>");
-        panel.add(lblWarningOnlyFor);
-        
         JLabel step7Label = new JLabel("7. Press \"Store nozzle mark position\".");
         instructionPanel.add(step7Label, "2, 23");
         
@@ -245,9 +240,6 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
 
         nozzleOffsetZLabel = new JLabel("Z");
         nozzleOffsetPanel.add(nozzleOffsetZLabel, "6, 2");
-        
-        lblSafeZ = new JLabel("Adjusted Safe Z");
-        nozzleOffsetPanel.add(lblSafeZ, "12, 2");
 
         nozzleOffsetLocationX = new JTextField();
         nozzleOffsetPanel.add(nozzleOffsetLocationX, "2, 4");
@@ -262,10 +254,6 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
         nozzleOffsetLocationZ.setColumns(10);
 
         instructionPanel.add(nozzleOffsetPanel, "2, 33");
-        
-        textFieldSafeZ = new JTextField();
-        nozzleOffsetPanel.add(textFieldSafeZ, "12, 4");
-        textFieldSafeZ.setColumns(10);
 
         contentPanel.add(instructionPanel);
                 
@@ -307,12 +295,7 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
                         Camera currentCamera = selectedCameraItem.getCamera();
                 Location cameraLocation = currentCamera.getLocation();
                 Location headOffsets = cameraLocation.subtract(nozzleMarkLocation.getLocation());
-                if (chckbxIncludeZ.isSelected()) {
-                    // adjust Safe Z to new offset
-                    Length safeZ = nozzle.getSafeZ().subtract(nozzle.getHeadOffsets().getLengthZ()).add(headOffsets.getLengthZ());
-                    textFieldSafeZ.setText(lengthConverter.convertForward(safeZ));
-                }
-                else {
+                if (! chckbxIncludeZ.isSelected()) {
                     // keep the old Z offset
                     headOffsets = headOffsets.derive(nozzle.getHeadOffsets(), false, false, true, false);
                 }
@@ -339,14 +322,12 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
         addWrappedBinding(nozzleOffsetLocation, "lengthY", nozzleOffsetLocationY, "text", lengthConverter);
         addWrappedBinding(nozzleOffsetLocation, "lengthZ", nozzleOffsetLocationZ, "text", lengthConverter);
 
-        addWrappedBinding(nozzle, "safeZ", textFieldSafeZ, "text", lengthConverter);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(nozzleMarkLocationX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(nozzleMarkLocationY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(nozzleMarkLocationZ);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(nozzleOffsetLocationX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(nozzleOffsetLocationY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(nozzleOffsetLocationZ);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
     }
     protected void initDataBindings() {
         BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty = BeanProperty.create("selected");
@@ -360,12 +341,6 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
         //
         AutoBinding<JCheckBox, Boolean, JLabel, Boolean> autoBinding_2 = Bindings.createAutoBinding(UpdateStrategy.READ, chckbxIncludeZ, jCheckBoxBeanProperty, nozzleOffsetZLabel, jLabelBeanProperty);
         autoBinding_2.bind();
-        //
-        AutoBinding<JCheckBox, Boolean, JLabel, Boolean> autoBinding_3 = Bindings.createAutoBinding(UpdateStrategy.READ, chckbxIncludeZ, jCheckBoxBeanProperty, lblSafeZ, jLabelBeanProperty);
-        autoBinding_3.bind();
-        //
-        AutoBinding<JCheckBox, Boolean, JTextField, Boolean> autoBinding_4 = Bindings.createAutoBinding(UpdateStrategy.READ, chckbxIncludeZ, jCheckBoxBeanProperty, textFieldSafeZ, jTextFieldBeanProperty);
-        autoBinding_4.bind();
         //
         AutoBinding<JCheckBox, Boolean, JTextField, Boolean> autoBinding_5 = Bindings.createAutoBinding(UpdateStrategy.READ, chckbxIncludeZ, jCheckBoxBeanProperty, nozzleOffsetLocationZ, jTextFieldBeanProperty);
         autoBinding_5.bind();
