@@ -8,6 +8,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
@@ -15,7 +16,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider;
-import org.openpnp.spi.Movable.MoveToOption;
+import org.openpnp.spi.base.AbstractHeadMountable;
 import org.openpnp.util.VisionUtils;
 
 
@@ -33,7 +34,7 @@ public class VisionUtilsTest {
         Assert.assertEquals(pixelLocation, new Location(LengthUnit.Millimeters, -220, 140, 0, 0));
     }
 
-    static class TestCamera implements Camera {
+    static class TestCamera extends AbstractHeadMountable implements Camera {
         protected Head head;
 
         @Override
@@ -49,21 +50,6 @@ public class VisionUtilsTest {
         @Override
         public void setHead(Head head) {
             this.head = head;
-        }
-
-        @Override
-        public void moveTo(Location location, double speed, MoveToOption... options) throws Exception {
-
-        }
-
-        @Override
-        public void moveToSafeZ(double speed) throws Exception {
-
-        }
-
-        @Override
-        public void home() throws Exception {
-
         }
 
         @Override
@@ -201,13 +187,21 @@ public class VisionUtilsTest {
         }
 
         @Override
-        public void moveTo(Location location, MoveToOption... options) throws Exception {
-            moveTo(location, getHead().getMachine().getSpeed(), options);
+        public Length getSafeZ() {
+            return null;
         }
 
         @Override
-        public void moveToSafeZ() throws Exception {
-            moveToSafeZ(getHead().getMachine().getSpeed());
+        public Location getHeadOffsets() {
+            return null;
+        }
+
+        @Override
+        public void setHeadOffsets(Location headOffsets) {
+        }
+
+        @Override
+        public void home() throws Exception {
         }
     }
 }

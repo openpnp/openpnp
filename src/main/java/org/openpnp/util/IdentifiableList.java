@@ -26,6 +26,9 @@ public class IdentifiableList<E extends Identifiable> extends ArrayList<E> {
     }
 
     public E get(String id) {
+        if (id == null || id.isEmpty()) {
+            return null;
+        }
         for (E e : this) {
             if (e.getId().equals(id)) {
                 return e;

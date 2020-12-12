@@ -29,15 +29,14 @@ import org.openpnp.CameraListener;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
-import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.VisionProvider;
-import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.SimpleGraph;
 import org.pmw.tinylog.Logger;
@@ -45,7 +44,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
-public abstract class AbstractCamera extends AbstractModelObject implements Camera {
+public abstract class AbstractCamera extends AbstractHeadMountable implements Camera {
     @Attribute
     protected String id;
 
@@ -248,10 +247,10 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     @Override
     public Location getLocation(HeadMountable tool) {
         if (tool != null) {
-            return getLocation().subtract(tool.getCameraToolCalibratedOffset(this));
+            return super.getLocation().subtract(tool.getCameraToolCalibratedOffset(this));
         }
 
-        return getLocation();
+        return super.getLocation();
     }
 
     @Override
@@ -316,7 +315,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
             .setColor(new Color(0, 180, 0));
             // init the capture data
             settleGraph.getRow(BOOLEAN, CAPTURE)
-            .setColor(new Color(00, 0x5B, 0xD9)); // the OpenPNP color
+            .setColor(new Color(00, 0x5B, 0xD9)); // the OpenPNP blue
             return settleGraph;
         }
         else {
@@ -465,7 +464,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                 lastSettleMat = mat;
 
                 long t = System.currentTimeMillis();
-                Logger.debug("autoSettleAndCapture t="+(t-t0)+" auto settle score: " + result);
+                Logger.trace("autoSettleAndCapture t="+(t-t0)+" auto settle score: " + result);
 
                 // If the image changed at least a bit (due to noise) and less than our
                 // threshold, we have a winner. The check for > 0 is to ensure that we're not just
@@ -665,7 +664,8 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         return img;
     }
 
-    public BufferedImage settleAndCapture() {
+    @Override
+    public BufferedImage settleAndCapture() throws Exception {
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("camera", this);
@@ -675,34 +675,24 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
             Logger.warn(e);
         }
 
-        try {
-            if (settleMethod == null) {
-                // Method undetermined, probably created a new camera (no @Commit handler)
-                settleMethod = SettleMethod.FixedTime;
-            }
-            if (settleMethod == SettleMethod.FixedTime) {
-                try {
-                    Thread.sleep(getSettleTimeMs());
-                }
-                catch (Exception e) {
+        // Make sure the camera (or its subject) stands still.
+        waitForCompletion(CompletionType.WaitForStillstand);
 
-                }
-                return capture();
-            }
-            else {
-                return autoSettleAndCapture();
-            }
+        if (settleMethod == null) {
+            // Method undetermined, probably created a new camera (no @Commit handler)
+            settleMethod = SettleMethod.FixedTime;
         }
-        finally {
-
+        if (settleMethod == SettleMethod.FixedTime) {
             try {
-                Map<String, Object> globals = new HashMap<>();
-                globals.put("camera", this);
-                Configuration.get().getScripting().on("Camera.AfterSettle", globals);
+                Thread.sleep(getSettleTimeMs());
             }
             catch (Exception e) {
-                Logger.warn(e);
+
             }
+            return capture();
+        }
+        else {
+            return autoSettleAndCapture();
         }
     }
 
@@ -893,17 +883,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     public Icon getPropertySheetHolderIcon() {
         return Icons.captureCamera;
     }
-    
-    @Override
-    public void moveTo(Location location, MoveToOption... options) throws Exception {
-        moveTo(location, getHead().getMachine().getSpeed(), options);
-    }
 
-    @Override
-    public void moveToSafeZ() throws Exception {
-        moveToSafeZ(getHead().getMachine().getSpeed());
-    }
-    
     @Override
     public String toString() {
         return getName();
