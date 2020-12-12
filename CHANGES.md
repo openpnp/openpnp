@@ -1,7 +1,7 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
-# 2020-10-29
+# 2020-12-12
 
 ## Advanced Motion Control
 
