@@ -518,7 +518,12 @@ class GcodeDriverSolutions implements Solutions.Subject {
                         break;
                     case SET_GLOBAL_OFFSETS_COMMAND:
                         if (hasAxes) {
-                            commandBuilt = "G92 "; 
+                            if (tinyG) {
+                                commandBuilt = "G28.3 ";
+                            }
+                            else {
+                                commandBuilt = "G92 ";
+                            }
                             for (String variable : gcodeDriver.getAxisVariables(machine)) {
                                 commandBuilt += "{"+variable+":"+variable+"%.4f} ";
                             }
