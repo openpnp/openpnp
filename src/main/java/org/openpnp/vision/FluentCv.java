@@ -355,7 +355,7 @@ public class FluentCv {
         return image;
     }
 
-    public FluentCv settleAndCapture(String... tag) {
+    public FluentCv settleAndCapture(String... tag) throws Exception {
         checkCamera();
         return toMat(camera.settleAndCapture(), tag);
     }

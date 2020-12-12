@@ -87,6 +87,19 @@ public class Icons {
     public static Icon processActivity1Icon = getIcon("/icons/process-activity-1.svg");
     public static Icon processActivity2Icon = getIcon("/icons/process-activity-2.svg");
 
+    public static Icon axisCartesian = getIcon("/icons/axis-cartesian.svg");
+    public static Icon axisRotation = getIcon("/icons/axis-rotate.svg");
+    public static Icon captureAxisLow = getIcon("/icons/capture-axis-low.svg");
+    public static Icon captureAxisHigh = getIcon("/icons/capture-axis-high.svg");
+    public static Icon positionAxisLow = getIcon("/icons/position-axis-low.svg");
+    public static Icon positionAxisHigh = getIcon("/icons/position-axis-high.svg");
+    public static Icon driver = getIcon("/icons/driver.svg");
+    public static Icon solutions = getIcon("/icons/solutions.svg");
+    public static Icon accept = getIcon("/icons/accept.svg");
+    public static Icon dismiss = getIcon("/icons/dismiss.svg");
+    public static Icon undo = getIcon("/icons/undo.svg");
+    public static Icon info = getIcon("/icons/info.svg");
+    
     public static Icon getIcon(String resourceName, int width, int height) {
         if (resourceName.endsWith(".svg")) {
             return new SvgIcon(Icons.class.getResource(resourceName), width, height);

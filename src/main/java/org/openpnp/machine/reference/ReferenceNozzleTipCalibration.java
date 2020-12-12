@@ -811,9 +811,12 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 throw (Exception)results;
             }
 
-            //show result from pipeline in camera view
-            MainFrame.get().getCameraViews().getCameraView(camera).showFilteredImage(
-                    OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 1000);
+            //show result from pipeline in camera view, but only if GUI is present (not so in UnitTests).
+            MainFrame mainFrame = MainFrame.get();
+            if (mainFrame != null) {
+                mainFrame.getCameraViews().getCameraView(camera).showFilteredImage(
+                        OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 1000);
+            }
 
             // add all results from pipeline to a Location-list post processing
             if (results instanceof List) {

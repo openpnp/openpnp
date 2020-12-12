@@ -24,6 +24,7 @@ package org.openpnp.util;
 import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -39,11 +40,12 @@ public class SimpleGraph {
 
     public static class DataScale {
         private String label;
+        public boolean labelShown;
         private Color color = null;
         private List<DataRow> dataRows = new ArrayList<>();
         private double relativePaddingTop;
         private double relativePaddingBottom;
-
+        private boolean symmetricIfSigned;
 
         public void addDataRow(DataRow dataRow) {
             dataRows.add(dataRow);
@@ -61,6 +63,12 @@ public class SimpleGraph {
             return label;
         }
 
+        public boolean isLabelShown() {
+            return labelShown;
+        }
+        public void setLabelShown(boolean labelShown) {
+            this.labelShown = labelShown;
+        }
         public Color getColor() {
             return color;
         }
@@ -78,6 +86,12 @@ public class SimpleGraph {
         }
         public void setRelativePaddingBottom(double relativePaddingBottom) {
             this.relativePaddingBottom = relativePaddingBottom;
+        }
+        public boolean isSymmetricIfSigned() {
+            return symmetricIfSigned;
+        }
+        public void setSymmetricIfSigned(boolean symmetricIfSigned) {
+            this.symmetricIfSigned = symmetricIfSigned;
         }
 
         public Point2D.Double getMinimum() {
@@ -182,6 +196,7 @@ public class SimpleGraph {
     public static class DataRow {
         private String label;
         private Color color;
+        private int displayCycleMask = 1; // Displayed on mask 1
         private TreeMap<Double, Double> data = new TreeMap<>();
 
         // housekeeping
@@ -196,8 +211,10 @@ public class SimpleGraph {
         }
 
         public void recordDataPoint(double x, double y) {
-            data.put(x, y);
-            dirty = true;
+            if (Double.isFinite(x) && Double.isFinite(y)) {
+                data.put(x, y);
+                dirty = true;
+            }
         }
         public Double getDataPoint(double x) {
             return data.get(x);
@@ -275,6 +292,14 @@ public class SimpleGraph {
         public void setColor(Color color) {
             this.color = color;
         }
+
+        public int getDisplayCycleMask() {
+            return displayCycleMask;
+        }
+
+        public void setDisplayCycleMask(int displayCycleMask) {
+            this.displayCycleMask = displayCycleMask;
+        }
     }
 
 
@@ -309,5 +334,9 @@ public class SimpleGraph {
             }
         }
         return maximum; 
+    }
+
+    public List<DataScale> getScales() {
+        return Collections.unmodifiableList(dataScales);
     }
 }

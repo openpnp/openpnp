@@ -43,6 +43,7 @@ import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.simpleframework.xml.Serializer;
 
@@ -79,19 +80,28 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         gcodePanel.add(comboBoxHm, "2, 4, fill, default");
 
         comboBoxHm.addItem(new HeadMountableItem(null));
-        for (Head head : Configuration.get().getMachine().getHeads()) {
+        Machine machine = Configuration.get().getMachine();
+        for (Head head : machine.getHeads()) {
             for (Nozzle hm : head.getNozzles()) {
-                comboBoxHm.addItem(new HeadMountableItem(hm));
+                if (!hm.getMappedAxes(machine).drivenBy(driver).isEmpty()) {
+                    comboBoxHm.addItem(new HeadMountableItem(hm));
+                }
             }
             for (Camera hm : head.getCameras()) {
-                comboBoxHm.addItem(new HeadMountableItem(hm));
+                if (!hm.getMappedAxes(machine).drivenBy(driver).isEmpty()) {
+                    comboBoxHm.addItem(new HeadMountableItem(hm));
+                }
             }
             for (Actuator hm : head.getActuators()) {
-                comboBoxHm.addItem(new HeadMountableItem(hm));
+                if (hm.getDriver() == driver || !hm.getMappedAxes(machine).drivenBy(driver).isEmpty()) {
+                    comboBoxHm.addItem(new HeadMountableItem(hm));
+                }
             }
         }
         for (Actuator actuator : Configuration.get().getMachine().getActuators()) {
-            comboBoxHm.addItem(new HeadMountableItem(actuator));
+            if (actuator.getDriver() == driver) {
+                comboBoxHm.addItem(new HeadMountableItem(actuator));
+            }
         }
 
         comboBoxCommandType = new JComboBox<>();
@@ -122,17 +132,29 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         importExportPanel.setBorder(new TitledBorder(null, "Import / Export", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(importExportPanel);
-        importExportPanel.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        importExportPanel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JButton btnExportGcodeProfile = new JButton(exportProfileAction);
         importExportPanel.add(btnExportGcodeProfile, "2, 2");
 
         JButton btnCopyGcodeProfile = new JButton(copyProfileToClipboardAction);
         importExportPanel.add(btnCopyGcodeProfile, "2, 4");
+        
+//        JButton btnResetToDefaults = new JButton(resetToDefaultAction);
+//        importExportPanel.add(btnResetToDefaults, "2, 8");
 
         headMountableChanged();
         commandTypeChanged();
@@ -164,13 +186,29 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         CommandType commandType = (CommandType) comboBoxCommandType.getSelectedItem();
         return commandType;
     }
-    
+
+    private boolean hasCommand(HeadMountable hm, CommandType commandType) {
+        String text = changes.get(new ChangeKey(hm, commandType));
+        if (text == null) {
+            // If not, see if there is a command on the driver
+            Command c = driver.getCommand(hm, commandType, false);
+            if (c != null) {
+                text = c.getCommand();
+            }
+        }
+        return (text != null);
+    }
+
     private void headMountableChanged() {
         comboBoxCommandType.removeAllItems();
         HeadMountable hm = getSelectedHeadMountable();
         for (CommandType type : CommandType.values()) {
             if (hm == null || type.isHeadMountable()) {
-                comboBoxCommandType.addItem(type);
+                if (hasCommand(hm, type) || !type.isDeprecated()) {
+                    // Only if the command is set (perhaps a legacy setup) 
+                    // or if it is not deprecated, do we add it.
+                    comboBoxCommandType.addItem(type);
+                }
             }
         }
     }
@@ -357,6 +395,32 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.get(), "Paste Failed", e);
+            }
+        }
+    };
+    public final Action resetToDefaultAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.delete);
+            putValue(NAME, "Reset to defaults");
+            putValue(SHORT_DESCRIPTION, "Reset the Gcode profile to the default.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            try {
+                int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "This will delete all your Gcode and reset it to minimal defaults.\n"
+                        + "Are you absolutely sure?", 
+                        "Reset to defaults",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE);
+                if (ret == JOptionPane.YES_OPTION) {
+                    driver.createDefaultCommands();
+                    resetAction.actionPerformed(arg0);
+                }
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(MainFrame.get(), "Reset Failed", e);
             }
         }
     };
