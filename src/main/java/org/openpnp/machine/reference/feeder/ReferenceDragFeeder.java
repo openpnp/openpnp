@@ -107,13 +107,12 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
             pickLocation = location;
         }
 
+        if (this.isPart0402() && partPitch != null) {
+			pickLocation = pickLocation.add(partPitch);
+		}
+
         if (vision.isEnabled() && visionOffset != null) {
-			if (this.isPart0402() && partPitch != null) {
-				return pickLocation.subtract(visionOffset).add(partPitch);
-			}
-			else {
-				return pickLocation.subtract(visionOffset);
-			}
+			pickLocation = pickLocation.subtract(visionOffset);
         }
 
         return pickLocation;
@@ -227,19 +226,19 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
         head.moveToSafeZ();
 
+        if (feededCount > 0) {
+            feededCount--;
+            if (feededCount > 0) {
+                partPitch = new Location(LengthUnit.Millimeters, partsPitchX * feededCount,
+                        partsPitchY * feededCount, 0, 0);
+            } 
+            else {
+                partPitch = null;
+            }
+        }
+
         if (vision.isEnabled()) {
             visionOffset = getVisionOffsets(head, location);
-
-			if (feededCount > 0) {
-				feededCount--;
-				if (feededCount > 0) {
-					partPitch = new Location(LengthUnit.Millimeters, partsPitchX * feededCount,
-							partsPitchY * feededCount, 0, 0);
-				} 
-				else {
-					partPitch = null;
-				}
-			}
 
             Logger.debug("final visionOffsets " + visionOffset);
 
