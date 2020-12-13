@@ -76,6 +76,8 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     @Element
     protected Location feedEndLocation = new Location(LengthUnit.Millimeters);
     @Element(required = false)
+    private Length partPitch = new Length(4, LengthUnit.Millimeters);
+    @Element(required = false)
     protected double feedSpeed = 1.0;
     @Attribute(required = false)
     protected String actuatorName;
@@ -99,7 +101,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
      * correct feed locations.
      */
     protected Location visionOffset;
-    protected Location partPitch;
+    protected Location partPick;
 
     @Override
     public Location getPickLocation() throws Exception {
@@ -107,8 +109,8 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
             pickLocation = location;
         }
 
-        if (this.isPart0402() && partPitch != null) {
-			pickLocation = pickLocation.add(partPitch);
+        if (partPitch.convertToUnits(LengthUnit.Millimeters).getValue() == 2 && partPick != null) {
+			pickLocation = pickLocation.add(partPick);
 		}
 
         if (vision.isEnabled() && visionOffset != null) {
@@ -213,8 +215,13 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
 	        // retract the pin
 	        actuator.actuate(false);
+            
+            // evaluate for backwards compatibility
+            if(this.isPart0402() == true){
+                partPitch = new Length(2, LengthUnit.Millimeters);
+            }
 
-	        if (this.isPart0402() == true) {
+	        if (partPitch.convertToUnits(LengthUnit.Millimeters).getValue() == 2) {
 				// can change it to "feededCount = parts_count_userSettings;"
 				feededCount = 2;
 	        }
@@ -229,11 +236,11 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         if (feededCount > 0) {
             feededCount--;
             if (feededCount > 0) {
-                partPitch = new Location(LengthUnit.Millimeters, partsPitchX * feededCount,
+                partPick = new Location(LengthUnit.Millimeters, partsPitchX * feededCount,
                         partsPitchY * feededCount, 0, 0);
             } 
             else {
-                partPitch = null;
+                partPick = null;
             }
         }
 
@@ -343,7 +350,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 			Logger.debug("resetVisionOffsets " + visionOffset);
 		}
 
-		partPitch = null;
+		partPick = null;
 	}
 
 	public boolean isPart0402() {
@@ -365,6 +372,14 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
     public void setFeedEndLocation(Location feedEndLocation) {
         this.feedEndLocation = feedEndLocation;
+    }
+
+    public Length getPartPitch() {
+        return partPitch;
+    }
+
+    public void setPartPitch(Length partPitch) {
+        this.partPitch = partPitch;
     }
 
     public Double getFeedSpeed() {
