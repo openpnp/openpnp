@@ -1,3 +1,6 @@
+See also:
+* (Troubleshooting Placement Accuracy)[https://github.com/openpnp/openpnp/wiki/Troubleshooting-Placement-Accuracy]
+
 ## Backlash
 ### Belts
 Make sure they're tightened appropriately (twang!).
