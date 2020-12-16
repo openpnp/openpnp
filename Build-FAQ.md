@@ -58,8 +58,10 @@ A few aspects that affect a machines accuracy and precision
 ### Build (Existing Designs)
 See http://openpnp.org/hardware/ for a number of options. 
 
+#### Recommended Build
 The currently recommended build is [Stephen Hawes's Index](https://github.com/sphawes/index/). It's been designed to be as budget-friendly as possible and the design and construction of every aspect has been extensively documented in a great, high-quality YouTube series.
 
+#### DIY Build
 For a more DIY build the recommendation is:
 * [DIY Pick and Place](https://hackaday.io/project/9319-diy-pick-and-place) for frame and X/Y.
 * [ICEpick Direct Drive Head](https://github.com/BETZtechnik/ICEpick--Direct-drive-pick-and-place-head/wiki) for the head.
