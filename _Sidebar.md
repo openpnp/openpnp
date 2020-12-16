@@ -2,6 +2,8 @@ OpenPnP
 -------
 
 * [[Quick Start]]
+* [Hardware Build FAQ](https://github.com/openpnp/openpnp/wiki/Build-FAQ)
+    * [Pick-and-Place Design Comparison](https://github.com/openpnp/openpnp/wiki/Pick-and-Place-Design-Comparison)
 * [[Setup and Calibration]]
     * [Before You Start](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Before-You-Start)
     * [Driver Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup)
@@ -32,7 +34,10 @@ OpenPnP
     * [Your First Job](https://github.com/openpnp/openpnp/wiki/User-Manual#your-first-job)
     * [Getting Help](https://github.com/openpnp/openpnp/wiki/User-Manual#getting-help)
 * [Video Tutorials](https://github.com/openpnp/openpnp/wiki/Video-Tutorials)
-* [Developer's Guide](https://github.com/openpnp/openpnp/wiki/Developers-Guide)
+* Development Resources
+    * [Developer's Guide](https://github.com/openpnp/openpnp/wiki/Developers-Guide)
+    * [Your First Pull Request](https://github.com/openpnp/openpnp/wiki/Your-First-Pull-Request)
+    * [API Documentation](http://openpnp.org/api)
 * [FAQ](https://github.com/openpnp/openpnp/wiki/FAQ)
 * [Getting Help](https://github.com/openpnp/openpnp/wiki/Getting-Help)
 
