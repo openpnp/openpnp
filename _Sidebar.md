@@ -4,6 +4,7 @@ OpenPnP
 * [[Quick Start]]
 * [Hardware Build FAQ](https://github.com/openpnp/openpnp/wiki/Build-FAQ)
     * [Pick-and-Place Design Comparison](https://github.com/openpnp/openpnp/wiki/Pick-and-Place-Design-Comparison)
+    * [Mechanical Issues (aka Debugging)](https://github.com/openpnp/openpnp/wiki/Mechanical-Issues-(aka-Debugging))
 * [[Setup and Calibration]]
     * [Before You Start](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Before-You-Start)
     * [Driver Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup)
