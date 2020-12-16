@@ -71,6 +71,7 @@ The current recommendation for a build guideline is:
 
 belts vs leadscrews
 different types of each
+feeders. Should be broken out into its own page as there's so much to cover.
 
 ### Mounting Vacuum Hose to NEMA-8 Motors
 Most home built systems use NEMA-8 stepper motors for nozzle rotation. To get vacuum to the nozzle on the motor shaft, there are three common options:
