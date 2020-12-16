@@ -1,5 +1,9 @@
 This is a collection of frequently asked questions specific to designing, building, and assembling a machine. For questions more specific to the OpenPnP software or running the machine, see the main [[FAQ]].
 
+See also:
+* [Pick-and-Place Design Comparison](https://github.com/openpnp/openpnp/wiki/Pick-and-Place-Design-Comparison)
+* [Mechanical Issues (aka Debugging)](https://github.com/openpnp/openpnp/wiki/Mechanical-Issues-(aka-Debugging))
+
 ## 101
 
 ### Questions Before You Start
