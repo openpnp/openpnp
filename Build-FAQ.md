@@ -69,8 +69,8 @@ The current recommendation for a build guideline is:
 
 // TODO
 
-belts vs leadscrews
-different types of each
+belts vs leadscrews  
+different types of each  
 feeders. Should be broken out into its own page as there's so much to cover.
 
 ### Mounting Vacuum Hose to NEMA-8 Motors
