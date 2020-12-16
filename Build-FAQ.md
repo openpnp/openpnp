@@ -4,7 +4,7 @@ See also:
 * [Pick-and-Place Design Comparison](https://github.com/openpnp/openpnp/wiki/Pick-and-Place-Design-Comparison)
 * [Mechanical Issues (aka Debugging)](https://github.com/openpnp/openpnp/wiki/Mechanical-Issues-(aka-Debugging))
 
-## 101
+## Getting Started
 
 ### Questions Before You Start
 1. What is your budget?
