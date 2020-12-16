@@ -18,7 +18,7 @@ The hardware design considerations for a pick-and-place (PnP) machine are differ
 
 ### Unique aspects of a PnP machine
 * Rapid movements of a heavy head will make the machine move across tables and the floor. Industrial machines have huge masses to prevent this.
-* Relatively complicated electronic, mechanical, and pneumatic design. Complexity multiplies (electronic*mechanical*pneumatic = complexity cubed!).
+* Relatively complicated electronic, mechanical, and pneumatic design. Complexity multiplies (electronic\*mechanical\*pneumatic = complexity cubed!).
 * The Z axis has to rotate. For large fine-pitch components, it needs to do so with high accuracy and precision.
 * Computer vision is used extensively. This can get around some mechanical issues with machines, but should not be used as a crutch.
 * Great open source software. ;)
