@@ -1,6 +1,6 @@
-package org.openpnp.machine.index;
+package org.openpnp.machine.index.protocol;
 
-public class IndexFeederProtocol {
+public class IndexCommandEncoder {
     // CRC Table for CRC16/MODBUS
     private static final int[] crcTable = new int[]{
             0X0000, 0XC0C1, 0XC181, 0X0140, 0XC301, 0X03C0, 0X0280, 0XC241,
@@ -53,7 +53,7 @@ public class IndexFeederProtocol {
         int checksum = crc16(dataBuffer);
         StringBuilder result = new StringBuilder();
 
-        for(int data : dataBuffer) {
+        for (int data : dataBuffer) {
             result.append(String.format("%02X", data & 0xFF));
         }
         result.append(String.format("%02X", checksum & 0xFF));
@@ -63,7 +63,7 @@ public class IndexFeederProtocol {
     }
 
     public static String getFeederId(int address) {
-        int[] data = new int[] {address & 0xFF, 0x01, 0x01};
+        int[] data = new int[]{address & 0xFF, 0x01, 0x01};
 
         return toByteString(data);
     }
@@ -74,21 +74,21 @@ public class IndexFeederProtocol {
         data[1] = 0x0D; // Length
         data[2] = 0x02; // Command ID
         for (int i = 0; i < 12; i++) {
-            data[i+3] = (Character.digit(uuid.charAt(2*i), 16) << 4) +
-                    Character.digit(uuid.charAt(2*i + 1), 16);
+            data[i + 3] = (Character.digit(uuid.charAt(2 * i), 16) << 4) +
+                    Character.digit(uuid.charAt(2 * i + 1), 16);
         }
-        
+
         return toByteString(data);
     }
 
     public static String getVersion(int address) {
-        int[] data = new int[] {address & 0xFF, 0x01, 0x03};
+        int[] data = new int[]{address & 0xFF, 0x01, 0x03};
 
         return toByteString(data);
     }
 
     public static String moveFeedForward(int address, int distance) {
-        int[] data = new int[] {
+        int[] data = new int[]{
                 address & 0xFF,
                 0x02, // Length
                 0x04, // Command ID
@@ -99,7 +99,7 @@ public class IndexFeederProtocol {
     }
 
     public static String moveFeedBackward(int address, int distance) {
-        int[] data = new int[] {
+        int[] data = new int[]{
                 address & 0xFF,
                 0x02, // Length
                 0x05, // Command ID
@@ -115,8 +115,8 @@ public class IndexFeederProtocol {
         data[1] = 0x0D; // Length
         data[2] = 0x01; // Command ID
         for (int i = 0; i < 12; i++) {
-            data[i+3] = (Character.digit(uuid.charAt(2*i), 16) << 4) +
-                    Character.digit(uuid.charAt(2*i + 1), 16);
+            data[i + 3] = (Character.digit(uuid.charAt(2 * i), 16) << 4) +
+                    Character.digit(uuid.charAt(2 * i + 1), 16);
         }
 
         return toByteString(data);

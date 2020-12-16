@@ -3,9 +3,9 @@ package org.openpnp.machine.index;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.openpnp.machine.index.IndexFeederProtocol.*;
+import static org.openpnp.machine.index.protocol.IndexCommandEncoder.*;
 
-public class IndexFeederProtocolTest {
+public class IndexCommandEncoderTest {
     @Test
     public void testGetFeederID() {
         assertEquals("010101E050", getFeederId(1));
