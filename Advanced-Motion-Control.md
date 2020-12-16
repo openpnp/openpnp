@@ -43,10 +43,11 @@ ____
 
 **First Stop**: Check out the [[Issues and Solutions]] page. 
 ____
-To complement the automatic system, the following background informations details the needed changes to prepare for Advanced Motion Control features:
+
+**Important:** Only if the [[Issues and Solutions]] system does not help you, should you continue here. To complement the automatic system, the following background information details the most important needed changes to prepare for Advanced Motion Control features:
 
 1. If you use more than four axes on one controller: check out if you can use it **without** pre-move commands (the `T` letter commands used to switch between extruder `E` axes). [[Smoothieware, Duet3D, Bill's fork of Marlin 2.0|Motion-Controller-Firmwares]] and possibly others can be used with proper axis letters `A`, `B`, `C` instead. 
-**Warning**: if this is not the case, only a limited number of advanced features will be available. **This guide assumes you do not have pre-move commands!** 
+**Warning**: if this is not the case, only a limited number of advanced features will be available. **This guide assumes you do not have pre-move commands, so if you continue you are on your own!** 
 
 2. Upgrade your [[controller firmware|Motion-Controller-Firmwares]] if necessary. 
 
