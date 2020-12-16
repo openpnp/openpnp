@@ -65,11 +65,11 @@ public class Packet {
                 .putByte(command_id);
     }
 
-    public static Packet response(int feeder_address) {
+    public static Packet response(int feederAddress) {
         return new Packet()
                 .putByte(0x00)
                 .putLength()
-                .putByte(feeder_address);
+                .putByte(feederAddress);
     }
 
     public Packet putByte(int data) {
@@ -95,6 +95,10 @@ public class Packet {
 
     public Packet putOk() {
         return this.putByte(0x00);
+    }
+
+    public Packet putError(ErrorTypes error) {
+        return putByte(error.getId());
     }
 
     public String toByteString() {
