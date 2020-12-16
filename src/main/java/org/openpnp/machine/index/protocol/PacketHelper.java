@@ -1,8 +1,6 @@
 package org.openpnp.machine.index.protocol;
 
-import java.nio.IntBuffer;
-
-public class Packet {
+public class PacketHelper {
     // CRC Table for CRC16/MODBUS
     private static final int[] crcTable = new int[]{
             0X0000, 0XC0C1, 0XC181, 0X0140, 0XC301, 0X03C0, 0X0280, 0XC241,
@@ -39,7 +37,7 @@ public class Packet {
             0X8201, 0X42C0, 0X4380, 0X8341, 0X4100, 0X81C1, 0X8081, 0X4040
     };
 
-    private static int crc16(int[] dataBuffer) {
+    public static int crc16(int[] dataBuffer) {
         int temp;
         int result = 0xFFFF;
         for (int data : dataBuffer) {
@@ -51,74 +49,8 @@ public class Packet {
         return result;
     }
 
-    private final IntBuffer dataBuffer;
-    private Integer lengthIndex = null;
-
-    private Packet() {
-        dataBuffer = IntBuffer.allocate(32);
-    }
-
-    public static Packet command(int address, int command_id) {
-        return new Packet()
-                .putByte(address)
-                .putLength()
-                .putByte(command_id);
-    }
-
-    public static Packet response(int feederAddress) {
-        return new Packet()
-                .putByte(0x00)
-                .putLength()
-                .putByte(feederAddress);
-    }
-
-    public Packet putByte(int data) {
-        dataBuffer.put(data & 0xFF);
-        return this;
-    }
-
-    public Packet putLength() {
-        lengthIndex = dataBuffer.position();
-        dataBuffer.put(0x00); // Placeholder, will be updated later
-        return this;
-    }
-
-    public Packet putUuid(String uuid) {
-        for (int i = 0; i < 12; i++) {
-            int data = (Character.digit(uuid.charAt(2 * i), 16) << 4) +
-                    Character.digit(uuid.charAt(2 * i + 1), 16);
-            this.putByte(data);
-        }
-
-        return this;
-    }
-
-    public Packet putOk() {
-        return this.putByte(0x00);
-    }
-
-    public Packet putError(ErrorTypes error) {
-        return putByte(error.getId());
-    }
-
-    public String toByteString() {
-        if(lengthIndex != null) {
-            dataBuffer.put(1, dataBuffer.position() - lengthIndex - 1);
-        }
-
-        dataBuffer.flip();
-        int[] dataBytes = new int[dataBuffer.remaining()];
-        dataBuffer.get(dataBytes);
-
-        int checksum = crc16(dataBytes);
-        StringBuilder result = new StringBuilder();
-
-        for (int data : dataBytes) {
-            result.append(String.format("%02X", data & 0xFF));
-        }
-        result.append(String.format("%02X", checksum & 0xFF));
-        result.append(String.format("%02X", (checksum >> 8) & 0xFF));
-
-        return result.toString();
+    public static int getByteAtIndex(String s, int index) {
+        return (Character.digit(s.charAt(2 * index), 16) << 4) +
+                Character.digit(s.charAt(2 * index + 1), 16);
     }
 }
