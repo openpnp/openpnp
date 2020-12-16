@@ -25,30 +25,22 @@ In the Head Actuators, add a new probing Actuator for each Nozzle. On the Nozzle
 
 ## Setting up the G-Code
 
-On your GCodeDriver choose the new contact probing Actuator and define the ACTUATE_BOOLEAN_COMMAND for probing. 
+On your GCodeDriver choose the new contact probing Actuator and define the ACTUATE_BOOLEAN_COMMAND for probing. For certain controllers it may be suggested by the [[Issues and Solutions]] system. Otherwise you need to manually set it up:
 
 ![grafik](https://user-images.githubusercontent.com/9963310/69479755-4f839100-0e01-11ea-89b7-201993ef22b7.png)
 
 An example (for Smoothieware) could be:
 ``` 
-{True:G38.2 Z-4 F1200   ; Probe down max. 4mm for contact with picked/placed part }
-{True:M400          ; Wait until machine has stopped }
-{True:M114.2        ; Report current realtime position, as M114 does not report rotation }
-{False:G91 G0 Z1 G90; Retract 1mm }
-{False:M400         ; Wait until machine has stopped }
-{False:M114.2       ; Report current realtime position, as M114 does not report rotation }
+{True:G38.2 Z-4 F1200  ; probe down max. 4mm for contact with picked/placed part }
+{True:M400          ; wait until machine has stopped }
+{True:M114          ; report current realtime position, as M114 does not report rotation }
+{False:G91          ; switch to relative mode }
+{False:G0 Z1        ; retract 1mm }
+{False:G90          ; switch back to absolute mode }
+{False:M400         ; wait until machine has stopped }
+{False:M114         ; report current realtime position, as M114 does not report rotation }
 ```
-Note, we are using M400 followed by M114.2 instead of plain M114 because Smoothieware does not report the rotation axis with M114. That's an ugly HACK. 
-
-**Preview**: this has been resolved in the [[Advanced Motion Control]] version of OpenPnP 2.0 (currently the [Testing Version](https://openpnp.org/test-downloads/)) and improved [[Motion Controller Firmwares]]. 
-
-For now, you need to define the POSITION_REPORT_REGEX to read back the probed Z i.e. to get OpenPNP back in sync with the machine position after probing. 
-
-![grafik](https://user-images.githubusercontent.com/9963310/69497644-d149ec00-0edf-11ea-9af8-089f69e3eaac.png)
-
-For Smoothieware this could be:
-
-`^ok MCS: X:(?<x>-?\d+\.\d+) Y:(?<y>-?\d+\.\d+) Z:(?<z>-?\d+\.\d+) A:(?<rotation>-?\d+\.\d+).*`
+Note, this requires an OpenPnP 2.0 Version > December 2020 and the special [[PnP Smoothieware firmware|Motion-Controller-Firmwares#smoothieware]]. 
 
 ## Testing the Contact Probing
 
