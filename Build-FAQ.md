@@ -23,7 +23,7 @@ See also:
     * The faster the speed, the more rigid and heavy the machine needs to be. It's an exponential relationship; doubling the speed will quadruple the rigidity requirements of the entire machine.
 
 ### Gotcha's To Be Aware Of
-1. All Z heights that the pickup nozzle needs picks from or place on, must be exactly the same. Specifically, this means that the top surface of all components in feeders must be equal, and the top of the PCB has to be very close also.
+1. All Z heights that the pickup nozzle needs to pick from or place on, must be exactly the same. Specifically, this means that the top surface of all components in feeders must be equal, and the top of the PCB has to be very close also.
     * Within a millimeter isn't good enough here - the Z heights have to be very close to making a single plane across the entire machine. This may sound easy, but across a large machine with a lot of removable feeders of different types, this can be difficult to achieve.
     * This goes for PCBs of different thicknesses too (even 1.6mm vs 1.0mm may be too much depending on your camera and lenses depth of field), though computer vision can help somewhat here.
     * That means you're going to want to design in a way to precisely adjust the Z-height of different parts of your PnP
