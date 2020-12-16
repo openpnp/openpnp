@@ -19,8 +19,9 @@ See also:
         * 1x1 9-BGA? 0603? 0402? hint: 0201 and below are unlikely to be possible unless you're an expert and putting a lot of work into the machine - in which case why are you reading this?!
 1. How fast does the machine have to operate?
     * Is speed even a factor to you - is it OK if it takes all night to populate a PCB?
+    * A faster PnP usually means higher acceleration first, and higher maximum velocity second.
     * Due to the weight of the head on PnP machines, momentum can be an issue at higher speeds.
-    * The faster the speed, the more rigid and heavy the machine needs to be. It's an exponential relationship; doubling the speed will quadruple the rigidity requirements of the entire machine.
+    * The higher the acceleration, the more rigid and heavy the machine needs to be.
 
 ### Gotcha's To Be Aware Of
 1. All Z heights that the pickup nozzle needs to pick from or place on, must be exactly the same. Specifically, this means that the top surface of all components in feeders must be equal, and the top of the PCB has to be very close also.
