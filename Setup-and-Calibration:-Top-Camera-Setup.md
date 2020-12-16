@@ -4,7 +4,7 @@ The Top Camera is the camera that is attached to your machine's head. It's also 
 The Top Camera is used primarily when setting up feeders and jobs, and can be used to target any location on your machine. It's the thing you will look at most often when using OpenPnP.
 
 ## Add a Camera
-First, add a head camera by following the instructions in [[General Camera Setup|Setup and Calibration: General Camera Setup]]. Make sure to configure each section before returning to this page to continue.  Tip: When you focus your downward looking camera, make sure you nip up the lens lock screw so the lens doesn’t move with the machine direction by “That Much” and so avoid false backlash errors.
+First, add a head camera by following the instructions in [[General Camera Setup|Setup and Calibration: General Camera Setup]]. Make sure to configure each section before returning to this page to continue.  Tip: When you focus your downward looking camera, make sure you nip up the lens lock screw so the lens doesn’t move with the machine direction by “That Much” to avoid false backlash errors.
 
 ## Head Offsets
 Camera Head Offsets tell OpenPnP where the camera is in relation to the other objects on the head, such as nozzles. It's best to use the primary camera as the origin for the head, so we set the offset to all zeros.
