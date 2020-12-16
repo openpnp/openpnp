@@ -51,53 +51,70 @@ public class Packet {
         return result;
     }
 
-    public static String toByteString(int[] dataBuffer) {
-        int checksum = crc16(dataBuffer);
+    private final IntBuffer dataBuffer;
+    private Integer lengthIndex = null;
+
+    private Packet() {
+        dataBuffer = IntBuffer.allocate(32);
+    }
+
+    public static Packet command(int address, int command_id) {
+        return new Packet()
+                .putByte(address)
+                .putLength()
+                .putByte(command_id);
+    }
+
+    public static Packet response(int feeder_address) {
+        return new Packet()
+                .putByte(0x00)
+                .putLength()
+                .putByte(feeder_address);
+    }
+
+    public Packet putByte(int data) {
+        dataBuffer.put(data & 0xFF);
+        return this;
+    }
+
+    public Packet putLength() {
+        lengthIndex = dataBuffer.position();
+        dataBuffer.put(0x00); // Placeholder, will be updated later
+        return this;
+    }
+
+    public Packet putUuid(String uuid) {
+        for (int i = 0; i < 12; i++) {
+            int data = (Character.digit(uuid.charAt(2 * i), 16) << 4) +
+                    Character.digit(uuid.charAt(2 * i + 1), 16);
+            this.putByte(data);
+        }
+
+        return this;
+    }
+
+    public Packet putOk() {
+        return this.putByte(0x00);
+    }
+
+    public String toByteString() {
+        if(lengthIndex != null) {
+            dataBuffer.put(1, dataBuffer.position() - lengthIndex - 1);
+        }
+
+        dataBuffer.flip();
+        int[] dataBytes = new int[dataBuffer.remaining()];
+        dataBuffer.get(dataBytes);
+
+        int checksum = crc16(dataBytes);
         StringBuilder result = new StringBuilder();
 
-        for (int data : dataBuffer) {
+        for (int data : dataBytes) {
             result.append(String.format("%02X", data & 0xFF));
         }
         result.append(String.format("%02X", checksum & 0xFF));
         result.append(String.format("%02X", (checksum >> 8) & 0xFF));
 
         return result.toString();
-    }
-
-    public static void writeUuidAt(String uuid, int[] data, int offset) {
-        for (int i = 0; i < 12; i++) {
-            data[i + offset] = (Character.digit(uuid.charAt(2 * i), 16) << 4) +
-                    Character.digit(uuid.charAt(2 * i + 1), 16);
-        }
-    }
-
-    public static String command(int address, int command_id, Object... varargs) {
-        IntBuffer buffer = IntBuffer.allocate(32);
-        buffer.put((address & 0xFF));
-        buffer.put(0); // Length, will be updated later
-        buffer.put(command_id);
-
-        for (Object arg : varargs) {
-            if (arg instanceof String) {
-                // Assume a string is a hardware UUID
-                String sArg = (String) arg;
-                for (int i = 0; i < 12; i++) {
-                    buffer.put(
-                            (Character.digit(sArg.charAt(2 * i), 16) << 4) +
-                                    Character.digit(sArg.charAt(2 * i + 1), 16)
-                    );
-                }
-            } else if (arg instanceof Integer) {
-                buffer.put((int) arg);
-            }
-        }
-
-        buffer.put(1, buffer.position()-2);
-
-        buffer.flip();
-        int[] data = new int[buffer.remaining()];
-        buffer.get(data);
-
-        return toByteString(data);
     }
 }

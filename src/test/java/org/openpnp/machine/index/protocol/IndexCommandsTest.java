@@ -16,7 +16,6 @@ public class IndexCommandsTest {
             assertEquals("0201011050", GetFeederId.encode(2));
             assertEquals("0301014190", GetFeederId.encode(3));
         }
-        // TODO Exceptions for <= 0 and >= 255
 
         @Test
         public void testOk() {
@@ -39,7 +38,6 @@ public class IndexCommandsTest {
                     InitializeFeeder.encode(0xFE, uuid2)
             );
         }
-        // TODO Exceptions for anything that's not a 24 character string
 
         @Test
         public void testOK() {
@@ -90,12 +88,12 @@ public class IndexCommandsTest {
         @Test
         public void testEncode() {
             assertEquals(
-                    "FF0D0100112233445566778899AABB7989",
-                    GetFeederAddress.encode("00112233445566778899AABB")
+                    "FF0D01" + uuid1 + "7989",
+                    GetFeederAddress.encode(uuid1)
             );
             assertEquals(
-                    "FF0D01FFEEDDCCBBAA9988776655442C08",
-                    GetFeederAddress.encode("FFEEDDCCBBAA998877665544")
+                    "FF0D01" + uuid2 + "2C08",
+                    GetFeederAddress.encode(uuid2)
             );
         }
 
