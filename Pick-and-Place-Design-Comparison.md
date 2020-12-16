@@ -3,7 +3,8 @@ The hardware design considerations for a pick-and-place (PnP) machine are differ
 
 ### Compared to both 3D printers and CNC machines
 * The X and Y axes of PnP machines need accuracy and precision only in final movement coordinates; how they get there is almost irrelevant.
-* The Z axis has very limited travel. Often there'll be 2, 4, or more Z-axes.
+* The Z axis has very limited travel.
+* Often there'll be 2, 4, or more Z-axes. Most people find 2 is sufficient (even if they've build a machine with 4 heads!).
 * The Z-axis accuracy and precision can be very low (and the axis is often spring-loaded to add more wiggle room).
 
 ### Compared to a 3D printer
