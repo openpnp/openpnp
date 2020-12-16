@@ -1,5 +1,5 @@
 See also:
-* (Troubleshooting Placement Accuracy)[https://github.com/openpnp/openpnp/wiki/Troubleshooting-Placement-Accuracy]
+* [Troubleshooting Placement Accuracy](https://github.com/openpnp/openpnp/wiki/Troubleshooting-Placement-Accuracy)
 
 ## Backlash
 ### Belts
