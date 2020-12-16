@@ -58,9 +58,9 @@ A few aspects that affect a machines accuracy and precision
 ### Build (Existing Designs)
 See http://openpnp.org/hardware/ for a number of options. 
 
-The current recommendation for a build guideline is [Stephen Hawes's Index](https://github.com/sphawes/index/). The design and build of every aspect has been extensively documented in a great, high-quality YouTube series.
+The currently recommended build is [Stephen Hawes's Index](https://github.com/sphawes/index/). It's been designed to be as budget-friendly as possible and the design and construction of every aspect has been extensively documented in a great, high-quality YouTube series.
 
-For a more pick-and-choose build the recommendation is:
+For a more DIY build the recommendation is:
 * [DIY Pick and Place](https://hackaday.io/project/9319-diy-pick-and-place) for frame and X/Y.
 * [ICEpick Direct Drive Head](https://github.com/BETZtechnik/ICEpick--Direct-drive-pick-and-place-head/wiki) for the head.
 * [Quick Change Juki Nozzle Holders](http://www.betztechnik.ca/store/p32/Quick_change_Juki_nozzle_holders-_NEMA_8_5mm_OD_hollow_shaft-_STOCK.html) for nozzle holders and nozzles.
