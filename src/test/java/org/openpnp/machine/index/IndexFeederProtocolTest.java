@@ -3,9 +3,7 @@ package org.openpnp.machine.index;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.openpnp.machine.index.IndexFeederProtocol.getFeederId;
-import static org.openpnp.machine.index.IndexFeederProtocol.getVersion;
-import static org.openpnp.machine.index.IndexFeederProtocol.initializeFeeder;
+import static org.openpnp.machine.index.IndexFeederProtocol.*;
 
 public class IndexFeederProtocolTest {
     @Test
@@ -33,5 +31,29 @@ public class IndexFeederProtocolTest {
     public void testGetVersion() {
         assertEquals("0101036191", getVersion(1));
         assertEquals("FE010351A1", getVersion(0xFE));
+    }
+
+    @Test
+    public void testMoveFeedForward() {
+        assertEquals("0102047FE338", moveFeedForward(1, 127));
+        assertEquals("0502040A23EF", moveFeedForward(5, 10));
+    }
+
+    @Test
+    public void testMoveFeedBackward() {
+        assertEquals("0102057FE2A8", moveFeedBackward(1, 127));
+        assertEquals("0502050A227F", moveFeedBackward(5, 10));
+    }
+
+    @Test
+    public void testGetFeederAddress() {
+        assertEquals(
+                "FF0D0100112233445566778899AABB7989",
+                getFeederAddress("00112233445566778899AABB")
+        );
+        assertEquals(
+                "FF0D01FFEEDDCCBBAA9988776655442C08",
+                getFeederAddress("FFEEDDCCBBAA998877665544")
+        );
     }
 }

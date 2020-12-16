@@ -86,4 +86,39 @@ public class IndexFeederProtocol {
 
         return toByteString(data);
     }
+
+    public static String moveFeedForward(int address, int distance) {
+        int[] data = new int[] {
+                address & 0xFF,
+                0x02, // Length
+                0x04, // Command ID
+                distance & 0xFF // Distance
+        };
+
+        return toByteString(data);
+    }
+
+    public static String moveFeedBackward(int address, int distance) {
+        int[] data = new int[] {
+                address & 0xFF,
+                0x02, // Length
+                0x05, // Command ID
+                distance & 0xFF // Distance
+        };
+
+        return toByteString(data);
+    }
+
+    public static String getFeederAddress(String uuid) {
+        int[] data = new int[15];
+        data[0] = 0xFF;
+        data[1] = 0x0D; // Length
+        data[2] = 0x01; // Command ID
+        for (int i = 0; i < 12; i++) {
+            data[i+3] = (Character.digit(uuid.charAt(2*i), 16) << 4) +
+                    Character.digit(uuid.charAt(2*i + 1), 16);
+        }
+
+        return toByteString(data);
+    }
 }
