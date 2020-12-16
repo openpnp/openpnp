@@ -1,6 +1,8 @@
 package org.openpnp.machine.index.protocol;
 
-public class IndexCommandEncoder {
+import java.nio.IntBuffer;
+
+public class Packet {
     // CRC Table for CRC16/MODBUS
     private static final int[] crcTable = new int[]{
             0X0000, 0XC0C1, 0XC181, 0X0140, 0XC301, 0X03C0, 0X0280, 0XC241,
@@ -49,7 +51,7 @@ public class IndexCommandEncoder {
         return result;
     }
 
-    private static String toByteString(int[] dataBuffer) {
+    public static String toByteString(int[] dataBuffer) {
         int checksum = crc16(dataBuffer);
         StringBuilder result = new StringBuilder();
 
@@ -62,62 +64,39 @@ public class IndexCommandEncoder {
         return result.toString();
     }
 
-    public static String getFeederId(int address) {
-        int[] data = new int[]{address & 0xFF, 0x01, 0x01};
-
-        return toByteString(data);
-    }
-
-    public static String initializeFeeder(int address, String uuid) {
-        int[] data = new int[15];
-        data[0] = address & 0xFF;
-        data[1] = 0x0D; // Length
-        data[2] = 0x02; // Command ID
+    public static void writeUuidAt(String uuid, int[] data, int offset) {
         for (int i = 0; i < 12; i++) {
-            data[i + 3] = (Character.digit(uuid.charAt(2 * i), 16) << 4) +
+            data[i + offset] = (Character.digit(uuid.charAt(2 * i), 16) << 4) +
                     Character.digit(uuid.charAt(2 * i + 1), 16);
         }
-
-        return toByteString(data);
     }
 
-    public static String getVersion(int address) {
-        int[] data = new int[]{address & 0xFF, 0x01, 0x03};
+    public static String command(int address, int command_id, Object... varargs) {
+        IntBuffer buffer = IntBuffer.allocate(32);
+        buffer.put((address & 0xFF));
+        buffer.put(0); // Length, will be updated later
+        buffer.put(command_id);
 
-        return toByteString(data);
-    }
-
-    public static String moveFeedForward(int address, int distance) {
-        int[] data = new int[]{
-                address & 0xFF,
-                0x02, // Length
-                0x04, // Command ID
-                distance & 0xFF // Distance
-        };
-
-        return toByteString(data);
-    }
-
-    public static String moveFeedBackward(int address, int distance) {
-        int[] data = new int[]{
-                address & 0xFF,
-                0x02, // Length
-                0x05, // Command ID
-                distance & 0xFF // Distance
-        };
-
-        return toByteString(data);
-    }
-
-    public static String getFeederAddress(String uuid) {
-        int[] data = new int[15];
-        data[0] = 0xFF;
-        data[1] = 0x0D; // Length
-        data[2] = 0x01; // Command ID
-        for (int i = 0; i < 12; i++) {
-            data[i + 3] = (Character.digit(uuid.charAt(2 * i), 16) << 4) +
-                    Character.digit(uuid.charAt(2 * i + 1), 16);
+        for (Object arg : varargs) {
+            if (arg instanceof String) {
+                // Assume a string is a hardware UUID
+                String sArg = (String) arg;
+                for (int i = 0; i < 12; i++) {
+                    buffer.put(
+                            (Character.digit(sArg.charAt(2 * i), 16) << 4) +
+                                    Character.digit(sArg.charAt(2 * i + 1), 16)
+                    );
+                }
+            } else if (arg instanceof Integer) {
+                buffer.put((int) arg);
+            }
         }
+
+        buffer.put(1, buffer.position()-2);
+
+        buffer.flip();
+        int[] data = new int[buffer.remaining()];
+        buffer.get(data);
 
         return toByteString(data);
     }
