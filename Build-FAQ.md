@@ -45,7 +45,8 @@ The one hardware constraint worth mentioning has to do with USB Cameras. In orde
 Even if you choose the path of building an existing design, you will need to understand [accuracy and precision](https://en.wikipedia.org/wiki/Accuracy_and_precision) and how they combine to determine the repeatability of the final machine. It should be considered a pre-requisite of any build.
 
 A few aspects that affect a machines accuracy and precision
-* Rigidity
+* Rigidity (stiffness) of materials
+* Kinematic constraints (and avoiding over-constraining)
 * Squareness
 * Backlash, or 'slop'
 * Temperature(!)
