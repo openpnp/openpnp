@@ -25,7 +25,10 @@ public class IndexResponsesTest {
 
         @Test
         public void testUninitializedFeeder() {
-            assertEquals("00020B03E6D5", Errors.uninitializedFeeder(11));
+            assertEquals(
+                    "000E0B03" + uuid1 + "B7C6",
+                    Errors.uninitializedFeeder(11, uuid1)
+            );
         }
     }
 

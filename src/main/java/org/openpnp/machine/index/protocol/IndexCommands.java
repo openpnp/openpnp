@@ -26,6 +26,7 @@ public class IndexCommands {
                 .putByte(distance)
                 .toByteString();
     }
+
     public static String getFeederAddress(String uuid) {
         return PacketBuilder.command(0xFF, 0x01)
                 .putUuid(uuid)

@@ -15,9 +15,10 @@ public class IndexResponses {
                     .toByteString();
         }
 
-        public static String uninitializedFeeder(int feederAddress) {
+        public static String uninitializedFeeder(int feederAddress, String uuid) {
             return PacketBuilder.response(feederAddress)
                     .putError(ErrorTypes.UNINITIALIZED_FEEDER)
+                    .putUuid(uuid)
                     .toByteString();
         }
     }
