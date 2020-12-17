@@ -675,24 +675,37 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
             Logger.warn(e);
         }
 
-        // Make sure the camera (or its subject) stands still.
-        waitForCompletion(CompletionType.WaitForStillstand);
+        try {
+            // Make sure the camera (or its subject) stands still.
+            waitForCompletion(CompletionType.WaitForStillstand);
 
-        if (settleMethod == null) {
-            // Method undetermined, probably created a new camera (no @Commit handler)
-            settleMethod = SettleMethod.FixedTime;
+            if (settleMethod == null) {
+                // Method undetermined, probably created a new camera (no @Commit handler)
+                settleMethod = SettleMethod.FixedTime;
+            }
+            if (settleMethod == SettleMethod.FixedTime) {
+                try {
+                    Thread.sleep(getSettleTimeMs());
+                }
+                catch (Exception e) {
+
+                }
+                return capture();
+            }
+            else {
+                return autoSettleAndCapture();
+            }
         }
-        if (settleMethod == SettleMethod.FixedTime) {
+        finally {
+
             try {
-                Thread.sleep(getSettleTimeMs());
+                Map<String, Object> globals = new HashMap<>();
+                globals.put("camera", this);
+                Configuration.get().getScripting().on("Camera.AfterSettle", globals);
             }
             catch (Exception e) {
-
+                Logger.warn(e);
             }
-            return capture();
-        }
-        else {
-            return autoSettleAndCapture();
         }
     }
 
