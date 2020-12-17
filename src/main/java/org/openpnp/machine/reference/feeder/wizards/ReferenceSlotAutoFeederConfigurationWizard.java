@@ -36,21 +36,12 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AbstractBindingListener;
-import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.Binding;
-import org.jdesktop.beansbinding.BindingListener;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
-import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.DoubleConverter;
-import org.openpnp.gui.support.IdentifiableListCellRenderer;
-import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.*;
 import org.openpnp.gui.support.JBindings.Wrapper;
-import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.support.MutableLocationProxy;
-import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder.ActuatorType;
 import org.openpnp.machine.reference.feeder.ReferenceSlotAutoFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceSlotAutoFeeder.Bank;
@@ -62,17 +53,23 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import org.openpnp.spi.Actuator;
+import org.openpnp.util.UiUtils;
+import org.pmw.tinylog.Logger;
+
 import java.awt.FlowLayout;
 
 public class ReferenceSlotAutoFeederConfigurationWizard
         extends AbstractConfigurationWizard {
     private final ReferenceSlotAutoFeeder feeder;
-    private JTextField actuatorName;
+    private JComboBox comboBoxFeedActuator;
     private JTextField actuatorValue;
-    private JTextField postPickActuatorName;
+    private JComboBox comboBoxPostPickActuator;
     private JTextField postPickActuatorValue;
     private JComboBox actuatorType;
     private JComboBox postPickActuatorType;
+    private JButton btnTestFeedActuator;
+    private JButton btnTestPostPickActuator;
     private JTextField feederNameTf;
     private JTextField bankNameTf;
     private JCheckBox ckBoxMoveBeforeFeed;
@@ -227,6 +224,8 @@ public class ReferenceSlotAutoFeederConfigurationWizard
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -244,8 +243,8 @@ public class ReferenceSlotAutoFeederConfigurationWizard
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblActuatorName = new JLabel("Actuator Name");
-        panelActuator.add(lblActuatorName, "4, 2, left, default");
+        JLabel lblActuator = new JLabel("Actuator");
+        panelActuator.add(lblActuator, "4, 2, left, default");
 
         JLabel lblActuatorType = new JLabel("Actuator Type");
         panelActuator.add(lblActuatorType, "6, 2, left, default");
@@ -256,9 +255,9 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         JLabel lblFeed = new JLabel("Feed");
         panelActuator.add(lblFeed, "2, 4, right, default");
 
-        actuatorName = new JTextField();
-        panelActuator.add(actuatorName, "4, 4");
-        actuatorName.setColumns(10);
+        comboBoxFeedActuator = new JComboBox();
+        comboBoxFeedActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        panelActuator.add(comboBoxFeedActuator, "4, 4, fill, default");
         
         actuatorType = new JComboBox(ActuatorType.values());
         panelActuator.add(actuatorType, "6, 4, fill, default");
@@ -270,12 +269,15 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         JLabel lblForBoolean = new JLabel("For Boolean: 1 = True, 0 = False");
         panelActuator.add(lblForBoolean, "10, 4");
 
+        btnTestFeedActuator = new JButton(testFeedActuatorAction);
+        panelActuator.add(btnTestFeedActuator, "12, 4");
+
         JLabel lblPostPick = new JLabel("Post Pick");
         panelActuator.add(lblPostPick, "2, 6, right, default");
 
-        postPickActuatorName = new JTextField();
-        postPickActuatorName.setColumns(10);
-        panelActuator.add(postPickActuatorName, "4, 6");
+        comboBoxPostPickActuator = new JComboBox();
+        comboBoxPostPickActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        panelActuator.add(comboBoxPostPickActuator, "4, 6, fill, default");
         
         postPickActuatorType = new JComboBox(ActuatorType.values());
         panelActuator.add(postPickActuatorType, "6, 6, fill, default");
@@ -286,6 +288,9 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         
         JLabel lblForBoolean_1 = new JLabel("For Boolean: 1 = True, 0 = False");
         panelActuator.add(lblForBoolean_1, "10, 6");
+
+        btnTestPostPickActuator = new JButton(testPostPickActuatorAction);
+        panelActuator.add(btnTestPostPickActuator, "12, 6");
         
         JLabel lblMoveBeforeFeed = new JLabel("Move before feed");
         panelActuator.add(lblMoveBeforeFeed, "2, 8, right, default");
@@ -375,11 +380,11 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         DoubleConverter doubleConverter =
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
-        addWrappedBinding(feeder, "actuatorName", actuatorName, "text");
+        addWrappedBinding(feeder, "actuatorName", comboBoxFeedActuator, "selectedItem");
         addWrappedBinding(feeder, "actuatorType", actuatorType, "selectedItem");
         addWrappedBinding(feeder, "actuatorValue", actuatorValue, "text", doubleConverter);
-        
-        addWrappedBinding(feeder, "postPickActuatorName", postPickActuatorName, "text");
+
+        addWrappedBinding(feeder, "postPickActuatorName", comboBoxPostPickActuator, "selectedItem");
         addWrappedBinding(feeder, "postPickActuatorType", postPickActuatorType, "selectedItem");
         addWrappedBinding(feeder, "postPickActuatorValue", postPickActuatorValue, "text", doubleConverter);
         
@@ -441,9 +446,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         bind(UpdateStrategy.READ_WRITE, offsets, "lengthZ", zOffsetTf, "text", lengthConverter);
         bind(UpdateStrategy.READ_WRITE, offsets, "rotation", rotOffsetTf, "text", doubleConverter);
 
-        ComponentDecorators.decorateWithAutoSelect(actuatorName);
         ComponentDecorators.decorateWithAutoSelect(actuatorValue);
-        ComponentDecorators.decorateWithAutoSelect(postPickActuatorName);
         ComponentDecorators.decorateWithAutoSelect(postPickActuatorValue);
         ComponentDecorators.decorateWithAutoSelect(feederNameTf);
         ComponentDecorators.decorateWithAutoSelect(bankNameTf);
@@ -506,6 +509,52 @@ public class ReferenceSlotAutoFeederConfigurationWizard
             }
             ReferenceSlotAutoFeeder.getBanks().remove(bank);
             bankCb.removeItem(bank);
+        }
+    };
+
+    private Action testFeedActuatorAction = new AbstractAction("Test feed") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.messageBoxOnException(() -> {
+                if (feeder.getActuatorName() == null || feeder.getActuatorName().equals("")) {
+                    Logger.warn("No actuatorName specified for feeder {}.", feeder.getName());
+                    return;
+                }
+                Actuator actuator = Configuration.get().getMachine().getActuatorByName(feeder.getActuatorName());
+
+                if (actuator == null) {
+                    throw new Exception("Feed failed. Unable to find an actuator named " + feeder.getActuatorName());
+                }
+                if (feeder.getActuatorType() == ActuatorType.Boolean) {
+                    actuator.actuate(feeder.getActuatorValue() != 0);
+                } else {
+                    actuator.actuate(feeder.getActuatorValue());
+                }
+            });
+        }
+    };
+
+    private Action testPostPickActuatorAction = new AbstractAction("Test post pick") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.messageBoxOnException(() -> {
+                if (feeder.getPostPickActuatorName() == null || feeder.getPostPickActuatorName().equals("")) {
+                    Logger.warn("No postPickActuatorName specified for feeder {}.", feeder.getName());
+                    return;
+                }
+                Actuator actuator = Configuration.get().getMachine()
+                        .getActuatorByName(feeder.getPostPickActuatorName());
+
+                if (actuator == null) {
+                    throw new Exception(
+                            "Feed failed. Unable to find an actuator named " + feeder.getPostPickActuatorName());
+                }
+                if (feeder.getPostPickActuatorType() == ActuatorType.Boolean) {
+                    actuator.actuate(feeder.getPostPickActuatorValue() != 0);
+                } else {
+                    actuator.actuate(feeder.getPostPickActuatorValue());
+                }
+            });
         }
     };
 

@@ -80,8 +80,9 @@ public class OpenCvVisionProvider implements VisionProvider {
      * 
      * @param template
      * @return
+     * @throws Exception 
      */
-    public List<TemplateMatch> getTemplateMatches(BufferedImage template) {
+    public List<TemplateMatch> getTemplateMatches(BufferedImage template) throws Exception {
         BufferedImage image = camera.settleAndCapture();
 
         // Convert the camera image and template image to the same type. This

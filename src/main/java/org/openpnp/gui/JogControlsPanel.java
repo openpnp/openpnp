@@ -54,6 +54,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
@@ -228,7 +229,8 @@ public class JogControlsPanel extends JPanel {
             }
         }
 
-        tool.moveTo(targetLocation);
+        tool.moveTo(targetLocation, MotionOption.JogMotion); 
+        // to test without backlash comp for continous jogging: add MotionOption.SpeedOverPrecision
     }
 
     private boolean nozzleLocationIsSafe(Location origin, Location dimension, Location nozzle,
@@ -566,7 +568,14 @@ public class JogControlsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable hm = machineControlsPanel.getSelectedTool();
-                hm.moveToSafeZ();
+                // Note, we don't just moveToSafeZ(), because this will just sit still, if we're anywhere in the Safe Z Zone.
+                // instead we explicitly move to the Safe Z coordinate i.e. the lower bound of the Safe Z Zone, applicable
+                // for this hm.
+                Location location = hm.getLocation();
+                Length safeZLength = hm.getSafeZ();
+                double safeZ = (safeZLength != null ? safeZLength.convertToUnits(location.getUnits()).getValue() : Double.NaN);
+                location = location.derive(null, null, safeZ, null);
+                hm.moveTo(location);
             });
         }
     };

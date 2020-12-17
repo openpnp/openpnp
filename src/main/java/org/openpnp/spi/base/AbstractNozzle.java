@@ -20,7 +20,7 @@ import org.openpnp.spi.NozzleTip;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 
-public abstract class AbstractNozzle extends AbstractModelObject implements Nozzle {
+public abstract class AbstractNozzle extends AbstractHeadMountable implements Nozzle {
     @Attribute
     protected String id;
 

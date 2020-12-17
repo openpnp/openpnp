@@ -147,6 +147,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         searchTextField.setColumns(15);
 
         JComboBox packagesCombo = new JComboBox(new PackagesComboBoxModel());
+        packagesCombo.setMaximumRowCount(20);
         packagesCombo.setRenderer(new IdentifiableListCellRenderer<org.openpnp.model.Package>());
 
         JSplitPane splitPane = new JSplitPane();

@@ -9,6 +9,7 @@ import java.net.SocketTimeoutException;
 import java.util.concurrent.TimeoutException;
 
 import org.openpnp.machine.reference.driver.ReferenceDriverCommunications.LineEndingType;
+import org.openpnp.util.GcodeServer;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -29,10 +30,20 @@ public class TcpCommunications extends ReferenceDriverCommunications {
     protected Socket clientSocket;
     protected BufferedReader input;
     protected DataOutputStream output;
+    protected GcodeServer gcodeServer;
+    protected AbstractReferenceDriver driver;
 
     public synchronized void connect() throws Exception {
         disconnect();
-        clientSocket = new Socket(ipAddress,port);
+        if (ipAddress.equals("GcodeServer")) {
+            gcodeServer = new GcodeServer();
+            gcodeServer.setDriver(driver);
+            port = gcodeServer.getListenerPort();
+            clientSocket = new Socket("localhost", port);
+        }
+        else {
+            clientSocket = new Socket(ipAddress,port);
+        }
         input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         output = new DataOutputStream(clientSocket.getOutputStream());
     }
@@ -43,6 +54,10 @@ public class TcpCommunications extends ReferenceDriverCommunications {
             input = null;
             output = null;
             clientSocket = null;
+        }
+        if (gcodeServer != null) {
+            gcodeServer.shutdown();
+            gcodeServer = null;
         }
     }
 
@@ -86,6 +101,10 @@ public class TcpCommunications extends ReferenceDriverCommunications {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public void setDriver(AbstractReferenceDriver driver) {
+        this.driver = driver;
     }
     
 }

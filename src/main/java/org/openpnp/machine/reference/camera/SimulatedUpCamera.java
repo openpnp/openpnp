@@ -13,6 +13,7 @@ import java.awt.image.BufferedImage;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.camera.wizards.SimulatedUpCameraConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
@@ -33,7 +34,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
 
     protected int height = 1280;
 
-    protected int fps = 10;
+    protected int fps = 30;
 
     private Thread thread;
     
@@ -70,25 +71,27 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
                 location.getY() - phyHeight / 2, phyWidth, phyHeight);
 
         // determine if there are any nozzles within our bounds and if so render them
-        for (Head head : Configuration.get()
-                                      .getMachine()
-                                      .getHeads()) {
+        for (Head head :  Configuration.get()
+                .getMachine().getHeads()) {
             for (Nozzle nozzle : head.getNozzles()) {
-                Location l = nozzle.getLocation()
-                                   .convertToUnits(LengthUnit.Millimeters);
+                Location l = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, getLooking());
                 if (phyBounds.contains(l.getX(), l.getY())) {
-                    drawNozzle(g, nozzle);
+                    drawNozzle(g, nozzle, l);
                 }
             }
         }
 
         g.setTransform(tx);
+
+        SimulationModeMachine.drawSimulatedCameraNoise(g, width, height);
+
         g.dispose();
+
         return image;
     }
 
 
-    private void drawNozzle(Graphics2D g, Nozzle nozzle) {
+    private void drawNozzle(Graphics2D g, Nozzle nozzle, Location l) {
         g.setStroke(new BasicStroke(2f));
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
@@ -97,9 +100,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         
         // Draw the nozzle
         // Get nozzle offsets from camera
-        Location offsets = nozzle.getLocation()
-                .convertToUnits(units)
-                .subtractWithRotation(getLocation());
+        Location offsets = l.subtractWithRotation(getLocation());
         
         // Create a nozzle shape
         fillShape(g, new Ellipse2D.Double(-0.5, -0.5, 1, 1), Color.green, unitsPerPixel, offsets, false);

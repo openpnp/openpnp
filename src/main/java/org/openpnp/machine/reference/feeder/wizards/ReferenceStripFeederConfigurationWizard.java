@@ -64,11 +64,13 @@ import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.camera.BufferedImageCamera;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder.TapeType;
+import org.openpnp.model.Board;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.HslColor;
 import org.openpnp.util.OpenCvUtils;
@@ -96,7 +98,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JPanel panelPart;
 
     private JComboBox comboBoxPart;
-
+    private JLabel lblPartInfo;
+    
     private JTextField textFieldFeedStartX;
     private JTextField textFieldFeedStartY;
     private JTextField textFieldFeedStartZ;
@@ -143,7 +146,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC },
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
@@ -166,6 +171,15 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
         panelPart.add(comboBoxPart, "4, 2, left, default");
 
+        comboBoxPart.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                updatePartInfo(e);            
+            }
+        });
+        
+        lblPartInfo = new JLabel("");
+        panelPart.add(lblPartInfo,"6, 2, left, default");
+        
         lblRotationInTape = new JLabel("Rotation In Tape");
         panelPart.add(lblRotationInTape, "2, 4, left, default");
 
@@ -387,6 +401,31 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndZ);
     }
 
+    private void updatePartInfo(ActionEvent e)
+    {
+        int count = 0;
+    	Part feeder_part =(Part)comboBoxPart.getSelectedItem(); 
+    
+        for (Board board: Configuration.get().getBoards())    {
+            for (Placement p : board.getPlacements())
+            {
+                if (p.getPart() == feeder_part)
+                {
+                    count++;
+                }
+            }
+        }
+        if (count > 0)
+        {
+            String lbl = Integer.toString(count) + " used by current job";
+            lblPartInfo.setText(lbl);
+        }
+        else
+        {
+            lblPartInfo.setText("");
+        }
+    }
+    
     private Action autoSetup = new AbstractAction("Auto Setup") {
         @Override
         public void actionPerformed(ActionEvent e) {
