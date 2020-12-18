@@ -21,7 +21,9 @@ If you are adding a new driver, just press the **+** button and select the Gcode
 
 ### For existing GcodeDrivers 
 
-If you are migrating an existing `machine.xml` and you want to keep the settings and the G-code setup of your existing GcodeDriver, you need to change its class _in place_. 
+Use the [[Issues and Solutions]] system. It will suggest the replacement of the driver for you. If you accept, all the work is done. 
+
+If for some reason you still need to do it manually, and you are migrating an existing `machine.xml`, and you want to keep the settings and the G-code setup of your existing GcodeDriver, you need to change its class _in place_. 
 
 1. Close OpenPnP. 
 2. Open the `machine.xml` found [here](https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located).
