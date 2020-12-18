@@ -33,6 +33,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
+import org.openpnp.Scripting;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
@@ -286,7 +287,7 @@ public class LocationButtonsPanel extends JPanel {
                         try {
                             Map<String, Object> globals = new HashMap<>();
                             globals.put("camera", camera);
-                            Configuration.get().getScripting().on("Camera.AfterPosition", globals);
+                            Scripting.get().on("Camera.AfterPosition", globals);
                         }
                         catch (Exception e) {
                             Logger.warn(e);

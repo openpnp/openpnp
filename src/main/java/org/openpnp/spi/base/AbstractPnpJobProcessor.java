@@ -3,6 +3,7 @@ package org.openpnp.spi.base;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.openpnp.Scripting;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
@@ -38,7 +39,7 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", nozzle);
-            Configuration.get().getScripting().on("Job.BeforeDiscard", globals);
+            Scripting.get().on("Job.BeforeDiscard", globals);
         }
         catch (Exception e) {
             Logger.warn(e);
@@ -53,7 +54,7 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
             try {
                 Map<String, Object> globals = new HashMap<>();
                 globals.put("nozzle", nozzle);
-                Configuration.get().getScripting().on("Job.AfterDiscard", globals);
+                Scripting.get().on("Job.AfterDiscard", globals);
             }
             catch (Exception e) {
                 Logger.warn(e);

@@ -66,6 +66,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Scripting;
 import org.openpnp.Translations;
 import org.openpnp.events.BoardLocationSelectedEvent;
 import org.openpnp.events.JobLoadedEvent;
@@ -1258,7 +1259,7 @@ public class JobPanel extends JPanel {
                         try {
                             Map<String, Object> globals = new HashMap<>();
                             globals.put("camera", camera);
-                            Configuration.get().getScripting().on("Camera.AfterPosition", globals);
+                            Scripting.get().on("Camera.AfterPosition", globals);
                         }
                         catch (Exception e) {
                             Logger.warn(e);
@@ -1294,7 +1295,7 @@ public class JobPanel extends JPanel {
                         try {
                             Map<String, Object> globals = new HashMap<>();
                             globals.put("camera", camera);
-                            Configuration.get().getScripting().on("Camera.AfterPosition", globals);
+                            Scripting.get().on("Camera.AfterPosition", globals);
                         }
                         catch (Exception e) {
                             Logger.warn(e);

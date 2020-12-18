@@ -46,6 +46,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Scripting;
 import org.openpnp.Translations;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.WrapLayout;
@@ -616,7 +617,7 @@ public class JogControlsPanel extends JPanel {
                 try {
                     Map<String, Object> globals = new HashMap<>();
                     globals.put("nozzle", nozzle);
-                    Configuration.get().getScripting().on("Job.BeforeDiscard", globals);
+                    Scripting.get().on("Job.BeforeDiscard", globals);
                 }
                 catch (Exception e) {
                     Logger.warn(e);
@@ -630,7 +631,7 @@ public class JogControlsPanel extends JPanel {
                 try {
                     Map<String, Object> globals = new HashMap<>();
                     globals.put("nozzle", nozzle);
-                    Configuration.get().getScripting().on("Job.AfterDiscard", globals);
+                    Scripting.get().on("Job.AfterDiscard", globals);
                 }
                 catch (Exception e) {
                     Logger.warn(e);

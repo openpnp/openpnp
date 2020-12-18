@@ -18,7 +18,7 @@ public class ScriptActuator extends ReferenceActuator {
     private void execute(Map<String, Object> globals) throws Exception {
         // Using https://docs.oracle.com/javase/7/docs/technotes/guides/scripting/programmer_guide/ 
         // we should be able to call specific functions, and return a value.
-        Scripting scripting = Configuration.get().getScripting();
+        Scripting scripting = Scripting.get();
         File scriptsDirectory = scripting.getScriptsDirectory();
         File script = new File(scriptsDirectory, scriptName);
         scripting.execute(script, globals);

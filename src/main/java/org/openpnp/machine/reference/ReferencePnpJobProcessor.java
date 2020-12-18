@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.openpnp.Scripting;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
@@ -277,7 +278,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             params.put("job", job);
             params.put("jobProcessor", this);
             try {
-                Configuration.get().getScripting().on("Job.Starting", params);
+                Scripting.get().on("Job.Starting", params);
             }
             catch (Exception e) {
                 throw new JobProcessorException(null, e);
@@ -577,9 +578,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 params.put("placement", placement);
                 params.put("boardLocation", boardLocation);
                 params.put("feeder", feeder);
-                Configuration.get()
-                             .getScripting()
-                             .on("Job.Placement.Starting", params);
+                Scripting.get().on("Job.Placement.Starting", params);
             }
             catch (Exception e) {
                 throw new JobProcessorException(null, e);
@@ -894,7 +893,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 params.put("boardLocation", boardLocation);
                 params.put("placementLocation", placementLocation);
                 params.put("alignmentOffsets", plannedPlacement.alignmentOffsets);
-                Configuration.get().getScripting().on("Job.Placement.BeforeAssembly", params);
+                Scripting.get().on("Job.Placement.BeforeAssembly", params);
             }
             catch (Exception e) {
             }
@@ -915,7 +914,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 params.put("placement", placement);
                 params.put("boardLocation", boardLocation);
                 params.put("placementLocation", placementLocation);
-                Configuration.get().getScripting().on("Job.Placement.Complete", params);
+                Scripting.get().on("Job.Placement.Complete", params);
             }
             catch (Exception e) {
                 throw new JobProcessorException(null, e);
@@ -1039,9 +1038,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 HashMap<String, Object> params = new HashMap<>();
                 params.put("job", job);
                 params.put("jobProcessor", this);
-                Configuration.get()
-                             .getScripting()
-                             .on("Job.Finished", params);
+                Scripting.get().on("Job.Finished", params);
             }
             catch (Exception e) {
                 throw new JobProcessorException(null, e);

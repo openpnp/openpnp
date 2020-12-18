@@ -31,6 +31,7 @@ import java.util.Set;
 import javax.swing.Action;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Scripting;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -406,7 +407,7 @@ public class ReferenceMachine extends AbstractMachine {
         super.home();
 
         try {
-            Configuration.get().getScripting().on("Machine.AfterHoming", null);
+            Scripting.get().on("Machine.AfterHoming", null);
         }
         catch (Exception e) {
             Logger.warn(e);

@@ -40,6 +40,7 @@ import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.Scripting;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -135,7 +136,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("camera", this);
-            Configuration.get().getScripting().on("Camera.BeforeCapture", globals);
+            Scripting.get().on("Camera.BeforeCapture", globals);
         }
         catch (Exception e) {
             Logger.warn(e);
@@ -144,7 +145,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("camera", this);
-            Configuration.get().getScripting().on("Camera.AfterCapture", globals);
+            Scripting.get().on("Camera.AfterCapture", globals);
         }
         catch (Exception e) {
             Logger.warn(e);

@@ -41,6 +41,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
 
+import org.openpnp.Scripting;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
@@ -492,7 +493,7 @@ public class JobPlacementsPanel extends JPanel {
                 try {
                     Map<String, Object> globals = new HashMap<>();
                     globals.put("camera", camera);
-                    Configuration.get().getScripting().on("Camera.AfterPosition", globals);
+                    Scripting.get().on("Camera.AfterPosition", globals);
                 }
                 catch (Exception e) {
                     Logger.warn(e);
@@ -526,7 +527,7 @@ public class JobPlacementsPanel extends JPanel {
                 try {
                     Map<String, Object> globals = new HashMap<>();
                     globals.put("camera", camera);
-                    Configuration.get().getScripting().on("Camera.AfterPosition", globals);
+                    Scripting.get().on("Camera.AfterPosition", globals);
                 }
                 catch (Exception e) {
                     Logger.warn(e);

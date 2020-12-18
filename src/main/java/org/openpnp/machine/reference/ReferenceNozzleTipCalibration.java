@@ -12,6 +12,7 @@ import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.RotatedRect;
+import org.openpnp.Scripting;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
@@ -602,7 +603,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             HashMap<String, Object> params = new HashMap<>();
             params.put("nozzle", nozzle);
             params.put("camera", camera);
-            Configuration.get().getScripting().on("NozzleCalibration.Starting", params);
+            Scripting.get().on("NozzleCalibration.Starting", params);
 
             // move nozzle to the camera location at the start angle - the nozzle must not necessarily be at the center
             MovableUtils.moveToLocationAtSafeZ(nozzle, measureBaseLocation.derive(null, null, null, angleStart));
@@ -669,7 +670,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 throw new Exception("Not enough results from vision. Check pipeline and threshold."); 
             }
 
-            Configuration.get().getScripting().on("NozzleCalibration.Finished", params);
+            Scripting.get().on("NozzleCalibration.Finished", params);
 
             if (!calibrateCamera) {
                 if (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.Model) {

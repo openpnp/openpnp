@@ -75,6 +75,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
 
+import org.openpnp.Scripting;
 import org.openpnp.Translations;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.importer.BoardImporter;
@@ -654,7 +655,7 @@ public class MainFrame extends JFrame {
         while (!configurationLoaded) {
 	        try {
 	            configuration.load();
-	            configuration.getScripting().setMenu(mnScripts);
+	            Scripting.get().setMenu(mnScripts);
 	            
 	            if (Configuration.get().getMachine().getProperty("Welcome2_0_Dialog_Shown") == null) {
 	                Welcome2_0Dialog dialog = new Welcome2_0Dialog(this);

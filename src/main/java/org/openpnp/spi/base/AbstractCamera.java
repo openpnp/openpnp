@@ -27,6 +27,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.CameraListener;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Scripting;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.model.Configuration;
@@ -669,7 +670,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("camera", this);
-            Configuration.get().getScripting().on("Camera.BeforeSettle", globals);
+            Scripting.get().on("Camera.BeforeSettle", globals);
         }
         catch (Exception e) {
             Logger.warn(e);
@@ -701,7 +702,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
             try {
                 Map<String, Object> globals = new HashMap<>();
                 globals.put("camera", this);
-                Configuration.get().getScripting().on("Camera.AfterSettle", globals);
+                Scripting.get().on("Camera.AfterSettle", globals);
             }
             catch (Exception e) {
                 Logger.warn(e);

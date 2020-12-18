@@ -38,6 +38,8 @@ import com.google.common.io.Files;
 import bsh.engine.BshScriptEngineFactory;
 
 public class Scripting {
+    private static Scripting instance;
+
     JMenu menu;
     final ScriptEngineManager manager = new ScriptEngineManager();
     final String[] extensions;
@@ -45,7 +47,7 @@ public class Scripting {
     File eventsDirectory;
     WatchService watcher;
 
-    public Scripting() {
+    private Scripting() {
         // Collect all the script filename extensions we know how to handle from the list of
         // available scripting engines.
         List<ScriptEngineFactory> factories = manager.getEngineFactories();
@@ -142,6 +144,13 @@ public class Scripting {
         catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static Scripting get() {
+        if (instance == null) {
+            instance = new Scripting();
+        }
+        return instance;
     }
 
     public void setMenu(JMenu menu) {

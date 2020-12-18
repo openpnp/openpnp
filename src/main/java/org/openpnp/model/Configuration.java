@@ -23,7 +23,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -35,7 +34,6 @@ import java.util.prefs.Preferences;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.ConfigurationListener;
-import org.openpnp.Scripting;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.ResourceUtils;
@@ -84,7 +82,6 @@ public class Configuration extends AbstractModelObject {
     private Set<ConfigurationListener> listeners = Collections.synchronizedSet(new HashSet<>());
     private File configurationDirectory;
     private Preferences prefs;
-    private Scripting scripting;
     private EventBus bus = new EventBus();
 
     public static boolean isInstanceInitialized() {
@@ -106,10 +103,6 @@ public class Configuration extends AbstractModelObject {
     private Configuration(File configurationDirectory) {
         this.configurationDirectory = configurationDirectory;
         this.prefs = Preferences.userNodeForPackage(Configuration.class);
-    }
-    
-    public Scripting getScripting() {
-        return scripting;
     }
     
     public EventBus getBus() {
@@ -310,8 +303,6 @@ public class Configuration extends AbstractModelObject {
         for (ConfigurationListener listener : listeners) {
             listener.configurationComplete(this);
         }
-        
-        scripting = new Scripting();
     }
 
     public synchronized void save() throws Exception {

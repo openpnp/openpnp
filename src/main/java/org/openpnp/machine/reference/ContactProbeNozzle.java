@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.openpnp.Scripting;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.driver.GcodeAsyncDriver;
 import org.openpnp.machine.reference.wizards.ContactProbeNozzleWizard;
@@ -64,7 +65,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
             globals.put("part", part);
-            Configuration.get().getScripting().on("Nozzle.BeforePickProbe", globals);
+            Scripting.get().on("Nozzle.BeforePickProbe", globals);
         } catch (Exception e) {
             Logger.warn(e);
         }
@@ -83,7 +84,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
             globals.put("part", part);
-            Configuration.get().getScripting().on("Nozzle.AfterPickProbe", globals);
+            Scripting.get().on("Nozzle.AfterPickProbe", globals);
         } catch (Exception e) {
             Logger.warn(e);
         }
@@ -95,7 +96,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
             globals.put("part", part);
-            Configuration.get().getScripting().on("Nozzle.BeforePlaceProbe", globals);
+            Scripting.get().on("Nozzle.BeforePlaceProbe", globals);
         } catch (Exception e) {
             Logger.warn(e);
         }
@@ -114,7 +115,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
             globals.put("part", part);
-            Configuration.get().getScripting().on("Nozzle.AfterPlaceProbe", globals);
+            Scripting.get().on("Nozzle.AfterPlaceProbe", globals);
         } catch (Exception e) {
             Logger.warn(e);
         }

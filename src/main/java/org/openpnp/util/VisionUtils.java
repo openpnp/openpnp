@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.openpnp.Scripting;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -210,7 +211,7 @@ public class VisionUtils {
             Map<String, Object> globals = new HashMap<>();
             globals.put("part", part);
             globals.put("nozzle", nozzle);
-            Configuration.get().getScripting().on("Vision.PartAlignment.Before", globals);
+            Scripting.get().on("Vision.PartAlignment.Before", globals);
         }
         catch (Exception e) {
             Logger.warn(e);
@@ -226,7 +227,7 @@ public class VisionUtils {
                 globals.put("part", part);
                 globals.put("nozzle", nozzle);
                 globals.put("offsets", offsets);
-                Configuration.get().getScripting().on("Vision.PartAlignment.After", globals);
+                Scripting.get().on("Vision.PartAlignment.After", globals);
             }
             catch (Exception e) {
                 Logger.warn(e);

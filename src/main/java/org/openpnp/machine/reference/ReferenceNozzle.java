@@ -9,6 +9,7 @@ import javax.swing.Action;
 import javax.swing.JOptionPane;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Scripting;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
@@ -208,7 +209,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
             globals.put("part", part);
-            Configuration.get().getScripting().on("Nozzle.BeforePick", globals);
+            Scripting.get().on("Nozzle.BeforePick", globals);
         }
         catch (Exception e) {
             Logger.warn(e);
@@ -236,7 +237,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
             globals.put("part", part);
-            Configuration.get().getScripting().on("Nozzle.AfterPick", globals);
+            Scripting.get().on("Nozzle.AfterPick", globals);
         }
         catch (Exception e) {
             Logger.warn(e);
@@ -253,7 +254,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
-            Configuration.get().getScripting().on("Nozzle.BeforePlace", globals);
+            Scripting.get().on("Nozzle.BeforePlace", globals);
         }
         catch (Exception e) {
             Logger.warn(e);
@@ -285,7 +286,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
-            Configuration.get().getScripting().on("Nozzle.AfterPlace", globals);
+            Scripting.get().on("Nozzle.AfterPlace", globals);
         }
         catch (Exception e) {
             Logger.warn(e);
@@ -463,9 +464,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     globals.put("head", getHead());
                     globals.put("nozzle", this);
                     globals.put("nozzleTip", nt);
-                    Configuration.get()
-                    .getScripting()
-                    .on("NozzleTip.BeforeLoad", globals);
+                    Scripting.get().on("NozzleTip.BeforeLoad", globals);
                 }
                 catch (Exception e) {
                     Logger.warn(e);
@@ -515,9 +514,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     Map<String, Object> globals = new HashMap<>();
                     globals.put("head", getHead());
                     globals.put("nozzle", this);
-                    Configuration.get()
-                    .getScripting()
-                    .on("NozzleTip.Loaded", globals);
+                    Scripting.get().on("NozzleTip.Loaded", globals);
                 }
                 catch (Exception e) {
                     Logger.warn(e);
@@ -574,9 +571,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     globals.put("head", getHead());
                     globals.put("nozzle", this);
                     globals.put("nozzleTip", nt);
-                    Configuration.get()
-                    .getScripting()
-                    .on("NozzleTip.BeforeUnload", globals);
+                    Scripting.get().on("NozzleTip.BeforeUnload", globals);
                 }
                 catch (Exception e) {
                     Logger.warn(e);
@@ -626,9 +621,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     Map<String, Object> globals = new HashMap<>();
                     globals.put("head", getHead());
                     globals.put("nozzle", this);
-                    Configuration.get()
-                    .getScripting()
-                    .on("NozzleTip.Unloaded", globals);
+                    Scripting.get().on("NozzleTip.Unloaded", globals);
                 }
                 catch (Exception e) {
                     Logger.warn(e);
