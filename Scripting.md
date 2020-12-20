@@ -60,7 +60,8 @@ Scripting Events allow you to define scripts that will be run automatically by O
 * [Camera.AfterCapture](#CameraAfterCapture): Called after an image capture.
 * [Camera.AfterSettle](#CameraAfterSettle): Called after the camera settle time.
 * [Camera.AfterPosition](#CameraAfterPosition): Called after moving the camera using the Position Camera icon.
-* [Job.AfterDiscard](#JobAfterDiscard): Called after a part has been discarded.
+* [Job.AfterDiscard](#JobAfterDiscard): Called after a part has been discarded and the nozzle has returned to safe z.
+* [Job.BeforeDiscard](#JobBeforeDiscard): Called during a discard sequence before the nozzle has moved to the discard location.
 * [Job.Finished](#JobFinished): Called when a job completes.
 * [Job.Placement.BeforeAssembly](#JobPlacementBeforeAssembly): Called before the process of handling a placement starts.
 * [Job.Placement.Complete](#JobPlacementComplete): Called after a placement is complete.
@@ -86,6 +87,26 @@ Scripting Events allow you to define scripts that will be run automatically by O
 Called when system startup is complete.
 
 Variables: None.
+
+### Job.AfterDiscard
+
+Called after a part has been discarded and the nozzle has returned to safe z.
+
+Variables:
+
+| Name  | Type | Description |
+| ------------- | ------------- | -------------- |
+| nozzle  | [org.openpnp.spi.Nozzle](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Nozzle.html) | The Nozzle that held the discarded the part. |
+
+### Job.BeforeDiscard
+
+Called during a discard sequence before the nozzle has moved to the discard location.
+
+Variables:
+
+| Name  | Type | Description |
+| ------------- | ------------- | -------------- |
+| nozzle  | [org.openpnp.spi.Nozzle](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Nozzle.html) | The Nozzle that holds the part to be discarded. |
 
 ### Job.Starting
 
