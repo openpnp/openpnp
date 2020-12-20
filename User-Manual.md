@@ -39,7 +39,7 @@ For a more formal definition of this coordinate system see the [Wikipedia Page](
 In this coordinate system we are standing above the machine, looking down at it.
 
 The X axis moves right and left. Right is positive.
-The Y axis moves forward and back. Forward is positive.
+The Y axis moves forward and back. Back is positive.
 The Z axis moves up and down. Up is positive.
 The C, or rotation, axis rotates clockwise and counter-clockwise. Counter-clockwise is positive.
 
