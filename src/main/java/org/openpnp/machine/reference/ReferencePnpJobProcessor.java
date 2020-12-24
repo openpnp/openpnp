@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -566,70 +565,129 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             final Placement placement = jobPlacement.getPlacement();
             final Part part = placement.getPart();
             final BoardLocation boardLocation = plannedPlacement.jobPlacement.getBoardLocation();
-            final Feeder feeder = findFeeder(machine, part);
             
-            try {
-                HashMap<String, Object> params = new HashMap<>();
-                params.put("job", job);
-                params.put("jobProcessor", this);
-                params.put("part", part);
-                params.put("nozzle", nozzle);
-                params.put("placement", placement);
-                params.put("boardLocation", boardLocation);
-                params.put("feeder", feeder);
-                Configuration.get()
-                             .getScripting()
-                             .on("Job.Placement.Starting", params);
-            }
-            catch (Exception e) {
-                throw new JobProcessorException(null, e);
-            }
-
-            feed(feeder, nozzle);
-
-            // TODO: move over the pick location first to let more time pass? 
-            // What happens if feeders already position the nozzle in feed()? 
-            // (there are several, e.g. drag, lever, push-pull, blinds feeder with push cover)
-            // it did not work in my tests, as the previous check already built up some underpressure
-            checkPartOff(nozzle, part);
-
-            pick(nozzle, feeder, placement, part);
-
-            /** 
-             * If either postPick or checkPartOn fails we discard and then cycle back to feed
-             * up to pickRetryCount times. We include postPick because if the pick succeeded
-             * then we assume we are carrying a part, so we want to make sure to discard it
-             * if there is a problem.   
+            /**
+             * So, what do we need to do for pick retry, at least?
+             * 
+             * - pickRetryCount should not be on feeder, but lets not worry about that right now.
+             * - I think a loop starts here, but the loop would be over the pick retry count, which we
+             *   don't know yet, so we could do a do while.
+             * - find a feeder: if one does not exist, that is a true error so we throw.
+             * - feed it, retrying feedRetryCount number of times. If they all fail
+             *   that's an error but we want to try the next feeder if one exists.
+             * - pick: any error here is a real error and aborts.
+             * - postPick and checkPartOn: an error here is within the pickretrycount
              */
-            try {
-                postPick(feeder, nozzle);
+            
+            /**
+             * This `3` will eventually be alignRetryCount and align will be included as part of
+             * this loop, but for now the counter is hard coded and the align is seperate. One thing
+             * at a time. 
+             */
+            /**
+             * If anything goes wrong that causes us to fail all the retries, this is the error
+             * that will get thrown. 
+             */
+            int feedPickRetryCount = 3;
+            JobProcessorException lastException = null;
+            for (int i = 0; i < feedPickRetryCount; i++) {
+                System.out.println("Starting cycle " + i);
                 
-                checkPartOn(nozzle);
-            }
-            catch (JobProcessorException e) {
-                if (retryIncrementAndGet(plannedPlacement) >= feeder.getPickRetryCount()) {
-                    // Clear the retry count because we're about to show the error. If the user
-                    // decides to try again we want to do the full retry cycle.
-                    retries.remove(plannedPlacement);
-                    throw e;
+                /**
+                 * Find an available feeder. If one cannot be found this will throw. There's nothing
+                 * else we can do with this part.
+                 */
+                final Feeder feeder = findFeeder(machine, part);
+                System.out.println("Feeder " + feeder);
+                
+                /**
+                 * Run the placement starting script. An error here will throw. That's the user's
+                 * problem.
+                 */
+                try {
+                    HashMap<String, Object> params = new HashMap<>();
+                    params.put("job", job);
+                    params.put("jobProcessor", this);
+                    params.put("part", part);
+                    params.put("nozzle", nozzle);
+                    params.put("placement", placement);
+                    params.put("boardLocation", boardLocation);
+                    params.put("feeder", feeder);
+                    Configuration.get()
+                                 .getScripting()
+                                 .on("Job.Placement.Starting", params);
                 }
-                else {
+                catch (Exception e) {
+                    throw new JobProcessorException(null, e);
+                }
+                
+                /**
+                 * Feed the feeder, retrying up to feedRetryCount times. That happens within the
+                 * feed method. It will either succeed or throw after the retries. We catch the
+                 * Exception so that we can continue the loop.
+                 */
+                try {
+                    System.out.println("Feeding " + feeder);
+                    feed(feeder, nozzle);
+                    System.out.println("Fed " + feeder);
+                }
+                catch (JobProcessorException jpe) {
+                    System.out.println("feed error " + jpe.getMessage());
+                    lastException = jpe;
+                    continue;
+                }
+
+                /**
+                 * Currently this will throw and abort the placement if it fails. Probably it should
+                 * discard and retry, and really it should probably be done before we attempt to
+                 * feed. I *think* this has been debated as to whether or not it's useful
+                 * and should maybe be done at the end of the cycle, rather than here. Maybe it just
+                 * gets removed completely.
+                 */
+                System.out.println("checkPartOff");
+                checkPartOff(nozzle, part);
+
+                /**
+                 * Attempt the pick. This really should not fail as it's just moving down and turning
+                 * on vacuum, so we let this one throw and abort the placement if something goes
+                 * wrong. TODO is this where the pick retry would actually happen? Check
+                 * the notes.
+                 */
+                System.out.println("pick");
+                pick(nozzle, feeder, placement, part);
+
+                /** 
+                 * If either postPick or checkPartOn fails we discard and then cycle back to feed
+                 * up. We include postPick because if the pick succeeded
+                 * then we assume we are carrying a part, so we want to make sure to discard it
+                 * if there is a problem.   
+                 */
+                try {
+                    System.out.println("postPick");
+                    postPick(feeder, nozzle);
+                    
+                    System.out.println("checkPartOn");
+                    checkPartOn(nozzle);
+                }
+                catch (JobProcessorException jpe) {
+                    System.out.println("postPick or checkPartOn " + jpe.getMessage());
+                    lastException = jpe;
+                    System.out.println("discarding");
                     discard(nozzle);
-                    return this;
+                    continue;
                 }
+                
+                /**
+                 * If we get here with no problems then we are done.
+                 */
+                return this;
             }
             
-            return this;
-        }
-        
-        private int retryIncrementAndGet(PlannedPlacement plannedPlacement) {
-            Integer retry = retries.get(plannedPlacement);
-            if (retry == null) {
-                retry = 0;
-            }
-            retry++;
-            retries.put(plannedPlacement, retry);
-            return retry;
+            /**
+             * If we didn't return in the loop above then we didn't succeed, so throw
+             * the recorded error.
+             */
+            throw lastException;
         }
         
         private void feed(Feeder feeder, Nozzle nozzle) throws JobProcessorException {
