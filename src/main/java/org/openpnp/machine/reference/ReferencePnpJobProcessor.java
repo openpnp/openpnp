@@ -590,7 +590,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
              */
             int feedPickRetryCount = 3;
             JobProcessorException lastException = null;
-            for (int i = 0; i < feedPickRetryCount; i++) {
+            for (int i = 0; i < 1 + feedPickRetryCount; i++) {
                 System.out.println("Starting cycle " + i);
                 
                 /**

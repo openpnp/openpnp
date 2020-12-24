@@ -1,7 +1,6 @@
 package org.openpnp;
 
 import java.awt.Desktop;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
@@ -24,7 +23,6 @@ import javax.script.ScriptEngineManager;
 import javax.swing.AbstractAction;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.KeyStroke;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -46,6 +44,13 @@ public class Scripting {
     WatchService watcher;
 
     public Scripting() {
+        try {
+            Configuration.get();
+        }
+        catch (Error e) {
+            extensions = null;
+            return;
+        }
         // Collect all the script filename extensions we know how to handle from the list of
         // available scripting engines.
         List<ScriptEngineFactory> factories = manager.getEngineFactories();
@@ -308,6 +313,9 @@ public class Scripting {
 
     public void on(String event, Map<String, Object> globals) throws Exception {
         Logger.trace("Scripting.on " + event);
+        if (extensions == null) {
+            return;
+        }
         for (File script : FileUtils.listFiles(eventsDirectory, extensions, false)) {
             if (!script.isFile()) {
                 continue;

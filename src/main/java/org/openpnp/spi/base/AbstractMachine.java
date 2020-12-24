@@ -105,6 +105,11 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
             head.setMachine(this);
         }
     }
+    
+    public void addHead(Head head) {
+        head.setMachine(this);
+        heads.add(head);
+    }
 
     @Override
     public List<Axis> getAxes() {

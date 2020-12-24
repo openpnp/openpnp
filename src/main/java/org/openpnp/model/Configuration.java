@@ -102,10 +102,35 @@ public class Configuration extends AbstractModelObject {
         instance = new Configuration(configurationDirectory);
         instance.setLengthDisplayFormatWithUnits(PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS_DEF);
     }
+    
+    public static synchronized void initialize() {
+        /**
+         * TODO STOPSHIP ideally this would use an in memory prefs, too, so that we
+         * don't mess with global user prefs.
+         */
+        instance = new Configuration();
+        instance.setLengthDisplayFormatWithUnits(PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS_DEF);
+    }
 
     private Configuration(File configurationDirectory) {
         this.configurationDirectory = configurationDirectory;
         this.prefs = Preferences.userNodeForPackage(Configuration.class);
+        this.scripting = new Scripting();
+    }
+    
+    private Configuration() {
+        this.prefs = Preferences.userNodeForPackage(Configuration.class);
+        this.scripting = new Scripting();
+        /**
+         * Setting loaded = true allows the mechanism of immediately notifying late
+         * Configuration.addListener() calls that the configuration is ready. It's a legacy
+         * hack.
+         */
+        loaded = true;
+    }
+    
+    public void setMachine(Machine machine) {
+        this.machine = machine;
     }
     
     public Scripting getScripting() {
@@ -310,8 +335,6 @@ public class Configuration extends AbstractModelObject {
         for (ConfigurationListener listener : listeners) {
             listener.configurationComplete(this);
         }
-        
-        scripting = new Scripting();
     }
 
     public synchronized void save() throws Exception {
