@@ -645,6 +645,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     lastException = e;
                 }
             }
+            feeder.setEnabled(false);
             throw new JobProcessorException(feeder, lastException);
         }
         
