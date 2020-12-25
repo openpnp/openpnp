@@ -119,6 +119,7 @@ public class RetryTest {
         Assert.assertTrue("R1 should be placed.", boardLocation.getPlaced("R1"));
         Assert.assertFalse("R2 should not be placed.", boardLocation.getPlaced("R2"));
         Assert.assertEquals("Feed count should be 4.", 4, feeder.feedCount);
+        Assert.assertFalse("Feeder should be disabled.", feeder.isEnabled());
     }
 
     @Test
