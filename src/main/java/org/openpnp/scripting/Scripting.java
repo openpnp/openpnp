@@ -1,4 +1,4 @@
-package org.openpnp;
+package org.openpnp.scripting;
 
 import java.awt.Desktop;
 import java.awt.Toolkit;
@@ -28,6 +28,7 @@ import javax.swing.KeyStroke;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Configuration;
 import org.openpnp.util.UiUtils;
