@@ -1,7 +1,6 @@
 package org.openpnp.scripting;
 
 import java.awt.Desktop;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
@@ -24,7 +23,6 @@ import javax.script.ScriptEngineManager;
 import javax.swing.AbstractAction;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.KeyStroke;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -46,7 +44,9 @@ public class Scripting {
     File eventsDirectory;
     WatchService watcher;
 
-    public Scripting() {
+    public Scripting(File scriptsDirectory) {
+        this.scriptsDirectory = scriptsDirectory;
+
         // Collect all the script filename extensions we know how to handle from the list of
         // available scripting engines.
         List<ScriptEngineFactory> factories = manager.getEngineFactories();
@@ -64,9 +64,6 @@ public class Scripting {
         extensions.add("java");
 
         this.extensions = extensions.toArray(new String[] {});
-
-        this.scriptsDirectory =
-                new File(Configuration.get().getConfigurationDirectory(), "scripts");
 
         // Create the scripts directory if it doesn't exist and copy the example scripts
         // over.

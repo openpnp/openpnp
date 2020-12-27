@@ -309,8 +309,9 @@ public class Configuration extends AbstractModelObject {
         for (ConfigurationListener listener : listeners) {
             listener.configurationComplete(this);
         }
-        
-        scripting = new Scripting();
+
+        File scriptingDirectory = new File(Configuration.get().getConfigurationDirectory(), "scripts");
+        scripting = new Scripting(scriptingDirectory);
     }
 
     public synchronized void save() throws Exception {
