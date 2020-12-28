@@ -567,38 +567,16 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             final BoardLocation boardLocation = plannedPlacement.jobPlacement.getBoardLocation();
             
             /**
-             * So, what do we need to do for pick retry, at least?
-             * 
-             * - pickRetryCount should not be on feeder, but lets not worry about that right now.
-             * - I think a loop starts here, but the loop would be over the pick retry count, which we
-             *   don't know yet, so we could do a do while.
-             * - find a feeder: if one does not exist, that is a true error so we throw.
-             * - feed it, retrying feedRetryCount number of times. If they all fail
-             *   that's an error but we want to try the next feeder if one exists.
-             * - pick: any error here is a real error and aborts.
-             * - postPick and checkPartOn: an error here is within the pickretrycount
-             */
-            
-            /**
-             * This `3` will eventually be alignRetryCount and align will be included as part of
-             * this loop, but for now the counter is hard coded and the align is seperate. One thing
-             * at a time. 
-             */
-            /**
              * If anything goes wrong that causes us to fail all the retries, this is the error
              * that will get thrown. 
              */
-            int feedPickRetryCount = 3;
             JobProcessorException lastException = null;
-            for (int i = 0; i < 1 + feedPickRetryCount; i++) {
-                System.out.println("Starting cycle " + i);
-                
+            for (int partPickTry = 0; partPickTry < 1 + part.getPickRetryCount(); partPickTry++) {
                 /**
                  * Find an available feeder. If one cannot be found this will throw. There's nothing
                  * else we can do with this part.
                  */
                 final Feeder feeder = findFeeder(machine, part);
-                System.out.println("Feeder " + feeder);
                 
                 /**
                  * Run the placement starting script. An error here will throw. That's the user's
@@ -627,12 +605,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                  * Exception so that we can continue the loop.
                  */
                 try {
-                    System.out.println("Feeding " + feeder);
                     feed(feeder, nozzle);
-                    System.out.println("Fed " + feeder);
                 }
                 catch (JobProcessorException jpe) {
-                    System.out.println("feed error " + jpe.getMessage());
                     lastException = jpe;
                     continue;
                 }
@@ -644,35 +619,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                  * and should maybe be done at the end of the cycle, rather than here. Maybe it just
                  * gets removed completely.
                  */
-                System.out.println("checkPartOff");
                 checkPartOff(nozzle, part);
 
-                /**
-                 * Attempt the pick. This really should not fail as it's just moving down and turning
-                 * on vacuum, so we let this one throw and abort the placement if something goes
-                 * wrong. TODO is this where the pick retry would actually happen? Check
-                 * the notes.
-                 */
-                System.out.println("pick");
-                pick(nozzle, feeder, placement, part);
-
-                /** 
-                 * If either postPick or checkPartOn fails we discard and then cycle back to feed
-                 * up. We include postPick because if the pick succeeded
-                 * then we assume we are carrying a part, so we want to make sure to discard it
-                 * if there is a problem.   
-                 */
                 try {
-                    System.out.println("postPick");
-                    postPick(feeder, nozzle);
-                    
-                    System.out.println("checkPartOn");
-                    checkPartOn(nozzle);
+                    feederPickRetry(nozzle, feeder, placement, part);
                 }
                 catch (JobProcessorException jpe) {
-                    System.out.println("postPick or checkPartOn " + jpe.getMessage());
                     lastException = jpe;
-                    System.out.println("discarding");
                     discard(nozzle);
                     continue;
                 }
@@ -692,7 +645,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         
         private void feed(Feeder feeder, Nozzle nozzle) throws JobProcessorException {
             Exception lastException = null;
-            for (int i = 0; i < Math.max(1, feeder.getFeedRetryCount()); i++) {
+            for (int i = 0; i < 1 + feeder.getFeedRetryCount(); i++) {
                 try {
                     fireTextStatus("Feed %s on %s.", feeder.getName(), feeder.getPart().getId());
                     
@@ -722,6 +675,22 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             catch (Exception e) {
                 throw new JobProcessorException(nozzle, e);
             }
+        }
+        
+        private void feederPickRetry(Nozzle nozzle, Feeder feeder, Placement placement, Part part) throws JobProcessorException {
+            Exception lastException = null;
+            for (int i = 0; i < 1 + feeder.getPickRetryCount(); i++) {
+                try {
+                    pick(nozzle, feeder, placement, part);
+                    postPick(feeder, nozzle);
+                    checkPartOn(nozzle);
+                    return;
+                }
+                catch (Exception e) {
+                    lastException = e;
+                }
+            }
+            throw new JobProcessorException(feeder, lastException);
         }
         
         private void pick(Nozzle nozzle, Feeder feeder, Placement placement, Part part) throws JobProcessorException {

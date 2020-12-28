@@ -169,6 +169,16 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     public Head getHead(String id) {
         return heads.get(id);
     }
+    
+    @Override
+    public Head getHeadByName(String name) {
+        for (Head head : heads) {
+            if (head.getName().equals(name)) {
+                return head;
+            }
+        }
+        return null;
+    }
 
     @Override
     public List<Signaler> getSignalers() {

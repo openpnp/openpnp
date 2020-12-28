@@ -200,6 +200,11 @@ public class Scripting {
         if (menu == null) {
             return;
         }
+        // TODO STOPSHIP the menu is broken currently, need to init after the config
+        // is ready
+        if (directory == null) {
+            return;
+        }
         // Remove any menu items that don't have a matching entry in the directory
         Set<String> filenames = new HashSet<>(Arrays.asList(directory.list()));
         for (JMenuItem item : getScriptMenuItems(menu)) {
