@@ -1,8 +1,6 @@
 GcodeDriver is a universal driver that makes it possible to configure complex machines and add-on hardware such as feeders without having to write any custom driver code. All configuration is done through commands in the configuration files.
 
-GcodeDriver introduces a new concept to OpenPnP drivers: Sub-Drivers. Sub-Drivers allow you to embed multiple drivers in your configuration and each one can control a different device. This is helpful for cases where you might have one board that controls your machine's movements and another that controls your feeders.
-
-Work on this feature is being done in #106: https://github.com/openpnp/openpnp/issues/106
+The [[GcodeAsyncDriver]] is an advanced extension of this driver. The instruction on this page still apply, but more settings are documented [[here|GcodeAsyncDriver]]. You can automatically upgrade to the advanced driver using the [[Issues and Solutions]] system, while keeping all the settings.
 
 # Controller Specific
 
