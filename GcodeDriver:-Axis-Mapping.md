@@ -14,6 +14,9 @@ In this document, there is some terminology that may be new as well. Here are so
 * **head-mountable-id**: Another name for ID. This tells you that this is a place where you can put the ID of a Head Mountable like a Nozzle or Camera.
 
 # Defining Axes
+___
+**Note**: With newer Versions of OpenPnP 2.0, the following is obsolete. Use the [[Machine Axes]] GUI based setup instead. 
+___
 
 The first step in axis mapping is to define each axis that your motion controller can control. In general these will correspond to motors on your machine, but not always. Another way to think of it is to consider each individual part of the machine that can move.
 
@@ -29,6 +32,9 @@ A basic axis definition looks like:
 ```
 
 # Mapping Axes to HeadMountables
+___
+**Note**: With newer Versions of OpenPnP 2.0, the following is obsolete. Use the [[Mapping Axes]] GUI based setup instead. 
+___
 
 In OpenPnP anything that can be attached to the head is called a HeadMountable. These are your Nozzles, PasteDispensers, Cameras and Actuators. Each of these has an ID.
 
@@ -137,6 +143,10 @@ For more information, see:
 * https://groups.google.com/d/msgid/openpnp/d7a88150-6e12-4532-b0fa-6971da25c557%40googlegroups.com
 
 # Axis Transforms
+___
+**Note**: With newer Versions of OpenPnP 2.0, the following is obsolete. Use the [[Transformed Axes]] GUI based setup instead. 
+___
+
 ## NegatingTransform
 
 For machines with dual nozzles controlled by a single Z motor in a counterweight configuration. This works for rack and pinion drives and belt drives. It does not work for cam based drives. Commonly referred to as "Peter's Head".
