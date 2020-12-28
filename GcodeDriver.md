@@ -35,6 +35,10 @@ Most of the regular expressions that GcodeDriver uses are just used to match the
 
 [RegExr](https://regexr.com/4pvqj) is a good site to experiment with regular expressions. If you click the Explain tab it shows what each part of the expression does and the Details tab shows information about the matches and captured values.
 
+___
+**Note**: For [[the most common controller firmwares|Motion-Controller-Firmwares]], OpenPnP can automatically configure many commands and regular expressions for you. It will use the [[axes as configured in your machine|Machine-Axes]] to compose it with the right variables. Use the [[Issues and Solutions]] system to get the proposed codes. You can always dismiss/undo them or change/expand them afterwards. 
+___
+
 ### COMMAND_CONFIRM_REGEX
 
 The driver uses this regex to look for responses from the controller. After sending a command it will wait for a line that matches this regex before considering the command complete. For many controllers this is simply `ok`, although since some controllers send additional information with command results it's better to use `^ok.*`.
@@ -48,6 +52,10 @@ The driver uses this regex to check for errors in responses from the controller.
 Example: `^error:.*`
 
 ### MOVE_TO_COMPLETE_REGEX
+
+For **newer Versions of OpenPnP 2.0** and [[recent controller firmwares|Motion-Controller-Firmwares]], this is often no longer needed. TinyG users should [[upgrade the firmware|Motion-Controller-Firmwares#tinyg]]. Use the [[Issues and Solutions]] system to set this up in a modern way, i.e. use the [`MOVE_TO_COMPLETE_COMMAND`](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#move_to_complete_command).
+
+For **older Versions of OpenPnP** and/or older firmwares follow these instructions.
 
 If specified, the driver will check for this regex in the responses after a move-to-command is sent and will not return until the regex is matched. This can be used to support motion controllers that return the command confirmation before movement is complete.
 
@@ -68,6 +76,8 @@ This would read a response from the controller in the form of `read:255`. The re
 5. `\d+` means one or more digits, which represent the value itself.
 
 ### POSITION_REPORT_REGEX
+
+**Note**: For [[the most common controller firmwares|Motion-Controller-Firmwares]], OpenPnP can automatically configure this regular expression for you. Use the [[Issues and Solutions]] system.
 
 Used to parse a position report. Position reports can be sent by the controller to update OpenPnP when a move has been made outside of the program. This is particularly useful for controllers that support external jogging such as manual jog pendants.
 
