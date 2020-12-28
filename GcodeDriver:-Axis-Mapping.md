@@ -134,7 +134,7 @@ Finally, we define the second rotational axis and include a `T1` pre-move-comman
 ```
 ## Pre Move Command
 ___
-**Note**: With newer Versions of OpenPnP 2.0 you should try to avoid pre-move commands. Many firmwares can work with proper **Axis Letters** (`A`, `B`, `C` axes instead of the "extruder" style `E` axis). See the [[Motion Controller Firmwares]] to check your controller's support and the [[**Letter Variables** option in the driver|GcodeAsyncDriver#gcodedriver-new-settings]]. 
+**Note**: With newer Versions of OpenPnP 2.0 you should try to avoid pre-move commands. Many firmwares can work with proper **Axis Letters** (`A`, `B`, `C` axes instead of the "extruder" style `E` axis). See the [[Motion Controller Firmwares]] to check your controller's support and the [**Letter Variables** option in the driver](https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings). 
 ___
 The `pre-move-command` shown in examples above supports a `Coordinate` variable which can be used to reset the axis before moving it. This is useful for motion controllers that do not support multiple extruder coordinates, for example. Usage looks like:
 
