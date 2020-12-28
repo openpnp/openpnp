@@ -163,7 +163,7 @@ If your homing fiducial is in a different location than the camera can see after
 
 # Backlash Compensation
 
-For **newer Versions of OpenPnP 2.0**, you can directly configure this in the GUI. See the [[Backlash Compensation]] page. 
+For **newer Versions of OpenPnP 2.0**, you can directly configure this in the GUI. See the [[Backlash Compensation]] page. The special Gcode configuration detailed below is no longer needed.
 
 For **older Versions of OpenPnP** use the following instructions.
 
