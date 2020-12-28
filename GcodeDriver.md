@@ -91,6 +91,12 @@ Number of milliseconds to wait after connecting to the serial port before sendin
 
 ## Sub-Drivers
 
+For **newer Versions of OpenPnP 2.0**, Sub-Drivers are obsolete. You can now add multiple drivers of any type using the usual `[+]` button on the Drivers tree node. 
+
+![Add new Driver](https://user-images.githubusercontent.com/9963310/96038934-2f6d1e00-0e68-11eb-8736-12018f01a8fd.png)
+
+For **older Versions of OpenPnP** use the following instructions.
+
 Sub-Drivers allow you to interface multiple controllers by passing commands through. This can be used to control additional boards attached to your machine for functions such as feeders, actuators, conveyers, lighting, etc.
 
 When a command is sent to the driver it is first processed by the main driver and then it is passed on to each defined sub-driver. If the main driver or any sub-driver does not define a handler for the command it is simply ignored.
@@ -120,11 +126,19 @@ Here is an example sub-drivers section of the main driver configuration:
 
 ## Axis Mapping
 
+For **newer Versions of OpenPnP 2.0**, you can directly map axes in the GUI. See the page on [[Mapping Axes]].
+
+For **older Versions of OpenPnP** use the following instructions.
+
 If your system has more than one nozzle you will need to tell OpenPnP which axes on your controller map to which nozzles, and other devices. Axis Mapping allows you to do this, along with specifying axes that should be ignored or included for a given head mounted device. This is an advanced option and will not be used by everyone. By default OpenPnP will create a basic axis mapping configuration that will work for a single nozzle, four axis system.
 
 See [[GcodeDriver: Axis Mapping]] for the full documentation of this feature.
 
 # Visual Homing
+
+For **newer Versions of OpenPnP 2.0**, you can directly configure [[Visual Homing]] in the GUI. 
+
+For **older Versions of OpenPnP** use the following instructions.
 
 GcodeDriver supports the ability to complete the homing operation using a vision check. If there is a part defined in your Parts list called `FIDUCIAL-HOME` then after GcodeDriver completes the standard homing operation (using `HOME_COMMAND`) it will do a fiducial check for the `FIDUCIAL-HOME` part and reset the home coordinates.
 
@@ -138,6 +152,10 @@ To use visual homing:
 If your homing fiducial is in a different location than the camera can see after homing you can change the location that is searched by adding `<homing-fiducial-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>` to your driver in `machine.xml`.  Also you will need to add a G0 X Y command (fiducial X, Y coordinates) at the end of your HOME_COMMAND so after homing the machine moves to the approximate homing fiducial location.
 
 # Backlash Compensation
+
+For **newer Versions of OpenPnP 2.0**, you can directly configure [[Backlash Compensation]] in the GUI, on the Axis. 
+
+For **older Versions of OpenPnP** use the following instructions.
 
 The GcodeDriver includes basic basic backlash compensation; also known as slack compensation. When enabled, the machine will always overshoot the target position and then move back to the target at a slower rate. This has been found to resolve issues with improperly tensioned belts and other sources of backlash.
 
@@ -155,6 +173,10 @@ The way this works is that the first command moves past the target position by t
 More information about this feature can be found in https://github.com/openpnp/openpnp/issues/318.
 
 # Non-Squareness Compensation
+
+For **newer Versions of OpenPnP 2.0**, you can directly configure [[Non-Squareness Compensation|Linear-Transformed-Axes#use-case--non-squareness-compensation]] in the GUI, using [[Linear Transformed Axes]]. 
+
+For **older Versions of OpenPnP** use the following instructions.
 
 No matter how well you planned your pnp machine and how well you assembled it chances are that the X and Y moving axes are not 100% perpendicular to each other. A very small 0.1° alignment error will already result in a physical offset of 0.52mm (already a bit more than the width of one 0402 component) when the head travels 300mm. 
 
