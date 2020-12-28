@@ -184,7 +184,7 @@ More information about this feature can be found in https://github.com/openpnp/o
 
 # Non-Squareness Compensation
 
-For **newer Versions of OpenPnP 2.0**, you can directly configure this in the GUI. See the [[Non-Squareness Compensation|Linear-Transformed-Axes#use-case--non-squareness-compensation]] section of the [[Linear Transformed Axes]] page. 
+For **newer Versions of OpenPnP 2.0**, this is now more universally handled by linear axis transformations. See the [[Non-Squareness Compensation use case|Linear-Transformed-Axes#use-case--non-squareness-compensation]] section of the [[Linear Transformed Axes]] page. 
 
 For **older Versions of OpenPnP** use the following instructions.
 
