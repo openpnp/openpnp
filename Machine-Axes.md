@@ -140,6 +140,12 @@ Aside from the Machine Axes, discussed here, there are other types of axes, docu
 * To use shared axes, typically the shared Z of a multi-nozzle machine, you can use [[Transformed-Axes]]. 
 * To compensate/calibrate for mechanical imperfections of the machine, use [[Linear-Transformed-Axes]].
 
+***
+
+| Previous Step                 | Jump To                 | Next Step                                   |
+| ----------------------------- | ----------------------- | ------------------------------------------- |
+| [Driver Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Top Camera Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Top-Camera-Setup) |
+
 ___
 
 ## Advanced Motion Control Topics
