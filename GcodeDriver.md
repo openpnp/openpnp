@@ -136,7 +136,7 @@ Here is an example sub-drivers section of the main driver configuration:
 
 ## Axis Mapping
 
-For **newer Versions of OpenPnP 2.0**, you can directly map axes in the GUI. See the page on [[Mapping Axes]].
+For **newer Versions of OpenPnP 2.0**, you can directly map axes in the GUI. See the [[Mapping Axes]] page.
 
 For **older Versions of OpenPnP** use the following instructions.
 
@@ -146,7 +146,7 @@ See [[GcodeDriver: Axis Mapping]] for the full documentation of this feature.
 
 # Visual Homing
 
-For **newer Versions of OpenPnP 2.0**, you can directly configure [[Visual Homing]] in the GUI. 
+For **newer Versions of OpenPnP 2.0**, you can directly configure this in the GUI. See the [[Visual Homing]] page. 
 
 For **older Versions of OpenPnP** use the following instructions.
 
@@ -163,7 +163,7 @@ If your homing fiducial is in a different location than the camera can see after
 
 # Backlash Compensation
 
-For **newer Versions of OpenPnP 2.0**, you can directly configure [[Backlash Compensation]] in the GUI, on the Axis. 
+For **newer Versions of OpenPnP 2.0**, you can directly configure this in the GUI. See the [[Backlash Compensation]] page. 
 
 For **older Versions of OpenPnP** use the following instructions.
 
@@ -184,7 +184,7 @@ More information about this feature can be found in https://github.com/openpnp/o
 
 # Non-Squareness Compensation
 
-For **newer Versions of OpenPnP 2.0**, you can directly configure [[Non-Squareness Compensation|Linear-Transformed-Axes#use-case--non-squareness-compensation]] in the GUI, using [[Linear Transformed Axes]]. 
+For **newer Versions of OpenPnP 2.0**, you can directly configure this in the GUI. See the [[Non-Squareness Compensation|Linear-Transformed-Axes#use-case--non-squareness-compensation]] section of the [[Linear Transformed Axes]] page. 
 
 For **older Versions of OpenPnP** use the following instructions.
 
