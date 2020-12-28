@@ -24,7 +24,8 @@ Most of the drivers in OpenPnP communicate using the serial port. Before you can
 
 See the pages below for additional information on setting up specific drivers within OpenPnP.
 
-* [[GcodeDriver]]: Recommended for all Gcode based controllers such as Smoothe, Grbl, TinyG, Marlin, etc.
+* [[GcodeAsyncDriver]] for the newest Versions of OpenPnP 2.0, use this driver. It is an extension of GcodeDriver. Recommended for all Gcode based controllers such as Smootihe, Grbl, TinyG, Marlin, etc.
+* [[GcodeDriver]]: Recommended for all Gcode based controllers such as Smootihe, Grbl, TinyG, Marlin, etc.
 The Smoothie controller should not be configured in CNC (GRBL), but the 3D printer mode. 
 
 
