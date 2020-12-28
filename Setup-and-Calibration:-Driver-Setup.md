@@ -3,7 +3,7 @@
 In OpenPnP, the Driver is the part of the software that interfaces between OpenPnP and a particular type of machine. Typically this is just a small piece of code that translates OpenPnP commands into commands for a particular motion controller such as Smoothie, TinyG, Marlin, etc.
 
 ## Choosing a Driver
-For the **newest Versions of OpenPnP 2.0** you can add as many drivers as you like. Go to the Machine Setup tab and select the Drivers node. Press the `[ + ]` button to create a new driver.
+For **newer Versions of OpenPnP 2.0** you can add as many drivers as you like. Go to the Machine Setup tab and select the Drivers node. Press the `[ + ]` button to create a new driver.
 
 ![Add new Driver](https://user-images.githubusercontent.com/9963310/96038934-2f6d1e00-0e68-11eb-8736-12018f01a8fd.png)
 
