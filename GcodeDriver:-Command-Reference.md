@@ -1,6 +1,10 @@
 This is a list of Gcode configuration options available for the GcodeDriver. Each of these options can be specified in the `machine.xml` or in the configuration panel. When the driver is commanded by OpenPnP to perform an action it looks up the appropriate Gcode, performs variable substitution and then sends it to the controller.
 
-Commands can contain multiple lines to send to the controller. Each line is sent as a command and the driver waits for the COMMAND_CONFIRM_REGEX to match before sending the next one.
+Commands can contain multiple lines to send to the controller. Each line is sent as a command and the driver usually waits for the COMMAND_CONFIRM_REGEX to match before sending the next one. 
+
+___
+**Note**: For [[the most common controller firmwares|Motion-Controller-Firmwares]], OpenPnP can automatically configure many commands and regular expressions for you. It will use the [[axes as configured in your machine|Machine-Axes]] to compose it with the right variables. Use the [[Issues and Solutions]] system to get the proposed codes. You can always dismiss/undo them or change/expand them afterwards. 
+___
 
 ### CONNECT_COMMAND
 
@@ -34,6 +38,8 @@ M811 ; Turn off LED lighting
 
 ### HOME_COMMAND
 
+**Note**: For [[the most common controller firmwares|Motion-Controller-Firmwares]], OpenPnP can automatically configure this command for you. Use the [[Issues and Solutions]] system.
+
 Sent in response to the home command. Should home the machine and reset the controller's coordinates to the preferred home location.
 
 | Variable Name  |   Type   | Description |
@@ -50,6 +56,8 @@ G92 X0 Y0 Z0 E0 ; Reset machine coordinates to zero.
 ```
 
 ### MOVE_TO_COMMAND
+
+**Note**: For [[the most common controller firmwares|Motion-Controller-Firmwares]], OpenPnP can automatically configure this command for you. Use the [[Issues and Solutions]] system. 
 
 This command has special handling for the X, Y, Z and Rotation variables. If the move does not change one of these variables that variable is replaced with the empty string, removing it from the command. This allows Gcode to be sent containing only the components that are being used which is important for some controllers when moving an "extruder" for the C axis (The current extruder is selected by sending a Gcode tool command like 'T1' in the pre-move-command). The end result is that if a move contains only a change in the C axis only the C axis value will be sent.
 
@@ -91,9 +99,21 @@ https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/openpnp
 
 ### MOVE_TO_COMPLETE_COMMAND
 
+**Note**: For [[the most common controller firmwares|Motion-Controller-Firmwares]], OpenPnP can automatically configure this command for you. Use the [[Issues and Solutions]] system.
+
 This command is useful in systems that use multiple controllers where it is desirable to have them move simultaneously.  To use it, remove the "M400 ; Wait for moves to complete before returning" from the MOVE_TO_COMMAND and add it to the MOVE_TO_COMPLETE_COMMAND.  Now the G0 portion of the command will be sent to all involved controllers first.  Then M400 will be sent to each controller in turn, starting from the last one, until all moves are complete.
 
 `M400 ; Wait for moves to complete before returning`
+
+### SET_GLOBAL_OFFSETS_COMMAND
+
+**Note**: For [[the most common controller firmwares|Motion-Controller-Firmwares]], OpenPnP can automatically configure this command for you. Use the [[Issues and Solutions]] system.
+
+This command can reset the axis coordinates at the current machine position to new values. This is used after [[Visual Homing]] but also if you use the [[rotational axis **Wrap around** feature|Machine-Axes#controller-settings-rotational-axis]]. 
+
+Example:
+
+`G92 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {A:A%.4f} {B:B%.4f} ; reset coordinates in the controller`
 
 ### PICK_COMMAND
 
@@ -187,6 +207,8 @@ Sent whenever an Actuator's read() method is called. Along with [ACTUATOR_READ_R
 | Index          | Index    | The user defined index of the actuator. Can be used to specify a register or port number. |
 
 ### POST_VISION_HOME_COMMAND
+
+**NOTE** This command is deprecated in the newer OpenPnP 2.0 versions. Use the more universal [`SET_GLOBAL_OFFSETS_COMMAND`](#SET_GLOBAL_OFFSETS_COMMAND) instead.
 
 Sent after [visual homing](https://github.com/openpnp/openpnp/wiki/GcodeDriver#visual-homing) is complete to reset the motion controller's coordinates to their home locations. 
 
