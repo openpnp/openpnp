@@ -1,4 +1,7 @@
 # Before You Start
+___
+**Note**: With newer Versions of OpenPnP 2.0, most of the following is obsolete. Use the [[Machine Axes]] GUI based setup instead. 
+___
 
 Axis Mapping requires editing the `machine.xml` configuration file directly. Since most of OpenPnP can be configured through the GUI, this may be new to you. See https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located for information about where to find the file.
 
