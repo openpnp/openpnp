@@ -141,6 +141,7 @@ public class Part extends AbstractModelObject implements Identifiable {
 
     public void setPickRetryCount(int pickRetryCount) {
         this.pickRetryCount = pickRetryCount;
+        firePropertyChange("pickRetryCount", null, pickRetryCount);
     }
 
     @Override
