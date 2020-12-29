@@ -33,6 +33,7 @@ org.openpnp.machine.reference.wizards
 org.openpnp.model
 org.openpnp.model.eagle
 org.openpnp.model.eagle.xml
+org.openpnp.scripting
 org.openpnp.spi
 org.openpnp.spi.base
 org.openpnp.util
