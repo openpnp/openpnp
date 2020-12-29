@@ -80,10 +80,12 @@ public class ReferenceDragFeederConfigurationWizard
     private JTextField textFieldFeedEndZ;
     private JTextField textFieldFeedRate;
     private JLabel lblActuatorId;
+    private JLabel lblActuatorSafeValue;
     private JLabel lblPeelOffActuatorId;
     private JLabel lbl0402PartDetected;
     private JTextField textFieldActuatorId;
     private JTextField textFieldPeelOffActuatorId;
+    private JTextField textFieldActuatorSafeValue;
     private JPanel panelGeneral;
     private JPanel panelVision;
     private JPanel panelLocations;
@@ -127,30 +129,41 @@ public class ReferenceDragFeederConfigurationWizard
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"),},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblFeedRate = new JLabel("Feed Speed %");
-        panelGeneral.add(lblFeedRate, "2, 2");
+        panelGeneral.add(lblFeedRate, "2, 2, right, default");
 
         textFieldFeedRate = new JTextField();
         panelGeneral.add(textFieldFeedRate, "4, 2");
-        textFieldFeedRate.setColumns(5);
+        textFieldFeedRate.setColumns(10);
 
         lblActuatorId = new JLabel("Actuator Name");
         panelGeneral.add(lblActuatorId, "2, 4, right, default");
 
         textFieldActuatorId = new JTextField();
         panelGeneral.add(textFieldActuatorId, "4, 4");
-        textFieldActuatorId.setColumns(5);
+        textFieldActuatorId.setColumns(10);
 
+        lblActuatorSafeValue = new JLabel("Actuator Safe Value");
+        panelGeneral.add(lblActuatorSafeValue, "2, 6, right, default");
+
+        textFieldActuatorSafeValue = new JTextField();
+        panelGeneral.add(textFieldActuatorSafeValue, "4, 6");
+        textFieldActuatorSafeValue.setColumns(10);
+        
         lblPeelOffActuatorId = new JLabel("Peel Off Actuator Name");
         panelGeneral.add(lblPeelOffActuatorId, "6, 4, right, default");
 
         textFieldPeelOffActuatorId = new JTextField();
         panelGeneral.add(textFieldPeelOffActuatorId, "8, 4");
-        textFieldPeelOffActuatorId.setColumns(5);
+        textFieldPeelOffActuatorId.setColumns(10);
 
         if (feeder.isPart0402()) {
 	        lbl0402PartDetected = new JLabel("0402 Part DETECTED");
@@ -367,6 +380,7 @@ public class ReferenceDragFeederConfigurationWizard
         addWrappedBinding(feeder, "feedSpeed", textFieldFeedRate, "text", percentConverter);
         addWrappedBinding(feeder, "actuatorName", textFieldActuatorId, "text");
         addWrappedBinding(feeder, "peelOffActuatorName", textFieldPeelOffActuatorId, "text");
+        addWrappedBinding(feeder, "actuatorSafeValue", textFieldActuatorSafeValue, "text");
 
         MutableLocationProxy feedStartLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "feedStartLocation", feedStartLocation, "location");
@@ -400,6 +414,7 @@ public class ReferenceDragFeederConfigurationWizard
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedRate);
         ComponentDecorators.decorateWithAutoSelect(textFieldActuatorId);
         ComponentDecorators.decorateWithAutoSelect(textFieldPeelOffActuatorId);
+        ComponentDecorators.decorateWithAutoSelect(textFieldActuatorSafeValue);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartZ);

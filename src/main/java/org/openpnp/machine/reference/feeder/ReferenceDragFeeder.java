@@ -81,6 +81,8 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     protected String actuatorName;
     @Attribute(required = false)
     protected String peelOffActuatorName;
+    @Attribute(required = false)
+    protected String actuatorSafeValue;
     @Element(required = false)
     protected Vision vision = new Vision();
     @Element(required = false)
@@ -193,6 +195,18 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
 	        // extend the pin
 	        actuator.actuate(true);
+	        
+	        // if possible, confirm drag pin extension
+	        if (actuatorSafeValue.length() > 0) {
+	            if (actuator.read().equals(actuatorSafeValue)) {
+	                // if the actuator is reading as the safe value, then the actuate failed
+	                
+	                // let's deactivate the solenoid so we don't burn anything up
+	                actuator.actuate(false);
+	                
+	                throw new Exception("Unable to extend drag pin");
+	            }
+	        }
 
 	        // insert the pin
 	        actuator.moveTo(feedStartLocation);
@@ -214,6 +228,32 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
 	        // retract the pin
 	        actuator.actuate(false);
+	        
+	        // if possible, confirm drag pin retraction
+	        if (actuatorSafeValue.length() > 0) {
+	            String actuatorValue = actuator.read();
+	            Logger.debug("drag pin reads {} and needs to read {}", actuatorValue, actuatorSafeValue );
+	            
+                if (!actuatorValue.equals(actuatorSafeValue)) {
+                    // if the actuator is not reading as the safe value, then the retraction failed
+                    
+                    // Try backing off a little bit farther
+                    if (backoffDistance.getValue() != 0) {
+                        Logger.debug("Moving to second backoff position for drag pin");
+                        Location backoffLocation2 = Utils2D.getPointAlongLine(feedEndLocation,
+                                feedStartLocation, backoffDistance.add(backoffDistance));
+                        actuator.moveTo(backoffLocation2, feedSpeed * actuator.getHead().getMachine().getSpeed());
+                    }
+                    
+                    // retract the pin again, only included in case the command has a sleep that might help
+                    actuator.actuate(false);
+                }
+                
+                // Do another read to see if we're ok now
+                if (!actuator.read().equals(actuatorSafeValue)) {
+                    throw new Exception("Unable to retract drag pin");
+                }
+            }
 
 	        if (this.isPart0402() == true) {
 				// can change it to "feededCount = parts_count_userSettings;"
@@ -389,6 +429,16 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         propertyChangeSupport.firePropertyChange("actuatorName", oldValue, actuatorName);
     }
 
+    public String getActuatorSafeValue() {
+        return actuatorSafeValue;
+    }
+    
+    public void setActuatorSafeValue(String actuatorSafeValue) {
+        String oldValue = this.actuatorSafeValue;
+        this.actuatorSafeValue = actuatorSafeValue;
+        propertyChangeSupport.firePropertyChange("actuatorSafeValue", oldValue, actuatorSafeValue);
+    }
+    
     public String getPeelOffActuatorName() {
         return peelOffActuatorName;
     }
