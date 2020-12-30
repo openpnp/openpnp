@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.openpnp.Scripting;
+import org.openpnp.scripting.Scripting;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ScriptActuatorConfigurationWizard;
 import org.openpnp.model.Configuration;
