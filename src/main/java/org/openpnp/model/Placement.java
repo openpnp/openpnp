@@ -24,7 +24,6 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Version;
 import org.simpleframework.xml.core.Commit;
-import org.simpleframework.xml.core.Persist;
 
 
 /**
@@ -70,8 +69,6 @@ public class Placement extends AbstractModelObject implements Identifiable {
     @Attribute(required = false)
     private Type type;
 
-    private Part part;
-
     @Element(required = false)
     private String comments;
     
@@ -93,18 +90,9 @@ public class Placement extends AbstractModelObject implements Identifiable {
     }
 
     @SuppressWarnings("unused")
-    @Persist
-    private void persist() {
-        partId = (part == null ? null : part.getId());
-    }
-
-    @SuppressWarnings("unused")
     @Commit
     private void commit() {
         setLocation(location);
-        if (getPart() == null) {
-            setPart(Configuration.get().getPart(partId));
-        }
         if (getType() == Type.Ignore) {
             setType(Type.Placement);
             setEnabled(false);
@@ -114,14 +102,22 @@ public class Placement extends AbstractModelObject implements Identifiable {
         }
     }
 
-    public Part getPart() {
-        return part;
+    public void setPartId(String partId) {
+        this.partId = partId;
+        firePropertyChange("partId", null, partId);
+    }
+    
+    public String getPartId() {
+        return partId;
     }
 
     public void setPart(Part part) {
-        Part oldValue = this.part;
-        this.part = part;
-        firePropertyChange("part", oldValue, part);
+        setPartId(part == null ? null : part.getId());
+        firePropertyChange("part", null, partId);
+    }
+    
+    public Part getPart() {
+        return Configuration.get().getPart(partId);
     }
 
     public String getId() {
@@ -191,6 +187,6 @@ public class Placement extends AbstractModelObject implements Identifiable {
     @Override
     public String toString() {
         return String.format("id %s, location %s, side %s, part %s, type %s", id, location, side,
-                part, type);
+                getPart(), type);
     }
 }

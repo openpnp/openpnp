@@ -6,8 +6,6 @@ import java.awt.Component;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -41,15 +39,14 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
 
+import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
+import org.jdesktop.swingx.autocomplete.ComboBoxCellEditor;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
-import org.openpnp.gui.support.IdentifiableListCellRenderer;
-import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
 import org.openpnp.model.Board;
@@ -57,7 +54,6 @@ import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.ErrorHandling;
 import org.openpnp.model.Placement.Type;
@@ -113,31 +109,44 @@ public class JobPlacementsPanel extends JPanel {
                 moveCameraToPlacementLocationNext, moveToolToPlacementLocation);
         captureAndPositionActionGroup.setEnabled(false);
 
-        JComboBox<PartsComboBoxModel> partsComboBox = new JComboBox(new PartsComboBoxModel());
-        partsComboBox.setMaximumRowCount(20);
-        partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
-        JComboBox<Side> sidesComboBox = new JComboBox(Side.values());
-        // Note we don't use Type.values() here because there are a couple Types that are only
-        // there for backwards compatibility and we don't want them in the list.
-        JComboBox<Type> typesComboBox = new JComboBox(new Type[] { Type.Placement, Type.Fiducial });
-        JComboBox<Type> errorHandlingComboBox = new JComboBox(ErrorHandling.values());
+        setLayout(new BorderLayout(0, 0));
         
-                setLayout(new BorderLayout(0, 0));
         tableModel = new PlacementsTableModel(configuration);
+        tableModel.setJobPlacementsPanel(this);
         tableSorter = new TableRowSorter<>(tableModel);
         
-                table = new AutoSelectTextTable(tableModel);
+        table = new AutoSelectTextTable(tableModel);
+        table.setCellSelectionEnabled(true);
         table.setRowSorter(tableSorter);
         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        
+        JComboBox<Side> sidesComboBox = new JComboBox<>(Side.values());
         table.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
-        table.setDefaultEditor(Part.class, new DefaultCellEditor(partsComboBox));
-        table.setDefaultEditor(Type.class, new DefaultCellEditor(typesComboBox));
+        
+        // https://stackoverflow.com/questions/10897839/how-to-implement-auto-complete-functionality-in-a-cell-in-jtable
+        // second comment also looks like it includes how to fix the combobox not dropping down on space bar.
+//        JComboBox<PartsComboBoxModel> partsComboBox = new JComboBox<PartsComboBoxModel>(new PartsComboBoxModel());
+//        partsComboBox.setMaximumRowCount(20);
+//        partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
+//        table.setDefaultEditor(Part.class, new DefaultCellEditor(partsComboBox));
+//        table.setDefaultRenderer(Part.class, new IdentifiableTableCellRenderer<Part>());
+        JComboBox<String> partsComboBox = new JComboBox<>(new String[] { "R0402-1k", "R0402-2k", "R0402-3k", "R0603-1k", "R0805-1k" });
+        partsComboBox.setEditable(true);
+        AutoCompleteDecorator.decorate(partsComboBox);
+        table.getColumnModel().getColumn(2).setCellEditor(new ComboBoxCellEditor(partsComboBox));
+
+        JComboBox<ErrorHandling> errorHandlingComboBox = new JComboBox<>(ErrorHandling.values());
         table.setDefaultEditor(ErrorHandling.class, new DefaultCellEditor(errorHandlingComboBox));
-        table.setDefaultRenderer(Part.class, new IdentifiableTableCellRenderer<Part>());
+        
         table.setDefaultRenderer(PlacementsTableModel.Status.class, new StatusRenderer());
-        table.setDefaultRenderer(Placement.Type.class, new TypeRenderer());
-        tableModel.setJobPlacementsPanel(this);
+        
+        // Note we don't use Type.values() here because there are a couple Types that are only
+        // there for backwards compatibility and we don't want them in the list.
+        JComboBox<Type> typesComboBox = new JComboBox<>(new Type[] { Type.Placement, Type.Fiducial });
+        table.setDefaultEditor(Type.class, new DefaultCellEditor(typesComboBox));
+        table.setDefaultRenderer(Type.class, new TypeRenderer());
+        
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -178,20 +187,20 @@ public class JobPlacementsPanel extends JPanel {
                 }
             }
         });
-        table.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-                if (e.getKeyChar() == ' ') {
-                    Placement placement = getSelection();
-                    placement.setEnabled(!placement.isEnabled());
-                    refreshSelectedRow();
-                    updateActivePlacements();
-                }
-                else {
-                    super.keyTyped(e);
-                }
-            }
-        });
+//        table.addKeyListener(new KeyAdapter() {
+//            @Override
+//            public void keyTyped(KeyEvent e) {
+//                if (e.getKeyChar() == ' ') {
+//                    Placement placement = getSelection();
+//                    placement.setEnabled(!placement.isEnabled());
+//                    refreshSelectedRow();
+//                    updateActivePlacements();
+//                }
+//                else {
+//                    super.keyTyped(e);
+//                }
+//            }
+//        });
         
         JPopupMenu popupMenu = new JPopupMenu();
 

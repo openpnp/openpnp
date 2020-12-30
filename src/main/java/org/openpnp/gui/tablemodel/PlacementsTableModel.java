@@ -43,7 +43,7 @@ public class PlacementsTableModel extends AbstractTableModel {
     private String[] columnNames =
             new String[] {"Enabled", "ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Placed", "Status", "Error Handling", "Comments"};
 
-    private Class[] columnTypes = new Class[] {Boolean.class, PartCellValue.class, Part.class, Side.class,
+    private Class[] columnTypes = new Class[] {Boolean.class, PartCellValue.class, String.class, Side.class,
             LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, Type.class,
             Boolean.class, Status.class, ErrorHandling.class, String.class};
 
@@ -114,7 +114,9 @@ public class PlacementsTableModel extends AbstractTableModel {
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 2) {
-                placement.setPart((Part) aValue);
+                System.out.println("> " + aValue);
+                placement.setPartId((String) aValue);
+                // Tells the status cell to update based on the change.
                 fireTableCellUpdated(rowIndex, 8);
             }
             else if (columnIndex == 3) {
@@ -145,6 +147,7 @@ public class PlacementsTableModel extends AbstractTableModel {
             }
             else if (columnIndex == 7) {
                 placement.setType((Type) aValue);
+                // Tells the status cell to update based on the change.
                 fireTableCellUpdated(rowIndex, 8);
                 jobPlacementsPanel.updateActivePlacements();
             }
@@ -202,7 +205,7 @@ public class PlacementsTableModel extends AbstractTableModel {
             case 1:
                 return new PartCellValue(placement.getId());
             case 2:
-                return placement.getPart();
+                return new PartCellValue(placement.getPartId());
             case 3:
                 return placement.getSide();
             case 4:
