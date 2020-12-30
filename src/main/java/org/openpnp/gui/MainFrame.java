@@ -855,8 +855,7 @@ public class MainFrame extends JFrame {
                 return true;
             }
             catch (Exception e) {
-                System.err.println("Error while loading the OSXAdapter:"); //$NON-NLS-1$
-                e.printStackTrace();
+                System.err.println("Error while loading the OSXAdapter: " + e.getMessage()); //$NON-NLS-1$
             }
         }
         return false;

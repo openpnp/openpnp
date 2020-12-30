@@ -67,7 +67,6 @@ import org.simpleframework.xml.core.Persist;
 public abstract class ReferenceCamera extends AbstractCamera implements ReferenceHeadMountable {
     static {
         nu.pattern.OpenCV.loadShared();
-        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }
 
     private static final int CAPTURE_RETRY_COUNT = 10;

@@ -26,11 +26,8 @@ import org.pmw.tinylog.Logger;
  * OpenCV 3.
  */
 public class LensCalibration {
-
-
     static {
         nu.pattern.OpenCV.loadShared();
-        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }
 
     public enum Pattern {

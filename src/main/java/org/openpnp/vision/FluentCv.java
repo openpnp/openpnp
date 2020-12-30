@@ -105,7 +105,6 @@ import org.pmw.tinylog.Logger;
 public class FluentCv {
     static {
         nu.pattern.OpenCV.loadShared();
-        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }
 
     public enum ColorCode {
