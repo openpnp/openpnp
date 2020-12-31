@@ -40,6 +40,7 @@ import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -53,6 +54,9 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.base.AbstractCamera;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.LensCalibration;
@@ -112,7 +116,10 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     @Element(required = false)
     private LensCalibrationParams calibration = new LensCalibrationParams();
-    
+
+    @Attribute(required = false)
+    private String lightActuatorId; 
+
     private boolean calibrating;
     private CalibrationCallback calibrationCallback;
     private int calibrationCountGoal = 25;
@@ -121,8 +128,26 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     private Mat undistortionMap2;
 
     private LensCalibration lensCalibration;
-    
+
+    private Actuator lightActuator;
+
     public ReferenceCamera() {
+        super();
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+
+            @Override
+            public void configurationLoaded(Configuration configuration) throws Exception {
+                // We don't have access to machine or head here. So we need to scan them all. 
+                // I'm sure there is a better solution.
+                Machine machine = configuration.getMachine();
+                lightActuator = machine.getActuator(lightActuatorId);
+                for (Head head : machine.getHeads()) {
+                    if (lightActuator == null) {
+                        lightActuator = head.getActuator(lightActuatorId);
+                    }
+                }
+            }
+        });
     }
     
     /**
@@ -329,6 +354,16 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     public void setDeinterlace(boolean deinterlace) {
         this.deinterlace = deinterlace;
+    }
+
+    @Override
+    public Actuator getLightActuator() {
+        return lightActuator;
+    }
+
+    public void setLightActuator(Actuator lightActuator) {
+        this.lightActuator = lightActuator;
+        this.lightActuatorId = (lightActuator == null) ? null : lightActuator.getId();
     }
 
     // TODO Optimization: We could skip the convert to and from Mat if no transforms are needed.

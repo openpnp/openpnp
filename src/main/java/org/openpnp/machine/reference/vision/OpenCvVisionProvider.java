@@ -66,8 +66,8 @@ public class OpenCvVisionProvider implements VisionProvider {
         return new OpenCvVisionProviderConfigurationWizard(this);
     }
 
-    protected Mat getCameraImage() {
-        BufferedImage image_ = camera.capture();
+    protected Mat getCameraImage() throws Exception {
+        BufferedImage image_ = camera.settleAndCapture();
         Mat image = OpenCvUtils.toMat(image_);
         return image;
     }

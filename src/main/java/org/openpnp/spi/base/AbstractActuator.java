@@ -4,14 +4,12 @@ import javax.swing.Icon;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.machine.reference.ActuatorInterlockMonitor;
-import org.openpnp.machine.reference.ActuatorInterlockMonitor.InterlockType;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.Head;
-import org.openpnp.spi.Actuator.InterlockMonitor;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -22,6 +20,19 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
 
     @Attribute(required = false)
     protected String name;
+
+    @Attribute(required = false)
+    protected ActuatorValueType valueType = ActuatorValueType.Boolean;
+
+    @Attribute(required = false)
+    protected Double defaultOnDouble = 1.0;
+    @Attribute(required = false)
+    protected String defaultOnString = "1";
+
+    @Attribute(required = false)
+    protected Double defaultOffDouble = 0.0;
+    @Attribute(required = false)
+    protected String defaultOffString = "0";
 
     @Attribute(required = false)
     protected boolean interlockActuator;
@@ -103,6 +114,173 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
     public void setName(String name) {
         this.name = name;
         firePropertyChange("name", null, name);
+    }
+
+    @Override
+    public ActuatorValueType getValueType() {
+        return valueType;
+    }
+
+    public void setValueType(ActuatorValueType valueType) {
+        this.valueType = valueType;
+    }
+
+    /**
+     * As the user might change the valueType() in the life-time of the actuator, we try to re-interpret
+     * persisted values in the most tolerant fashion. 
+     * 
+     * @param value
+     * @return 
+     */
+    public Object typedValue(Object value) {
+        if (value == null) {
+            return getDefaultOffValue();
+        }
+        // Tolerant conversion in case the user changed the type.
+        switch (getValueType()) {
+            case Boolean:
+                if (value instanceof Boolean) { 
+                    return (Boolean)value;
+                }
+                else if (value instanceof Double) {
+                    return (Double)value != 0.0;
+                }
+                else if (value instanceof String) {
+                    try {
+                        return !(((String)value).isEmpty() 
+                                || ((String)value).equals(Boolean.FALSE.toString()) 
+                                || Double.valueOf((String) value) == 0.0);
+                    }
+                    catch (NumberFormatException e) {
+                        return false;
+                    }
+                }
+                return false;
+            case Double:
+                    if (value instanceof Boolean) { 
+                        return (Boolean)value ? getDefaultOnValue() : getDefaultOffValue();
+                    }
+                    else if (value instanceof Double) {
+                        return (Double)value;
+                    }
+                    else if (value instanceof String) {
+                        if (((String)value).equals(Boolean.TRUE.toString())) {
+                            return getDefaultOnValue();
+                        }
+                        try {
+                            return Double.valueOf((String) value);
+                        }
+                        catch (NumberFormatException e) {
+                            return getDefaultOffValue();
+                        }
+                    }
+                    return getDefaultOffValue();
+            default:
+                if (value instanceof Boolean) { 
+                    return (Boolean)value ? getDefaultOnValue() : getDefaultOffValue();
+                }
+                return value.toString();
+        }
+    }
+
+    /**
+     * Convenience null- and type-checked call to typedValue().  
+     * 
+     * @param value
+     * @param actuator
+     * @return
+     */
+    public static Object typedValue(Object value, Actuator actuator) {
+        if (actuator instanceof AbstractActuator) {
+            return ((AbstractActuator) actuator).typedValue(value);
+        }
+        return null;
+    }
+
+    public Double getDefaultOnDouble() {
+        return defaultOnDouble;
+    }
+
+    public void setDefaultOnDouble(Double defaultOnDouble) {
+        this.defaultOnDouble = defaultOnDouble;
+    }
+
+    public String getDefaultOnString() {
+        return defaultOnString;
+    }
+
+    public void setDefaultOnString(String defaultOnString) {
+        this.defaultOnString = defaultOnString;
+    }
+
+    public Double getDefaultOffDouble() {
+        return defaultOffDouble;
+    }
+
+    public void setDefaultOffDouble(Double defaultOffDouble) {
+        this.defaultOffDouble = defaultOffDouble;
+    }
+
+    public String getDefaultOffString() {
+        return defaultOffString;
+    }
+
+    public void setDefaultOffString(String defaultOffString) {
+        this.defaultOffString = defaultOffString;
+    }
+
+    protected abstract String getDefaultOnProfile();
+
+    protected abstract String getDefaultOffProfile();
+
+    @Override
+    public Object getDefaultOnValue() {
+        switch (getValueType()) {
+            case Boolean:
+                return true;
+            case Double:
+                return getDefaultOnDouble();
+            case String:
+                return getDefaultOnString();
+            case Profile:
+                return getDefaultOnProfile();
+        }
+        return null;
+   }
+
+    @Override
+    public Object getDefaultOffValue() {
+        switch (getValueType()) {
+            case Boolean:
+                return false;
+            case Double:
+                return getDefaultOffDouble();
+            case String:
+                return getDefaultOffString();
+            case Profile:
+                return getDefaultOffProfile();
+        }
+        return null;
+    }
+
+    @Override
+    public void actuate(Object value) throws Exception {
+        switch (getValueType()) {
+            case Boolean:
+                actuate((boolean)typedValue(value));
+                break;
+            case Double:
+                actuate((double)typedValue(value));
+                break;
+            case String:
+                actuate((String)typedValue(value));
+                break;
+            case Profile:
+                actuateProfile((String)typedValue(value));
+                break;
+            default:
+                throw new Exception("Unsupported valueType "+getValueType());
+        }
     }
 
     @Override

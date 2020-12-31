@@ -78,12 +78,25 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     public BufferedImage captureRaw();
     
     /**
-     * Same as capture(), but waits the settle time before capturing.
+     * Same as capture(), but settles the camera before capturing. Uses default lighting.
      * 
      * @return
      * @throws Exception 
      */
     public BufferedImage settleAndCapture() throws Exception;
+
+    /**
+     * Same as settleAndCapture() with additional conditional settle and lighting parameters.
+     * 
+     * @param settleFirst True to enable camera settling.  
+     * @param light Light actuation value. The Actuator will interpret the type of the parameter, it may 
+     * be a Boolean, Double, String or Profile name value.   
+     * @param keepLighted True if the light should be kept on for further captures.
+     * 
+     * @return
+     * @throws Exception
+     */
+    public BufferedImage settleAndCapture(boolean settleFirst, Object light, boolean keepLighted) throws Exception;
 
     /**
      * Registers a listener to receive continuous images from the camera.
@@ -122,4 +135,9 @@ public interface Camera extends HeadMountable, WizardConfigurable,
      * @return
      */
     public int getHeight();
+
+    /**
+     * @return the Camera light actuator.
+     */
+    public Actuator getLightActuator();
 }

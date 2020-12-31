@@ -11,6 +11,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
@@ -187,6 +188,12 @@ public class VisionUtilsTest {
         }
 
         @Override
+        public BufferedImage settleAndCapture(boolean settleFirst, Object light,
+                boolean keepLighted) throws Exception {
+            return null;
+        }
+
+        @Override
         public Length getSafeZ() {
             return null;
         }
@@ -202,6 +209,11 @@ public class VisionUtilsTest {
 
         @Override
         public void home() throws Exception {
+        }
+
+        @Override
+        public Actuator getLightActuator() {
+            return null;
         }
     }
 }

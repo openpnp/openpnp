@@ -32,6 +32,7 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
@@ -666,9 +667,21 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     @Override
     public BufferedImage settleAndCapture() throws Exception {
+        return settleAndCapture(true, null, false);
+    }
+
+    @Override
+    public BufferedImage settleAndCapture(boolean settleFirst, Object light, boolean keepLighted) throws Exception {
+        Actuator lightActuator = getLightActuator();
+        if (lightActuator != null) {
+            lightActuator.actuate(light != null ? light : lightActuator.getDefaultOnValue());
+        }
+
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("camera", this);
+            globals.put("light", light);
+            globals.put("keepLighted", keepLighted);
             Configuration.get().getScripting().on("Camera.BeforeSettle", globals);
         }
         catch (Exception e) {
@@ -676,24 +689,30 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         }
 
         try {
+            
             // Make sure the camera (or its subject) stands still.
             waitForCompletion(CompletionType.WaitForStillstand);
 
-            if (settleMethod == null) {
-                // Method undetermined, probably created a new camera (no @Commit handler)
-                settleMethod = SettleMethod.FixedTime;
-            }
-            if (settleMethod == SettleMethod.FixedTime) {
-                try {
-                    Thread.sleep(getSettleTimeMs());
-                }
-                catch (Exception e) {
-
-                }
+            if (!settleFirst) {
                 return capture();
             }
             else {
-                return autoSettleAndCapture();
+                if (settleMethod == null) {
+                    // Method undetermined, probably created a new camera (no @Commit handler)
+                    settleMethod = SettleMethod.FixedTime;
+                }
+                if (settleMethod == SettleMethod.FixedTime) {
+                    try {
+                        Thread.sleep(getSettleTimeMs());
+                    }
+                    catch (Exception e) {
+    
+                    }
+                    return capture();
+                }
+                else {
+                    return autoSettleAndCapture();
+                }
             }
         }
         finally {
@@ -701,10 +720,16 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
             try {
                 Map<String, Object> globals = new HashMap<>();
                 globals.put("camera", this);
+                globals.put("light", light);
+                globals.put("keepLighted", keepLighted);
                 Configuration.get().getScripting().on("Camera.AfterSettle", globals);
             }
             catch (Exception e) {
                 Logger.warn(e);
+            }
+
+            if (lightActuator != null && !keepLighted) {
+                lightActuator.actuate(lightActuator.getDefaultOffValue());
             }
         }
     }

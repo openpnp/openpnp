@@ -20,6 +20,7 @@
 package org.openpnp.machine.reference;
 
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -35,7 +36,6 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Driver;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractActuator;
 import org.pmw.tinylog.Logger;
@@ -77,19 +77,8 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         this.index = index;
     }
 
-    @Override
-    public void actuate(boolean on) throws Exception {
-        if (isCoordinatedBeforeActuate()) {
-            coordinateWithMachine(false);
-        }
-        Logger.debug("{}.actuate({})", getName(), on);
-        getDriver().actuate(this, on);
-        setLastActuationValue(on);
-        if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine(true);
-        }
-        getMachine().fireMachineHeadActivity(head);
-    }
+    @Element(required = false)
+    private ReferenceActuatorProfiles actuatorProfiles;
 
     @Override
     public Object getLastActuationValue() {
@@ -107,33 +96,116 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     }
 
     @Override
+    public void setValueType(ActuatorValueType valueType) {
+        super.setValueType(valueType);
+    }
+
+    public ReferenceActuatorProfiles getActuatorProfiles() {
+        if (actuatorProfiles == null && getValueType() == ActuatorValueType.Profile) 
+        { actuatorProfiles = new ReferenceActuatorProfiles();
+        }
+        return actuatorProfiles;
+    }
+
+    public void setActuatorProfiles(ReferenceActuatorProfiles actuatorProfiles) {
+        this.actuatorProfiles = actuatorProfiles;
+        firePropertyChange("actuatorProfiles", null, actuatorProfiles);
+        firePropertyChange("profileValues", null, getProfileValues());
+    }
+
+    @Override
+    protected String getDefaultOnProfile() {
+        ReferenceActuatorProfiles.Profile profile = getActuatorProfiles().findProfile(true);
+        return (profile != null ? profile.getName() : null);
+    }
+
+    @Override
+    protected String getDefaultOffProfile() {
+        ReferenceActuatorProfiles.Profile profile = getActuatorProfiles().findProfile(false);
+        return (profile != null ? profile.getName() : null);
+    }
+
+    @Override
+    public String[] getProfileValues() {
+        if (getValueType() == ActuatorValueType.Profile) {
+            return getActuatorProfiles().getProfileNames();
+        }
+        return new String[] {};
+    }
+
+    @Override
+    public void actuate(boolean on) throws Exception {
+        if (isCoordinatedBeforeActuate()) {
+            coordinateWithMachine(false);
+        }
+        Logger.debug("{}.actuate({})", getName(), on);
+        if (getValueType() == ActuatorValueType.Profile) {
+            actuateProfile(on);
+        }
+        else {
+            driveActuation(on);
+            setLastActuationValue(on);
+        }
+        if (isCoordinatedAfterActuate()) {
+            coordinateWithMachine(true);
+        }
+        getMachine().fireMachineHeadActivity(head);
+    }
+
+    protected void driveActuation(boolean on) throws Exception {
+        getDriver().actuate(this, on);
+    }
+
+    @Override
     public void actuate(double value) throws Exception {
         if (isCoordinatedBeforeActuate()) {
             coordinateWithMachine(false);
         }
         Logger.debug("{}.actuate({})", getName(), value);
-        getDriver().actuate(this, value);
+        driveActuation(value);
         setLastActuationValue(value);
         if (isCoordinatedAfterActuate()) {
             coordinateWithMachine(true);
         }
         getMachine().fireMachineHeadActivity(head);
     }
-    
+
+    protected void driveActuation(double value) throws Exception {
+        getDriver().actuate(this, value);
+    }
+
     @Override
     public void actuate(String value) throws Exception {
         if (isCoordinatedBeforeActuate()) {
             coordinateWithMachine(false);
         }
         Logger.debug("{}.actuate({})", getName(), value);
-        getDriver().actuate(this, value);
+        driveActuation(value);
         setLastActuationValue(value);
         if (isCoordinatedAfterActuate()) {
             coordinateWithMachine(true);
         }
         getMachine().fireMachineHeadActivity(head);
     }
-    
+
+    protected void driveActuation(String value) throws Exception {
+        getDriver().actuate(this, value);
+    }
+
+    @Override
+    public void actuateProfile(String name) throws Exception {
+        if (getActuatorProfiles() != null) {
+            setLastActuationValue(getActuatorProfiles().actuate(this, name));
+        }
+    }
+
+    @Override
+    public void actuateProfile(boolean on) throws Exception {
+        if (getActuatorProfiles() != null) {
+            setLastActuationValue(getActuatorProfiles().actuate(this, on));
+        }
+    }
+
     @Override
     public String read() throws Exception {
         if (isCoordinatedBeforeRead()) {
@@ -181,15 +253,15 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        if (getInterlockMonitor() == null) {
-            return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
+        ArrayList<PropertySheet> propertySheets = new ArrayList<>();
+        propertySheets.add(new PropertySheetWizardAdapter(getConfigurationWizard()));
+        if (getInterlockMonitor() != null) {
+            propertySheets.add(new PropertySheetWizardAdapter(getInterlockMonitor().getConfigurationWizard(this), "Axis Interlock"));
         }
-        else {
-            return new PropertySheet[] {
-                    new PropertySheetWizardAdapter(getConfigurationWizard()),
-                    new PropertySheetWizardAdapter(getInterlockMonitor().getConfigurationWizard(this), "Axis Interlock")
-            };
+        if (getValueType() == ActuatorValueType.Profile) {
+            propertySheets.add(new PropertySheetWizardAdapter(getActuatorProfiles().getConfigurationWizard(this), "Profiles"));
         }
+        return propertySheets.toArray(new PropertySheet[propertySheets.size()]);
     }
 
     @Override
@@ -227,5 +299,9 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     ReferenceMachine getMachine() {
         return (ReferenceMachine) Configuration.get().getMachine();
+    }
+
+    public void fireProfilesChanged() {
+        firePropertyChange("profileValues", null, getProfileValues());
     }
 }

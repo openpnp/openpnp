@@ -127,7 +127,7 @@ public class ReferenceMachineSolutionsWizard extends AbstractConfigurationWizard
         table.setDefaultRenderer(Solutions.Subject.class, new Solutions.SubjectRenderer());
         table.setDefaultRenderer(Solutions.Severity.class, new Solutions.SeverityRenderer());
         table.setDefaultRenderer(Solutions.State.class, new Solutions.StateRenderer());
-        JComboBox<Side> statesComboBox = new JComboBox(Solutions.State.values());
+        JComboBox statesComboBox = new JComboBox(Solutions.State.values());
         table.setDefaultEditor(Solutions.State.class, new DefaultCellEditor(statesComboBox));
 
         btnAccept = new JButton(acceptSolutionAction);
