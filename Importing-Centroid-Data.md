@@ -2,6 +2,10 @@ See the sections below for information about importing boards from your preferre
 
 EAGLE
 -----
+OpenPNP can read EAGLE .brd files directly:
+1. File -> Import Board -> CadSoft EAGLE Board
+
+You can also export via a ULP:
 1. In EAGLE, run mountsmd.ulp, which is included in the EAGLE distribution.
 2. In OpenPnP, go to the menu at File -> Import Board -> EAGLE mountsmd.ulp.
 
