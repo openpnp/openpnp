@@ -10,6 +10,7 @@ import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Actuator.ActuatorValueType;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -25,14 +26,17 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
     protected ActuatorValueType valueType = ActuatorValueType.Boolean;
 
     @Attribute(required = false)
-    protected Double defaultOnDouble = 1.0;
+    protected boolean valueTypeConfirmed = false;
+
     @Attribute(required = false)
-    protected String defaultOnString = "1";
+    protected Double defaultOnDouble = 0.0;
+    @Attribute(required = false)
+    protected String defaultOnString = "";
 
     @Attribute(required = false)
     protected Double defaultOffDouble = 0.0;
     @Attribute(required = false)
-    protected String defaultOffString = "0";
+    protected String defaultOffString = "";
 
     @Attribute(required = false)
     protected boolean interlockActuator;
@@ -122,7 +126,40 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
     }
 
     public void setValueType(ActuatorValueType valueType) {
+        Object oldValue = this.valueType; 
         this.valueType = valueType;
+        if (oldValue != valueType) {
+            valueTypeConfirmed = true;
+            firePropertyChange("valueType", oldValue, valueType);
+        }
+    }
+
+    /**
+     * @return true if the valueType was not yet confirmed by functional usage or user interaction.
+     */
+    public boolean isValueTypeConfirmed() {
+        return valueTypeConfirmed;
+    }
+
+    public void setValueTypeConfirmed(boolean valueTypeConfirmed) {
+        this.valueTypeConfirmed = valueTypeConfirmed;
+    }
+
+    /**
+     * Suggest a specific valueType for the actuator, based on its functional use. This will only set the valueType
+     * once, if not yet otherwise confirmed by GUI user interaction etc. (mixed type usage must remain possible).  
+     * 
+     * Performs null and type checking on the actuator.   
+     * 
+     * @param actuator
+     * @param valueType
+     */
+    public static void suggestValueType(Actuator actuator, ActuatorValueType valueType) {
+        if (actuator instanceof AbstractActuator
+                && !((AbstractActuator) actuator).isValueTypeConfirmed()) {
+            ((AbstractActuator) actuator).setValueType(valueType);
+            ((AbstractActuator) actuator).setValueTypeConfirmed(true);
+        }
     }
 
     /**
@@ -265,6 +302,14 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
 
     @Override
     public void actuate(Object value) throws Exception {
+        if (value instanceof Boolean) {
+            if (getDefaultOnValue() == null 
+                    || getDefaultOffValue() == null 
+                    || getDefaultOnValue().equals(getDefaultOffValue())) {
+                throw new Exception("Actuator "+getName()+" has Default ON/OFF values not properly configured.");
+            }
+        }
+
         switch (getValueType()) {
             case Boolean:
                 actuate((boolean)typedValue(value));

@@ -31,6 +31,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.base.AbstractActuator;
 import org.simpleframework.xml.Attribute;
 
 public class SwitcherCamera extends ReferenceCamera implements Runnable {
@@ -212,7 +213,9 @@ public class SwitcherCamera extends ReferenceCamera implements Runnable {
     }
 
     public Actuator getActuator() {
-        return Configuration.get().getMachine().getActuator(actuatorId);
+        Actuator actuator = Configuration.get().getMachine().getActuator(actuatorId); 
+        AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
+        return actuator;
     }
 
     public void setActuator(Actuator actuator) {

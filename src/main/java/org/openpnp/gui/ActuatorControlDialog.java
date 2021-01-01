@@ -56,45 +56,45 @@ public class ActuatorControlDialog extends JDialog {
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.LABEL_COMPONENT_GAP_ROWSPEC,}));
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.LABEL_COMPONENT_GAP_ROWSPEC,}));
 
         setModalityType(JDialog.ModalityType.MODELESS);
 
         lblBoolean = new JLabel("Set Boolean Value");
         getContentPane().add(lblBoolean, "2, 2");
-        
-                onBtn = new JButton("On");
-                getContentPane().add(onBtn, "4, 2");
-                onBtn.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        UiUtils.submitUiMachineTask(() -> {
-                            actuator.actuate(true);
-                        });
-                    }
+
+        onBtn = new JButton("On");
+        getContentPane().add(onBtn, "4, 2");
+        onBtn.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                UiUtils.submitUiMachineTask(() -> {
+                    actuator.actuate(actuator.getDefaultOnValue());
                 });
-        
-                offBtn = new JButton("Off");
-                getContentPane().add(offBtn, "6, 2");
-                offBtn.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        UiUtils.submitUiMachineTask(() -> {
-                            actuator.actuate(false);
-                        });
-                    }
+            }
+        });
+
+        offBtn = new JButton("Off");
+        getContentPane().add(offBtn, "6, 2");
+        offBtn.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                UiUtils.submitUiMachineTask(() -> {
+                    actuator.actuate(actuator.getDefaultOffValue());
                 });
+            }
+        });
 
         lblValue = new JLabel("Set Value");
         getContentPane().add(lblValue, "2, 4, right, default");
@@ -113,13 +113,13 @@ public class ActuatorControlDialog extends JDialog {
             }
         });
         getContentPane().add(setBtn, "8, 4");
-        
+
         lblSetProfile = new JLabel("Set Profile");
         getContentPane().add(lblSetProfile, "2, 5, right, default");
-        
+
         profile = new JComboBox(new ActuatorProfilesComboBoxModel((AbstractActuator) actuator));
         getContentPane().add(profile, "4, 5, 3, 1, fill, default");
-        
+
         setProfileBtn = new JButton("Set");
         setProfileBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -157,10 +157,10 @@ public class ActuatorControlDialog extends JDialog {
                 });
             }
         });
-        
+
         lblWith = new JLabel("With");
         getContentPane().add(lblWith, "2, 9, right, default");
-        
+
         withDoubleTf = new JTextField();
         getContentPane().add(withDoubleTf, "4, 9, 3, 1, fill, default");
         withDoubleTf.setColumns(10);
@@ -190,14 +190,17 @@ public class ActuatorControlDialog extends JDialog {
     private void adaptDialog() {
         boolean isBoolean = actuator.getValueType() == ActuatorValueType.Boolean;
         boolean isProfiled = actuator.getValueType() == ActuatorValueType.Profile;
-        lblBoolean.setVisible(isBoolean || isProfiled);
-        onBtn.setVisible(isBoolean || isProfiled);
-        offBtn.setVisible(isBoolean || isProfiled);
+
+        boolean showBoolean = (actuator.getDefaultOffValue() != null && actuator.getDefaultOnValue() != null
+                && !actuator.getDefaultOffValue().equals(actuator.getDefaultOnValue()));
+        lblBoolean.setVisible(showBoolean);
+        onBtn.setVisible(showBoolean);
+        offBtn.setVisible(showBoolean);
 
         lblValue.setVisible(!(isBoolean || isProfiled));
         valueTf.setVisible(!(isBoolean || isProfiled));
         setBtn.setVisible(!(isBoolean || isProfiled));
-        
+
         lblSetProfile.setVisible(isProfiled);
         profile.setVisible(isProfiled);
         setProfileBtn.setVisible(isProfiled);

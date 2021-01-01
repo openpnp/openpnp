@@ -119,6 +119,8 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     @Attribute(required = false)
     private String lightActuatorId; 
+    @Attribute(required = false)
+    private boolean allowMachineActuators = false;
 
     private boolean calibrating;
     private CalibrationCallback calibrationCallback;
@@ -364,6 +366,14 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public void setLightActuator(Actuator lightActuator) {
         this.lightActuator = lightActuator;
         this.lightActuatorId = (lightActuator == null) ? null : lightActuator.getId();
+    }
+
+    public boolean isAllowMachineActuators() {
+        return allowMachineActuators;
+    }
+
+    public void setAllowMachineActuators(boolean allowMachineActuators) {
+        this.allowMachineActuators = allowMachineActuators;
     }
 
     // TODO Optimization: We could skip the convert to and from Mat if no transforms are needed.

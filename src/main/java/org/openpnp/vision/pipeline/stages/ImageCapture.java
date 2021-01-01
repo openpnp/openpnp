@@ -105,8 +105,7 @@ public class ImageCapture extends CvStage {
             // Always switch off the light. 
             Actuator lightActuator = camera.getLightActuator();
             if (lightActuator != null) {
-                // By passing generic (Object) false, the actuator will actuate according to its defaultOffValue.
-                lightActuator.actuate((Object)false);
+                lightActuator.actuate(lightActuator.getDefaultOffValue());
             }
         }
     }

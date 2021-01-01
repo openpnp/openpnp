@@ -208,10 +208,10 @@ public class CameraView extends JComponent implements CameraListener {
     Color dragJogHandleActiveColor = Color.white;
 
     private int lightToggleSize = 40;
-    Color lightToggleInactiveBgColor = new Color(125, 125, 125, 160);
+    Color lightToggleInactiveBgColor = new Color(255, 255, 255, 100);
     Color lightToggleActiveBgColor = new Color(0, 0, 0, 100);
-    Color lightToggleInactiveColor = new Color(0, 0, 0);
-    Color lightToggleActiveColor = new Color(125, 125, 64);
+    Color lightToggleInactiveColor = new Color(0, 0, 0, 200);
+    Color lightToggleActiveColor = new Color(255, 255, 125, 200);
 
     long lastFrameReceivedTime = 0;
     MovingAverage fpsAverage = new MovingAverage(24);
@@ -844,7 +844,7 @@ public class CameraView extends JComponent implements CameraListener {
         boolean active = actuator.isActuated();
         for (int pass = 0 ; pass < 2; pass++) {
             if (pass == 0) {
-                g2d.setStroke(new BasicStroke(active ? 6 : 4, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                g2d.setStroke(new BasicStroke(active ? 4 : 4, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
                 g2d.setColor(active ? lightToggleActiveBgColor : lightToggleInactiveBgColor);
             }
             else {

@@ -48,6 +48,7 @@ public class PipelinePropertySheetTable extends PropertySheetTable {
                     case Boolean:
                         getEditorRegistry().registerEditor(actuatorValueProperty, new BooleanAsCheckBoxPropertyEditor());
                         getRendererRegistry().registerRenderer(Object.class, new BooleanCellRenderer());
+                        getRendererRegistry().registerRenderer(String.class, new DefaultCellRenderer());
                         break;
                     case Double:
                         getEditorRegistry().registerEditor(actuatorValueProperty, new DoublePropertyEditor());
