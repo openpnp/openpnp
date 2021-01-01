@@ -135,7 +135,7 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
     }
 
     /**
-     * @return true if the valueType was not yet confirmed by functional usage or user interaction.
+     * @return true if the valueType was confirmed by functional usage or user interaction.
      */
     public boolean isValueTypeConfirmed() {
         return valueTypeConfirmed;
