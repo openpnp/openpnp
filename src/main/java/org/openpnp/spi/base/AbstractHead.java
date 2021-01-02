@@ -115,6 +115,16 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     public Nozzle getNozzle(String id) {
         return nozzles.get(id);
     }
+    
+    @Override
+    public Nozzle getNozzleByName(String name) {
+        for (Nozzle nozzle : nozzles) {
+            if (nozzle.getName().equals(name)) {
+                return nozzle;
+            }
+        }
+        return null;
+    }
 
     @Override
     public List<Actuator> getActuators() {

@@ -150,7 +150,18 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
 
     public void postPick(Nozzle nozzle) throws Exception;
     
+    /**
+     * If feed() throws an Exception during job processing, the job processor will retry the
+     * feed() call this many times before raising the error.
+     * @return
+     */
     public int getFeedRetryCount();
     
+    /**
+     * If post pick checks such as isPartOn() fail during job processing, the job processor will
+     * retry the pick and check process this many times before raising the error. Note that
+     * this does not include re-feeding the part.  
+     * @return
+     */
     public int getPickRetryCount();
 }

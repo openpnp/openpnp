@@ -29,6 +29,13 @@ public class Scripting {
 
     public Scripting(File scriptsDirectory) {
         this.scriptsDirectory = scriptsDirectory;
+        
+        if (scriptsDirectory == null) {
+            extensions = null;
+            scriptsDirectory = null;
+            eventsDirectory = null;
+            return;
+        }
 
         // Collect all the script filename extensions we know how to handle from the list of
         // available scripting engines.
@@ -106,6 +113,9 @@ public class Scripting {
 
     public void on(String event, Map<String, Object> globals) throws Exception {
         Logger.trace("Scripting.on " + event);
+        if (eventsDirectory == null) {
+            return;
+        }
         for (File script : FileUtils.listFiles(eventsDirectory, extensions, false)) {
             if (!script.isFile()) {
                 continue;
