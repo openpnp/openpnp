@@ -90,6 +90,8 @@ public class ReferenceActuatorProfilesWizard extends AbstractConfigurationWizard
     private JButton btnAdd;
     private JLabel label;
     private JButton btnDelete;
+    private JButton btnUp;
+    private JButton btnDown;
 
     public ReferenceActuatorProfilesWizard(ReferenceActuator actuator, ReferenceActuatorProfiles referenceActuatorProfiles) {
         super();
@@ -203,16 +205,19 @@ public class ReferenceActuatorProfilesWizard extends AbstractConfigurationWizard
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        RowSpec.decode("default:grow"),
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
-        tableSorter = new TableRowSorter<>(actuatorProfiles);
         table = new AutoSelectTextTable(actuatorProfiles) {
             @Override
             public String getToolTipText(MouseEvent e) {
@@ -232,6 +237,7 @@ public class ReferenceActuatorProfilesWizard extends AbstractConfigurationWizard
                 return super.getToolTipText();
             }
         };
+        tableSorter = new TableRowSorter<>(actuatorProfiles);
         table.setRowSorter(tableSorter);
         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -253,16 +259,26 @@ public class ReferenceActuatorProfilesWizard extends AbstractConfigurationWizard
 
         btnDelete = new JButton(deleteProfileAction);
         panelCondition.add(btnDelete, "4, 2");
+        
+        btnUp = new JButton(permutateUpAction);
+        panelCondition.add(btnUp, "6, 2");
+        
+        btnDown = new JButton(permutateDownAction);
+        panelCondition.add(btnDown, "8, 2");
 
         label = new JLabel(" ");
-        panelCondition.add(label, "6, 2");
+        panelCondition.add(label, "10, 2");
 
         scrollPane = new JScrollPane(table);
-        panelCondition.add(scrollPane, "2, 4, 5, 1, fill, fill");
+        panelCondition.add(scrollPane, "2, 4, 9, 1, fill, fill");
     }
 
     private void enableActions() {
         deleteProfileAction.setEnabled(!getSelections().isEmpty());
+        int pos = (getSelections().size() != 1) ? 
+                -1 : actuatorProfiles.getProfiles().indexOf(getSelections().get(0));
+        permutateUpAction.setEnabled(pos > 0);
+        permutateDownAction.setEnabled(pos >= 0 && pos < actuatorProfiles.getProfiles().size()-1);
     }
 
     @Override
@@ -331,6 +347,62 @@ public class ReferenceActuatorProfilesWizard extends AbstractConfigurationWizard
                     actuatorProfiles.delete(profile);
                 }
                 actuator.fireProfilesChanged();
+            });
+        }
+    };
+    private Action permutateUpAction =
+            new AbstractAction("", Icons.arrowUp) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "<html>Move the profile up one position.</html>");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
+            UiUtils.messageBoxOnException(() -> { 
+                ArrayList<Profile>profiles = actuatorProfiles.getProfiles();
+                table.getRowSorter().setSortKeys(null);
+                for (Profile profile : getSelections()) {
+                    int pos = profiles.indexOf(profile);
+                    if (pos > 0) {
+                        profiles.set(pos, profiles.get(pos-1));
+                        profiles.set(pos-1, profile); 
+                        actuatorProfiles.fireTableRowsUpdated(pos-1, pos);
+                        table.clearSelection();
+                        pos = table.convertRowIndexToView(pos-1);
+                        table.addRowSelectionInterval(pos, pos);
+                    }
+                    break;// We assume it's just single selection
+                }
+            });
+        }
+    };
+    private Action permutateDownAction =
+            new AbstractAction("", Icons.arrowDown) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "<html>Move the profile down one position.</html>");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
+            UiUtils.messageBoxOnException(() -> { 
+                ArrayList<Profile>profiles = actuatorProfiles.getProfiles();
+                table.getRowSorter().setSortKeys(null);
+                for (Profile profile : getSelections()) {
+                    int pos = profiles.indexOf(profile);
+                    if (pos < profiles.size()-1) {
+                        profiles.set(pos, profiles.get(pos+1));
+                        profiles.set(pos+1, profile); 
+                        actuatorProfiles.fireTableRowsUpdated(pos, pos+1);
+                        table.clearSelection();
+                        pos = table.convertRowIndexToView(pos+1);
+                        table.addRowSelectionInterval(pos, pos);
+                    }
+                    break;// We assume it's just single selection
+                }
             });
         }
     };

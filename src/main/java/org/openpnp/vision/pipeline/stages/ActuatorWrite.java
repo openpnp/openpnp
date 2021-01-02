@@ -28,9 +28,9 @@ public class ActuatorWrite extends CvStage {
     @Attribute(required=false)
     private double actuatorValue;
 
+    // For an Object property we need @Element persistence, therefore the original actuatorValue is deprecated.
     @Element(required=false)
     protected Object actuatorWriteValue = true;
-
 
     public String getActuatorName() {
         return actuatorName;

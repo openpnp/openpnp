@@ -475,6 +475,10 @@ public class ReferenceActuatorProfiles extends AbstractTableModel {
             return count;
         }
         count--;
+        if (getActuator1() != null) {
+            return count;
+        }
+        count--;
         return count;
     }
 
