@@ -4,6 +4,7 @@ package org.openpnp.vision.pipeline.stages;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Actuator.ActuatorValueType;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.base.AbstractActuator;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -92,6 +93,12 @@ public class ActuatorWrite extends CvStage {
                 if (actuatorType != null) { 
                     Actuator actuator = getActuator();
                     AbstractActuator.suggestValueType(actuator, actuatorType);
+                    if (actuatorType == ActuatorValueType.Boolean) {
+                        actuatorWriteValue = (actuatorValue != 0.0);
+                    }
+                    else {
+                        actuatorWriteValue = actuatorValue;
+                    }
                     actuatorType = null;
                 }
             }
