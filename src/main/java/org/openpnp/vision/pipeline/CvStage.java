@@ -10,6 +10,8 @@ import java.beans.PropertyDescriptor;
 
 import org.opencv.core.Mat;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.vision.FluentCv;
+import org.openpnp.vision.FluentCv.ColorSpace;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -163,19 +165,33 @@ public abstract class CvStage {
         final public Mat image;
         final public Object model;
         final public long processingTimeNs;
+        final public ColorSpace colorSpace;
 
-        public Result(Mat image, Object model, long processingTimeNs) {
+        public Result(Mat image, ColorSpace colorSpace, Object model, long processingTimeNs) {
             this.image = image;
             this.model = model;
             this.processingTimeNs = processingTimeNs;
+            this.colorSpace = colorSpace;
+        }
+
+        public Result(Mat image, Object model, long processingTimeNs) {
+            this(image, null, model, processingTimeNs);
+        }
+
+        public Result(Mat image, ColorSpace colorSpace, Object model) {
+            this(image, colorSpace, model, 0);
         }
 
         public Result(Mat image, Object model) {
-            this(image, model, 0);
+            this(image, null, model, 0);
+        }
+
+        public Result(Mat image, ColorSpace colorSpace) {
+            this(image, colorSpace, null, 0);
         }
 
         public Result(Mat image) {
-            this(image, null, 0);
+            this(image, null, null, 0);
         }
         
         public Mat getImage() {
@@ -184,6 +200,10 @@ public abstract class CvStage {
         
         public Object getModel() {
             return model;
+        }
+
+        public ColorSpace getColorSpace() {
+            return colorSpace;
         }
 
         public static class Circle {

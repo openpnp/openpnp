@@ -8,6 +8,7 @@ import org.opencv.core.MatOfDouble;
 import org.opencv.core.CvType;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.OpenCvUtils;
+import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
@@ -71,6 +72,6 @@ public class ImageCapture extends CvStage {
             Core.addWeighted(avgImage, 1, image, beta, 0, avgImage); // avgImage = avgImag + image/count
         }
         avgImage.convertTo(avgImage, 0); //0=CV_8U
-        return new Result(avgImage);
+        return new Result(avgImage, ColorSpace.Bgr);
     }
 }

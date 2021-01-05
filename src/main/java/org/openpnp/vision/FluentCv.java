@@ -107,6 +107,26 @@ public class FluentCv {
         nu.pattern.OpenCV.loadShared();
     }
 
+    public enum ColorSpace {
+        Gray(0),
+        Bgr(1),
+        Rgb(2),
+        Hls(3),
+        HlsFull(4),
+        Hsv(5),
+        HsvFull(6);
+        
+        private int code;
+
+        ColorSpace(int code) {
+            this.code = code;
+        }
+
+        public int getCode() {
+            return code;
+        }
+    }
+    
     public enum ColorCode {
         Bgr2Gray(Imgproc.COLOR_BGR2GRAY),
         Rgb2Gray(Imgproc.COLOR_RGB2GRAY),
@@ -129,6 +149,31 @@ public class FluentCv {
 
         public int getCode() {
             return code;
+        }
+        
+        public ColorSpace getResultingColorSpace() {
+            switch (this) {
+                case Bgr2Gray:
+                case Rgb2Gray:
+                    return ColorSpace.Gray;
+                case Gray2Bgr :
+                case Hls2Bgr :
+                case Hls2BgrFull :
+                case Hsv2Bgr :
+                case Hsv2BgrFull :
+                    return ColorSpace.Bgr;
+                case Gray2Rgb :
+                    return ColorSpace.Rgb;
+                case Bgr2Hls :
+                    return ColorSpace.Hls;
+                case Bgr2HlsFull :
+                    return ColorSpace.HlsFull;
+                case Bgr2Hsv :
+                    return ColorSpace.Hsv;
+                case Bgr2HsvFull :
+                    return ColorSpace.HsvFull;
+            }
+            return null;
         }
     }
 
