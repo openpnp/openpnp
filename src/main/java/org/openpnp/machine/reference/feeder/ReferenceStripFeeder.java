@@ -108,6 +108,9 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     @Attribute
     private int feedCount = 0;
 
+	@Attribute(required = false)
+	private int maxFeedCount = 0;
+
     private Length holeDiameter = new Length(1.5, LengthUnit.Millimeters);
 
     private Length holePitch = new Length(4, LengthUnit.Millimeters);
@@ -219,6 +222,10 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
     public void feed(Nozzle nozzle) throws Exception {
         setFeedCount(getFeedCount() + 1);
+
+        if ((maxFeedCount > 0) && (feedCount > maxFeedCount)) {
+			throw new Exception("Tried to feed part: " + part.getId() + "  Feeder " + name + " empty.");
+		}
 
         updateVisionOffsets(nozzle);
     }
@@ -397,6 +404,14 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         this.feedCount = feedCount;
         firePropertyChange("feedCount", oldValue, feedCount);
     }
+
+	public int getMaxFeedCount() {
+		return maxFeedCount;
+	}
+
+	public void setMaxFeedCount(int count) {
+		maxFeedCount = count;
+	}
 
     public Length getReferenceHoleToPartLinear() {
         return referenceHoleToPartLinear;

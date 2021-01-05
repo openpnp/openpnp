@@ -116,6 +116,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JLabel lblFeedCount;
     private JTextField textFieldFeedCount;
     private JButton btnResetFeedCount;
+    private JLabel lblMaxFeedCount;
+    private JTextField textFieldMaxFeedCount;
     private JLabel lblTapeType;
     private JComboBox comboBoxTapeType;
     private JLabel lblRotationInTape;
@@ -220,6 +222,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         btnAutoSetup = new JButton(autoSetup);
@@ -260,6 +263,13 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             }
         });
         panelTapeSettings.add(btnResetFeedCount, "12, 6");
+
+        lblMaxFeedCount = new JLabel("Max Feed Count");
+        panelTapeSettings.add(lblMaxFeedCount,"8, 8, right, default");
+        textFieldMaxFeedCount = new JTextField();
+        panelTapeSettings.add(textFieldMaxFeedCount,"10,8");
+        textFieldMaxFeedCount.setColumns(10);
+        textFieldMaxFeedCount.setToolTipText("Max number of parts to feed from this strip.  If set to zero, this setting is ignored.");
 
         JPanel panelVision = new JPanel();
         panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING, TitledBorder.TOP,
@@ -380,6 +390,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         addWrappedBinding(feeder, "tapeWidth", textFieldTapeWidth, "text", lengthConverter);
         addWrappedBinding(feeder, "partPitch", textFieldPartPitch, "text", lengthConverter);
         addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", intConverter);
+        addWrappedBinding(feeder, "maxFeedCount", textFieldMaxFeedCount, "text", intConverter);
 
         MutableLocationProxy feedStartLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "referenceHoleLocation", feedStartLocation,
@@ -405,6 +416,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         ComponentDecorators.decorateWithAutoSelect(pickRetryCount);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPartPitch);
         ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
+        ComponentDecorators.decorateWithAutoSelect(textFieldMaxFeedCount);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartZ);
