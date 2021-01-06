@@ -1,5 +1,7 @@
 package org.openpnp.vision.pipeline.stages;
 
+import java.awt.image.BufferedImage;
+
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -80,7 +82,8 @@ public class ImageCapture extends CvStage {
         // Light, settle and capture the image. Keep the lights on for possible averaging.
         camera.actuateLightBeforeCapture((defaultLight ? null : getLight()));
         try {
-            Mat image = OpenCvUtils.toMat(settleFirst ? camera.settleAndCapture() : camera.capture());
+            BufferedImage bufferedImage = (settleFirst ? camera.settleAndCapture() : camera.capture()); 
+            Mat image = OpenCvUtils.toMat(bufferedImage);
             if (count <= 1) { 
                 return new Result(image);
             }

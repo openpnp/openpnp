@@ -386,49 +386,54 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     // TODO Optimization: We could skip the convert to and from Mat if no transforms are needed.
     protected BufferedImage transformImage(BufferedImage image) {
-        Mat mat = OpenCvUtils.toMat(image);
+        try {
+            Mat mat = OpenCvUtils.toMat(image);
 
-        mat = crop(mat);
+            mat = crop(mat);
 
-        mat = calibrate(mat);
+            mat = calibrate(mat);
 
-        mat = undistort(mat);
+            mat = undistort(mat);
 
-        // apply affine transformations
-        mat = scale(mat, scaleWidth, scaleHeight);
-        
-        mat = rotate(mat, rotation);
+            // apply affine transformations
+            mat = scale(mat, scaleWidth, scaleHeight);
 
-        mat = offset(mat, offsetX, offsetY);
-        
-        mat = deinterlace(mat);
+            mat = rotate(mat, rotation);
 
-        if (flipX || flipY) {
-            int flipCode;
-            if (flipX && flipY) {
-                flipCode = -1;
+            mat = offset(mat, offsetX, offsetY);
+
+            mat = deinterlace(mat);
+
+            if (flipX || flipY) {
+                int flipCode;
+                if (flipX && flipY) {
+                    flipCode = -1;
+                }
+                else {
+                    flipCode = flipX ? 0 : 1;
+                }
+                Core.flip(mat, mat, flipCode);
             }
-            else {
-                flipCode = flipX ? 0 : 1;
+
+            image = OpenCvUtils.toBufferedImage(mat);
+            mat.release();
+
+            if (image != null) { 
+                // save the new image dimensions
+                width = image.getWidth();
+                height = image.getHeight();
             }
-            Core.flip(mat, mat, flipCode);
         }
-
-        image = OpenCvUtils.toBufferedImage(mat);
-        mat.release();
-        
-        if (image != null) { 
-            // save the new image dimensions
-            width = image.getWidth();
-            height = image.getHeight();
+        catch (Exception e) {
+            Logger.error(e);
         }
         return image;
     }
 
     private Mat crop(Mat mat) {
         if (cropWidth != 0 || cropHeight != 0) {
-            int cw = (cropWidth != 0) ? cropWidth : (int) mat.size().width;
-            int ch = (cropHeight != 0) ? cropHeight : (int) mat.size().height;
+            int cw = (cropWidth != 0 && cropWidth < (int) mat.size().width) ? cropWidth : (int) mat.size().width;
+            int ch = (cropHeight != 0 && cropHeight < (int) mat.size().height) ? cropHeight : (int) mat.size().height;
             Rect roi = new Rect(
                     (int) ((mat.size().width / 2) - (cw / 2)),
                     (int) ((mat.size().height / 2) - (ch / 2)),

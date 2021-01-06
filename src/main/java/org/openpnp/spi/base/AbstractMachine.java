@@ -36,6 +36,7 @@ import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.Signaler;
 import org.openpnp.util.IdentifiableList;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -454,6 +455,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
             throws Exception {
         if (onlyIfEnabled && !isEnabled()) {
             // Ignore the task if the machine is not enabled.
+            Logger.trace("Machine not enabled, task ignored.");
             return null;
         }
         if (isTask(Thread.currentThread())) {
