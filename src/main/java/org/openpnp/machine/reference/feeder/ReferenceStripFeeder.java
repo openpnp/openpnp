@@ -223,11 +223,20 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     public void feed(Nozzle nozzle) throws Exception {
         setFeedCount(getFeedCount() + 1);
 
+        // normally the feeder will automatically disable when it runs out but
+        // if the user re-enables and tries to feed, throw an exception that we are out of parts.
         if ((maxFeedCount > 0) && (feedCount > maxFeedCount)) {
 			throw new Exception("Tried to feed part: " + part.getId() + "  Feeder " + name + " empty.");
 		}
 
         updateVisionOffsets(nozzle);
+        
+        // automatically disable when we reach the last part, openpnp will try
+        // to pick another feeder that provides the same part for the next feed.
+        if ((maxFeedCount > 0) && (feedCount >= maxFeedCount))
+        {
+        	enabled = false;
+        }
     }
 
     private void updateVisionOffsets(Nozzle nozzle) throws Exception {
