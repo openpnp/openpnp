@@ -241,6 +241,60 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public <T> Future<T> submit(final Callable<T> callable, final FutureCallback<T> callback,
             boolean ignoreEnabled);
 
+    /**
+     * Same as org.openpnp.spi.Machine.submit(Callable<T>, FutureCallback<T>, boolean) but the task is 
+     * executed immediately if we are already inside a machine task thread. Otherwise the task is 
+     * submitted and the caller thread waits for its completion (with timeout).
+     *  
+     * Return value and exceptions are handled as if called directly. 
+     * 
+     * @param <T>
+     * @param callable
+     * @param onlyIfEnabled Only execute the task, if the machine is enabled.
+     * @param timeout Abort, if the submitted task does not finish before the timeout (milliseconds).
+     * @return
+     * @throws Exception
+     */
+    public <T> T execute(Callable<T> callable, boolean onlyIfEnabled, long timeout) throws Exception;
+
+    public long DEFAULT_TASK_TIMEOUT_MS = 1000;
+
+    /**
+     * Same as org.openpnp.spi.Machine.submit(Callable<T>, FutureCallback<T>, boolean) but the task is 
+     * executed immediately if we are already inside a machine task thread. Otherwise the task is 
+     * submitted and the caller thread waits for its completion (with default timeout).
+     *  
+     * Return value and exceptions are handled as if called directly. 
+     * 
+     * @param <T>
+     * @param callable
+     * @return
+     * @throws Exception
+     */
+    public default <T> T execute(Callable<T> callable) throws Exception {
+        return execute(callable, false, DEFAULT_TASK_TIMEOUT_MS);
+    }
+
+    /**
+     * Same as execute() but the task is only executed if the Machine is enabled. 
+     * 
+     * @param <T>
+     * @param callable
+     * @return
+     * @throws Exception
+     */
+    public default <T> T executeIfEnabled(Callable<T> callable) throws Exception {
+        return execute(callable, true, DEFAULT_TASK_TIMEOUT_MS);
+    }
+
+    /**
+     * Determines whether the given thread is a task thread currently executed by the machine. 
+     * 
+     * @param thread
+     * @return
+     */
+    public boolean isTask(Thread thread);
+
     public Head getDefaultHead() throws Exception;
 
     public List<PartAlignment> getPartAlignments();

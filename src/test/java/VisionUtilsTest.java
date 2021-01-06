@@ -179,18 +179,24 @@ public class VisionUtilsTest {
 
         @Override
         public void close() throws IOException {
-
         }
 
         @Override
-        public BufferedImage settleAndCapture() {
+        public BufferedImage settleAndCapture() throws Exception {
             return null;
         }
 
         @Override
-        public BufferedImage settleAndCapture(boolean settleFirst, Object light,
-                boolean keepLighted) throws Exception {
+        public BufferedImage lightSettleAndCapture() {
             return null;
+        }
+
+        @Override
+        public void actuateLightBeforeCapture(Object light) throws Exception {
+        }
+
+        @Override
+        public void actuateLightAfterCapture() throws Exception {
         }
 
         @Override

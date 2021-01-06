@@ -193,7 +193,7 @@ public class VisionUtils {
      * @throws Exception 
      */
     public static String scanBarcode(Camera camera) throws Exception {
-        BufferedImage image = camera.settleAndCapture();
+        BufferedImage image = camera.lightSettleAndCapture();
         BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(
                 new BufferedImageLuminanceSource(image)));
         try {

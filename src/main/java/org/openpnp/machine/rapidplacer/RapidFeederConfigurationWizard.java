@@ -251,7 +251,7 @@ public class RapidFeederConfigurationWizard
     }
     
     private Set<QrCodeLocation> locateQrCodes(Camera camera) throws Exception {
-        BufferedImage image = camera.settleAndCapture();
+        BufferedImage image = camera.lightSettleAndCapture();
         BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(
                 new BufferedImageLuminanceSource(image)));
         MultipleBarcodeReader reader = new QRCodeMultiReader();

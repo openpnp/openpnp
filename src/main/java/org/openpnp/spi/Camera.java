@@ -78,25 +78,20 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     public BufferedImage captureRaw();
     
     /**
-     * Same as capture(), but settles the camera before capturing. Uses default lighting.
-     * 
-     * @return
-     * @throws Exception 
-     */
-    public BufferedImage settleAndCapture() throws Exception;
-
-    /**
-     * Same as settleAndCapture() with additional conditional settle and lighting parameters.
-     * 
-     * @param settleFirst True to enable camera settling.  
-     * @param light Light actuation value. The Actuator will interpret the type of the parameter, it may 
-     * be a Boolean, Double, String or Profile name value.   
-     * @param keepLighted True if the light should be kept on for further captures.
+     * Same as capture() but settles the camera before capturing.
      * 
      * @return
      * @throws Exception
      */
-    public BufferedImage settleAndCapture(boolean settleFirst, Object light, boolean keepLighted) throws Exception;
+    public BufferedImage settleAndCapture() throws Exception;
+
+    /**
+     * Same as capture(), but lights and settles the camera before capturing. Uses default lighting.
+     * 
+     * @return
+     * @throws Exception 
+     */
+    public BufferedImage lightSettleAndCapture() throws Exception;
 
     /**
      * Registers a listener to receive continuous images from the camera.
@@ -140,4 +135,29 @@ public interface Camera extends HeadMountable, WizardConfigurable,
      * @return the Camera light actuator.
      */
     public Actuator getLightActuator();
+
+    /**
+     * Inform the Camera that the light actuator (if any) should now be actuated to the given light setting.
+     * Effective actuation may be optimized to span longer periods. 
+     * 
+     * @param light Provides the light actuation value or null for default lighting. 
+     * @throws Exception
+     */
+    void actuateLightBeforeCapture(Object light) throws Exception;
+
+    /**
+     * Inform the Camera that the light actuator (if any) should now be actuated to the default light setting.
+     * @throws Exception
+     */
+    default void actuateLightBeforeCapture() throws Exception {
+        actuateLightBeforeCapture(null);
+    }
+
+    /**
+     * Inform the Camera that the light actuator (if any) may now be actuated to the default off setting.
+     * Effective actuation may be optimized to span longer periods. 
+     * 
+     * @throws Exception
+     */
+    void actuateLightAfterCapture() throws Exception;
 }

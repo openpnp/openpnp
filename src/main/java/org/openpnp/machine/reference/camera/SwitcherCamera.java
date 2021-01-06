@@ -30,8 +30,10 @@ import org.openpnp.machine.reference.camera.wizards.SwitcherCameraConfigurationW
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractActuator;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
 public class SwitcherCamera extends ReferenceCamera implements Runnable {
@@ -73,13 +75,19 @@ public class SwitcherCamera extends ReferenceCamera implements Runnable {
         synchronized (switchers) {
             if (switchers.get(switcher) != this) {
                 try {
-                    if (Configuration.get().getMachine().isEnabled()) {
-                        // TODO This would ideally happen within a machine task, but in almost all
-                        // cases it will end up being called from a machine task so it's okay. It
-                        // would be good if we could detect if it wasn't and trigger one.
-                        getActuator().actuate(actuatorDoubleValue);
-                        Thread.sleep(actuatorDelayMillis);
-                        switchers.put(switcher, this);
+                    Machine machine = Configuration.get().getMachine();
+                    if (machine.isEnabled()) {
+                        // Make sure this happens within a machine task, but wait for it.
+                        machine.execute(() -> {
+                            getActuator().actuate(actuatorDoubleValue);
+                            Thread.sleep(actuatorDelayMillis);
+                            switchers.put(switcher, this);
+                            return null;
+                        }); // true = skip the light actuation, if the machine is not enabled.
+                    }
+                    else {
+                        // If the machine is disabled we can't switch, so we should return an error image.
+                        return getCaptureErrorImage();
                     }
                 }
                 catch (Exception e) {

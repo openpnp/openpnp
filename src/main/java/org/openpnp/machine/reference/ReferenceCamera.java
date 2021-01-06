@@ -19,8 +19,10 @@
 
 package org.openpnp.machine.reference;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -213,20 +215,26 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             }
             Logger.trace("Camera {} failed to return an image. Retrying.", this);
         }
+        Logger.warn("Camera {} failed to return an image after {} tries.", this, CAPTURE_RETRY_COUNT);
+        return getCaptureErrorImage();
+    }
+
+    protected BufferedImage getCaptureErrorImage() {
         if (CAPTURE_ERROR_IMAGE == null) {
             CAPTURE_ERROR_IMAGE = new BufferedImage(640, 480, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = (Graphics2D) CAPTURE_ERROR_IMAGE.createGraphics();
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g.setColor(Color.black);
             g.fillRect(0, 0, 640, 480);
             g.setColor(Color.red);
+            g.setStroke(new BasicStroke(5));
             g.drawLine(0, 0, 640, 480);
             g.drawLine(640, 0, 0, 480);
             g.dispose();
         }
-        Logger.warn("Camera {} failed to return an image after {} tries.", this, CAPTURE_RETRY_COUNT);
         return CAPTURE_ERROR_IMAGE;
     }
-    
+
     @Override
     public synchronized int getWidth() {
         if (width == null) {

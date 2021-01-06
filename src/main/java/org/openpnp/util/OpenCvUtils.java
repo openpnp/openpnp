@@ -123,7 +123,7 @@ public class OpenCvUtils {
         double maxDiameterPixels = maxDiameter.getValue() / avgUnitsPerPixel;
         double minDistancePixels = minDistance.getValue() / avgUnitsPerPixel;
 
-        BufferedImage image = camera.settleAndCapture();
+        BufferedImage image = camera.lightSettleAndCapture();
         Mat mat = toMat(image);
         Mat circles = houghCircles(mat, minDiameterPixels, maxDiameterPixels, minDistancePixels);
 

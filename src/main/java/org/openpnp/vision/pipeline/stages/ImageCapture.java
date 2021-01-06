@@ -77,10 +77,10 @@ public class ImageCapture extends CvStage {
         if (camera == null) {
             throw new Exception("No Camera set on pipeline.");
         }
+        // Light, settle and capture the image. Keep the lights on for possible averaging.
+        camera.actuateLightBeforeCapture((defaultLight ? null : getLight()));
         try {
-            // Light, settle and capture the image. Keep the lights on for possible averaging. 
-            Mat image = OpenCvUtils.toMat(camera.settleAndCapture(settleFirst, 
-                    (defaultLight ? null : getLight()), true));
+            Mat image = OpenCvUtils.toMat(settleFirst ? camera.settleAndCapture() : camera.capture());
             if (count <= 1) { 
                 return new Result(image);
             }
@@ -103,10 +103,7 @@ public class ImageCapture extends CvStage {
         }
         finally {
             // Always switch off the light. 
-            Actuator lightActuator = camera.getLightActuator();
-            if (lightActuator != null) {
-                lightActuator.actuate(lightActuator.getDefaultOffValue());
-            }
+            camera.actuateLightAfterCapture();
         }
     }
 

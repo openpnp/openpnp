@@ -405,7 +405,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
                 }
                 MainFrame.get().getMachineControls().getJogControlsPanel().jogTool(x, y, 0, c, jogTool);
                 MainFrame.get().getMachineControls().getJogControlsPanel().jogTool(-x, -y, 0, -c, jogTool);
-                camera.settleAndCapture();
+                camera.lightSettleAndCapture();
             });
         });
     }
@@ -476,7 +476,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
                     // Go to the camera.
                     UiUtils.submitUiMachineTask(() -> {
                         MovableUtils.moveToLocationAtSafeZ(jogTool, camera.getLocation());
-                        camera.settleAndCapture();
+                        camera.lightSettleAndCapture();
                     });
                 }
                 else {
@@ -485,7 +485,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
                     UiUtils.submitUiMachineTask(() -> {
                         jogTool.moveToSafeZ();
                         jogTool.moveTo(location);
-                        camera.settleAndCapture();
+                        camera.lightSettleAndCapture();
                     });
                 }
             });
@@ -500,7 +500,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         public void actionPerformed(ActionEvent e) {
             UiUtils.messageBoxOnException(() -> {
                 applyAction.actionPerformed(e);
-                camera.settleAndCapture();
+                camera.lightSettleAndCapture();
             });
         }
     };

@@ -59,7 +59,11 @@ public class ActuatorWrite extends CvStage {
             {
                 throw new Exception("Actuator writing (CvStage operation) failed. Unable to find an actuator named " + actuatorName);
             }
-            actuator.actuate(actuatorWriteValue);
+            // Make sure this happens in a machine task, but wait for completion.
+            Configuration.get().getMachine().execute(() -> {
+                actuator.actuate(actuatorWriteValue);
+                return null;
+                });
         }
         return null;
     }

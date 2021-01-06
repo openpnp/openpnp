@@ -666,22 +666,21 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     }
 
     @Override
-    public BufferedImage settleAndCapture() throws Exception {
-        return settleAndCapture(true, null, false);
+    public BufferedImage lightSettleAndCapture() throws Exception {
+        actuateLightBeforeCapture(null);
+        try {
+            return settleAndCapture();
+        }
+        finally {
+            actuateLightAfterCapture();
+        }
     }
 
     @Override
-    public BufferedImage settleAndCapture(boolean settleFirst, Object light, boolean keepLighted) throws Exception {
-        Actuator lightActuator = getLightActuator();
-        if (lightActuator != null) {
-            lightActuator.actuate(light != null ? light : lightActuator.getDefaultOnValue());
-        }
-
+    public BufferedImage settleAndCapture() throws Exception {
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("camera", this);
-            globals.put("light", light);
-            globals.put("keepLighted", keepLighted);
             Configuration.get().getScripting().on("Camera.BeforeSettle", globals);
         }
         catch (Exception e) {
@@ -689,30 +688,24 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         }
 
         try {
-            
             // Make sure the camera (or its subject) stands still.
             waitForCompletion(CompletionType.WaitForStillstand);
 
-            if (!settleFirst) {
+            if (settleMethod == null) {
+                // Method undetermined, probably created a new camera (no @Commit handler)
+                settleMethod = SettleMethod.FixedTime;
+            }
+            if (settleMethod == SettleMethod.FixedTime) {
+                try {
+                    Thread.sleep(getSettleTimeMs());
+                }
+                catch (Exception e) {
+
+                }
                 return capture();
             }
             else {
-                if (settleMethod == null) {
-                    // Method undetermined, probably created a new camera (no @Commit handler)
-                    settleMethod = SettleMethod.FixedTime;
-                }
-                if (settleMethod == SettleMethod.FixedTime) {
-                    try {
-                        Thread.sleep(getSettleTimeMs());
-                    }
-                    catch (Exception e) {
-    
-                    }
-                    return capture();
-                }
-                else {
-                    return autoSettleAndCapture();
-                }
+                return autoSettleAndCapture();
             }
         }
         finally {
@@ -720,17 +713,35 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
             try {
                 Map<String, Object> globals = new HashMap<>();
                 globals.put("camera", this);
-                globals.put("light", light);
-                globals.put("keepLighted", keepLighted);
                 Configuration.get().getScripting().on("Camera.AfterSettle", globals);
             }
             catch (Exception e) {
                 Logger.warn(e);
             }
+        }
+    }
 
-            if (lightActuator != null && !keepLighted) {
-                lightActuator.actuate(lightActuator.getDefaultOffValue());
-            }
+    private void actuateLight(Actuator lightActuator, Object light) throws Exception {
+        // Make sure it is actuated in a machine task, but only if the machine is enabled.
+        Configuration.get().getMachine().executeIfEnabled(() -> {
+            lightActuator.actuate(light);
+            return null; 
+            });
+    }
+
+    @Override
+    public void actuateLightBeforeCapture(Object light) throws Exception {
+        Actuator lightActuator = getLightActuator();
+        if (lightActuator != null) {
+            actuateLight(lightActuator, light != null ? light : lightActuator.getDefaultOnValue());
+        }
+    }
+
+    @Override
+    public void actuateLightAfterCapture() throws Exception {
+        Actuator lightActuator = getLightActuator();
+        if (lightActuator != null) {
+            actuateLight(lightActuator, lightActuator.getDefaultOffValue());
         }
     }
 
