@@ -319,6 +319,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         if (camera.getHead() == null) {
             lightActuator.setModel(new ActuatorsComboBoxModel(machine));
             allowMachineActuators.setVisible(false);
+            lblAllowMachineActuators.setVisible(false);
         }
         else if (allowMachineActuators.isSelected()) {
             lightActuator.setModel(new ActuatorsComboBoxModel(machine, camera.getHead()));

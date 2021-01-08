@@ -83,7 +83,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
 
         g.setTransform(tx);
 
-        SimulationModeMachine.drawSimulatedCameraNoise(g, width, height);
+        SimulationModeMachine.simulateCameraExposure(this, g, width, height);
 
         g.dispose();
 

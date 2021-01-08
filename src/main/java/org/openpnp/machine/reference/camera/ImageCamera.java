@@ -217,7 +217,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
         }
 
         if (simulation) {
-            SimulationModeMachine.drawSimulatedCameraNoise(gFrame, width, height);
+            SimulationModeMachine.simulateCameraExposure(this, gFrame, width, height);
         }
 
         gFrame.dispose();

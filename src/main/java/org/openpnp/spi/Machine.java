@@ -212,12 +212,13 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public boolean getHomeAfterEnabled();
 
     /**
-     * Submit a task to be run with access to the Machine. This is the primary entry point into
-     * executing any blocking operation on the Machine. If you are doing anything that results in
-     * the Machine doing something it should happen here.
+     * Submit a task to be run with access to the Machine. The submit() and execute() methods are 
+     * the primary entry points into executing any blocking operation on the Machine. If you are 
+     * doing anything that results in the Machine doing something it should happen here.
      * 
-     * Tasks can be cancelled and interrupted via the returned Future. Tasks which operate in a loop
-     * should check Thread.currentThread().isInterrupted().
+     * With the submit() method, tasks can be cancelled and interrupted via the returned Future. 
+     * 
+     * Tasks which operate in a loop should check Thread.currentThread().isInterrupted().
      * 
      * When a task begins the MachineListeners are notified with machineBusy(true). When the task
      * ends, if there are no more tasks to run then machineBusy(false) is called.
@@ -242,29 +243,30 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
             boolean ignoreEnabled);
 
     /**
-     * Same as org.openpnp.spi.Machine.submit(Callable<T>, FutureCallback<T>, boolean) but the task is 
-     * executed immediately if we are already inside a machine task thread. Otherwise the task is 
-     * submitted and the caller thread waits for its completion (with timeout).
-     *  
-     * Return value and exceptions are handled as if called directly. 
+     * Execute a task to be run with access to the Machine. The submit() and execute() methods are 
+     * the primary entry points into executing any blocking operation on the Machine. If you are 
+     * doing anything that results in the Machine doing something it should happen here.
+     * 
+     * With the execute() method, tasks are executed and waited for, rather than queued. 
+     * If called from inside a machine task the execution is immediate. If called from a different 
+     * thread, the task is submitted and then the calling thread will wait for completion.  
+     *   
+     * Return value and exceptions are always handled as if called directly. 
      * 
      * @param <T>
      * @param callable
-     * @param onlyIfEnabled Only execute the task, if the machine is enabled.
-     * @param timeout Abort, if the submitted task does not finish before the timeout (milliseconds).
+     * @param onlyIfEnabled True if the task must only be executed if the machine is enabled.
+     * @param busyTimeout If the machine is busy executing other submitted task, the execution 
+     * will be rejected when the timeout (in milliseconds) expires, throwing a TimeoutException. 
+     * This will typically happen, when a long-running operation like a Job is pending.  
      * @return
      * @throws Exception
      */
-    public <T> T execute(Callable<T> callable, boolean onlyIfEnabled, long timeout) throws Exception;
+    public <T> T execute(Callable<T> callable, boolean onlyIfEnabled, long busyTimeout) throws Exception;
 
-    public long DEFAULT_TASK_TIMEOUT_MS = 1000;
-
+    public long DEFAULT_TASK_BUSY_TIMEOUT_MS = 1000;
     /**
-     * Same as org.openpnp.spi.Machine.submit(Callable<T>, FutureCallback<T>, boolean) but the task is 
-     * executed immediately if we are already inside a machine task thread. Otherwise the task is 
-     * submitted and the caller thread waits for its completion (with default timeout).
-     *  
-     * Return value and exceptions are handled as if called directly. 
+     * Calls {@link #execute(Callable, boolean, long)} with default busy timeout. 
      * 
      * @param <T>
      * @param callable
@@ -272,7 +274,7 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
      * @throws Exception
      */
     public default <T> T execute(Callable<T> callable) throws Exception {
-        return execute(callable, false, DEFAULT_TASK_TIMEOUT_MS);
+        return execute(callable, false, DEFAULT_TASK_BUSY_TIMEOUT_MS);
     }
 
     /**
@@ -284,7 +286,7 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
      * @throws Exception
      */
     public default <T> T executeIfEnabled(Callable<T> callable) throws Exception {
-        return execute(callable, true, DEFAULT_TASK_TIMEOUT_MS);
+        return execute(callable, true, DEFAULT_TASK_BUSY_TIMEOUT_MS);
     }
 
     /**

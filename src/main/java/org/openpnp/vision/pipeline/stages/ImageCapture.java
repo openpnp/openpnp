@@ -22,7 +22,7 @@ import org.simpleframework.xml.Element;
         description="Capture an image from the pipeline camera.")
 
 public class ImageCapture extends CvStage {
-    @Element(required=false)
+    @Attribute(required=false)
     @Property(description="Use the default camera lighting.")
     private boolean defaultLight = true;
 

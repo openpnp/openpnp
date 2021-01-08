@@ -451,39 +451,6 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     }
 
     @Override
-    public <T> T execute(final Callable<T> callable, final boolean onlyIfEnabled, final long timeout) 
-            throws Exception {
-        if (onlyIfEnabled && !isEnabled()) {
-            // Ignore the task if the machine is not enabled.
-            Logger.trace("Machine not enabled, task ignored.");
-            return null;
-        }
-        if (isTask(Thread.currentThread())) {
-            // We are already on the machine task, just execute this.
-            return callable.call();
-        }
-        else {
-            // Otherwise, submit a machine task and wait for its completion.
-            try {
-                Future<T> future = submit(callable, null, false);
-                try {
-                    return future.get(timeout, TimeUnit.MILLISECONDS);
-                }
-                finally  {
-                    // Cancel if not already started (in case of timeout). 
-                    future.cancel(false);
-                }
-            }
-            catch (ExecutionException e) {
-                if (e.getCause() instanceof Exception) {
-                    throw (Exception)e.getCause();
-                }
-                throw e;
-            }
-        }
-    }
-
-    @Override
     public <T> Future<T> submit(final Callable<T> callable, final FutureCallback<T> callback,
             final boolean ignoreEnabled) {
         synchronized (this) {
@@ -542,12 +509,11 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
                     return result;
                 }
                 finally {
-                    // TODO: this should also unlock drivers
-                    setTaskThread(null);
-
                     // If no more tasks are scheduled notify listeners that
                     // the machine is no longer busy
                     if (executor.getQueue().isEmpty()) {
+                        // TODO: this should also unlock drivers
+                        setTaskThread(null);
                         fireMachineBusy(false);
                     }
                 }
@@ -555,6 +521,41 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         };
 
         return executor.submit(wrapper);
+    }
+
+    @Override
+    public <T> T execute(final Callable<T> callable, final boolean onlyIfEnabled, final long timeout) 
+            throws Exception {
+        if (onlyIfEnabled && !isEnabled()) {
+            // Ignore the task if the machine is not enabled.
+            Logger.trace("Machine not enabled, task ignored.");
+            return null;
+        }
+        if (isTask(Thread.currentThread())) {
+            // We are already on the machine task, just execute this.
+            return callable.call();
+        }
+        else {
+            // Otherwise, submit a machine task and wait for its completion.
+            try {
+                long t1 = System.currentTimeMillis() + timeout;
+                while (getTaskThread() != null) {
+                    // Busy.
+                    if (System.currentTimeMillis() > t1) {
+                        throw new TimeoutException("Machine still busy after timeout expired, task rejected.");
+                    }
+                    Thread.yield();
+                }
+                Future<T> future = submit(callable, null, false);
+                return future.get();
+            }
+            catch (ExecutionException e) {
+                if (e.getCause() instanceof Exception) {
+                    throw (Exception)e.getCause();
+                }
+                throw e;
+            }
+        }
     }
 
     protected Thread getTaskThread() {

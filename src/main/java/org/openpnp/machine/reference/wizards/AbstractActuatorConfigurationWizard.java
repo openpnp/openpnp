@@ -214,6 +214,44 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         panelSafeZ.add(textFieldSafeZ, "4, 2, fill, default");
         textFieldSafeZ.setColumns(10);
         
+        panelCoordination = new JPanel();
+        contentPanel.add(panelCoordination);
+        panelCoordination.setBorder(new TitledBorder(null, "Machine Coordination", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
+        panelCoordination.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblBeforeActuation = new JLabel("Before Actuation?");
+        lblBeforeActuation.setToolTipText("<html>\r\nCoordinate with the machine, before the actuator is actuated, i.e. wait for the controllers <br/>\r\nto acknowledge that all the pending commands (including motion) were sent and executed. \r\n</html>");
+        panelCoordination.add(lblBeforeActuation, "2, 2, right, default");
+        
+        coordinatedBeforeActuate = new JCheckBox("");
+        panelCoordination.add(coordinatedBeforeActuate, "4, 2, center, bottom");
+        
+        lblAfterActuation = new JLabel("After Actuation?");
+        lblAfterActuation.setToolTipText("<html>\r\nCoordinate with the machine, after the actuator was actuated, i.e. wait for the controllers <br/>\r\nto acknowledge that the actuation as well as all the pending commands (including motion)<br/>\r\nwere sent and executed and any position report processed.\r\n</html>");
+        panelCoordination.add(lblAfterActuation, "2, 4, right, default");
+        
+        coordinatedAfterActuate = new JCheckBox("");
+        panelCoordination.add(coordinatedAfterActuate, "4, 4");
+        
+        lblBeforeRead = new JLabel("Before Read?");
+        lblBeforeRead.setToolTipText("<html>\r\nCoordinate with the machine, before the actuator is read, i.e. wait for the controllers <br/>\r\nto acknowledge that all the pending commands (including motion) were sent and executed. \r\n</html>");
+        panelCoordination.add(lblBeforeRead, "2, 6, right, default");
+        
+        coordinatedBeforeRead = new JCheckBox("");
+        panelCoordination.add(coordinatedBeforeRead, "4, 6");
+        
         generalPanel = new JPanel();
         generalPanel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(generalPanel);
@@ -284,44 +322,6 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         indexTextField = new JTextField();
         generalPanel.add(indexTextField, "4, 9, fill, default");
         indexTextField.setColumns(10);
-        
-        panelCoordination = new JPanel();
-        headMountablePanel.add(panelCoordination);
-        panelCoordination.setBorder(new TitledBorder(null, "Machine Coordination", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
-        panelCoordination.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("max(70dlu;default)"),
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-        
-        lblBeforeActuation = new JLabel("Before Actuation?");
-        lblBeforeActuation.setToolTipText("<html>\r\nCoordinate with the machine, before the actuator is actuated, i.e. wait for the controllers <br/>\r\nto acknowledge that all the pending commands (including motion) were sent and executed. \r\n</html>");
-        panelCoordination.add(lblBeforeActuation, "2, 2, right, default");
-        
-        coordinatedBeforeActuate = new JCheckBox("");
-        panelCoordination.add(coordinatedBeforeActuate, "4, 2, center, bottom");
-        
-        lblAfterActuation = new JLabel("After Actuation?");
-        lblAfterActuation.setToolTipText("<html>\r\nCoordinate with the machine, after the actuator was actuated, i.e. wait for the controllers <br/>\r\nto acknowledge that the actuation as well as all the pending commands (including motion)<br/>\r\nwere sent and executed and any position report processed.\r\n</html>");
-        panelCoordination.add(lblAfterActuation, "2, 4, right, default");
-        
-        coordinatedAfterActuate = new JCheckBox("");
-        panelCoordination.add(coordinatedAfterActuate, "4, 4");
-        
-        lblBeforeRead = new JLabel("Before Read?");
-        lblBeforeRead.setToolTipText("<html>\r\nCoordinate with the machine, before the actuator is read, i.e. wait for the controllers <br/>\r\nto acknowledge that all the pending commands (including motion) were sent and executed. \r\n</html>");
-        panelCoordination.add(lblBeforeRead, "2, 6, right, default");
-        
-        coordinatedBeforeRead = new JCheckBox("");
-        panelCoordination.add(coordinatedBeforeRead, "4, 6");
 
         if (actuator.getHead() == null) {
             headMountablePanel.setVisible(false);
