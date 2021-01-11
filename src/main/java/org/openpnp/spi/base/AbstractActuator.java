@@ -10,6 +10,7 @@ import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.Actuator.ActuatorValueType;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.simpleframework.xml.Attribute;
@@ -334,7 +335,11 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
     }
 
     protected void coordinateWithMachine(boolean unconditional) throws Exception {
-        Configuration.get().getMachine().getMotionPlanner()
+        Machine machine = Configuration.get().getMachine();
+        if (!machine.isTask(Thread.currentThread())) {
+            throw new Exception("Actuator "+getName()+" must not coordinate with machine when actuated outside machine task.");
+        }
+        machine.getMotionPlanner()
         .waitForCompletion(null, unconditional ? 
                 CompletionType.WaitForUnconditionalCoordination
                 : CompletionType.WaitForStillstand);

@@ -115,6 +115,7 @@ public class CameraPanel extends JPanel {
             camerasCombo.insertItemAt(SHOW_ALL_ITEM_H, 1);
             camerasCombo.insertItemAt(SHOW_ALL_ITEM_V, 2);
         }
+        relayoutPanel();
     }
     
     public void removeCamera(Camera camera) {
@@ -132,6 +133,7 @@ public class CameraPanel extends JPanel {
                 }
             }
         }
+        relayoutPanel();
     }
     
     private void createUi() {
@@ -183,57 +185,61 @@ public class CameraPanel extends JPanel {
         return cameraViews.get(camera);
     }
 
+    private void relayoutPanel() {
+        selectedCameraView = null;
+        camerasPanel.removeAll();
+        if (camerasCombo.getSelectedItem().equals(SHOW_NONE_ITEM)) {
+            camerasPanel.setLayout(new BorderLayout());
+            JPanel panel = new JPanel();
+            panel.setBackground(Color.black);
+            camerasPanel.add(panel);
+            selectedCameraView = null;
+        }
+        else if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_H) || camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_V)) {
+            int rows = (int) Math.ceil(Math.sqrt(cameraViews.size()));
+            if (rows == 0) {
+                rows = 1;
+            }
+            if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_H)) {
+                camerasPanel.setLayout(new GridLayout(rows, 0, 1, 1));
+            }
+            else {
+                camerasPanel.setLayout(new GridLayout(0, rows, 1, 1));
+            }
+
+            for (CameraView cameraView : cameraViews.values()) {
+                cameraView.setShowName(true);
+                camerasPanel.add(cameraView);
+                if (cameraViews.size() == 1) {
+                    selectedCameraView = cameraView;
+                }
+            }
+            if (cameraViews.size() > 2) {
+                for (int i = 0; i < (rows * rows) - cameraViews.size(); i++) {
+                    JPanel panel = new JPanel();
+                    panel.setBackground(Color.black);
+                    camerasPanel.add(panel);
+                }
+            }
+            selectedCameraView = null;
+        }
+        else {
+            camerasPanel.setLayout(new BorderLayout());
+            Camera camera = ((CameraItem) camerasCombo.getSelectedItem()).getCamera();
+            CameraView cameraView = getCameraView(camera);
+            cameraView.setShowName(false);
+            camerasPanel.add(cameraView);
+
+            selectedCameraView = cameraView;
+        }
+        revalidate();
+        repaint();
+    }
+
     private AbstractAction cameraSelectedAction = new AbstractAction("") {
         @Override
         public void actionPerformed(ActionEvent ev) {
-            selectedCameraView = null;
-            camerasPanel.removeAll();
-            if (camerasCombo.getSelectedItem().equals(SHOW_NONE_ITEM)) {
-                camerasPanel.setLayout(new BorderLayout());
-                JPanel panel = new JPanel();
-                panel.setBackground(Color.black);
-                camerasPanel.add(panel);
-                selectedCameraView = null;
-            }
-            else if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_H) || camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_V)) {
-                int rows = (int) Math.ceil(Math.sqrt(cameraViews.size()));
-                if (rows == 0) {
-                    rows = 1;
-                }
-				if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_H)) {
-					camerasPanel.setLayout(new GridLayout(rows, 0, 1, 1));
-				}
-				else {
-					camerasPanel.setLayout(new GridLayout(0, rows, 1, 1));
-				}
-
-                for (CameraView cameraView : cameraViews.values()) {
-                    cameraView.setShowName(true);
-                    camerasPanel.add(cameraView);
-                    if (cameraViews.size() == 1) {
-                        selectedCameraView = cameraView;
-                    }
-                }
-                if (cameraViews.size() > 2) {
-                    for (int i = 0; i < (rows * rows) - cameraViews.size(); i++) {
-                        JPanel panel = new JPanel();
-                        panel.setBackground(Color.black);
-                        camerasPanel.add(panel);
-                    }
-                }
-                selectedCameraView = null;
-            }
-            else {
-                camerasPanel.setLayout(new BorderLayout());
-                Camera camera = ((CameraItem) camerasCombo.getSelectedItem()).getCamera();
-                CameraView cameraView = getCameraView(camera);
-                cameraView.setShowName(false);
-                camerasPanel.add(cameraView);
-
-                selectedCameraView = cameraView;
-            }
-            revalidate();
-            repaint();
+            relayoutPanel();
         }
     };
 }

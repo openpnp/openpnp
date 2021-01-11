@@ -99,9 +99,12 @@ public class SampleJobTest {
         Job job = Configuration.get().loadJob(jobFile);
 
         machine.setEnabled(true);
-        machine.home();
-        jobProcessor.initialize(job);
-        while (jobProcessor.next());
+        machine.execute(() -> {
+            machine.home();
+            jobProcessor.initialize(job);
+            while (jobProcessor.next());
+            return null;
+        });
         // camera.stopContinuousCapture(encoder);
         // encoder.finish();
     }

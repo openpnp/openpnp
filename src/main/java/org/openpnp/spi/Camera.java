@@ -73,7 +73,7 @@ public interface Camera extends HeadMountable, WizardConfigurable,
      */
     public BufferedImage capture();
     
-    public BufferedImage captureForPreview();
+    public BufferedImage captureTransformed();
     
     public BufferedImage captureRaw();
     
@@ -92,6 +92,11 @@ public interface Camera extends HeadMountable, WizardConfigurable,
      * @throws Exception 
      */
     public BufferedImage lightSettleAndCapture() throws Exception;
+
+    /**
+     * @return True if the Camera device has a new frame available (since the last one was captured).  
+     */
+    abstract public boolean hasNewFrame();
 
     /**
      * Registers a listener to receive continuous images from the camera.
@@ -138,7 +143,7 @@ public interface Camera extends HeadMountable, WizardConfigurable,
 
     /**
      * Inform the Camera that the light actuator (if any) should now be actuated to the given light setting.
-     * Effective actuation may be optimized to span longer periods. 
+     * Effective actuation may be optimized to span longer periods/prevent blinking. 
      * 
      * @param light Provides the light actuation value or null for default lighting. 
      * @throws Exception
@@ -147,6 +152,8 @@ public interface Camera extends HeadMountable, WizardConfigurable,
 
     /**
      * Inform the Camera that the light actuator (if any) should now be actuated to the default light setting.
+     * Effective actuation may be optimized to span longer periods/prevent blinking. 
+     * 
      * @throws Exception
      */
     default void actuateLightBeforeCapture() throws Exception {
@@ -155,9 +162,38 @@ public interface Camera extends HeadMountable, WizardConfigurable,
 
     /**
      * Inform the Camera that the light actuator (if any) may now be actuated to the default off setting.
-     * Effective actuation may be optimized to span longer periods. 
+     * Effective actuation may be optimized to span longer periods/prevent blinking. 
      * 
      * @throws Exception
      */
     void actuateLightAfterCapture() throws Exception;
+
+    /**
+     * Whenever a user action deliberately changes the Camera view via its position or subject, or relevant machine state 
+     * such as lighting, this method should be called to trigger a new image capture. If the camera is set to 
+     * 0 fps or otherwise not continuously capturing, this will generate an updated camera view (subject to 
+     * configuration or other constraints). 
+     * 
+     * @see  {@link #isAutoVisible()} and {@link #isAutoLight()}
+     */
+    public void cameraViewChanged();
+
+    /**
+     * Ensure the related CameraView will eventually be made visible on the user interface.  
+     */
+    void ensureCameraVisible();
+
+    /**
+     * @return True if {@link #ensureCameraVisible()} should be called on this Camera whenever 
+     * {@link #cameraViewChanged()} is called.  
+     */
+    default boolean isAutoVisible() { 
+        return false; 
+    }
+
+    /**
+     * @return True if {@link #actuateLightBeforeCapture()} should be called on this Camera whenever
+     * {@link #cameraViewChanged()} is called.  
+     */
+    boolean isAutoLight();
 }

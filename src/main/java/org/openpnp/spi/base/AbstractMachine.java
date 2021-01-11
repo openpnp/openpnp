@@ -100,7 +100,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     protected ThreadPoolExecutor executor;
 
-    protected Thread taskThread;
+    volatile protected Thread taskThread;
 
     protected AbstractMachine() {}
 
@@ -539,9 +539,8 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
             // Otherwise, submit a machine task and wait for its completion.
             try {
                 long t1 = System.currentTimeMillis() + timeout;
-                while (getTaskThread() != null) {
-                    // Busy.
-                    if (System.currentTimeMillis() > t1) {
+                while (isBusy()) {
+                    if (System.currentTimeMillis() >= t1) {
                         throw new TimeoutException("Machine still busy after timeout expired, task rejected.");
                     }
                     Thread.yield();
@@ -572,6 +571,11 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
             return false;
         }
         return taskThread.getId() == thread.getId();
+    }
+
+    @Override
+    public boolean isBusy() {
+        return taskThread != null;
     }
 
     @Override

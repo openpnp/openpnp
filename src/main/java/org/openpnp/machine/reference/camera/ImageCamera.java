@@ -35,7 +35,6 @@ import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
-import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.SimulationModeMachine;
@@ -54,12 +53,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
-public class ImageCamera extends ReferenceCamera implements Runnable {
-    private PropertyChangeSupport pcs = new PropertyChangeSupport(this);
-
-    @Attribute(required = false)
-    private int fps = 30;
-
+public class ImageCamera extends ReferenceCamera {
     @Element
     private String sourceUri = "classpath://samples/pnp-test/pnp-test.png";
 
@@ -70,8 +64,6 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
     private int height = 480;
 
     private BufferedImage source;
-
-    private Thread thread;
 
     /**
      * In pick location checking, this is the maximum distance allowed.
@@ -96,69 +88,35 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 
     public ImageCamera() {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.04233, 0.04233, 0, 0));
-        try {
-            setSourceUri(sourceUri);
-        }
-        catch (Exception e) {
-            
-        }
-    }
-
-    @SuppressWarnings("unused")
-    @Commit
-    protected void commit() throws Exception {
-        super.commit();
-        setSourceUri(sourceUri);
-    }
-
-    @Override
-    public synchronized void startContinuousCapture(CameraListener listener) {
-        start();
-        super.startContinuousCapture(listener);
-    }
-
-    @Override
-    public synchronized void stopContinuousCapture(CameraListener listener) {
-        super.stopContinuousCapture(listener);
-        if (listeners.size() == 0) {
-            stop();
-        }
-    }
-
-    private synchronized void stop() {
-        if (thread != null && thread.isAlive()) {
-            thread.interrupt();
-            try {
-                thread.join(3000);
-            }
-            catch (Exception e) {
-
-            }
-            thread = null;
-        }
-    }
-
-    private synchronized void start() {
-        if (thread == null) {
-            thread = new Thread(this);
-            thread.setDaemon(true);
-            thread.start();
-        }
     }
 
     public String getSourceUri() {
         return sourceUri;
     }
 
-    public void setSourceUri(String sourceUri) throws Exception {
+    public void setSourceUri(String sourceUri) {
         String oldValue = this.sourceUri;
         this.sourceUri = sourceUri;
-        pcs.firePropertyChange("sourceUri", oldValue, sourceUri);
-        initialize();
+        firePropertyChange("sourceUri", oldValue, sourceUri);
+    }
+
+    @Override 
+    public synchronized void open() throws Exception {
+        if (sourceUri.startsWith("classpath://")) {
+            source = ImageIO.read(getClass().getClassLoader()
+                    .getResourceAsStream(sourceUri.substring("classpath://".length())));
+        }
+        else {
+            source = ImageIO.read(new URL(sourceUri));
+        }
+        super.open();
     }
 
     @Override
     public synchronized BufferedImage internalCapture() {
+        if (! ensureOpen()) {
+            return null;
+        }
         Location location = SimulationModeMachine.getSimulatedPhysicalLocation(this, getLooking());
 
         BufferedImage frame = locationCapture(location, width, height, true);
@@ -370,35 +328,6 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
             if (resultMat != null) {
                 resultMat.release();
                 resultMat = null;
-            }
-        }
-    }
-
-    private synchronized void initialize() throws Exception {
-        stop();
-
-        if (sourceUri.startsWith("classpath://")) {
-            source = ImageIO.read(getClass().getClassLoader()
-                    .getResourceAsStream(sourceUri.substring("classpath://".length())));
-        }
-        else {
-            source = ImageIO.read(new URL(sourceUri));
-        }
-
-        if (listeners.size() > 0) {
-            start();
-        }
-    }
-
-
-    public void run() {
-        while (!Thread.interrupted()) {
-            broadcastCapture(captureForPreview());
-            try {
-                Thread.sleep(1000 / fps);
-            }
-            catch (InterruptedException e) {
-                return;
             }
         }
     }

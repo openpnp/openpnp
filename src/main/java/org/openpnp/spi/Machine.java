@@ -265,6 +265,7 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public <T> T execute(Callable<T> callable, boolean onlyIfEnabled, long busyTimeout) throws Exception;
 
     public long DEFAULT_TASK_BUSY_TIMEOUT_MS = 1000;
+
     /**
      * Calls {@link #execute(Callable, boolean, long)} with default busy timeout. 
      * 
@@ -297,6 +298,11 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
      */
     public boolean isTask(Thread thread);
 
+    /**
+     * @return True if a machine task is currently running/pending.
+     */
+    public boolean isBusy();
+
     public Head getDefaultHead() throws Exception;
 
     public List<PartAlignment> getPartAlignments();
@@ -327,4 +333,5 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public NozzleTip getNozzleTip(String id);
     
     public NozzleTip getNozzleTipByName(String name);
+
 }

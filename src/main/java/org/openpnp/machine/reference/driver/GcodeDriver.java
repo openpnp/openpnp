@@ -278,7 +278,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     protected List<Axis> axes = null;
 
     private ReaderThread readerThread;
-    boolean disconnectRequested;
+    volatile boolean disconnectRequested;
     protected boolean connected;
     
     static public class Line {
@@ -340,6 +340,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public synchronized void connect() throws Exception {
+        disconnectRequested = false;
         getCommunications().connect();
         connected = false;
 
@@ -877,7 +878,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         catch (Exception e) {
             Logger.error("disconnect()", e);
         }
-        disconnectRequested = false;
 
         closeGcodeLogger();
     }
@@ -1161,8 +1161,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     continue;
                 }
                 catch (IOException e) {
-                    Logger.error("Read error", e);
-                    return;
+                    if (disconnectRequested) {
+                        Logger.trace("Read error while disconnecting", e);
+                        return;
+                    }
+                    else {
+                        Logger.error("Read error", e);
+                        return;
+                    }
                 }
                 Line line = new Line(receivedLine);
                 Logger.trace("[{}] << {}", getCommunications().getConnectionName(), line);

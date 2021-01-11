@@ -282,6 +282,7 @@ public class RapidFeederConfigurationWizard
                 Location l = feeder.getScanStartLocation();
                 while (true) {
                     MovableUtils.moveToLocationAtSafeZ(camera, l);
+                    camera.cameraViewChanged();
                     try {
                         Set<QrCodeLocation> results = locateQrCodes(camera);
                         qrCodes.addAll(results);

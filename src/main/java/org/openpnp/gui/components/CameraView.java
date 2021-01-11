@@ -64,6 +64,7 @@ import javax.swing.SwingUtilities;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.reticle.Reticle;
+import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
@@ -276,6 +277,8 @@ public class CameraView extends JComponent implements CameraListener {
         if (this.camera != null) {
             this.camera.stopContinuousCapture(this);
         }
+        // Make sure it always starts with an error image.
+        this.lastFrame = ReferenceCamera.getCaptureErrorImage(); 
         this.camera = camera;
         // turn on capture for the new camera
         if (this.camera != null) {
@@ -411,6 +414,9 @@ public class CameraView extends JComponent implements CameraListener {
 
     public void setCameraViewFilter(CameraViewFilter cameraViewFilter) {
         this.cameraViewFilter = cameraViewFilter;
+        if (camera.isAutoVisible()) {
+            camera.ensureCameraVisible();
+        }
     }
 
     public void showFilteredImage(final BufferedImage filteredImage, final long milliseconds) {
@@ -1455,6 +1461,7 @@ public class CameraView extends JComponent implements CameraListener {
                 // move the camera to the location
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
             }
+            camera.cameraViewChanged();
         });
     }
     
@@ -1478,6 +1485,7 @@ public class CameraView extends JComponent implements CameraListener {
             Location location = selectedTool.getLocation();
             location = location.derive(null, null, null, targetAngle);
             MovableUtils.moveToLocationAtSafeZ(selectedTool, location);
+            camera.cameraViewChanged();
         });
     }
 
@@ -1488,8 +1496,9 @@ public class CameraView extends JComponent implements CameraListener {
         }
         UiUtils.submitUiMachineTask(() -> {
             // Pass as Object for the generic behavior according to the actuator valueType.  
-            Object state = !actuator.isActuated();
-            actuator.actuate(state);
+            boolean state = !actuator.isActuated();
+            actuator.actuate((Object)state);
+            camera.captureTransformed();
         });
     }
 

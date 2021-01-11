@@ -22,11 +22,14 @@ package org.openpnp.gui.wizards;
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.Locale;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -39,9 +42,18 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.ActuatorsComboBoxModel;
+import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.gui.support.NamedConverter;
+import org.openpnp.machine.reference.AbstractBroadcastingCamera;
+import org.openpnp.model.Configuration;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.base.AbstractCamera;
+import org.openpnp.spi.base.AbstractMachine;
+import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -50,39 +62,113 @@ import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
 public class CameraConfigurationWizard extends AbstractConfigurationWizard {
-    private final Camera camera;
+    private final AbstractBroadcastingCamera camera;
+
+    private JLabel lblLightingActuator;
+
+    private JComboBox lightActuator;
+
+    private JLabel lblAllowMachineActuators;
+
+    private JCheckBox allowMachineActuators;
+
+    private JLabel lblAutoVisible;
+
+    private JCheckBox autoVisible;
     
     private static String uppFormat = "%.8f";
 
-    public CameraConfigurationWizard(Camera camera) {
+    public CameraConfigurationWizard(AbstractBroadcastingCamera camera) {
+        AbstractMachine machine = (AbstractMachine) Configuration.get().getMachine();
         this.camera = camera;
-        
+
         panel = new JPanel();
         panel.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
-        
+
         lblName = new JLabel("Name");
         panel.add(lblName, "2, 2, right, default");
-        
+
         nameTf = new JTextField();
         panel.add(nameTf, "4, 2");
         nameTf.setColumns(20);
-        
+
         lblLooking = new JLabel("Looking");
         panel.add(lblLooking, "2, 4, right, default");
-        
+
         lookingCb = new JComboBox(Camera.Looking.values());
         panel.add(lookingCb, "4, 4");
+
+        lblPreviewFps = new JLabel("Preview FPS");
+        panel.add(lblPreviewFps, "2, 6, right, default");
+
+        previewFps = new JTextField();
+        panel.add(previewFps, "4, 6, fill, default");
+        previewFps.setColumns(10);
+
+        lblSuspendDuringTaks = new JLabel("Suspend during taks?");
+        lblSuspendDuringTaks.setToolTipText("<html>Continuous camera preview is suspended during machine tasks, only frames<br/>\r\ncaptured using computer vision are shown. For high Preview FPS this improves <br/>\r\nperformance </html>");
+        panel.add(lblSuspendDuringTaks, "6, 6, right, default");
+
+        suspendPreviewInTasks = new JCheckBox("");
+        panel.add(suspendPreviewInTasks, "8, 6");
+
+        lblAutoVisible = new JLabel("Auto Camera View?");
+        lblAutoVisible.setToolTipText("<html>If enabled, the CameraView will be automatically selected whenever a<br/>\r\nuser action is related to the camera or when a computer vision result is presented.</html>");
+        panel.add(lblAutoVisible, "2, 8, right, default");
+
+        autoVisible = new JCheckBox("");
+        panel.add(autoVisible, "4, 8");
+
+        lblLightingActuator = new JLabel("Ligh Actuator");
+        panel.add(lblLightingActuator, "2, 12, right, default");
+
+        lightActuator = new JComboBox();
+        panel.add(lightActuator, "4, 12");
+
+        lblAllowMachineActuators = new JLabel("Allow Machine Actuators?");
+        panel.add(lblAllowMachineActuators, "6, 12, right, default");
+        lblAllowMachineActuators.setToolTipText("<html>It is recommended to attach the Light Actuator to the camera's head.<br/>\r\nHowever, for backwards-compatibility with how Light Actuators were used in<br/>\r\nScripts, you can enable this switch and choose a Machine actuator. \r\n</html>\r\n");
+
+        allowMachineActuators = new JCheckBox("");
+        panel.add(allowMachineActuators, "8, 12");
+        allowMachineActuators.setToolTipText("<html>It is recommended to attach the Light Actuator to the camera's head.<br/>\r\nHowever, for backwards-compatibility with how Light Actuators were used in<br/>\r\nScripts, you can enable this switch and choose a Machine actuator. \r\n</html>\r\n");
+
+        lblAutoCameraLight = new JLabel("Auto Camera Light?");
+        lblAutoCameraLight.setToolTipText("<html>If enabled, the Light Actuator will be automatically be actuated ON whenever a<br/>\r\nuser action is related to the camera.</html>");
+        panel.add(lblAutoCameraLight, "2, 14, right, default");
+
+        autoLight = new JCheckBox("");
+        panel.add(autoLight, "4, 14");
+        allowMachineActuators.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                setActuatorModel(machine, camera);
+            }
+        });
 
         panelUpp = new JPanel();
         contentPanel.add(panelUpp);
@@ -143,13 +229,39 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panelUpp.add(lblUppInstructions, "2, 6, 10, 1, default, fill");
     }
 
+    protected void setActuatorModel(AbstractMachine machine, AbstractCamera camera) {
+        if (camera.getHead() == null) {
+            lightActuator.setModel(new ActuatorsComboBoxModel(machine));
+            allowMachineActuators.setVisible(false);
+            lblAllowMachineActuators.setVisible(false);
+        }
+        else if (allowMachineActuators.isSelected()) {
+            lightActuator.setModel(new ActuatorsComboBoxModel(machine, camera.getHead()));
+        }
+        else {
+            lightActuator.setModel(new ActuatorsComboBoxModel(camera.getHead()));
+        }
+    }
+
     @Override
     public void createBindings() {
+        AbstractMachine machine = (AbstractMachine) Configuration.get().getMachine();
         LengthConverter lengthConverter = new LengthConverter(uppFormat);
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+        NamedConverter<Actuator> actuatorConverter = (camera.getHead() != null ? 
+                new NamedConverter<>(machine.getActuators(), camera.getHead().getActuators()) 
+                : new NamedConverter<>(machine.getActuators()));
         
         addWrappedBinding(camera, "name", nameTf, "text");
         addWrappedBinding(camera, "looking", lookingCb, "selectedItem");
-        
+        addWrappedBinding(camera, "previewFps", previewFps, "text", doubleConverter);
+        addWrappedBinding(camera, "suspendPreviewInTasks", suspendPreviewInTasks, "selected");
+        addWrappedBinding(camera, "autoVisible", autoVisible, "selected");
+
+        addWrappedBinding(camera, "allowMachineActuators", allowMachineActuators, "selected");
+        addWrappedBinding(camera, "lightActuator", lightActuator, "selectedItem", actuatorConverter);
+        addWrappedBinding(camera, "autoLight", autoLight, "selected");
+
         MutableLocationProxy unitsPerPixel = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, camera, "unitsPerPixel", unitsPerPixel, "location");
         addWrappedBinding(unitsPerPixel, "lengthX", textFieldUppX, "text", lengthConverter);
@@ -161,9 +273,11 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         ComponentDecorators.decorateWithLengthConversion(textFieldUppY, uppFormat);
 
         ComponentDecorators.decorateWithAutoSelect(nameTf);
+        ComponentDecorators.decorateWithAutoSelect(previewFps);
         ComponentDecorators.decorateWithAutoSelect(textFieldWidth);
         ComponentDecorators.decorateWithAutoSelect(textFieldHeight);
-        
+
+        setActuatorModel(machine, camera);
     }
 
     private Action measureAction = new AbstractAction("Measure") {
@@ -202,6 +316,14 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         }
     };
 
+    @Override
+    protected void saveToModel() {
+        super.saveToModel();
+        UiUtils.messageBoxOnException(() -> {
+            camera.reinitialize(); 
+        });
+    }
+
     private JPanel panelUpp;
     private JButton btnMeasure;
     private JButton btnCancelMeasure;
@@ -219,4 +341,10 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     private JLabel lblLooking;
     private JComboBox lookingCb;
     private JTextField nameTf;
+    private JLabel lblPreviewFps;
+    private JTextField previewFps;
+    private JLabel lblSuspendDuringTaks;
+    private JCheckBox suspendPreviewInTasks;
+    private JLabel lblAutoCameraLight;
+    private JCheckBox autoLight;
 }

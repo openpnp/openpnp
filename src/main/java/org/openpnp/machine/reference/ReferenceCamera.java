@@ -59,7 +59,6 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
-import org.openpnp.spi.base.AbstractCamera;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.LensCalibration;
 import org.openpnp.vision.LensCalibration.LensModel;
@@ -70,13 +69,17 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
-public abstract class ReferenceCamera extends AbstractCamera implements ReferenceHeadMountable {
+public abstract class ReferenceCamera extends AbstractBroadcastingCamera implements ReferenceHeadMountable {
     static {
         nu.pattern.OpenCV.loadShared();
     }
 
-    private static final int CAPTURE_RETRY_COUNT = 10;
-    
+    @Attribute(required = false)
+    private int captureTryCount = 4;
+
+    @Attribute(required = false)
+    private int captureTryTimeoutMs = 2000;
+
     private static BufferedImage CAPTURE_ERROR_IMAGE = null;
     
     @Element(required = false)
@@ -155,7 +158,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     }
     
     /**
-     * Captures an image using captureForPreview() and performs scripting and lighting events
+     * Captures an image using captureTransformed() and performs scripting and lighting events
      * before and after the capture.
      */
     @Override
@@ -168,7 +171,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         catch (Exception e) {
             Logger.warn(e);
         }
-        BufferedImage image = captureForPreview();
+        BufferedImage image = captureTransformed();
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("camera", this);
@@ -184,7 +187,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
      * Captures an image using captureRaw(), applies local transformations and returns the image.
      */
     @Override
-    public BufferedImage captureForPreview() {
+    public BufferedImage captureTransformed() {
         return transformImage(captureRaw());
     }
     
@@ -196,7 +199,13 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public BufferedImage captureRaw() {
         return safeInternalCapture();
     }
-    
+
+    @Override
+    public boolean hasNewFrame() {
+        // Default behavior: always has frames when open.
+        return isOpen();
+    }
+
     protected abstract BufferedImage internalCapture();
     
     /**
@@ -208,18 +217,36 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
      * @return
      */
     protected synchronized BufferedImage safeInternalCapture() {
-        for (int i = 0; i < CAPTURE_RETRY_COUNT; i++) {
+        if (! ensureOpen()) {
+            return getCaptureErrorImage();
+        }
+        long t1 = System.currentTimeMillis() + captureTryTimeoutMs;
+        int i = 0;
+        while (true) {
             BufferedImage image = internalCapture();
+            i++;
             if (image != null) {
                 return image;
             }
+            if (i >= getCaptureTryCount()) {
+                break;
+            }
+            if (System.currentTimeMillis() > t1) {
+                // Timed out.
+                break;
+            }
             Logger.trace("Camera {} failed to return an image. Retrying.", this);
+            Thread.yield();
         }
-        Logger.warn("Camera {} failed to return an image after {} tries.", this, CAPTURE_RETRY_COUNT);
+        Logger.warn("Camera {} failed to return an image after {} tries.", this, i);
         return getCaptureErrorImage();
     }
 
-    protected BufferedImage getCaptureErrorImage() {
+    protected int getCaptureTryCount() {
+        return captureTryCount;
+    }
+
+    public static BufferedImage getCaptureErrorImage() {
         if (CAPTURE_ERROR_IMAGE == null) {
             CAPTURE_ERROR_IMAGE = new BufferedImage(640, 480, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = (Graphics2D) CAPTURE_ERROR_IMAGE.createGraphics();
@@ -238,9 +265,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     @Override
     public synchronized int getWidth() {
         if (width == null) {
-            BufferedImage image = safeInternalCapture();
-            width = image.getWidth();
-            height = image.getHeight();
+            determineSize();
         }
         return width;
     }
@@ -248,11 +273,21 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     @Override
     public synchronized int getHeight() {
         if (height == null) {
-            BufferedImage image = safeInternalCapture();
+            determineSize();
+        }
+        return height;
+    }
+
+    private void determineSize() {
+        if (isOpen()) {
+            BufferedImage image = captureTransformed();
             width = image.getWidth();
             height = image.getHeight();
         }
-        return height;
+        else {
+            width = 640;
+            height = 480;
+        }
     }
 
     @Override
@@ -387,6 +422,10 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     // TODO Optimization: We could skip the convert to and from Mat if no transforms are needed.
     protected BufferedImage transformImage(BufferedImage image) {
         try {
+            if (image == null) {
+                return null;
+            }
+
             Mat mat = OpenCvUtils.toMat(image);
 
             mat = crop(mat);
@@ -418,10 +457,11 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             image = OpenCvUtils.toBufferedImage(mat);
             mat.release();
 
-            if (image != null) { 
+            if (image != null) {
                 // save the new image dimensions
                 width = image.getWidth();
                 height = image.getHeight();
+                setLastTransformedImage(image);
             }
         }
         catch (Exception e) {
@@ -616,9 +656,6 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     }
 
     @Override
-    public void close() throws IOException {}
-
-    @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(new CameraConfigurationWizard(this), "General Configuration"),
@@ -655,6 +692,12 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
                     Configuration.get().getMachine().removeCamera(ReferenceCamera.this);
                 }
                 MainFrame.get().getCameraViews().removeCamera(ReferenceCamera.this);
+                try {
+                    ReferenceCamera.this.close();
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     };

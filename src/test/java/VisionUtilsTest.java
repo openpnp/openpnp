@@ -133,7 +133,7 @@ public class VisionUtilsTest {
         }
 
         @Override
-        public BufferedImage captureForPreview() {
+        public BufferedImage captureTransformed() {
             return null;
         }
 
@@ -220,6 +220,24 @@ public class VisionUtilsTest {
         @Override
         public Actuator getLightActuator() {
             return null;
+        }
+
+        @Override
+        public void cameraViewChanged() {
+        }
+
+        @Override
+        public void ensureCameraVisible() {
+        }
+
+        @Override
+        public boolean hasNewFrame() {
+            return true;
+        }
+
+        @Override
+        public boolean isAutoLight() {
+            return false;
         }
     }
 }

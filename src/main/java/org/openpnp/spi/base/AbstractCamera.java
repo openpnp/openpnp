@@ -41,6 +41,7 @@ import org.openpnp.spi.VisionProvider;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.SimpleGraph;
 import org.pmw.tinylog.Logger;
+import org.python.jline.internal.Log;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
@@ -54,6 +55,12 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     @Attribute
     protected Looking looking = Looking.Down;
+
+    @Attribute(required = false)
+    protected boolean autoVisible = false;
+
+    @Attribute(required = false)
+    protected boolean autoLight = false;
 
     @Element
     protected Location unitsPerPixel = new Location(LengthUnit.Millimeters);
@@ -273,6 +280,28 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     @Override
     public Looking getLooking() {
         return looking;
+    }
+
+    @Override
+    public boolean isAutoVisible() {
+        return autoVisible;
+    }
+
+    public void setAutoVisible(boolean autoVisible) {
+        Object oldValue = this.autoVisible;
+        this.autoVisible = autoVisible;
+        firePropertyChange("autoVisible", oldValue, autoVisible);
+    }
+
+    @Override
+    public boolean isAutoLight() {
+        return autoLight;
+    }
+
+    public void setAutoLight(boolean autoLight) {
+        Object oldValue = this.autoLight;
+        this.autoLight = autoLight;
+        firePropertyChange("autoLight", oldValue, autoLight);
     }
 
     @Override
@@ -745,6 +774,22 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         }
     }
 
+    @Override
+    public void cameraViewChanged() {
+        try {
+            if (isAutoLight()) {
+                actuateLightBeforeCapture();
+            }
+            broadcastCapture(settleAndCapture());
+        }
+        catch (Exception e) {
+            Log.error(e);
+        }
+        if (isAutoVisible()) {
+            ensureCameraVisible();
+        }
+    }
+
     protected void broadcastCapture(BufferedImage img) {
         for (ListenerEntry listener : new ArrayList<>(listeners)) {
             listener.listener.frameReceived(img);
@@ -921,11 +966,16 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
                 String message = "Camera settling, frame number "+n+", t=+"+String.format(Locale.US, "%.1f", tFrame)+"ms";
                 MainFrame.get().getCameraViews().getCameraView(this)
                 .showFilteredImage(img, message, 1500);
-                SwingUtilities.invokeLater(() -> {
-                    MainFrame.get().getCameraViews().ensureCameraVisible(this);
-                });
+                ensureCameraVisible();
             }
         }
+    }
+
+    @Override
+    public void ensureCameraVisible() {
+        SwingUtilities.invokeLater(() -> {
+            MainFrame.get().getCameraViews().ensureCameraVisible(this);
+        });
     }
 
     @Override

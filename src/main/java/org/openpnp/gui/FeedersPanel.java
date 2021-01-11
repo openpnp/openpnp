@@ -656,6 +656,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                         .getDefaultCamera();
                 Location pickLocation = feeder.getPickLocation();
                 MovableUtils.moveToLocationAtSafeZ(camera, pickLocation);
+                camera.cameraViewChanged();
             });
         }
     };

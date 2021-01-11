@@ -276,12 +276,14 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
             pipeline.process();
     
-            try {
-                MainFrame.get().getCameraViews().getCameraView(camera)
-                        .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
-            }
-            catch (Exception e) {
-                // if we aren't running in the UI this will fail, and that's okay
+            if (MainFrame.get() != null) {
+                try {
+                    MainFrame.get().getCameraViews().getCameraView(camera)
+                            .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
+                }
+                catch (Exception e) {
+                    // if we aren't running in the UI this will fail, and that's okay
+                }
             }
     
             // Grab the results
