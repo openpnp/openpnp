@@ -234,10 +234,5 @@ public class VisionUtilsTest {
         public boolean hasNewFrame() {
             return true;
         }
-
-        @Override
-        public boolean isAutoLight() {
-            return false;
-        }
     }
 }

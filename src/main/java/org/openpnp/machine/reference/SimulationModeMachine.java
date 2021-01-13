@@ -23,8 +23,6 @@ package org.openpnp.machine.reference;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -40,7 +38,6 @@ import org.openpnp.machine.reference.driver.SimulatedCommunications;
 import org.openpnp.machine.reference.feeder.BlindsFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.wizards.SimulationModeMachineConfigurationWizard;
-import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -540,19 +537,20 @@ public class SimulationModeMachine extends ReferenceMachine {
         return axesLocation;
     }
 
-    private static class CameraLightActuatorHistory {
-        //private final Actuator actuator;
+    @Override
+    public void fireMachineActuatorActivity(Actuator actuator) {
+        super.fireMachineActuatorActivity(actuator);
+        ActuatorHistory history = getActuatorHistory(actuator);
+        history.put(NanosecondTime.getRuntimeSeconds(), actuator.isActuated());
+    }
+
+    private static class ActuatorHistory  {
         private TreeMap<Double, Boolean> stateHistory = new TreeMap<>();
-        CameraLightActuatorHistory(Actuator actuator) {
-            //this.actuator = actuator;
-            ((AbstractModelObject)actuator).addPropertyChangeListener("lastActuationValue", new PropertyChangeListener() {
-                
-                @Override
-                public void propertyChange(PropertyChangeEvent evt) {
-                    stateHistory.put(NanosecondTime.getRuntimeSeconds(), actuator.isActuated());
-                }
-            });
+
+        public void put(double t, boolean actuated) {
+            stateHistory.put(t, actuated);
         }
+
         public boolean getActuationAt(double t) {
             Entry<Double, Boolean> state = stateHistory.floorEntry(t);
             if (state != null) {
@@ -565,18 +563,23 @@ public class SimulationModeMachine extends ReferenceMachine {
             return false;
         }
     }
-    private HashMap<Actuator, CameraLightActuatorHistory> cameraLightActuatorHistories = new HashMap<>();
+    private HashMap<Actuator, ActuatorHistory> cameraLightActuatorHistories = new HashMap<>();
+    protected ActuatorHistory getActuatorHistory(Actuator lightActuator) {
+        ActuatorHistory actuatorHistory = cameraLightActuatorHistories.get(lightActuator);
+        if (actuatorHistory == null) {
+            actuatorHistory = new ActuatorHistory();
+            cameraLightActuatorHistories.put(lightActuator, actuatorHistory);
+        }
+        return actuatorHistory;
+    }
+
     public static void simulateCameraExposure(Camera camera, Graphics2D gFrame, int width, int height) {
         SimulationModeMachine machine = getSimulationModeMachine();
         if (machine != null 
                 && machine.getSimulationMode().isDynamicallyImperfectMachine()) {
             Actuator lightActuator = camera.getLightActuator();
             if (lightActuator != null) {
-                CameraLightActuatorHistory actuatorHistory = machine.cameraLightActuatorHistories.get(lightActuator);
-                if (actuatorHistory == null) {
-                    actuatorHistory = new CameraLightActuatorHistory(lightActuator);
-                    machine.cameraLightActuatorHistories.put(lightActuator, actuatorHistory);
-                }
+                ActuatorHistory actuatorHistory = machine.getActuatorHistory(lightActuator);
                 if (!actuatorHistory.getActuationAt(NanosecondTime.getRuntimeSeconds() - machine.getSimulatedCameraLag())) {
                     // Shade the view. 
                     gFrame.setColor(new Color(0, 0, 0, 200));

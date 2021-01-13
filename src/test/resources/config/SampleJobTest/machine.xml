@@ -327,7 +327,7 @@
          </feeder>
       </feeders>
       <cameras>
-         <camera class="org.openpnp.machine.reference.camera.SimulatedUpCamera" id="C2" name="Bottom" looking="Up" settle-method="Euclidean" settle-time-ms="0" settle-timeout-ms="500" settle-threshold="0.1" settle-debounce="3" settle-full-color="false" settle-gaussian-blur="0" settle-gradients="false" settle-mask-circle="0.0" settle-contrast-enhance="0.0" settle-diagnostics="true" rotation="0.0" flip-x="false" flip-y="false" offset-x="0" offset-y="0" crop-width="0" crop-height="0" scale-width="0" scale-height="0" deinterlace="false" light-actuator-id="ACT16584ca976098384" allow-machine-actuators="false">
+         <camera class="org.openpnp.machine.reference.camera.SimulatedUpCamera" id="C2" name="Bottom" looking="Up" settle-method="Euclidean" settle-time-ms="0" settle-timeout-ms="500" settle-threshold="0.2" settle-debounce="3" fps="24" settle-full-color="false" settle-gaussian-blur="0" settle-gradients="false" settle-mask-circle="0.0" settle-contrast-enhance="0.0" settle-diagnostics="true" rotation="0.0" flip-x="false" flip-y="false" offset-x="0" offset-y="0" crop-width="0" crop-height="0" scale-width="0" scale-height="0" deinterlace="false" light-actuator-id="ACT16584ca976098384" allow-machine-actuators="false">
             <units-per-pixel units="Millimeters" x="0.0134375" y="0.0134375" z="0.0" rotation="0.0"/>
             <vision-provider class="org.openpnp.machine.reference.vision.OpenCvVisionProvider"/>
             <head-offsets units="Millimeters" x="118.799" y="7.117" z="-10.0" rotation="0.0"/>

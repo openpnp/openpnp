@@ -190,10 +190,4 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     default boolean isAutoVisible() { 
         return false; 
     }
-
-    /**
-     * @return True if {@link #actuateLightBeforeCapture()} should be called on this Camera whenever
-     * {@link #cameraViewChanged()} is called.  
-     */
-    boolean isAutoLight();
 }

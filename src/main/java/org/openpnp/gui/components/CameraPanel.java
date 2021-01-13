@@ -36,14 +36,12 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.CameraItem;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Head;
 
 /**
  * Shows a square grid of cameras or a blown up image from a single camera.
  */
 @SuppressWarnings("serial")
 public class CameraPanel extends JPanel {
-    private static int maximumFps = 15;
     private static final String SHOW_NONE_ITEM = "Show None";
     private static final String SHOW_ALL_ITEM_H = "Show All Horizontal";
     private static final String SHOW_ALL_ITEM_V = "Show All Vertical";
@@ -67,12 +65,7 @@ public class CameraPanel extends JPanel {
             @Override
             public void configurationComplete(Configuration configuration) throws Exception {
             	SwingUtilities.invokeLater(() -> {
-                    for (Head head : Configuration.get().getMachine().getHeads()) {
-                        for (Camera camera : head.getCameras()) {
-                            addCamera(camera);
-                        }
-                    }
-                    for (Camera camera : configuration.getMachine().getCameras()) {
+                    for (Camera camera : configuration.getMachine().getAllCameras()) {
                         addCamera(camera);
                     }
 

@@ -82,6 +82,12 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
      */
     public List<Camera> getCameras();
 
+    /**
+     * Gets a list of all Cameras attached to the Machine and to all the Heads.
+     * @return
+     */
+    public List<Camera> getAllCameras();
+
     public Camera getCamera(String id);
 
     /**

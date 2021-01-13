@@ -3,7 +3,6 @@ package org.openpnp.spi.base;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,7 +40,6 @@ import org.openpnp.spi.VisionProvider;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.SimpleGraph;
 import org.pmw.tinylog.Logger;
-import org.python.jline.internal.Log;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
@@ -60,7 +58,16 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     protected boolean autoVisible = false;
 
     @Attribute(required = false)
-    protected boolean autoLight = false;
+    protected boolean beforeCaptureLightOn = true;
+
+    @Attribute(required = false)
+    protected boolean userActionLightOn = true;
+
+    @Attribute(required = false)
+    protected boolean afterCaptureLightOff = false;
+
+    @Attribute(required = false)
+    protected boolean antiGlareLightOff = false;
 
     @Element
     protected Location unitsPerPixel = new Location(LengthUnit.Millimeters);
@@ -293,15 +300,36 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         firePropertyChange("autoVisible", oldValue, autoVisible);
     }
 
-    @Override
-    public boolean isAutoLight() {
-        return autoLight;
+    public boolean isBeforeCaptureLightOn() {
+        return beforeCaptureLightOn;
     }
 
-    public void setAutoLight(boolean autoLight) {
-        Object oldValue = this.autoLight;
-        this.autoLight = autoLight;
-        firePropertyChange("autoLight", oldValue, autoLight);
+    public void setBeforeCaptureLightOn(boolean beforeCaptureLightOn) {
+        this.beforeCaptureLightOn = beforeCaptureLightOn;
+    }
+
+    public boolean isUserActionLightOn() {
+        return userActionLightOn;
+    }
+
+    public void setUserActionLightOn(boolean userActionLightOn) {
+        this.userActionLightOn = userActionLightOn;
+    }
+
+    public boolean isAfterCaptureLightOff() {
+        return afterCaptureLightOff;
+    }
+
+    public void setAfterCaptureLightOff(boolean afterCaptureLightOff) {
+        this.afterCaptureLightOff = afterCaptureLightOff;
+    }
+
+    public boolean isAntiGlareLightOff() {
+        return antiGlareLightOff;
+    }
+
+    public void setAntiGlareLightOff(boolean antiGlareLightOff) {
+        this.antiGlareLightOff = antiGlareLightOff;
     }
 
     @Override
@@ -696,7 +724,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     @Override
     public BufferedImage lightSettleAndCapture() throws Exception {
-        actuateLightBeforeCapture(null);
+        actuateLightBeforeCapture();
         try {
             return settleAndCapture();
         }
@@ -750,49 +778,49 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         }
     }
 
-    private void actuateLight(Actuator lightActuator, Object light) throws Exception {
+    protected static void actuateLight(Actuator lightActuator, Object light) throws Exception {
         // Make sure it is actuated in a machine task, but only if the machine is enabled.
         Configuration.get().getMachine().executeIfEnabled(() -> {
-            lightActuator.actuate(light);
+            // Only actuate a light when the current state is unknown or different. 
+            if (lightActuator.getLastActuationValue() == null 
+                    || !lightActuator.getLastActuationValue().equals(light)) {
+                lightActuator.actuate(light);
+            }
             return null; 
-            });
+        });
     }
 
     @Override
     public void actuateLightBeforeCapture(Object light) throws Exception {
-        Actuator lightActuator = getLightActuator();
-        if (lightActuator != null) {
-            actuateLight(lightActuator, light != null ? light : lightActuator.getDefaultOnValue());
+        // Anti-glare: switch off opposite looking cameras.
+        for (Camera camera : Configuration.get().getMachine().getAllCameras()) {
+            if (camera != this
+                    && (camera instanceof AbstractCamera)
+                    && ((AbstractCamera) camera).isAntiGlareLightOff() 
+                    && camera.getLooking() != this.getLooking()) {
+                Actuator lightActuator = camera.getLightActuator();
+                if (lightActuator != null 
+                        && lightActuator.isActuated()) {
+                    actuateLight(lightActuator, lightActuator.getDefaultOffValue());
+                }
+            }
+        }
+
+        if (isBeforeCaptureLightOn()) {
+            Actuator lightActuator = getLightActuator();
+            if (lightActuator != null) {
+                actuateLight(lightActuator, light != null ? light : lightActuator.getDefaultOnValue());
+            }
         }
     }
 
     @Override
     public void actuateLightAfterCapture() throws Exception {
-        Actuator lightActuator = getLightActuator();
-        if (lightActuator != null) {
-            actuateLight(lightActuator, lightActuator.getDefaultOffValue());
-        }
-    }
-
-    @Override
-    public void cameraViewChanged() {
-        try {
-            if (isAutoLight()) {
-                actuateLightBeforeCapture();
+        if (isAfterCaptureLightOff()) {
+            Actuator lightActuator = getLightActuator();
+            if (lightActuator != null) {
+                actuateLight(lightActuator, lightActuator.getDefaultOffValue());
             }
-            broadcastCapture(settleAndCapture());
-        }
-        catch (Exception e) {
-            Log.error(e);
-        }
-        if (isAutoVisible()) {
-            ensureCameraVisible();
-        }
-    }
-
-    protected void broadcastCapture(BufferedImage img) {
-        for (ListenerEntry listener : new ArrayList<>(listeners)) {
-            listener.listener.frameReceived(img);
         }
     }
 

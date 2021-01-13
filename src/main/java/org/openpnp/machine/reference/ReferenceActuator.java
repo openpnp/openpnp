@@ -84,10 +84,15 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     public Object getLastActuationValue() {
         return lastActuationValue;
     }
+
+    @Override
     protected void setLastActuationValue(Object lastActuationValue) {
         Object oldValue = this.lastActuationValue;
         this.lastActuationValue = lastActuationValue;
         firePropertyChange("lastActuationValue", oldValue, lastActuationValue);
+        if (oldValue == null || !oldValue.equals(lastActuationValue)) {
+            getMachine().fireMachineActuatorActivity(this);
+        }
     }
 
     @Override
@@ -232,9 +237,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     }
 
     @Override
-    public void home() throws Exception {
-        setLastActuationValue(null);
-    }
+    public void home() throws Exception {}
 
     @Override
     public Wizard getConfigurationWizard() {

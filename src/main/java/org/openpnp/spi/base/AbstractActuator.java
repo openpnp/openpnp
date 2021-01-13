@@ -3,6 +3,8 @@ package org.openpnp.spi.base;
 import javax.swing.Icon;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.ActuatorInterlockMonitor;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
@@ -11,8 +13,10 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
-import org.openpnp.spi.Actuator.ActuatorValueType;
+import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.MotionPlanner.CompletionType;
+import org.openpnp.util.UiUtils;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
@@ -38,6 +42,22 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
     protected Double defaultOffDouble = 0.0;
     @Attribute(required = false)
     protected String defaultOffString = "";
+
+    public enum MachineStateActuation {
+        LeaveAsIs,
+        AssumeUnknown,
+        AssumeActuatedOff,
+        AssumeActuatedOn,
+        ActuateOff,
+        ActuateOn
+    };
+
+    @Attribute(required = false)
+    protected MachineStateActuation enabledActuation = MachineStateActuation.AssumeUnknown;
+    @Attribute(required = false)
+    protected MachineStateActuation homedActuation = MachineStateActuation.LeaveAsIs;
+    @Attribute(required = false)
+    protected MachineStateActuation disabledActuation = MachineStateActuation.LeaveAsIs;
 
     @Attribute(required = false)
     protected boolean interlockActuator;
@@ -69,8 +89,24 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
                 driver = configuration.getMachine().getDriver(driverId);
+                Configuration.get().getMachine().addListener(new MachineListener.Adapter() {
+                    @Override 
+                    public void machineEnabled(Machine machine) {
+                        actuateMachineState(machine, getEnabledActuation(), true);
+                    }
+                    @Override
+                    public void machineHomed(Machine machine, boolean isHomed) {
+                        if (isHomed) {
+                            actuateMachineState(machine, getHomedActuation(), true);
+                        } 
+                    }
+                    @Override 
+                    public void machineAboutToBeDisabled(Machine machine, String reason) {
+                        actuateMachineState(machine, getDisabledActuation(), false);
+                    }
+                });
             }
-        });    
+        });
     }
 
     @Override
@@ -267,6 +303,30 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
         this.defaultOffString = defaultOffString;
     }
 
+    public MachineStateActuation getEnabledActuation() {
+        return enabledActuation;
+    }
+
+    public void setEnabledActuation(MachineStateActuation enabledActuation) {
+        this.enabledActuation = enabledActuation;
+    }
+
+    public MachineStateActuation getHomedActuation() {
+        return homedActuation;
+    }
+
+    public void setHomedActuation(MachineStateActuation homedActuation) {
+        this.homedActuation = homedActuation;
+    }
+
+    public MachineStateActuation getDisabledActuation() {
+        return disabledActuation;
+    }
+
+    public void setDisabledActuation(MachineStateActuation disabledActuation) {
+        this.disabledActuation = disabledActuation;
+    }
+
     protected abstract String getDefaultOnProfile();
 
     protected abstract String getDefaultOffProfile();
@@ -328,6 +388,51 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
                 throw new Exception("Unsupported valueType "+getValueType());
         }
     }
+
+    public void actuateMachineState(Machine machine, MachineStateActuation machineStateActuation, boolean deferred) {
+        // Need to execute this now, before the machine is being disabled.
+        switch (machineStateActuation) {
+            case LeaveAsIs:
+                break;
+            case AssumeUnknown:
+                setLastActuationValue(null);
+                break;
+            case AssumeActuatedOff:
+                setLastActuationValue(getDefaultOffValue());
+                break;
+            case AssumeActuatedOn:
+                setLastActuationValue(getDefaultOnValue());
+                break;
+            case ActuateOff:
+                actuateTry(machine, getDefaultOffValue(), deferred);
+                break;
+            case ActuateOn:
+                actuateTry(machine, getDefaultOnValue(), deferred);
+                break;
+        }
+    }
+
+    public void actuateTry(Machine machine, Object value, boolean deferred) {
+        try {
+            if (deferred) {
+                UiUtils.submitUiMachineTask(() -> { 
+                    actuate(value);
+                });
+            }
+            else {
+                machine.execute(() -> { 
+                    actuate(value);
+                    return true;
+                }, true, 0);
+            }
+        }
+        catch (Exception e) {
+            Logger.error(e);
+            MessageBoxes.errorBox(MainFrame.get(), "Error actuating "+getName(), e);
+        }
+    }
+
+    protected abstract void setLastActuationValue(Object object);
 
     @Override
     public Icon getPropertySheetHolderIcon() {

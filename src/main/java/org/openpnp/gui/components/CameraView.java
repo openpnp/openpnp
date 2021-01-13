@@ -64,7 +64,7 @@ import javax.swing.SwingUtilities;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.reticle.Reticle;
-import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.AbstractBroadcastingCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
@@ -277,13 +277,7 @@ public class CameraView extends JComponent implements CameraListener {
         if (this.camera != null) {
             this.camera.stopContinuousCapture(this);
         }
-        // Make sure it always starts with an error image.
-        this.lastFrame = ReferenceCamera.getCaptureErrorImage(); 
         this.camera = camera;
-        // turn on capture for the new camera
-        if (this.camera != null) {
-            this.camera.startContinuousCapture(this);
-        }
         // load the reticle pref, if any
         try {
             String reticleXml = prefs.get(getReticlePrefKey(), null);
@@ -311,7 +305,14 @@ public class CameraView extends JComponent implements CameraListener {
         catch (Exception e) {
             // ignore errors
         }
-
+        SwingUtilities.invokeLater(() -> {
+            // Make sure it always starts with an error image.
+            frameReceived(AbstractBroadcastingCamera.getCaptureErrorImage());
+            // turn on capture for the new camera
+            if (this.camera != null) {
+                this.camera.startContinuousCapture(this);
+            }
+        });
     }
 
     public Camera getCamera() {

@@ -19,10 +19,6 @@
 
 package org.openpnp.machine.reference;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -80,8 +76,6 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     @Attribute(required = false)
     private int captureTryTimeoutMs = 2000;
 
-    private static BufferedImage CAPTURE_ERROR_IMAGE = null;
-    
     @Element(required = false)
     private Location headOffsets = new Location(LengthUnit.Millimeters);
 
@@ -244,22 +238,6 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     protected int getCaptureTryCount() {
         return captureTryCount;
-    }
-
-    public static BufferedImage getCaptureErrorImage() {
-        if (CAPTURE_ERROR_IMAGE == null) {
-            CAPTURE_ERROR_IMAGE = new BufferedImage(640, 480, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g = (Graphics2D) CAPTURE_ERROR_IMAGE.createGraphics();
-            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g.setColor(Color.black);
-            g.fillRect(0, 0, 640, 480);
-            g.setColor(Color.red);
-            g.setStroke(new BasicStroke(5));
-            g.drawLine(0, 0, 640, 480);
-            g.drawLine(640, 0, 0, 480);
-            g.dispose();
-        }
-        return CAPTURE_ERROR_IMAGE;
     }
 
     @Override

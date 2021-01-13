@@ -13,12 +13,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.swing.Icon;
 
 import org.openpnp.machine.reference.axis.ReferenceLinearTransformAxis;
 import org.openpnp.model.AbstractModelObject;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
@@ -204,6 +205,16 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @Override
     public List<Camera> getCameras() {
         return Collections.unmodifiableList(cameras);
+    }
+
+    @Override
+    public List<Camera> getAllCameras() {
+        Stream<Camera> stream = Stream.of();
+        for (Head head : getHeads()) {
+            stream = Stream.concat(stream, head.getCameras().stream());
+        }
+        stream = Stream.concat(stream, getCameras().stream());
+        return stream.collect(Collectors.toList());
     }
 
     @Override
@@ -400,6 +411,12 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         }
     }
 
+    public void fireMachineActuatorActivity(Actuator actuator) {
+        for (MachineListener listener : listeners) {
+            listener.machineActuatorActivity(this, actuator);
+        }
+    }
+
     public void fireMachineEnabled() {
         for (MachineListener listener : listeners) {
             listener.machineEnabled(this);
@@ -412,6 +429,12 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         }
     }
 
+    public void fireMachineAboutToBeDisabled(String reason) {
+        for (MachineListener listener : listeners) {
+            listener.machineAboutToBeDisabled(this, reason);
+        }
+    }
+
     public void fireMachineDisabled(String reason) {
         for (MachineListener listener : listeners) {
             listener.machineDisabled(this, reason);
@@ -421,6 +444,12 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     public void fireMachineDisableFailed(String reason) {
         for (MachineListener listener : listeners) {
             listener.machineDisableFailed(this, reason);
+        }
+    }
+
+    public void fireMachineHomed(boolean isHomed) {
+        for (MachineListener listener : listeners) {
+            listener.machineHomed(this, isHomed);
         }
     }
 
@@ -463,11 +492,14 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         Callable<T> wrapper = new Callable<T>() {
             public T call() throws Exception {
                 try {
+                    boolean isBusy = isBusy();
                     // TODO: this should also lock drivers
                     setTaskThread(Thread.currentThread());
 
-                    // Notify listeners that the machine is now busy
-                    fireMachineBusy(true);
+                    if (!isBusy) {
+                        // Notify listeners that the machine is now busy
+                        fireMachineBusy(true);
+                    }
 
                     // Call the task, storing the result and exception if any
                     T result = null;
@@ -513,8 +545,8 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
                     // the machine is no longer busy
                     if (executor.getQueue().isEmpty()) {
                         // TODO: this should also unlock drivers
-                        setTaskThread(null);
                         fireMachineBusy(false);
+                        setTaskThread(null);
                     }
                 }
             }

@@ -1,19 +1,45 @@
+/*
+ * Copyright (C) 2021 <mark@makr.zone>
+ * inspired and based on work
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
+ */
+
 package org.openpnp.machine.reference;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.openpnp.CameraListener;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.base.AbstractCamera;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.core.Commit;
 
 /**
  * AbstractPreviewCamera handles the preview capture broadcasting aspects of a Camera. 
@@ -32,10 +58,14 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
 
     private Thread thread;
 
+    private static BufferedImage CAPTURE_ERROR_IMAGE = null;
+    
     /**
      * The lastTransformedImage is produced by transformImage() and consumed by the Camera thread.
      */
     private AtomicReference<BufferedImage> lastTransformedImage = new AtomicReference<>();
+
+    volatile private boolean cameraViewDirty;
 
     AbstractBroadcastingCamera() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
@@ -52,6 +82,15 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
                     @Override 
                     public void machineEnabled(Machine machine) {
                         notifyCapture();
+                    }
+
+                    @Override 
+                    public void machineBusy(Machine machine, boolean busy) {
+                        if (!busy) {
+                            if (cameraViewDirty) {
+                                captureCameraView();
+                            }
+                        }
                     }
                 });
             }
@@ -94,6 +133,59 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
     protected void notifyCapture() {
         synchronized(captureNotifier) {
             captureNotifier.notifyAll();
+        }
+    }
+
+    @Override
+    public void cameraViewChanged() {
+        cameraViewDirty = true;
+        notifyCapture();
+        if (isAutoVisible()) {
+            ensureCameraVisible();
+        } 
+    }
+
+    public synchronized static BufferedImage getCaptureErrorImage() {
+        if (CAPTURE_ERROR_IMAGE == null) {
+            CAPTURE_ERROR_IMAGE = new BufferedImage(640, 480, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = (Graphics2D) CAPTURE_ERROR_IMAGE.createGraphics();
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g.setColor(Color.black);
+            g.fillRect(0, 0, 640, 480);
+            g.setColor(Color.red);
+            g.setStroke(new BasicStroke(5));
+            g.drawLine(0, 0, 640, 480);
+            g.drawLine(640, 0, 0, 480);
+            g.dispose();
+        }
+        return CAPTURE_ERROR_IMAGE;
+    }
+
+    protected void captureCameraView() {
+        try {
+            try {
+                if (isUserActionLightOn()) {
+                    Actuator lightActuator = getLightActuator();
+                    if (lightActuator != null) {
+                        actuateLight(lightActuator, lightActuator.getDefaultOnValue());
+                    }
+                }
+                if (getPreviewFps() == 0.0) {
+                    broadcastCapture(settleAndCapture());
+                }
+            }
+            catch (Exception e) {
+                Logger.error(e);
+            }
+        }
+        finally {
+            cameraViewDirty = false;
+        }
+    }
+
+    protected void broadcastCapture(BufferedImage img) {
+        for (ListenerEntry listener : new ArrayList<>(listeners)) {
+            listener.listener.frameReceived(img);
         }
     }
 
@@ -177,7 +269,6 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
     @Override
     public void run() {
         while (!Thread.interrupted()) {
-
             try {
                 // The camera should reuse images recently captures by on-going computer vision as 
                 // every call to captureTransformed() may consume the frame and make it unavailable 
@@ -216,6 +307,9 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
     }
 
     public boolean isPreviewSuspended() {
+        if (cameraViewDirty) {
+            return false;
+        }
         return (suspendPreviewInTasks && Configuration.get().getMachine().isBusy());
     }
 }

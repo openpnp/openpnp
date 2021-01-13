@@ -75,7 +75,9 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     private JLabel lblAutoVisible;
 
     private JCheckBox autoVisible;
-    
+
+    private JPanel panelLight;
+
     private static String uppFormat = "%.8f";
 
     public CameraConfigurationWizard(AbstractBroadcastingCamera camera) {
@@ -94,28 +96,22 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblName = new JLabel("Name");
         panel.add(lblName, "2, 2, right, default");
 
         nameTf = new JTextField();
         panel.add(nameTf, "4, 2");
-        nameTf.setColumns(20);
+        nameTf.setColumns(10);
 
         lblLooking = new JLabel("Looking");
         panel.add(lblLooking, "2, 4, right, default");
@@ -143,27 +139,78 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
         autoVisible = new JCheckBox("");
         panel.add(autoVisible, "4, 8");
+        panelLight = new JPanel();
+        panelLight.setBorder(new TitledBorder(null, "Light", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panelLight);
+        panelLight.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblLightingActuator = new JLabel("Ligh Actuator");
-        panel.add(lblLightingActuator, "2, 12, right, default");
+        panelLight.add(lblLightingActuator, "2, 2, right, default");
 
         lightActuator = new JComboBox();
-        panel.add(lightActuator, "4, 12");
+        panelLight.add(lightActuator, "4, 2");
+        lightActuator.setMaximumRowCount(12);
 
         lblAllowMachineActuators = new JLabel("Allow Machine Actuators?");
-        panel.add(lblAllowMachineActuators, "6, 12, right, default");
+        panelLight.add(lblAllowMachineActuators, "6, 2, right, default");
         lblAllowMachineActuators.setToolTipText("<html>It is recommended to attach the Light Actuator to the camera's head.<br/>\r\nHowever, for backwards-compatibility with how Light Actuators were used in<br/>\r\nScripts, you can enable this switch and choose a Machine actuator. \r\n</html>\r\n");
 
         allowMachineActuators = new JCheckBox("");
-        panel.add(allowMachineActuators, "8, 12");
+        panelLight.add(allowMachineActuators, "8, 2");
         allowMachineActuators.setToolTipText("<html>It is recommended to attach the Light Actuator to the camera's head.<br/>\r\nHowever, for backwards-compatibility with how Light Actuators were used in<br/>\r\nScripts, you can enable this switch and choose a Machine actuator. \r\n</html>\r\n");
 
-        lblAutoCameraLight = new JLabel("Auto Camera Light?");
-        lblAutoCameraLight.setToolTipText("<html>If enabled, the Light Actuator will be automatically be actuated ON whenever a<br/>\r\nuser action is related to the camera.</html>");
-        panel.add(lblAutoCameraLight, "2, 14, right, default");
+        lblOn = new JLabel(" ON");
+        panelLight.add(lblOn, "4, 6, left, default");
 
-        autoLight = new JCheckBox("");
-        panel.add(autoLight, "4, 14");
+        lblOff = new JLabel("OFF");
+        panelLight.add(lblOff, "8, 6");
+
+        lblBeforeCapture = new JLabel("Before Capture?");
+        lblBeforeCapture.setToolTipText("<html>\r\nThe light is actuated ON, before this camera is capturing an<br/>\r\nimage for computer vision. \r\n</html>");
+        panelLight.add(lblBeforeCapture, "2, 8, right, default");
+
+        beforeCaptureLightOn = new JCheckBox("");
+        panelLight.add(beforeCaptureLightOn, "4, 8");
+
+        lblAfterCapture = new JLabel("After Capture?");
+        lblAfterCapture.setToolTipText("<html>\r\nThe light is actuated OFF, after this camera has captured an<br/>\r\nimage for computer vision. \r\n</html>");
+        panelLight.add(lblAfterCapture, "6, 8, right, default");
+
+        afterCaptureLightOff = new JCheckBox("");
+        panelLight.add(afterCaptureLightOff, "8, 8");
+
+        lblUserActionLight = new JLabel("User Camera Action?");
+        panelLight.add(lblUserActionLight, "2, 10, right, default");
+        lblUserActionLight.setToolTipText("<html>\r\nThe light is actuated ON when a user action is deliberately positioning<br>\r\nor otherwise using the camera. \r\n</html>");
+
+        userActionLightOn = new JCheckBox("");
+        panelLight.add(userActionLightOn, "4, 10");
+
+        lblAntiglare = new JLabel("Anti-Glare?");
+        lblAntiglare.setToolTipText("<html>\r\nTo prevent glare from this camera light, the light is actuated OFF, <br/>\r\nbefore any other camera looking the opposite way is capturing. \r\n</html>");
+        panelLight.add(lblAntiglare, "6, 10, right, default");
+
+        antiGlareLightOff = new JCheckBox("");
+        panelLight.add(antiGlareLightOff, "8, 10");
         allowMachineActuators.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 setActuatorModel(machine, camera);
@@ -251,7 +298,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         NamedConverter<Actuator> actuatorConverter = (camera.getHead() != null ? 
                 new NamedConverter<>(machine.getActuators(), camera.getHead().getActuators()) 
                 : new NamedConverter<>(machine.getActuators()));
-        
+
         addWrappedBinding(camera, "name", nameTf, "text");
         addWrappedBinding(camera, "looking", lookingCb, "selectedItem");
         addWrappedBinding(camera, "previewFps", previewFps, "text", doubleConverter);
@@ -260,7 +307,11 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
         addWrappedBinding(camera, "allowMachineActuators", allowMachineActuators, "selected");
         addWrappedBinding(camera, "lightActuator", lightActuator, "selectedItem", actuatorConverter);
-        addWrappedBinding(camera, "autoLight", autoLight, "selected");
+
+        addWrappedBinding(camera, "beforeCaptureLightOn", beforeCaptureLightOn, "selected");
+        addWrappedBinding(camera, "userActionLightOn", userActionLightOn, "selected");
+        addWrappedBinding(camera, "afterCaptureLightOff", afterCaptureLightOff, "selected");
+        addWrappedBinding(camera, "antiGlareLightOff", antiGlareLightOff, "selected");
 
         MutableLocationProxy unitsPerPixel = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, camera, "unitsPerPixel", unitsPerPixel, "location");
@@ -345,6 +396,14 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     private JTextField previewFps;
     private JLabel lblSuspendDuringTaks;
     private JCheckBox suspendPreviewInTasks;
-    private JLabel lblAutoCameraLight;
-    private JCheckBox autoLight;
+    private JLabel lblUserActionLight;
+    private JCheckBox userActionLightOn;
+    private JLabel lblAntiglare;
+    private JCheckBox antiGlareLightOff;
+    private JLabel lblAfterCapture;
+    private JCheckBox afterCaptureLightOff;
+    private JLabel lblOn;
+    private JLabel lblOff;
+    private JLabel lblBeforeCapture;
+    private JCheckBox beforeCaptureLightOn;
 }

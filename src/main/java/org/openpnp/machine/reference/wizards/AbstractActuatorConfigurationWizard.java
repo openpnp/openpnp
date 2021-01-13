@@ -99,6 +99,14 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
     private JLabel lblOffString;
     private JTextField defaultOnString;
     private JTextField defaultOffString;
+    private JLabel lblHomingActuation;
+    private JComboBox homedActuation;
+    private JLabel lblEnableActuation;
+    private JLabel lblDisableActuation;
+    private JComboBox enabledActuation;
+    private JComboBox disabledActuation;
+    private JLabel lblMachineStateActuation;
+    private JLabel lblMachineState;
 
     public AbstractActuatorConfigurationWizard(AbstractMachine machine, ReferenceActuator actuator) {
         this.actuator = actuator;
@@ -273,6 +281,12 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblValueType = new JLabel("Value Type");
@@ -316,11 +330,37 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         generalPanel.add(defaultOffString, "8, 5");
         defaultOffString.setColumns(10);
         
+        lblMachineState = new JLabel("Machine State");
+        generalPanel.add(lblMachineState, "2, 9, right, default");
+        
+        lblEnableActuation = new JLabel("Enabled");
+        generalPanel.add(lblEnableActuation, "4, 9, center, default");
+        
+        lblHomingActuation = new JLabel("Homed");
+        lblHomingActuation.setToolTipText("");
+        generalPanel.add(lblHomingActuation, "6, 9, center, default");
+        
+        lblDisableActuation = new JLabel("Disabled");
+        generalPanel.add(lblDisableActuation, "8, 9, center, default");
+        
+        lblMachineStateActuation = new JLabel("Actuation");
+        lblMachineStateActuation.setToolTipText("<html>\r\nWhen the machine state changes, a specific actuation value can be assumed or set. \r\n</html>\r\n");
+        generalPanel.add(lblMachineStateActuation, "2, 11, right, default");
+        
+        enabledActuation = new JComboBox(ReferenceActuator.MachineStateActuation.values());
+        generalPanel.add(enabledActuation, "4, 11, fill, default");
+        
+        homedActuation = new JComboBox(ReferenceActuator.MachineStateActuation.values());
+        generalPanel.add(homedActuation, "6, 11, fill, default");
+        
+        disabledActuation = new JComboBox(ReferenceActuator.MachineStateActuation.values());
+        generalPanel.add(disabledActuation, "8, 11, fill, default");
+        
         lblIndex = new JLabel("Index");
-        generalPanel.add(lblIndex, "2, 9, right, default");
+        generalPanel.add(lblIndex, "2, 15, right, default");
         
         indexTextField = new JTextField();
-        generalPanel.add(indexTextField, "4, 9, fill, default");
+        generalPanel.add(indexTextField, "4, 15, fill, default");
         indexTextField.setColumns(10);
 
         if (actuator.getHead() == null) {
@@ -374,6 +414,10 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         addWrappedBinding(actuator, "defaultOffDouble", defaultOffDouble, "text", doubleConverter);
         addWrappedBinding(actuator, "defaultOnString", defaultOnString, "text");
         addWrappedBinding(actuator, "defaultOffString", defaultOffString, "text");
+
+        addWrappedBinding(actuator, "enabledActuation", enabledActuation, "selectedItem");
+        addWrappedBinding(actuator, "homedActuation", homedActuation, "selectedItem");
+        addWrappedBinding(actuator, "disabledActuation", disabledActuation, "selectedItem");
 
         addWrappedBinding(actuator, "index", indexTextField, "text", intConverter);
 
