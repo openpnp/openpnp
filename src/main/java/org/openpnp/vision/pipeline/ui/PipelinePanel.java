@@ -181,6 +181,7 @@ public class PipelinePanel extends JPanel {
             try {
                 propertySheetPanel.setBeanInfo(stage.getBeanInfo());
                 propertySheetPanel.readFromObject(stage);
+                stage.customizePropertySheet(pipelinePropertySheetTable, editor.getPipeline());
             }
             catch (Exception ex) {
                 ex.printStackTrace();

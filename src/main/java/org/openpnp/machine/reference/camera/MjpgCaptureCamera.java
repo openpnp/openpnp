@@ -21,7 +21,6 @@
 package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeSupport;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,7 +30,6 @@ import java.net.URLConnection;
 
 import javax.imageio.ImageIO;
 
-import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.MjpgCaptureCameraWizard;
@@ -39,18 +37,16 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.core.Commit;
 
 
 
-public class MjpgCaptureCamera extends ReferenceCamera implements Runnable {
-    private PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+public class MjpgCaptureCamera extends ReferenceCamera {
 
     @Attribute(required = false)
-    private int fps = 24;
-
-    @Attribute(required = false)
-    private String mjpgURL = "http://192.168.1.66:5802";
+    private String mjpgURL = "";
+    // TEST URLs 
+    // http://213.193.89.202/axis-cgi/mjpg/video.cgi
+    // http://192.168.1.66:5802
 
     @Attribute(required = false)
     private int width = 960;
@@ -61,7 +57,6 @@ public class MjpgCaptureCamera extends ReferenceCamera implements Runnable {
     private InputStream mjpgStream; // BufferedInputStream mjpgStream;
     private StringWriter lineBuilder;
 
-    private Thread thread;
     private boolean dirty = false;
 
     // private static final String BOUNDARY_PREFIX = "--";
@@ -71,12 +66,6 @@ public class MjpgCaptureCamera extends ReferenceCamera implements Runnable {
 
     public MjpgCaptureCamera() {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.04233, 0.04233, 0, 0));
-        try {
-            setURL(mjpgURL);
-        }
-        catch (Exception e) {
-
-        }
     }
 
     public boolean isDirty() {
@@ -91,92 +80,78 @@ public class MjpgCaptureCamera extends ReferenceCamera implements Runnable {
         return mjpgURL;
     }
 
-    public synchronized void setMjpgURL(String url) {
+    public void setMjpgURL(String url) {
         this.mjpgURL = url;
         setDirty(true);
-        initialize();
-    }
-
-    @Override
-    @SuppressWarnings("unused")
-    @Commit
-    protected void commit() throws Exception {
-        setURL(mjpgURL);
-    }
-
-    @Override
-    public synchronized void startContinuousCapture(CameraListener listener) {
-        start();
-        super.startContinuousCapture(listener);
-    }
-
-    @Override
-    public synchronized void stopContinuousCapture(CameraListener listener) {
-        super.stopContinuousCapture(listener);
-        if (listeners.size() == 0) {
-            stop();
-        }
-    }
-
-    private synchronized void stop() {
-        if (thread != null && thread.isAlive()) {
-            thread.interrupt();
-            try {
-                thread.join(3000);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            thread = null;
-        }
-    }
-
-    private synchronized void start() {
-
-        try {
-            URL url = new URL(mjpgURL);
-            URLConnection urlcon = url.openConnection();
-            urlcon.setConnectTimeout(3000);
-            urlcon.setReadTimeout(1000);
-
-            mjpgStream = urlcon.getInputStream(); // new BufferedInputStream(url.openStream());
-            lineBuilder = new StringWriter(256);
-
-            if (thread == null) {
-                thread = new Thread(this);
-                thread.setDaemon(true);
-                thread.start();
-            }
-        }
-        catch (Exception e) {
-            System.err.println("Unknown error communicating with MJPG stream at " + mjpgURL + ": "
-                    + e.toString());
-            e.printStackTrace();
-            stop();
-        }
     }
 
     public String getURL() {
         return mjpgURL;
     }
 
-    public void setURL(String url) throws Exception {
+    public void setURL(String url) {
         String oldValue = this.mjpgURL;
         this.mjpgURL = url;
-        pcs.firePropertyChange("mjpgURL", oldValue, url);
-        initialize();
+        firePropertyChange("mjpgURL", oldValue, url);
+        setDirty(true);
     }
 
-    private synchronized void initialize() {
+    @Override 
+    protected synchronized boolean ensureOpen() {
+        if (mjpgURL.isEmpty()) {
+            return false;
+        }
+        return super.ensureOpen();
+    }
+
+    @Override
+    public void open() throws Exception {
         stop();
-        if (listeners.size() > 0) {
-            start();
+
+        if (mjpgStream != null) {
+            try {
+                mjpgStream.close();
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+            mjpgStream = null;
+        }
+
+        try {
+            URL url = new URL(mjpgURL);
+            URLConnection urlcon = url.openConnection();
+            urlcon.setConnectTimeout(3000);
+            urlcon.setReadTimeout(3000);
+
+            mjpgStream = urlcon.getInputStream(); // new BufferedInputStream(url.openStream());
+            lineBuilder = new StringWriter(256);
+        }
+        catch (Exception e) {
+            System.err.println("Unknown error communicating with MJPG stream at " + mjpgURL + ": "
+                    + e.toString());
+            e.printStackTrace();
+            throw e;
+        }
+
+        super.open();
+    }
+
+    @Override
+    public void close() throws IOException {
+        super.close();
+        
+        if (mjpgStream != null) {
+            mjpgStream.close();
+            mjpgStream = null;
         }
     }
 
-
     @Override
     public synchronized BufferedImage internalCapture() {
+        if (! ensureOpen()) {
+            return null;
+        }
         int image_size = 0;
         String inputLine;
         lineBuilder.flush();
@@ -222,7 +197,7 @@ public class MjpgCaptureCamera extends ReferenceCamera implements Runnable {
             }
         }
 
-        // We got what we needed from the header, now just read the steam until we see a 255 which
+        // We got what we needed from the header, now just read the stream until we see a 255 which
         // is the beginning of the JPG image
         try {
             while (mjpgStream.read() != 255) {
@@ -276,31 +251,8 @@ public class MjpgCaptureCamera extends ReferenceCamera implements Runnable {
             return frame;
         }
         else {
-            System.err.println("Incomplete JPG frame in MJPG steram: " + mjpgURL);
+            System.err.println("Incomplete JPG frame in MJPG stream: " + mjpgURL);
             return null;
-        }
-    }
-
-    @Override
-    public void run() {
-
-        while (!Thread.interrupted()) {
-            try {
-                BufferedImage image = internalCapture();
-                if (image != null) {
-                    image = transformImage(image);
-                    broadcastCapture(image);
-                }
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                Thread.sleep(10);
-            }
-            catch (InterruptedException e) {
-                break;
-            }
         }
     }
 
@@ -317,19 +269,5 @@ public class MjpgCaptureCamera extends ReferenceCamera implements Runnable {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         return null;
-    }
-
-    @Override
-    public void close() throws IOException {
-        super.close();
-        if (thread != null) {
-            thread.interrupt();
-            try {
-                thread.join(3000);
-            }
-            catch (Exception e) {
-
-            }
-        }
     }
 }

@@ -121,11 +121,14 @@ public class BasicJobTest {
 
         ReferencePnpJobProcessor jobProcessor = (ReferencePnpJobProcessor) machine.getPnpJobProcessor();
         machine.setEnabled(true);
-        jobProcessor.addTextStatusListener(text -> {
-            System.out.println(text);
+        machine.execute(() -> { 
+            jobProcessor.addTextStatusListener(text -> {
+                System.out.println(text);
+            });
+            jobProcessor.initialize(job);
+            while (jobProcessor.next());
+            return true;
         });
-        jobProcessor.initialize(job);
-        while (jobProcessor.next());
     }
 
     private Job createSimpleJob() {

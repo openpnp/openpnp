@@ -501,6 +501,7 @@ public class JobPlacementsPanel extends JPanel {
                 Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
+                camera.cameraViewChanged();
                 try {
                     Map<String, Object> globals = new HashMap<>();
                     globals.put("camera", camera);
@@ -534,6 +535,7 @@ public class JobPlacementsPanel extends JPanel {
                 Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
+                camera.cameraViewChanged();
                 
                 try {
                     Map<String, Object> globals = new HashMap<>();

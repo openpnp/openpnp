@@ -210,6 +210,9 @@ public class ReferenceMachine extends AbstractMachine {
             fireMachineEnabled();
         }
         else {
+            // remove homed-flag if machine is disabled
+            this.setHomed(false);
+            fireMachineAboutToBeDisabled("User requested stop.");
             // In a multi-driver machine, we must try to disable all drivers even if one throws.
             Exception e = null;
             List<Driver> enabledDrivers = new ArrayList<>();
@@ -231,9 +234,6 @@ public class ReferenceMachine extends AbstractMachine {
                 throw e;
             }
             fireMachineDisabled("User requested stop.");
-
-            // remove homed-flag if machine is disabled
-            this.setHomed(false);
         }
     }
 
@@ -478,6 +478,7 @@ public class ReferenceMachine extends AbstractMachine {
         Logger.info("setHomed({})", isHomed);
         this.isHomed = isHomed;
         firePropertyChange("homed", null, this.isHomed);
+        fireMachineHomed(isHomed);
     }
 
     @Override

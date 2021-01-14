@@ -97,7 +97,7 @@ public class GcodeDriverTest {
         /**
          * Read the actuator we configured.
          */
-        Assert.assertEquals(actuator.read(), "497");
+        Assert.assertEquals(machine.execute(() -> actuator.read()), "497");
     }
     
     @Test
@@ -116,7 +116,7 @@ public class GcodeDriverTest {
          * ACTUATOR_READ_REGEX.
          */
         try {
-            actuator.read();
+            machine.execute(() -> actuator.read());
             throw new AssertionError("Expected Actuator.read() to fail because no regex set.");
         }
         catch (Exception e) {
@@ -139,7 +139,7 @@ public class GcodeDriverTest {
          * ACTUATOR_READ_COMMAND.
          */
         try {
-            actuator.read();
+            machine.execute(() -> actuator.read());
             throw new AssertionError("Expected Actuator.read() to fail because no command set.");
         }
         catch (Exception e) {
@@ -163,7 +163,7 @@ public class GcodeDriverTest {
          * ACTUATOR_READ_REGEX is incorrect and will not match the response.
          */
         try {
-            actuator.read();
+            machine.execute(() -> actuator.read());
             throw new AssertionError("Expected Actuator.read() to fail because invalid regex set.");
         }
         catch (Exception e) {

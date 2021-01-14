@@ -232,16 +232,19 @@ public class ReferenceBottomVision implements PartAlignment {
     }
 
     private static void displayResult(CvPipeline pipeline, Part part, Location offsets, Camera camera) {
-        try {
-            String s = String.format("%s : %s", part.getId(), offsets.toString());
-            MainFrame.get()
-                     .getCameraViews()
-                     .getCameraView(camera)
-                     .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), s,
-                             1500);
-        }
-        catch (Exception e) {
-            // Throw away, just means we're running outside of the UI.
+        MainFrame mainFrame = MainFrame.get();
+        if (mainFrame != null) {
+            try {
+                String s = String.format("%s : %s", part.getId(), offsets.toString());
+                mainFrame
+                .getCameraViews()
+                .getCameraView(camera)
+                .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), s,
+                        1500);
+            }
+            catch (Exception e) {
+                // Throw away, just means we're running outside of the UI.
+            }
         }
     }
 

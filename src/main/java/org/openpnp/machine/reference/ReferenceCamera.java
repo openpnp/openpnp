@@ -19,8 +19,6 @@
 
 package org.openpnp.machine.reference;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -40,6 +38,7 @@ import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -53,7 +52,9 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.base.AbstractCamera;
+import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.LensCalibration;
 import org.openpnp.vision.LensCalibration.LensModel;
@@ -64,15 +65,17 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
-public abstract class ReferenceCamera extends AbstractCamera implements ReferenceHeadMountable {
+public abstract class ReferenceCamera extends AbstractBroadcastingCamera implements ReferenceHeadMountable {
     static {
         nu.pattern.OpenCV.loadShared();
     }
 
-    private static final int CAPTURE_RETRY_COUNT = 10;
-    
-    private static BufferedImage CAPTURE_ERROR_IMAGE = null;
-    
+    @Attribute(required = false)
+    private int captureTryCount = 4;
+
+    @Attribute(required = false)
+    private int captureTryTimeoutMs = 2000;
+
     @Element(required = false)
     private Location headOffsets = new Location(LengthUnit.Millimeters);
 
@@ -112,7 +115,12 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     @Element(required = false)
     private LensCalibrationParams calibration = new LensCalibrationParams();
-    
+
+    @Attribute(required = false)
+    private String lightActuatorId; 
+    @Attribute(required = false)
+    private boolean allowMachineActuators = false;
+
     private boolean calibrating;
     private CalibrationCallback calibrationCallback;
     private int calibrationCountGoal = 25;
@@ -121,12 +129,30 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     private Mat undistortionMap2;
 
     private LensCalibration lensCalibration;
-    
+
+    private Actuator lightActuator;
+
     public ReferenceCamera() {
+        super();
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+
+            @Override
+            public void configurationLoaded(Configuration configuration) throws Exception {
+                // We don't have access to machine or head here. So we need to scan them all. 
+                // I'm sure there is a better solution.
+                Machine machine = configuration.getMachine();
+                lightActuator = machine.getActuator(lightActuatorId);
+                for (Head head : machine.getHeads()) {
+                    if (lightActuator == null) {
+                        lightActuator = head.getActuator(lightActuatorId);
+                    }
+                }
+            }
+        });
     }
     
     /**
-     * Captures an image using captureForPreview() and performs scripting and lighting events
+     * Captures an image using captureTransformed() and performs scripting and lighting events
      * before and after the capture.
      */
     @Override
@@ -139,7 +165,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         catch (Exception e) {
             Logger.warn(e);
         }
-        BufferedImage image = captureForPreview();
+        BufferedImage image = captureTransformed();
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("camera", this);
@@ -155,7 +181,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
      * Captures an image using captureRaw(), applies local transformations and returns the image.
      */
     @Override
-    public BufferedImage captureForPreview() {
+    public BufferedImage captureTransformed() {
         return transformImage(captureRaw());
     }
     
@@ -167,7 +193,13 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public BufferedImage captureRaw() {
         return safeInternalCapture();
     }
-    
+
+    @Override
+    public boolean hasNewFrame() {
+        // Default behavior: always has frames when open.
+        return isOpen();
+    }
+
     protected abstract BufferedImage internalCapture();
     
     /**
@@ -179,33 +211,39 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
      * @return
      */
     protected synchronized BufferedImage safeInternalCapture() {
-        for (int i = 0; i < CAPTURE_RETRY_COUNT; i++) {
+        if (! ensureOpen()) {
+            return getCaptureErrorImage();
+        }
+        long t1 = System.currentTimeMillis() + captureTryTimeoutMs;
+        int i = 0;
+        while (true) {
             BufferedImage image = internalCapture();
+            i++;
             if (image != null) {
                 return image;
             }
+            if (i >= getCaptureTryCount()) {
+                break;
+            }
+            if (System.currentTimeMillis() > t1) {
+                // Timed out.
+                break;
+            }
             Logger.trace("Camera {} failed to return an image. Retrying.", this);
+            Thread.yield();
         }
-        if (CAPTURE_ERROR_IMAGE == null) {
-            CAPTURE_ERROR_IMAGE = new BufferedImage(640, 480, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g = (Graphics2D) CAPTURE_ERROR_IMAGE.createGraphics();
-            g.setColor(Color.black);
-            g.fillRect(0, 0, 640, 480);
-            g.setColor(Color.red);
-            g.drawLine(0, 0, 640, 480);
-            g.drawLine(640, 0, 0, 480);
-            g.dispose();
-        }
-        Logger.warn("Camera {} failed to return an image after {} tries.", this, CAPTURE_RETRY_COUNT);
-        return CAPTURE_ERROR_IMAGE;
+        Logger.warn("Camera {} failed to return an image after {} tries.", this, i);
+        return getCaptureErrorImage();
     }
-    
+
+    protected int getCaptureTryCount() {
+        return captureTryCount;
+    }
+
     @Override
     public synchronized int getWidth() {
         if (width == null) {
-            BufferedImage image = safeInternalCapture();
-            width = image.getWidth();
-            height = image.getHeight();
+            determineSize();
         }
         return width;
     }
@@ -213,11 +251,21 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     @Override
     public synchronized int getHeight() {
         if (height == null) {
-            BufferedImage image = safeInternalCapture();
+            determineSize();
+        }
+        return height;
+    }
+
+    private void determineSize() {
+        if (isOpen()) {
+            BufferedImage image = captureTransformed();
             width = image.getWidth();
             height = image.getHeight();
         }
-        return height;
+        else {
+            width = 640;
+            height = 480;
+        }
     }
 
     @Override
@@ -331,51 +379,79 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         this.deinterlace = deinterlace;
     }
 
+    @Override
+    public Actuator getLightActuator() {
+        return lightActuator;
+    }
+
+    public void setLightActuator(Actuator lightActuator) {
+        this.lightActuator = lightActuator;
+        this.lightActuatorId = (lightActuator == null) ? null : lightActuator.getId();
+    }
+
+    public boolean isAllowMachineActuators() {
+        return allowMachineActuators;
+    }
+
+    public void setAllowMachineActuators(boolean allowMachineActuators) {
+        this.allowMachineActuators = allowMachineActuators;
+    }
+
     // TODO Optimization: We could skip the convert to and from Mat if no transforms are needed.
     protected BufferedImage transformImage(BufferedImage image) {
-        Mat mat = OpenCvUtils.toMat(image);
-
-        mat = crop(mat);
-
-        mat = calibrate(mat);
-
-        mat = undistort(mat);
-
-        // apply affine transformations
-        mat = scale(mat, scaleWidth, scaleHeight);
-        
-        mat = rotate(mat, rotation);
-
-        mat = offset(mat, offsetX, offsetY);
-        
-        mat = deinterlace(mat);
-
-        if (flipX || flipY) {
-            int flipCode;
-            if (flipX && flipY) {
-                flipCode = -1;
+        try {
+            if (image == null) {
+                return null;
             }
-            else {
-                flipCode = flipX ? 0 : 1;
+
+            Mat mat = OpenCvUtils.toMat(image);
+
+            mat = crop(mat);
+
+            mat = calibrate(mat);
+
+            mat = undistort(mat);
+
+            // apply affine transformations
+            mat = scale(mat, scaleWidth, scaleHeight);
+
+            mat = rotate(mat, rotation);
+
+            mat = offset(mat, offsetX, offsetY);
+
+            mat = deinterlace(mat);
+
+            if (flipX || flipY) {
+                int flipCode;
+                if (flipX && flipY) {
+                    flipCode = -1;
+                }
+                else {
+                    flipCode = flipX ? 0 : 1;
+                }
+                Core.flip(mat, mat, flipCode);
             }
-            Core.flip(mat, mat, flipCode);
+
+            image = OpenCvUtils.toBufferedImage(mat);
+            mat.release();
+
+            if (image != null) {
+                // save the new image dimensions
+                width = image.getWidth();
+                height = image.getHeight();
+                setLastTransformedImage(image);
+            }
         }
-
-        image = OpenCvUtils.toBufferedImage(mat);
-        mat.release();
-        
-        if (image != null) { 
-            // save the new image dimensions
-            width = image.getWidth();
-            height = image.getHeight();
+        catch (Exception e) {
+            Logger.error(e);
         }
         return image;
     }
 
     private Mat crop(Mat mat) {
         if (cropWidth != 0 || cropHeight != 0) {
-            int cw = (cropWidth != 0) ? cropWidth : (int) mat.size().width;
-            int ch = (cropHeight != 0) ? cropHeight : (int) mat.size().height;
+            int cw = (cropWidth != 0 && cropWidth < (int) mat.size().width) ? cropWidth : (int) mat.size().width;
+            int ch = (cropHeight != 0 && cropHeight < (int) mat.size().height) ? cropHeight : (int) mat.size().height;
             Rect roi = new Rect(
                     (int) ((mat.size().width / 2) - (cw / 2)),
                     (int) ((mat.size().height / 2) - (ch / 2)),
@@ -558,9 +634,6 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     }
 
     @Override
-    public void close() throws IOException {}
-
-    @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(new CameraConfigurationWizard(this), "General Configuration"),
@@ -597,6 +670,12 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
                     Configuration.get().getMachine().removeCamera(ReferenceCamera.this);
                 }
                 MainFrame.get().getCameraViews().removeCamera(ReferenceCamera.this);
+                try {
+                    ReferenceCamera.this.close();
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     };
