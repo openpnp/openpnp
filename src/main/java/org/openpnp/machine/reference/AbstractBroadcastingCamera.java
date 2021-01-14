@@ -37,6 +37,7 @@ import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
+import org.openpnp.spi.base.AbstractActuator;
 import org.openpnp.spi.base.AbstractCamera;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -167,6 +168,7 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
                 if (isUserActionLightOn()) {
                     Actuator lightActuator = getLightActuator();
                     if (lightActuator != null) {
+                        AbstractActuator.assertOnOffDefined(lightActuator);
                         actuateLight(lightActuator, lightActuator.getDefaultOnValue());
                     }
                 }

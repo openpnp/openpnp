@@ -26,8 +26,10 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceActuatorConfigurationWizard;
@@ -36,8 +38,11 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractActuator;
+import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -46,6 +51,22 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     @Element
     private Location headOffsets = new Location(LengthUnit.Millimeters);
+
+    public enum MachineStateActuation {
+        LeaveAsIs,
+        AssumeUnknown,
+        AssumeActuatedOff,
+        AssumeActuatedOn,
+        ActuateOff,
+        ActuateOn
+    };
+
+    @Attribute(required = false)
+    protected MachineStateActuation enabledActuation = MachineStateActuation.AssumeUnknown;
+    @Attribute(required = false)
+    protected MachineStateActuation homedActuation = MachineStateActuation.LeaveAsIs;
+    @Attribute(required = false)
+    protected MachineStateActuation disabledActuation = MachineStateActuation.LeaveAsIs;
 
     @Attribute
     private int index;
@@ -57,6 +78,28 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     protected Object lastActuationValue;
     
     public ReferenceActuator() {
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+
+            @Override
+            public void configurationLoaded(Configuration configuration) throws Exception {
+                Configuration.get().getMachine().addListener(new MachineListener.Adapter() {
+                    @Override 
+                    public void machineEnabled(Machine machine) {
+                        actuateMachineState(machine, getEnabledActuation(), true);
+                    }
+                    @Override
+                    public void machineHomed(Machine machine, boolean isHomed) {
+                        if (isHomed) {
+                            actuateMachineState(machine, getHomedActuation(), true);
+                        } 
+                    }
+                    @Override 
+                    public void machineAboutToBeDisabled(Machine machine, String reason) {
+                        actuateMachineState(machine, getDisabledActuation(), false);
+                    }
+                });
+            }
+        });
     }
 
     @Override
@@ -67,6 +110,30 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     @Override
     public Location getHeadOffsets() {
         return headOffsets;
+    }
+
+    public MachineStateActuation getEnabledActuation() {
+        return enabledActuation;
+    }
+
+    public void setEnabledActuation(MachineStateActuation enabledActuation) {
+        this.enabledActuation = enabledActuation;
+    }
+
+    public MachineStateActuation getHomedActuation() {
+        return homedActuation;
+    }
+
+    public void setHomedActuation(MachineStateActuation homedActuation) {
+        this.homedActuation = homedActuation;
+    }
+
+    public MachineStateActuation getDisabledActuation() {
+        return disabledActuation;
+    }
+
+    public void setDisabledActuation(MachineStateActuation disabledActuation) {
+        this.disabledActuation = disabledActuation;
     }
 
     public int getIndex() {
@@ -85,7 +152,6 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         return lastActuationValue;
     }
 
-    @Override
     protected void setLastActuationValue(Object lastActuationValue) {
         Object oldValue = this.lastActuationValue;
         this.lastActuationValue = lastActuationValue;
@@ -136,6 +202,49 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
             return getActuatorProfiles().getProfileNames();
         }
         return new String[] {};
+    }
+
+    public void actuateMachineState(Machine machine, MachineStateActuation machineStateActuation, boolean deferred) {
+        // Need to execute this now, before the machine is being disabled.
+        switch (machineStateActuation) {
+            case LeaveAsIs:
+                break;
+            case AssumeUnknown:
+                setLastActuationValue(null);
+                break;
+            case AssumeActuatedOff:
+                setLastActuationValue(getDefaultOffValue());
+                break;
+            case AssumeActuatedOn:
+                setLastActuationValue(getDefaultOnValue());
+                break;
+            case ActuateOff:
+                tryActuateBoolean(machine, false, deferred);
+                break;
+            case ActuateOn:
+                tryActuateBoolean(machine, true, deferred);
+                break;
+        }
+    }
+
+    protected void tryActuateBoolean(Machine machine, boolean value, boolean deferred) {
+        try {
+            assertOnOffDefined();
+            if (deferred) {
+                UiUtils.submitUiMachineTask(() -> { 
+                    actuate(value ? getDefaultOnValue() : getDefaultOffValue());
+                });
+            }
+            else {
+                machine.execute(() -> { 
+                    actuate(value ? getDefaultOnValue() : getDefaultOffValue());
+                    return true;
+                }, true, 0);
+            }
+        }
+        catch (Exception e) {
+            MessageBoxes.errorBox(MainFrame.get(), "Error actuating "+getName(), e);
+        }
     }
 
     @Override

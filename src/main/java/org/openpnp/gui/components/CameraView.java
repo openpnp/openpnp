@@ -305,14 +305,10 @@ public class CameraView extends JComponent implements CameraListener {
         catch (Exception e) {
             // ignore errors
         }
-        SwingUtilities.invokeLater(() -> {
-            // Make sure it always starts with an error image.
-            frameReceived(AbstractBroadcastingCamera.getCaptureErrorImage());
-            // turn on capture for the new camera
-            if (this.camera != null) {
-                this.camera.startContinuousCapture(this);
-            }
-        });
+        // turn on capture for the new camera
+        if (this.camera != null) {
+            this.camera.startContinuousCapture(this);
+        }
     }
 
     public Camera getCamera() {
@@ -593,6 +589,9 @@ public class CameraView extends JComponent implements CameraListener {
     @Override
     protected synchronized void paintComponent(Graphics g) {
         super.paintComponent(g);
+        if (lastFrame == null) {
+            frameReceived(AbstractBroadcastingCamera.getCaptureErrorImage());
+        }
         BufferedImage image = lastFrame;
         Insets ins = getInsets();
         int width = getWidth() - ins.left - ins.right;
@@ -1499,7 +1498,9 @@ public class CameraView extends JComponent implements CameraListener {
             // Pass as Object for the generic behavior according to the actuator valueType.  
             boolean state = !actuator.isActuated();
             actuator.actuate((Object)state);
-            camera.captureTransformed();
+            // Note, we cannot use camera.cameraViewChanged(), because this itself will turn the light on
+            // if configured so.
+            camera.settleAndCapture();
         });
     }
 

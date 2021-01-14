@@ -16,7 +16,6 @@ import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Axis;
-import org.openpnp.spi.Camera;
 import org.openpnp.spi.base.AbstractCamera;
 import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
@@ -62,10 +61,10 @@ public class SampleJobTest {
                 new File(workingDirectory, "machine.xml"));
         }
 
-//        Configurator
-//        .currentConfig()
-//        .level(Level.TRACE)  // set this for other log levels.
-//        .activate();
+        Configurator
+        .currentConfig()
+        .level(Level.INFO) // change this for other log levels.
+        .activate();
 
         Configuration.initialize(workingDirectory);
         Configuration.get().load();

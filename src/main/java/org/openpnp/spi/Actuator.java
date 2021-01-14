@@ -123,11 +123,7 @@ public interface Actuator
      * 
      * @return 
      */
-    public default boolean isActuated() { 
-        Object defaultOff = getDefaultOffValue();
-        Object last = getLastActuationValue();
-        return defaultOff != null && last != null && !defaultOff.equals(last);
-    }
+    public boolean isActuated();
 
     /**
      * Read a value from the actuator. The value will be returned exactly as provided by the

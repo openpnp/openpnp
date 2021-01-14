@@ -393,7 +393,6 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
             long t0 = System.currentTimeMillis();
             long timeout = t0 + settleTimeoutMs;
             int debounceCount = 0;
-            final double seq = 0.01;
             SimpleGraph settleGraph = startDiagnostics();
             TreeMap<Double, BufferedImage> settleImages = null;
             if (settleGraph != null) {
@@ -430,6 +429,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
                 // Do these calculations up front.
                 final int resizeToMaxGaussianKernelSize = 5;
                 int gaussianBlurEff = settleGaussianBlur;
+                @SuppressWarnings("unused")
                 int divisor = (resizeToMaxGaussianKernelSize > resizeToMaxGaussianKernelSize) ? 
                         (settleGaussianBlur+resizeToMaxGaussianKernelSize/2)/resizeToMaxGaussianKernelSize
                         : 1;
@@ -801,6 +801,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
                 Actuator lightActuator = camera.getLightActuator();
                 if (lightActuator != null 
                         && lightActuator.isActuated()) {
+                    AbstractActuator.assertOnOffDefined(lightActuator);
                     actuateLight(lightActuator, lightActuator.getDefaultOffValue());
                 }
             }
@@ -809,7 +810,9 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         if (isBeforeCaptureLightOn()) {
             Actuator lightActuator = getLightActuator();
             if (lightActuator != null) {
-                actuateLight(lightActuator, light != null ? light : lightActuator.getDefaultOnValue());
+                AbstractActuator.assertOnOffDefined(lightActuator);
+                actuateLight(lightActuator, 
+                        (light != null ? light : lightActuator.getDefaultOnValue()));
             }
         }
     }
@@ -819,6 +822,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         if (isAfterCaptureLightOff()) {
             Actuator lightActuator = getLightActuator();
             if (lightActuator != null) {
+                AbstractActuator.assertOnOffDefined(lightActuator);
                 actuateLight(lightActuator, lightActuator.getDefaultOffValue());
             }
         }
