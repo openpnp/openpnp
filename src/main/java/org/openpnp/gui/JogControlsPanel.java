@@ -56,6 +56,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
@@ -230,7 +231,8 @@ public class JogControlsPanel extends JPanel {
         }
 
         tool.moveTo(targetLocation, MotionOption.JogMotion); 
-        // to test without backlash comp for continous jogging: add MotionOption.SpeedOverPrecision
+
+        MovableUtils.cameraViewChanged(tool);
     }
 
     private boolean nozzleLocationIsSafe(Location origin, Location dimension, Location nozzle,
@@ -557,7 +559,9 @@ public class JogControlsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                MovableUtils.park(machineControlsPanel.getSelectedTool().getHead());
+                Head head = machineControlsPanel.getSelectedTool().getHead();
+                MovableUtils.park(head);
+                MovableUtils.cameraViewChanged(head.getDefaultHeadMountable());
             });
         }
     };
@@ -576,6 +580,7 @@ public class JogControlsPanel extends JPanel {
                 double safeZ = (safeZLength != null ? safeZLength.convertToUnits(location.getUnits()).getValue() : Double.NaN);
                 location = location.derive(null, null, safeZ, null);
                 hm.moveTo(location);
+                MovableUtils.cameraViewChanged(hm);
             });
         }
     };
@@ -589,6 +594,7 @@ public class JogControlsPanel extends JPanel {
                 Location location = hm.getLocation();
                 location = location.derive(null, null, null, 0.);
                 hm.moveTo(location);
+                MovableUtils.cameraViewChanged(hm);
             });
         }
     };
@@ -598,10 +604,11 @@ public class JogControlsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                Configuration.get()
-                             .getMachine()
-                             .getDefaultHead()
-                             .moveToSafeZ();
+                Head head = Configuration.get()
+                        .getMachine()
+                        .getDefaultHead();
+                head.moveToSafeZ();
+                MovableUtils.cameraViewChanged(head.getDefaultHeadMountable());
             });
         }
     };

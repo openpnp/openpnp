@@ -6,6 +6,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -152,43 +153,48 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Commit
     public void commit() {
-        /**
-         * Backwards compatibility.
-         */
-        if (methodPartOn == null) {
-            if (vacuumLevelPartOnLow < vacuumLevelPartOnHigh) {
-                // was enabled
-                methodPartOn = VacuumMeasurementMethod.Absolute;
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationComplete(Configuration configuration) throws Exception {
+                /**
+                 * Backwards compatibility.
+                 */
+                if (methodPartOn == null) {
+                    if (vacuumLevelPartOnLow < vacuumLevelPartOnHigh) {
+                        // was enabled
+                        methodPartOn = VacuumMeasurementMethod.Absolute;
+                    }
+                    else {
+                        methodPartOn = VacuumMeasurementMethod.None;
+                    }
+                }
+                if (methodPartOff == null) {
+                    // use the same as the former pick dwell time.
+                    partOffProbingMilliseconds = pickDwellMilliseconds;
+                    try {
+                        // also add the nozzle's pick dwell time
+                        Nozzle nozzle = Configuration.get()
+                                .getMachine()
+                                .getDefaultHead()
+                                .getDefaultNozzle();
+                        if (nozzle instanceof ReferenceNozzle) {
+                            ReferenceNozzle refNozzle = (ReferenceNozzle) nozzle;
+                            partOffProbingMilliseconds += refNozzle.getPickDwellMilliseconds();
+                        } 
+                    }
+                    catch (Exception e) {
+                        Logger.info("Cannot fully upgrade partOffProbingMilliseconds time", e);
+                    }
+                    if (vacuumLevelPartOffLow < vacuumLevelPartOffHigh) {
+                        // was enabled
+                        methodPartOff = VacuumMeasurementMethod.Absolute;
+                    }
+                    else {
+                        methodPartOff = VacuumMeasurementMethod.None;
+                    }
+                }
             }
-            else {
-                methodPartOn = VacuumMeasurementMethod.None;
-            }
-        }
-        if (methodPartOff == null) {
-            // use the same as the former pick dwell time.
-            partOffProbingMilliseconds = pickDwellMilliseconds;
-            try {
-                // also add the nozzle's pick dwell time
-                Nozzle nozzle = Configuration.get()
-                                             .getMachine()
-                                             .getDefaultHead()
-                                             .getDefaultNozzle();
-                if (nozzle instanceof ReferenceNozzle) {
-                    ReferenceNozzle refNozzle = (ReferenceNozzle) nozzle;
-                    partOffProbingMilliseconds += refNozzle.getPickDwellMilliseconds();
-                } 
-            }
-            catch (Exception e) {
-                Logger.info("Cannot fully upgrade partOffProbingMilliseconds time", e);
-            }
-            if (vacuumLevelPartOffLow < vacuumLevelPartOffHigh) {
-                // was enabled
-                methodPartOff = VacuumMeasurementMethod.Absolute;
-            }
-            else {
-                methodPartOff = VacuumMeasurementMethod.None;
-            }
-        }
+        });
     }
 
     @Override

@@ -311,6 +311,7 @@ public class MachineControlsPanel extends JPanel {
                 HeadMountable tool = getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(tool, camera.getLocation(tool));
+                MovableUtils.cameraViewChanged(tool);
             });
         }
     };
@@ -323,6 +324,7 @@ public class MachineControlsPanel extends JPanel {
                 HeadMountable tool = getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, tool.getLocation());
+                camera.cameraViewChanged();
             });
         }
     };

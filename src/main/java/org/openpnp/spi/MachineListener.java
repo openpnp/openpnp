@@ -28,13 +28,19 @@ package org.openpnp.spi;
 public interface MachineListener {
     void machineHeadActivity(Machine machine, Head head);
 
+    void machineActuatorActivity(Machine machine, Actuator actuator);
+
     void machineEnabled(Machine machine);
 
     void machineEnableFailed(Machine machine, String reason);
 
+    void machineAboutToBeDisabled(Machine machine, String reason);
+
     void machineDisabled(Machine machine, String reason);
 
     void machineDisableFailed(Machine machine, String reason);
+
+    void machineHomed(Machine machine, boolean isHomed);
 
     void machineBusy(Machine machine, boolean busy);
 
@@ -44,16 +50,25 @@ public interface MachineListener {
         public void machineHeadActivity(Machine machine, Head head) {}
 
         @Override
+        public void machineActuatorActivity(Machine machine, Actuator actuator) {}
+
+        @Override
         public void machineEnabled(Machine machine) {}
 
         @Override
         public void machineEnableFailed(Machine machine, String reason) {}
 
         @Override
+        public void machineAboutToBeDisabled(Machine machine, String reason) {}
+
+        @Override
         public void machineDisabled(Machine machine, String reason) {}
 
         @Override
         public void machineDisableFailed(Machine machine, String reason) {}
+
+        @Override
+        public void machineHomed(Machine machine, boolean isHomed) {}
 
         @Override
         public void machineBusy(Machine machine, boolean busy) {}

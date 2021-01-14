@@ -10,7 +10,6 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
-import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.SimulationModeMachine;
@@ -29,15 +28,11 @@ import org.simpleframework.xml.Root;
 
 
 @Root
-public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
-    protected int width = 1280;
+public class SimulatedUpCamera extends ReferenceCamera {
+    protected int width = 640;
 
-    protected int height = 1280;
+    protected int height = 480;
 
-    protected int fps = 30;
-
-    private Thread thread;
-    
     @Element(required=false)
     private Location errorOffsets = new Location(LengthUnit.Millimeters);
 
@@ -48,6 +43,9 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
 
     @Override
     public BufferedImage internalCapture() {
+        if (!ensureOpen()) {
+            return null;
+        }
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = (Graphics2D) image.getGraphics();
         AffineTransform tx = g.getTransform();
@@ -83,13 +81,12 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
 
         g.setTransform(tx);
 
-        SimulationModeMachine.drawSimulatedCameraNoise(g, width, height);
+        SimulationModeMachine.simulateCameraExposure(this, g, width, height);
 
         g.dispose();
 
         return image;
     }
-
 
     private void drawNozzle(Graphics2D g, Nozzle nozzle, Location l) {
         g.setStroke(new BasicStroke(2f));
@@ -146,60 +143,13 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         g.setColor(color);
         g.fill(shape);
     }
-    
+
     public Location getErrorOffsets() {
         return errorOffsets;
     }
 
     public void setErrorOffsets(Location errorOffsets) {
         this.errorOffsets = errorOffsets;
-    }
-
-    @Override
-    public synchronized void startContinuousCapture(CameraListener listener) {
-        start();
-        super.startContinuousCapture(listener);
-    }
-
-    @Override
-    public synchronized void stopContinuousCapture(CameraListener listener) {
-        super.stopContinuousCapture(listener);
-        if (listeners.size() == 0) {
-            stop();
-        }
-    }
-
-    private synchronized void stop() {
-        if (thread != null && thread.isAlive()) {
-            thread.interrupt();
-            try {
-                thread.join(3000);
-            }
-            catch (Exception e) {
-
-            }
-            thread = null;
-        }
-    }
-
-    private synchronized void start() {
-        if (thread == null) {
-            thread = new Thread(this);
-            thread.setDaemon(true);
-            thread.start();
-        }
-    }
-
-    public void run() {
-        while (!Thread.interrupted()) {
-            broadcastCapture(captureForPreview());
-            try {
-                Thread.sleep(1000 / fps);
-            }
-            catch (InterruptedException e) {
-                return;
-            }
-        }
     }
 
     @Override

@@ -37,7 +37,9 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.camera.ImageCamera;
+import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -60,11 +62,18 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
                 "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-        panelGeneral.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblSourceUrl = new JLabel("Source URL");
         panelGeneral.add(lblSourceUrl, "2, 2, right, default");
@@ -111,4 +120,12 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
             textFieldSourceUrl.setText(file.toURI().toString());
         }
     };
+
+    @Override
+    protected void saveToModel() {
+        super.saveToModel();
+        UiUtils.messageBoxOnException(() -> {
+            camera.reinitialize(); 
+        });
+    }
 }

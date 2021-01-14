@@ -6,11 +6,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.swing.Icon;
 
@@ -33,6 +37,7 @@ import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.Signaler;
 import org.openpnp.util.IdentifiableList;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -95,6 +100,8 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     protected Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<>());
 
     protected ThreadPoolExecutor executor;
+
+    volatile protected Thread taskThread;
 
     protected AbstractMachine() {}
 
@@ -213,6 +220,16 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @Override
     public List<Camera> getCameras() {
         return Collections.unmodifiableList(cameras);
+    }
+
+    @Override
+    public List<Camera> getAllCameras() {
+        Stream<Camera> stream = Stream.of();
+        for (Head head : getHeads()) {
+            stream = Stream.concat(stream, head.getCameras().stream());
+        }
+        stream = Stream.concat(stream, getCameras().stream());
+        return stream.collect(Collectors.toList());
     }
 
     @Override
@@ -409,6 +426,12 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         }
     }
 
+    public void fireMachineActuatorActivity(Actuator actuator) {
+        for (MachineListener listener : listeners) {
+            listener.machineActuatorActivity(this, actuator);
+        }
+    }
+
     public void fireMachineEnabled() {
         for (MachineListener listener : listeners) {
             listener.machineEnabled(this);
@@ -421,6 +444,12 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         }
     }
 
+    public void fireMachineAboutToBeDisabled(String reason) {
+        for (MachineListener listener : listeners) {
+            listener.machineAboutToBeDisabled(this, reason);
+        }
+    }
+
     public void fireMachineDisabled(String reason) {
         for (MachineListener listener : listeners) {
             listener.machineDisabled(this, reason);
@@ -430,6 +459,12 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     public void fireMachineDisableFailed(String reason) {
         for (MachineListener listener : listeners) {
             listener.machineDisableFailed(this, reason);
+        }
+    }
+
+    public void fireMachineHomed(boolean isHomed) {
+        for (MachineListener listener : listeners) {
+            listener.machineHomed(this, isHomed);
         }
     }
 
@@ -471,61 +506,123 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
         Callable<T> wrapper = new Callable<T>() {
             public T call() throws Exception {
-                // TODO: lock driver
-
-                // Notify listeners that the machine is now busy
-                fireMachineBusy(true);
-
-                // Call the task, storing the result and exception if any
-                T result = null;
-                Exception exception = null;
                 try {
-                    if (!ignoreEnabled && !isEnabled()) {
-                        throw new Exception("Machine has not been started.");
+                    boolean isBusy = isBusy();
+                    // TODO: this should also lock drivers
+                    setTaskThread(Thread.currentThread());
+
+                    if (!isBusy) {
+                        // Notify listeners that the machine is now busy
+                        fireMachineBusy(true);
                     }
-                    result = callable.call();
-                    // Make sure all pending motion commands are planned and sent to the controllers. 
-                    // This does not necessarily wait for the motion to be complete physically, as this would 
-                    // be undesirable for continuous Jog commands.  
-                    getMotionPlanner().waitForCompletion(null, CompletionType.CommandJog);
-                }
-                catch (Exception e) {
-                    exception = e;
-                }
 
-                // If there was an error cancel all pending tasks.
-                if (exception != null) {
-                    executor.shutdownNow();
-                }
+                    // Call the task, storing the result and exception if any
+                    T result = null;
+                    Exception exception = null;
+                    try {
+                        if (!ignoreEnabled && !isEnabled()) {
+                            throw new Exception("Machine has not been started.");
+                        }
+                        result = callable.call();
+                        // Make sure all pending motion commands are planned and sent to the controllers. 
+                        // This does not necessarily wait for the motion to be complete physically, as this would 
+                        // be undesirable for continuous Jog commands.  
+                        getMotionPlanner().waitForCompletion(null, CompletionType.CommandJog);
+                    }
+                    catch (Exception e) {
+                        exception = e;
+                    }
 
-                // If a callback was supplied, call it with the results
-                if (callback != null) {
+                    // If there was an error cancel all pending tasks.
                     if (exception != null) {
-                        callback.onFailure(exception);
+                        executor.shutdownNow();
                     }
-                    else {
-                        callback.onSuccess(result);
+
+                    // If a callback was supplied, call it with the results
+                    if (callback != null) {
+                        if (exception != null) {
+                            callback.onFailure(exception);
+                        }
+                        else {
+                            callback.onSuccess(result);
+                        }
+                    }
+
+                    // Finally, fulfill the Future by either throwing the
+                    // exception or returning the result.
+                    if (exception != null) {
+                        throw exception;
+                    }
+                    return result;
+                }
+                finally {
+                    // If no more tasks are scheduled notify listeners that
+                    // the machine is no longer busy
+                    if (executor.getQueue().isEmpty()) {
+                        // TODO: this should also unlock drivers
+                        fireMachineBusy(false);
+                        setTaskThread(null);
                     }
                 }
-
-                // TODO: unlock driver
-
-                // If no more tasks are scheduled notify listeners that
-                // the machine is no longer busy
-                if (executor.getQueue().isEmpty()) {
-                    fireMachineBusy(false);
-                }
-
-                // Finally, fulfill the Future by either throwing the
-                // exception or returning the result.
-                if (exception != null) {
-                    throw exception;
-                }
-                return result;
             }
         };
 
         return executor.submit(wrapper);
+    }
+
+    @Override
+    public <T> T execute(final Callable<T> callable, final boolean onlyIfEnabled, final long timeout) 
+            throws Exception {
+        if (onlyIfEnabled && !isEnabled()) {
+            // Ignore the task if the machine is not enabled.
+            Logger.trace("Machine not enabled, task ignored.");
+            return null;
+        }
+        if (isTask(Thread.currentThread())) {
+            // We are already on the machine task, just execute this.
+            return callable.call();
+        }
+        else {
+            // Otherwise, submit a machine task and wait for its completion.
+            try {
+                long t1 = System.currentTimeMillis() + timeout;
+                while (isBusy()) {
+                    if (System.currentTimeMillis() >= t1) {
+                        throw new TimeoutException("Machine still busy after timeout expired, task rejected.");
+                    }
+                    Thread.yield();
+                }
+                Future<T> future = submit(callable, null, false);
+                return future.get();
+            }
+            catch (ExecutionException e) {
+                if (e.getCause() instanceof Exception) {
+                    throw (Exception)e.getCause();
+                }
+                throw e;
+            }
+        }
+    }
+
+    protected Thread getTaskThread() {
+        return taskThread;
+    }
+
+    protected void setTaskThread(Thread taskThread) {
+        this.taskThread = taskThread;
+    }
+
+    @Override
+    public boolean isTask(Thread thread) {
+        if (taskThread == null || thread == null) {
+            return false;
+        }
+        return taskThread.getId() == thread.getId();
+    }
+
+    @Override
+    public boolean isBusy() {
+        return taskThread != null;
     }
 
     @Override

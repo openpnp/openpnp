@@ -276,6 +276,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                                 nozzleTip.getCalibration().getCalibrationZOffset().getValue(), 0));
 
                 MovableUtils.moveToLocationAtSafeZ(nozzle, location);
+                camera.cameraViewChanged();
             });
         }
     };
