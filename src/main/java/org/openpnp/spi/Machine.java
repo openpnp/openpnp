@@ -53,6 +53,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public Head getHead(String id);
 
+    public Head getHeadByName(String name);
+    
     /**
      * Gets a List of Signalers attached to the Machine.
      *
