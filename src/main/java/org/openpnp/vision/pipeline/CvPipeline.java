@@ -47,7 +47,6 @@ import org.simpleframework.xml.stream.Style;
 public class CvPipeline implements AutoCloseable {
     static {
         nu.pattern.OpenCV.loadShared();
-        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }
 
     @ElementList

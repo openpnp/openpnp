@@ -43,7 +43,6 @@ import org.simpleframework.xml.ElementList;
 public class OpenCvCamera extends ReferenceCamera implements Runnable {
     static {
         nu.pattern.OpenCV.loadShared();
-        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }
 
     @Attribute(name = "deviceIndex", required = true)
