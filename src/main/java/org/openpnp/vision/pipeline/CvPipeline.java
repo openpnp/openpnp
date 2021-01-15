@@ -150,6 +150,32 @@ public class CvPipeline implements AutoCloseable {
     }
 
     /**
+     * Get the Result returned by the CvStage with the given name, expected to be defined in the pipeline 
+     * and to return a non-null model. 
+     * 
+     * @param name
+     * @return
+     * @throws Exception when the stage name is undefined or the stage is missing in the pipeline.
+     */
+    public Result getExpectedResult(String name) throws Exception {
+        if (name == null || name.trim().isEmpty()) {
+            throw new Exception("Stage name must be given.");
+        }
+        CvStage stage = getStage(name);
+        if (stage == null) {
+            throw new Exception("Stage \""+name+"\" is missing in the pipeline.");
+        }
+        Result result = getResult(stage);
+        if (result == null) {
+            throw new Exception("Stage \""+name+"\" returned no result.");
+        }
+        if (result.model instanceof Exception) {
+            throw (Exception)(result.model);
+        }
+        return result;
+    }
+
+    /**
      * Get the Result returned by give CvStage. May return null if the stage did not return a
      * result.
      * 
@@ -236,7 +262,7 @@ public class CvPipeline implements AutoCloseable {
                 image = image.clone();
             }
 
-            results.put(stage, new Result(image, model, processingTimeNs));
+            results.put(stage, new Result(image, model, processingTimeNs, stage));
         }
     }
 

@@ -27,13 +27,10 @@ public class ConvertModelToKeyPoints extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (modelStageName == null) {
+        if (modelStageName == null || modelStageName.trim().isEmpty()) {
             return null;
         }
-        Result result = pipeline.getResult(modelStageName);
-        if (result == null || result.model == null) {
-            return null;
-        }
+        Result result = pipeline.getExpectedResult(modelStageName);
         Object model = result.model;
         if (model instanceof List) {
             List<KeyPoint> points = new ArrayList<>();
@@ -42,9 +39,10 @@ public class ConvertModelToKeyPoints extends CvStage {
             }
             return new Result(null, points);
         }
-        else {
+        else if (model != null) {
             return new Result(null, convertToKeyPoint(model));
         }
+        return null;
     }
 
     private static KeyPoint convertToKeyPoint(Object keyPointHolder) throws Exception {

@@ -728,15 +728,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         }
 
         public FindHoles invoke() throws Exception {
-            List<CvStage.Result.Circle> results = null;
-            Object result = null;
-            try {
-                result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
-                results = (List<CvStage.Result.Circle>) result;
-            }
-            catch (ClassCastException e) {
-                throw new Exception("Unrecognized result type (should be Circles): " + result);
-            }
+            List<CvStage.Result.Circle> results = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
+                    .getExpectedListModel(CvStage.Result.Circle.class, null);
 
             // Sort by the distance to the camera center (which is over the part, not the hole)
             results.sort((a, b) -> {

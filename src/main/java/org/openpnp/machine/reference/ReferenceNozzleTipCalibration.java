@@ -800,16 +800,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             List<Location> locations = new ArrayList<>();
 
             String stageName = VisionUtils.PIPELINE_RESULTS_NAME;
-            Result pipelineResult = pipeline.getResult(stageName);
-            if (pipelineResult == null) {
-                throw new Exception(String.format("There should be a \"%s\" stage in the pipeline.", stageName));
-            }
-
-            Object results = pipelineResult.model;
-
-            if (results instanceof Exception) {
-                throw (Exception)results;
-            }
+            List results = pipeline.getExpectedResult(stageName).getExpectedModel(List.class);
 
             //show result from pipeline in camera view, but only if GUI is present (not so in UnitTests).
             MainFrame mainFrame = MainFrame.get();
@@ -819,29 +810,28 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             }
 
             // add all results from pipeline to a Location-list post processing
-            if (results instanceof List) {
-                // are there any results from the pipeline?
-                if (0==((List) results).size()) {
-                    // Don't throw new Exception("No results from vision. Check pipeline.");      
-                    // Instead the number of obtained fixes is evaluated later.
-                    return null;
+            // are there any results from the pipeline?
+            if (0==results.size()) {
+                // Don't throw new Exception("No results from vision. Check pipeline.");      
+                // Instead the number of obtained fixes is evaluated later.
+                return null;
+            }
+            for (Object result : results) {
+                if ((result) instanceof Result.Circle) {
+                    Result.Circle circle = ((Result.Circle) result);
+                    locations.add(VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y));
                 }
-                for (Object result : (List) results) {
-                    if ((result) instanceof Result.Circle) {
-                        Result.Circle circle = ((Result.Circle) result);
-                        locations.add(VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y));
-                    }
-                    else if ((result) instanceof KeyPoint) {
-                        KeyPoint keyPoint = ((KeyPoint) result);
-                        locations.add(VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x, keyPoint.pt.y));
-                    }
-                    else if ((result) instanceof RotatedRect) {
-                        RotatedRect rect = ((RotatedRect) result);
-                        locations.add(VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y));
-                    }
-                    else {
-                        throw new Exception("Unrecognized result " + result);
-                    }
+                else if ((result) instanceof KeyPoint) {
+                    KeyPoint keyPoint = ((KeyPoint) result);
+                    locations.add(VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x, keyPoint.pt.y));
+                }
+                else if ((result) instanceof RotatedRect) {
+                    RotatedRect rect = ((RotatedRect) result);
+                    locations.add(VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y));
+                }
+                else {
+                    Logger.error("[nozzleTipCalibration] Unrecognized result " + result);
+                    throw new Exception("Unrecognized result " + result);
                 }
             }
 

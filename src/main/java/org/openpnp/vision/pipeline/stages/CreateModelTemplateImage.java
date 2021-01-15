@@ -67,12 +67,12 @@ public class CreateModelTemplateImage extends CvStage {
                                                     .equals("")) {
             return null;
         }
-        Result modelResult = pipeline.getResult(modelStageName);
+        Result modelResult = pipeline.getExpectedResult(modelStageName);
         Mat image = pipeline.getWorkingImage()
                             .clone();
         RotatedRect rect = null;
 
-        if (modelResult == null || modelResult.model == null) {
+        if (modelResult.model == null) {
             return null;
         }
 

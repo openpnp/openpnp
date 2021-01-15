@@ -18,11 +18,11 @@ public class ImageRecall extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (imageStageName == null) {
+        if (imageStageName == null || imageStageName.trim().isEmpty()) {
             return null;
         }
-        Result result = pipeline.getResult(imageStageName);
-        if (result == null || result.image == null) {
+        Result result = pipeline.getExpectedResult(imageStageName);
+        if (result.image == null) {
             return null;
         }
         return new Result(result.image.clone());
