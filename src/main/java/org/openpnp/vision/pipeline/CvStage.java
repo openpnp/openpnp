@@ -208,13 +208,13 @@ public abstract class CvStage {
             // Due to type erasure we need to pass the class as well.
             T typedModel = null;
             if (model == null) {
-                throw new Exception("Pipeline stage "+getName()+" returned no "+expectedModelClass.getSimpleName()+".");
+                throw new Exception("Pipeline stage \""+getName()+"\" returned no "+expectedModelClass.getSimpleName()+".");
             }
             if (expectedModelClass.isInstance(model)) {
                 typedModel = (T)model;
             }
             if (typedModel == null) {
-                throw new Exception("Pipeline stage "+getName()+" returned a "+model.getClass().getSimpleName()+" but expected a "+expectedModelClass.getSimpleName()+".");
+                throw new Exception("Pipeline stage \""+getName()+"\" returned a "+model.getClass().getSimpleName()+" but expected a "+expectedModelClass.getSimpleName()+".");
             }
             return typedModel;
         }
@@ -230,7 +230,7 @@ public abstract class CvStage {
                 return (List<T>)list;
             }
             if (!expectedElementClass.isInstance(list.get(0))) {
-                throw new Exception("Pipeline stage "+getName()+" returned a "+list.get(0).getClass().getSimpleName()+" list but expected a "+expectedElementClass.getSimpleName()+" list.");
+                throw new Exception("Pipeline stage \""+getName()+"\" returned a "+list.get(0).getClass().getSimpleName()+" list but expected a "+expectedElementClass.getSimpleName()+" list.");
             }
             return (List<T>)list;
         }
