@@ -1254,7 +1254,7 @@ public class JobPanel extends JPanel {
                         Camera camera = tool.getHead().getDefaultCamera();
                         Location location = getSelection().getLocation();
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
-                        camera.cameraViewChanged();
+                        MovableUtils.fireTargetedUserAction(camera);
                         try {
                             Map<String, Object> globals = new HashMap<>();
                             globals.put("camera", camera);
@@ -1288,7 +1288,7 @@ public class JobPanel extends JPanel {
                         Camera camera = tool.getHead().getDefaultCamera();
                         Location location = getSelection().getLocation();
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
-                        camera.cameraViewChanged();
+                        MovableUtils.fireTargetedUserAction(camera);
                        
                         try {
                             Map<String, Object> globals = new HashMap<>();
@@ -1315,6 +1315,7 @@ public class JobPanel extends JPanel {
                 HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Location location = getSelection().getLocation();
                 MovableUtils.moveToLocationAtSafeZ(tool, location);
+                MovableUtils.fireTargetedUserAction(tool);
             });
         }
     };
@@ -1366,7 +1367,7 @@ public class JobPanel extends JPanel {
                 HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
-                camera.cameraViewChanged();
+                MovableUtils.fireTargetedUserAction(camera);
             });
         }
     };
@@ -1428,7 +1429,7 @@ public class JobPanel extends JPanel {
                 HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
-                camera.cameraViewChanged();
+                MovableUtils.fireTargetedUserAction(camera);
             });
         }
 

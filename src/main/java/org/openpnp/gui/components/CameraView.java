@@ -1465,7 +1465,7 @@ public class CameraView extends JComponent implements CameraListener {
                 // move the camera to the location
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
             }
-            camera.cameraViewChanged();
+            MovableUtils.fireTargetedUserAction(camera);
         });
     }
     
@@ -1489,7 +1489,7 @@ public class CameraView extends JComponent implements CameraListener {
             Location location = selectedTool.getLocation();
             location = location.derive(null, null, null, targetAngle);
             MovableUtils.moveToLocationAtSafeZ(selectedTool, location);
-            camera.cameraViewChanged();
+            MovableUtils.fireTargetedUserAction(selectedTool);
         });
     }
 
@@ -1502,8 +1502,8 @@ public class CameraView extends JComponent implements CameraListener {
             // Pass as Object for the generic behavior according to the actuator valueType.  
             boolean state = !actuator.isActuated();
             actuator.actuate((Object)state);
-            // Note, we cannot use camera.cameraViewChanged(), because this itself will turn the light on
-            // if configured so.
+            // Note, we cannot use MovableUtils.fireTargetedUserAction(), because this itself might 
+            // turn the light on.
             camera.settleAndCapture();
         });
     }

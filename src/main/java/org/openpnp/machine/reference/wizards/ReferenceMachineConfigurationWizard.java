@@ -1,8 +1,5 @@
 package org.openpnp.machine.reference.wizards;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -18,12 +15,8 @@ import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
-import org.openpnp.machine.neoden4.NeoDen4Driver;
 import org.openpnp.machine.reference.ReferenceMachine;
-import org.openpnp.machine.reference.driver.GcodeDriver;
-import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.MotionPlanner;
 
@@ -43,6 +36,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
     private JTextField discardCTf;
     private JComboBox motionPlannerClass;
     private boolean reloadWizard;
+    private JCheckBox autoToolSelect;
 
     public ReferenceMachineConfigurationWizard(ReferenceMachine machine) {
         this.machine = machine;
@@ -62,6 +56,8 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         JLabel lblHomeAfterEnabled = new JLabel("Home after enabled?");
@@ -70,13 +66,19 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         checkBoxHomeAfterEnabled = new JCheckBox("");
         panelGeneral.add(checkBoxHomeAfterEnabled, "4, 2");
         
+        JLabel lblAutoToolSelect = new JLabel("Auto tool select?");
+        panelGeneral.add(lblAutoToolSelect, "2, 4, right, default");
+        
+        autoToolSelect = new JCheckBox("");
+        panelGeneral.add(autoToolSelect, "4, 4");
+        
         JLabel lblMotionPlanning = new JLabel("Motion Planning");
-        panelGeneral.add(lblMotionPlanning, "2, 4, right, default");
+        panelGeneral.add(lblMotionPlanning, "2, 6, right, default");
         
         Object[] classNames = machine.getCompatibleMotionPlannerClasses().stream()
         .map(c -> c.getSimpleName()).toArray();
         motionPlannerClass = new JComboBox(classNames);
-        panelGeneral.add(motionPlannerClass, "4, 4, fill, default");
+        panelGeneral.add(motionPlannerClass, "4, 6, fill, default");
         
                 JPanel panelLocations = new JPanel();
         panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
@@ -139,7 +141,8 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         LengthConverter lengthConverter = new LengthConverter();
 
         addWrappedBinding(machine, "homeAfterEnabled", checkBoxHomeAfterEnabled, "selected");
-        
+        addWrappedBinding(machine, "autoToolSelect", autoToolSelect, "selected");
+
         motionPlannerClassName = machine.getMotionPlanner().getClass().getSimpleName();
         addWrappedBinding(this, "motionPlannerClassName", motionPlannerClass, "selectedItem");
 

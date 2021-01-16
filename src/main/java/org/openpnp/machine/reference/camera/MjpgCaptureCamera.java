@@ -48,11 +48,16 @@ public class MjpgCaptureCamera extends ReferenceCamera {
     // http://213.193.89.202/axis-cgi/mjpg/video.cgi
     // http://192.168.1.66:5802
 
+    @Deprecated
     @Attribute(required = false)
     private int width = 960;
 
+    @Deprecated
     @Attribute(required = false)
     private int height = 720;
+
+    @Attribute(required = false)
+    private int timeout = 3000;
 
     private InputStream mjpgStream; // BufferedInputStream mjpgStream;
     private StringWriter lineBuilder;
@@ -96,6 +101,14 @@ public class MjpgCaptureCamera extends ReferenceCamera {
         setDirty(true);
     }
 
+    public int getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(int timeout) {
+        this.timeout = timeout;
+    }
+
     @Override 
     protected synchronized boolean ensureOpen() {
         if (mjpgURL.isEmpty()) {
@@ -121,8 +134,8 @@ public class MjpgCaptureCamera extends ReferenceCamera {
         try {
             URL url = new URL(mjpgURL);
             URLConnection urlcon = url.openConnection();
-            urlcon.setConnectTimeout(3000);
-            urlcon.setReadTimeout(3000);
+            urlcon.setConnectTimeout(getTimeout());
+            urlcon.setReadTimeout(getTimeout());
 
             mjpgStream = urlcon.getInputStream(); // new BufferedInputStream(url.openStream());
             lineBuilder = new StringWriter(256);

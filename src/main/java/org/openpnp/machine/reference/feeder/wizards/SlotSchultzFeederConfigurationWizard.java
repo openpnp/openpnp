@@ -699,7 +699,7 @@ extends AbstractConfigurationWizard {
     private Action getIdActuatorAction = new AbstractAction("Get ID") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
                     throw new Exception ("Start machine first.");
                 }
@@ -723,7 +723,7 @@ extends AbstractConfigurationWizard {
     private Action testFeedActuatorAction = new AbstractAction("Test pre pick") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
                     throw new Exception ("Start machine first.");
                 }
@@ -745,7 +745,7 @@ extends AbstractConfigurationWizard {
     private Action testPostPickActuatorAction = new AbstractAction("Test post pick") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
                     throw new Exception ("Start machine first.");
                 }
@@ -769,7 +769,7 @@ extends AbstractConfigurationWizard {
     private Action getFeedCountActuatorAction = new AbstractAction("Get feed count") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
                     throw new Exception ("Start machine first.");
                 }
@@ -842,7 +842,7 @@ extends AbstractConfigurationWizard {
     private Action togglePitchActuatorAction = new AbstractAction("Toggle pitch") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
                     throw new Exception ("Start machine first.");
                 }
@@ -867,7 +867,7 @@ extends AbstractConfigurationWizard {
     private Action statusActuatorAction =  new AbstractAction("Get status") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
                     throw new Exception ("Start machine first.");
                 }
@@ -891,7 +891,7 @@ extends AbstractConfigurationWizard {
     private Action updateLocationAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 // make sure machine is powered on
                 if(Configuration.get().getMachine().isEnabled()) {
                     if (feeder.getFiducialPart() == null) {

@@ -281,7 +281,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                         Camera camera = head.getDefaultCamera();
                         Location location = getParsedLocation(homingFiducialX, homingFiducialY);
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
-                        camera.cameraViewChanged();
+                        MovableUtils.fireTargetedUserAction(camera);
                     });
                 }
             };
@@ -318,7 +318,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                         Camera camera = head.getDefaultCamera();
                         Location location = getParsedLocation(parkX, parkY);
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
-                        camera.cameraViewChanged();
+                        MovableUtils.fireTargetedUserAction(camera);
                     });
                 }
             };

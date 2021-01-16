@@ -501,7 +501,7 @@ public class JobPlacementsPanel extends JPanel {
                 Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
-                camera.cameraViewChanged();
+                MovableUtils.fireTargetedUserAction(camera);
                 try {
                     Map<String, Object> globals = new HashMap<>();
                     globals.put("camera", camera);
@@ -535,7 +535,7 @@ public class JobPlacementsPanel extends JPanel {
                 Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
-                camera.cameraViewChanged();
+                MovableUtils.fireTargetedUserAction(camera);
                 
                 try {
                     Map<String, Object> globals = new HashMap<>();
@@ -564,6 +564,7 @@ public class JobPlacementsPanel extends JPanel {
             Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
             UiUtils.submitUiMachineTask(() -> {
                 MovableUtils.moveToLocationAtSafeZ(nozzle, location);
+                MovableUtils.fireTargetedUserAction(nozzle);
             });
         }
     };
