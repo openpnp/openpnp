@@ -557,6 +557,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 feeder.feed(nozzle);
                 Location pickLocation = feeder.getPickLocation();
                 MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
+                MovableUtils.fireTargetedUserAction(nozzle);
             });
         }
     };
@@ -638,6 +639,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 throw new JobProcessorException(nozzle, "No part detected.");
             }
         }
+        // The part is now on the nozzle.
+        MovableUtils.fireTargetedUserAction(nozzle);
     }
 
     public Action moveCameraToPickLocation = new AbstractAction() {
@@ -656,7 +659,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                         .getDefaultCamera();
                 Location pickLocation = feeder.getPickLocation();
                 MovableUtils.moveToLocationAtSafeZ(camera, pickLocation);
-                camera.cameraViewChanged();
+                MovableUtils.fireTargetedUserAction(camera);
             });
         }
     };
@@ -677,6 +680,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
                 Location pickLocation = feeder.getPickLocation();
                 MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
+                MovableUtils.fireTargetedUserAction(nozzle);
             });
         }
     };

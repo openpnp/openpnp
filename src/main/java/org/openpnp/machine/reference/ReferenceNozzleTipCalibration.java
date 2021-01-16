@@ -735,6 +735,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
             // after processing the nozzle returns to safe-z
             nozzle.moveToSafeZ();
+            MovableUtils.fireTargetedUserAction(nozzle);
 
             // setting to false in the very end to prevent endless calibration repetitions if calibration was not successful (pipeline not well or similar) and the nozzle is commanded afterwards somewhere else (where the calibration is asked for again ...)
             calibrating = false;

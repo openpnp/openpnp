@@ -33,12 +33,17 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.openpnp.CameraListener;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.base.AbstractActuator;
 import org.openpnp.spi.base.AbstractCamera;
+import org.openpnp.util.MovableUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
@@ -60,7 +65,7 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
     private Thread thread;
 
     private static BufferedImage CAPTURE_ERROR_IMAGE = null;
-    
+
     /**
      * The lastTransformedImage is produced by transformImage() and consumed by the Camera thread.
      */
@@ -91,6 +96,35 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
                             if (cameraViewDirty) {
                                 captureCameraView();
                             }
+                        }
+                    }
+
+                    @Override
+                    public void machineTargetedUserAction(Machine machine, HeadMountable hm) {
+                        // Find the nearest camera.
+                        Camera nearestCamera = null;
+                        if (hm instanceof Camera) {
+                            // That's easy.
+                            nearestCamera = (Camera) hm;
+                        }
+                        else if (hm != null) {
+                            // This is not a Camera but it may be a camera subject. Get the nearest camera looking at it.   
+                            Location location = hm.getLocation().convertToUnits(LengthUnit.Millimeters);
+                            double nearestDistance = Double.POSITIVE_INFINITY;
+                            for (Camera camera : machine.getCameras()) {
+                                double distance = location.getLinearDistanceTo(camera.getLocation());
+                                if (distance < 50) {
+                                    // Roughly in view of the camera (50mm radius).
+                                    if (distance < nearestDistance) {
+                                        nearestDistance = distance;
+                                        nearestCamera = camera;
+                                    }
+                                }
+                            }
+                        }
+                        if (nearestCamera == AbstractBroadcastingCamera.this) {
+                            // The nearest is our camera. That's an updated view, then. 
+                            cameraViewHasChanged();
                         }
                     }
                 });
@@ -137,8 +171,14 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
         }
     }
 
-    @Override
-    public void cameraViewChanged() {
+    /**
+     * Whenever a user action deliberately changes the Camera view via its position, subject, or other action,
+     * this method should be called to trigger a new image capture. 
+     * If the camera is set to 0 fps or otherwise not continuously capturing, this will generate an updated 
+     * camera view (subject to configuration and other constraints).
+     *  
+     */
+    public void cameraViewHasChanged() {
         cameraViewDirty = true;
         notifyCapture();
         if (isAutoVisible()) {
@@ -213,6 +253,7 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
     public synchronized void reinitialize() throws Exception {
         stop();
         ensureOpen();
+        MovableUtils.fireTargetedUserAction(this);
     }
 
     protected synchronized void stop() {

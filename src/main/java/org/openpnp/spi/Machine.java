@@ -342,4 +342,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     
     public NozzleTip getNozzleTipByName(String name);
 
+    /**
+     * @return True if the tool in machine controls should be auto-selected based on targeted user action.
+     */
+    public boolean isAutoToolSelect();
 }

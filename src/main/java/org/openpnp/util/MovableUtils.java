@@ -2,12 +2,12 @@ package org.openpnp.util;
 
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
+import org.openpnp.spi.base.AbstractMachine;
+import org.pmw.tinylog.Logger;
 
 public class MovableUtils {
     /**
@@ -47,30 +47,20 @@ public class MovableUtils {
         hm.moveTo(location);
     }
 
-    public static void cameraViewChanged(HeadMountable hm) {
-        if (hm instanceof Camera) {
-            // That's easy, just change the camera's view itself.
-            ((Camera) hm).cameraViewChanged();
+    public static void fireTargetedUserAction(HeadMountable hm) {
+        Machine machine = Configuration.get().getMachine();
+        if (machine instanceof AbstractMachine) {
+            ((AbstractMachine)machine).fireMachineTargetedUserAction(hm);
         }
-        else if (hm != null) {
-            // This is not a Camera but a Camera subject. Get the nearest Camera looking at it.   
-            Location location = hm.getLocation().convertToUnits(LengthUnit.Millimeters);
-            Machine machine = Configuration.get().getMachine();
-            Camera nearestCamera = null;
-            double nearestDistance = Double.POSITIVE_INFINITY;
-            for (Camera camera : machine.getCameras()) {
-                double distance = location.getLinearDistanceTo(camera.getLocation());
-                if (distance < 100) {
-                    // Roughly in view of the camera (100mm).
-                    if (distance < nearestDistance) {
-                        nearestDistance = distance;
-                        nearestCamera = camera;
-                    }
-                }
-            }
-            if (nearestCamera != null) {
-                nearestCamera.cameraViewChanged();
-            }
+    }
+
+    public static boolean isInSafeZZone(HeadMountable hm) {
+        try {
+            return hm.isInSafeZZone(hm.getLocation().getLengthZ());
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+            return false;
         }
     }
 }

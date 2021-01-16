@@ -178,7 +178,7 @@ public class MultiPlacementBoardLocationProcess {
                 Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
                         placements.get(0).getLocation() );
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
-                camera.cameraViewChanged();
+                MovableUtils.fireTargetedUserAction(camera);
             });
         }
         
@@ -239,7 +239,7 @@ public class MultiPlacementBoardLocationProcess {
                     Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
                             placements.get(idxPlacement).getLocation() );
                     MovableUtils.moveToLocationAtSafeZ(camera, location);
-                    camera.cameraViewChanged();
+                    MovableUtils.fireTargetedUserAction(camera);
                 });
             }
             
@@ -295,7 +295,7 @@ public class MultiPlacementBoardLocationProcess {
         UiUtils.submitUiMachineTask(() -> {
             Location location = jobPanel.getSelection().getLocation();
             MovableUtils.moveToLocationAtSafeZ(camera, location);
-            camera.cameraViewChanged();
+            MovableUtils.fireTargetedUserAction(camera);
         });
 
         return true;

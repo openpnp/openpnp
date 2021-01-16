@@ -273,7 +273,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
     private Action getIdActuatorAction = new AbstractAction("Get ID") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
                     throw new Exception ("Start machine first.");
                 }
@@ -297,7 +297,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
     private Action testFeedActuatorAction = new AbstractAction("Test pre pick") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
                     throw new Exception ("Start machine first.");
                 }
@@ -319,7 +319,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
     private Action testPostPickActuatorAction = new AbstractAction("Test post pick") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
                     throw new Exception ("Start machine first.");
                 }
@@ -344,7 +344,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
     private Action getFeedCountActuatorAction = new AbstractAction("Get feed count") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
                     throw new Exception ("Start machine first.");
                 }
@@ -368,7 +368,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
     private Action clearCountActuatorAction = new AbstractAction("Clear feed count") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
                     throw new Exception ("Start machine first.");
                 }
@@ -394,7 +394,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
     private Action pitchActuatorAction = new AbstractAction("Get pitch") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
                     throw new Exception ("Start machine first.");
                 }
@@ -418,7 +418,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
     private Action togglePitchActuatorAction = new AbstractAction("Toggle pitch") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
                     throw new Exception ("Start machine first.");
                 }
@@ -443,7 +443,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
     private Action statusActuatorAction = new AbstractAction("Get status") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
                     throw new Exception ("Start machine first.");
                 }

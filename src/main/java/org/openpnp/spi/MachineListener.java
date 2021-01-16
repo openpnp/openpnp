@@ -28,6 +28,8 @@ package org.openpnp.spi;
 public interface MachineListener {
     void machineHeadActivity(Machine machine, Head head);
 
+    void machineTargetedUserAction(Machine abstractMachine, HeadMountable hm);
+
     void machineActuatorActivity(Machine machine, Actuator actuator);
 
     void machineEnabled(Machine machine);
@@ -48,6 +50,9 @@ public interface MachineListener {
 
         @Override
         public void machineHeadActivity(Machine machine, Head head) {}
+
+        @Override
+        public void machineTargetedUserAction(Machine machine, HeadMountable hm) {}
 
         @Override
         public void machineActuatorActivity(Machine machine, Actuator actuator) {}
