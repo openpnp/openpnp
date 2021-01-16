@@ -526,7 +526,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
     private Action testFeedActuatorAction = new AbstractAction("Test feed") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 if (feeder.getActuatorName() == null || feeder.getActuatorName().equals("")) {
                     Logger.warn("No actuatorName specified for feeder {}.", feeder.getName());
                     return;
@@ -545,7 +545,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
     private Action testPostPickActuatorAction = new AbstractAction("Test post pick") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 if (feeder.getPostPickActuatorName() == null || feeder.getPostPickActuatorName().equals("")) {
                     Logger.warn("No postPickActuatorName specified for feeder {}.", feeder.getName());
                     return;

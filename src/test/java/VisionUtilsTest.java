@@ -223,10 +223,6 @@ public class VisionUtilsTest {
         }
 
         @Override
-        public void cameraViewChanged() {
-        }
-
-        @Override
         public void ensureCameraVisible() {
         }
 

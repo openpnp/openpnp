@@ -169,23 +169,13 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     void actuateLightAfterCapture() throws Exception;
 
     /**
-     * Whenever a user action deliberately changes the Camera view via its position or subject, or relevant machine state 
-     * such as lighting, this method should be called to trigger a new image capture. If the camera is set to 
-     * 0 fps or otherwise not continuously capturing, this will generate an updated camera view (subject to 
-     * configuration or other constraints). 
-     * 
-     * @see  {@link #isAutoVisible()} and {@link #isAutoLight()}
-     */
-    public void cameraViewChanged();
-
-    /**
      * Ensure the related CameraView will eventually be made visible on the user interface.  
      */
     void ensureCameraVisible();
 
     /**
      * @return True if {@link #ensureCameraVisible()} should be called on this Camera whenever 
-     * {@link #cameraViewChanged()} is called.  
+     * a targeted user action changes the Camera view.  
      */
     default boolean isAutoVisible() { 
         return false; 

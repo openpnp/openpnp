@@ -56,7 +56,6 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
@@ -232,7 +231,7 @@ public class JogControlsPanel extends JPanel {
 
         tool.moveTo(targetLocation, MotionOption.JogMotion); 
 
-        MovableUtils.cameraViewChanged(tool);
+        MovableUtils.fireTargetedUserAction(tool);
     }
 
     private boolean nozzleLocationIsSafe(Location origin, Location dimension, Location nozzle,
@@ -560,8 +559,13 @@ public class JogControlsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Head head = machineControlsPanel.getSelectedTool().getHead();
+                if (head == null) {
+                    head = Configuration.get()
+                            .getMachine()
+                            .getDefaultHead(); 
+                }
                 MovableUtils.park(head);
-                MovableUtils.cameraViewChanged(head.getDefaultHeadMountable());
+                MovableUtils.fireTargetedUserAction(head.getDefaultHeadMountable());
             });
         }
     };
@@ -580,7 +584,7 @@ public class JogControlsPanel extends JPanel {
                 double safeZ = (safeZLength != null ? safeZLength.convertToUnits(location.getUnits()).getValue() : Double.NaN);
                 location = location.derive(null, null, safeZ, null);
                 hm.moveTo(location);
-                MovableUtils.cameraViewChanged(hm);
+                MovableUtils.fireTargetedUserAction(hm);
             });
         }
     };
@@ -594,7 +598,7 @@ public class JogControlsPanel extends JPanel {
                 Location location = hm.getLocation();
                 location = location.derive(null, null, null, 0.);
                 hm.moveTo(location);
-                MovableUtils.cameraViewChanged(hm);
+                MovableUtils.fireTargetedUserAction(hm);
             });
         }
     };
@@ -604,11 +608,10 @@ public class JogControlsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                Head head = Configuration.get()
-                        .getMachine()
-                        .getDefaultHead();
+                HeadMountable hm = machineControlsPanel.getSelectedTool();
+                Head head = hm.getHead();
                 head.moveToSafeZ();
-                MovableUtils.cameraViewChanged(head.getDefaultHeadMountable());
+                MovableUtils.fireTargetedUserAction(hm);
             });
         }
     };

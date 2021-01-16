@@ -11,6 +11,7 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.camera.MjpgCaptureCamera;
 import org.openpnp.util.UiUtils;
 
@@ -64,16 +65,26 @@ public class MjpgCaptureCameraWizard extends AbstractConfigurationWizard {
 
         lbluseFor_ip = new JLabel("(IP:port)");
         panelGeneral.add(lbluseFor_ip, "6, 2");
+        
+        lblTimeout = new JLabel("Timeout [ms]");
+        panelGeneral.add(lblTimeout, "2, 4, right, default");
+        
+        timeout = new JTextField();
+        panelGeneral.add(timeout, "4, 4, left, default");
+        timeout.setColumns(10);
 
     }
 
     @Override
     public void createBindings() {
+        IntegerConverter intConverter = new IntegerConverter();
 
         // Should always be last so that it doesn't trigger multiple camera reloads.
         addWrappedBinding(camera, "mjpgURL", ipTextField, "text");
+        addWrappedBinding(camera, "timeout", timeout, "text", intConverter);
 
         ComponentDecorators.decorateWithAutoSelect(ipTextField);
+        ComponentDecorators.decorateWithAutoSelect(timeout);
     }
 
     @Override
@@ -94,6 +105,8 @@ public class MjpgCaptureCameraWizard extends AbstractConfigurationWizard {
     private JLabel lblIP;
     private JTextField ipTextField;
     private JLabel lbluseFor_ip;
+    private JLabel lblTimeout;
+    private JTextField timeout;
 
 
 }

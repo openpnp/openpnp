@@ -34,6 +34,9 @@ import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.spi.Camera;
+import org.openpnp.util.MovableUtils;
+import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 
 import com.l2fprod.common.propertysheet.*;
@@ -154,7 +157,16 @@ public class PipelinePanel extends JPanel {
     }
     
     public void initializeFocus() {
-    	stagesTable.grabFocus();
+        stagesTable.grabFocus();
+        try {
+            CvPipeline pipeline = editor.getPipeline();
+            Camera camera = (Camera) pipeline.getProperty("camera");
+            if (camera != null) {
+                MovableUtils.fireTargetedUserAction(camera);
+            }
+        }
+        catch (Exception e) {
+        }
     }
 
     public void onStagePropertySheetValueChanged(Object aValue, int row, int column) {

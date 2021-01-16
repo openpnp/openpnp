@@ -104,6 +104,7 @@ import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.openpnp.util.Collect;
 import org.pmw.tinylog.Logger;
+import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.core.Commit;
@@ -124,6 +125,9 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Element(required = false)
     private boolean homeAfterEnabled = false;
+
+    @Attribute(required = false)
+    private boolean autoToolSelect = true;
 
     @ElementList(required = false)
     Set<String> dismissedSolutions = new HashSet<>();
@@ -244,6 +248,15 @@ public class ReferenceMachine extends AbstractMachine {
 
     public void setMotionPlanner(MotionPlanner motionPlanner) {
         this.motionPlanner = motionPlanner;
+    }
+
+    @Override
+    public boolean isAutoToolSelect() {
+        return autoToolSelect;
+    }
+
+    public void setAutoToolSelect(boolean autoToolSelect) {
+        this.autoToolSelect = autoToolSelect;
     }
 
     @Override

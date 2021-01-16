@@ -632,7 +632,7 @@ extends AbstractReferenceFeederConfigurationWizard {
             if (Configuration.get().getMachine().isEnabled()) {
                 UiUtils.submitUiMachineTask(() -> {
                     MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
-                    feeder.getCamera().cameraViewChanged();
+                    MovableUtils.fireTargetedUserAction(feeder.getCamera());
                     SwingUtilities.invokeAndWait(() -> {
                         UiUtils.messageBoxOnException(() -> {
                             editPipeline();
@@ -807,7 +807,7 @@ extends AbstractReferenceFeederConfigurationWizard {
             applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
                 MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
-                feeder.getCamera().cameraViewChanged();
+                MovableUtils.fireTargetedUserAction(feeder.getCamera());
                 SwingUtilities.invokeAndWait(() -> {
                     UiUtils.messageBoxOnException(() -> {
                         new RegionOfInterestProcess(MainFrame.get(), feeder.getCamera(), "Setup OCR Region") {
@@ -834,7 +834,7 @@ extends AbstractReferenceFeederConfigurationWizard {
             applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
                 MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
-                feeder.getCamera().cameraViewChanged();
+                MovableUtils.fireTargetedUserAction(feeder.getCamera());
                 StringBuilder report = new StringBuilder();
                 feeder.performOcr(OcrWrongPartAction.ChangePart, false, report);
                 if (report.length() == 0) {
@@ -939,7 +939,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                 UiUtils.submitUiMachineTask(() -> {
                     Camera camera = feeder.getCamera(); 
                     MovableUtils.moveToLocationAtSafeZ(camera, newFeeder.getPickLocation(0, null));
-                    camera.cameraViewChanged();
+                    MovableUtils.fireTargetedUserAction(camera);
                     newFeeder.autoSetup();
                     SwingUtilities.invokeLater(() -> {
                         Configuration.get().getBus().post(new FeederSelectedEvent(newFeeder, this));

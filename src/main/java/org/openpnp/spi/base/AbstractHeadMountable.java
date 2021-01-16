@@ -206,10 +206,16 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         return safeZ[0];
     }
 
+    @Override
     public boolean isInSafeZZone(Length z) throws Exception {
         CoordinateAxis coordAxis = getCoordinateAxisZ();
-        Length rawZ = headMountableToRawZ(coordAxis, z);
-        return coordAxis.isInSafeZone(rawZ);
+        if (coordAxis != null) {
+            Length rawZ = headMountableToRawZ(coordAxis, z);
+            return coordAxis.isInSafeZone(rawZ);
+        }
+        else {
+            return true;
+        }
     }
 
     public void setSafeZ(Length safeZ) {

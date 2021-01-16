@@ -23,6 +23,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzleTip;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
@@ -652,7 +653,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         @Override
         public void actionPerformed(final ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                MainFrame.get().getMachineControls().getSelectedNozzle().loadNozzleTip(ReferenceNozzleTip.this);
+                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                nozzle.loadNozzleTip(ReferenceNozzleTip.this);
+                MovableUtils.fireTargetedUserAction(nozzle);
             });
         }
     };
@@ -667,7 +670,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         @Override
         public void actionPerformed(final ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                MainFrame.get().getMachineControls().getSelectedNozzle().unloadNozzleTip();
+                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                nozzle.unloadNozzleTip();
+                MovableUtils.fireTargetedUserAction(nozzle);
             });
         }
     };

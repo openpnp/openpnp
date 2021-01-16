@@ -436,7 +436,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
                     UiUtils.submitUiMachineTask(() -> {
                         MovableUtils.moveToLocationAtSafeZ(jogTool, camera.getLocation());
                         camera.lightSettleAndCapture();
-                        camera.cameraViewChanged();
+                        MovableUtils.fireTargetedUserAction(camera);
                     });
                 }
                 else {
@@ -446,7 +446,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
                         jogTool.moveToSafeZ();
                         jogTool.moveTo(location);
                         camera.lightSettleAndCapture();
-                        camera.cameraViewChanged();
+                        MovableUtils.fireTargetedUserAction(camera);
                     });
                 }
             });
@@ -462,7 +462,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
             UiUtils.messageBoxOnException(() -> {
                 applyAction.actionPerformed(e);
                 camera.lightSettleAndCapture();
-                camera.cameraViewChanged();
+                MovableUtils.fireTargetedUserAction(camera);
             });
         }
     };
