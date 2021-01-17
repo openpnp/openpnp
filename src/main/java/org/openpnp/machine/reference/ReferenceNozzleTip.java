@@ -135,7 +135,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     @Attribute(required = false)
     private boolean isPushAndDragAllowed = false;
     
-    // berts stuff start
     @Element(required = false)
     protected String changerActuatorPostStepOne;
 
@@ -144,8 +143,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     
     @Element(required = false)
     protected String changerActuatorPostStepThree;
-    
-    //end bert
 
     public ReferenceNozzleTip() {
     }
@@ -247,7 +244,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setChangerStartLocation(Location changerStartLocation) {
+        Object oldValue = this.changerStartLocation;
         this.changerStartLocation = changerStartLocation;
+        firePropertyChange("changerStartLocation", oldValue, changerStartLocation);
     }
 
     public Location getChangerMidLocation() {
@@ -255,7 +254,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setChangerMidLocation(Location changerMidLocation) {
+        Object oldValue = this.changerMidLocation;
         this.changerMidLocation = changerMidLocation;
+        firePropertyChange("changerMidLocation", oldValue, changerMidLocation);
     }
 
     public Location getChangerMidLocation2() {
@@ -263,7 +264,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setChangerMidLocation2(Location changerMidLocation2) {
+        Object oldValue = this.changerMidLocation2;
         this.changerMidLocation2 = changerMidLocation2;
+        firePropertyChange("changerMidLocation2", oldValue, changerMidLocation2);
     }
 
     public Location getChangerEndLocation() {
@@ -271,7 +274,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setChangerEndLocation(Location changerEndLocation) {
+        Object oldValue = this.changerEndLocation;
         this.changerEndLocation = changerEndLocation;
+        firePropertyChange("changerEndLocation", oldValue, changerEndLocation);
     }
     
     public double getChangerStartToMidSpeed() {
@@ -279,7 +284,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setChangerStartToMidSpeed(double changerStartToMidSpeed) {
+        Object oldValue = this.changerStartToMidSpeed;
         this.changerStartToMidSpeed = changerStartToMidSpeed;
+        firePropertyChange("changerStartToMidSpeed", oldValue, changerStartToMidSpeed);
     }
 
     public double getChangerMidToMid2Speed() {
@@ -287,7 +294,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setChangerMidToMid2Speed(double changerMidToMid2Speed) {
+        Object oldValue = this.changerMidToMid2Speed;
         this.changerMidToMid2Speed = changerMidToMid2Speed;
+        firePropertyChange("changerMidToMid2Speed", oldValue, changerMidToMid2Speed);
     }
 
     public double getChangerMid2ToEndSpeed() {
@@ -295,16 +304,19 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setChangerMid2ToEndSpeed(double changerMid2ToEndSpeed) {
+        Object oldValue = this.changerMid2ToEndSpeed;
         this.changerMid2ToEndSpeed = changerMid2ToEndSpeed;
+        firePropertyChange("changerMid2ToEndSpeed", oldValue, changerMid2ToEndSpeed);
     }
-    
-    //bert start
+
     public String getChangerActuatorPostStepOne() {
         return changerActuatorPostStepOne;
     }
 
     public void setChangerActuatorPostStepOne(String changerActuatorPostStepOne) {
+        Object oldValue = this.changerActuatorPostStepOne;
         this.changerActuatorPostStepOne = changerActuatorPostStepOne;
+        firePropertyChange("changerActuatorPostStepOne", oldValue, changerActuatorPostStepOne);
     }
 
     public String getChangerActuatorPostStepTwo() {
@@ -312,7 +324,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setChangerActuatorPostStepTwo(String changerActuatorPostStepTwo) {
+        Object oldValue = this.changerActuatorPostStepTwo;
         this.changerActuatorPostStepTwo = changerActuatorPostStepTwo;
+        firePropertyChange("changerActuatorPostStepTwo", oldValue, changerActuatorPostStepTwo);
     }
     
     public String getChangerActuatorPostStepThree() {
@@ -320,9 +334,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setChangerActuatorPostStepThree(String changerActuatorPostStepThree) {
+        Object oldValue = this.changerActuatorPostStepThree;
         this.changerActuatorPostStepThree = changerActuatorPostStepThree;
+        firePropertyChange("changerActuatorPostStepThree", oldValue, changerActuatorPostStepThree);
     }
-    // bert stop
 
     public ReferenceNozzle getNozzleAttachedTo() {
         for (Head head : Configuration.get().getMachine().getHeads()) {
