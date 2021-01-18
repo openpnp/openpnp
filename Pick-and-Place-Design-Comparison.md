@@ -1,5 +1,5 @@
 ## Pick-and-Place vs 3D Printers and CNC Machines
-The hardware design considerations for a pick-and-place (PnP) machine are different from those for a 3D printer of CNC machine. Though you can adapt other designs to work as a PnP if all you need is a bare-bones machine, it's nearly always necessary to diverge significantly from 3D printer and CNC designs to the point that you should not expect to use one as a starting point for your design/build.
+The hardware design considerations for a pick-and-place (PnP) machine are different from those for a 3D printer or CNC machine. Though you can adapt other designs to work as a PnP if all you need is a bare-bones machine, it's nearly always necessary to diverge significantly from 3D printer and CNC designs to the point that you should not expect to use one as a starting point for your design/build.
 
 ### Compared to both 3D printers and CNC machines
 * The X and Y axes of PnP machines need accuracy and precision only in final movement coordinates; how they get there is almost irrelevant.
