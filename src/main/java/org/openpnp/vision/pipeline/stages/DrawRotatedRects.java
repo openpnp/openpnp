@@ -105,11 +105,11 @@ public class DrawRotatedRects extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (rotatedRectsStageName == null) {
+        if (rotatedRectsStageName == null || rotatedRectsStageName.trim().isEmpty()) {
             throw new Exception("rotatedRectsStageName must be specified.");
         }
-        Result result = pipeline.getResult(rotatedRectsStageName);
-        if (result == null || result.model == null) {
+        Result result = pipeline.getExpectedResult(rotatedRectsStageName);
+        if (result.model == null) {
             return null;
         }
 

@@ -293,21 +293,12 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
                     // if we aren't running in the UI this will fail, and that's okay
                 }
             }
-    
+
             // Grab the results
-            Object result = null;
-            List<CvStage.Result.Circle> results = null;
-            try {
-                result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;            
-                results = (List<CvStage.Result.Circle>) result;
-            }
-            catch (ClassCastException e) {
-                throw new Exception("Unrecognized result type (should be Circles): " + result);
-            }
-            if (results.isEmpty()) {
-                throw new Exception("Feeder " + getName() + ": No tape holes found.");
-            }
-    
+            List<CvStage.Result.Circle> results = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
+                    .getExpectedListModel(CvStage.Result.Circle.class, 
+                            new Exception("Feeder " + getName() + ": No tape holes found."));            
+
             // Find the closest result
             results.sort((a, b) -> {
                 Double da = VisionUtils.getPixelLocation(camera, a.x, a.y)

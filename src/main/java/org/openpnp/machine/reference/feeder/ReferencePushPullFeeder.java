@@ -1363,7 +1363,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     final double sprocketHolePitchPx = sprocketHolePitchMm/mmScale.getX();
                     final double sprocketHoleTolerancePx = sprocketHoleToleranceMm/mmScale.getX(); 
                     // Grab the results
-                    resultsList = (List) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
+                    resultsList = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
+                            .getExpectedModel(List.class);
 
                     // Convert eligible results into circles
                     List<CvStage.Result.Circle> results = new ArrayList<>();;
