@@ -11,6 +11,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
@@ -132,7 +133,7 @@ public class VisionUtilsTest {
         }
 
         @Override
-        public BufferedImage captureForPreview() {
+        public BufferedImage captureTransformed() {
             return null;
         }
 
@@ -178,12 +179,24 @@ public class VisionUtilsTest {
 
         @Override
         public void close() throws IOException {
-
         }
 
         @Override
-        public BufferedImage settleAndCapture() {
+        public BufferedImage settleAndCapture() throws Exception {
             return null;
+        }
+
+        @Override
+        public BufferedImage lightSettleAndCapture() {
+            return null;
+        }
+
+        @Override
+        public void actuateLightBeforeCapture(Object light) throws Exception {
+        }
+
+        @Override
+        public void actuateLightAfterCapture() throws Exception {
         }
 
         @Override
@@ -202,6 +215,20 @@ public class VisionUtilsTest {
 
         @Override
         public void home() throws Exception {
+        }
+
+        @Override
+        public Actuator getLightActuator() {
+            return null;
+        }
+
+        @Override
+        public void ensureCameraVisible() {
+        }
+
+        @Override
+        public boolean hasNewFrame() {
+            return true;
         }
     }
 }

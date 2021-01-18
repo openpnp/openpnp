@@ -171,6 +171,7 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
                 .put(new AxesLocation(this, coordinate));
         Location location = axisMover.toHeadMountableLocation(axisMover.toTransformed(axesLocation));
         MovableUtils.moveToLocationAtSafeZ(axisMover, location);
+        MovableUtils.fireTargetedUserAction(axisMover);
     }
 
     /**

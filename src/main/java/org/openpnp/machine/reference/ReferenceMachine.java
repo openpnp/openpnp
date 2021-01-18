@@ -104,6 +104,7 @@ import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.openpnp.util.Collect;
 import org.pmw.tinylog.Logger;
+import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.core.Commit;
@@ -124,6 +125,9 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Element(required = false)
     private boolean homeAfterEnabled = false;
+
+    @Attribute(required = false)
+    private boolean autoToolSelect = true;
 
     @ElementList(required = false)
     Set<String> dismissedSolutions = new HashSet<>();
@@ -210,6 +214,9 @@ public class ReferenceMachine extends AbstractMachine {
             fireMachineEnabled();
         }
         else {
+            // remove homed-flag if machine is disabled
+            this.setHomed(false);
+            fireMachineAboutToBeDisabled("User requested stop.");
             // In a multi-driver machine, we must try to disable all drivers even if one throws.
             Exception e = null;
             List<Driver> enabledDrivers = new ArrayList<>();
@@ -231,9 +238,6 @@ public class ReferenceMachine extends AbstractMachine {
                 throw e;
             }
             fireMachineDisabled("User requested stop.");
-
-            // remove homed-flag if machine is disabled
-            this.setHomed(false);
         }
     }
 
@@ -244,6 +248,15 @@ public class ReferenceMachine extends AbstractMachine {
 
     public void setMotionPlanner(MotionPlanner motionPlanner) {
         this.motionPlanner = motionPlanner;
+    }
+
+    @Override
+    public boolean isAutoToolSelect() {
+        return autoToolSelect;
+    }
+
+    public void setAutoToolSelect(boolean autoToolSelect) {
+        this.autoToolSelect = autoToolSelect;
     }
 
     @Override
@@ -478,6 +491,7 @@ public class ReferenceMachine extends AbstractMachine {
         Logger.info("setHomed({})", isHomed);
         this.isHomed = isHomed;
         firePropertyChange("homed", null, this.isHomed);
+        fireMachineHomed(isHomed);
     }
 
     @Override

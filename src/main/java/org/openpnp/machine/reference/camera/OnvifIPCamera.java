@@ -22,7 +22,6 @@ package org.openpnp.machine.reference.camera;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -39,7 +38,6 @@ import org.onvif.ver10.schema.VideoEncoderConfigurationOptions;
 import org.onvif.ver10.schema.VideoEncoding;
 import org.onvif.ver10.schema.VideoRateControl;
 import org.onvif.ver10.schema.VideoResolution;
-import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.OnvifIPCameraConfigurationWizard;
@@ -63,27 +61,31 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
     private int resizeHeight;
 
     @Attribute(required = false)
-    private int fps = 10;
-
-    @Attribute(required = false)
     private String hostIP;
     @Attribute(required = false)
     private String username;
     @Attribute(required = false)
     private String password;
 
-    private Thread thread;
     private boolean dirty = false;
 
     private OnvifDevice nvt;
     private URL snapshotURI;
 
     public OnvifIPCamera() {}
+    
+    @Override 
+    protected synchronized boolean ensureOpen() {
+        if (hostIP == null || hostIP.isEmpty()) {
+            return false;
+        }
+        return super.ensureOpen();
+    }
 
     @Override
     public BufferedImage internalCapture() {
-        if (thread == null) {
-            initCamera();
+        if (! ensureOpen()) {
+            return null;
         }
         try {
             if (snapshotURI == null) {
@@ -97,83 +99,10 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
         }
     }
 
-    private BufferedImage resizeImage(BufferedImage src) {
-        int imgW = src.getWidth();
-        int imgH = src.getHeight();
-        if (resizeWidth != 0) {
-            imgW = resizeWidth;
-        }
-        if (resizeHeight != 0) {
-            imgH = resizeHeight;
-        }
-
-        if ((imgW != src.getWidth()) || (imgH != src.getHeight())) {
-            Image tmp = src.getScaledInstance(imgW, imgH, Image.SCALE_SMOOTH);
-            BufferedImage dst = new BufferedImage(imgW, imgH, BufferedImage.TYPE_INT_RGB);
-
-            Graphics2D g2d = dst.createGraphics();
-            g2d.drawImage(tmp, 0, 0, null);
-            g2d.dispose();
-
-            return dst;
-        }
-
-        return src;
-    }
-
     @Override
-    public synchronized void startContinuousCapture(CameraListener listener) {
-        if (thread == null) {
-            initCamera();
-        }
-        super.startContinuousCapture(listener);
-    }
+    public void open() throws Exception {
+        stop();
 
-    public void run() {
-        while (!Thread.interrupted()) {
-            try {
-                BufferedImage image = internalCapture();
-                if (image != null) {
-                    broadcastCapture(captureForPreview());
-                }
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                Thread.sleep(1000 / fps);
-            }
-            catch (InterruptedException e) {
-                break;
-            }
-        }
-    }
-
-    private Profile findJPEGProfile(InitialDevices devices) throws Exception {
-        List<Profile> profiles = devices.getProfiles();
-
-        for (Profile profile : profiles) {
-            VideoEncoderConfiguration videoEncoderConfiguration = profile.getVideoEncoderConfiguration();
-            VideoEncoding videoEncoding = videoEncoderConfiguration.getEncoding();
-            if (videoEncoding == VideoEncoding.JPEG) {
-                return profile;
-            }
-        }
-
-        throw new Exception("No JPEG profiles available for camera at " + hostIP);
-    }
-
-    private void initCamera() {
-        if (thread != null) {
-            thread.interrupt();
-            try {
-                thread.join(3000);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            thread = null;
-        }
         try {
             setDirty(false);
             width = null;
@@ -279,29 +208,50 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
             e.printStackTrace();
             return;
         }
-        thread = new Thread(this);
-        thread.setDaemon(true);
-        thread.start();
+        
+        super.open();
     }
 
-    @Override
-    public void close() throws IOException {
-        super.close();
-        if (thread != null) {
-            thread.interrupt();
-            try {
-                thread.join(3000);
-            }
-            catch (Exception e) {
+    private BufferedImage resizeImage(BufferedImage src) {
+        int imgW = src.getWidth();
+        int imgH = src.getHeight();
+        if (resizeWidth != 0) {
+            imgW = resizeWidth;
+        }
+        if (resizeHeight != 0) {
+            imgH = resizeHeight;
+        }
 
+        if ((imgW != src.getWidth()) || (imgH != src.getHeight())) {
+            Image tmp = src.getScaledInstance(imgW, imgH, Image.SCALE_SMOOTH);
+            BufferedImage dst = new BufferedImage(imgW, imgH, BufferedImage.TYPE_INT_RGB);
+
+            Graphics2D g2d = dst.createGraphics();
+            g2d.drawImage(tmp, 0, 0, null);
+            g2d.dispose();
+
+            return dst;
+        }
+
+        return src;
+    }
+
+    private Profile findJPEGProfile(InitialDevices devices) throws Exception {
+        List<Profile> profiles = devices.getProfiles();
+
+        for (Profile profile : profiles) {
+            VideoEncoderConfiguration videoEncoderConfiguration = profile.getVideoEncoderConfiguration();
+            VideoEncoding videoEncoding = videoEncoderConfiguration.getEncoding();
+            if (videoEncoding == VideoEncoding.JPEG) {
+                return profile;
             }
         }
+
+        throw new Exception("No JPEG profiles available for camera at " + hostIP);
     }
 
     public List<VideoResolution> getSupportedResolutions() {
-        if (thread == null) {
-            initCamera();
-        }
+        ensureOpen();
         if (nvt == null) {
             return null;
         }
@@ -343,8 +293,6 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
     public synchronized void setHostIP(String hostIP) {
         this.hostIP = hostIP;
         setDirty(true);
-
-        initCamera();
     }
 
     public String getUsername() {
@@ -388,14 +336,6 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
 
     public void setResizeHeight(int resizeHeight) {
         this.resizeHeight = resizeHeight;
-    }
-
-    public int getFps() {
-        return fps;
-    }
-
-    public void setFps(int fps) {
-        this.fps = fps;
     }
 
     public boolean isDirty() {

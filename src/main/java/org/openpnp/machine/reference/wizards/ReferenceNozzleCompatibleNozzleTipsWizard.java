@@ -33,6 +33,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
 @SuppressWarnings("serial")
@@ -152,11 +153,13 @@ public class ReferenceNozzleCompatibleNozzleTipsWizard extends AbstractConfigura
                             }
                         }
                         nozzle.loadNozzleTip(getSelection());
+                        MovableUtils.fireTargetedUserAction(nozzle);
                     });
                 }
                 else {
                     UiUtils.submitUiMachineTask(() -> {
                         nozzle.unloadNozzleTip();
+                        MovableUtils.fireTargetedUserAction(nozzle);
                     });
                 }
             }

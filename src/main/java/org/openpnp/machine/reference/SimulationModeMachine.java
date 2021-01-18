@@ -23,6 +23,9 @@ package org.openpnp.machine.reference;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.util.HashMap;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.function.BiFunction;
 
 import org.openpnp.gui.MainFrame;
@@ -49,8 +52,8 @@ import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.Machine;
 import org.openpnp.spi.Locatable.LocationOption;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.Collect;
 import org.openpnp.util.GcodeServer;
@@ -534,10 +537,55 @@ public class SimulationModeMachine extends ReferenceMachine {
         return axesLocation;
     }
 
-    public static void drawSimulatedCameraNoise(Graphics2D gFrame, int width, int height) {
+    @Override
+    public void fireMachineActuatorActivity(Actuator actuator) {
+        super.fireMachineActuatorActivity(actuator);
+        ActuatorHistory history = getActuatorHistory(actuator);
+        history.put(NanosecondTime.getRuntimeSeconds(), actuator.isActuated());
+    }
+
+    private static class ActuatorHistory  {
+        private TreeMap<Double, Boolean> stateHistory = new TreeMap<>();
+
+        public void put(double t, boolean actuated) {
+            stateHistory.put(t, actuated);
+        }
+
+        public boolean getActuationAt(double t) {
+            Entry<Double, Boolean> state = stateHistory.floorEntry(t);
+            if (state != null) {
+                while (stateHistory.firstKey() < state.getKey() - 30.0) {
+                    // Remove ancient history.
+                    stateHistory.remove(stateHistory.firstKey());
+                }
+                return state.getValue();
+            }
+            return false;
+        }
+    }
+    private HashMap<Actuator, ActuatorHistory> cameraLightActuatorHistories = new HashMap<>();
+    protected ActuatorHistory getActuatorHistory(Actuator lightActuator) {
+        ActuatorHistory actuatorHistory = cameraLightActuatorHistories.get(lightActuator);
+        if (actuatorHistory == null) {
+            actuatorHistory = new ActuatorHistory();
+            cameraLightActuatorHistories.put(lightActuator, actuatorHistory);
+        }
+        return actuatorHistory;
+    }
+
+    public static void simulateCameraExposure(Camera camera, Graphics2D gFrame, int width, int height) {
         SimulationModeMachine machine = getSimulationModeMachine();
         if (machine != null 
                 && machine.getSimulationMode().isDynamicallyImperfectMachine()) {
+            Actuator lightActuator = camera.getLightActuator();
+            if (lightActuator != null) {
+                ActuatorHistory actuatorHistory = machine.getActuatorHistory(lightActuator);
+                if (!actuatorHistory.getActuationAt(NanosecondTime.getRuntimeSeconds() - machine.getSimulatedCameraLag())) {
+                    // Shade the view. 
+                    gFrame.setColor(new Color(0, 0, 0, 200));
+                    gFrame.fillRect(0, 0, width, height);
+                }
+            }
             if (machine.getSimulatedCameraNoise() > 0) { 
                 for (int noise = (int) (Math.random()*machine.getSimulatedCameraNoise()); noise > 0; noise--) {
                     int x = (int) (Math.random()*width) - 1;

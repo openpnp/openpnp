@@ -117,6 +117,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JTextField textFieldFeedCount;
     private JButton btnResetFeedCount;
     private JLabel lblMaxFeedCount;
+    private JButton btnMaxFeedCount;
     private JTextField textFieldMaxFeedCount;
     private JLabel lblTapeType;
     private JComboBox comboBoxTapeType;
@@ -270,7 +271,20 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelTapeSettings.add(textFieldMaxFeedCount,"10,8");
         textFieldMaxFeedCount.setColumns(10);
         textFieldMaxFeedCount.setToolTipText("Max number of parts to feed from this strip.  If set to zero, this setting is ignored.");
-
+        btnMaxFeedCount = new JButton(new AbstractAction("Auto Set MaxFeedCount") {
+        	@Override
+        	public void actionPerformed(ActionEvent e) {
+        		Location h0 = feeder.getReferenceHoleLocation();
+        		Location h1 = feeder.getLastHoleLocation();
+        		Length strip_len = h0.getLinearLengthTo(h1);
+        		double part_count = strip_len.divide(feeder.getPartPitch());
+        		int ipart_count = 1+(int)Math.round(part_count);
+        		textFieldMaxFeedCount.setText(Integer.toString(ipart_count));
+        	}
+        });
+        btnMaxFeedCount.setToolTipText("Calculate the Max Feed Count using the feeder's hole locations and part pitch");
+        panelTapeSettings.add(btnMaxFeedCount,"12,8");
+        
         JPanel panelVision = new JPanel();
         panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));

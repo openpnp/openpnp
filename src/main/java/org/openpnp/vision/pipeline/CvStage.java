@@ -10,6 +10,7 @@ import java.beans.PropertyDescriptor;
 
 import org.opencv.core.Mat;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.vision.pipeline.ui.PipelinePropertySheetTable;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -288,5 +289,14 @@ public abstract class CvStage {
                         + height + ", score=" + score + "]";
             }
         }
+    }
+
+    /**
+     * Stages can override to register customized PropertyEditors.
+     * 
+     * @param table
+     * @param pipeline
+     */
+    public void customizePropertySheet(PipelinePropertySheetTable table, CvPipeline pipeline) {
     }
 }

@@ -1649,6 +1649,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             performVisionOperations(camera, pipeline, true, true, false, OcrWrongPartAction.ChangePart, false, null);
             // Move the camera back to the pick location
             MovableUtils.moveToLocationAtSafeZ(camera, getLocation());
+            MovableUtils.fireTargetedUserAction(camera);
         }
     }
 

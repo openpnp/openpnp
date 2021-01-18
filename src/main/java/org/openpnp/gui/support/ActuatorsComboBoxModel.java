@@ -40,27 +40,54 @@ public class ActuatorsComboBoxModel extends DefaultComboBoxModel implements Prop
             return o1.getName().compareTo(o2.getName());
         }
     };
-    private AbstractModelObject actuatorsBase;
+    private Machine actuatorsMachine;
+    private Head actuatorsHead;
     
-    public ActuatorsComboBoxModel(Object object) {
-        this.actuatorsBase = (AbstractModelObject)object;
+    private void init() {
         addAllElements();
-        this.actuatorsBase.addPropertyChangeListener("actuators", this);
+        if (actuatorsMachine != null) {
+            ((AbstractModelObject) actuatorsMachine).addPropertyChangeListener("actuators", this);
+        }
+        if (actuatorsHead != null) {
+            ((AbstractModelObject) actuatorsHead).addPropertyChangeListener("actuators", this);
+        }
+    }
+    public ActuatorsComboBoxModel(Object actuatorsBase) {
+        if (actuatorsBase instanceof Head) {
+            this.actuatorsHead = (Head)actuatorsBase;
+        }
+        else if (actuatorsBase instanceof Machine) {
+            this.actuatorsMachine = (Machine)actuatorsBase;
+        }
+        init();
+    }
+    public ActuatorsComboBoxModel(Head actuatorsHead) {
+        this.actuatorsHead = actuatorsHead;
+        init();
+    }
+    public ActuatorsComboBoxModel(Machine actuatorsMachine) {
+        this.actuatorsMachine = actuatorsMachine;
+        init();
+    }
+    public ActuatorsComboBoxModel(Machine actuatorsMachine, Head actuatorsHead) {
+        this.actuatorsMachine = actuatorsMachine;
+        this.actuatorsHead = actuatorsHead;
+        init();
     }
 
     private void addAllElements() {
-        ArrayList<Actuator> actuators = null;
-        if (actuatorsBase instanceof Machine) {
-             actuators = new ArrayList<>(((Machine)actuatorsBase).getActuators());
+        ArrayList<Actuator> actuators = new ArrayList<>();
+        if (actuatorsMachine != null) {
+            actuators.addAll(actuatorsMachine.getActuators());
         }
-        if (actuatorsBase instanceof Head) {
-            actuators = new ArrayList<>(((Head)actuatorsBase).getActuators());
+        if (actuatorsHead != null) {
+            actuators.addAll(actuatorsHead.getActuators());
         }
         Collections.sort(actuators, comparator);
+        addElement(new String());
         for (Actuator actuator : actuators) {
             addElement(actuator.getName());
         }
-        addElement(new String());
     }
 
     @Override

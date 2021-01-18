@@ -39,6 +39,13 @@ public interface Movable extends Locatable {
      */
     Length getEffectiveSafeZ() throws Exception;
 
+    /**
+     * @param z
+     * @return True if the given z is in the Safe Z Zone.
+     * @throws Exception
+     */
+    boolean isInSafeZZone(Length z) throws Exception;
+
     void moveToSafeZ(double speed) throws Exception;
 
     void moveToSafeZ() throws Exception;

@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
+ */
+
 package org.openpnp.machine.reference.driver;
 
 import java.io.File;
@@ -57,6 +76,7 @@ import org.openpnp.spi.base.AbstractHeadMountable;
 import org.openpnp.spi.base.AbstractSingleTransformedAxis;
 import org.openpnp.spi.base.AbstractTransformedAxis;
 import org.openpnp.util.NanosecondTime;
+import org.openpnp.util.TextUtils;
 import org.openpnp.util.Triplet;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -258,7 +278,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     protected List<Axis> axes = null;
 
     private ReaderThread readerThread;
-    boolean disconnectRequested;
+    volatile boolean disconnectRequested;
     protected boolean connected;
     
     static public class Line {
@@ -320,6 +340,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public synchronized void connect() throws Exception {
+        disconnectRequested = false;
         getCommunications().connect();
         connected = false;
 
@@ -857,7 +878,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         catch (Exception e) {
             Logger.error("disconnect()", e);
         }
-        disconnectRequested = false;
 
         closeGcodeLogger();
     }
@@ -1141,8 +1161,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     continue;
                 }
                 catch (IOException e) {
-                    Logger.error("Read error", e);
-                    return;
+                    if (disconnectRequested) {
+                        Logger.trace("Read error while disconnecting", e);
+                        return;
+                    }
+                    else {
+                        Logger.error("Read error", e);
+                        return;
+                    }
                 }
                 Line line = new Line(receivedLine);
                 Logger.trace("[{}] << {}", getCommunications().getConnectionName(), line);
@@ -1224,34 +1250,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         return true;
     }
 
-    /**
-     * Find matches of variables in the format {Name:Format} and replace them with the specified
-     * value formatted using String.format with the specified Format. Format is optional and
-     * defaults to %s. A null value replaces the variable with "".
-     */
     static protected String substituteVariable(String command, String name, Object value) {
-        if (command == null) {
-            return command;
-        }
-        StringBuffer sb = new StringBuffer();
-        Matcher matcher = Pattern.compile("\\{(\\w+)(?::(.+?))?\\}").matcher(command);
-        while (matcher.find()) {
-            String n = matcher.group(1);
-            if (!n.equals(name)) {
-                continue;
-            }
-            String format = matcher.group(2);
-            if (format == null) {
-                format = "%s";
-            }
-            String v = "";
-            if (value != null) {
-                v = String.format((Locale) null, format, value);
-            }
-            matcher.appendReplacement(sb, v);
-        }
-        matcher.appendTail(sb);
-        return sb.toString();
+        return TextUtils.substituteVar(command, name, value);
     }
 
     /**
