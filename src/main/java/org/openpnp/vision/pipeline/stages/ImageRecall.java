@@ -25,6 +25,6 @@ public class ImageRecall extends CvStage {
         if (result.image == null) {
             return null;
         }
-        return new Result(result.image.clone());
+        return new Result(result.image.clone(), result.colorSpace);
     }
 }
