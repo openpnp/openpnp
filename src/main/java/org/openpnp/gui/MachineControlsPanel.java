@@ -416,7 +416,10 @@ public class MachineControlsPanel extends JPanel {
 
         @Override
         public void machineTargetedUserAction(Machine machine, HeadMountable hm) {
-            if (hm != null) {
+            if (hm != null 
+                    && hm.getHead() != null) { // Do this only if this is a true HeadMountable 
+                                               // i.e. not for bottom cameras or Machine actuators.
+
                 if (getSelectedTool() != hm || MovableUtils.isInSafeZZone(hm)) {
                     lastUserActionLocation = hm.getLocation().convertToUnits(LengthUnit.Millimeters);
                 }
