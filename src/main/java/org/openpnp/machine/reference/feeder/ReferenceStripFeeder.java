@@ -223,6 +223,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     public void feed(Nozzle nozzle) throws Exception {
         setFeedCount(getFeedCount() + 1);
 
+        // Throw an exception when the feeder runs out of parts
         if ((maxFeedCount > 0) && (feedCount > maxFeedCount)) {
 			throw new Exception("Tried to feed part: " + part.getId() + "  Feeder " + name + " empty.");
 		}
