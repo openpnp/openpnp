@@ -12,6 +12,8 @@ import java.util.List;
 import org.opencv.core.Mat;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.vision.pipeline.ui.PipelinePropertySheetTable;
+import org.openpnp.vision.FluentCv;
+import org.openpnp.vision.FluentCv.ColorSpace;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -166,23 +168,34 @@ public abstract class CvStage {
         final public Mat image;
         final public Object model;
         final public long processingTimeNs;
+        final public ColorSpace colorSpace;
 
-        public Result(Mat image, Object model, long processingTimeNs, CvStage stage) {
+        public Result(Mat image, ColorSpace colorSpace, Object model, long processingTimeNs, CvStage stage) {
             this.image = image;
             this.model = model;
             this.processingTimeNs = processingTimeNs;
             this.stage = stage;
+            this.colorSpace = colorSpace;
         }
 
         public Result(Mat image, Object model, long processingTimeNs) {
-            this(image, model, processingTimeNs, null);
+            this(image, null, model, processingTimeNs, null);
         }
+
+        public Result(Mat image, ColorSpace colorSpace, Object model) {
+            this(image, colorSpace, model, 0, null);
+        }
+
         public Result(Mat image, Object model) {
-            this(image, model, 0);
+            this(image, null, model);
+        }
+
+        public Result(Mat image, ColorSpace colorSpace) {
+            this(image, colorSpace, null);
         }
 
         public Result(Mat image) {
-            this(image, null, 0);
+            this(image, null);
         }
         
         public Mat getImage() {
@@ -193,10 +206,14 @@ public abstract class CvStage {
             return model;
         }
 
+        public ColorSpace getColorSpace() {
+            return colorSpace;
+        }
+
         public CvStage getStage() {
             return stage;
         }
-        
+
         public String getName() {
             if (stage != null) {
                 return stage.getName();

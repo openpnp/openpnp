@@ -14,6 +14,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.CvStage.Result;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
@@ -58,6 +59,7 @@ public class CvPipeline implements AutoCloseable {
 
     private Mat workingImage;
     private Object workingModel;
+    private ColorSpace workingColorSpace;
     
     private long totalProcessingTimeNs;
     
@@ -199,12 +201,21 @@ public class CvPipeline implements AutoCloseable {
             workingImage = new Mat(480, 640, CvType.CV_8UC3, new Scalar(0, 0, 0));
             Imgproc.line(workingImage, new Point(0, 0), new Point(640, 480), new Scalar(0, 0, 255));
             Imgproc.line(workingImage, new Point(640, 0), new Point(0, 480), new Scalar(0, 0, 255));
+            workingColorSpace = ColorSpace.Bgr;
         }
         return workingImage;
     }
 
     public Object getWorkingModel() {
       return workingModel;
+    }
+    
+    public ColorSpace getWorkingColorSpace() {
+        return workingColorSpace;
+    }
+    
+    public void setWorkingColorSpace(ColorSpace colorSpace) {
+        workingColorSpace = colorSpace;
     }
 
     public long getTotalProcessingTimeNs() {
@@ -236,12 +247,17 @@ public class CvPipeline implements AutoCloseable {
 
             Mat image = null;
             Object model = null;
+            ColorSpace colorSpace = null;
             if (result != null) {
                 image = result.image;
                 model = result.model;
+                colorSpace = result.colorSpace;
             }
             if(stage.isEnabled() && model != null) {
-              workingModel=model;
+                workingModel = model;
+            }
+            if(stage.isEnabled() && colorSpace != null) {
+                workingColorSpace = colorSpace;
             }
             // If the result image is null and there is a working image,
             // replace the result image with a clone of the working image.
@@ -262,7 +278,15 @@ public class CvPipeline implements AutoCloseable {
                 image = image.clone();
             }
 
-            results.put(stage, new Result(image, model, processingTimeNs, stage));
+            // If the result colorSpace is null and there is a working colorSpace,
+            // replace the result colorSpace with the working colorSpace.
+            if (colorSpace == null) {
+                if (workingColorSpace != null) {
+                    colorSpace = workingColorSpace;
+                }
+            }
+
+            results.put(stage, new Result(image, colorSpace, model, processingTimeNs, stage));
         }
     }
 

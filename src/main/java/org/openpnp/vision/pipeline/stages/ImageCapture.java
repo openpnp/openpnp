@@ -8,6 +8,7 @@ import org.opencv.core.Mat;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.OpenCvUtils;
+import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -85,7 +86,7 @@ public class ImageCapture extends CvStage {
             BufferedImage bufferedImage = (settleFirst ? camera.settleAndCapture() : camera.capture()); 
             Mat image = OpenCvUtils.toMat(bufferedImage);
             if (count <= 1) { 
-                return new Result(image);
+                return new Result(image, ColorSpace.Bgr);
             }
             else {
                 // Perform averaging in channel type double.
@@ -101,7 +102,7 @@ public class ImageCapture extends CvStage {
                     image.release();
                 }
                 avgImage.convertTo(avgImage, CvType.CV_8U);
-                return new Result(avgImage);
+                return new Result(avgImage, ColorSpace.Bgr);
             }
         }
         finally {
