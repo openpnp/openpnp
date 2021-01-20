@@ -95,7 +95,12 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
         Object oldValue = this.part;
         this.part = part;
         firePropertyChange("part", oldValue, part);
-        this.partId = part.getId();
+        if (part != null) {
+            this.partId = part.getId();
+        }
+        else {
+            this.partId = "";
+        }
     }
 
     @Override

@@ -1,6 +1,16 @@
 package org.openpnp.machine.reference.driver.wizards;
 
-import javax.swing.*;
+import java.awt.Component;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
@@ -9,6 +19,7 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.driver.AbstractReferenceDriver;
+import org.openpnp.machine.reference.driver.AbstractReferenceDriver.CommunicationsType;
 import org.openpnp.machine.reference.driver.SerialPortCommunications;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -16,12 +27,7 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-
-public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigurationWizard implements ActionListener {
+public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigurationWizard {
     private final AbstractReferenceDriver driver;
     private JComboBox comboBoxPort;
     private JComboBox comboBoxBaud;
@@ -36,12 +42,13 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
     private ButtonGroup commsMethodButtonGroup;
     private JPanel panelSerial;
     private JPanel panelTcp;
-    private JTextField commsMethod;
     private JCheckBox connectionKeepAlive;
     private JPanel panelController;
     private JLabel lblName;
     private JTextField driverName;
-  
+    private JComboBox communicationsType;
+    private JLabel lblCommunicationsType;
+
     public AbstractReferenceDriverConfigurationWizard(AbstractReferenceDriver driver) {
         this.driver = driver;
 
@@ -52,7 +59,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         contentPanel.add(panelController);
         panelController.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
@@ -72,7 +79,47 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         contentPanel.add(panelComms);
         panelComms.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("right:default"),
+                ColumnSpec.decode("right:max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+
+        commsMethodButtonGroup = new ButtonGroup();
+        
+        communicationsType = new JComboBox(CommunicationsType.values());
+        communicationsType.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                if (communicationsType.getSelectedItem() == CommunicationsType.serial) {
+                    setPanelEnabled(panelSerial, true);
+                    setPanelEnabled(panelTcp, false);
+                } else {
+                    setPanelEnabled(panelSerial, false);
+                    setPanelEnabled(panelTcp, true);
+                }
+            }
+        });
+        
+        lblCommunicationsType = new JLabel("Communications Type");
+        panelComms.add(lblCommunicationsType, "2, 2, right, default");
+        panelComms.add(communicationsType, "4, 2, fill, default");
+
+        JLabel lblConnectionKeepAlive = new JLabel("Keep Alive");
+        panelComms.add(lblConnectionKeepAlive, "2, 4, right, default");
+        
+        connectionKeepAlive = new JCheckBox("");
+        panelComms.add(connectionKeepAlive, "4, 4");
+
+        //Serial config code
+        panelSerial = new JPanel();
+        panelSerial.setBorder(new TitledBorder(null, "Serial Port", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panelSerial);
+        panelSerial.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("right:max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
@@ -83,61 +130,15 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
-
-        JRadioButton radioSerial = new JRadioButton("Serial");
-        radioSerial.setMnemonic(KeyEvent.VK_S);
-        radioSerial.setActionCommand("serial");
-        radioSerial.addActionListener(this);
-
-        JRadioButton radioTCP = new JRadioButton("TCP");
-        radioTCP.setMnemonic(KeyEvent.VK_T);
-        radioTCP.setActionCommand("tcp");
-        radioTCP.addActionListener(this);
-
-        commsMethodButtonGroup = new ButtonGroup();
-        commsMethodButtonGroup.add(radioSerial);
-        commsMethodButtonGroup.add(radioTCP);
-
-        panelComms.add(radioSerial, "4, 2, fill, default");
-        panelComms.add(radioTCP, "4, 4, fill, default");
-
-        commsMethod = new JTextField();
-        commsMethod.setVisible(false);
-        panelComms.add(commsMethod, "4, 6, fill, default");
-
-        JLabel lblConnectionKeepAlive = new JLabel("Keep Alive");
-        panelComms.add(lblConnectionKeepAlive, "2, 8, right, default");
-        
-        connectionKeepAlive = new JCheckBox("");
-        panelComms.add(connectionKeepAlive, "4, 8");
-
-        //Serial config code
-        panelSerial = new JPanel();
-        panelSerial.setBorder(new TitledBorder(null, "Serial Port", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        contentPanel.add(panelSerial);
-        panelSerial.setLayout(new FormLayout(new ColumnSpec[]{
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("right:default"),
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[]{
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblPortName = new JLabel("Port");
         panelSerial.add(lblPortName, "2, 2, right, default");
@@ -231,7 +232,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         contentPanel.add(panelTcp);
         panelTcp.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("right:default"),
+                ColumnSpec.decode("right:max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
@@ -254,10 +255,6 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         portTextField = new JTextField(17);
         panelTcp.add(portTextField, "4, 4, fill, default");
         portTextField.setColumns(10);
-
-        //Finally, click a radio button to initialise enabled/disabled setting
-        if(driver.getCommunicationsType().equals("serial")){ radioSerial.doClick(); }
-        if(driver.getCommunicationsType().equals("tcp")) { radioTCP.doClick(); }
     }
 
     private void setPanelEnabled(JPanel panel, Boolean isEnabled) {
@@ -266,18 +263,6 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         for (Component cp : panel.getComponents()) {
             cp.setEnabled(isEnabled);
         }
-    }
-
-    public void actionPerformed(ActionEvent e) {
-        // Enable/Disable controls for selected comms method
-        if (e.getActionCommand().equals("serial")) {
-            setPanelEnabled(panelSerial, true);
-            setPanelEnabled(panelTcp, false);
-        } else {
-            setPanelEnabled(panelSerial, false);
-            setPanelEnabled(panelTcp, true);
-        }
-        commsMethod.setText(e.getActionCommand());
     }
 
     private void refreshPortList() {
@@ -303,7 +288,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
 
         addWrappedBinding(driver, "name", driverName, "text");
 
-        addWrappedBinding(driver, "communicationsType", commsMethod, "text");
+        addWrappedBinding(driver, "communicationsType", communicationsType, "selectedItem");
         addWrappedBinding(driver, "connectionKeepAlive", connectionKeepAlive, "selected");
         
         addWrappedBinding(driver, "portName", comboBoxPort, "selectedItem");

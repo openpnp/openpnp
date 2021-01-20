@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.machine.reference.driver.AbstractReferenceDriver.CommunicationsType;
 import org.openpnp.machine.reference.driver.GcodeDriver.Command;
 import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.FlowControl;
@@ -93,11 +94,6 @@ class GcodeDriverSolutions implements Solutions.Subject {
             }
         }
 
-        Integer firmwareAxesCount = null;
-        Integer firmwarePrimaryAxesCount = null;
-        boolean smoothie = false;
-        boolean grblSyntax = false;
-        boolean tinyG = false;
         if (machine.isEnabled() && gcodeDriver.isSpeakingGcode()) {
             try {
                 gcodeDriver.detectFirmware(true);
@@ -106,6 +102,12 @@ class GcodeDriverSolutions implements Solutions.Subject {
                 Logger.warn(gcodeDriver.getName()+" failure to detect firmware", e);
             }
         }
+        Integer firmwareAxesCount = null;
+        Integer firmwarePrimaryAxesCount = null;
+        boolean isSmoothie = false;
+        boolean isGrblSyntax = false;
+        boolean isTinyG = false;
+        boolean isMarlin = false;
         if (gcodeDriver.getDetectedFirmware() == null) {
             issues.add(new Solutions.Issue(
                     gcodeDriver, 
@@ -130,8 +132,8 @@ class GcodeDriverSolutions implements Solutions.Subject {
         }
         else {
             if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("Smoothieware")) {
-                smoothie = true;
-                grblSyntax = (gcodeDriver.getFirmwareProperty("X-GRBL_MODE", "").contentEquals("1"));
+                isSmoothie = true;
+                isGrblSyntax = (gcodeDriver.getFirmwareProperty("X-GRBL_MODE", "").contentEquals("1"));
                 firmwareAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-AXES", "0"));
                 firmwarePrimaryAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-PAXES", "3"));
                 if (firmwarePrimaryAxesCount == firmwareAxesCount) {
@@ -155,6 +157,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                         "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#duet"));
             }
             else if (gcodeDriver.getDetectedFirmware().contains("Marlin")) {
+                isMarlin = true;
                 firmwareAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("AXIS_COUNT", "0"));
                 if (firmwareAxesCount > 3) { 
                     firmwarePrimaryAxesCount = firmwareAxesCount;
@@ -170,7 +173,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
             }
             else if (gcodeDriver.getDetectedFirmware().contains("TinyG")) {
                 // Having a response already means we have a new firmware.
-                tinyG = true;
+                isTinyG = true;
             }
             else if (gcodeDriver.getDetectedFirmware().contains("GcodeServer")) {
                 // Built-in.
@@ -251,16 +254,16 @@ class GcodeDriverSolutions implements Solutions.Subject {
             }
 
             final MotionControlType oldMotionControlType = gcodeDriver.getMotionControlType();
-            final MotionControlType newMotionControlType = tinyG ? 
+            final MotionControlType newMotionControlType = isTinyG ? 
                     MotionControlType.SimpleSCurve : MotionControlType.ModeratedConstantAcceleration;
             if (gcodeDriver.getMotionControlType().isUnpredictable() 
-                    || (tinyG && newMotionControlType != oldMotionControlType)) {
+                    || (isTinyG && newMotionControlType != oldMotionControlType)) {
                 issues.add(new Solutions.Issue(
                         gcodeDriver, 
-                        (tinyG ? "Choose "+newMotionControlType.name()+" for proper TinyG operation." : 
+                        (isTinyG ? "Choose "+newMotionControlType.name()+" for proper TinyG operation." : 
                                 "Choose an advanced Motion Control Type for your controller type."), 
                         "Set to "+newMotionControlType.name()+".", 
-                        (tinyG ? Severity.Error : Severity.Suggestion),
+                        (isTinyG ? Severity.Error : Severity.Suggestion),
                         "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
 
                     @Override
@@ -435,7 +438,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                             commandBuilt = 
                                     "G21 ; Set millimeters mode \n"
                                             +"G90 ; Set absolute positioning mode";
-                            if (tinyG) {
+                            if (isTinyG) {
                                 commandBuilt = 
                                         "$ex=2\n" // RtsCts
                                         +"$sv=0\n" // Non-verbose
@@ -444,7 +447,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                         }
                         break;
                     case COMMAND_CONFIRM_REGEX:
-                        if (tinyG) {
+                        if (isTinyG) {
                             commandBuilt = "^tinyg .* ok.*";
                         }
                         else {
@@ -452,7 +455,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                         }
                         break;
                     case COMMAND_ERROR_REGEX:
-                        if (tinyG) {
+                        if (isTinyG) {
                             commandBuilt = "^tinyg .* err:.*";
                         }
                         else {
@@ -461,10 +464,10 @@ class GcodeDriverSolutions implements Solutions.Subject {
                         break;
                     case HOME_COMMAND:
                         if (command == null) {
-                            if (grblSyntax) {
+                            if (isGrblSyntax) {
                                 commandBuilt = "$H ; Home all axes";
                             }
-                            else if (tinyG) {
+                            else if (isTinyG) {
                                 commandBuilt = "G28.2 ";
                                 for (String variable : gcodeDriver.getAxisVariables(machine)) {
                                     commandBuilt += variable+"0 "; // In TinyG you need to indicate the axis and only 0 is possible. 
@@ -478,7 +481,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                         break;
                     case MOVE_TO_COMMAND:
                         if (hasAxes) {
-                            if (tinyG) { 
+                            if (isTinyG) { 
                                 // Apply jerk limits per axis. 
                                 commandBuilt = "M201.3 ";
                                 for (String variable : gcodeDriver.getAxisVariables(machine)) {
@@ -491,6 +494,10 @@ class GcodeDriverSolutions implements Solutions.Subject {
                             else {
                                 // Apply acceleration limit.
                                 commandBuilt = "{Acceleration:M204 S%.2f} ";
+                                if (isMarlin) {
+                                    // Non-conformant G-code parser, needs newline. 
+                                    commandBuilt += "\n";
+                                }
                             }
                             commandBuilt += "G1 ";
                             for (String variable : gcodeDriver.getAxisVariables(machine)) {
@@ -511,14 +518,14 @@ class GcodeDriverSolutions implements Solutions.Subject {
                         }
                         break;
                     case MOVE_TO_COMPLETE_REGEX:
-                        if (command != null && tinyG) {
+                        if (command != null && isTinyG) {
                             // Make it obsolete with the new (detected) firmware.
                             commandBuilt = "";
                         }
                         break;
                     case SET_GLOBAL_OFFSETS_COMMAND:
                         if (hasAxes) {
-                            if (tinyG) {
+                            if (isTinyG) {
                                 commandBuilt = "G28.3 ";
                             }
                             else {
@@ -575,10 +582,10 @@ class GcodeDriverSolutions implements Solutions.Subject {
                                 issues.add(new Solutions.PlainIssue(
                                         gcodeDriver, 
                                         "The driver does not report axes in the expected "+pattern+" pattern: "+gcodeDriver.getReportedAxes(), 
-                                        (smoothie ? "Check axis letters and make sure use a proper 6-axis configuration without extruders."
+                                        (isSmoothie ? "Check axis letters and make sure use a proper 6-axis configuration without extruders."
                                                 : "Check axis letters and make sure the controller is capable to use extra axes (i.e. not extruders)."), 
                                         Severity.Error,
-                                        (smoothie ? "http://smoothieware.org/6axis" 
+                                        (isSmoothie ? "http://smoothieware.org/6axis" 
                                                 : "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares")));
                             }
                         }
@@ -669,12 +676,28 @@ class GcodeDriverSolutions implements Solutions.Subject {
     }
 
     /**
-     * Replace a driver with the same Id at the same place in the machine driver list.
+     * Convert an existing NullDriver to a GcodeAsyncDriver while keeping the Id and 
+     * Axis/Actuator assignments. 
      * 
-     * @param gcodeDriver
+     * @param nullDriver
      * @throws Exception
      */
-    public static void replaceDriver(GcodeDriver gcodeDriver) throws Exception {
+    public static void convertToAsync(NullDriver nullDriver) throws Exception {
+        GcodeAsyncDriver asyncDriver = new GcodeAsyncDriver();
+        asyncDriver.setId(nullDriver.getId());
+        // Set to simulation by GcodeServer as a default.
+        asyncDriver.setCommunicationsType(CommunicationsType.tcp);
+        asyncDriver.setIpAddress("GcodeServer");
+        replaceDriver(asyncDriver);
+    }
+
+    /**
+     * Replace a driver with the same Id at the same place in the machine driver list.
+     * 
+     * @param driver
+     * @throws Exception
+     */
+    public static void replaceDriver(Driver driver) throws Exception {
         // Disable the machine, so the driver isn't connected.
         Machine machine = Configuration.get().getMachine();
         boolean wasEnabled = machine.isEnabled();
@@ -686,33 +709,33 @@ class GcodeDriverSolutions implements Solutions.Subject {
         Driver replaced = null;
         int index;
         for (index = 0; index < list.size(); index++) {
-            if (list.get(index).getId().equals(gcodeDriver.getId())) {
+            if (list.get(index).getId().equals(driver.getId())) {
                 replaced = list.get(index);
                 machine.removeDriver(replaced);
                 break;
             }
         }
         // Add the new one.
-        machine.addDriver(gcodeDriver);
+        machine.addDriver(driver);
         // Permutate it back to the old list place (cumbersome but works).
         for (int p = list.size()-index; p > 1; p--) {
-            machine.permutateDriver(gcodeDriver, -1);
+            machine.permutateDriver(driver, -1);
         }
         // Replace the driver in the Machine Setup.
         for (ControllerAxis axis : new AxesLocation(machine).getControllerAxes()) {
             if (axis.getDriver() == replaced) {
-                axis.setDriver(gcodeDriver);
+                axis.setDriver(driver);
             }
         }
         for (Actuator actuator : machine.getActuators()) {
             if (actuator.getDriver() == replaced) {
-                actuator.setDriver(gcodeDriver);
+                actuator.setDriver(driver);
             }
         }
         for (Head head : machine.getHeads()) {
             for (Actuator actuator : head.getActuators()) {
                 if (actuator.getDriver() == replaced) {
-                    actuator.setDriver(gcodeDriver);
+                    actuator.setDriver(driver);
                 }
             }
         }

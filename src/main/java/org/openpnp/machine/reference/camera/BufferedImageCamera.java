@@ -37,6 +37,18 @@ public class BufferedImageCamera extends ReferenceCamera {
         setUnitsPerPixel(originalCamera.getUnitsPerPixel());
     }
 
+    @Override 
+    protected boolean isBroadcasting() {
+        // Switch off any Broadcasting for this one. 
+        return false;
+    }
+
+    @Override
+    protected synchronized boolean ensureOpen() {
+        // Never really open this one.
+        return true;
+    }
+
     @Override
     public synchronized BufferedImage internalCapture() {
         return source;

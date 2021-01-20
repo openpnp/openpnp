@@ -240,7 +240,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                     }
                 }
 
-                if (selectedTab != -1) {
+                if (selectedTab >= 0 && selectedTab < tabbedPane.getTabCount()) {
                     tabbedPane.setSelectedIndex(selectedTab);
                 }
 

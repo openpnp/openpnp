@@ -25,8 +25,8 @@ import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeSupport;
 import java.net.URL;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -43,6 +43,8 @@ import org.openpnp.model.Footprint;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider.TemplateMatch;
@@ -51,7 +53,6 @@ import org.openpnp.vision.FluentCv;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.Commit;
 
 public class ImageCamera extends ReferenceCamera {
     @Element
@@ -345,5 +346,33 @@ public class ImageCamera extends ReferenceCamera {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         return null;
+    }
+    
+
+    @Override
+    public void findIssues(List<Solutions.Issue> issues) {
+        super.findIssues(issues);
+        issues.add(new Solutions.Issue(
+                this, 
+                "The simulation ImageCamera can be replaced with a OpenPnpCaptureCamera to connect to a real USB camera.", 
+                "Replace with OpenPnpCaptureCamera.", 
+                Severity.Fundamental,
+                "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera") {
+
+            @Override
+            public void setState(Solutions.State state) throws Exception {
+                if (confirmStateChange(state)) {
+                    if (state == Solutions.State.Solved) {
+                        OpenPnpCaptureCamera camera = createReplacementCamera();
+                        replaceCamera(camera);
+                    }
+                    else if (getState() == Solutions.State.Solved) {
+                        // Place the old one back (from the captured ImageCamera.this).
+                        replaceCamera(ImageCamera.this);
+                    }
+                    super.setState(state);
+                }
+            }
+        });
     }
 }

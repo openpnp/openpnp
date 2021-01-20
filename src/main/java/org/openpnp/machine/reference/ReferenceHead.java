@@ -175,13 +175,54 @@ public class ReferenceHead extends AbstractHead {
             if (camera.getAxisX() == null) {
                 addMissingAxisIssue(issues, camera, Axis.Type.X);
             }
-            else if (camera.getAxisY() == null) {
+            if (camera.getAxisY() == null) {
                 addMissingAxisIssue(issues, camera, Axis.Type.Y);
             }
-            else {
+            if (camera.getAxisX() != null && camera.getAxisY() != null) {
                 for (HeadMountable hm : getHeadMountables()) {
                     addInconsistentAxisIssue(issues, camera, hm, Axis.Type.X);
                     addInconsistentAxisIssue(issues, camera, hm, Axis.Type.Y);
+                    if (hm instanceof Nozzle) {
+                        if (hm.getAxisZ() == null) {
+                            issues.add(new Solutions.PlainIssue(
+                                    this, 
+                                    "Nozzle "+hm.getName()+" does not have a Z axis assigned.", 
+                                    "Please assign a proper Z axis. You might need to create one first.", 
+                                    Severity.Error,
+                                    "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
+                        }
+                        if (hm.getAxisRotation() == null) {
+                            issues.add(new Solutions.PlainIssue(
+                                    this, 
+                                    "Nozzle "+hm.getName()+" does not have a Rotation axis assigned.", 
+                                    "Please assign a proper Rotation axis. You might need to create one first.", 
+                                    Severity.Error,
+                                    "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
+                        }
+                        if (hm.getAxisZ() != null && hm.getAxisRotation() != null) {
+                            for (Nozzle nozzle2 : getNozzles()) {
+                                if (nozzle2 == hm) {
+                                    break;
+                                }
+                                if (nozzle2.getAxisZ() == hm.getAxisZ()) {
+                                    issues.add(new Solutions.PlainIssue(
+                                            this, 
+                                            "Nozzles "+nozzle2.getName()+" and "+hm.getName()+" have the same Z axis assigned.", 
+                                            "Please assign a different Z axis.", 
+                                            Severity.Error,
+                                            "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
+                                }
+                                if (nozzle2.getAxisRotation() == hm.getAxisRotation()) {
+                                    issues.add(new Solutions.PlainIssue(
+                                            this, 
+                                            "Nozzles "+nozzle2.getName()+" and "+hm.getName()+" have the same Rotation axis assigned.", 
+                                            "Please assign a different Rotation axis.", 
+                                            Severity.Error,
+                                            "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

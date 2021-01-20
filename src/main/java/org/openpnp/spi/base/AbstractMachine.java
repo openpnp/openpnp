@@ -294,7 +294,9 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     @Override
     public void addListener(MachineListener listener) {
-        listeners.add(listener);
+        if (!listeners.contains(listener)) {
+            listeners.add(listener);
+        }
     }
 
     @Override
@@ -364,7 +366,19 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
             fireIndexedPropertyChange("cameras", index, camera, null);
         }
     }
-    
+
+    @Override 
+    public void permutateCamera(Camera camera, int direction) {
+        int index0 = cameras.indexOf(camera);
+        int index1 = direction > 0 ? index0+1 : index0-1;
+        if (0 <= index1 && cameras.size() > index1) {
+            cameras.remove(camera);
+            cameras.add(index1, camera);
+            fireIndexedPropertyChange("cameras", index0, camera, cameras.get(index0));
+            fireIndexedPropertyChange("cameras", index1, cameras.get(index0), camera);
+        }
+    }
+
     @Override
     public void addActuator(Actuator actuator) throws Exception {
         actuator.setHead(null);

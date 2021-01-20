@@ -57,7 +57,7 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
     protected Object captureNotifier = new Object();
 
     @Attribute(required = false)
-    protected double fps = 3;
+    protected double fps = 5;
 
     @Attribute(required = false)
     protected boolean suspendPreviewInTasks = false;
@@ -74,69 +74,75 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
     volatile private boolean cameraViewDirty;
 
     AbstractBroadcastingCamera() {
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationComplete(Configuration configuration) throws Exception {
-                Configuration.get().getMachine().addListener(new MachineListener.Adapter() {
-                    @Override
-                    public void machineHeadActivity(Machine machine, Head head) {
-                        if (!isPreviewSuspended()) {
-                            notifyCapture();
-                        }
-                    }
-
-                    @Override 
-                    public void machineEnabled(Machine machine) {
-                        notifyCapture();
-                    }
-
-                    @Override 
-                    public void machineBusy(Machine machine, boolean busy) {
-                        if (!busy) {
-                            if (cameraViewDirty) {
-                                captureCameraView();
+        if (isBroadcasting()) {
+            Configuration.get().addListener(new ConfigurationListener.Adapter() {
+                @Override
+                public void configurationComplete(Configuration configuration) throws Exception {
+                    Configuration.get().getMachine().addListener(new MachineListener.Adapter() {
+                        @Override
+                        public void machineHeadActivity(Machine machine, Head head) {
+                            if (!isPreviewSuspended()) {
+                                notifyCapture();
                             }
                         }
-                    }
 
-                    @Override
-                    public void machineTargetedUserAction(Machine machine, HeadMountable hm) {
-                        // Find the nearest camera.
-                        Camera nearestCamera = null;
-                        if (hm instanceof Camera) {
-                            // That's easy.
-                            nearestCamera = (Camera) hm;
+                        @Override 
+                        public void machineEnabled(Machine machine) {
+                            notifyCapture();
                         }
-                        else if (hm != null) {
-                            // This is not a Camera but it may be a camera subject. Get the nearest camera looking at it.   
-                            Location location = hm.getLocation().convertToUnits(LengthUnit.Millimeters);
-                            double nearestDistance = Double.POSITIVE_INFINITY;
-                            for (Camera camera : machine.getCameras()) {
-                                double distance = location.getLinearDistanceTo(camera.getLocation());
-                                if (distance < 50) {
-                                    // Roughly in view of the camera (50mm radius).
-                                    if (distance < nearestDistance) {
-                                        nearestDistance = distance;
-                                        nearestCamera = camera;
-                                    }
+
+                        @Override 
+                        public void machineBusy(Machine machine, boolean busy) {
+                            if (!busy) {
+                                if (cameraViewDirty) {
+                                    captureCameraView();
                                 }
                             }
                         }
-                        if (nearestCamera == AbstractBroadcastingCamera.this) {
-                            // The nearest is our camera. That's an updated view, then. 
-                            cameraViewHasChanged();
+
+                        @Override
+                        public void machineTargetedUserAction(Machine machine, HeadMountable hm) {
+                            // Find the nearest camera.
+                            Camera nearestCamera = null;
+                            if (hm instanceof Camera) {
+                                // That's easy.
+                                nearestCamera = (Camera) hm;
+                            }
+                            else if (hm != null) {
+                                // This is not a Camera but it may be a camera subject. Get the nearest camera looking at it.   
+                                Location location = hm.getLocation().convertToUnits(LengthUnit.Millimeters);
+                                double nearestDistance = Double.POSITIVE_INFINITY;
+                                for (Camera camera : machine.getCameras()) {
+                                    double distance = location.getLinearDistanceTo(camera.getLocation());
+                                    if (distance < 50) {
+                                        // Roughly in view of the camera (50mm radius).
+                                        if (distance < nearestDistance) {
+                                            nearestDistance = distance;
+                                            nearestCamera = camera;
+                                        }
+                                    }
+                                }
+                            }
+                            if (nearestCamera == AbstractBroadcastingCamera.this) {
+                                // The nearest is our camera. That's an updated view, then. 
+                                cameraViewHasChanged();
+                            }
                         }
-                    }
-                });
-            }
-        });
+                    });
+                }
+            });
+        }
+    }
+
+    protected boolean isBroadcasting() {
+        return true;
     }
 
     public double getPreviewFps() {
         return fps;
     }
 
-    public void setPreviewFps(double fps) throws Exception {
+    public void setPreviewFps(double fps) {
         Object oldValue = this.fps;
         this.fps = fps;
         firePropertyChange("previewFps", oldValue, fps);

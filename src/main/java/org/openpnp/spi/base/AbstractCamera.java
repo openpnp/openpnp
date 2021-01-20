@@ -229,6 +229,10 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         return id;
     }
 
+    public void setId(String id) {
+        this.id = id;
+    }
+
     @Override
     public String getName() {
         return name;
@@ -247,7 +251,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     @Override
     public void setHead(Head head) {
-        if (this.headSet) {
+        if (this.head != head && this.headSet) {
             throw new Error("Can't change head on camera " + this);
         }
         this.head = head;

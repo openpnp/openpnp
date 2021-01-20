@@ -23,6 +23,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -347,24 +355,42 @@ public class Configuration extends AbstractModelObject {
     }
 
     public synchronized void save() throws Exception {
+        LocalDateTime now = LocalDateTime.now();
         try {
-            saveMachine(new File(configurationDirectory, "machine.xml"));
+           saveMachine(createBackedUpFile("machine.xml", now));
         }
         catch (Exception e) {
             throw new Exception("Error while saving machine.xml (" + e.getMessage() + ")", e);
         }
         try {
-            savePackages(new File(configurationDirectory, "packages.xml"));
+            savePackages(createBackedUpFile("packages.xml", now));
         }
         catch (Exception e) {
             throw new Exception("Error while saving packages.xml (" + e.getMessage() + ")", e);
         }
         try {
-            saveParts(new File(configurationDirectory, "parts.xml"));
+            saveParts(createBackedUpFile("parts.xml", now));
         }
         catch (Exception e) {
             throw new Exception("Error while saving parts.xml (" + e.getMessage() + ")", e);
         }
+    }
+
+    protected File createBackedUpFile(String fileName, LocalDateTime now) throws Exception {
+        File file = new File(configurationDirectory, fileName);
+        if (file.exists()) {
+            File backupsDirectory = new File(configurationDirectory, "backups");
+            if (System.getProperty("backups") != null) {
+                backupsDirectory = new File(System.getProperty("backups"));
+            }
+
+            File singleBackupDirectory = new File(backupsDirectory, DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.mm.ss").format(now));
+            singleBackupDirectory.mkdirs();
+            File backupFile = new File(singleBackupDirectory, fileName);
+            Files.copy(Paths.get(file.toURI()), Paths.get(backupFile.toURI()), 
+                    StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+        }
+        return file;
     }
 
     public Package getPackage(String id) {

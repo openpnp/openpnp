@@ -381,7 +381,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                     "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
         }
         else if (getLetter().equals("E")) {
-            if (!getDriver().isSupportingPreMove()) {
+            if (getDriver() != null && !getDriver().isSupportingPreMove()) {
                 issues.add(new Solutions.PlainIssue(
                         this, 
                         "Avoid axis letter E, if possible. Use proper rotation axes instead.", 
@@ -389,6 +389,23 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                         Severity.Warning,
                         "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version"));
             }
+        }
+        else if (getLetter().length() != 1 || !"XYZABCDUVW".contains(getLetter())) {
+            issues.add(new Solutions.PlainIssue(
+                    this, 
+                    "Axis letter "+getLetter()+" is not a G-code standard letter, one of X Y Z A B C D U V W.", 
+                    "Please assign the correct controller axis letter.", 
+                    Severity.Warning,
+                    "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
+        }
+        if (getDriver() == null) {
+            issues.add(new Solutions.PlainIssue(
+                    this, 
+                    "Axis is not assigned to a driver.", 
+                    "Assign a driver.", 
+                    Severity.Fundamental,
+                    "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
+
         }
         final BacklashCompensationMethod oldBacklashCompensationMethod = 
                 getBacklashCompensationMethod();

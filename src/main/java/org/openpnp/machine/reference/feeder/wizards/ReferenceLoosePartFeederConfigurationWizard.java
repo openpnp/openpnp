@@ -87,6 +87,9 @@ public class ReferenceLoosePartFeederConfigurationWizard
     }
 
     private void editPipeline() throws Exception {
+        if (feeder.getPart() == null) {
+            throw new Exception("Feeder "+feeder.getName()+" has no part.");
+        }
         CvPipeline pipeline = feeder.getPipeline();
         pipeline.setProperty("camera", Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
         pipeline.setProperty("feeder", feeder);
