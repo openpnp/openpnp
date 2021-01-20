@@ -30,6 +30,12 @@ For the Bottom Camera, you may see an existing one called SimulatedUpCamera. Del
 **Preview:** See the "Instructions for Use" here:
 https://github.com/openpnp/openpnp/pull/1095
 
+## Camera View Configuration
+
+Check out the context menu in the Camera View. You can set various options there:
+
+![Camera View Options](https://user-images.githubusercontent.com/9963310/105194658-1bf1e300-5b3a-11eb-9391-2bb9092a60a2.png)
+
 ## Camera Type Specific Setup
 
 * [[OpenPnpCaptureCamera]] - USB Cameras (Recommended)
