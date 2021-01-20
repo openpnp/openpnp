@@ -25,6 +25,10 @@ If you are adding a Top Camera, look to see if there is an existing Top Camera c
 
 For the Bottom Camera, you may see an existing one called SimulatedUpCamera. Delete it.
 
+## General Configuration
+
+**Preview:** See the "Instructions for Use" here:
+https://github.com/openpnp/openpnp/pull/1095
 
 ## Camera Type Specific Setup
 
