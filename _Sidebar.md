@@ -7,7 +7,7 @@ OpenPnP
     * [Mechanical Issues (aka Debugging)](https://github.com/openpnp/openpnp/wiki/Mechanical-Issues-(aka-Debugging))
 * [[Setup and Calibration]]
     * [Before You Start](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Before-You-Start)
-    * [Machine Setup Tree](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Machine-Setup#configuration)
+    * [Machine Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Machine-Setup)
     * [Driver Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup)
     * [[Machine Axes]]
     * [Top Camera Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Top-Camera-Setup)
