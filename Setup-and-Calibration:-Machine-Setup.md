@@ -18,3 +18,9 @@ A few basic settings are on the Machine.
 
 **Discard Location** specifies a location where parts will be discarded when the Job processor determines the part was not picked well (after [Vacuum Sensing](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Sensing) or [Bottom Vision](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Bottom-Vision) errors).
 
+
+***
+
+| Previous Step                 | Jump To                 | Next Step                                   |
+| ----------------------------- | ----------------------- | ------------------------------------------- |
+| [Before You Start](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Before-You-Start) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Driver Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup) |
