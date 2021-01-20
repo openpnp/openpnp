@@ -5,7 +5,7 @@ This document will guide you through the process of setting up a new machine to 
 You should follow the steps in the order they are listed in this guide since many of the steps depend on previous steps.
 
 1. [[Before You Start|Setup and Calibration: Before You Start]]
-2. [[Machine Setup Tree|Setup and Calibration: Machine Setup Tree]]
+2. [[Machine Setup|Setup and Calibration: Machine Setup]]
 3. [[Driver Setup|Setup and Calibration: Driver Setup]]
 4. [[Axes Setup|Machine Axes]]
 5. [[Top Camera Setup|Setup and Calibration: Top Camera Setup]]
