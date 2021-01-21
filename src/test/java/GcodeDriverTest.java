@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.driver.AbstractReferenceDriver.CommunicationsType;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
 import org.openpnp.machine.reference.driver.TcpCommunications;
@@ -58,7 +59,7 @@ public class GcodeDriverTest {
         GcodeDriver driver = new GcodeDriver();
         driver.createDefaults();
         driver.setConnectionKeepAlive(false);
-        driver.setCommunicationsType("tcp");
+        driver.setCommunicationsType(CommunicationsType.tcp);
         TcpCommunications tcp = (TcpCommunications) driver.getCommunications();
         tcp.setIpAddress("localhost");
         tcp.setPort(server.getListenerPort());

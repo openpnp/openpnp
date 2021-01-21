@@ -32,10 +32,8 @@ import java.util.List;
 import java.util.Set;
 
 import javax.swing.Action;
-import javax.swing.JOptionPane;
 
 import org.apache.commons.io.IOUtils;
-import org.opencv.core.Core;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -1796,7 +1794,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         });
 
         for (ReferencePushPullFeeder templateFeeder : list) {
-            if (templateFeeder != this) { 
+            if (templateFeeder.getPart() != null && templateFeeder != this) { 
                 if (compatiblePart == null || compatiblePartPackages(compatiblePart, templateFeeder.getPart())) {
                     // the first ranking does it  
                     return templateFeeder;
@@ -1809,7 +1807,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     public List<ReferencePushPullFeeder> getCompatibleFeeders() {
         List<ReferencePushPullFeeder> list = new ArrayList<>();
         for (ReferencePushPullFeeder feeder : getAllPushPullFeeders()) {
-            if (feeder != this) { 
+            if (feeder.getPart() != null && feeder != this) { 
                 if (ReferencePushPullFeeder.compatiblePartPackages(getPart(), feeder.getPart())) {
                     list.add(feeder);
                 }
@@ -1825,10 +1823,12 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             status += "Clones to ";
             int n = 0;
             for (ReferencePushPullFeeder targetFeeder : getCompatibleFeeders()) {
-                if (n++ > 0) {
-                    status += ",<br/>";
+                if (targetFeeder.getPart() != null) {
+                    if (n++ > 0) {
+                        status += ",<br/>";
+                    }
+                    status += targetFeeder.getName()+" "+targetFeeder.getPart().getId();
                 }
-                status += targetFeeder.getName()+" "+targetFeeder.getPart().getId();
             }
             status += n == 0 ? "none." : " (Count: "+n+")";
         }

@@ -22,9 +22,6 @@
 package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -32,25 +29,13 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.driver.wizards.GcodeAsyncDriverSettings;
-import org.openpnp.model.AxesLocation;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.spi.Driver;
-import org.openpnp.spi.Machine;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.util.Collect;
-import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.CvStage;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.convert.AnnotationStrategy;
-import org.simpleframework.xml.core.Persister;
-import org.simpleframework.xml.stream.Format;
-import org.simpleframework.xml.stream.HyphenStyle;
-import org.simpleframework.xml.stream.Style;
 
 /**
  * The GcodeAsyncDriver extends the GcodeDriver for asynchronous communication with the controller. 

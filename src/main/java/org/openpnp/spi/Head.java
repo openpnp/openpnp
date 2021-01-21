@@ -108,6 +108,8 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
 
     public void removeCamera(Camera camera);
 
+    public void permutateCamera(Camera driver, int direction);
+
     public void addNozzle(Nozzle nozzle) throws Exception;
 
     public void removeNozzle(Nozzle nozzle);

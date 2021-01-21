@@ -256,7 +256,9 @@ public class ReferenceMachine extends AbstractMachine {
     }
 
     public void setAutoToolSelect(boolean autoToolSelect) {
+        Object oldValue = this.autoToolSelect;
         this.autoToolSelect = autoToolSelect;
+        firePropertyChange("autoToolSelect", oldValue, autoToolSelect);
     }
 
     @Override
@@ -516,6 +518,23 @@ public class ReferenceMachine extends AbstractMachine {
                         }
                         // Reselect the tree path to reload the wizard with potentially different property sheets. 
                         MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
+                        super.setState(state);
+                    }
+                }
+            });
+        }
+        if (! isAutoToolSelect()) {
+            issues.add(new Solutions.Issue(
+                    this, 
+                    "OpenPnP can often automatically select the right tool for you in Machine Controls.", 
+                    "Enable Auto tool select.", 
+                    Solutions.Severity.Suggestion,
+                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Machine-Setup#configuration") {
+
+                @Override
+                public void setState(Solutions.State state) throws Exception {
+                    if (confirmStateChange(state)) {
+                        setAutoToolSelect((state == Solutions.State.Solved));
                         super.setState(state);
                     }
                 }

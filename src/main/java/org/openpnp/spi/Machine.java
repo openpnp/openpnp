@@ -205,6 +205,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public void removeCamera(Camera camera);
 
+    public void permutateCamera(Camera driver, int direction);
+
     public void addActuator(Actuator actuator) throws Exception;
 
     public void removeActuator(Actuator actuator);

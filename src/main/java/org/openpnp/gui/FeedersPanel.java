@@ -20,10 +20,10 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
-import java.awt.Component;
-import java.awt.Color;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -57,11 +56,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
 
-import org.openpnp.events.BoardLocationSelectedEvent;
 import org.openpnp.events.FeederSelectedEvent;
-import org.openpnp.gui.JobPanel.SetCheckFidsAction;
-import org.openpnp.gui.JobPanel.SetEnabledAction;
-import org.openpnp.gui.JobPanel.SetSideAction;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
@@ -72,18 +67,17 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
-import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Job;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
-import org.openpnp.model.Job;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.JobProcessor.JobProcessorException;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
-import org.openpnp.spi.JobProcessor.JobProcessorException;
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
@@ -580,6 +574,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     };
 
     public static void pickFeeder(Feeder feeder) throws Exception, JobProcessorException {
+        if (feeder.getPart() == null) {
+            throw new Exception("Feeder "+feeder.getName()+" has no part.");
+        }
         // Simulate a "one feeder" job, prepare the feeder.
         if (feeder.getJobPreparationLocation() != null) {
             feeder.prepareForJob(true);

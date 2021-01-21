@@ -73,6 +73,7 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.HslColor;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
@@ -485,6 +486,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                                              .getCameraView(autoSetupCamera);
             cameraView.addActionListener(autoSetupPart1Clicked);
             cameraView.setText("Click on the center of the first part in the tape.");
+            MovableUtils.fireTargetedUserAction(autoSetupCamera);
             cameraView.flash();
 
             logDebugInfo = (e.getModifiers() & ActionEvent.ALT_MASK) != 0;
@@ -543,6 +545,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                              public Void call() throws Exception {
                                  cameraView.setText("Checking first part...");
                                  autoSetupCamera.moveTo(firstPartLocation);
+                                 MovableUtils.fireTargetedUserAction(autoSetupCamera);
                                  part1HoleLocations = findHoles(autoSetupCamera);
                                  if (part1HoleLocations.size() < 1) {
                                      throw new Exception("No hole found at selected location");
@@ -587,6 +590,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                              public Void call() throws Exception {
                                  cameraView.setText("Checking second part...");
                                  autoSetupCamera.moveTo(secondPartLocation);
+                                 MovableUtils.fireTargetedUserAction(autoSetupCamera);
                                  List<Location> part2HoleLocations = findHoles(autoSetupCamera);
                                  if (part2HoleLocations.size() < 1) {
                                      throw new Exception("No hole found at selected location");
@@ -627,6 +631,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
                                  feeder.setFeedCount(1);
                                  autoSetupCamera.moveTo(feeder.getPickLocation());
+                                 MovableUtils.fireTargetedUserAction(autoSetupCamera);
                                  feeder.setFeedCount(0);
 
                                  cameraView.setText("Setup complete!");

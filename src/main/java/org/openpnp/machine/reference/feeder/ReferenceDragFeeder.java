@@ -354,8 +354,9 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 	}
 
 	public boolean isPart0402() {
-		return this.getPart().getPackage().getId().contains("C0402")
-				|| this.getPart().getPackage().getId().contains("R0402");
+		return this.getPart() != null
+		        && (this.getPart().getPackage().getId().contains("C0402")
+				|| this.getPart().getPackage().getId().contains("R0402"));
 	}
 
     public Location getFeedStartLocation() {
