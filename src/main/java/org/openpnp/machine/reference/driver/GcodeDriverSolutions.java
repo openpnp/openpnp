@@ -518,7 +518,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                         }
                         break;
                     case MOVE_TO_COMPLETE_REGEX:
-                        if (command != null && isTinyG) {
+                        if (command != null) {
                             // Make it obsolete with the new (detected) firmware.
                             commandBuilt = "";
                         }
@@ -672,6 +672,8 @@ class GcodeDriverSolutions implements Solutions.Subject {
         Serializer serIn = createSerializer();
         StringReader sr = new StringReader(gcodeDriverSerialized);
         GcodeAsyncDriver asyncDriver = serIn.read(GcodeAsyncDriver.class, sr);
+        // Triple the timeout as asynchronously executed move sequences can be longer than single moves. 
+        asyncDriver.setTimeoutMilliseconds(asyncDriver.getTimeoutMilliseconds()*3);
         replaceDriver(asyncDriver);
     }
 

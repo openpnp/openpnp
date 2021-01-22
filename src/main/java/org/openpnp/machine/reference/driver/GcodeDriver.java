@@ -391,6 +391,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             else {
                 try {
                     sendGcode(getCommand(null, CommandType.DISABLE_COMMAND));
+                    drainCommandQueue(getTimeoutAtMachineSpeed());
                 }
                 catch (Exception e) {
                     // When the connection is lost, we have IO errors. We should still be able to go on
@@ -719,6 +720,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Override
     public boolean isMotionPending() {
         return motionPending;
+    }
+
+    protected void drainCommandQueue(long timeout) throws InterruptedException {
+        // This does nothing in the plain GcodeDriver. It will be overridden in the GcodeAsyncDriver. 
     }
 
     @Override
