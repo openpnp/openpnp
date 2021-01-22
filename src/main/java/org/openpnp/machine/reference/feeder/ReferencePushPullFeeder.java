@@ -292,6 +292,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     protected CalibrationTrigger calibrationTrigger = CalibrationTrigger.UntilConfident;
 
     public void assertCalibrated(boolean tapeFeed) throws Exception {
+        if (getHole1Location().convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(getHole2Location()) < 3) {
+            throw new Exception("Feeder "+getName()+" sprocket hole locations undefined/too close together.");
+        }
         if ((visionOffset == null && calibrationTrigger != CalibrationTrigger.None)
                 || (tapeFeed && calibrationTrigger == CalibrationTrigger.UntilConfident && !isPrecisionSufficient())
                 || (tapeFeed && calibrationTrigger == CalibrationTrigger.OnEachTapeFeed)) {
@@ -1032,6 +1035,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         // with the locations manually.
 
         Location unitVector = getHole1Location().unitVectorTo(getHole2Location());
+        if (!(Double.isFinite(unitVector.getX()) && Double.isFinite(unitVector.getY()))) {
+            // Catch (yet) undefined hole locations.    
+            unitVector = new Location(getHole1Location().getUnits(), 0, 1, 0, 0);
+        }
         double rotationTape = Math.atan2(unitVector.getY(), unitVector.getX())*180.0/Math.PI;
         Location transform = getLocation().derive(null, null, null, rotationTape);
         if (Math.abs(rotationTape - getLocation().getRotation()) > 0.1) {
