@@ -781,10 +781,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         sendGcode(command);
     }
 
-    private String actuatorRead(ReferenceActuator actuator, Double parameter) throws Exception {
-        /**
+    @Override
+    public <T> String actuatorRead(ReferenceActuator actuator, T parameter) throws Exception {
+        /*
          * The logic here is a little complicated. This is the only driver method that is
-         * not fire and forget. In this case, we need to know if the command was serviced or not 
+         * not fire and forget. In this case, we need to know if the command was serviced or not
          * and throw an Exception if not.
          */
         String command;
@@ -800,13 +801,18 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             command = substituteVariable(command, "Name", actuator.getName());
             command = substituteVariable(command, "Index", actuator.getIndex());
             if (parameter != null) {
-                command = substituteVariable(command, "DoubleValue", parameter);
-                command = substituteVariable(command, "IntegerValue", (int) parameter.doubleValue());
+                if (parameter instanceof Double) { // Backwards compatibility
+                    Double doubleParameter = (Double) parameter;
+                    command = substituteVariable(command, "DoubleValue", doubleParameter);
+                    command = substituteVariable(command, "IntegerValue", (int) doubleParameter.doubleValue());
+                }
+
+                command = substituteVariable(command, "Value", parameter);
             }
             sendGcode(command);
             List<Line> responses = receiveResponses(regex, timeoutMilliseconds, (r) -> {
                 throw new Exception(String.format("Actuator \"%s\" read error: No matching responses found.", actuator.getName()));
-            }); 
+            });
 
             Pattern pattern = Pattern.compile(regex);
             for (Line line : responses) {
@@ -814,15 +820,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 if (matcher.matches()) {
                     Logger.trace("actuatorRead response: {}", line);
                     try {
-                        String s = matcher.group("Value");
-                        return s;
+                        return matcher.group("Value");
                     }
                     catch (IllegalArgumentException e) {
-                        throw new Exception(String.format("Actuator \"%s\" read error: Regex is missing \"Value\" capturing group. See https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex", 
+                        throw new Exception(String.format("Actuator \"%s\" read error: Regex is missing \"Value\" capturing group. See https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex",
                                 actuator.getName()), e);
                     }
                     catch (Exception e) {
-                        throw new Exception(String.format("Actuator \"%s\" read error: Failed to parse response. See https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex", 
+                        throw new Exception(String.format("Actuator \"%s\" read error: Failed to parse response. See https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex",
                                 actuator.getName()), e);
                     }
                 }
@@ -837,12 +842,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
     @Override
     public String actuatorRead(ReferenceActuator actuator) throws Exception {
-        return actuatorRead(actuator, null); 
-    }
-
-    @Override
-    public String actuatorRead(ReferenceActuator actuator, double parameter) throws Exception {
-        return actuatorRead(actuator, (Double) parameter);
+        return actuatorRead(actuator, null);
     }
 
     public synchronized void disconnect() {

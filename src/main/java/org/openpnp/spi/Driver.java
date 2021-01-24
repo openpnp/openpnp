@@ -56,7 +56,6 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
      * sure.
      * 
      * @param machine
-     * @param homeLocation
      * @throws Exception
      */
     public void home(ReferenceMachine machine) throws Exception;
@@ -125,7 +124,7 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
      * Actuates a machine defined object with a double value.
      * 
      * @param actuator
-     * @param on
+     * @param value
      * @throws Exception
      */
     public void actuate(ReferenceActuator actuator, double value) throws Exception;
@@ -134,7 +133,7 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
      * Actuates a machine defined object with a String value.
      * 
      * @param actuator
-     * @param on
+     * @param value
      * @throws Exception
      */
     public default void actuate(ReferenceActuator actuator, String value) throws Exception {
@@ -159,7 +158,7 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
      * @return 
      * @throws Exception
      */
-    public default String actuatorRead(ReferenceActuator actuator, double parameter) throws Exception {
+    public default <T> String actuatorRead(ReferenceActuator actuator, T parameter) throws Exception {
         return null;
     }
 

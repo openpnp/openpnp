@@ -76,7 +76,7 @@ public interface Actuator
      */
     public String read() throws Exception;
 
-    public String read(double value) throws Exception;
+    public <T> String read(T value) throws Exception;
 
     boolean isCoordinatedBeforeActuate();
 

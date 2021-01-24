@@ -35,7 +35,6 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Driver;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractActuator;
 import org.pmw.tinylog.Logger;
@@ -95,12 +94,12 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     public Object getLastActuationValue() {
         return lastActuationValue;
     }
+
     protected void setLastActuationValue(Object lastActuationValue) {
         Object oldValue = this.lastActuationValue;
         this.lastActuationValue = lastActuationValue;
         firePropertyChange("lastActuationValue", oldValue, lastActuationValue);
     }
-
     @Override
     public Location getCameraToolCalibratedOffset(Camera camera) {
         return new Location(camera.getUnitsPerPixel().getUnits());
@@ -149,12 +148,12 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     }
 
     @Override
-    public String read(double parameter) throws Exception {
+    public <T> String read(T parameter) throws Exception {
         if (isCoordinatedBeforeRead()) {
             coordinateWithMachine(false);
         }
         String value = getDriver().actuatorRead(this, parameter);
-        Logger.debug("{}.readWithDouble({}): {}", getName(), parameter, value);
+        Logger.debug("{}.readWithParameter({}): {}", getName(), parameter, value);
         getMachine().fireMachineHeadActivity(head);
         return value;
     }
