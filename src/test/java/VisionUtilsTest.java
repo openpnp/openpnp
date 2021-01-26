@@ -203,5 +203,48 @@ public class VisionUtilsTest {
         @Override
         public void home() throws Exception {
         }
+
+        @Override
+        public Location getActualLocation() {
+            return new Location(LengthUnit.Millimeters, 1, 1, 0, 0);
+        }
+
+        @Override
+        public Location getActualLocation(HeadMountable tool) {
+            return new Location(LengthUnit.Millimeters, 1, 1, 0, 0);
+        }
+
+        @Override
+        public Location getUnitsPerPixel(Length z) {
+            return new Location(LengthUnit.Millimeters, 1, 1, 0, 0).derive(null, null, z.getValue(), null);
+        }
+
+        @Override
+        public Location getUnitsPerPixel(Location location) {
+            return new Location(LengthUnit.Millimeters, 1, 1, 0, 0);
+        }
+
+        @Override
+        public Location getUnitsPerPixelSecondary() {
+            return new Location(LengthUnit.Millimeters, 1, 1, 0, 0);
+        }
+
+        @Override
+        public void setUnitsPerPixelSecondary(Location unitsPerPixelSecondary) {
+        }
+
+        @Override
+        public Length getDefaultZ() {
+            return new Length(0.0, LengthUnit.Millimeters);
+        }
+
+        @Override
+        public void setDefaultZ(Length defaultZ) {
+        }
+
+        @Override
+        public Length estimateZCoordinateOfObject(Location observedUnitsPerPixel) throws Exception {
+            return new Length(0.0, LengthUnit.Millimeters);
+        }
     }
 }
