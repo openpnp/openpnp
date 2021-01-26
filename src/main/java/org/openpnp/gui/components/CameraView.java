@@ -32,6 +32,7 @@ import java.awt.RenderingHints;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -65,6 +66,8 @@ import org.openpnp.CameraListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
@@ -212,6 +215,8 @@ public class CameraView extends JComponent implements CameraListener {
     }
     RenderingQuality renderingQuality = RenderingQuality.Low;
     
+    private Length viewingPlaneZ; //the Z coordinate at which the reticle is correctly scaled
+    
     public CameraView() {
         setBackground(Color.black);
         setOpaque(true);
@@ -300,6 +305,8 @@ public class CameraView extends JComponent implements CameraListener {
             // ignore errors
         }
 
+        // set the viewing plane to the default for the camera
+        viewingPlaneZ = camera.getDefaultZ();
     }
 
     public Camera getCamera() {
@@ -380,6 +387,43 @@ public class CameraView extends JComponent implements CameraListener {
         prefs.put(getQualityRenderingPrefKey(), renderingQuality.toString());
         this.renderingQuality = renderingQuality;
         calculateScalingData();
+    }
+
+    /**
+     * Gets the current Z coordinate at which the reticle is correctly scaled
+     * 
+     * @return the Z coordinate
+     */
+    public Length getViewingPlaneZ() {
+        return viewingPlaneZ;
+    }
+
+    /**
+     * Sets the Z coordinate at which the reticle is correctly scaled
+     * 
+     * @param viewingPlaneZ the Z coordinate
+     */
+    public void setViewingPlaneZ(Length viewingPlaneZ) {
+        this.viewingPlaneZ = viewingPlaneZ;
+    }
+    
+    /**
+     * Resets the Z coordinate at which the reticle is correctly scaled to the default for the
+     * camera
+     */
+    public void resetViewingPlaneZ() {
+        this.viewingPlaneZ = camera.getDefaultZ();
+    }
+    
+    /**
+     * Checks to see if the reticle for this camera can be changed to different heights.  This is
+     * true if the camera's Units Per Pixel has been calibrated at two different distances from the
+     * camera.
+     * 
+     * @return the result of the check
+     */
+    public boolean isReticleHeightChangable() {
+        return camera.getUnitsPerPixel().subtract(camera.getUnitsPerPixelSecondary()).getZ() != 0;
     }
 
     /**
@@ -500,7 +544,7 @@ public class CameraView extends JComponent implements CameraListener {
         lastFrame = img;
         if (oldFrame == null
                 || (oldFrame.getWidth() != img.getWidth() || oldFrame.getHeight() != img.getHeight()
-                        || camera.getUnitsPerPixel() != lastUnitsPerPixel)) {
+                        || !camera.getUnitsPerPixel(viewingPlaneZ).equals(lastUnitsPerPixel))) {
             calculateScalingData();
         }
         fps = 1000.0 / fpsAverage.next(System.currentTimeMillis() - lastFrameReceivedTime);
@@ -564,7 +608,7 @@ public class CameraView extends JComponent implements CameraListener {
         scaleRatioX = lastSourceWidth / (double) scaledWidth;
         scaleRatioY = lastSourceHeight / (double) scaledHeight;
         
-        lastUnitsPerPixel = camera.getUnitsPerPixel();
+        lastUnitsPerPixel = camera.getUnitsPerPixel(viewingPlaneZ);
         scaledUnitsPerPixelX = lastUnitsPerPixel.getX() * scaleRatioX;
         scaledUnitsPerPixelY = lastUnitsPerPixel.getY() * scaleRatioY;
 
@@ -606,7 +650,7 @@ public class CameraView extends JComponent implements CameraListener {
                     .getRotation();
 
             for (Reticle reticle : reticles.values()) {
-                reticle.draw(g2d, camera.getUnitsPerPixel().getUnits(), scaledUnitsPerPixelX,
+                reticle.draw(g2d, camera.getUnitsPerPixel(viewingPlaneZ).getUnits(), scaledUnitsPerPixelX,
                         scaledUnitsPerPixelY, ins.left + (width / 2), ins.top + (height / 2),
                         scaledWidth, scaledHeight, c);
             }
@@ -630,6 +674,16 @@ public class CameraView extends JComponent implements CameraListener {
 
             if (!selectionEnabled) {
                 paintDragJogging(g2d);
+            }
+            
+            // Display the height of the reticle in the lower left corner if it is different than
+            // the default
+            if (Math.abs(viewingPlaneZ.subtract(camera.getDefaultZ()).
+                    convertToUnits(LengthUnit.Millimeters).getValue()) > 0.05) {
+                String text = "Reticle Height: " + viewingPlaneZ + " (Default: " +
+                    camera.getDefaultZ() + ")";
+                Dimension dim = measureTextOverlay(g2d, text);
+                drawTextOverlay(g2d, width - dim.width - 10, height - dim.height - 10, text);
             }
         }
         else {
@@ -1338,7 +1392,8 @@ public class CameraView extends JComponent implements CameraListener {
 
         // Create a location in the Camera's units per pixel's units
         // and with the values of the offsets.
-        Location offsets = camera.getUnitsPerPixel().derive(offsetX, offsetY, 0.0, 0.0);
+        Location offsets = camera.getUnitsPerPixel(viewingPlaneZ).
+                derive(offsetX, offsetY, 0.0, 0.0);
         // Add the offsets to the Camera's position.
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
         Location location = camera.getLocation(nozzle).add(offsets);
@@ -1348,6 +1403,29 @@ public class CameraView extends JComponent implements CameraListener {
         for (CameraViewActionListener listener : new ArrayList<>(actionListeners)) {
             listener.actionPerformed(action);
         }
+    }
+
+    /**
+     * Gets the offset from the center of the image in camera pixels given a set of coordinates in
+     * the camera view component.
+     *  
+     * @param x - the x position in the camera's view component as returned by a mouse click
+     * @param y - the y position in the camera's view component as returned by a mouse click
+     * @return the offset in camera pixels from the center of the image in a bottom left to
+     * top right coordinate system
+     */
+    public Point getCameraViewCenterPixelsFromXy(int x, int y) {
+        // Find the difference in X and Y from the center of the image
+        // to the mouse click.
+        double offsetX = (scaledWidth / 2.0D) - (x - imageX);
+        double offsetY = (scaledHeight / 2.0D) - (y - imageY) + 1;
+
+        // Invert the X so that the offsets represent a bottom left to
+        // top right coordinate system.
+        offsetX = -offsetX;
+
+        return new Point((int) Math.round(offsetX*scaleRatioX),
+                (int) Math.round(offsetY*scaleRatioY));
     }
 
     public Location getCameraViewCenterOffsetsFromXy(int x, int y) {
@@ -1377,16 +1455,20 @@ public class CameraView extends JComponent implements CameraListener {
         Location offsets = getCameraViewCenterOffsetsFromXy(e.getX(), e.getY());
         // And move there.
         UiUtils.submitUiMachineTask(() -> {
-            if (camera.getHead() == null) {
-                // move the nozzle to the camera
+            // For non-movable cameras, move the nozzle so that the clicked position is centered in
+            // the camera's view.  For movable cameras, move the camera so that the clicked position
+            // is centered in the camera's view.
+            if (camera.getHead() == null) { // The camera is non-movable
+                // Get the selected nozzle
                 Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
-                // Add the offsets to the Camera's nozzle calibrated position.
-                Location location = camera.getLocation(nozzle).add(offsets);
+                // Subtract the offsets from the nozzle position.
+                Location location = nozzle.getLocation().subtract(offsets);
                 // Only change X/Y. 
                 location = nozzle.getLocation().derive(location, true, true, false, false);
+                // Move the nozzle such that the clicked position is moved to the center of the camera view
                 MovableUtils.moveToLocationAtSafeZ(nozzle, location);
             }
-            else {
+            else { // The camera is movable
                 // Add the offsets to the Camera's position.
                 Location location = camera.getLocation().add(offsets);
                 // move the camera to the location
@@ -1611,12 +1693,23 @@ public class CameraView extends JComponent implements CameraListener {
     private MouseWheelListener mouseWheelListener = new MouseWheelListener() {
         @Override
         public void mouseWheelMoved(MouseWheelEvent e) {
-            double zoomInc = Math.max(zoomIncPerMouseWheelTick,
-                    // When best-scale is selected, we can only zoom by 1.0 or faster.
-                    renderingQuality == RenderingQuality.BestScale ? 1.0 : 0);
-            zoom = (Math.round(zoom/zoomInc) - e.getPreciseWheelRotation()) * zoomInc; 
-            zoom = Math.max(zoom, 1.0d);
-            zoom = Math.min(zoom, 100d);
+            int modifiers = e.getModifiersEx();
+            boolean ctrlDown = (modifiers & InputEvent.CTRL_DOWN_MASK) != 0;
+            if (!ctrlDown) { // Scroll wheel without Ctrl changes the zoom factor
+                double zoomInc = Math.max(zoomIncPerMouseWheelTick,
+                        // When best-scale is selected, we can only zoom by 1.0 or faster.
+                        renderingQuality == RenderingQuality.BestScale ? 1.0 : 0);
+                zoom = (Math.round(zoom/zoomInc) - e.getPreciseWheelRotation()) * zoomInc; 
+                zoom = Math.max(zoom, 1.0d);
+                zoom = Math.min(zoom, 100d);
+            }
+            else { // Scroll wheel with Ctrl or Ctrl-Alt changes the reticle height
+                // Change the reticle height if possible
+                if (isReticleHeightChangable()) {
+                    double factor = (modifiers & InputEvent.ALT_DOWN_MASK) == 0 ? 1.0 : 0.1;
+                    viewingPlaneZ = viewingPlaneZ.subtract(factor * e.getPreciseWheelRotation());
+                }
+            }
             calculateScalingData();
             repaint();
         }
@@ -1626,13 +1719,13 @@ public class CameraView extends JComponent implements CameraListener {
             new CameraViewSelectionTextDelegate() {
                 @Override
                 public String getSelectionText(CameraView cameraView) {
-                    double widthInUnits = selection.width * camera.getUnitsPerPixel().getX();
-                    double heightInUnits = selection.height * camera.getUnitsPerPixel().getY();
+                    double widthInUnits = selection.width * camera.getUnitsPerPixel(viewingPlaneZ).getX();
+                    double heightInUnits = selection.height * camera.getUnitsPerPixel(viewingPlaneZ).getY();
 
                     String text = String.format(Locale.US, "%dpx, %dpx\n%2.3f%s, %2.3f%s",
                             (int) selection.getWidth(), (int) selection.getHeight(), widthInUnits,
-                            camera.getUnitsPerPixel().getUnits().getShortName(), heightInUnits,
-                            camera.getUnitsPerPixel().getUnits().getShortName());
+                            camera.getUnitsPerPixel(viewingPlaneZ).getUnits().getShortName(), heightInUnits,
+                            camera.getUnitsPerPixel(viewingPlaneZ).getUnits().getShortName());
                     return text;
                 }
             };

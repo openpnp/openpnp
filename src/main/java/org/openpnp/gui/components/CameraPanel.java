@@ -58,6 +58,7 @@ public class CameraPanel extends JPanel {
 
     private static final String PREF_SELECTED_CAMERA_VIEW = "JobPanel.dividerPosition";
     private Preferences prefs = Preferences.userNodeForPackage(CameraPanel.class);
+    private Object savedSelection; //used to save and restore selected camera view(s)
 
     public CameraPanel() {
 		SwingUtilities.invokeLater(() -> {
@@ -183,6 +184,24 @@ public class CameraPanel extends JPanel {
         return cameraViews.get(camera);
     }
 
+    /**
+     * Saves the currently selected views being displayed so that they may later be restored by
+     * calling restoreSelectedViews() 
+     */
+    public void saveCurrentlySelectedViews() {
+        savedSelection = camerasCombo.getSelectedItem();
+    }
+    
+    /**
+     * Restores the views being displayed to what they were when saveCurrentlySelectedViews() was
+     * last called 
+     */
+    public void restoreSelectedViews() {
+        if (savedSelection != null) {
+            camerasCombo.setSelectedItem(savedSelection);
+        }
+    }
+    
     private AbstractAction cameraSelectedAction = new AbstractAction("") {
         @Override
         public void actionPerformed(ActionEvent ev) {

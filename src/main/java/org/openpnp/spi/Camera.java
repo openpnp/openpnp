@@ -23,6 +23,7 @@ import java.awt.image.BufferedImage;
 import java.io.Closeable;
 
 import org.openpnp.CameraListener;
+import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 
 /**
@@ -35,7 +36,7 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     }
 
     /**
-     * Get the location of the camera inlcuding the calibrated offset for the given tool.   
+     * Get the location of the camera including the calibrated offset for the given tool.   
      * If the bottom camera focal plane is different from the PCB surface plane, the various
      * tools might introduce slight offsets in X, Y as their Z axes are not perfectly parallel.
      * This offset is compensated if the getLocation(tool) method is used instead of the plain
@@ -48,6 +49,24 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     public Location getLocation(HeadMountable tool);
 
     /**
+     * Get the actual location of the camera.  This is the same as that obtained by getLocation()
+     * except coordinates for virtual axis are replaced by their home coordinates.
+     * 
+     * @return
+     */
+    public Location getActualLocation();
+    
+    /**
+     * Get the actual location of the camera including the calibrated offset for the given tool.
+     * This is the same as that obtained by getLocation(HeadMountable tool) except coordinates for
+     * virtual axis are replaced by their home coordinates.
+     * 
+     * @param tool
+     * @return
+     */
+    public Location getActualLocation(HeadMountable tool);
+    
+    /**
      * Get the direction the Camera is looking.
      * 
      * @return
@@ -57,15 +76,84 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     public void setLooking(Looking looking);
 
     /**
-     * The number of X and Y units per pixel this camera shows when in perfect focus. Location isn't
-     * a great datatype for this, but it gets the job done.
+     * The number of X and Y units per pixel this camera shows when in perfect focus. The Z value of
+     * this location is the height above the camera at which the units per pixel were measured.
      * 
-     * @return
+     * @return a Location whose x and y length represent the units per pixel in those axis
+     * respectively
      */
     public Location getUnitsPerPixel();
 
     public void setUnitsPerPixel(Location unitsPerPixel);
     
+    /**
+     * Gets the units per pixel for determining the physical size of an object in an image given
+     * its Z height is known
+     * 
+     * @param z - a length with the z coordinate of the imaged object, if null, the height of the 
+     * default working plane for this camera is used
+     * @return a Location whose x and y length represent the units per pixel in those axis
+     * respectively
+     */
+    public Location getUnitsPerPixel(Length z);
+    
+    /**
+     * Gets the units per pixel for determining the physical size of an object in an image given
+     * its Z height is known
+     * 
+     * @param location - a location with the z coordinate of the imaged object, if null, the height
+     * of the default working plane for this camera is used
+     * @return a Location whose x and y length represent the units per pixel in those axis
+     * respectively
+     */
+    public Location getUnitsPerPixel(Location location);
+
+    /**
+     * Gets the secondary units per pixel
+     * 
+     * @return a location whose x and y coordinates are the measured pixels per unit for those axis
+     *         respectively and the z coordinate is the height above the camera at which the
+     *         measurements were made.
+     */
+    public Location getUnitsPerPixelSecondary();
+    
+    /**
+     * Sets the secondary units per pixel
+     * 
+     * @param unitsPerPixelSecondary - a location whose x and y coordinates are the measured pixels
+     * per unit for those axis respectively and the z coordinate is the height above the camera at
+     * which the measurements were made.
+     */
+    public void setUnitsPerPixelSecondary(Location unitsPerPixelSecondary);
+
+    /**
+     * Gets the Z  height of the default working plane for this camera.  This is the height
+     * at which objects are assumed to be if no other information is available.
+     * 
+     * @return the Z height of the default working plane
+     */
+    public Length getDefaultZ();
+
+    /**
+     * Sets the Z height of the default working plane for this camera.  This is the height
+     * at which objects are assumed to be if no other information is available.
+     * 
+     * @param defaultZ - the Z height of the default working plane
+     */
+    public void setDefaultZ(Length defaultZ);
+    
+    /**
+     * Estimates the Z height of an object based upon the observed units per pixel for the
+     * object. This is typically found by capturing images of a feature of the object from two
+     * different camera positions. The observed units per pixel is then computed by dividing the
+     * actual change in camera position (in machine units) by the apparent change in position of the
+     * feature (in pixels) between the two images.
+     *
+     * @param observedUnitsPerPixel - the observed units per pixel for the object
+     * @return - the estimated Z height of the object
+     */
+    public Length estimateZCoordinateOfObject(Location observedUnitsPerPixel) throws Exception;
+
     /**
      * Immediately captures an image from the camera and returns it in it's native format. Fires
      * the Camera.BeforeCapture and Camera.AfterCapture scripting events before and after.
