@@ -46,6 +46,7 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.VisionProvider;
 import org.openpnp.spi.Axis.Type;
+import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.SimpleGraph;
 import org.pmw.tinylog.Logger;
@@ -296,54 +297,26 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         return super.getLocation();
     }
 
-    @Override
-    public Location getActualLocation() {
-        Location location = getLocation();
-        LengthUnit units = location.getUnits();
-        //Check for any virtual axis and replace them with their home coordinate
-        Axis axis = getAxisX();
-        if ((axis != null) && (axis.getClass() == ReferenceVirtualAxis.class)) {
-            Length home = ((ReferenceVirtualAxis) axis).getHomeCoordinate().convertToUnits(units);
-            location = location.derive(home.getValue(), null, null, null);
-        }
-        axis = getAxisY();
-        if ((axis != null) && (axis.getClass() == ReferenceVirtualAxis.class)) {
-            Length home = ((ReferenceVirtualAxis) axis).getHomeCoordinate().convertToUnits(units);
-            location = location.derive(null, home.getValue(), null, null);
-        }
-        axis = getAxisZ();
-        if ((axis != null) && (axis.getClass() == ReferenceVirtualAxis.class)) {
-            Length home = ((ReferenceVirtualAxis) axis).getHomeCoordinate().convertToUnits(units);
-            location = location.derive(null, null, home.getValue(), null);
-        }
-        axis = getAxisRotation();
-        if ((axis != null) && (axis.getClass() == ReferenceVirtualAxis.class)) {
-            Length home = ((ReferenceVirtualAxis) axis).getHomeCoordinate().convertToUnits(units);
-            location = location.derive(null, null, null, home.getValue());
-        }
-        return location;
-    }
-    
-    @Override
-    public Location getActualLocation(HeadMountable tool) {
-        if (tool != null) {
-            return getActualLocation().subtract(tool.getCameraToolCalibratedOffset(this));
-        }
-        return getActualLocation();
-    }
-
     /**
-     * Gets the height above the camera of the specified z coordinate
+     * Gets the height above the physical camera of the specified z coordinate
      * 
      * @param zCoordinate
      * @return the height above the camera in the same units as zCoordinate
      */
     protected Length getHeightAboveCamera(Length zCoordinate) {
-        return zCoordinate.subtract(getActualLocation().getLengthZ());
+        Location cameraLocation = getLocation();
+        try {
+            //Replace virtual axis coordinates, if any, with the head offset
+            cameraLocation = getApproximativeLocation(cameraLocation, cameraLocation, LocationOption.ReplaceVirtual);
+        }
+        catch (Exception e1) {
+            e1.printStackTrace();
+        }
+        return zCoordinate.subtract(cameraLocation.getLengthZ());
     }
     
     /**
-     * Gets the height above the camera of the specified location
+     * Gets the height above the physical camera of the specified location
      * 
      * @param location - the location whose height is being determined
      * @return the height above the camera in the same units as location
@@ -353,13 +326,22 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     }
     
     /**
-     * Gets the Z coordinate that is a given height above the camera
+     * Gets the Z coordinate that is a given height above the physical camera
      * 
      * @param heightAboveCamera
      * @return the Z coordinate that is the given height above the camera
      */
     protected Length getZCoordinateAboveCamera(Length heightAboveCamera) {
-        return heightAboveCamera.add(getActualLocation().getLengthZ());
+        Location cameraLocation = getLocation();
+        try {
+            //Replace virtual axis coordinates, if any, with the head offset
+            cameraLocation = getApproximativeLocation(cameraLocation, cameraLocation, LocationOption.ReplaceVirtual);
+        }
+        catch (Exception e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        return heightAboveCamera.add(cameraLocation.getLengthZ());
     }
     
     @Override

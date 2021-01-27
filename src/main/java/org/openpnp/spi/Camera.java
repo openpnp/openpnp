@@ -49,24 +49,6 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     public Location getLocation(HeadMountable tool);
 
     /**
-     * Get the actual location of the camera.  This is the same as that obtained by getLocation()
-     * except coordinates for virtual axis are replaced by their home coordinates.
-     * 
-     * @return
-     */
-    public Location getActualLocation();
-    
-    /**
-     * Get the actual location of the camera including the calibrated offset for the given tool.
-     * This is the same as that obtained by getLocation(HeadMountable tool) except coordinates for
-     * virtual axis are replaced by their home coordinates.
-     * 
-     * @param tool
-     * @return
-     */
-    public Location getActualLocation(HeadMountable tool);
-    
-    /**
      * Get the direction the Camera is looking.
      * 
      * @return

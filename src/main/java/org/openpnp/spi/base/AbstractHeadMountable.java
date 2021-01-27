@@ -6,6 +6,7 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
@@ -387,6 +388,11 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
                     desiredRawLocation = desiredRawLocation
                             .put(new AxesLocation(rawAxis, currentRawLocation.getCoordinate(rawAxis)));
                 }
+            }
+            else if ((axis instanceof ReferenceVirtualAxis) && (Arrays.asList(options).contains(LocationOption.ReplaceVirtual))) {
+                // Replace the virtual axis coordinate with zero
+                desiredRawLocation = desiredRawLocation
+                        .put(new AxesLocation(axis, new Length(0.0, LengthUnit.Millimeters)));
             }
         }    
         // Now transform it forward, NOT applying any options, i.e. when a moveTo() is later made, it will effectively reverse 

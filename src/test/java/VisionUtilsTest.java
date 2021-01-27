@@ -204,17 +204,6 @@ public class VisionUtilsTest {
         public void home() throws Exception {
         }
 
-        @Override
-        public Location getActualLocation() {
-            return new Location(LengthUnit.Millimeters, 1, 1, 0, 0);
-        }
-
-        @Override
-        public Location getActualLocation(HeadMountable tool) {
-            return new Location(LengthUnit.Millimeters, 1, 1, 0, 0);
-        }
-
-        @Override
         public Location getUnitsPerPixel(Length z) {
             return new Location(LengthUnit.Millimeters, 1, 1, 0, 0).derive(null, null, z.getValue(), null);
         }
