@@ -89,12 +89,12 @@ public class MatchTemplate extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (templateStageName == null) {
+        if (templateStageName == null || templateStageName.trim().isEmpty()) {
             return null;
         }
 
         Mat mat = pipeline.getWorkingImage();
-        Mat template = pipeline.getResult(templateStageName).image;
+        Mat template = pipeline.getExpectedResult(templateStageName).image;
         Mat result = new Mat();
 
         Imgproc.matchTemplate(mat, template, result, Imgproc.TM_CCOEFF_NORMED);

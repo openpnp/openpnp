@@ -20,22 +20,18 @@
 
 package org.openpnp.machine.reference.wizards;
 
-import java.awt.Color;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
-import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
-import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
-import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.IntegerConverter;
-import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.HttpActuator;
+import org.openpnp.spi.Actuator.ActuatorValueType;
+import org.openpnp.spi.base.AbstractMachine;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -43,20 +39,7 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class HttpActuatorConfigurationWizard extends AbstractConfigurationWizard {
-    private final HttpActuator actuator;
-
-    private JTextField locationX;
-    private JTextField locationY;
-    private JTextField locationZ;
-    private JPanel panelOffsets;
-    private JPanel panelSafeZ;
-    private JLabel lblSafeZ;
-    private JTextField textFieldSafeZ;
-    private JPanel headMountablePanel;
-    private JPanel generalPanel;
-    private JLabel lblIndex;
-    private JTextField indexTextField;
+public class HttpActuatorConfigurationWizard extends AbstractActuatorConfigurationWizard {
     private JPanel panelProperties;
     private JLabel lblName;
     private JTextField nameTf;
@@ -64,26 +47,39 @@ public class HttpActuatorConfigurationWizard extends AbstractConfigurationWizard
     private JTextField onUrlTf;
     private JLabel lblOffUrl;
     private JTextField offUrlTf;
+    private JLabel lblParametricUrl;
+    private JTextField paramUrl;
 
-    public HttpActuatorConfigurationWizard(HttpActuator httpActuator) {
-        this.actuator = httpActuator;
+    public HttpActuatorConfigurationWizard(AbstractMachine machine, HttpActuator httpActuator) {
+        super(machine, httpActuator);
+    }
 
+    @Override 
+    protected void createUi(AbstractMachine machine) {
         panelProperties = new JPanel();
         panelProperties.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelProperties);
-        panelProperties.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblName = new JLabel("Name");
         panelProperties.add(lblName, "2, 2, right, default");
 
         nameTf = new JTextField();
-        panelProperties.add(nameTf, "4, 2, fill, default");
+        panelProperties.add(nameTf, "4, 2");
         nameTf.setColumns(20);
 
         lblOnUrl = new JLabel("On URL");
@@ -100,102 +96,40 @@ public class HttpActuatorConfigurationWizard extends AbstractConfigurationWizard
         panelProperties.add(offUrlTf, "4, 6, fill, default");
         offUrlTf.setColumns(40);
 
-        headMountablePanel = new JPanel();
-        headMountablePanel.setLayout(new BoxLayout(headMountablePanel, BoxLayout.Y_AXIS));
-        contentPanel.add(headMountablePanel);
+        lblParametricUrl = new JLabel("Parametric URL");
+        lblParametricUrl.setToolTipText("<html>\r\nUse a parametric template to encode non-boolean actuation values into the URL.<br/>\r\nThe {val} placeholder can be used. <br/>\r\nFormatting is possible in the form of {val:%f} etc.<br/>\r\n<br/>\r\n<strong>Note:</strong> no escaping is performed. If using String actuation values, <br/>\r\nyou can use complex URI fragments e.g. drive multiple parameters. \r\n</html>");
+        panelProperties.add(lblParametricUrl, "2, 8, right, default");
 
-        panelOffsets = new JPanel();
-        headMountablePanel.add(panelOffsets);
-        panelOffsets.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Offsets", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-        panelOffsets.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        paramUrl = new JTextField();
+        panelProperties.add(paramUrl, "4, 8, fill, default");
+        paramUrl.setColumns(40);
 
-        JLabel lblX = new JLabel("X");
-        panelOffsets.add(lblX, "2, 2");
-
-        JLabel lblY = new JLabel("Y");
-        panelOffsets.add(lblY, "4, 2");
-
-        JLabel lblZ = new JLabel("Z");
-        panelOffsets.add(lblZ, "6, 2");
-
-        locationX = new JTextField();
-        panelOffsets.add(locationX, "2, 4");
-        locationX.setColumns(5);
-
-        locationY = new JTextField();
-        panelOffsets.add(locationY, "4, 4");
-        locationY.setColumns(5);
-
-        locationZ = new JTextField();
-        panelOffsets.add(locationZ, "6, 4");
-        locationZ.setColumns(5);
-
-        panelSafeZ = new JPanel();
-        headMountablePanel.add(panelSafeZ);
-        panelSafeZ.setBorder(new TitledBorder(null, "Safe Z", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
-        panelSafeZ.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
-
-        lblSafeZ = new JLabel("Safe Z");
-        panelSafeZ.add(lblSafeZ, "2, 2, right, default");
-
-        textFieldSafeZ = new JTextField();
-        panelSafeZ.add(textFieldSafeZ, "4, 2, fill, default");
-        textFieldSafeZ.setColumns(10);
-
-        generalPanel = new JPanel();
-        generalPanel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
-        contentPanel.add(generalPanel);
-        generalPanel.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
-
-        lblIndex = new JLabel("Index");
-        generalPanel.add(lblIndex, "2, 2, right, default");
-
-        indexTextField = new JTextField();
-        generalPanel.add(indexTextField, "4, 2, fill, default");
-        indexTextField.setColumns(10);
-        if (httpActuator.getHead() == null) {
-            headMountablePanel.setVisible(false);
-        }
+        super.createUi(machine);
     }
 
     @Override
     public void createBindings() {
-        LengthConverter lengthConverter = new LengthConverter();
-        IntegerConverter intConverter = new IntegerConverter();
-
         addWrappedBinding(actuator, "name", nameTf, "text");
         addWrappedBinding(actuator, "onUrl", onUrlTf, "text");
         addWrappedBinding(actuator, "offUrl", offUrlTf, "text");
-        MutableLocationProxy headOffsets = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, actuator, "headOffsets", headOffsets, "location");
-        addWrappedBinding(headOffsets, "lengthX", locationX, "text", lengthConverter);
-        addWrappedBinding(headOffsets, "lengthY", locationY, "text", lengthConverter);
-        addWrappedBinding(headOffsets, "lengthZ", locationZ, "text", lengthConverter);
-        addWrappedBinding(actuator, "safeZ", textFieldSafeZ, "text", lengthConverter);
-        addWrappedBinding(actuator, "index", indexTextField, "text", intConverter);
+        addWrappedBinding(actuator, "paramUrl", paramUrl, "text");
 
         ComponentDecorators.decorateWithAutoSelect(nameTf);
         ComponentDecorators.decorateWithAutoSelect(onUrlTf);
         ComponentDecorators.decorateWithAutoSelect(offUrlTf);
-        ComponentDecorators.decorateWithAutoSelect(indexTextField);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationX);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationY);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationZ);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
+        ComponentDecorators.decorateWithAutoSelect(paramUrl);
+
+        super.createBindings();
+    }
+
+    protected void adaptDialog() {
+        super.adaptDialog();
+        boolean isBoolean = (valueType.getSelectedItem() == ActuatorValueType.Boolean);
+        lblOnUrl.setVisible(isBoolean);
+        onUrlTf.setVisible(isBoolean);
+        lblOffUrl.setVisible(isBoolean);
+        offUrlTf.setVisible(isBoolean);
+        lblParametricUrl.setVisible(!isBoolean);
+        paramUrl.setVisible(!isBoolean);
     }
 }

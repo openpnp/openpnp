@@ -50,11 +50,11 @@ public class DilateModel extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (modelStageName == null) {
+        if (modelStageName == null || modelStageName.trim().isEmpty()) {
             throw new Exception("Stage name for model must be specified.");
         }
 
-        Result inStage = pipeline.getResult(modelStageName);
+        Result inStage = pipeline.getExpectedResult(modelStageName);
 
         if (inStage.model instanceof RotatedRect) {
             // just one RotatedRect

@@ -1,13 +1,25 @@
 package org.openpnp.machine.reference.driver.wizards;
 
-import javax.swing.*;
+import java.awt.Component;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
+import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.driver.AbstractReferenceDriver;
+import org.openpnp.machine.reference.driver.AbstractReferenceDriver.CommunicationsType;
 import org.openpnp.machine.reference.driver.SerialPortCommunications;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -15,12 +27,7 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-
-public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigurationWizard implements ActionListener {
+public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigurationWizard {
     private final AbstractReferenceDriver driver;
     private JComboBox comboBoxPort;
     private JComboBox comboBoxBaud;
@@ -35,94 +42,103 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
     private ButtonGroup commsMethodButtonGroup;
     private JPanel panelSerial;
     private JPanel panelTcp;
-    private JTextField commsMethod;
     private JCheckBox connectionKeepAlive;
-  
+    private JPanel panelController;
+    private JLabel lblName;
+    private JTextField driverName;
+    private JComboBox communicationsType;
+    private JLabel lblCommunicationsType;
+
     public AbstractReferenceDriverConfigurationWizard(AbstractReferenceDriver driver) {
         this.driver = driver;
 
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        
+        panelController = new JPanel();
+        panelController.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panelController);
+        panelController.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblName = new JLabel("Name");
+        panelController.add(lblName, "2, 2, right, default");
+        
+        driverName = new JTextField();
+        panelController.add(driverName, "4, 2, fill, default");
+        driverName.setColumns(20);
 
         //Selector code
         JPanel panelComms = new JPanel();
         panelComms.setBorder(new TitledBorder(null, "Communications method", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelComms);
-        panelComms.setLayout(new FormLayout(new ColumnSpec[]{
+        panelComms.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("right:default"),
+                ColumnSpec.decode("right:max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[]{
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
-
-        JRadioButton radioSerial = new JRadioButton("Serial");
-        radioSerial.setMnemonic(KeyEvent.VK_S);
-        radioSerial.setActionCommand("serial");
-        radioSerial.addActionListener(this);
-
-        JRadioButton radioTCP = new JRadioButton("TCP");
-        radioTCP.setMnemonic(KeyEvent.VK_T);
-        radioTCP.setActionCommand("tcp");
-        radioTCP.addActionListener(this);
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         commsMethodButtonGroup = new ButtonGroup();
-        commsMethodButtonGroup.add(radioSerial);
-        commsMethodButtonGroup.add(radioTCP);
-
-        panelComms.add(radioSerial, "4, 2, fill, default");
-        panelComms.add(radioTCP, "4, 4, fill, default");
-
-        commsMethod = new JTextField();
-        commsMethod.setVisible(false);
-        panelComms.add(commsMethod, "4, 6, fill, default");
+        
+        communicationsType = new JComboBox(CommunicationsType.values());
+        communicationsType.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                if (communicationsType.getSelectedItem() == CommunicationsType.serial) {
+                    setPanelEnabled(panelSerial, true);
+                    setPanelEnabled(panelTcp, false);
+                } else {
+                    setPanelEnabled(panelSerial, false);
+                    setPanelEnabled(panelTcp, true);
+                }
+            }
+        });
+        
+        lblCommunicationsType = new JLabel("Communications Type");
+        panelComms.add(lblCommunicationsType, "2, 2, right, default");
+        panelComms.add(communicationsType, "4, 2, fill, default");
 
         JLabel lblConnectionKeepAlive = new JLabel("Keep Alive");
-        panelComms.add(lblConnectionKeepAlive, "2, 8, right, default");
+        panelComms.add(lblConnectionKeepAlive, "2, 4, right, default");
         
         connectionKeepAlive = new JCheckBox("");
-        panelComms.add(connectionKeepAlive, "4, 8");
+        panelComms.add(connectionKeepAlive, "4, 4");
 
         //Serial config code
         panelSerial = new JPanel();
         panelSerial.setBorder(new TitledBorder(null, "Serial Port", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelSerial);
-        panelSerial.setLayout(new FormLayout(new ColumnSpec[]{
+        panelSerial.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("right:default"),
+                ColumnSpec.decode("right:max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[]{
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblPortName = new JLabel("Port");
         panelSerial.add(lblPortName, "2, 2, right, default");
@@ -214,46 +230,31 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         panelTcp = new JPanel();
         panelTcp.setBorder(new TitledBorder(null, "TCP", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelTcp);
-        panelTcp.setLayout(new FormLayout(new ColumnSpec[]{
+        panelTcp.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("right:default"),
+                ColumnSpec.decode("right:max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[]{
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblIpAddress = new JLabel("IP Address");
+        lblIpAddress.setToolTipText("IP address or host-name. Set to \"GcodeServer\" for an internally simulated Controller.");
         panelTcp.add(lblIpAddress, "2, 2, right, default");
 
         ipAddressTextField = new JTextField(17);
         panelTcp.add(ipAddressTextField, "4, 2, fill, default");
-        ipAddressTextField.setColumns(5);
+        ipAddressTextField.setColumns(10);
 
         JLabel lblPort = new JLabel("Port");
         panelTcp.add(lblPort, "2, 4, right, default");
 
         portTextField = new JTextField(17);
         panelTcp.add(portTextField, "4, 4, fill, default");
-        portTextField.setColumns(5);
-
-        //Finally, click a radio button to initialise enabled/disabled setting
-        if(driver.getCommunicationsType().equals("serial")){ radioSerial.doClick(); }
-        if(driver.getCommunicationsType().equals("tcp")) { radioTCP.doClick(); }
+        portTextField.setColumns(10);
     }
 
     private void setPanelEnabled(JPanel panel, Boolean isEnabled) {
@@ -262,18 +263,6 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         for (Component cp : panel.getComponents()) {
             cp.setEnabled(isEnabled);
         }
-    }
-
-    public void actionPerformed(ActionEvent e) {
-        // Enable/Disable controls for selected comms method
-        if (e.getActionCommand().equals("serial")) {
-            setPanelEnabled(panelSerial, true);
-            setPanelEnabled(panelTcp, false);
-        } else {
-            setPanelEnabled(panelSerial, false);
-            setPanelEnabled(panelTcp, true);
-        }
-        commsMethod.setText(e.getActionCommand());
     }
 
     private void refreshPortList() {
@@ -297,7 +286,9 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
     public void createBindings() {
         IntegerConverter integerConverter = new IntegerConverter();
 
-        addWrappedBinding(driver, "communicationsType", commsMethod, "text");
+        addWrappedBinding(driver, "name", driverName, "text");
+
+        addWrappedBinding(driver, "communicationsType", communicationsType, "selectedItem");
         addWrappedBinding(driver, "connectionKeepAlive", connectionKeepAlive, "selected");
         
         addWrappedBinding(driver, "portName", comboBoxPort, "selectedItem");
@@ -311,5 +302,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         
         addWrappedBinding(driver, "ipAddress", ipAddressTextField, "text");
         addWrappedBinding(driver, "port", portTextField, "text", integerConverter);
+
+        ComponentDecorators.decorateWithAutoSelect(driverName);
     }
 }

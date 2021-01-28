@@ -1,6 +1,8 @@
 package org.openpnp.machine.reference.signaler;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.signaler.wizards.ActuatorSignalerConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Machine;
@@ -8,7 +10,6 @@ import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractSignaler;
 import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
 /**
@@ -81,6 +82,7 @@ public class ActuatorSignaler extends AbstractSignaler {
 
     public void setActuator(Actuator actuator) {
         this.actuator = actuator;
+        firePropertyChange("actuator", null, actuator);
     }
 
     public AbstractJobProcessor.State getJobState() {
@@ -89,6 +91,7 @@ public class ActuatorSignaler extends AbstractSignaler {
 
     public void setJobState(AbstractJobProcessor.State jobState) {
         this.jobState = jobState;
+        firePropertyChange("jobState", null, jobState);
     }
 
     public AbstractMachine.State getMachineState() {
@@ -97,5 +100,11 @@ public class ActuatorSignaler extends AbstractSignaler {
 
     public void setMachineState(AbstractMachine.State machineState) {
         this.machineState = machineState;
+        firePropertyChange("machineState", null, machineState);
+    }
+
+    @Override
+    public Wizard getConfigurationWizard() {
+        return new ActuatorSignalerConfigurationWizard(this);
     }
 }

@@ -105,7 +105,16 @@ import org.pmw.tinylog.Logger;
 public class FluentCv {
     static {
         nu.pattern.OpenCV.loadShared();
-        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
+    }
+
+    public enum ColorSpace {
+        Gray,
+        Bgr,
+        Rgb,
+        Hls,
+        HlsFull,
+        Hsv,
+        HsvFull;
     }
 
     public enum ColorCode {
@@ -130,6 +139,31 @@ public class FluentCv {
 
         public int getCode() {
             return code;
+        }
+        
+        public ColorSpace getResultingColorSpace() {
+            switch (this) {
+                case Bgr2Gray:
+                case Rgb2Gray:
+                    return ColorSpace.Gray;
+                case Gray2Bgr :
+                case Hls2Bgr :
+                case Hls2BgrFull :
+                case Hsv2Bgr :
+                case Hsv2BgrFull :
+                    return ColorSpace.Bgr;
+                case Gray2Rgb :
+                    return ColorSpace.Rgb;
+                case Bgr2Hls :
+                    return ColorSpace.Hls;
+                case Bgr2HlsFull :
+                    return ColorSpace.HlsFull;
+                case Bgr2Hsv :
+                    return ColorSpace.Hsv;
+                case Bgr2HsvFull :
+                    return ColorSpace.HsvFull;
+            }
+            return null;
         }
     }
 
@@ -355,9 +389,9 @@ public class FluentCv {
         return image;
     }
 
-    public FluentCv settleAndCapture(String... tag) {
+    public FluentCv settleAndCapture(String... tag) throws Exception {
         checkCamera();
-        return toMat(camera.settleAndCapture(), tag);
+        return toMat(camera.lightSettleAndCapture(), tag);
     }
 
     /**

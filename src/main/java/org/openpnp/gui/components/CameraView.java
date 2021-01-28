@@ -40,6 +40,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.font.TextLayout;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.text.DateFormat;
@@ -63,9 +64,12 @@ import javax.swing.SwingUtilities;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.reticle.Reticle;
+import org.openpnp.machine.reference.AbstractBroadcastingCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
@@ -77,6 +81,7 @@ import org.pmw.tinylog.Logger;
 public class CameraView extends JComponent implements CameraListener {
     private static final String PREF_RETICLE = "CamerView.reticle";
     private static final String PREF_ZOOM_INCREMENT = "CamerView.zoomIncrement";
+    private static final String PREF_RENDERING_QUALITY = "CamerView.renderingQuality";
     private static final double DEFAULT_ZOOM_INCREMENT = 0.01;
 
     private static final String DEFAULT_RETICLE_KEY = "DEFAULT_RETICLE_KEY";
@@ -194,16 +199,28 @@ public class CameraView extends JComponent implements CameraListener {
     private double zoomIncPerMouseWheelTick = DEFAULT_ZOOM_INCREMENT;
     
     private boolean dragJogging = false;
+    private boolean lightToggling = false;
+
     
     private MouseEvent dragJoggingStart = null;
     private MouseEvent dragJoggingTarget = null;
     private int dragJogHandleSize = 50;
     Color dragJogHandleInactiveColor = new Color(125, 125, 125);
     Color dragJogHandleActiveColor = Color.white;
-    
+
+    private int lightToggleSize = 40;
+    Color lightToggleInactiveBgColor = new Color(255, 255, 255, 100);
+    Color lightToggleActiveBgColor = new Color(0, 0, 0, 100);
+    Color lightToggleInactiveColor = new Color(0, 0, 0, 200);
+    Color lightToggleActiveColor = new Color(255, 255, 125, 200);
+
     long lastFrameReceivedTime = 0;
     MovingAverage fpsAverage = new MovingAverage(24);
     double fps = 0;
+    public enum RenderingQuality {
+        Low, High, BestScale
+    }
+    RenderingQuality renderingQuality = RenderingQuality.Low;
     
     public CameraView() {
         setBackground(Color.black);
@@ -241,6 +258,10 @@ public class CameraView extends JComponent implements CameraListener {
         return PREF_ZOOM_INCREMENT + "." + camera.getId();
     }
 
+    private String getQualityRenderingPrefKey() {
+        return PREF_RENDERING_QUALITY + "." + camera.getId();
+    }
+
     public void addActionListener(CameraViewActionListener listener) {
         if (!actionListeners.contains(listener)) {
             actionListeners.add(listener);
@@ -257,10 +278,6 @@ public class CameraView extends JComponent implements CameraListener {
             this.camera.stopContinuousCapture(this);
         }
         this.camera = camera;
-        // turn on capture for the new camera
-        if (this.camera != null) {
-            this.camera.startContinuousCapture(this);
-        }
         // load the reticle pref, if any
         try {
             String reticleXml = prefs.get(getReticlePrefKey(), null);
@@ -281,7 +298,17 @@ public class CameraView extends JComponent implements CameraListener {
 
         // load the zoom increment pref, if any
         zoomIncPerMouseWheelTick = prefs.getDouble(getZoomIncrementPrefKey(), DEFAULT_ZOOM_INCREMENT);
-
+        // load sub.pixel rendering prefs, if any.
+        try {
+            renderingQuality = RenderingQuality.valueOf(prefs.get(getQualityRenderingPrefKey(), RenderingQuality.Low.toString()));
+        }
+        catch (Exception e) {
+            // ignore errors
+        }
+        // turn on capture for the new camera
+        if (this.camera != null) {
+            this.camera.startContinuousCapture(this);
+        }
     }
 
     public Camera getCamera() {
@@ -354,6 +381,16 @@ public class CameraView extends JComponent implements CameraListener {
         this.zoomIncPerMouseWheelTick = zoomIncPerMouseWheelTick;
     }
     
+    public RenderingQuality getRenderingQuality() {
+        return renderingQuality;
+    }
+
+    public void setRenderingQuality(RenderingQuality renderingQuality) {
+        prefs.put(getQualityRenderingPrefKey(), renderingQuality.toString());
+        this.renderingQuality = renderingQuality;
+        calculateScalingData();
+    }
+
     /**
      * Causes a short flash in the CameraView to get the user's attention.
      */
@@ -374,6 +411,9 @@ public class CameraView extends JComponent implements CameraListener {
 
     public void setCameraViewFilter(CameraViewFilter cameraViewFilter) {
         this.cameraViewFilter = cameraViewFilter;
+        if (camera.isAutoVisible()) {
+            camera.ensureCameraVisible();
+        }
     }
 
     public void showFilteredImage(final BufferedImage filteredImage, final long milliseconds) {
@@ -503,7 +543,7 @@ public class CameraView extends JComponent implements CameraListener {
 
         lastSourceWidth = image.getWidth();
         lastSourceHeight = image.getHeight();
-
+        
         double heightRatio = lastSourceHeight / destHeight;
         double widthRatio = lastSourceWidth / destWidth;
 
@@ -520,6 +560,15 @@ public class CameraView extends JComponent implements CameraListener {
 
         scaledWidth *= zoom;
         scaledHeight *= zoom;
+
+        if (renderingQuality == RenderingQuality.BestScale) {
+            // Bring to an integral scaling factor.
+            double scalingFactor = lastSourceWidth > scaledWidth ? 
+                    1./Math.max(1, Math.round(lastSourceWidth/scaledWidth))
+                    : Math.max(1, Math.round(scaledWidth/lastSourceWidth));
+            scaledWidth = (int)(lastSourceWidth*scalingFactor);
+            scaledHeight = (int)(lastSourceHeight*scalingFactor);
+        }
 
         imageX = ins.left + (width / 2) - (scaledWidth / 2);
         imageY = ins.top + (height / 2) - (scaledHeight / 2);
@@ -540,6 +589,9 @@ public class CameraView extends JComponent implements CameraListener {
     @Override
     protected synchronized void paintComponent(Graphics g) {
         super.paintComponent(g);
+        if (lastFrame == null) {
+            frameReceived(AbstractBroadcastingCamera.getCaptureErrorImage());
+        }
         BufferedImage image = lastFrame;
         Insets ins = getInsets();
         int width = getWidth() - ins.left - ins.right;
@@ -549,7 +601,21 @@ public class CameraView extends JComponent implements CameraListener {
         g2d.fillRect(ins.left, ins.top, width, height);
         if (image != null) {
             // Only render if there is a valid image.
-            g2d.drawImage(lastFrame, imageX, imageY, scaledWidth, scaledHeight, null);
+            if (renderingQuality == RenderingQuality.Low) {
+                g2d.drawImage(lastFrame, imageX, imageY, scaledWidth, scaledHeight, null);
+            }
+            else {
+                g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                AffineTransform t = new AffineTransform();
+                double scaleW = ((double)scaledWidth)/image.getWidth();
+                double scaleH = ((double)scaledHeight)/image.getHeight();
+                // Scaled
+                t.translate(imageX, imageY);
+                t.scale(scaleW, scaleH);
+                g2d.drawImage(lastFrame, t, null);
+            }
 
             double c = MainFrame.get().getMachineControls().getSelectedTool().getLocation()
                     .getRotation();
@@ -579,6 +645,7 @@ public class CameraView extends JComponent implements CameraListener {
 
             if (!selectionEnabled) {
                 paintDragJogging(g2d);
+                paintLightToggle(g2d);
             }
         }
         else {
@@ -606,7 +673,8 @@ public class CameraView extends JComponent implements CameraListener {
     }
     
     private boolean isPointInsideDragJogRotationHandle(int x, int y) {
-        if (camera.getHead() == null) {
+        HeadMountable selectedTool = MainFrame.get().getMachineControls().getSelectedTool(); 
+        if (selectedTool.getAxisRotation() == null) {
             return false;
         }
         
@@ -618,7 +686,7 @@ public class CameraView extends JComponent implements CameraListener {
         
         // The rotation handle is drawn on an imaginary circle centered in the view
         double rotHandleRadius = Math.min(width, height) / 2 * .80;
-        double rotHandleAngle = -Utils2D.normalizeAngle(camera.getLocation().getRotation() + 90);
+        double rotHandleAngle = -Utils2D.normalizeAngle(selectedTool.getLocation().getRotation() + 90);
         double rotHandleX = rotHandleRadius * Math.cos(Math.toRadians(rotHandleAngle)) + (width / 2.);
         double rotHandleY = rotHandleRadius * Math.sin(Math.toRadians(rotHandleAngle)) + (height / 2.);
         
@@ -642,7 +710,25 @@ public class CameraView extends JComponent implements CameraListener {
     private boolean isPointInsideDragJogHandle(int x, int y) {
         return isPointInsideDragJogXyHandle(x, y) || isPointInsideDragJogRotationHandle(x, y);
     }
-    
+
+    private boolean isPointInsideLightToggle(int x, int y) {
+        Actuator actuator = camera.getLightActuator();
+        if (actuator == null) {
+            return false;
+        }
+        
+        Insets ins = getInsets();
+        int width = getWidth() - ins.left - ins.right;
+        int height = getHeight() - ins.top - ins.bottom;
+        // Center
+        int x0 = width - lightToggleSize/2;
+        int y0 = lightToggleSize/2;
+        
+        double distance = Math.sqrt(Math.pow(x-x0, 2)+ Math.pow(y-y0, 2));
+
+        return distance <= lightToggleSize/2;
+    }
+
     private void drawCircle(Graphics2D g2d, int centerX, int centerY, int radius) {
         g2d.drawArc(centerX - radius, centerY - radius, radius * 2, radius * 2, 0, 360);
     }
@@ -653,7 +739,8 @@ public class CameraView extends JComponent implements CameraListener {
     }
     
     private void paintDragJogRotationHandle(Graphics2D g2d, boolean active) {
-        if (camera.getHead() == null) {
+        HeadMountable selectedTool = MainFrame.get().getMachineControls().getSelectedTool(); 
+        if (selectedTool.getAxisRotation() == null) {
             return;
         }
         
@@ -663,7 +750,7 @@ public class CameraView extends JComponent implements CameraListener {
 
         // The rotation handle is drawn on an imaginary circle centered in the view
         double rotHandleRadius = Math.min(width, height) / 2 * .80;
-        double rotHandleAngle = -Utils2D.normalizeAngle(camera.getLocation().getRotation() + 90);
+        double rotHandleAngle = -Utils2D.normalizeAngle(selectedTool.getLocation().getRotation() + 90);
         double rotHandleX = rotHandleRadius * Math.cos(Math.toRadians(rotHandleAngle)) + (width / 2.);
         double rotHandleY = rotHandleRadius * Math.sin(Math.toRadians(rotHandleAngle)) + (height / 2.);
 
@@ -743,6 +830,44 @@ public class CameraView extends JComponent implements CameraListener {
                 && !isPointInsideDragJogRotationHandle(dragJoggingStart.getX(), dragJoggingStart.getY()));
         paintDragJogRotationHandle(g2d, isDragJogging() 
                 && isPointInsideDragJogRotationHandle(dragJoggingStart.getX(), dragJoggingStart.getY()));
+    }
+
+    private void paintLightToggle(Graphics2D g2d) {
+        Actuator actuator = camera.getLightActuator();
+        if (actuator == null) {
+            return;
+        }
+        Insets ins = getInsets();
+        int width = getWidth() - ins.left - ins.right;
+        int height = getHeight() - ins.top - ins.bottom;
+        // Center
+        int x0 = width - lightToggleSize/2;
+        int y0 = lightToggleSize/2;
+        if (isTogglingLight()) {
+            x0++;
+            y0++;
+        }
+        boolean active = actuator.isActuated();
+        for (int pass = 0 ; pass < 2; pass++) {
+            if (pass == 0) {
+                g2d.setStroke(new BasicStroke(active ? 4 : 4, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                g2d.setColor(active ? lightToggleActiveBgColor : lightToggleInactiveBgColor);
+            }
+            else {
+                g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                g2d.setColor(active ? lightToggleActiveColor : lightToggleInactiveColor);
+            }
+            drawCircle(g2d, x0, y0, (int)(lightToggleSize*0.27));
+            double r0 = lightToggleSize*0.36;
+            double r1 = lightToggleSize*0.5-1;
+            for (int angle = 15; angle < 360; angle += 30) {
+                g2d.drawLine(
+                        (int)(x0 + 0.5 + r0*Math.cos(Math.toRadians(angle))), 
+                        (int)(y0 + 0.5 + r0*Math.sin(Math.toRadians(angle))),
+                        (int)(x0 + 0.5 + r1*Math.cos(Math.toRadians(angle))), 
+                        (int)(y0 + 0.5 + r1*Math.sin(Math.toRadians(angle))));
+            }
+        }
     }
 
     private void paintSelection(Graphics2D g2d) {
@@ -1246,17 +1371,14 @@ public class CameraView extends JComponent implements CameraListener {
      * Capture the current image (unscaled, unmodified) and write it to disk.
      */
     private void captureSnapshot() {
-        try {
+        UiUtils.messageBoxOnException(() -> {
             flash();
             File dir = new File(Configuration.get().getConfigurationDirectory(), "snapshots");
             dir.mkdirs();
             DateFormat df = new SimpleDateFormat("YYYY-MM-dd_HH.mm.ss.SSS");
             File file = new File(dir, camera.getName() + "_" + df.format(new Date()) + ".png");
-            ImageIO.write(camera.capture(), "png", file);
-        }
-        catch (Exception e1) {
-            e1.printStackTrace();
-        }
+            ImageIO.write(camera.lightSettleAndCapture(), "png", file);
+        });
     }
 
     private void fireActionEvent(MouseEvent e) {
@@ -1329,6 +1451,8 @@ public class CameraView extends JComponent implements CameraListener {
                 Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
                 // Add the offsets to the Camera's nozzle calibrated position.
                 Location location = camera.getLocation(nozzle).add(offsets);
+                // Only change X/Y. 
+                location = nozzle.getLocation().derive(location, true, true, false, false);
                 MovableUtils.moveToLocationAtSafeZ(nozzle, location);
             }
             else {
@@ -1337,6 +1461,7 @@ public class CameraView extends JComponent implements CameraListener {
                 // move the camera to the location
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
             }
+            MovableUtils.fireTargetedUserAction(camera);
         });
     }
     
@@ -1354,15 +1479,28 @@ public class CameraView extends JComponent implements CameraListener {
         }
 
         double targetAngle = Utils2D.normalizeAngle(-(rotTargetHandleAngle + 90));
+        HeadMountable selectedTool = MainFrame.get().getMachineControls().getSelectedTool();
+
         UiUtils.submitUiMachineTask(() -> {
-            if (camera.getHead() == null) {
-                Logger.warn("Drag rotate not yet implemented for upward facing cameras."); 
-            }
-            else {
-                Location location = camera.getLocation();
-                location = location.derive(null, null, null, targetAngle);
-                MovableUtils.moveToLocationAtSafeZ(camera, location);
-            }
+            Location location = selectedTool.getLocation();
+            location = location.derive(null, null, null, targetAngle);
+            MovableUtils.moveToLocationAtSafeZ(selectedTool, location);
+            MovableUtils.fireTargetedUserAction(selectedTool);
+        });
+    }
+
+    private void toggleLight(MouseEvent e) {
+        Actuator actuator = camera.getLightActuator();
+        if (actuator == null) {
+            return;
+        }
+        UiUtils.submitUiMachineTask(() -> {
+            // Pass as Object for the generic behavior according to the actuator valueType.  
+            boolean state = !actuator.isActuated();
+            actuator.actuate((Object)state);
+            // Note, we cannot use MovableUtils.fireTargetedUserAction(), because this itself might 
+            // turn the light on.
+            camera.settleAndCapture();
         });
     }
 
@@ -1453,39 +1591,59 @@ public class CameraView extends JComponent implements CameraListener {
     }
     
     private void dragJoggingBegin(MouseEvent e) {
-        this.dragJogging = true;
-        this.dragJoggingStart = e;
-        this.dragJoggingTarget = e;
-        repaint();
+        if (! isTogglingLight()) {
+            this.dragJogging = true;
+            this.dragJoggingStart = e;
+            this.dragJoggingTarget = e;
+            repaint();
+        }
     }
     
     private void dragJoggingContinue(MouseEvent e) {
-        this.dragJoggingTarget = e;
-        repaint();
+        if (! isTogglingLight()) {
+            this.dragJoggingTarget = e;
+            repaint();
+        }
     }
     
     private void dragJoggingEnd(MouseEvent e) {
-        int startX = dragJoggingStart.getX();
-        int startY = dragJoggingStart.getY();
-        
-        this.dragJogging = false;
-        this.dragJoggingStart = null;
-        this.dragJoggingTarget = null;
-        repaint();
-        
-        if (isPointInsideDragJogRotationHandle(startX, startY)) {
-            rotateToClick(e);
-        }
-        else {
-            moveToClick(e);
+        if (! isTogglingLight()) {
+            int startX = dragJoggingStart.getX();
+            int startY = dragJoggingStart.getY();
+            
+            this.dragJogging = false;
+            this.dragJoggingStart = null;
+            this.dragJoggingTarget = null;
+            repaint();
+            
+            if (isPointInsideDragJogRotationHandle(startX, startY)) {
+                rotateToClick(e);
+            }
+            else {
+                moveToClick(e);
+            }
         }
     }
-    
+
     private boolean isDragJogging() {
         return this.dragJogging;
     }
 
+    private void beginTogglingLight() {
+        lightToggling = true;
+        repaint();
+    }
+    private void endTogglingLight() {
+        lightToggling = false;
+        repaint();
+    }
+    private boolean isTogglingLight() {
+        return lightToggling;
+    }
+
+
     private MouseListener mouseListener = new MouseAdapter() {
+ 
         @Override
         public void mouseClicked(MouseEvent e) {
             if (e.isPopupTrigger() || e.isShiftDown() || SwingUtilities.isRightMouseButton(e)) {
@@ -1509,11 +1667,13 @@ public class CameraView extends JComponent implements CameraListener {
             else if (e.isShiftDown()) {
                 moveToClick(e);
             }
+            else if (isPointInsideLightToggle(e.getX(), e.getY())) {
+                beginTogglingLight();
+            }
             else if (selectionEnabled) {
                 beginSelection(e);
             }
         }
-
         @Override
         public void mouseReleased(MouseEvent e) {
             if (e.isPopupTrigger()) {
@@ -1523,9 +1683,13 @@ public class CameraView extends JComponent implements CameraListener {
             else if (isDragJogging()) {
                 dragJoggingEnd(e);
             }
+            else if (isTogglingLight() && isPointInsideLightToggle(e.getX(), e.getY())) {
+                toggleLight(e);
+            }
             else {
                 endSelection();
             }
+            endTogglingLight();
         }
     };
 
@@ -1559,7 +1723,10 @@ public class CameraView extends JComponent implements CameraListener {
     private MouseWheelListener mouseWheelListener = new MouseWheelListener() {
         @Override
         public void mouseWheelMoved(MouseWheelEvent e) {
-            zoom -= e.getPreciseWheelRotation() * zoomIncPerMouseWheelTick;
+            double zoomInc = Math.max(zoomIncPerMouseWheelTick,
+                    // When best-scale is selected, we can only zoom by 1.0 or faster.
+                    renderingQuality == RenderingQuality.BestScale ? 1.0 : 0);
+            zoom = (Math.round(zoom/zoomInc) - e.getPreciseWheelRotation()) * zoomInc; 
             zoom = Math.max(zoom, 1.0d);
             zoom = Math.min(zoom, 100d);
             calculateScalingData();

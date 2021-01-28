@@ -27,7 +27,6 @@ import java.util.List;
 import org.opencv.core.Mat;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
-import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.OpenCvCameraConfigurationWizard;
@@ -43,7 +42,6 @@ import org.simpleframework.xml.ElementList;
 public class OpenCvCamera extends ReferenceCamera implements Runnable {
     static {
         nu.pattern.OpenCV.loadShared();
-        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }
 
     @Attribute(name = "deviceIndex", required = true)
@@ -53,22 +51,19 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     private int preferredWidth;
     @Attribute(required = false)
     private int preferredHeight;
-    @Attribute(required = false)
-    private int fps = 24;
 
     @ElementList(required=false)
     private List<OpenCvCapturePropertyValue> properties = new ArrayList<>();
 
     private VideoCapture fg = new VideoCapture();
-    private Thread thread;
     private boolean dirty = false;
 
     public OpenCvCamera() {}
 
     @Override
     public synchronized BufferedImage internalCapture() {
-        if (thread == null) {
-            initCamera();
+        if (! ensureOpen()) {
+            return null;
         }
         Mat mat = new Mat();
         try {
@@ -86,41 +81,9 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     }
 
     @Override
-    public synchronized void startContinuousCapture(CameraListener listener) {
-        if (thread == null) {
-            initCamera();
-        }
-        super.startContinuousCapture(listener);
-    }
+    public void open() throws Exception {
+        stop();
 
-    public void run() {
-        while (!Thread.interrupted()) {
-            try {
-                broadcastCapture(captureForPreview());
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                Thread.sleep(1000 / fps);
-            }
-            catch (InterruptedException e) {
-                break;
-            }
-        }
-    }
-
-    private void initCamera() {
-        if (thread != null) {
-            thread.interrupt();
-            try {
-                thread.join(3000);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            thread = null;
-        }
         try {
             setDirty(false);
             width = null;
@@ -180,23 +143,14 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
             e.printStackTrace();
             return;
         }
-        thread = new Thread(this);
-        thread.setDaemon(true);
-        thread.start();
+
+        super.open();
     }
 
     @Override
     public void close() throws IOException {
         super.close();
-        if (thread != null) {
-            thread.interrupt();
-            try {
-                thread.join(3000);
-            }
-            catch (Exception e) {
 
-            }
-        }
         if (fg.isOpened()) {
             fg.release();
         }
@@ -210,10 +164,8 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
         return deviceIndex;
     }
 
-    public synchronized void setDeviceIndex(int deviceIndex) {
+    public void setDeviceIndex(int deviceIndex) {
         this.deviceIndex = deviceIndex;
-
-        initCamera();
     }
 
     public int getPreferredWidth() {
@@ -232,14 +184,6 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     public void setPreferredHeight(int preferredHeight) {
         this.preferredHeight = preferredHeight;
         setDirty(true);
-    }
-
-    public int getFps() {
-        return fps;
-    }
-
-    public void setFps(int fps) {
-        this.fps = fps;
     }
 
     public boolean isDirty() {

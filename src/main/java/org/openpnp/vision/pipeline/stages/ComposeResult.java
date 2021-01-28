@@ -70,14 +70,14 @@ public class ComposeResult extends CvStage {
             // return new Result(pipeline.getWorkingImage());
         }
         else {
-            model = pipeline.getResult(modelStageName).model;
+            model = pipeline.getExpectedResult(modelStageName).model;
         }
         if (imageStageName == null || imageStageName.trim()
                                                     .equals("")) {
             image = pipeline.getWorkingImage();
         }
         else {
-            image = pipeline.getResult(imageStageName).image;
+            image = pipeline.getExpectedResult(imageStageName).image;
         }
         if (model == null) {
             return new Result(image);

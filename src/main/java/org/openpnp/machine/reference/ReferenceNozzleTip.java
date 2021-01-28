@@ -6,6 +6,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -22,6 +23,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzleTip;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
@@ -134,49 +136,63 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Attribute(required = false)
     private boolean isPushAndDragAllowed = false;
+    
+    @Element(required = false)
+    protected String changerActuatorPostStepOne;
+
+    @Element(required = false)
+    protected String changerActuatorPostStepTwo;
+    
+    @Element(required = false)
+    protected String changerActuatorPostStepThree;
 
     public ReferenceNozzleTip() {
     }
 
     @Commit
     public void commit() {
-        /**
-         * Backwards compatibility.
-         */
-        if (methodPartOn == null) {
-            if (vacuumLevelPartOnLow < vacuumLevelPartOnHigh) {
-                // was enabled
-                methodPartOn = VacuumMeasurementMethod.Absolute;
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationComplete(Configuration configuration) throws Exception {
+                /**
+                 * Backwards compatibility.
+                 */
+                if (methodPartOn == null) {
+                    if (vacuumLevelPartOnLow < vacuumLevelPartOnHigh) {
+                        // was enabled
+                        methodPartOn = VacuumMeasurementMethod.Absolute;
+                    }
+                    else {
+                        methodPartOn = VacuumMeasurementMethod.None;
+                    }
+                }
+                if (methodPartOff == null) {
+                    // use the same as the former pick dwell time.
+                    partOffProbingMilliseconds = pickDwellMilliseconds;
+                    try {
+                        // also add the nozzle's pick dwell time
+                        Nozzle nozzle = Configuration.get()
+                                .getMachine()
+                                .getDefaultHead()
+                                .getDefaultNozzle();
+                        if (nozzle instanceof ReferenceNozzle) {
+                            ReferenceNozzle refNozzle = (ReferenceNozzle) nozzle;
+                            partOffProbingMilliseconds += refNozzle.getPickDwellMilliseconds();
+                        } 
+                    }
+                    catch (Exception e) {
+                        Logger.info("Cannot fully upgrade partOffProbingMilliseconds time", e);
+                    }
+                    if (vacuumLevelPartOffLow < vacuumLevelPartOffHigh) {
+                        // was enabled
+                        methodPartOff = VacuumMeasurementMethod.Absolute;
+                    }
+                    else {
+                        methodPartOff = VacuumMeasurementMethod.None;
+                    }
+                }
             }
-            else {
-                methodPartOn = VacuumMeasurementMethod.None;
-            }
-        }
-        if (methodPartOff == null) {
-            // use the same as the former pick dwell time.
-            partOffProbingMilliseconds = pickDwellMilliseconds;
-            try {
-                // also add the nozzle's pick dwell time
-                Nozzle nozzle = Configuration.get()
-                                             .getMachine()
-                                             .getDefaultHead()
-                                             .getDefaultNozzle();
-                if (nozzle instanceof ReferenceNozzle) {
-                    ReferenceNozzle refNozzle = (ReferenceNozzle) nozzle;
-                    partOffProbingMilliseconds += refNozzle.getPickDwellMilliseconds();
-                } 
-            }
-            catch (Exception e) {
-                Logger.info("Cannot fully upgrade partOffProbingMilliseconds time", e);
-            }
-            if (vacuumLevelPartOffLow < vacuumLevelPartOffHigh) {
-                // was enabled
-                methodPartOff = VacuumMeasurementMethod.Absolute;
-            }
-            else {
-                methodPartOff = VacuumMeasurementMethod.None;
-            }
-        }
+        });
     }
 
     @Override
@@ -235,7 +251,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setChangerStartLocation(Location changerStartLocation) {
+        Object oldValue = this.changerStartLocation;
         this.changerStartLocation = changerStartLocation;
+        firePropertyChange("changerStartLocation", oldValue, changerStartLocation);
     }
 
     public Location getChangerMidLocation() {
@@ -243,7 +261,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setChangerMidLocation(Location changerMidLocation) {
+        Object oldValue = this.changerMidLocation;
         this.changerMidLocation = changerMidLocation;
+        firePropertyChange("changerMidLocation", oldValue, changerMidLocation);
     }
 
     public Location getChangerMidLocation2() {
@@ -251,7 +271,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setChangerMidLocation2(Location changerMidLocation2) {
+        Object oldValue = this.changerMidLocation2;
         this.changerMidLocation2 = changerMidLocation2;
+        firePropertyChange("changerMidLocation2", oldValue, changerMidLocation2);
     }
 
     public Location getChangerEndLocation() {
@@ -259,7 +281,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setChangerEndLocation(Location changerEndLocation) {
+        Object oldValue = this.changerEndLocation;
         this.changerEndLocation = changerEndLocation;
+        firePropertyChange("changerEndLocation", oldValue, changerEndLocation);
     }
     
     public double getChangerStartToMidSpeed() {
@@ -267,7 +291,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setChangerStartToMidSpeed(double changerStartToMidSpeed) {
+        Object oldValue = this.changerStartToMidSpeed;
         this.changerStartToMidSpeed = changerStartToMidSpeed;
+        firePropertyChange("changerStartToMidSpeed", oldValue, changerStartToMidSpeed);
     }
 
     public double getChangerMidToMid2Speed() {
@@ -275,7 +301,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setChangerMidToMid2Speed(double changerMidToMid2Speed) {
+        Object oldValue = this.changerMidToMid2Speed;
         this.changerMidToMid2Speed = changerMidToMid2Speed;
+        firePropertyChange("changerMidToMid2Speed", oldValue, changerMidToMid2Speed);
     }
 
     public double getChangerMid2ToEndSpeed() {
@@ -283,7 +311,39 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setChangerMid2ToEndSpeed(double changerMid2ToEndSpeed) {
+        Object oldValue = this.changerMid2ToEndSpeed;
         this.changerMid2ToEndSpeed = changerMid2ToEndSpeed;
+        firePropertyChange("changerMid2ToEndSpeed", oldValue, changerMid2ToEndSpeed);
+    }
+
+    public String getChangerActuatorPostStepOne() {
+        return changerActuatorPostStepOne;
+    }
+
+    public void setChangerActuatorPostStepOne(String changerActuatorPostStepOne) {
+        Object oldValue = this.changerActuatorPostStepOne;
+        this.changerActuatorPostStepOne = changerActuatorPostStepOne;
+        firePropertyChange("changerActuatorPostStepOne", oldValue, changerActuatorPostStepOne);
+    }
+
+    public String getChangerActuatorPostStepTwo() {
+        return changerActuatorPostStepTwo;
+    }
+
+    public void setChangerActuatorPostStepTwo(String changerActuatorPostStepTwo) {
+        Object oldValue = this.changerActuatorPostStepTwo;
+        this.changerActuatorPostStepTwo = changerActuatorPostStepTwo;
+        firePropertyChange("changerActuatorPostStepTwo", oldValue, changerActuatorPostStepTwo);
+    }
+    
+    public String getChangerActuatorPostStepThree() {
+        return changerActuatorPostStepThree;
+    }
+
+    public void setChangerActuatorPostStepThree(String changerActuatorPostStepThree) {
+        Object oldValue = this.changerActuatorPostStepThree;
+        this.changerActuatorPostStepThree = changerActuatorPostStepThree;
+        firePropertyChange("changerActuatorPostStepThree", oldValue, changerActuatorPostStepThree);
     }
 
     public ReferenceNozzle getNozzleAttachedTo() {
@@ -608,7 +668,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         @Override
         public void actionPerformed(final ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                MainFrame.get().getMachineControls().getSelectedNozzle().loadNozzleTip(ReferenceNozzleTip.this);
+                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                nozzle.loadNozzleTip(ReferenceNozzleTip.this);
+                MovableUtils.fireTargetedUserAction(nozzle);
             });
         }
     };
@@ -623,7 +685,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         @Override
         public void actionPerformed(final ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                MainFrame.get().getMachineControls().getSelectedNozzle().unloadNozzleTip();
+                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                nozzle.unloadNozzleTip();
+                MovableUtils.fireTargetedUserAction(nozzle);
             });
         }
     };

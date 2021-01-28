@@ -36,23 +36,28 @@ public class ReferenceBottomVisionTest {
 
         Configuration.initialize(workingDirectory);
         Configuration.get().load();
+        // Save migrated.
+        Configuration.get().save();
 
         Machine machine = Configuration.get().getMachine();
         Nozzle nozzle = machine.getDefaultHead().getDefaultNozzle();
         SimulatedUpCamera camera = (SimulatedUpCamera) VisionUtils.getBottomVisionCamera();
         Part part = Configuration.get().getPart("R0805-1K"); 
         ReferenceBottomVision bottomVision = (ReferenceBottomVision) machine.getPartAlignments().get(0);
-        NullDriver driver = (NullDriver) ((ReferenceMachine) machine).getDriver();
+        NullDriver driver = (NullDriver) ((ReferenceMachine) machine).getDefaultDriver();
         driver.setFeedRateMmPerMinute(0);
         
         camera.setErrorOffsets(error);
         machine.setEnabled(true);
-        nozzle.pick(part);
-        PartAlignmentOffset offset = bottomVision.findOffsets(part, null, null, nozzle);
-        Location offsets = offset.getLocation();
-        assertMaxDelta(offsets.getX(), error.getX(), maxError.getX());
-        assertMaxDelta(offsets.getY(), error.getY(), maxError.getY());
-        assertMaxDelta(offsets.getRotation(), error.getRotation(), maxError.getRotation());
+        machine.execute(() -> {
+            nozzle.pick(part);
+            PartAlignmentOffset offset = bottomVision.findOffsets(part, null, null, nozzle);
+            Location offsets = offset.getLocation();
+            assertMaxDelta(offsets.getX(), error.getX(), maxError.getX());
+            assertMaxDelta(offsets.getY(), error.getY(), maxError.getY());
+            assertMaxDelta(offsets.getRotation(), error.getRotation(), maxError.getRotation());
+            return true;
+        });
     }
     
     public static void assertMaxDelta(double a, double b, double maxDelta) throws Exception {

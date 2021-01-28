@@ -119,6 +119,15 @@ public class Location {
                 + Math.pow(this.y - location.getY(), 2) + Math.pow(this.z - location.getZ(), 2)));
     }
 
+    public double getXyzcDistanceTo(Location location) {
+        location = location.convertToUnits(getUnits());
+        return (Math.sqrt(
+                Math.pow(this.x - location.getX(), 2)
+                + Math.pow(this.y - location.getY(), 2) 
+                + Math.pow(this.z - location.getZ(), 2) 
+                + Math.pow((this.rotation - location.getRotation()) % 360, 2)));
+    }
+
     /**
      * Returns the distance between this Location and the infinite line defined by the Locations a and b,
      * in the units of this Location.

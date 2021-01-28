@@ -83,7 +83,7 @@ public class MatchPartsTemplate extends CvStage {
     @Attribute
     @Property(
             description = "If maximum value is below this value, then no matches will be reported. Default is 0.85.")
-    private double threshold = 0.85f;
+    private double threshold = 0.85;
 
     public String getTemplateStageName() {
         return templateStageName;
@@ -122,7 +122,7 @@ public class MatchPartsTemplate extends CvStage {
         }
         else {
 
-            model = (List<?>) pipeline.getResult(modelStageName.toString()).model;
+            model = pipeline.getExpectedResult(modelStageName).model;
         }
 
         if (model == null || pipeline.getWorkingImage() == null) {
@@ -136,7 +136,7 @@ public class MatchPartsTemplate extends CvStage {
                                                           .equals("")) {
             return null;
         }
-        Result template = pipeline.getResult(templateStageName.toString());
+        Result template = pipeline.getExpectedResult(templateStageName);
         // no template image is an error
         if (template == null || template.image == null) {
 

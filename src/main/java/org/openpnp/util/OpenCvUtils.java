@@ -1,5 +1,11 @@
 package org.openpnp.util;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.File;
@@ -11,7 +17,6 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
-import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -19,6 +24,7 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
@@ -29,7 +35,6 @@ public class OpenCvUtils {
 
     static {
         nu.pattern.OpenCV.loadShared();
-        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }
 
     public static BufferedImage toBufferedImage(Mat m) {
@@ -118,7 +123,7 @@ public class OpenCvUtils {
         double maxDiameterPixels = maxDiameter.getValue() / avgUnitsPerPixel;
         double minDistancePixels = minDistance.getValue() / avgUnitsPerPixel;
 
-        BufferedImage image = camera.capture();
+        BufferedImage image = camera.lightSettleAndCapture();
         Mat mat = toMat(image);
         Mat circles = houghCircles(mat, minDiameterPixels, maxDiameterPixels, minDistancePixels);
 
@@ -254,6 +259,93 @@ public class OpenCvUtils {
     private enum MinMaxState {
         BEFORE_INFLECTION,
         AFTER_INFLECTION
+    }
+
+    /**
+     * Draws a template image of the given footprint.  
+     * 
+     * @param camera The camera to get the pixel scale from.
+     * @param footprint Footprint to be drawn.
+     * @param topView Whether the body is drawn over the pads rather than vice versa. 
+     * @param padsColor Color of the pads. Pads are not drawn if null.
+     * @param bodyColor Color of the body. Body is not drawn if null.
+     * @param backgroundColor 
+     * @param marginFactor The margin around the Footprint, relative to its bounding rectangle.
+     * @param minimumMarginSize 
+     * @return
+     * @throws Exception
+     */
+    public static BufferedImage createFootprintTemplate(Camera camera, Footprint footprint, double rotation,
+            boolean topView, Color padsColor, Color bodyColor, Color backgroundColor, double marginFactor, int minimumMarginSize)
+                    throws Exception {
+        Location unitsPerPixel = camera.getUnitsPerPixel();
+
+        Shape shape = footprint.getShape();
+        Shape bodyShape = footprint.getBodyShape();
+        Shape padsShape = footprint.getPadsShape();
+
+        if (shape == null) {
+            throw new Exception(
+                    "Invalid footprint found, unable to create template for part match. See https://github.com/openpnp/openpnp/wiki/Fiducials.");
+        }
+
+        // Determine the scaling factor to go from Outline units to
+        // Camera units.
+        Length l = new Length(1, footprint.getUnits());
+        l = l.convertToUnits(unitsPerPixel.getUnits());
+        double unitScale = l.getValue();
+
+        // Create a transform to scale the Shape by
+        AffineTransform tx = new AffineTransform();
+
+        // First we scale by units to convert the units and then we scale
+        // by the camera X and Y units per pixels to get pixel locations.
+        tx.scale(unitScale, unitScale);
+        tx.scale(1.0 / unitsPerPixel.getX(), 1.0 / unitsPerPixel.getY());
+        tx.rotate(Math.toRadians(-rotation));
+
+        // Transform the Shape and draw it out.
+        shape = tx.createTransformedShape(shape);
+        bodyShape = tx.createTransformedShape(bodyShape);
+        padsShape = tx.createTransformedShape(padsShape);
+
+        Rectangle2D bounds = shape.getBounds2D();
+
+        if (bounds.getWidth() == 0 || bounds.getHeight() == 0) {
+            throw new Exception(
+                    "Invalid footprint found, unable to create template for part match. Width and height of pads must be greater than 0. See https://github.com/openpnp/openpnp/wiki/Fiducials.");
+        }
+
+        // Make the image bigger than the shape. This gives better
+        // recognition performance because it allows some border around the edges.
+        double width = Math.max(bounds.getWidth() * marginFactor, bounds.getWidth()+2*minimumMarginSize);
+        double height = Math.max(bounds.getHeight() * marginFactor, bounds.getHeight()+2*minimumMarginSize);
+        BufferedImage template =
+                new BufferedImage((int) width, (int) height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = (Graphics2D) template.getGraphics();
+        if (backgroundColor != null) {
+            g2d.setColor(backgroundColor);
+            g2d.fillRect(0, 0, (int) width, (int) height);
+        }
+
+        //g2d.setStroke(new BasicStroke(1f));
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        // center the drawing
+        g2d.translate(width / 2.0, height / 2.0);
+        if (!topView && bodyColor != null) {
+            g2d.setColor(bodyColor);
+            g2d.fill(bodyShape);
+        }
+        if (padsColor != null) {
+            g2d.setColor(padsColor);
+            g2d.fill(padsShape);
+        }
+        if (topView && bodyColor != null) {
+            g2d.setColor(bodyColor);
+            g2d.fill(bodyShape);
+        }
+        g2d.dispose();
+        return template;
     }
 
     /**

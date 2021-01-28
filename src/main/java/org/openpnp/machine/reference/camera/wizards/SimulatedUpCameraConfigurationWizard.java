@@ -67,7 +67,7 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
                 "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -99,19 +99,19 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         
         errorOffsetsX = new JTextField();
         panelGeneral.add(errorOffsetsX, "4, 4, fill, default");
-        errorOffsetsX.setColumns(8);
+        errorOffsetsX.setColumns(10);
         
         errorOffsetsY = new JTextField();
         panelGeneral.add(errorOffsetsY, "6, 4, fill, default");
-        errorOffsetsY.setColumns(8);
+        errorOffsetsY.setColumns(10);
         
         errorOffsetsZ = new JTextField();
         panelGeneral.add(errorOffsetsZ, "8, 4, fill, default");
-        errorOffsetsZ.setColumns(8);
+        errorOffsetsZ.setColumns(10);
         
         errorOffsetsRotation = new JTextField();
         panelGeneral.add(errorOffsetsRotation, "10, 4, fill, default");
-        errorOffsetsRotation.setColumns(8);
+        errorOffsetsRotation.setColumns(10);
     }
 
     @Override

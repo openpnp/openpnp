@@ -1,38 +1,44 @@
 package org.openpnp.machine.reference.driver;
 
-import java.io.Closeable;
 import java.io.IOException;
-
-import javax.swing.Action;
-import javax.swing.Icon;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceDriver;
+import org.openpnp.machine.reference.SimulationModeMachine;
+import org.openpnp.machine.reference.SimulationModeMachine.SimulationMode;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.DataBits;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.FlowControl;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.Parity;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.StopBits;
 import org.openpnp.machine.reference.driver.wizards.AbstractReferenceDriverConfigurationWizard;
-import org.openpnp.model.AbstractModelObject;
-import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.base.AbstractDriver;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
-public abstract class AbstractReferenceDriver extends AbstractModelObject implements ReferenceDriver, Closeable {
+public abstract class AbstractReferenceDriver extends AbstractDriver {
+    @Attribute(required = false)
+    protected MotionControlType motionControlType = MotionControlType.ToolpathFeedRate; 
+
     @Element(required = false)
     protected SerialPortCommunications serial = new SerialPortCommunications();
 
     @Element(required = false)
     protected TcpCommunications tcp = new TcpCommunications();
+    
+    @Element(required = false)
+    protected SimulatedCommunications simulated = new SimulatedCommunications();
 
+    public enum CommunicationsType {
+        serial, // lower case for legacy support.
+        tcp
+    }
     @Attribute(required = false, name = "communications")
-    protected String communicationsType = "serial";
+    protected CommunicationsType communicationsType = CommunicationsType.serial;
     
     @Attribute(required = false)
-    protected boolean connectionKeepAlive = true;
+    protected boolean connectionKeepAlive = false;
 
     /**
      * TODO The following properties are for backwards compatibility and can be removed after 2019-07-15. 
@@ -87,6 +93,7 @@ public abstract class AbstractReferenceDriver extends AbstractModelObject implem
 
         setCommunicationsType(communicationsType);
         setConnectionKeepAlive(connectionKeepAlive);
+        tcp.setDriver(this);
     }
     
     @Override
@@ -100,14 +107,23 @@ public abstract class AbstractReferenceDriver extends AbstractModelObject implem
     }
     
     public abstract void disconnect() throws Exception;
-    
-    public String getCommunicationsType() {
+
+    @Override
+    public MotionControlType getMotionControlType() {
+        return motionControlType;
+    }
+
+    public void setMotionControlType(MotionControlType motionControlType) {
+        this.motionControlType = motionControlType;
+    }
+
+    public CommunicationsType getCommunicationsType() {
         return communicationsType;
     }
 
-    public void setCommunicationsType(String communicationsType) {
+    public void setCommunicationsType(CommunicationsType communicationsType) {
         // If the communications type is changing we need to disconnect the old one first.
-        if (communicationsType == null || !communicationsType.equals(this.communicationsType)) {
+        if (communicationsType == null || communicationsType != this.communicationsType) {
             try {
                 disconnect();
             }
@@ -118,20 +134,32 @@ public abstract class AbstractReferenceDriver extends AbstractModelObject implem
         this.communicationsType = communicationsType;
     }
     
-    public boolean getConnectionKeepAlive() {
+    public boolean isConnectionKeepAlive() {
     	return connectionKeepAlive;
     }
     
     public void setConnectionKeepAlive(boolean connectionKeepAlive) {
     	this.connectionKeepAlive = connectionKeepAlive;
     }
-    
+
+    public boolean isInSimulationMode() {
+        SimulationModeMachine machine = SimulationModeMachine.getSimulationModeMachine();
+        return (machine != null && machine.getSimulationMode() != SimulationMode.Off);
+    }
+
     public ReferenceDriverCommunications getCommunications() {
+        if (isInSimulationMode()) {
+            // Switch off keep-alive, to allow for dynamic switching. 
+            setConnectionKeepAlive(false);
+            simulated.setDriver(this);
+            return simulated;
+        }
         switch (communicationsType) {
-            case "serial": {
+            case serial: {
                 return serial;
             }
-            case "tcp": {
+            case tcp: {
+                tcp.setDriver(this);
                 return tcp;
             }
             default: {
@@ -221,27 +249,6 @@ public abstract class AbstractReferenceDriver extends AbstractModelObject implem
         tcp.setPort(port);
     }
 
-
-    @Override
-    public Icon getPropertySheetHolderIcon() {
-        return null;
-    }
-
-    @Override
-    public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName();
-    }
-
-    @Override
-    public PropertySheetHolder[] getChildPropertySheetHolders() {
-        return null;
-    }
-
-    @Override
-    public Action[] getPropertySheetHolderActions() {
-        return null;
-    }
-
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[]{new PropertySheetWizardAdapter(getConfigurationWizard())};
@@ -300,6 +307,4 @@ public abstract class AbstractReferenceDriver extends AbstractModelObject implem
         }
         return sb.toString();
     }
-
-
 }

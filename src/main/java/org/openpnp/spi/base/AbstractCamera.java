@@ -3,7 +3,6 @@ package org.openpnp.spi.base;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,15 +28,15 @@ import org.openpnp.CameraListener;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
-import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.VisionProvider;
-import org.openpnp.spi.Movable.MoveToOption;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.SimpleGraph;
 import org.pmw.tinylog.Logger;
@@ -45,7 +44,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
-public abstract class AbstractCamera extends AbstractModelObject implements Camera {
+public abstract class AbstractCamera extends AbstractHeadMountable implements Camera {
     @Attribute
     protected String id;
 
@@ -54,6 +53,21 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
 
     @Attribute
     protected Looking looking = Looking.Down;
+
+    @Attribute(required = false)
+    protected boolean autoVisible = false;
+
+    @Attribute(required = false)
+    protected boolean beforeCaptureLightOn = true;
+
+    @Attribute(required = false)
+    protected boolean userActionLightOn = true;
+
+    @Attribute(required = false)
+    protected boolean afterCaptureLightOff = false;
+
+    @Attribute(required = false)
+    protected boolean antiGlareLightOff = false;
 
     @Element
     protected Location unitsPerPixel = new Location(LengthUnit.Millimeters);
@@ -215,6 +229,10 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         return id;
     }
 
+    public void setId(String id) {
+        this.id = id;
+    }
+
     @Override
     public String getName() {
         return name;
@@ -233,7 +251,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
 
     @Override
     public void setHead(Head head) {
-        if (this.headSet) {
+        if (this.head != head && this.headSet) {
             throw new Error("Can't change head on camera " + this);
         }
         this.head = head;
@@ -248,10 +266,10 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     @Override
     public Location getLocation(HeadMountable tool) {
         if (tool != null) {
-            return getLocation().subtract(tool.getCameraToolCalibratedOffset(this));
+            return super.getLocation().subtract(tool.getCameraToolCalibratedOffset(this));
         }
 
-        return getLocation();
+        return super.getLocation();
     }
 
     @Override
@@ -273,6 +291,49 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     @Override
     public Looking getLooking() {
         return looking;
+    }
+
+    @Override
+    public boolean isAutoVisible() {
+        return autoVisible;
+    }
+
+    public void setAutoVisible(boolean autoVisible) {
+        Object oldValue = this.autoVisible;
+        this.autoVisible = autoVisible;
+        firePropertyChange("autoVisible", oldValue, autoVisible);
+    }
+
+    public boolean isBeforeCaptureLightOn() {
+        return beforeCaptureLightOn;
+    }
+
+    public void setBeforeCaptureLightOn(boolean beforeCaptureLightOn) {
+        this.beforeCaptureLightOn = beforeCaptureLightOn;
+    }
+
+    public boolean isUserActionLightOn() {
+        return userActionLightOn;
+    }
+
+    public void setUserActionLightOn(boolean userActionLightOn) {
+        this.userActionLightOn = userActionLightOn;
+    }
+
+    public boolean isAfterCaptureLightOff() {
+        return afterCaptureLightOff;
+    }
+
+    public void setAfterCaptureLightOff(boolean afterCaptureLightOff) {
+        this.afterCaptureLightOff = afterCaptureLightOff;
+    }
+
+    public boolean isAntiGlareLightOff() {
+        return antiGlareLightOff;
+    }
+
+    public void setAntiGlareLightOff(boolean antiGlareLightOff) {
+        this.antiGlareLightOff = antiGlareLightOff;
     }
 
     @Override
@@ -316,7 +377,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
             .setColor(new Color(0, 180, 0));
             // init the capture data
             settleGraph.getRow(BOOLEAN, CAPTURE)
-            .setColor(new Color(00, 0x5B, 0xD9)); // the OpenPNP color
+            .setColor(new Color(00, 0x5B, 0xD9)); // the OpenPNP blue
             return settleGraph;
         }
         else {
@@ -336,7 +397,6 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
             long t0 = System.currentTimeMillis();
             long timeout = t0 + settleTimeoutMs;
             int debounceCount = 0;
-            final double seq = 0.01;
             SimpleGraph settleGraph = startDiagnostics();
             TreeMap<Double, BufferedImage> settleImages = null;
             if (settleGraph != null) {
@@ -373,6 +433,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                 // Do these calculations up front.
                 final int resizeToMaxGaussianKernelSize = 5;
                 int gaussianBlurEff = settleGaussianBlur;
+                @SuppressWarnings("unused")
                 int divisor = (resizeToMaxGaussianKernelSize > resizeToMaxGaussianKernelSize) ? 
                         (settleGaussianBlur+resizeToMaxGaussianKernelSize/2)/resizeToMaxGaussianKernelSize
                         : 1;
@@ -465,7 +526,7 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                 lastSettleMat = mat;
 
                 long t = System.currentTimeMillis();
-                Logger.debug("autoSettleAndCapture t="+(t-t0)+" auto settle score: " + result);
+                Logger.trace("autoSettleAndCapture t="+(t-t0)+" auto settle score: " + result);
 
                 // If the image changed at least a bit (due to noise) and less than our
                 // threshold, we have a winner. The check for > 0 is to ensure that we're not just
@@ -665,7 +726,19 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         return img;
     }
 
-    public BufferedImage settleAndCapture() {
+    @Override
+    public BufferedImage lightSettleAndCapture() throws Exception {
+        actuateLightBeforeCapture();
+        try {
+            return settleAndCapture();
+        }
+        finally {
+            actuateLightAfterCapture();
+        }
+    }
+
+    @Override
+    public BufferedImage settleAndCapture() throws Exception {
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("camera", this);
@@ -676,6 +749,9 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         }
 
         try {
+            // Make sure the camera (or its subject) stands still.
+            waitForCompletion(CompletionType.WaitForStillstand);
+
             if (settleMethod == null) {
                 // Method undetermined, probably created a new camera (no @Commit handler)
                 settleMethod = SettleMethod.FixedTime;
@@ -706,9 +782,53 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         }
     }
 
-    protected void broadcastCapture(BufferedImage img) {
-        for (ListenerEntry listener : new ArrayList<>(listeners)) {
-            listener.listener.frameReceived(img);
+    protected static void actuateLight(Actuator lightActuator, Object light) throws Exception {
+        // Make sure it is actuated in a machine task, but only if the machine is enabled.
+        Configuration.get().getMachine().executeIfEnabled(() -> {
+            // Only actuate a light when the current state is unknown or different. 
+            if (lightActuator.getLastActuationValue() == null 
+                    || !lightActuator.getLastActuationValue().equals(light)) {
+                lightActuator.actuate(light);
+            }
+            return null; 
+        });
+    }
+
+    @Override
+    public void actuateLightBeforeCapture(Object light) throws Exception {
+        // Anti-glare: switch off opposite looking cameras.
+        for (Camera camera : Configuration.get().getMachine().getAllCameras()) {
+            if (camera != this
+                    && (camera instanceof AbstractCamera)
+                    && ((AbstractCamera) camera).isAntiGlareLightOff() 
+                    && camera.getLooking() != this.getLooking()) {
+                Actuator lightActuator = camera.getLightActuator();
+                if (lightActuator != null 
+                        && lightActuator.isActuated()) {
+                    AbstractActuator.assertOnOffDefined(lightActuator);
+                    actuateLight(lightActuator, lightActuator.getDefaultOffValue());
+                }
+            }
+        }
+
+        if (isBeforeCaptureLightOn()) {
+            Actuator lightActuator = getLightActuator();
+            if (lightActuator != null) {
+                AbstractActuator.assertOnOffDefined(lightActuator);
+                actuateLight(lightActuator, 
+                        (light != null ? light : lightActuator.getDefaultOnValue()));
+            }
+        }
+    }
+
+    @Override
+    public void actuateLightAfterCapture() throws Exception {
+        if (isAfterCaptureLightOff()) {
+            Actuator lightActuator = getLightActuator();
+            if (lightActuator != null) {
+                AbstractActuator.assertOnOffDefined(lightActuator);
+                actuateLight(lightActuator, lightActuator.getDefaultOffValue());
+            }
         }
     }
 
@@ -882,28 +1002,23 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
                 String message = "Camera settling, frame number "+n+", t=+"+String.format(Locale.US, "%.1f", tFrame)+"ms";
                 MainFrame.get().getCameraViews().getCameraView(this)
                 .showFilteredImage(img, message, 1500);
-                SwingUtilities.invokeLater(() -> {
-                    MainFrame.get().getCameraViews().ensureCameraVisible(this);
-                });
+                ensureCameraVisible();
             }
         }
+    }
+
+    @Override
+    public void ensureCameraVisible() {
+        SwingUtilities.invokeLater(() -> {
+            MainFrame.get().getCameraViews().ensureCameraVisible(this);
+        });
     }
 
     @Override
     public Icon getPropertySheetHolderIcon() {
         return Icons.captureCamera;
     }
-    
-    @Override
-    public void moveTo(Location location, MoveToOption... options) throws Exception {
-        moveTo(location, getHead().getMachine().getSpeed(), options);
-    }
 
-    @Override
-    public void moveToSafeZ() throws Exception {
-        moveToSafeZ(getHead().getMachine().getSpeed());
-    }
-    
     @Override
     public String toString() {
         return getName();

@@ -2,6 +2,7 @@ package org.openpnp.vision.pipeline.stages;
 
 import java.awt.Color;
 import java.util.List;
+import java.util.Locale;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
@@ -44,16 +45,16 @@ public class DrawTemplateMatches extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (templateMatchesStageName == null) {
+        if (templateMatchesStageName == null || templateMatchesStageName.trim().isEmpty()) {
             return null;
         }
-        Result result = pipeline.getResult(templateMatchesStageName);
-        if (result == null || result.model == null) {
+        Result result = pipeline.getExpectedResult(templateMatchesStageName);
+        if (result.model == null) {
             return null;
         }
         Mat mat = pipeline.getWorkingImage();
 
-        List<TemplateMatch> matches = (List<TemplateMatch>) result.model;
+        List<TemplateMatch> matches = result.getExpectedListModel(TemplateMatch.class, null);
         for (int i = 0; i < matches.size(); i++) {
             TemplateMatch match = matches.get(i);
             double x = match.x;
@@ -65,7 +66,7 @@ public class DrawTemplateMatches extends CvStage {
             Scalar color = FluentCv.colorToScalar(color_);
             Imgproc.rectangle(mat, new org.opencv.core.Point(x, y),
                     new org.opencv.core.Point(x + width, y + height), color);
-            Imgproc.putText(mat, "" + score, new org.opencv.core.Point(x + width, y + height),
+            Imgproc.putText(mat, String.format(Locale.US, "%.3f", score), new org.opencv.core.Point(x + width, y + height),
                     Imgproc.FONT_HERSHEY_PLAIN, 1.0, color);
         }
 

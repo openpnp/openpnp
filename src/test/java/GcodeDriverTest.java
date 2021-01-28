@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.driver.AbstractReferenceDriver.CommunicationsType;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
 import org.openpnp.machine.reference.driver.TcpCommunications;
@@ -58,7 +59,7 @@ public class GcodeDriverTest {
         GcodeDriver driver = new GcodeDriver();
         driver.createDefaults();
         driver.setConnectionKeepAlive(false);
-        driver.setCommunicationsType("tcp");
+        driver.setCommunicationsType(CommunicationsType.tcp);
         TcpCommunications tcp = (TcpCommunications) driver.getCommunications();
         tcp.setIpAddress("localhost");
         tcp.setPort(server.getListenerPort());
@@ -69,7 +70,10 @@ public class GcodeDriverTest {
          * Configure the machine to use the new GcodeDriver and initialize the machine.
          */
         ReferenceMachine referenceMachine = (ReferenceMachine) Configuration.get().getMachine();
-        referenceMachine.setDriver(driver);
+        while (referenceMachine.getDrivers().size() > 0) {
+            referenceMachine.removeDriver(referenceMachine.getDrivers().get(0));
+        }
+        referenceMachine.addDriver(driver);
         
         /**
          * Start the machine.
@@ -85,7 +89,7 @@ public class GcodeDriverTest {
         Actuator actuator = new ReferenceActuator();
         actuator.setName("A1");
         machine.addActuator(actuator);
-        GcodeDriver driver = (GcodeDriver) ((ReferenceMachine) machine).getDriver();
+        GcodeDriver driver = (GcodeDriver) ((ReferenceMachine) machine).getDefaultDriver();
         driver.setCommand(actuator, CommandType.ACTUATOR_READ_COMMAND, "READ A1");
         driver.setCommand(actuator, CommandType.ACTUATOR_READ_REGEX, "read:a1:(?<Value>-?\\d+)");
 
@@ -94,7 +98,7 @@ public class GcodeDriverTest {
         /**
          * Read the actuator we configured.
          */
-        Assert.assertEquals(actuator.read(), "497");
+        Assert.assertEquals(machine.execute(() -> actuator.read()), "497");
     }
     
     @Test
@@ -103,7 +107,7 @@ public class GcodeDriverTest {
         Actuator actuator = new ReferenceActuator();
         actuator.setName("A1");
         machine.addActuator(actuator);
-        GcodeDriver driver = (GcodeDriver) ((ReferenceMachine) machine).getDriver();
+        GcodeDriver driver = (GcodeDriver) ((ReferenceMachine) machine).getDefaultDriver();
         driver.setCommand(actuator, CommandType.ACTUATOR_READ_COMMAND, "READ A1");
 
         server.addCommandResponse("READ A1", "read:a1:497\nok");
@@ -113,7 +117,7 @@ public class GcodeDriverTest {
          * ACTUATOR_READ_REGEX.
          */
         try {
-            actuator.read();
+            machine.execute(() -> actuator.read());
             throw new AssertionError("Expected Actuator.read() to fail because no regex set.");
         }
         catch (Exception e) {
@@ -126,7 +130,7 @@ public class GcodeDriverTest {
         Actuator actuator = new ReferenceActuator();
         actuator.setName("A1");
         machine.addActuator(actuator);
-        GcodeDriver driver = (GcodeDriver) ((ReferenceMachine) machine).getDriver();
+        GcodeDriver driver = (GcodeDriver) ((ReferenceMachine) machine).getDefaultDriver();
         driver.setCommand(actuator, CommandType.ACTUATOR_READ_REGEX, "read:a1:(?<Value>-?\\d+)");
 
         server.addCommandResponse("READ A1", "read:a1:497\nok");
@@ -136,7 +140,7 @@ public class GcodeDriverTest {
          * ACTUATOR_READ_COMMAND.
          */
         try {
-            actuator.read();
+            machine.execute(() -> actuator.read());
             throw new AssertionError("Expected Actuator.read() to fail because no command set.");
         }
         catch (Exception e) {
@@ -149,7 +153,7 @@ public class GcodeDriverTest {
         Actuator actuator = new ReferenceActuator();
         actuator.setName("A1");
         machine.addActuator(actuator);
-        GcodeDriver driver = (GcodeDriver) ((ReferenceMachine) machine).getDriver();
+        GcodeDriver driver = (GcodeDriver) ((ReferenceMachine) machine).getDefaultDriver();
         driver.setCommand(actuator, CommandType.ACTUATOR_READ_COMMAND, "READ A1");
         driver.setCommand(actuator, CommandType.ACTUATOR_READ_REGEX, "reXXad:a1:(?<Value>-?\\d+)");
 
@@ -160,7 +164,7 @@ public class GcodeDriverTest {
          * ACTUATOR_READ_REGEX is incorrect and will not match the response.
          */
         try {
-            actuator.read();
+            machine.execute(() -> actuator.read());
             throw new AssertionError("Expected Actuator.read() to fail because invalid regex set.");
         }
         catch (Exception e) {

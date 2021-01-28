@@ -20,7 +20,6 @@
 package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeSupport;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
@@ -28,8 +27,6 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.PropertySheetHolder;
 
 public class BufferedImageCamera extends ReferenceCamera {
-    private PropertyChangeSupport pcs = new PropertyChangeSupport(this);
-
     private Camera originalCamera;
     private BufferedImage source;
 
@@ -40,10 +37,20 @@ public class BufferedImageCamera extends ReferenceCamera {
         setUnitsPerPixel(originalCamera.getUnitsPerPixel());
     }
 
+    @Override 
+    protected boolean isBroadcasting() {
+        // Switch off any Broadcasting for this one. 
+        return false;
+    }
+
+    @Override
+    protected synchronized boolean ensureOpen() {
+        // Never really open this one.
+        return true;
+    }
+
     @Override
     public synchronized BufferedImage internalCapture() {
-        // Don't do transformImage() like regular cameras - expect the image in this camera to have already
-        // been transformed by the original camera.
         return source;
     }
 

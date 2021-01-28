@@ -59,28 +59,27 @@ public class SelectSingleRect extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (rotatedRectsStageName == null) {
+        if (rotatedRectsStageName == null || rotatedRectsStageName.trim().isEmpty()) {
             return null;
         }
 
-        Result result = pipeline.getResult(rotatedRectsStageName);
-        if (result == null || result.model == null) {
+        Result result = pipeline.getExpectedResult(rotatedRectsStageName);
+        if (result.model == null) {
             return null;
         }
 
         List<RotatedRect> rects;
-        if (result.model instanceof RotatedRect) {
-            rects = Collections.singletonList((RotatedRect) result.model);
+        if (result.model instanceof List) {
+            rects = result.getExpectedListModel(RotatedRect.class, null);
         }
         else {
-            rects = (List<RotatedRect>) result.model;
+            rects = Collections.singletonList(result.getExpectedModel(RotatedRect.class));
         }
 
         RotatedRect results = null;
-        
         if (rects !=  null && rects.size() > 0) {
-            if (position == -1) {
-                results = rects.get(rects.size() -1);
+            if (position < 0) {
+                results = rects.get(rects.size() - position);
             } else if (position <= rects.size()) {
                 results = rects.get(position);
             }

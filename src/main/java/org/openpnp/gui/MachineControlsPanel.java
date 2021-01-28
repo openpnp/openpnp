@@ -51,7 +51,9 @@ import org.openpnp.gui.support.HeadMountableItem;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NozzleItem;
+import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
@@ -73,12 +75,14 @@ public class MachineControlsPanel extends JPanel {
     private final Configuration configuration;
     private final JobPanel jobPanel;
 
+    private static final double VIRTUAL_Z_MAX_UNSAFE_ROAMING_MM = 5;
     private static final String PREF_JOG_CONTROLS_EXPANDED =
             "MachineControlsPanel.jogControlsExpanded"; //$NON-NLS-1$
     private static final boolean PREF_JOG_CONTROLS_EXPANDED_DEF = true;
     private Preferences prefs = Preferences.userNodeForPackage(MachineControlsPanel.class);
 
     private HeadMountable selectedTool;
+    private HeadMountable lastSelectedNonCamera;
 
     private JComboBox comboBoxHeadMountable;
 
@@ -107,6 +111,9 @@ public class MachineControlsPanel extends JPanel {
         if (selectedTool instanceof Nozzle) {
             return (Nozzle) selectedTool;
         }
+        if (lastSelectedNonCamera instanceof Nozzle) {
+            return (Nozzle) lastSelectedNonCamera;
+        }
         try {
             return configuration.getMachine().getDefaultHead().getDefaultNozzle();
         }
@@ -129,6 +136,9 @@ public class MachineControlsPanel extends JPanel {
     public void setSelectedTool(HeadMountable hm) {
         HeadMountable oldValue = selectedTool;
         selectedTool = hm;
+        if (!(hm instanceof Camera)) {
+            lastSelectedNonCamera = hm;
+        }
         for (int i = 0; i < comboBoxHeadMountable.getItemCount(); i++) {
             HeadMountableItem item = (HeadMountableItem) comboBoxHeadMountable.getItemAt(i); 
             if (item.getItem() == hm) {
@@ -137,9 +147,28 @@ public class MachineControlsPanel extends JPanel {
             }
         }
         updateDros();
+        enableToolActions();
         if (oldValue != hm) {
             firePropertyChange("selectedTool", oldValue, hm);
         }
+    }
+
+    private void enableToolActions() {
+        Camera camera = null;
+        try {
+            Head head = selectedTool.getHead();
+            if (head == null) {
+                head = Configuration.get().getMachine().getDefaultHead();
+            }
+            camera = head.getDefaultCamera();
+        }
+        catch (Exception e) {
+        }
+        boolean enabled = Configuration.get().getMachine().isEnabled();
+        homeAction.setEnabled(enabled);
+        jogControlsPanel.setEnabled(enabled);
+        targetCameraAction.setEnabled(enabled && selectedTool != camera);
+        targetToolAction.setEnabled(enabled && selectedTool == camera);
     }
 
     public JogControlsPanel getJogControlsPanel() {
@@ -153,10 +182,7 @@ public class MachineControlsPanel extends JPanel {
     @Override
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
-        homeAction.setEnabled(enabled);
-        jogControlsPanel.setEnabled(enabled);
-        targetCameraAction.setEnabled(enabled);
-        targetToolAction.setEnabled(enabled);
+        enableToolActions();
     }
 
     public Location getCurrentLocation() {
@@ -224,6 +250,7 @@ public class MachineControlsPanel extends JPanel {
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         comboBoxHeadMountable = new JComboBox();
+        comboBoxHeadMountable.setMaximumRowCount(20);
         comboBoxHeadMountable.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -262,13 +289,14 @@ public class MachineControlsPanel extends JPanel {
                 Machine machine = Configuration.get().getMachine();
                 boolean enable = !machine.isEnabled();
                 try {
-					Configuration.get().getMachine().setEnabled(enable);
-					// TODO STOPSHIP move setEnabled into a binding.
-					setEnabled(true);
-					if (machine.getHomeAfterEnabled() && machine.isEnabled()) {
-                        // TODO STOPSHIP should not be in the UI
-						machine.home();
-					}
+                    Configuration.get().getMachine().setEnabled(enable);
+                    // TODO STOPSHIP move setEnabled into a binding.
+                    setEnabled(true);
+                    if (machine.getHomeAfterEnabled() && machine.isEnabled()) {
+                        UiUtils.submitUiMachineTask(() -> {
+                            machine.home();
+                        });
+                    }
                 }
                 catch (Exception t1) {
                     MessageBoxes.errorBox(MachineControlsPanel.this, "Enable Failure", //$NON-NLS-1$
@@ -308,7 +336,11 @@ public class MachineControlsPanel extends JPanel {
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable tool = getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
+                if (tool == camera) {
+                    tool = getLastSelectedNonCamera();
+                }
                 MovableUtils.moveToLocationAtSafeZ(tool, camera.getLocation(tool));
+                MovableUtils.fireTargetedUserAction(tool);
             });
         }
     };
@@ -320,7 +352,11 @@ public class MachineControlsPanel extends JPanel {
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable tool = getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
+                if (tool == camera) {
+                    tool = getLastSelectedNonCamera();
+                }
                 MovableUtils.moveToLocationAtSafeZ(camera, tool.getLocation());
+                MovableUtils.fireTargetedUserAction(camera);
             });
         }
     };
@@ -331,7 +367,24 @@ public class MachineControlsPanel extends JPanel {
                 enabled ? Icons.powerOff : Icons.powerOn);
     }
 
+    private HeadMountable getLastSelectedNonCamera() {
+        if (lastSelectedNonCamera == null) {
+            try {
+                lastSelectedNonCamera = getSelectedTool().getHead().getDefaultNozzle();
+            }
+            catch (Exception e) {
+            }
+        }
+        return lastSelectedNonCamera;
+    }
+
+    private void setLastSelectedNonCamera(HeadMountable lastSelectedNonCamera) {
+        this.lastSelectedNonCamera = lastSelectedNonCamera;
+    }
+
     private MachineListener machineListener = new MachineListener.Adapter() {
+        private Location lastUserActionLocation;
+
         @Override
         public void machineHeadActivity(Machine machine, Head head) {
             EventQueue.invokeLater(() -> updateDros());
@@ -359,6 +412,35 @@ public class MachineControlsPanel extends JPanel {
         @Override
         public void machineDisableFailed(Machine machine, String reason) {
             updateStartStopButton(machine.isEnabled());
+        }
+
+        @Override
+        public void machineTargetedUserAction(Machine machine, HeadMountable hm) {
+            if (hm != null 
+                    && hm.getHead() != null) { // Do this only if this is a true HeadMountable 
+                                               // i.e. not for bottom cameras or Machine actuators.
+
+                if (getSelectedTool() != hm || MovableUtils.isInSafeZZone(hm)) {
+                    lastUserActionLocation = hm.getLocation().convertToUnits(LengthUnit.Millimeters);
+                }
+                else {
+                    // This is the same selected tool.
+                    if (hm.getAxisZ() instanceof ReferenceVirtualAxis 
+                            && lastUserActionLocation != null) {
+                        if (lastUserActionLocation.getLinearDistanceTo(hm.getLocation()) > VIRTUAL_Z_MAX_UNSAFE_ROAMING_MM) {
+                            // Distance is too large to retain virtual Z. Make it safe.
+                            UiUtils.submitUiMachineTask(()-> hm.moveToSafeZ());
+                        }
+                    }
+                }
+                if (machine.isAutoToolSelect()) {
+                    SwingUtilities.invokeLater(() -> {
+                        if (getSelectedTool() != hm) {
+                            setSelectedTool(hm);
+                        }
+                    });
+                }
+            }
         }
     };
 
@@ -417,6 +499,9 @@ public class MachineControlsPanel extends JPanel {
             for (Head head : machine.getHeads()) {
 
                 BeanUtils.addPropertyChangeListener(head, "nozzles", (e) -> { //$NON-NLS-1$
+                    if (e.getOldValue() == getLastSelectedNonCamera()) {
+                        setLastSelectedNonCamera(null);
+                    }
                     if (e.getOldValue() == null && e.getNewValue() != null) {
                         Nozzle nozzle = (Nozzle) e.getNewValue();
                         comboBoxHeadMountable.addItem(new NozzleItem(nozzle));
@@ -446,9 +531,27 @@ public class MachineControlsPanel extends JPanel {
                         }
                     }
                 });
+
+                BeanUtils.addPropertyChangeListener(head, "actuators", (e) -> { //$NON-NLS-1$
+                    if (e.getOldValue() == getLastSelectedNonCamera()) {
+                        setLastSelectedNonCamera(null);
+                    }
+                    if (e.getOldValue() == null && e.getNewValue() != null) {
+                        Actuator actuator = (Actuator) e.getNewValue();
+                        comboBoxHeadMountable.addItem(new ActuatorItem(actuator));
+                    }
+                    else if (e.getOldValue() != null && e.getNewValue() == null) {
+                        for (int i = 0; i < comboBoxHeadMountable.getItemCount(); i++) {
+                            HeadMountableItem item =
+                                    (HeadMountableItem) comboBoxHeadMountable.getItemAt(i);
+                            if (item.getItem() == e.getOldValue()) {
+                                comboBoxHeadMountable.removeItemAt(i);
+                            }
+                        }
+                    }
+                });
             }
 
         }
     };
-    private JButton btnThing;
 }

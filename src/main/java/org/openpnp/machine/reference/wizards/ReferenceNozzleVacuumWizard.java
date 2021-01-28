@@ -27,8 +27,6 @@ import javax.swing.JPanel;
 
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.ActuatorsComboBoxModel;
-import org.openpnp.gui.support.IntegerConverter;
-import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.machine.reference.ReferenceNozzle;
 
 import com.jgoodies.forms.layout.CellConstraints;
@@ -44,11 +42,14 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
     private JPanel panel;
     private JComboBox vacuumComboBoxActuator;
     private JComboBox blowOffComboBoxActuator;
+    private JLabel lblSensingActuator;
+    private JComboBox vacuumSenseActuator;
 
     public ReferenceNozzleVacuumWizard(ReferenceNozzle nozzle) {
         this.nozzle = nozzle;
         createUi();
     }
+
     private void createUi() {
         
         CellConstraints cc = new CellConstraints();
@@ -57,32 +58,47 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
         panel = new JPanel();
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
-                ColumnSpec.decode("default:grow"),},
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC, 
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         label = new JLabel("Vacuum Actuator");
-        panel.add(label, "1, 2, right, center");
-        label = new JLabel("Blow Off Actuator");
-        panel.add(label, "1, 3, right, center");
+        panel.add(label, "2, 2, right, center");
         
         vacuumComboBoxActuator = new JComboBox();
+        vacuumComboBoxActuator.setMaximumRowCount(15);
         vacuumComboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
-        panel.add(vacuumComboBoxActuator, "2, 2");
+        panel.add(vacuumComboBoxActuator, "4, 2");
+        label = new JLabel("Blow Off Actuator");
+        panel.add(label, "2, 4, right, center");
+
         blowOffComboBoxActuator = new JComboBox();
+        blowOffComboBoxActuator.setMaximumRowCount(15);
         blowOffComboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
-        panel.add(blowOffComboBoxActuator, "2, 3");
+        panel.add(blowOffComboBoxActuator, "4, 4");
+        lblSensingActuator = new JLabel("Sensing Actuator");
+        panel.add(lblSensingActuator, "2, 6, right, default");
+
+        vacuumSenseActuator = new JComboBox(new ActuatorsComboBoxModel(nozzle.getHead()));
+        vacuumSenseActuator.setMaximumRowCount(15);
+        panel.add(vacuumSenseActuator, "4, 6, fill, default");
     }
 
     @Override
     public void createBindings() {
-        LengthConverter lengthConverter = new LengthConverter();
-        IntegerConverter intConverter = new IntegerConverter();
 
         addWrappedBinding(nozzle, "vacuumActuatorName", vacuumComboBoxActuator, "selectedItem");
         addWrappedBinding(nozzle, "blowOffActuatorName", blowOffComboBoxActuator, "selectedItem");
+        addWrappedBinding(nozzle, "vacuumSenseActuatorName", vacuumSenseActuator, "selectedItem");
     }
 }

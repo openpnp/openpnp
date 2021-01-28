@@ -23,8 +23,6 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.List;
 
-import org.openpnp.CameraListener;
-import org.openpnp.ConfigurationListener;
 import org.openpnp.capture.CaptureDevice;
 import org.openpnp.capture.CaptureFormat;
 import org.openpnp.capture.CaptureProperty;
@@ -35,10 +33,6 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.OpenPnpCaptureCameraConfigurationWizard;
 import org.openpnp.model.AbstractModelObject;
-import org.openpnp.model.Configuration;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.Machine;
-import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.PropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -47,7 +41,6 @@ import org.simpleframework.xml.core.Commit;
 
 public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     private OpenPnpCapture capture = new OpenPnpCapture();
-    private Thread thread;
 
     private CaptureDevice device;
     private CaptureFormat format;
@@ -58,9 +51,6 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
 
     @Attribute(required = false)
     private Integer formatId;
-
-    @Attribute(required = false)
-    private double fps = 10.;
 
     @Element(required = false)
     private CapturePropertyHolder backLightCompensation = new CapturePropertyHolder(CaptureProperty.BackLightCompensation);
@@ -100,56 +90,6 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
 
     @Element(required = false)
     private CapturePropertyHolder zoom = new CapturePropertyHolder(CaptureProperty.Zoom);
-    
-    // Calling notifyAll on this object will wake the stream thread for one loop to broadcast
-    // a new image.
-    private Object captureNotifier = new Object();
-
-    public OpenPnpCaptureCamera() {
-        // TODO Seems silly this has to be in every implementation. Should Camera implement MachineListener
-        // and every camera gets added as a listener automatically? And we codify the notifyCapture()
-        // system in some way? Seems like the entire broadcast system should move into a base class?
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationComplete(Configuration configuration) throws Exception {
-                Configuration.get().getMachine().addListener(new MachineListener.Adapter() {
-                    public void notifyCapture() {
-                        synchronized(captureNotifier) {
-                            captureNotifier.notifyAll();
-                        }
-                    }
-                    
-                    @Override
-                    public void machineHeadActivity(Machine machine, Head head) {
-                        notifyCapture();
-                    }
-
-                    @Override
-                    public void machineEnabled(Machine machine) {
-                        notifyCapture();
-                    }
-                });
-            }
-        });
-    }
-
-    @Commit
-    public void commit() throws Exception {
-        super.commit();
-        backLightCompensation.setCamera(this);
-        brightness.setCamera(this);
-        contrast.setCamera(this);
-        exposure.setCamera(this);
-        focus.setCamera(this);
-        gain.setCamera(this);
-        gamma.setCamera(this);
-        hue.setCamera(this);
-        powerLineFrequency.setCamera(this);
-        saturation.setCamera(this);
-        sharpness.setCamera(this);
-        whiteBalance.setCamera(this);
-        zoom.setCamera(this);
-    }
 
     public List<CaptureDevice> getCaptureDevices() {
         return capture.getDevices();
@@ -157,7 +97,9 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
 
     @Override
     public synchronized BufferedImage internalCapture() {
-        ensureOpen();
+        if (! ensureOpen()) {
+            return null;
+        }
         try {
             /**
              * The timeout is only needed if the stream is somehow in error and not producing frames (anymore) 
@@ -171,84 +113,30 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
                 }
             }
             BufferedImage img = stream.capture();
-            /**
-             * We don't ever want to "waste" an image. So even if the thread is running at a low
-             * frame rate, if we've been forced to capture an image we broadcast it.
-             * 
-             * TODO Note that it would be better to do this in ReferenceCamera.capture(), but the
-             * other camera implementations still call internalCapture() from their thread, which
-             * would cause the image to broadcast twice. Eventually they should be refactored as
-             * this one was, to capture frames directly in the loop rather than calling
-             * internalCapture().
-             * 
-             * And further, note that the *reason* the thread doesn't call internalCapture() on
-             * this implementation is due to the hasNewFrame() busy loop up there. We don't want
-             * the thread busy looping and eating tons of CPU.
-             * 
-             * Also note that we have to transform here, since we're broadcasting the image
-             * directly. Most of the other implementations just call captureForPreview() which
-             * handles the transform, but because of the above we can't do that.
-             */
-            broadcastCapture(transformImage(img));
             return img;
         }
         catch (Exception e) {
             return null;
         }
     }
+
+    @Override
+    protected synchronized boolean isOpen() {
+        return super.isOpen() 
+                && stream != null;
+    }
     
     @Override
-    public synchronized void startContinuousCapture(CameraListener listener) {
-        ensureOpen();
-        super.startContinuousCapture(listener);
+    public synchronized boolean hasNewFrame() {
+        if (isOpen()) {
+            return stream.hasNewFrame();
+        }        
+        return false;
     }
 
-    public void run() {
-        while (!Thread.interrupted()) {
-            try {
-                ensureOpen();
-                if (stream.hasNewFrame()) {
-                    BufferedImage img = stream.capture();
-                    img = transformImage(img);
-                    broadcastCapture(img);
-                }
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                synchronized(captureNotifier) {
-                    if (fps == 0) {
-                        captureNotifier.wait();
-                    }
-                    else {
-                        captureNotifier.wait((long) (1000. / fps));
-                    }
-                }
-            }
-            catch (InterruptedException e) {
-                break;
-            }
-        }
-    }
-    
-    public synchronized void ensureOpen() {
-        if (thread == null) {
-            open();
-        }
-    }
-
-    public void open() {
-        if (thread != null) {
-            thread.interrupt();
-            try {
-                thread.join(3000);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            thread = null;
-        }
+    @Override
+    public synchronized void open() throws Exception {
+        stop();
 
         if (stream != null) {
             try {
@@ -257,8 +145,8 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             catch (Exception e) {
                 e.printStackTrace();
             }
+            stream = null;
         }
-        stream = null;
         setPropertiesStream(stream);
 
         clearCalibrationCache();
@@ -313,9 +201,61 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             e.printStackTrace();
             return;
         }
-        thread = new Thread(this);
-        thread.setDaemon(true);
-        thread.start();
+
+        super.open();
+    }
+
+    public synchronized double estimateCaptureFps() throws Exception {
+        ensureOpen();
+        if (stream == null || format == null) {
+            throw new Exception("Camera stream not properly initialized."); 
+        }
+        // Start warmup capture timer for 1 second.
+        boolean warmup = true;
+        long t0 = System.currentTimeMillis();
+        long timeout = t0 + 1000;
+        long t1 = 0;
+        int capturedFrames = 0;
+        for (int frames = 0; frames < 480; frames++) {
+            stream.capture();
+            while (!stream.hasNewFrame()) {
+            }
+            t1 = System.currentTimeMillis();
+            capturedFrames++;
+            if (t1 > timeout) {
+                if (warmup) {
+                    // Warmup complete. 
+                    warmup = false;
+                    // Start the real capture timer of 2 seconds.
+                    t0 = t1;
+                    timeout = t0 + 2000;
+                    capturedFrames = 0;
+                }
+                else {
+                    break;
+                }
+            }
+        }
+        // Compute the fps.
+        return capturedFrames*1000./(t1-t0);
+    }
+
+    @Commit
+    protected void commit() throws Exception {
+        super.commit();
+        backLightCompensation.setCamera(this);
+        brightness.setCamera(this);
+        contrast.setCamera(this);
+        exposure.setCamera(this);
+        focus.setCamera(this);
+        gain.setCamera(this);
+        gamma.setCamera(this);
+        hue.setCamera(this);
+        powerLineFrequency.setCamera(this);
+        saturation.setCamera(this);
+        sharpness.setCamera(this);
+        whiteBalance.setCamera(this);
+        zoom.setCamera(this);
     }
 
     private void setPropertiesStream(CaptureStream stream) {
@@ -335,18 +275,8 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     }
 
     @Override
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
         super.close();
-
-        if (thread != null) {
-            thread.interrupt();
-            try {
-                thread.join(3000);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
 
         if (stream != null) {
             try {
@@ -355,8 +285,8 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             catch (Exception e) {
                 e.printStackTrace();
             }
+            stream = null;
         }
-        stream = null;
 
         capture.close();
     }
@@ -404,14 +334,6 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             this.formatId = format.getFormatId();
         }
         firePropertyChange("format", null, format);
-    }
-
-    public double getFps() {
-        return fps;
-    }
-
-    public void setFps(double fps) {
-        this.fps = fps;
     }
 
     public CapturePropertyHolder getBackLightCompensation() {
