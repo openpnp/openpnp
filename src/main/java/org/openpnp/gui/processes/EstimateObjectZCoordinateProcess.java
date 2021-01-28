@@ -31,6 +31,7 @@ import org.openpnp.gui.components.CameraView;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.base.AbstractCamera;
 
 /**
  * Guides the user with step by step instructions on using a camera to estimate an object's
@@ -149,7 +150,8 @@ public class EstimateObjectZCoordinateProcess {
                 0.0,
                 0.0);
         try {
-            estimatedZStr = camera.estimateZCoordinateOfObject(observedUnitsPerPixel).toString();
+            estimatedZStr = ((AbstractCamera) camera).
+                    estimateZCoordinateOfObject(observedUnitsPerPixel).toString();
         }
         catch (Exception ex) {
              estimatedZStr = "unavailable (due to " + ex.getMessage() + ")";

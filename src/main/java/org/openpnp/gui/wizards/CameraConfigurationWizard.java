@@ -49,6 +49,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.base.AbstractCamera;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
@@ -515,10 +516,12 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                         (height / Math.abs(selection.height))));
             }
 
-            //Get the camera's actual location (ignoring virtual axis)
-            Location cameraLocation = camera.getActualLocation();
-
-            double heightAboveCamera = measurementLocation.subtract(cameraLocation).getZ();
+            double heightAboveCamera = ((AbstractCamera) camera).
+                    getHeightAboveCamera(measurementLocation).getValue();
+//            //Get the camera's actual location (ignoring virtual axis)
+//            Location cameraLocation = camera.getActualLocation();
+//
+//            double heightAboveCamera = measurementLocation.subtract(cameraLocation).getZ();
             if (rdbtnPrimaryUpp.isSelected()) {
                 textFieldPrimaryUppHeightAboveCamera.setText(String.format(Locale.US, zFormat,
                         heightAboveCamera));

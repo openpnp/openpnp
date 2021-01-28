@@ -303,7 +303,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
      * @param zCoordinate
      * @return the height above the camera in the same units as zCoordinate
      */
-    protected Length getHeightAboveCamera(Length zCoordinate) {
+    public Length getHeightAboveCamera(Length zCoordinate) {
         Location cameraLocation = getLocation();
         try {
             //Replace virtual axis coordinates, if any, with the head offset
@@ -321,7 +321,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
      * @param location - the location whose height is being determined
      * @return the height above the camera in the same units as location
      */
-    protected Length getHeightAboveCamera(Location location) {
+    public Length getHeightAboveCamera(Location location) {
         return getHeightAboveCamera(location.getLengthZ());
     }
     
@@ -384,12 +384,24 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         this.unitsPerPixel = unitsPerPixel;
     }
 
-    @Override
+    /**
+     * Gets the secondary units per pixel
+     * 
+     * @return a location whose x and y coordinates are the measured pixels per unit for those axis
+     *         respectively and the z coordinate is the height above the camera at which the
+     *         measurements were made.
+     */
     public Location getUnitsPerPixelSecondary() {
         return unitsPerPixelSecondary;
     }
 
-    @Override
+    /**
+     * Sets the secondary units per pixel
+     * 
+     * @param unitsPerPixelSecondary - a location whose x and y coordinates are the measured pixels
+     * per unit for those axis respectively and the z coordinate is the height above the camera at
+     * which the measurements were made.
+     */
     public void setUnitsPerPixelSecondary(Location unitsPerPixelSecondary) {
         this.unitsPerPixelSecondary = unitsPerPixelSecondary;
     }
@@ -404,7 +416,16 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         this.defaultZ = defaultZ;
     }
 
-    @Override
+    /**
+     * Estimates the Z height of an object based upon the observed units per pixel for the
+     * object. This is typically found by capturing images of a feature of the object from two
+     * different camera positions. The observed units per pixel is then computed by dividing the
+     * actual change in camera position (in machine units) by the apparent change in position of the
+     * feature (in pixels) between the two images.
+     *
+     * @param observedUnitsPerPixel - the observed units per pixel for the object
+     * @return - the estimated Z height of the object
+     */
     public Length estimateZCoordinateOfObject(Location observedUnitsPerPixel) throws Exception {
         LengthUnit units = observedUnitsPerPixel.getUnits();
         double uppX = Math.abs(observedUnitsPerPixel.getX());

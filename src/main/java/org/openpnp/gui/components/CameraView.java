@@ -417,13 +417,14 @@ public class CameraView extends JComponent implements CameraListener {
     
     /**
      * Checks to see if the reticle for this camera can be changed to different heights.  This is
-     * true if the camera's Units Per Pixel has been calibrated at two different distances from the
-     * camera.
+     * true if the camera's Units Per Pixel is different at two different heights.
      * 
-     * @return the result of the check
+     * @return true if the reticle height can be changed
      */
     public boolean isReticleHeightChangable() {
-        return camera.getUnitsPerPixel().subtract(camera.getUnitsPerPixelSecondary()).getZ() != 0;
+        Location upp1 = camera.getUnitsPerPixel(new Length(0.0, LengthUnit.Millimeters));
+        Location upp2 = camera.getUnitsPerPixel(new Length(10.0, LengthUnit.Millimeters));
+        return !upp1.equals(upp2);
     }
 
     /**

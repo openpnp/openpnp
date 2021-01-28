@@ -91,24 +91,6 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     public Location getUnitsPerPixel(Location location);
 
     /**
-     * Gets the secondary units per pixel
-     * 
-     * @return a location whose x and y coordinates are the measured pixels per unit for those axis
-     *         respectively and the z coordinate is the height above the camera at which the
-     *         measurements were made.
-     */
-    public Location getUnitsPerPixelSecondary();
-    
-    /**
-     * Sets the secondary units per pixel
-     * 
-     * @param unitsPerPixelSecondary - a location whose x and y coordinates are the measured pixels
-     * per unit for those axis respectively and the z coordinate is the height above the camera at
-     * which the measurements were made.
-     */
-    public void setUnitsPerPixelSecondary(Location unitsPerPixelSecondary);
-
-    /**
      * Gets the Z  height of the default working plane for this camera.  This is the height
      * at which objects are assumed to be if no other information is available.
      * 
@@ -124,18 +106,6 @@ public interface Camera extends HeadMountable, WizardConfigurable,
      */
     public void setDefaultZ(Length defaultZ);
     
-    /**
-     * Estimates the Z height of an object based upon the observed units per pixel for the
-     * object. This is typically found by capturing images of a feature of the object from two
-     * different camera positions. The observed units per pixel is then computed by dividing the
-     * actual change in camera position (in machine units) by the apparent change in position of the
-     * feature (in pixels) between the two images.
-     *
-     * @param observedUnitsPerPixel - the observed units per pixel for the object
-     * @return - the estimated Z height of the object
-     */
-    public Length estimateZCoordinateOfObject(Location observedUnitsPerPixel) throws Exception;
-
     /**
      * Immediately captures an image from the camera and returns it in it's native format. Fires
      * the Camera.BeforeCapture and Camera.AfterCapture scripting events before and after.
