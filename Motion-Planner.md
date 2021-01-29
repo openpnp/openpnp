@@ -47,6 +47,7 @@ OpenPnP will automatically complete Motion Paths in these cases:
 * Before reading an Actuator (option that is enabled by default)
 * Between moves that contain axes from different and/or multiple drivers (interlock).
 * After the Machine Thread has finished a task.
+* Before a driver connection is closed (unless there is a M400 in the DISABLE_COMMAND, it will not actually wait for motion completion, just for commands to be sent). 
 
 ### Actuator Machine Coordination
 
