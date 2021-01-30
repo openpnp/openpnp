@@ -1,11 +1,17 @@
 # Read This First
+
 To submit a Pull Request for OpenPnP you must use this template or it will not be accepted. 
 
 Be sure to review the [Developers Guide](https://github.com/openpnp/openpnp/wiki/Developers-Guide)
 and the [Contributing Guidelines](https://github.com/openpnp/openpnp/blob/develop/CONTRIBUTING.md).
 
 Make your Pull Request as small as possible. Only include one bug or feature.
-Large pull requests that change dozens of files or add multiple features are unlikely to be accepted.
+
+If you would like to add a new feature to OpenPnP that changes core or reference functionality,
+please create a topic on the [discussion group](http://groups.google.com/group/openpnp) to discuss
+the feature first. Also consider if your feature can be implemented as a new subclass of
+a Reference class, or an entirely new class, instead of changing or adding to the Reference
+class.
 
 Fill out all the details below. All sections below are required. If they are not included your Pull Request
 will not be accepted.

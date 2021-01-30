@@ -28,7 +28,7 @@ public class ReferenceBottomVisionTest {
     }
     
     public static void testError(Location error) throws Exception {
-        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.01);
+        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
 
         File workingDirectory = Files.createTempDir();
         workingDirectory = new File(workingDirectory, ".openpnp");
@@ -36,13 +36,15 @@ public class ReferenceBottomVisionTest {
 
         Configuration.initialize(workingDirectory);
         Configuration.get().load();
+        // Save migrated.
+        Configuration.get().save();
 
         Machine machine = Configuration.get().getMachine();
         Nozzle nozzle = machine.getDefaultHead().getDefaultNozzle();
         SimulatedUpCamera camera = (SimulatedUpCamera) VisionUtils.getBottomVisionCamera();
         Part part = Configuration.get().getPart("R0805-1K"); 
         ReferenceBottomVision bottomVision = (ReferenceBottomVision) machine.getPartAlignments().get(0);
-        NullDriver driver = (NullDriver) ((ReferenceMachine) machine).getDriver();
+        NullDriver driver = (NullDriver) ((ReferenceMachine) machine).getDefaultDriver();
         driver.setFeedRateMmPerMinute(0);
         
         camera.setErrorOffsets(error);

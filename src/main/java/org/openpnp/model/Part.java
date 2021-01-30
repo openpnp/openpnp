@@ -46,6 +46,9 @@ public class Part extends AbstractModelObject implements Identifiable {
 
     @Attribute(required = false)
     private double speed = 1.0;
+    
+    @Attribute(required = false)
+    private int pickRetryCount = 0;
 
 
     @SuppressWarnings("unused")
@@ -130,6 +133,15 @@ public class Part extends AbstractModelObject implements Identifiable {
         Object oldValue = this.packag;
         this.packag = packag;
         firePropertyChange("package", oldValue, packag);
+    }
+    
+    public int getPickRetryCount() {
+        return pickRetryCount;
+    }
+
+    public void setPickRetryCount(int pickRetryCount) {
+        this.pickRetryCount = pickRetryCount;
+        firePropertyChange("pickRetryCount", null, pickRetryCount);
     }
 
     @Override

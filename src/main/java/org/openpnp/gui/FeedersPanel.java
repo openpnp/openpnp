@@ -22,6 +22,8 @@ package org.openpnp.gui;
 import java.awt.BorderLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
+import java.awt.Component;
+import java.awt.Color;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -52,6 +54,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.events.BoardLocationSelectedEvent;
@@ -74,9 +77,13 @@ import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.Job;
+import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.NozzleTip;
+import org.openpnp.spi.JobProcessor.JobProcessorException;
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
@@ -156,14 +163,55 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
             @Override
             public void changedUpdate(DocumentEvent e) {
-                search();
-            }
-        });
-        panel_1.add(searchTextField);
-        searchTextField.setColumns(15);
-        
-        
-        table = new AutoSelectTextTable(tableModel);
+				search();
+			}
+		});
+		panel_1.add(searchTextField);
+		searchTextField.setColumns(15);
+
+		table = new AutoSelectTextTable(tableModel);
+
+		table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+			// cells are grayed if the feeder is not used by any enabled placement.
+			@Override
+			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+					boolean hasFocus, int row, int column) {
+				final Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row,
+						column);
+				if (!isSelected) {
+					String partId = (String) tableModel.getValueAt(row, 2);
+					Job job = mainFrame.getJobTab().getJob();
+					boolean bFound = false;
+
+					for (BoardLocation boardLocation : job.getBoardLocations()) {
+						// Only check enabled boards
+						if (!boardLocation.isEnabled()) {
+							continue;
+						}
+
+						for (Placement placement : boardLocation.getBoard().getPlacements()) {
+							// Ignore placements that aren't placements
+							if (placement.getType() != Placement.Type.Placement) {
+								continue;
+							}
+							if (!placement.isEnabled()) {
+								continue;
+							}
+
+							if (placement.getPart().getId() == partId) {
+								bFound = true;
+								break;
+							}
+						}
+						if (bFound) {
+							break;
+						}
+					}
+					c.setBackground(bFound ? Color.WHITE : new Color(230, 230, 230));
+				}
+				return c;
+			}
+		});
         tableSorter = new TableRowSorter<>(tableModel);
         table.getColumnModel().moveColumn(1,  2);
 
@@ -217,10 +265,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 }
 
                 if (table.getSelectedRow() != priorRowIndex) {
-                    if (keepUnAppliedFeederConfigurationChanges()) {
+                	if (keepUnAppliedFeederConfigurationChanges()) {
                         table.setRowSelectionInterval(priorRowIndex, priorRowIndex);
                         return;
-                    }
+					}
                     priorRowIndex = table.getSelectedRow();
                     
                     Feeder feeder = getSelection();
@@ -265,19 +313,33 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             i++;
         }
         if (feederConfigurationIsDirty && (priorFeeder != null)) {
-            int selection = JOptionPane.showOptionDialog(null,
-                    "Configuration changes to '" + priorFeeder.getName() + "' will be lost.  Do you want to proceed?",
+            int selection = JOptionPane.showConfirmDialog(null,
+                    priorFeeder.getName() + " changed.  Apply changes?",
                     "Warning!",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.WARNING_MESSAGE,
-                    null,
-                    new String[]{"Yes", "No"},
-                    "No");
-            return (selection != JOptionPane.YES_OPTION);
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null
+                    );
+            switch (selection) {
+				case JOptionPane.YES_OPTION:
+				    int j = 0;
+				    while ((j<configurationPanel.getComponentCount())) {
+				    	AbstractConfigurationWizard wizard = ((AbstractConfigurationWizard) configurationPanel.getComponent(j));
+				        if (wizard.isDirty()) {
+							wizard.apply();
+				        }
+				        j++;
+				    }
+				    return false;
+				case JOptionPane.NO_OPTION:
+					return false;
+				case JOptionPane.CANCEL_OPTION:
+				default:
+					return true;
+			}
         } else {
             return false;
         }
-        
     }
     
     @Subscribe
@@ -429,6 +491,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                     "Feeder Error", e);
         }
     }
+    
+    public void updateView() {
+    	tableModel.fireTableChanged(null);
+    }
 
     public Action newFeederAction = new AbstractAction() {
         {
@@ -506,18 +572,73 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Feeder feeder = getSelection();
-                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
 
-                nozzle.moveToSafeZ();
-                feeder.feed(nozzle);
-                Location pickLocation = feeder.getPickLocation();
-                MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
-                nozzle.pick(feeder.getPart());
-                nozzle.moveToSafeZ();
-                feeder.postPick(nozzle);
+                pickFeeder(feeder);
             });
         }
     };
+
+    public static void pickFeeder(Feeder feeder) throws Exception, JobProcessorException {
+        // Simulate a "one feeder" job, prepare the feeder.
+        if (feeder.getJobPreparationLocation() != null) {
+            feeder.prepareForJob(true);
+        }
+        feeder.prepareForJob(false);
+
+        // Check the nozzle tip package compatibility.
+        Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+        org.openpnp.model.Package packag = feeder.getPart().getPackage();
+        if (nozzle.getNozzleTip() == null || 
+                !packag.getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
+            // Wrong nozzle tip, try find one that works.
+            boolean resolved = false;
+            if (nozzle.isNozzleTipChangedOnManualFeed()) {
+                for (NozzleTip nozzleTip : packag.getCompatibleNozzleTips()) {
+                    if (nozzle.getCompatibleNozzleTips().contains(nozzleTip)) {
+                        // Found a compatible one. Unload and load like the JobProcessor.
+                        nozzle.unloadNozzleTip();
+                        nozzle.loadNozzleTip(nozzleTip);
+                        resolved = true;
+                        break;
+                    }
+                }
+            }
+            if (nozzle.getNozzleTip() == null) {
+                throw new Exception("Can't pick, no nozzle tip loaded on nozzle "+nozzle.getName()+". "
+                        +"You may want to enable automatic nozzle tip change on manual pick on the Nozzle / Tool Changer.");
+            }
+            else if (! resolved) {
+                throw new Exception("Can't pick, loaded nozzle tip "+
+                        nozzle.getNozzleTip().getName()+" is not compatible with package "+packag.getId()+". "
+                        +"You may want to enable automatic nozzle tip change on manual pick on the Nozzle / Tool Changer.");
+            }
+        }
+
+        // Like in the JobProcessor, make sure it is calibrated.
+        if (!nozzle.isCalibrated()) {
+            nozzle.calibrate();
+        }
+
+        // Perform the feed.
+        nozzle.moveToSafeZ();
+        feeder.feed(nozzle);
+
+        // Go to the pick location and pick.
+        Location pickLocation = feeder.getPickLocation();
+        MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
+        nozzle.pick(feeder.getPart());
+        nozzle.moveToSafeZ();
+
+        // After the pick. 
+        feeder.postPick(nozzle);
+
+        // Perform the vacuum check, if enabled.
+        if (nozzle.isPartOnEnabled(Nozzle.PartOnStep.AfterPick)) {
+            if(!nozzle.isPartOn()) {
+                throw new JobProcessorException(nozzle, "No part detected.");
+            }
+        }
+    }
 
     public Action moveCameraToPickLocation = new AbstractAction() {
         {

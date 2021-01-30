@@ -108,6 +108,9 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     @Attribute
     private int feedCount = 0;
 
+	@Attribute(required = false)
+	private int maxFeedCount = 0;
+
     private Length holeDiameter = new Length(1.5, LengthUnit.Millimeters);
 
     private Length holePitch = new Length(4, LengthUnit.Millimeters);
@@ -167,8 +170,18 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         // It's the P1 value according to EIA-481-C, October 2003, pg. 9, 11, 13
         // Accuracy variations as specified in the document are not taken into account!
         double partPitchAdjusted = lineLocations[0].getLinearDistanceTo(lineLocations[1]);
-        partPitchAdjusted =
-                partPitchAdjusted / (Math.round(partPitchAdjusted / partPitch.getValue()));
+        double holeCount = (Math.round(partPitchAdjusted / partPitch.getValue()));
+
+        // if the two points are at least 1 hole apart, we can compute the adjusted pitch. 
+        // otherwise use the un-adjusted holePitch (and avoid a divide by zero).  The second 
+        // case means the feeder is set up incorrectly but has been tested to behave in a 
+        // reasonable way, even if the two points are coincident
+        if (holeCount > 0) {
+        	partPitchAdjusted = partPitchAdjusted / (Math.round(partPitchAdjusted / partPitch.getValue()));
+        } else {
+        	partPitchAdjusted = holePitch.getValue();
+        }
+        	
         Location l = Utils2D.getPointAlongLine(lineLocations[0], lineLocations[1],
                 new Length((feedCount - 1) * partPitchAdjusted, partPitch.getUnits()));
         // Create the offsets that are required to go from a reference hole
@@ -209,6 +222,10 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
     public void feed(Nozzle nozzle) throws Exception {
         setFeedCount(getFeedCount() + 1);
+
+        if ((maxFeedCount > 0) && (feedCount > maxFeedCount)) {
+			throw new Exception("Tried to feed part: " + part.getId() + "  Feeder " + name + " empty.");
+		}
 
         updateVisionOffsets(nozzle);
     }
@@ -329,8 +346,10 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 
     public void setReferenceHoleLocation(Location referenceHoleLocation) {
+        Object oldValue = this.referenceHoleLocation;
         this.referenceHoleLocation = referenceHoleLocation;
         visionLocation = null;
+        firePropertyChange("referenceHoleLocation", oldValue, referenceHoleLocation);
     }
 
     public Location getLastHoleLocation() {
@@ -338,8 +357,10 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 
     public void setLastHoleLocation(Location lastHoleLocation) {
+        Object oldValue = this.lastHoleLocation;
         this.lastHoleLocation = lastHoleLocation;
         visionLocation = null;
+        firePropertyChange("lastHoleLocation", oldValue, lastHoleLocation);
     }
 
     public Length getHoleDiameter() {
@@ -383,6 +404,14 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         this.feedCount = feedCount;
         firePropertyChange("feedCount", oldValue, feedCount);
     }
+
+	public int getMaxFeedCount() {
+		return maxFeedCount;
+	}
+
+	public void setMaxFeedCount(int count) {
+		maxFeedCount = count;
+	}
 
     public Length getReferenceHoleToPartLinear() {
         return referenceHoleToPartLinear;

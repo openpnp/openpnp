@@ -35,6 +35,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Driver;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractActuator;
 import org.pmw.tinylog.Logger;
@@ -43,16 +44,18 @@ import org.simpleframework.xml.Element;
 
 public class ReferenceActuator extends AbstractActuator implements ReferenceHeadMountable {
 
-
     @Element
     private Location headOffsets = new Location(LengthUnit.Millimeters);
 
     @Attribute
     private int index;
 
+    @Deprecated
     @Element(required = false)
-    protected Length safeZ = new Length(0, LengthUnit.Millimeters);
+    protected Length safeZ = null;
 
+    protected Object lastActuationValue;
+    
     public ReferenceActuator() {
     }
 
@@ -76,14 +79,26 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     @Override
     public void actuate(boolean on) throws Exception {
+        if (isCoordinatedBeforeActuate()) {
+            coordinateWithMachine(false);
+        }
         Logger.debug("{}.actuate({})", getName(), on);
         getDriver().actuate(this, on);
+        setLastActuationValue(on);
+        if (isCoordinatedAfterActuate()) {
+            coordinateWithMachine(true);
+        }
         getMachine().fireMachineHeadActivity(head);
     }
 
     @Override
-    public Location getLocation() {
-        return getDriver().getLocation(this);
+    public Object getLastActuationValue() {
+        return lastActuationValue;
+    }
+    protected void setLastActuationValue(Object lastActuationValue) {
+        Object oldValue = this.lastActuationValue;
+        this.lastActuationValue = lastActuationValue;
+        firePropertyChange("lastActuationValue", oldValue, lastActuationValue);
     }
 
     @Override
@@ -93,21 +108,51 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     @Override
     public void actuate(double value) throws Exception {
+        if (isCoordinatedBeforeActuate()) {
+            coordinateWithMachine(false);
+        }
         Logger.debug("{}.actuate({})", getName(), value);
         getDriver().actuate(this, value);
+        setLastActuationValue(value);
+        if (isCoordinatedAfterActuate()) {
+            coordinateWithMachine(true);
+        }
+        getMachine().fireMachineHeadActivity(head);
+    }
+    
+    @Override
+    public void actuate(String value) throws Exception {
+        if (isCoordinatedBeforeActuate()) {
+            coordinateWithMachine(false);
+        }
+        Logger.debug("{}.actuate({})", getName(), value);
+        getDriver().actuate(this, value);
+        setLastActuationValue(value);
+        if (isCoordinatedAfterActuate()) {
+            coordinateWithMachine(true);
+        }
         getMachine().fireMachineHeadActivity(head);
     }
     
     @Override
     public String read() throws Exception {
+        if (isCoordinatedBeforeRead()) {
+            coordinateWithMachine(false);
+        }
         String value = getDriver().actuatorRead(this);
         Logger.debug("{}.read(): {}", getName(), value);
+        if (isCoordinatedAfterActuate()) {
+            coordinateWithMachine(true);
+        }
         getMachine().fireMachineHeadActivity(head);
         return value;
     }
 
     @Override
     public String read(double parameter) throws Exception {
+        if (isCoordinatedBeforeRead()) {
+            coordinateWithMachine(false);
+        }
         String value = getDriver().actuatorRead(this, parameter);
         Logger.debug("{}.readWithDouble({}): {}", getName(), parameter, value);
         getMachine().fireMachineHeadActivity(head);
@@ -115,29 +160,13 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     }
 
     @Override
-    public void moveTo(Location location, double speed) throws Exception {
-        Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
-        ((ReferenceHead) getHead()).moveTo(this, location, getHead().getMaxPartSpeed() * speed);
-        getMachine().fireMachineHeadActivity(head);
-    }
-
-    @Override
-    public void moveToSafeZ(double speed) throws Exception {
-        Logger.debug("{}.moveToSafeZ({})", getName(), speed);
-        Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
-        Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN,
-                safeZ.getValue(), Double.NaN);
-        getDriver().moveTo(this, l, getHead().getMaxPartSpeed() * speed);
-        getMachine().fireMachineHeadActivity(head);
-    }
-
-    @Override
     public void home() throws Exception {
+        setLastActuationValue(null);
     }
 
     @Override
     public Wizard getConfigurationWizard() {
-        return new ReferenceActuatorConfigurationWizard(this);
+        return new ReferenceActuatorConfigurationWizard(getMachine(), this);
     }
 
     @Override
@@ -152,7 +181,15 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
+        if (getInterlockMonitor() == null) {
+            return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
+        }
+        else {
+            return new PropertySheet[] {
+                    new PropertySheetWizardAdapter(getConfigurationWizard()),
+                    new PropertySheetWizardAdapter(getInterlockMonitor().getConfigurationWizard(this), "Axis Interlock")
+            };
+        }
     }
 
     @Override
@@ -182,24 +219,12 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
             }
         }
     };
-    
+
     @Override
     public String toString() {
         return getName();
     }
 
-    public Length getSafeZ() {
-        return safeZ;
-    }
-
-    public void setSafeZ(Length safeZ) {
-        this.safeZ = safeZ;
-    }
-    
-    ReferenceDriver getDriver() {
-        return getMachine().getDriver();
-    }
-    
     ReferenceMachine getMachine() {
         return (ReferenceMachine) Configuration.get().getMachine();
     }

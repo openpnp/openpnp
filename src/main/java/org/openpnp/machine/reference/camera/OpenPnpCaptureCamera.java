@@ -134,7 +134,8 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     }
 
     @Commit
-    public void commit() {
+    public void commit() throws Exception {
+        super.commit();
         backLightCompensation.setCamera(this);
         brightness.setCamera(this);
         contrast.setCamera(this);
@@ -158,8 +159,16 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     public synchronized BufferedImage internalCapture() {
         ensureOpen();
         try {
+            /**
+             * The timeout is only needed if the stream is somehow in error and not producing frames (anymore) 
+             * which can happen, if you disconnect the USB port and then try to capture from a pipeline.  
+             */
+            long timeout = System.currentTimeMillis()+500;
             while (!stream.hasNewFrame()) {
                 Thread.yield();
+                if (System.currentTimeMillis() > timeout) {
+                    return null;
+                }
             }
             BufferedImage img = stream.capture();
             /**
@@ -252,6 +261,8 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         stream = null;
         setPropertiesStream(stream);
 
+        clearCalibrationCache();
+        
         // If a device and format are not set, see if we can read them from the stored
         // properties. This will only happen during startup.
         if (device == null && format == null) {
@@ -305,6 +316,41 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         thread = new Thread(this);
         thread.setDaemon(true);
         thread.start();
+    }
+
+    public double estimateCaptureFps() throws Exception {
+        ensureOpen();
+        if (stream == null || format == null) {
+            throw new Exception("Camera stream not properly initialized."); 
+        }
+        // Start warmup capture timer for 1 second.
+        boolean warmup = true;
+        long t0 = System.currentTimeMillis();
+        long timeout = t0 + 1000;
+        long t1 = 0;
+        int capturedFrames = 0;
+        for (int frames = 0; frames < 480; frames++) {
+            stream.capture();
+            while (!stream.hasNewFrame()) {
+            }
+            t1 = System.currentTimeMillis();
+            capturedFrames++;
+            if (t1 > timeout) {
+                if (warmup) {
+                    // Warmup complete. 
+                    warmup = false;
+                    // Start the real capture timer of 2 seconds.
+                    t0 = t1;
+                    timeout = t0 + 2000;
+                    capturedFrames = 0;
+                }
+                else {
+                    break;
+                }
+            }
+        }
+        // Compute the fps.
+        return capturedFrames*1000./(t1-t0);
     }
 
     private void setPropertiesStream(CaptureStream stream) {

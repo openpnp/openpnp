@@ -114,6 +114,7 @@ public class JobPlacementsPanel extends JPanel {
         captureAndPositionActionGroup.setEnabled(false);
 
         JComboBox<PartsComboBoxModel> partsComboBox = new JComboBox(new PartsComboBoxModel());
+        partsComboBox.setMaximumRowCount(20);
         partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
         JComboBox<Side> sidesComboBox = new JComboBox(Side.values());
         // Note we don't use Type.values() here because there are a couple Types that are only

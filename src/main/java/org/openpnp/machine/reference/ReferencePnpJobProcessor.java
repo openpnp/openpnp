@@ -52,6 +52,7 @@ import org.openpnp.spi.PnpJobProcessor.JobPlacement.Status;
 import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.TravellingSalesman;
 import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.pmw.tinylog.Logger;
@@ -301,21 +302,62 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // Everything still looks good, so prepare the feeders.
             fireTextStatus("Preparing feeders.");
             Machine machine = Configuration.get().getMachine();
-            List<Feeder> feederList = new ArrayList<>();
+            List<Feeder> feederVisitList = new ArrayList<>();
+            List<Feeder> feederNoVisitList = new ArrayList<>();
             // Get all the feeders that are used in the pending placements.
             for (Feeder feeder : machine.getFeeders()) {
                 if (feeder.isEnabled() && feeder.getPart() != null) {
                     for (JobPlacement placement : getPendingJobPlacements()) {
-                        if (placement.getPartId() == feeder.getPart().getId()) {
-                            feederList.add(feeder);
+                        if (placement.getPartId().equals(feeder.getPart().getId())) {
+                            if (feeder.getJobPreparationLocation() != null) {
+                                // only feeders with location added to the visit list
+                                feederVisitList.add(feeder);
+                            }
+                            // always also add them to the general (second pass) prep list
+                            feederNoVisitList.add(feeder);
                         }
                     }
                 }
             }
-            for (Feeder feeder : feederList) {
+            
+            Location startLocation = null;
+            try {
+                startLocation = head.getDefaultCamera().getLocation();
+            }
+            catch (Exception e) {
+                Logger.error(e);
+            }                
+
+            // Use a Travelling Salesman algorithm to optimize the path to actuate all the feeder covers.
+            TravellingSalesman<Feeder> tsm = new TravellingSalesman<>(
+                    feederVisitList, 
+                    new TravellingSalesman.Locator<Feeder>() { 
+                        @Override
+                        public Location getLocation(Feeder locatable) {
+                            return locatable.getJobPreparationLocation();
+                        }
+                    }, 
+                    // start from current location
+                    startLocation, 
+                    // no particular end location
+                    null);
+
+            // Solve it using the default heuristics.
+            tsm.solve();
+
+            // Prepare feeders along the visit travel path.
+            for (Feeder feeder : tsm.getTravel()) {
                 try {
-                    // feeder is used in this job, prep it.
-                    feeder.prepareForJob(feederList);
+                    feeder.prepareForJob(true);
+                }
+                catch (Exception e) {
+                    throw new JobProcessorException(feeder, e);
+                }
+            }
+            // Prepare feeders in general (second pass for visited feeders).
+            for (Feeder feeder : feederNoVisitList) {
+                try {
+                    feeder.prepareForJob(false);
                 }
                 catch (Exception e) {
                     throw new JobProcessorException(feeder, e);
@@ -523,73 +565,125 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             final Placement placement = jobPlacement.getPlacement();
             final Part part = placement.getPart();
             final BoardLocation boardLocation = plannedPlacement.jobPlacement.getBoardLocation();
-            final Feeder feeder = findFeeder(machine, part);
             
-            try {
-                HashMap<String, Object> params = new HashMap<>();
-                params.put("job", job);
-                params.put("jobProcessor", this);
-                params.put("part", part);
-                params.put("nozzle", nozzle);
-                params.put("placement", placement);
-                params.put("boardLocation", boardLocation);
-                params.put("feeder", feeder);
-                Configuration.get()
-                             .getScripting()
-                             .on("Job.Placement.Starting", params);
-            }
-            catch (Exception e) {
-                throw new JobProcessorException(null, e);
-            }
-
-            feed(feeder, nozzle);
-            
-            pick(nozzle, feeder, placement, part);
-
-            /** 
-             * If either postPick or checkPartOn fails we discard and then cycle back to feed
-             * up to pickRetryCount times. We include postPick because if the pick succeeded
-             * then we assume we are carrying a part, so we want to make sure to discard it
-             * if there is a problem.   
+            /**
+             * If anything goes wrong that causes us to fail all the retries, this is the error
+             * that will get thrown. 
              */
-            try {
-                postPick(feeder, nozzle);
+            JobProcessorException lastException = null;
+            for (int partPickTry = 0; partPickTry < 1 + part.getPickRetryCount(); partPickTry++) {
+                /**
+                 * Find an available feeder. If one cannot be found this will throw. There's nothing
+                 * else we can do with this part.
+                 */
+                final Feeder feeder = findFeeder(machine, part);
                 
-                checkPartOn(nozzle);
-            }
-            catch (JobProcessorException e) {
-                if (retryIncrementAndGet(plannedPlacement) >= feeder.getPickRetryCount()) {
-                    // Clear the retry count because we're about to show the error. If the user
-                    // decides to try again we want to do the full retry cycle.
-                    retries.remove(plannedPlacement);
-                    throw e;
+                /**
+                 * Run the placement starting script. An error here will throw. That's the user's
+                 * problem.
+                 */
+                try {
+                    HashMap<String, Object> params = new HashMap<>();
+                    params.put("job", job);
+                    params.put("jobProcessor", this);
+                    params.put("part", part);
+                    params.put("nozzle", nozzle);
+                    params.put("placement", placement);
+                    params.put("boardLocation", boardLocation);
+                    params.put("feeder", feeder);
+                    Configuration.get()
+                                 .getScripting()
+                                 .on("Job.Placement.Starting", params);
                 }
-                else {
+                catch (Exception e) {
+                    throw new JobProcessorException(null, e);
+                }
+                
+                /**
+                 * Feed the feeder, retrying up to feedRetryCount times. That happens within the
+                 * feed method. It will either succeed or throw after the retries. We catch the
+                 * Exception so that we can continue the loop.
+                 */
+                try {
+                    feed(feeder, nozzle);
+                }
+                catch (JobProcessorException jpe) {
+                    lastException = jpe;
+                    continue;
+                }
+
+                /**
+                 * Currently this will throw and abort the placement if it fails. Probably it should
+                 * discard and retry, and really it should probably be done before we attempt to
+                 * feed. I *think* this has been debated as to whether or not it's useful
+                 * and should maybe be done at the end of the cycle, rather than here. Maybe it just
+                 * gets removed completely.
+                 */
+                checkPartOff(nozzle, part);
+
+                try {
+                    feederPickRetry(nozzle, feeder, placement, part);
+                }
+                catch (JobProcessorException jpe) {
+                    lastException = jpe;
                     discard(nozzle);
-                    return this;
+                    continue;
                 }
+                
+                /**
+                 * If we get here with no problems then we are done.
+                 */
+                return this;
             }
             
-            return this;
-        }
-        
-        private int retryIncrementAndGet(PlannedPlacement plannedPlacement) {
-            Integer retry = retries.get(plannedPlacement);
-            if (retry == null) {
-                retry = 0;
-            }
-            retry++;
-            retries.put(plannedPlacement, retry);
-            return retry;
+            /**
+             * If we didn't return in the loop above then we didn't succeed, so throw
+             * the recorded error.
+             */
+            throw lastException;
         }
         
         private void feed(Feeder feeder, Nozzle nozzle) throws JobProcessorException {
             Exception lastException = null;
-            for (int i = 0; i < Math.max(1, feeder.getFeedRetryCount()); i++) {
+            for (int i = 0; i < 1 + feeder.getFeedRetryCount(); i++) {
                 try {
                     fireTextStatus("Feed %s on %s.", feeder.getName(), feeder.getPart().getId());
                     
                     feeder.feed(nozzle);
+                    return;
+                }
+                catch (Exception e) {
+                    lastException = e;
+                }
+            }
+            feeder.setEnabled(false);
+            throw new JobProcessorException(feeder, lastException);
+        }
+        
+        private void checkPartOff(Nozzle nozzle, Part part) throws JobProcessorException {
+            if (!nozzle.isPartOffEnabled(Nozzle.PartOffStep.BeforePick)) {
+                return;
+            }
+            try {
+                if (!nozzle.isPartOff()) {
+                    throw new JobProcessorException(nozzle, "Part detected on nozzle before pick.");
+                }
+            }
+            catch (JobProcessorException e) {
+                throw e;
+            }
+            catch (Exception e) {
+                throw new JobProcessorException(nozzle, e);
+            }
+        }
+        
+        private void feederPickRetry(Nozzle nozzle, Feeder feeder, Placement placement, Part part) throws JobProcessorException {
+            Exception lastException = null;
+            for (int i = 0; i < 1 + feeder.getPickRetryCount(); i++) {
+                try {
+                    pick(nozzle, feeder, placement, part);
+                    postPick(feeder, nozzle);
+                    checkPartOn(nozzle);
                     return;
                 }
                 catch (Exception e) {
@@ -606,7 +700,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 
                 // Move to pick location.
                 MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
-
 
                 // Pick
                 nozzle.pick(part);
@@ -629,7 +722,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         private void checkPartOn(Nozzle nozzle) throws JobProcessorException {
-            if (!nozzle.isPartOnEnabled()) {
+            if (!nozzle.isPartOnEnabled(Nozzle.PartOnStep.AfterPick)) {
                 return;
             }
             try {
@@ -704,7 +797,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         private void checkPartOn(Nozzle nozzle) throws JobProcessorException {
-            if (!nozzle.isPartOnEnabled()) {
+            if (!nozzle.isPartOnEnabled(Nozzle.PartOnStep.Align)) {
                 return;
             }
             try {
@@ -780,7 +873,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         private void checkPartOn(Nozzle nozzle) throws JobProcessorException {
-            if (!nozzle.isPartOnEnabled()) {
+            if (!nozzle.isPartOnEnabled(Nozzle.PartOnStep.BeforePlace)) {
                 return;
             }
             try {
@@ -797,7 +890,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         private void checkPartOff(Nozzle nozzle, Part part) throws JobProcessorException {
-            if (!nozzle.isPartOffEnabled()) {
+            if (!nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace)) {
                 return;
             }
             try {
@@ -988,17 +1081,17 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         totalPartsPlaced,
                         df.format(dtSec), 
                         df.format(totalPartsPlaced / (dtSec / 3600.0)));
+
+                Logger.info("Errored Placements:");
+                for (JobPlacement jobPlacement : erroredPlacements) {
+                    Logger.info("{}: {}", jobPlacement, jobPlacement.getError().getMessage());
+                }
             }
             else {
                 fireTextStatus("Job finished without error, placed %s parts in %s sec. (%s CPH)", 
                         totalPartsPlaced,
                         df.format(dtSec), 
                         df.format(totalPartsPlaced / (dtSec / 3600.0)));
-            }
-            
-            Logger.info("Errored Placements:");
-            for (JobPlacement jobPlacement : erroredPlacements) {
-                Logger.info("{}: {}", jobPlacement, jobPlacement.getError().getMessage());
             }
 
             return null;

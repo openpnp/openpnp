@@ -64,11 +64,13 @@ import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.camera.BufferedImageCamera;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder.TapeType;
+import org.openpnp.model.Board;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.HslColor;
 import org.openpnp.util.OpenCvUtils;
@@ -96,7 +98,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JPanel panelPart;
 
     private JComboBox comboBoxPart;
-
+    private JLabel lblPartInfo;
+    
     private JTextField textFieldFeedStartX;
     private JTextField textFieldFeedStartY;
     private JTextField textFieldFeedStartZ;
@@ -113,6 +116,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JLabel lblFeedCount;
     private JTextField textFieldFeedCount;
     private JButton btnResetFeedCount;
+    private JLabel lblMaxFeedCount;
+    private JTextField textFieldMaxFeedCount;
     private JLabel lblTapeType;
     private JComboBox comboBoxTapeType;
     private JLabel lblRotationInTape;
@@ -143,7 +148,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC },
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
@@ -168,6 +175,15 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
         panelPart.add(comboBoxPart, "4, 2, left, default");
 
+        comboBoxPart.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                updatePartInfo(e);            
+            }
+        });
+        
+        lblPartInfo = new JLabel("");
+        panelPart.add(lblPartInfo,"6, 2, left, default");
+        
         lblRotationInTape = new JLabel("Rotation In Tape");
         panelPart.add(lblRotationInTape, "2, 4, left, default");
 
@@ -204,6 +220,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
@@ -246,6 +263,13 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             }
         });
         panelTapeSettings.add(btnResetFeedCount, "12, 6");
+
+        lblMaxFeedCount = new JLabel("Max Feed Count");
+        panelTapeSettings.add(lblMaxFeedCount,"8, 8, right, default");
+        textFieldMaxFeedCount = new JTextField();
+        panelTapeSettings.add(textFieldMaxFeedCount,"10,8");
+        textFieldMaxFeedCount.setColumns(10);
+        textFieldMaxFeedCount.setToolTipText("Max number of parts to feed from this strip.  If set to zero, this setting is ignored.");
 
         JPanel panelVision = new JPanel();
         panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING, TitledBorder.TOP,
@@ -366,6 +390,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         addWrappedBinding(feeder, "tapeWidth", textFieldTapeWidth, "text", lengthConverter);
         addWrappedBinding(feeder, "partPitch", textFieldPartPitch, "text", lengthConverter);
         addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", intConverter);
+        addWrappedBinding(feeder, "maxFeedCount", textFieldMaxFeedCount, "text", intConverter);
 
         MutableLocationProxy feedStartLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "referenceHoleLocation", feedStartLocation,
@@ -391,6 +416,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         ComponentDecorators.decorateWithAutoSelect(pickRetryCount);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPartPitch);
         ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
+        ComponentDecorators.decorateWithAutoSelect(textFieldMaxFeedCount);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartZ);
@@ -399,6 +425,31 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndZ);
     }
 
+    private void updatePartInfo(ActionEvent e)
+    {
+        int count = 0;
+    	Part feeder_part =(Part)comboBoxPart.getSelectedItem(); 
+    
+        for (Board board: Configuration.get().getBoards())    {
+            for (Placement p : board.getPlacements())
+            {
+                if (p.getPart() == feeder_part)
+                {
+                    count++;
+                }
+            }
+        }
+        if (count > 0)
+        {
+            String lbl = Integer.toString(count) + " used by current job";
+            lblPartInfo.setText(lbl);
+        }
+        else
+        {
+            lblPartInfo.setText("");
+        }
+    }
+    
     private Action autoSetup = new AbstractAction("Auto Setup") {
         @Override
         public void actionPerformed(ActionEvent e) {

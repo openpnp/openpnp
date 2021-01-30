@@ -54,6 +54,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
@@ -161,69 +162,75 @@ public class JogControlsPanel extends JPanel {
     private void jog(final int x, final int y, final int z, final int c) {
         UiUtils.submitUiMachineTask(() -> {
             HeadMountable tool = machineControlsPanel.getSelectedTool();
-            Location l = tool.getLocation()
-                             .convertToUnits(Configuration.get()
-                                                          .getSystemUnits());
-            double xPos = l.getX();
-            double yPos = l.getY();
-            double zPos = l.getZ();
-            double cPos = l.getRotation();
+            jogTool(x, y, z, c, tool);
+        });
+    }
 
-            double jogIncrement =
-                    new Length(getJogIncrement(), configuration.getSystemUnits()).getValue();
+    public void jogTool(final int x, final int y, final int z, final int c, HeadMountable tool)
+            throws Exception {
+        Location l = tool.getLocation()
+                         .convertToUnits(Configuration.get()
+                                                      .getSystemUnits());
+        double xPos = l.getX();
+        double yPos = l.getY();
+        double zPos = l.getZ();
+        double cPos = l.getRotation();
 
-            if (x > 0) {
-                xPos += jogIncrement;
-            }
-            else if (x < 0) {
-                xPos -= jogIncrement;
-            }
+        double jogIncrement =
+                new Length(getJogIncrement(), configuration.getSystemUnits()).getValue();
 
-            if (y > 0) {
-                yPos += jogIncrement;
-            }
-            else if (y < 0) {
-                yPos -= jogIncrement;
-            }
+        if (x > 0) {
+            xPos += jogIncrement;
+        }
+        else if (x < 0) {
+            xPos -= jogIncrement;
+        }
 
-            if (z > 0) {
-                zPos += jogIncrement;
-            }
-            else if (z < 0) {
-                zPos -= jogIncrement;
-            }
+        if (y > 0) {
+            yPos += jogIncrement;
+        }
+        else if (y < 0) {
+            yPos -= jogIncrement;
+        }
 
-            if (c > 0) {
-                cPos += jogIncrement;
-            }
-            else if (c < 0) {
-                cPos -= jogIncrement;
-            }
+        if (z > 0) {
+            zPos += jogIncrement;
+        }
+        else if (z < 0) {
+            zPos -= jogIncrement;
+        }
 
-            Location targetLocation = new Location(l.getUnits(), xPos, yPos, zPos, cPos);
-            if (!this.getBoardProtectionOverrideEnabled()) {
-                /* check board location before movement */
-                List<BoardLocation> boardLocations = machineControlsPanel.getJobPanel()
-                                                                         .getJob()
-                                                                         .getBoardLocations();
-                for (BoardLocation boardLocation : boardLocations) {
-                    if (!boardLocation.isEnabled()) {
-                        continue;
-                    }
-                    boolean safe = nozzleLocationIsSafe(boardLocation.getLocation(),
-                            boardLocation.getBoard()
-                                         .getDimensions(),
-                            targetLocation, new Length(1.0, l.getUnits()));
-                    if (!safe) {
-                        throw new Exception(
-                                "Nozzle would crash into board: " + boardLocation.toString() + "\n" + //$NON-NLS-1$ //$NON-NLS-2$
-                                "To disable the board protection go to the \"Safety\" tab in the \"Machine Controls\" panel."); //$NON-NLS-1$
-                    }
+        if (c > 0) {
+            cPos += jogIncrement;
+        }
+        else if (c < 0) {
+            cPos -= jogIncrement;
+        }
+
+        Location targetLocation = new Location(l.getUnits(), xPos, yPos, zPos, cPos);
+        if (!this.getBoardProtectionOverrideEnabled()) {
+            /* check board location before movement */
+            List<BoardLocation> boardLocations = machineControlsPanel.getJobPanel()
+                                                                     .getJob()
+                                                                     .getBoardLocations();
+            for (BoardLocation boardLocation : boardLocations) {
+                if (!boardLocation.isEnabled()) {
+                    continue;
+                }
+                boolean safe = nozzleLocationIsSafe(boardLocation.getLocation(),
+                        boardLocation.getBoard()
+                                     .getDimensions(),
+                        targetLocation, new Length(1.0, l.getUnits()));
+                if (!safe) {
+                    throw new Exception(
+                            "Nozzle would crash into board: " + boardLocation.toString() + "\n" + //$NON-NLS-1$ //$NON-NLS-2$
+                            "To disable the board protection go to the \"Safety\" tab in the \"Machine Controls\" panel."); //$NON-NLS-1$
                 }
             }
+        }
 
-            tool.moveTo(targetLocation);
-        });
+        tool.moveTo(targetLocation, MotionOption.JogMotion); 
+        // to test without backlash comp for continous jogging: add MotionOption.SpeedOverPrecision
     }
 
     private boolean nozzleLocationIsSafe(Location origin, Location dimension, Location nozzle,
@@ -561,7 +568,14 @@ public class JogControlsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable hm = machineControlsPanel.getSelectedTool();
-                hm.moveToSafeZ();
+                // Note, we don't just moveToSafeZ(), because this will just sit still, if we're anywhere in the Safe Z Zone.
+                // instead we explicitly move to the Safe Z coordinate i.e. the lower bound of the Safe Z Zone, applicable
+                // for this hm.
+                Location location = hm.getLocation();
+                Length safeZLength = hm.getSafeZ();
+                double safeZ = (safeZLength != null ? safeZLength.convertToUnits(location.getUnits()).getValue() : Double.NaN);
+                location = location.derive(null, null, safeZ, null);
+                hm.moveTo(location);
             });
         }
     };

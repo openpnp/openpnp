@@ -7,63 +7,61 @@ import javax.swing.Icon;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
-import org.openpnp.machine.reference.ReferenceDriver;
-import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
-import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.model.AxesLocation;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
+import org.openpnp.model.Motion.MoveToCommand;
+import org.openpnp.spi.Driver;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.base.AbstractDriver;
 import org.simpleframework.xml.Attribute;
 
-public class TestDriver implements ReferenceDriver {
+public class TestDriver extends AbstractDriver implements Driver {
     @Attribute(required = false)
     private String dummy;
 
-    private Location location = new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
+    private Driver delegate = new TestDriverDelegate();
 
-    private ReferenceDriver delegate = new TestDriverDelegate();
-
-    public void setDelegate(ReferenceDriver delegate) {
+    public void setDelegate(Driver delegate) {
         this.delegate = delegate;
     }
 
     @Override
-    public void home(ReferenceHead head) throws Exception {
-        location = new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
-        delegate.home(head);
+    public void home(ReferenceMachine machine) throws Exception {
+        delegate.home(machine);
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+    public void setGlobalOffsets(ReferenceMachine machine, AxesLocation location)
             throws Exception {
-        // Subtract the offsets from the incoming Location. This converts the
-        // offset coordinates to driver / absolute coordinates.
-        location = location.subtract(hm.getHeadOffsets());
+        delegate.setGlobalOffsets(machine, location);
+    }
 
-        // Convert the Location to millimeters, since that's the unit that
-        // this driver works in natively.
-        location = location.convertToUnits(LengthUnit.Millimeters);
+    @Override
+    public AxesLocation getReportedLocation(long timeout) throws Exception {
+        return delegate.getReportedLocation(-1);
+    }
 
-        // Get the current location of the Head that we'll move
-        Location hl = this.location;
-
-        hl = hl.derive(Double.isNaN(location.getX()) ? null : location.getX(),
-                Double.isNaN(location.getY()) ? null : location.getY(),
-                Double.isNaN(location.getZ()) ? null : location.getZ(),
-                Double.isNaN(location.getRotation()) ? null : location.getRotation());
-
-        if (!this.location.equals(hl)) {
-            this.location = hl;
-            delegate.moveTo(hm, this.location, speed);
+    @Override
+    public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
+            throws Exception {
+        
+        // Take only this driver's axes.
+        AxesLocation newDriverLocation = move.getLocation1();
+        // Take the current driver location of the given axes.
+        AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this), 
+                (axis) -> (axis.getDriverLengthCoordinate()));
+        if (!oldDriverLocation.matches(newDriverLocation)) {
+            delegate.moveTo(hm, move);
+            // Store to axes
+            newDriverLocation.setToDriverCoordinates(this);
         }
     }
 
-    @Override
-    public Location getLocation(ReferenceHeadMountable hm) {
-        return location.add(hm.getHeadOffsets());
-    }
-    
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
         delegate.actuate(actuator, on);
@@ -79,26 +77,31 @@ public class TestDriver implements ReferenceDriver {
         delegate.setEnabled(enabled);
     }
 
-    public static class TestDriverDelegate implements ReferenceDriver {
+    public static class TestDriverDelegate implements Driver {
         @Override
         public Wizard getConfigurationWizard() {
             return null;
         }
 
         @Override
-        public void home(ReferenceHead head) throws Exception {
+        public void home(ReferenceMachine machine) throws Exception {
 
         }
 
         @Override
-        public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+        public void setGlobalOffsets(ReferenceMachine machine, AxesLocation location)
+                throws Exception {
+        }
+ 
+        @Override
+        public AxesLocation getReportedLocation(long timeout) throws Exception {
+            return null;
+        }
+
+        @Override
+        public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
                 throws Exception {
 
-        }
-
-        @Override
-        public Location getLocation(ReferenceHeadMountable hm) {
-            return null;
         }
 
         @Override
@@ -145,7 +148,71 @@ public class TestDriver implements ReferenceDriver {
         public void close() throws IOException {
 
         }
+
+        @Override
+        public String getName() {
+            return null;
+        }
+
+        @Override
+        public void setName(String name) {
+        }
+
+        @Override
+        public String getId() {
+            return null;
+        }
+
+        @Override
+        public MotionControlType getMotionControlType() {
+            return MotionControlType.Full3rdOrderControl;
+        }
+
+        @Override
+        public LengthUnit getUnits() {
+            return LengthUnit.Millimeters;
+        }
+
+        @Override
+        public boolean isSupportingPreMove() {
+            return false;
+        }
+
+        @Override
+        public void waitForCompletion(ReferenceHeadMountable hm, CompletionType completionType) throws Exception {
+        }
+
+        @Override
+        public boolean isUsingLetterVariables() {
+            return false;
+        }
+
+        @Override
+        public Length getFeedRatePerSecond() {
+            return null;
+        }
+
+        @Override
+        public boolean isMotionPending() {
+            return false;
+        }
+
+        @Override
+        public double getMinimumVelocity() {
+            return 0;
+        }
+   }
+
+    @Override
+    public MotionControlType getMotionControlType() {
+        return MotionControlType.Full3rdOrderControl;
     }
+
+    @Override
+    public LengthUnit getUnits() {
+        return LengthUnit.Millimeters;
+    }
+
 
     @Override
     public String getPropertySheetHolderTitle() {
@@ -179,5 +246,26 @@ public class TestDriver implements ReferenceDriver {
     @Override
     public Wizard getConfigurationWizard() {
         return null;
+    }
+
+    @Override
+    public void waitForCompletion(ReferenceHeadMountable hm, CompletionType completionType) throws Exception {
+    }
+
+    @Override
+    public boolean isUsingLetterVariables() {
+        return false;
+    }
+
+    @Deprecated
+    @Override
+    public void migrateDriver(Machine machine) throws Exception {
+        machine.addDriver(this);
+        createAxisMappingDefaults((ReferenceMachine) machine);
+    }
+
+    @Override
+    public boolean isMotionPending() {
+        return false;
     }
 }

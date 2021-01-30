@@ -147,6 +147,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         searchTextField.setColumns(15);
 
         JComboBox packagesCombo = new JComboBox(new PackagesComboBoxModel());
+        packagesCombo.setMaximumRowCount(20);
         packagesCombo.setRenderer(new IdentifiableListCellRenderer<org.openpnp.model.Package>());
 
         JSplitPane splitPane = new JSplitPane();
@@ -210,11 +211,14 @@ public class PartsPanel extends JPanel implements WizardContainer {
 
                 Part part = getSelection();
 
+                int selectedTab = tabbedPane.getSelectedIndex();
                 tabbedPane.removeAll();
 
                 if (part != null) {
+                    tabbedPane.add("Settings", new JScrollPane(new PartSettingsPanel(part)));
+
                     for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
-                        Wizard wizard=partAlignment.getPartConfigurationWizard(part);
+                        Wizard wizard = partAlignment.getPartConfigurationWizard(part);
                         if (wizard != null) {
                             JPanel panel = new JPanel();
                             panel.setLayout(new BorderLayout());
@@ -234,6 +238,10 @@ public class PartsPanel extends JPanel implements WizardContainer {
                         tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
                         wizard.setWizardContainer(PartsPanel.this);
                     }
+                }
+
+                if (selectedTab != -1) {
+                    tabbedPane.setSelectedIndex(selectedTab);
                 }
 
                 revalidate();
@@ -346,7 +354,6 @@ public class PartsPanel extends JPanel implements WizardContainer {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
                 Part part = getSelection();
                 Feeder feeder = null;
                 // find a feeder to feed
@@ -358,13 +365,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 if (feeder == null) {
                     throw new Exception("No valid feeder found for " + part.getId());
                 }
-                // feed the chosen feeder
-                feeder.feed(nozzle);
-                // pick the part
-                Location pickLocation = feeder.getPickLocation();
-                MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
-                nozzle.pick(part);
-                nozzle.moveToSafeZ();
+                // Perform the whole Job like pick cycle as in the FeedersPanel. 
+                FeedersPanel.pickFeeder(feeder);
             });
         }
     };

@@ -130,12 +130,18 @@ public class ReferenceBottomVision implements PartAlignment {
                 // the center of the camera to the located part.
                 offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
 
-                // OpenCV can only tell us the angle of the recognized rectangle in a   
+                double angleOffset = VisionUtils.getPixelAngle(camera, rect.angle) - wantedAngle;
+                // Most OpenCV Pipelines can only tell us the angle of the recognized rectangle in a   
                 // wrapping-around range of 0° .. 90° as it has no notion of which rectangle side 
                 // is which. We can assume that the part is never picked more than +/-45º rotated.
                 // So we change the range wrapping-around to -45° .. +45°. See angleNorm():
-                double angleOffset = angleNorm(VisionUtils.getPixelAngle(camera, rect.angle) - wantedAngle);
-                
+                if (partSettings.getMaxRotation() == MaxRotation.Adjust ) {
+                    angleOffset = angleNorm(angleOffset);
+                } else {
+                    // turning more than 180° in one direction makes no sense
+                    angleOffset = angleNorm(angleOffset, 180);
+                }
+
                 // When we rotate the nozzle later to compensate for the angle offset, the X, Y offsets 
                 // will change too, as the off-center part rotates around the nozzle axis.
                 // So we need to compensate for that.
@@ -203,11 +209,17 @@ public class ReferenceBottomVision implements PartAlignment {
             // the center of the camera to the located part.
             Location offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
 
-            // OpenCV can only tell us the angle of the recognized rectangle in a   
+            double angleOffset = VisionUtils.getPixelAngle(camera, rect.angle);
+            // Most OpenCV Pipelines can only tell us the angle of the recognized rectangle in a   
             // wrapping-around range of 0° .. 90° as it has no notion of which rectangle side 
             // is which. We can assume that the part is never picked more than +/-45º rotated.
             // So we change the range wrapping-around to -45° .. +45°. See angleNorm():
-            double angleOffset = angleNorm(VisionUtils.getPixelAngle(camera, rect.angle));
+            if (partSettings.getMaxRotation() == MaxRotation.Adjust ) {
+                angleOffset = angleNorm(angleOffset);
+            } else {
+                // turning more than 180° in one direction makes no sense
+                angleOffset = angleNorm(angleOffset, 180);
+            }
 
             // Set the angle on the offsets.
             offsets = offsets.derive(null, null, null, angleOffset);
@@ -236,6 +248,7 @@ public class ReferenceBottomVision implements PartAlignment {
     private static RotatedRect processPipelineAndGetResult(CvPipeline pipeline, Camera camera, Part part,
             Nozzle nozzle) throws Exception {
         pipeline.setProperty("camera", camera);
+        pipeline.setProperty("part", part);
         pipeline.setProperty("nozzle", nozzle);
         pipeline.process();
 
@@ -416,6 +429,10 @@ public class ReferenceBottomVision implements PartAlignment {
     public enum PreRotateUsage {
         Default, AlwaysOn, AlwaysOff
     }
+    
+    public enum MaxRotation {
+        Adjust, Full
+    }
     @Root
     public static class PartSettings {
         @Attribute
@@ -423,6 +440,9 @@ public class ReferenceBottomVision implements PartAlignment {
         @Attribute(required = false)
         protected PreRotateUsage preRotateUsage = PreRotateUsage.Default;
 
+        @Attribute(required = false)
+        protected MaxRotation maxRotation = MaxRotation.Adjust;
+        
         @Element
         protected CvPipeline pipeline;
 
@@ -463,6 +483,14 @@ public class ReferenceBottomVision implements PartAlignment {
 
         public void setPipeline(CvPipeline pipeline) {
             this.pipeline = pipeline;
+        }
+        
+        public MaxRotation getMaxRotation() {
+            return maxRotation;
+        }
+
+        public void setMaxRotation(MaxRotation maxRotation) {
+            this.maxRotation = maxRotation;
         }
     }
 }

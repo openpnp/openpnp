@@ -74,7 +74,7 @@ import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.panelization.DlgAutoPanelize;
 import org.openpnp.gui.panelization.DlgPanelXOut;
-import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
+import org.openpnp.gui.processes.MultiPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
@@ -784,6 +784,7 @@ public class JobPanel extends JPanel {
                     existingBoard.addSolderPastePad(pad);
                 }
                 jobPlacementsPanel.setBoardLocation(getSelection());
+                frame.getFeedersTab().updateView();
             }
         }
         catch (Exception e) {
@@ -822,6 +823,7 @@ public class JobPanel extends JPanel {
                 Job job = configuration.loadJob(file);
                 setJob(job);
                 addRecentJob(file);
+                frame.getFeedersTab().updateView();
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -1329,7 +1331,7 @@ public class JobPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                new TwoPlacementBoardLocationProcess(frame, JobPanel.this);
+                new MultiPlacementBoardLocationProcess(frame, JobPanel.this);
             });
         }
     };
@@ -1538,6 +1540,7 @@ public class JobPanel extends JPanel {
                 Job job = configuration.loadJob(file);
                 setJob(job);
                 addRecentJob(file);
+                frame.getFeedersTab().updateView();
             }
             catch (Exception e) {
                 e.printStackTrace();

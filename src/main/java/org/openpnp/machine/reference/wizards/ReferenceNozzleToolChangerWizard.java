@@ -40,6 +40,8 @@ public class ReferenceNozzleToolChangerWizard extends AbstractConfigurationWizar
     private JPanel panelChanger;
     private JCheckBox chckbxChangerEnabled;
     private JLabel lblChangerEnabled;
+    private JLabel lblChangeOnManual;
+    private JCheckBox chckbxChangeOnManualFeed;
 
     public ReferenceNozzleToolChangerWizard(ReferenceNozzle nozzle) {
         this.nozzle = nozzle;
@@ -62,6 +64,8 @@ public class ReferenceNozzleToolChangerWizard extends AbstractConfigurationWizar
                 ColumnSpec.decode("default:grow"),},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
                 
         lblChangerEnabled = new JLabel("Automatic Tool Changer Enabled?");
@@ -69,6 +73,12 @@ public class ReferenceNozzleToolChangerWizard extends AbstractConfigurationWizar
 
         chckbxChangerEnabled = new JCheckBox("");
         panelChanger.add(chckbxChangerEnabled, "4, 2");
+        
+        lblChangeOnManual = new JLabel("Change On Manual Pick?");
+        panelChanger.add(lblChangeOnManual, "2, 4, right, default");
+        
+        chckbxChangeOnManualFeed = new JCheckBox("");
+        panelChanger.add(chckbxChangeOnManualFeed, "4, 4");
         
         CellConstraints cc = new CellConstraints();
     }
@@ -79,5 +89,6 @@ public class ReferenceNozzleToolChangerWizard extends AbstractConfigurationWizar
         IntegerConverter intConverter = new IntegerConverter();
 
         addWrappedBinding(nozzle, "changerEnabled", chckbxChangerEnabled, "selected");
+        addWrappedBinding(nozzle, "nozzleTipChangedOnManualFeed", chckbxChangeOnManualFeed, "selected");
     }
 }

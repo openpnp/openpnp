@@ -48,12 +48,14 @@ import org.pmw.tinylog.Logger;
  * A Camera implementation for ONVIF compatible IP cameras.
  */
 public class Neoden4Camera extends ReferenceCamera implements Runnable {
-
-    /* so OpenPnP doesn't crash on startup */
+    @Attribute(required = true)
+    private String hostIP = "127.0.0.1";
+    @Attribute(required = true)
+    private int cameraId = 1;
+    @Attribute(required = true)
+    private int hostPort = 8080;
     @Attribute(required = false)
-    private int resizeWidth;
-    @Attribute(required = false)
-    private int resizeHeight;
+    private int fps = 1;
 
     @Attribute(required = false)
     private int width = 1024;
@@ -61,25 +63,15 @@ public class Neoden4Camera extends ReferenceCamera implements Runnable {
     private int height = 1024;
     @Attribute(required = false)
     private int timeout = 1000;
-    @Attribute(required = false)
-    private int cameraId;
 
     @Attribute(required = false)
-    private int exposure;
+    private int exposure = 25;
     @Attribute(required = false)
-    private int gain;
+    private int gain = 8;
     @Attribute(required = false)
-    private int lta2;
+    private int shiftX = 0;
     @Attribute(required = false)
-    private int lta3;
-
-    @Attribute(required = false)
-    private int fps = 10;
-
-    @Attribute(required = true)
-    private String hostIP;
-    @Attribute(required = false)
-    private int hostPort = 8080;
+    private int shiftY = 0;
 
     private Thread thread;
     private boolean dirty = false;
@@ -172,6 +164,7 @@ public class Neoden4Camera extends ReferenceCamera implements Runnable {
     }
 
     private void setCameraExposure() {
+        Logger.trace(String.format("imgSetExposure() [cameraId:%d]", cameraId, exposure));
         URL funcUrl;
         try {
             funcUrl = new URIBuilder(baseURI)
@@ -188,6 +181,7 @@ public class Neoden4Camera extends ReferenceCamera implements Runnable {
     }
 
     private void setCameraGain() {
+        Logger.trace(String.format("imgSetGain() [cameraId:%d, gain:%d]", cameraId, gain));
         URL funcUrl;
         try {
             funcUrl = new URIBuilder(baseURI)
@@ -204,12 +198,13 @@ public class Neoden4Camera extends ReferenceCamera implements Runnable {
     }
 
     private void setCameraLt() {
+        Logger.trace(String.format("imgSetLt() [cameraId:%d, shiftX:%d, shiftY:%d]", cameraId, shiftX, shiftY));
         URL funcUrl;
         try {
             funcUrl = new URIBuilder(baseURI)
                 .setPath(baseURI.getPath() + "imgSetLt")
-                .setParameter("a2", String.valueOf(lta2))
-                .setParameter("a3", String.valueOf(lta3))
+                .setParameter("a2", String.valueOf(shiftX))
+                .setParameter("a3", String.valueOf(shiftY))
                 .build()
                 .toURL();
         } catch (MalformedURLException | URISyntaxException e) {
@@ -221,6 +216,7 @@ public class Neoden4Camera extends ReferenceCamera implements Runnable {
     }
 
     private void cameraReset() {
+        Logger.trace(String.format("imgReset() [cameraId:%d]", cameraId));
         URL funcUrl;
         try {
             funcUrl = new URIBuilder(baseURI)
@@ -319,6 +315,78 @@ public class Neoden4Camera extends ReferenceCamera implements Runnable {
 
     public void setFps(int fps) {
         this.fps = fps;
+    }
+
+    public int getCameraId() {
+        return cameraId;
+    }
+
+    public void setCameraId(int cameraId) {
+        this.cameraId = cameraId;
+    }
+
+    public int getHostPort() {
+        return this.hostPort;
+    }
+
+    public void setHostPort(int hostPort) {
+        this.hostPort = hostPort;
+    }
+
+    public int getWidth() {
+        return this.width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return this.height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    public int getTimeout() {
+        return this.timeout;
+    }
+
+    public void setTimeout(int timeout) {
+        this.timeout = timeout;
+    }
+
+    public int getExposure() {
+        return this.exposure;
+    }
+
+    public void setExposure(int exposure) {
+        this.exposure = exposure;
+    }
+
+    public int getGain() {
+        return this.gain;
+    }
+
+    public void setGain(int gain) {
+        this.gain = gain;
+    }
+
+    public int getShiftX() {
+        return this.shiftX;
+    }
+
+    public void setShiftX(int shiftX) {
+        this.shiftX = shiftX;
+    }
+
+    public int getShiftY() {
+        return this.shiftY;
+    }
+
+    public void setShiftY(int shiftY) {
+        this.shiftY = shiftY;
     }
 
     public boolean isDirty() {

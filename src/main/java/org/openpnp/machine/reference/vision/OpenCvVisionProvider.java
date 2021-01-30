@@ -52,7 +52,6 @@ public class OpenCvVisionProvider implements VisionProvider {
 
     static {
         nu.pattern.OpenCV.loadShared();
-        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }
 
     protected Camera camera;
@@ -80,9 +79,10 @@ public class OpenCvVisionProvider implements VisionProvider {
      * 
      * @param template
      * @return
+     * @throws Exception 
      */
-    public List<TemplateMatch> getTemplateMatches(BufferedImage template) {
-        BufferedImage image = camera.capture();
+    public List<TemplateMatch> getTemplateMatches(BufferedImage template) throws Exception {
+        BufferedImage image = camera.settleAndCapture();
 
         // Convert the camera image and template image to the same type. This
         // is required by the cvMatchTemplate call.
@@ -122,7 +122,7 @@ public class OpenCvVisionProvider implements VisionProvider {
                         new Scalar(255));
                 Imgproc.putText(debugMat, "" + match.score,
                         new org.opencv.core.Point(x + templateMat.cols(), y + templateMat.rows()),
-                        Core.FONT_HERSHEY_PLAIN, 1.0, new Scalar(255));
+                        Imgproc.FONT_HERSHEY_PLAIN, 1.0, new Scalar(255));
             }
 
             match.location = VisionUtils.getPixelLocation(camera, x + (templateMat.cols() / 2),
@@ -149,7 +149,7 @@ public class OpenCvVisionProvider implements VisionProvider {
     @Override
     public Point[] locateTemplateMatches(int roiX, int roiY, int roiWidth, int roiHeight, int coiX,
             int coiY, BufferedImage templateImage_) throws Exception {
-        BufferedImage cameraImage_ = camera.capture();
+        BufferedImage cameraImage_ = camera.settleAndCapture();
 
         // Convert the camera image and template image to the same type. This
         // is required by the cvMatchTemplate call.

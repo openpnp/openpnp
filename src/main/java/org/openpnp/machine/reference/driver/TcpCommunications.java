@@ -9,6 +9,7 @@ import java.net.SocketTimeoutException;
 import java.util.concurrent.TimeoutException;
 
 import org.openpnp.machine.reference.driver.ReferenceDriverCommunications.LineEndingType;
+import org.openpnp.util.GcodeServer;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -29,10 +30,20 @@ public class TcpCommunications extends ReferenceDriverCommunications {
     protected Socket clientSocket;
     protected BufferedReader input;
     protected DataOutputStream output;
+    protected GcodeServer gcodeServer;
+    protected AbstractReferenceDriver driver;
 
     public synchronized void connect() throws Exception {
         disconnect();
-        clientSocket = new Socket(ipAddress,port);
+        if (ipAddress.equals("GcodeServer")) {
+            gcodeServer = new GcodeServer();
+            gcodeServer.setDriver(driver);
+            port = gcodeServer.getListenerPort();
+            clientSocket = new Socket("localhost", port);
+        }
+        else {
+            clientSocket = new Socket(ipAddress,port);
+        }
         input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         output = new DataOutputStream(clientSocket.getOutputStream());
     }
@@ -44,57 +55,16 @@ public class TcpCommunications extends ReferenceDriverCommunications {
             output = null;
             clientSocket = null;
         }
+        if (gcodeServer != null) {
+            gcodeServer.shutdown();
+            gcodeServer = null;
+        }
     }
 
     public String getConnectionName(){
         return "tcp://" + ipAddress + ":" + port;
     }
 
-    /**
-     * Read a line from the socket. Blocks for the default timeout. If the read times out a
-     * TimeoutException is thrown. Any other failure to read results in an IOExeption;
-     * 
-     * @return
-     * @throws TimeoutException
-     * @throws IOException
-     */
-    public String readLine() throws TimeoutException, IOException {
-        StringBuffer line = new StringBuffer();
-        while (true) {
-            try {
-                int ch = input.read();
-                if (ch == -1) {
-                    return null;
-                }
-                else if (ch == '\n' || ch == '\r') {
-                    if (line.length() > 0) {
-                        return line.toString();
-                    }
-                }
-                else {
-                    line.append((char) ch);
-                }
-            }
-            catch (IOException ex) {
-                if (ex.getCause() instanceof SocketTimeoutException) {
-                    throw new TimeoutException(ex.getMessage());
-                }
-                throw ex;
-            }
-        }
-    }
-
-    public void writeLine(String data) throws IOException
-    {
-        try {
-            output.write(data.getBytes());
-            output.write(getLineEndingType().getLineEnding().getBytes());
-        }
-        catch (IOException ex) {
-            throw ex;
-        }
-    }
-    
     public int read() throws TimeoutException, IOException {
         try {
             return input.read();
@@ -106,9 +76,15 @@ public class TcpCommunications extends ReferenceDriverCommunications {
             throw ex;
         }
     }
-    
+
+    @Override
     public void write(int d) throws IOException {
         output.write(d);
+    }
+
+    @Override
+    public void writeBytes(byte[] data) throws IOException {
+        output.write(data);
     }
 
     public String getIpAddress() {
@@ -125,6 +101,10 @@ public class TcpCommunications extends ReferenceDriverCommunications {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public void setDriver(AbstractReferenceDriver driver) {
+        this.driver = driver;
     }
     
 }

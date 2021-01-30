@@ -1,7 +1,7 @@
 package org.openpnp.machine.reference;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
-
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
@@ -22,9 +22,12 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzleTip;
+import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.UiUtils;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceNozzleTip extends AbstractNozzleTip {
     @Attribute(required = false)
@@ -57,7 +60,33 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     
     @Element(required = false)
     private ReferenceNozzleTipCalibration calibration = new ReferenceNozzleTipCalibration();
-    
+
+    public enum VacuumMeasurementMethod {
+        None, 
+        Absolute,
+        Difference;
+        
+        public boolean isDifferenceMethod() {
+            // there might be more difference methods in the future, so make this easy
+            return this == Difference;
+        }
+    }
+
+    @Element(required = false)
+    VacuumMeasurementMethod methodPartOn = null;
+
+    @Element(required = false)
+    boolean partOnCheckAfterPick = true; 
+
+    @Element(required = false)
+    boolean partOnCheckAlign = true; 
+
+    @Element(required = false)
+    boolean partOnCheckBeforePlace = true; 
+
+    @Attribute(required = false)
+    private boolean establishPartOnLevel;
+
     @Element(required = false)
     private double vacuumLevelPartOnLow;
 
@@ -65,18 +94,101 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     private double vacuumLevelPartOnHigh;
 
     @Element(required = false)
+    private double vacuumDifferencePartOnLow;
+
+    @Element(required = false)
+    private double vacuumDifferencePartOnHigh;
+
+    @Element(required = false)
+    VacuumMeasurementMethod methodPartOff = null;
+
+    @Attribute(required = false)
+    private boolean establishPartOffLevel;
+
+    @Element(required = false)
+    boolean partOffCheckAfterPlace = true; 
+
+    @Element(required = false)
+    boolean partOffCheckBeforePick = true; 
+
+    @Element(required = false)
     private double vacuumLevelPartOffLow;
     
     @Element(required = false)
     private double vacuumLevelPartOffHigh;
+
+    @Attribute(required = false)
+    private int partOffProbingMilliseconds;
+
+    @Attribute(required = false)
+    private int partOffDwellMilliseconds;
+
+    @Element(required = false)
+    private double vacuumDifferencePartOffLow;
+
+    @Element(required = false)
+    private double vacuumDifferencePartOffHigh;
 
     @Element(required = false)
     private Length diameterLow = new Length(0, LengthUnit.Millimeters);
 
     @Attribute(required = false)
     private boolean isPushAndDragAllowed = false;
+    
+    // berts stuff start
+    @Element(required = false)
+    protected String changerActuatorPostStepOne;
+
+    @Element(required = false)
+    protected String changerActuatorPostStepTwo;
+    
+    @Element(required = false)
+    protected String changerActuatorPostStepThree;
+    
+    //end bert
 
     public ReferenceNozzleTip() {
+    }
+
+    @Commit
+    public void commit() {
+        /**
+         * Backwards compatibility.
+         */
+        if (methodPartOn == null) {
+            if (vacuumLevelPartOnLow < vacuumLevelPartOnHigh) {
+                // was enabled
+                methodPartOn = VacuumMeasurementMethod.Absolute;
+            }
+            else {
+                methodPartOn = VacuumMeasurementMethod.None;
+            }
+        }
+        if (methodPartOff == null) {
+            // use the same as the former pick dwell time.
+            partOffProbingMilliseconds = pickDwellMilliseconds;
+            try {
+                // also add the nozzle's pick dwell time
+                Nozzle nozzle = Configuration.get()
+                                             .getMachine()
+                                             .getDefaultHead()
+                                             .getDefaultNozzle();
+                if (nozzle instanceof ReferenceNozzle) {
+                    ReferenceNozzle refNozzle = (ReferenceNozzle) nozzle;
+                    partOffProbingMilliseconds += refNozzle.getPickDwellMilliseconds();
+                } 
+            }
+            catch (Exception e) {
+                Logger.info("Cannot fully upgrade partOffProbingMilliseconds time", e);
+            }
+            if (vacuumLevelPartOffLow < vacuumLevelPartOffHigh) {
+                // was enabled
+                methodPartOff = VacuumMeasurementMethod.Absolute;
+            }
+            else {
+                methodPartOff = VacuumMeasurementMethod.None;
+            }
+        }
     }
 
     @Override
@@ -185,6 +297,32 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public void setChangerMid2ToEndSpeed(double changerMid2ToEndSpeed) {
         this.changerMid2ToEndSpeed = changerMid2ToEndSpeed;
     }
+    
+    //bert start
+    public String getChangerActuatorPostStepOne() {
+        return changerActuatorPostStepOne;
+    }
+
+    public void setChangerActuatorPostStepOne(String changerActuatorPostStepOne) {
+        this.changerActuatorPostStepOne = changerActuatorPostStepOne;
+    }
+
+    public String getChangerActuatorPostStepTwo() {
+        return changerActuatorPostStepTwo;
+    }
+
+    public void setChangerActuatorPostStepTwo(String changerActuatorPostStepTwo) {
+        this.changerActuatorPostStepTwo = changerActuatorPostStepTwo;
+    }
+    
+    public String getChangerActuatorPostStepThree() {
+        return changerActuatorPostStepThree;
+    }
+
+    public void setChangerActuatorPostStepThree(String changerActuatorPostStepThree) {
+        this.changerActuatorPostStepThree = changerActuatorPostStepThree;
+    }
+    // bert stop
 
     public ReferenceNozzle getNozzleAttachedTo() {
         for (Head head : Configuration.get().getMachine().getHeads()) {
@@ -200,6 +338,50 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
         }
         return null;
+    }
+
+    public VacuumMeasurementMethod getMethodPartOn() {
+        if (methodPartOn == null) {
+            // First time access after creation and no @Commit handler: initialize.
+            methodPartOn = VacuumMeasurementMethod.None;
+        }
+        return methodPartOn;
+    }
+
+    public void setMethodPartOn(VacuumMeasurementMethod methodPartOn) {
+        this.methodPartOn = methodPartOn;
+    }
+
+    public boolean isEstablishPartOnLevel() {
+        return establishPartOnLevel;
+    }
+
+    public void setEstablishPartOnLevel(boolean establishPartOnLevel) {
+        this.establishPartOnLevel = establishPartOnLevel;
+    }
+
+    public boolean isPartOnCheckAfterPick() {
+        return partOnCheckAfterPick;
+    }
+
+    public void setPartOnCheckAfterPick(boolean partOnCheckAfterPick) {
+        this.partOnCheckAfterPick = partOnCheckAfterPick;
+    }
+
+    public boolean isPartOnCheckAlign() {
+        return partOnCheckAlign;
+    }
+
+    public void setPartOnCheckAlign(boolean partOnCheckAlign) {
+        this.partOnCheckAlign = partOnCheckAlign;
+    }
+
+    public boolean isPartOnCheckBeforePlace() {
+        return partOnCheckBeforePlace;
+    }
+
+    public void setPartOnCheckBeforePlace(boolean partOnCheckBeforePlace) {
+        this.partOnCheckBeforePlace = partOnCheckBeforePlace;
     }
 
     public double getVacuumLevelPartOnLow() {
@@ -218,6 +400,58 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         this.vacuumLevelPartOnHigh = vacuumLevelPartOnHigh;
     }
 
+    public double getVacuumDifferencePartOnLow() {
+        return vacuumDifferencePartOnLow;
+    }
+
+    public void setVacuumDifferencePartOnLow(double vacuumDifferencePartOnLow) {
+        this.vacuumDifferencePartOnLow = vacuumDifferencePartOnLow;
+    }
+
+    public double getVacuumDifferencePartOnHigh() {
+        return vacuumDifferencePartOnHigh;
+    }
+
+    public void setVacuumDifferencePartOnHigh(double vacuumDifferencePartOnHigh) {
+        this.vacuumDifferencePartOnHigh = vacuumDifferencePartOnHigh;
+    }
+
+    public VacuumMeasurementMethod getMethodPartOff() {
+        if (methodPartOff == null) {
+            // First time access after creation and no @Commit handler: initialize.
+            methodPartOff = VacuumMeasurementMethod.None;
+        }
+        return methodPartOff;
+    }
+
+    public void setMethodPartOff(VacuumMeasurementMethod methodPartOff) {
+        this.methodPartOff = methodPartOff;
+    }
+
+    public boolean isEstablishPartOffLevel() {
+        return establishPartOffLevel;
+    }
+
+    public void setEstablishPartOffLevel(boolean establishPartOffLevel) {
+        this.establishPartOffLevel = establishPartOffLevel;
+    }
+
+    public boolean isPartOffCheckAfterPlace() {
+        return partOffCheckAfterPlace;
+    }
+
+    public void setPartOffCheckAfterPlace(boolean partOffCheckAfterPlace) {
+        this.partOffCheckAfterPlace = partOffCheckAfterPlace;
+    }
+
+    public boolean isPartOffCheckBeforePick() {
+        return partOffCheckBeforePick;
+    }
+
+    public void setPartOffCheckBeforePick(boolean partOffCheckBeforePick) {
+        this.partOffCheckBeforePick = partOffCheckBeforePick;
+    }
+
     public double getVacuumLevelPartOffLow() {
         return vacuumLevelPartOffLow;
     }
@@ -232,6 +466,110 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     public void setVacuumLevelPartOffHigh(double vacuumLevelPartOffHigh) {
         this.vacuumLevelPartOffHigh = vacuumLevelPartOffHigh;
+    }
+
+    public int getPartOffProbingMilliseconds() {
+        return partOffProbingMilliseconds;
+    }
+
+    public void setPartOffProbingMilliseconds(int partOffProbingMilliseconds) {
+        this.partOffProbingMilliseconds = partOffProbingMilliseconds;
+    }
+
+    public int getPartOffDwellMilliseconds() {
+        return partOffDwellMilliseconds;
+    }
+
+    public void setPartOffDwellMilliseconds(int partOffDwellMilliseconds) {
+        this.partOffDwellMilliseconds = partOffDwellMilliseconds;
+    }
+
+    public double getVacuumDifferencePartOffLow() {
+        return vacuumDifferencePartOffLow;
+    }
+
+    public void setVacuumDifferencePartOffLow(double vacuumDifferencePartOffLow) {
+        this.vacuumDifferencePartOffLow = vacuumDifferencePartOffLow;
+    }
+
+    public double getVacuumDifferencePartOffHigh() {
+        return vacuumDifferencePartOffHigh;
+    }
+
+    public void setVacuumDifferencePartOffHigh(double vacuumDifferencePartOffHigh) {
+        this.vacuumDifferencePartOffHigh = vacuumDifferencePartOffHigh;
+    }
+
+    public Double getVacuumLevelPartOnReading() {
+        return vacuumLevelPartOnReading;
+    }
+
+    public void setVacuumLevelPartOnReading(Double vacuumLevelPartOnReading) {
+        Object oldValue = this.vacuumLevelPartOnReading;
+        this.vacuumLevelPartOnReading = vacuumLevelPartOnReading;
+        if (!(oldValue == null && vacuumLevelPartOnReading == null)) { // only fire when values are set
+            firePropertyChange("vacuumLevelPartOnReading", oldValue, vacuumLevelPartOnReading);
+        }
+    }
+
+    public Double getVacuumDifferencePartOnReading() {
+        return vacuumDifferencePartOnReading;
+    }
+
+    public void setVacuumDifferencePartOnReading(Double vacuumDifferencePartOnReading) {
+        Object oldValue = this.vacuumDifferencePartOnReading;
+        this.vacuumDifferencePartOnReading = vacuumDifferencePartOnReading;
+        if (!(oldValue == null && vacuumDifferencePartOnReading == null)) { // only fire when values are set
+            firePropertyChange("vacuumDifferencePartOnReading", oldValue, vacuumDifferencePartOnReading);
+        }
+    }
+
+    public Double getVacuumLevelPartOffReading() {
+        return vacuumLevelPartOffReading;
+    }
+
+    public void setVacuumLevelPartOffReading(Double vacuumLevelPartOffReading) {
+        Object oldValue = this.vacuumLevelPartOffReading;
+        this.vacuumLevelPartOffReading = vacuumLevelPartOffReading;
+        if (!(oldValue == null && vacuumLevelPartOffReading == null)) { // only fire when values are set
+            firePropertyChange("vacuumLevelPartOffReading", oldValue, vacuumLevelPartOffReading);
+        }
+    }
+
+    public Double getVacuumDifferencePartOffReading() {
+        return vacuumDifferencePartOffReading;
+    }
+
+    public void setVacuumDifferencePartOffReading(Double vacuumDifferencePartOffReading) {
+        Object oldValue = this.vacuumDifferencePartOffReading;
+        this.vacuumDifferencePartOffReading = vacuumDifferencePartOffReading;
+        if (!(oldValue == null && vacuumDifferencePartOffReading == null)) { // only fire when values are set
+            firePropertyChange("vacuumDifferencePartOffReading", oldValue, vacuumDifferencePartOffReading);
+        }
+    }
+
+    public SimpleGraph getVacuumPartOnGraph() {
+        return vacuumPartOnGraph;
+    }
+
+    public void setVacuumPartOnGraph(SimpleGraph vacuumPartOnGraph) {
+        Object oldValue = this.vacuumPartOnGraph;
+        this.vacuumPartOnGraph = vacuumPartOnGraph;
+        if (!(oldValue == null && vacuumPartOnGraph == null)) { // only fire when values are set
+            firePropertyChange("vacuumPartOnGraph", null /*always treat as change*/, vacuumPartOnGraph); 
+        }
+    }
+
+    public SimpleGraph getVacuumPartOffGraph() {
+        return vacuumPartOffGraph;
+    }
+
+    public void setVacuumPartOffGraph(SimpleGraph vacuumPartOffGraph) {
+        Object oldValue = this.vacuumPartOffGraph;
+        this.vacuumPartOffGraph = vacuumPartOffGraph;
+        if (!(oldValue == null && vacuumPartOffGraph == null)) { // only fire when values are set
+            firePropertyChange("vacuumPartOffGraph", null /*always treat as change*/, vacuumPartOffGraph);
+        }
     }
 
     @Override
@@ -259,7 +597,44 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public ReferenceNozzleTipCalibration getCalibration() {
         return calibration;
     }
-    
+
+    // Recorded vacuum readings 
+    private Double vacuumLevelPartOnReading = null;
+    private Double vacuumDifferencePartOnReading = null;
+    private Double vacuumLevelPartOffReading = null;
+    private Double vacuumDifferencePartOffReading = null;
+    private SimpleGraph vacuumPartOnGraph = null;
+    private SimpleGraph vacuumPartOffGraph = null;
+
+    public static final String PRESSURE = "P"; 
+    public static final String BOOLEAN = "B"; 
+    public static final String VACUUM = "V"; 
+    public static final String VALVE_ON = "ON"; 
+
+    protected final SimpleGraph startNewVacuumGraph(double vacuumLevel, boolean valveSwitchingOn) {
+        // start a new graph 
+        SimpleGraph vacuumGraph = new SimpleGraph();
+        vacuumGraph.setRelativePaddingLeft(0.05);
+        double t = vacuumGraph.getT();
+        // init pressure scale
+        SimpleGraph.DataScale vacuumScale =  vacuumGraph.getScale(PRESSURE);
+        vacuumScale.setRelativePaddingBottom(0.3);
+        vacuumScale.setColor(new Color(0, 0, 0, 64));
+        // init valve scale
+        SimpleGraph.DataScale valveScale =  vacuumGraph.getScale(BOOLEAN);
+        valveScale.setRelativePaddingTop(0.75);
+        valveScale.setRelativePaddingBottom(0.2);
+        // record the current pressure
+        SimpleGraph.DataRow vacuumData = vacuumGraph.getRow(PRESSURE, VACUUM);
+        vacuumData.setColor(new Color(255, 0, 0));
+        vacuumData.recordDataPoint(t, vacuumLevel);
+        // record the valve switching off
+        SimpleGraph.DataRow valveData = vacuumGraph.getRow(BOOLEAN, VALVE_ON);
+        valveData.setColor(new Color(00, 0x5B, 0xD9)); // the OpenPNP color
+        valveData.recordDataPoint(t, valveSwitchingOn ? 0 : 1);
+        valveData.recordDataPoint(vacuumGraph.getT(), valveSwitchingOn ? 1 : 0);
+        return vacuumGraph;
+    }
 
     public Action loadAction = new AbstractAction("Load") {
         {

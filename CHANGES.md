@@ -1,6 +1,141 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2020-12-29
+
+## Retry Bug Fixes and Improvements
+
+This is the first in a series of updates to improve retry and error handling in OpenPnP. The
+goal of this change is to fix features that were already in OpenPnP but not working correctly
+and additionally bring back (and fix) a feature that existed in OpenPnP 1.0.
+
+- Feeder.feedRetryCount now works correctly: feeds will be retried if they fail due to the feed()
+  method throwing an Exception. This most often happens in feeders that can detect they are out
+  of parts, such as Strip and Tray feeders. If a feeder fails all of it's retries it is disabled.
+
+- Feeder.pickRetryCount implemented: If the vacuum check after a pick fails, the pick and vacuum
+  check will be retried without performing another feed. Since this was not previously implemented
+  at all, but the setting was there, and this could potentially break feeders or nozzles that
+  use shutters the value will be reset to 0 on initial load of this version. You can set it
+  if you want to use the new functionality.
+
+- Part.pickRetryCount: This new retry value controls how many times the feed-pick sequence will
+  be retried for a part. Defaults to 0. Setting this value makes it possible to automatically
+  try additional feeders when one becomes disabled.  
+
+
+# 2020-12-12
+
+## Advanced Motion Control
+
+- Simpler all-GUI setup of machine axes, axis transformations and their assignment to Nozzles, 
+  Cameras etc. (no more machine.xml hacking).
+- Making features such as Axis Mapping, Backlash Compensation, Visual Homing, Non-Squareness 
+  Compensation etc. available for all types of drivers (formerly just the GcodeDriver).
+- Allowing multiple drivers of mixed types.
+- Better control of speed factors: properly control the average speed, including 
+  acceleration/deceleration phases. A move at 50% takes exactly twice as long, regardles of 
+  how short or long the move is. 
+- Simulated Jerk Control to reduce vibrations, prevent slipping of parts on nozzles, etc.
+- Experimental: Motion Blending.
+- Asynchronous communication between OpenPnP and (multiple) controllers. Decoupled and 
+  paralellized operation. 
+- Graphical diagnostics for Motion Planning as a basis for fact based machine optimization.
+- Issues & Solutions system to automatically solve machine specific setup and migration 
+  issues, enable advanced features, generate firmware-adapted Gcode commands and regular 
+  expressions. 
+
+# 2020-06-23
+
+## Actuator API Change (Non-Breaking)
+
+- Actuator.actuate(String) has been added, along with support in GcodeDriver. This makes it
+  easy to send completely custom commands from machine object implementations. This is an
+  optional, non-breaking API change.
+
+# 2020-05-18
+
+## Camera Jogging Revert
+
+- The old method of camera jogging by clicking and dragging anywhere has been restored. This
+  was removed when camera rotation jogging was adding because it seemed necessary with the
+  new drag handles, but it turns out it's not necessary and the new version was far less
+  convenient.
+
+# 2020-05-17
+
+## Sponsors and About Dialog
+
+- The About dialog now includes a Credits tab to thank sponsors of the project. A SPONSORS.md
+  file is also included, which is shown in the dialog.  
+
+- The About menu item is now correctly added to the Help menu on MacOS when the MacOS integrations
+  are not available.
+  
+## Installer Improvements
+
+- Sample files are now installed by the installer in the user's Documents/OpenPnP directory,
+  instead of in the installation directory. This fixes an issue #836 where users loading the
+  sample files on Windows would experience a write error.
+
+- Install4J has been updated from version 6 to 8. 
+  
+
+# 2020-04-29
+
+## Advanced Camera Settle
+
+Camera Autosettle is now exposed on the GUI, it was significantly expanded to allow for
+different methods in image processing and for settling quantification. Graphical diagnostics 
+and image replay with motion "heat map" are provided. 
+
+## Advanced Part On/Off Detection
+
+Vacuum sensing part-on/part-off detection was significantly expanded to allow for differencial
+vacuum level assessment and adaptive dwell times. Graphical diagnostics are provided.
+
+# 2020-04-20
+
+## Improved Actuator Read Errors
+
+Actuator reads are used for a number of subsystems in OpenPnP, and this feature tends to be
+confusing to configure. Previously, a misconfigured actuator read would often result in
+a cryptic NullPointerException that was difficult to debug. This system has now been improved
+so that the Actuator will report the three most common errors: missing command, missing regex,
+and unmatched response.
+
+Additionally, actuatorRead() will no longer return null under any circumstance. It will either
+return a valid string (which may be empty) or throw a descriptive error.
+
+## GcodeDriver Test Framework
+
+A new GcodeServer class has been added, along with a number of small GcodeDriver based tests.
+The GcodeServer in combination with the test system allows end to end automated testing of complex
+features such as Actuators. 
+
+# 2020-04-12
+
+## OpenCV Upgrade
+
+OpenCV has been upgraded to 4.3.0-0. This is a major update (for OpenCV) and may introduce new
+issues. This is a necessary step on the way to Java 10+ support.
+
+Note that support for 32 bit Linux has been dropped from the OpenCV package due to difficulty
+of maintenance. If you are using 32 bit Linux please make it known.
+
+
+# 2020-04-02
+
+## Vacuum and Blow Off Levels
+
+You can now specify vacuum and blow off levels on packages. These values are used to trigger
+actuators when picking (vacuum level) and placing (blow off level).
+
+See https://github.com/openpnp/openpnp/pull/965 for more information.
+
+Thanks Thomas!
+
+
 # 2020-01-22
 
 ## Camera Jogging Update

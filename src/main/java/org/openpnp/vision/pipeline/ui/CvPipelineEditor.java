@@ -16,6 +16,8 @@ import org.openpnp.vision.pipeline.stages.BlurGaussian;
 import org.openpnp.vision.pipeline.stages.BlurMedian;
 import org.openpnp.vision.pipeline.stages.ClosestModel;
 import org.openpnp.vision.pipeline.stages.Add;
+import org.openpnp.vision.pipeline.stages.AffineUnwarp;
+import org.openpnp.vision.pipeline.stages.AffineWarp;
 import org.openpnp.vision.pipeline.stages.ComposeResult;
 import org.openpnp.vision.pipeline.stages.ConvertColor;
 import org.openpnp.vision.pipeline.stages.ConvertModelToKeyPoints;
@@ -54,6 +56,7 @@ import org.openpnp.vision.pipeline.stages.MaskModel;
 import org.openpnp.vision.pipeline.stages.MaskPolygon;
 import org.openpnp.vision.pipeline.stages.MaskRectangle;
 import org.openpnp.vision.pipeline.stages.MatchPartTemplate;
+import org.openpnp.vision.pipeline.stages.MatchPartsTemplate;
 import org.openpnp.vision.pipeline.stages.MatchTemplate;
 import org.openpnp.vision.pipeline.stages.MinAreaRect;
 import org.openpnp.vision.pipeline.stages.MinAreaRectContours;
@@ -64,8 +67,10 @@ import org.openpnp.vision.pipeline.stages.ReadModelProperty;
 import org.openpnp.vision.pipeline.stages.ReadPartTemplateImage;
 import org.openpnp.vision.pipeline.stages.Rotate;
 import org.openpnp.vision.pipeline.stages.ScriptRun;
+import org.openpnp.vision.pipeline.stages.SelectSingleRect;
 import org.openpnp.vision.pipeline.stages.SetColor;
 import org.openpnp.vision.pipeline.stages.SimpleBlobDetector;
+import org.openpnp.vision.pipeline.stages.SimpleOcr;
 import org.openpnp.vision.pipeline.stages.SizeCheck;
 import org.openpnp.vision.pipeline.stages.Threshold;
 import org.openpnp.vision.pipeline.stages.ThresholdAdaptive;
@@ -130,6 +135,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(MaskRectangle.class);
         registerStageClass(MatchTemplate.class);
         registerStageClass(MatchPartTemplate.class);
+        registerStageClass(MatchPartsTemplate.class);
         registerStageClass(MinAreaRect.class);
         registerStageClass(MinAreaRectContours.class);
         registerStageClass(FitEllipseContours.class);
@@ -138,6 +144,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(ReadModelProperty.class);
         registerStageClass(ReadPartTemplateImage.class);
         registerStageClass(Rotate.class);
+        registerStageClass(SelectSingleRect.class);
         registerStageClass(SetColor.class);
         registerStageClass(ScriptRun.class);
         registerStageClass(SimpleBlobDetector.class);
@@ -146,6 +153,9 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(ThresholdAdaptive.class);
         registerStageClass(WritePartTemplateImage.class);
         registerStageClass(ActuatorWrite.class);
+        registerStageClass(AffineWarp.class);
+        registerStageClass(AffineUnwarp.class);
+        registerStageClass(SimpleOcr.class);
         
     }
 
