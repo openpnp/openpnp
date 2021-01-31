@@ -18,6 +18,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Motion;
 import org.openpnp.model.Named;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
@@ -255,9 +256,9 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      */
     public void moveToHeap(Nozzle nozzle) throws Exception {
         nozzle.moveToSafeZ();
-        nozzle.moveTo(way3.derive(null, null, Double.NaN, Double.NaN), Movable.MoveToOption.SpeedOverPrecision);
-        nozzle.moveTo(way2.derive(null, null, Double.NaN, Double.NaN), Movable.MoveToOption.SpeedOverPrecision);
-        nozzle.moveTo(way1.derive(null, null, Double.NaN, Double.NaN), Movable.MoveToOption.SpeedOverPrecision);
+        nozzle.moveTo(way3.derive(null, null, Double.NaN, Double.NaN), Motion.MotionOption.SpeedOverPrecision);
+        nozzle.moveTo(way2.derive(null, null, Double.NaN, Double.NaN), Motion.MotionOption.SpeedOverPrecision);
+        nozzle.moveTo(way1.derive(null, null, Double.NaN, Double.NaN), Motion.MotionOption.SpeedOverPrecision);
         nozzle.moveTo(location);
     }
 
@@ -269,9 +270,9 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      */
     public void moveFromHeap(Nozzle nozzle) throws Exception {
         nozzle.moveToSafeZ();
-        nozzle.moveTo(way1.derive(null, null, Double.NaN, Double.NaN), Movable.MoveToOption.SpeedOverPrecision);
-        nozzle.moveTo(way2.derive(null, null, Double.NaN, Double.NaN), Movable.MoveToOption.SpeedOverPrecision);
-        nozzle.moveTo(way3.derive(null, null, Double.NaN, Double.NaN), Movable.MoveToOption.SpeedOverPrecision);
+        nozzle.moveTo(way1.derive(null, null, Double.NaN, Double.NaN), Motion.MotionOption.SpeedOverPrecision);
+        nozzle.moveTo(way2.derive(null, null, Double.NaN, Double.NaN), Motion.MotionOption.SpeedOverPrecision);
+        nozzle.moveTo(way3.derive(null, null, Double.NaN, Double.NaN), Motion.MotionOption.SpeedOverPrecision);
     }
 
     /**
@@ -320,7 +321,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         nozzle.getHead().getActuatorByName(((ReferenceNozzle)nozzle).getVacuumActuatorName()).actuate(true);
         long vacuumOn = System.currentTimeMillis();
         // move to heap
-        nozzle.moveTo(location.derive(null, null, Double.NaN, null), Movable.MoveToOption.SpeedOverPrecision);
+        nozzle.moveTo(location.derive(null, null, Double.NaN, null), Motion.MotionOption.SpeedOverPrecision);
         // if that didn't take long enough, wait
         ((ReferenceNozzle)nozzle).getPlaceDwellMilliseconds();
         vacuumOn = vacuumOn - (System.currentTimeMillis() + 
@@ -331,7 +332,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         // save current value as reference value
         double vacuumLevel = readVacuum(nozzle);
         // last pick location
-        nozzle.moveTo(location.add(new Location(LengthUnit.Millimeters, 0, 0, lastFeedDepth, 0)), Movable.MoveToOption.SpeedOverPrecision);
+        nozzle.moveTo(location.add(new Location(LengthUnit.Millimeters, 0, 0, lastFeedDepth, 0)), Motion.MotionOption.SpeedOverPrecision);
         // while vacuum difference is not reached, slowly stir in the heap
         double currentDepth = lastFeedDepth + part.getHeight().getValue() / 1.5; // start always a bit higher than last time, to be sure that level is empty
         for (int i = 0; ! stableVacuumDifferenceReached(nozzle, vacuumLevel, requiredVacuumDifference) && currentDepth > (boxDepth + part.getHeight().getValue()); i++) {
@@ -413,7 +414,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
                 break;
             }
         }
-        nozzle.moveTo(destination, 0.5, Movable.MoveToOption.SpeedOverPrecision);
+        nozzle.moveTo(destination, 0.33, Motion.MotionOption.SpeedOverPrecision);
     }
 
     /**
@@ -596,11 +597,11 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         this.dropBox = dropBox;
     }
 
-    // Workaround that in the Wizzard te old feeder is cached otherwise
+    // Workaround that in the Wizzard the old feeder is cached otherwise
     public Location getDropBoxLocation() {
         return dropBox.getCenterBottomLocation();
     }
-    // Workaround that in the Wizzard te old feeder is cached otherwise
+    // Workaround that in the Wizzard the old feeder is cached otherwise
     public void setDropBoxLocation(Location dropBox) throws Exception {
         if (dropBox == null) {
             throw new Exception("Location is required.");
@@ -611,7 +612,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
     public Location getDropBoxDropLocation() {
         return dropBox.getDropLocation();
     }
-    // Workaround that in the Wizzard te old feeder is cached otherwise
+    // Workaround that in the Wizzard the old feeder is cached otherwise
     public void setDropBoxDropLocation(Location dropBox) throws Exception {
         if (dropBox == null) {
             throw new Exception("Location is required.");
