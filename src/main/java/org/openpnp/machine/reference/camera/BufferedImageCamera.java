@@ -20,6 +20,7 @@
 package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
+import java.util.WeakHashMap;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
@@ -27,14 +28,19 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.PropertySheetHolder;
 
 public class BufferedImageCamera extends ReferenceCamera {
-    private Camera originalCamera;
-    private BufferedImage source;
+    private static WeakHashMap<Camera, BufferedImageCamera> bufferedCameras = new WeakHashMap<>(); 
 
-    public BufferedImageCamera(Camera _originalCamera, BufferedImage _source) {
-        originalCamera = _originalCamera;
-        source = _source;
+    private Camera originalCamera;
+    private BufferedImage image;
+
+    public BufferedImageCamera(Camera originalCamera) {
+        this.originalCamera = originalCamera;
 
         setUnitsPerPixel(originalCamera.getUnitsPerPixel());
+    }
+
+    protected void setImage(BufferedImage source) {
+        this.image = source;
     }
 
     @Override 
@@ -51,7 +57,7 @@ public class BufferedImageCamera extends ReferenceCamera {
 
     @Override
     public synchronized BufferedImage internalCapture() {
-        return source;
+        return image;
     }
 
     @Override
@@ -72,5 +78,15 @@ public class BufferedImageCamera extends ReferenceCamera {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         return null;
+    }
+
+    public static synchronized BufferedImageCamera get(Camera camera, BufferedImage image) {
+        BufferedImageCamera bufferedCamera = bufferedCameras.get(camera);
+        if (bufferedCamera == null) {
+            bufferedCamera = new BufferedImageCamera(camera); 
+            bufferedCameras.put(camera, bufferedCamera);
+        }
+        bufferedCamera.setImage(image);
+        return bufferedCamera;
     }
 }

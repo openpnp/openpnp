@@ -696,7 +696,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
      */
     private BufferedImage showHoles(Camera camera, BufferedImage image) throws Exception {
         // BufferedCameraImage is used as we want to run the pipeline on an existing image
-        BufferedImageCamera bufferedImageCamera = new BufferedImageCamera(camera, image);
+        BufferedImageCamera bufferedImageCamera = BufferedImageCamera.get(camera, image);
 
         try (CvPipeline pipeline = getCvPipeline(bufferedImageCamera, true)) {
             // Process the pipeline to clean up the image and detect the tape holes
