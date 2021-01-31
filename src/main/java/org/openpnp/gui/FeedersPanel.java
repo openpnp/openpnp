@@ -192,7 +192,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 								continue;
 							}
 
-							if (placement.getPart().getId() == partId) {
+							if (placement.getPart() != null && placement.getPart().getId() == partId) {
 								bFound = true;
 								break;
 							}
