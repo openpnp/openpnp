@@ -23,7 +23,7 @@ import org.openpnp.model.Named;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Movable;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
@@ -430,7 +430,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
 
         // if there is a part, get a precise location
         for (int i = 0; i < 3 && location != null; i++) {
-            location = locateFeederPart(nozzle);
+            location = locateFeederPart(nozzle, location);
             if (location != null) {
                 // adjust Z
                 location = location.derive(null, null, dropBox.centerBottomLocation.convertToUnits(location.getUnits()).getZ()
@@ -443,13 +443,16 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
     /**
      * Executes the vision pipeline to locate a part.
      * @param nozzle used nozzle
+     * @param visionCenter 
      * @return location or null
      * @throws Exception something went wrong
      */
-    private Location locateFeederPart(Nozzle nozzle) throws Exception {
+    private Location locateFeederPart(Nozzle nozzle, Location visionCenter) throws Exception {
         Camera camera = nozzle.getHead().getDefaultCamera();
-        MovableUtils.moveToLocationAtSafeZ(camera, dropBox.getCenterBottomLocation().derive(null, null, Double.NaN, 0d));
+        MovableUtils.moveToLocationAtSafeZ(camera, visionCenter.derive(null, null, Double.NaN, 0d));
         try (CvPipeline pipeline = getFeederPipeline()) {
+            // wait for the move to finish
+            camera.waitForCompletion(CompletionType.CommandStillstand);
             // Process the pipeline to extract RotatedRect results
             pipeline.setProperty("camera", camera);
             pipeline.setProperty("nozzle", nozzle);
@@ -483,6 +486,12 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
                             null);
             MainFrame.get().getCameraViews().getCameraView(camera)
             .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
+            
+            // just make sure vision has not left the dropBox
+            if(location.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(getDropBoxLocation()) > 8) {
+                return null;
+            }
+            
             return location;
         }
     }
@@ -873,8 +882,11 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
          * @param camera used camera
          * @param nozzle used nozzle
          * @return location if found, otherwise null
+         * @throws Exception 
          */
-        private Location getNearestPart(CvPipeline pipeline, Camera camera, Nozzle nozzle) {
+        private Location getNearestPart(CvPipeline pipeline, Camera camera, Nozzle nozzle) throws Exception {
+            // make sure move halted for vision
+            camera.waitForCompletion(CompletionType.CommandStillstand);
             // Process the pipeline to extract RotatedRect results
             pipeline.setProperty("camera", camera);
             pipeline.setProperty("nozzle", nozzle);
