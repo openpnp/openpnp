@@ -1,3 +1,4 @@
+* [How do I let OpenPnP help me?](#how-do-i-let-openpnp-help-me)
 * [How do I get help?](#how-do-i-get-help)
 * [Where are configuration and log files located?](#where-are-configuration-and-log-files-located)
 * [How do I reset my configuration?](#how-do-i-reset-my-configuration)
@@ -13,9 +14,13 @@
 * [OpenPnP is not working in Windows 7](#openpnp-is-not-working-in-windows-7)
 * [What can cause apparent X-Y movement backlash type errors?](#What-can-cause-apparent-X-Y-movement-backlash-type-errors)
 
+## How do I let OpenPnP help me?
+
+Check out the [[Issues and Solutions]] system. It can often diagnose issues and sometimes even suggest solutions. Issue are also most of the times linked to the relevant pages in this Wiki. 
+
 ## How do I get help?
 
-Check out https://github.com/openpnp/openpnp/wiki/Getting-Help for information on getting help and supplying good information.
+Check out the [[Getting Help]] page for information on getting help and supplying good information.
 
 ## Where are configuration and log files located?
 
