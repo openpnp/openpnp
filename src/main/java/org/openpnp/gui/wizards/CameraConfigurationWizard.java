@@ -126,9 +126,9 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panel.add(previewFps, "4, 6, fill, default");
         previewFps.setColumns(10);
 
-        lblSuspendDuringTaks = new JLabel("Suspend during taks?");
-        lblSuspendDuringTaks.setToolTipText("<html>Continuous camera preview is suspended during machine tasks, only frames<br/>\r\ncaptured using computer vision are shown. For high Preview FPS this improves <br/>\r\nperformance </html>");
-        panel.add(lblSuspendDuringTaks, "6, 6, right, default");
+        lblSuspendDuringTasks = new JLabel("Suspend during tasks?");
+        lblSuspendDuringTasks.setToolTipText("<html>Continuous camera preview is suspended during machine tasks, only frames<br/>\r\ncaptured using computer vision are shown. For high Preview FPS this improves <br/>\r\nperformance </html>");
+        panel.add(lblSuspendDuringTasks, "6, 6, right, default");
 
         suspendPreviewInTasks = new JCheckBox("");
         panel.add(suspendPreviewInTasks, "8, 6");
@@ -163,7 +163,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblLightingActuator = new JLabel("Ligh Actuator");
+        lblLightingActuator = new JLabel("Light Actuator");
         panelLight.add(lblLightingActuator, "2, 2, right, default");
 
         lightActuator = new JComboBox();
@@ -394,7 +394,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     private JTextField nameTf;
     private JLabel lblPreviewFps;
     private JTextField previewFps;
-    private JLabel lblSuspendDuringTaks;
+    private JLabel lblSuspendDuringTasks;
     private JCheckBox suspendPreviewInTasks;
     private JLabel lblUserActionLight;
     private JCheckBox userActionLightOn;
