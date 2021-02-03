@@ -1,9 +1,9 @@
 <cv-pipeline>
    <stages>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="0" enabled="true" settle-first="true" count="1"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="0" enabled="true" default-light="true" settle-first="true" count="1"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.BlurGaussian" name="2" enabled="true" kernel-size="5"/>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.ConvertColor" name="3" enabled="true" conversion="Bgr2Hsv"/>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.MaskHsv" name="5" enabled="true" auto="false" fraction-to-mask="0.0" hue-min="50" hue-max="110" saturation-min="30" saturation-max="255" value-min="0" value-max="240" invert="false" binary-mask="true"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ConvertColor" name="3" enabled="true" conversion="Bgr2HsvFull"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.MaskHsv" name="5" enabled="true" auto="false" fraction-to-mask="0.0" hue-min="55" hue-max="110" saturation-min="120" saturation-max="255" value-min="10" value-max="250" invert="false" binary-mask="true"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.MaskCircle" name="6" enabled="true" diameter="450"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.BlurMedian" name="1" enabled="true" kernel-size="7"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.FindContours" name="8" enabled="true" retrieval-mode="List" approximation-method="None"/>
@@ -13,7 +13,7 @@
       <cv-stage class="org.openpnp.vision.pipeline.stages.MaskModel" name="12" enabled="true" model-stage-name="9" is-mask="false">
          <color r="0" g="0" b="0" a="255"/>
       </cv-stage>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.CreateModelTemplateImage" name="14" enabled="true" model-stage-name="10" degrees="-90.0"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.CreateModelTemplateImage" name="14" enabled="true" model-stage-name="10" degrees="90.0"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.WritePartTemplateImage" name="13" enabled="true" template-file="" extension=".png" prefix="top-" as-package="false"/>
    </stages>
 </cv-pipeline>
