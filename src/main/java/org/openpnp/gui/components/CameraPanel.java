@@ -150,11 +150,11 @@ public class CameraPanel extends JPanel {
      * @param camera
      * @return
      */
-    public void ensureCameraVisible(Camera camera) {
+    public CameraView ensureCameraVisible(Camera camera) {
         if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_H) || camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_V)) {
-            return;
+            return getCameraView(camera);
         }
-        setSelectedCamera(camera);
+        return setSelectedCamera(camera);
     }
 
     public CameraView setSelectedCamera(Camera camera) {
