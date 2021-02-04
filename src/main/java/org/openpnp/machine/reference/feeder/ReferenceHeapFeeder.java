@@ -484,13 +484,6 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             // Get the result's Location
             // Update the location with the result's rotation
             location = location.derive(null, null, null, -(result.angle + getLocation().getRotation()));
-            // Update the location with the correct Z, which is the configured Location's Z
-            // plus the part height.
-            location =
-                    location.derive(null, null,
-                            this.location.convertToUnits(location.getUnits()).getZ()
-                            + part.getHeight().convertToUnits(location.getUnits()).getValue(),
-                            null);
             MainFrame.get().getCameraViews().getCameraView(camera)
             .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
             
