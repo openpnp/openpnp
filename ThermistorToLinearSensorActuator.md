@@ -1,6 +1,6 @@
 ThermistorToLinearSensorActuator is used to linearize readings from sensors connected to thermistor ports, as is common with vacuum sensors and Smoothie.
 
-The Actuator performs a set of inverse transforms to convert the "temperature" reading to the original voltage. It also allows you to specify a linear offset and scale to future refine the output.
+The Actuator performs a set of inverse transforms to convert the "temperature" reading to the original voltage. It also allows you to specify a linear offset and scale to furthur refine the output.
 
 ![Screen Shot 2021-02-04 at 12 28 43 AM](https://user-images.githubusercontent.com/1182323/106854080-5605cd80-6680-11eb-9556-8cd351312214.png)
 
