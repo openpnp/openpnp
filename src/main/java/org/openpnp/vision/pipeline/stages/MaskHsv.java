@@ -11,6 +11,7 @@ import org.opencv.core.MatOfInt;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.FluentCv;
+import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -439,7 +440,7 @@ public class MaskHsv extends CvStage {
         Logger.trace( "Fraction actually masked = " + fractionActuallyMasked );
         if (binaryMask) {
             masked.release();
-            return new Result(mask);
+            return new Result(mask, ColorSpace.Gray);
         } else {
             mat.copyTo(masked, mask);
             mask.release();

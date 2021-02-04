@@ -37,6 +37,8 @@ import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result;
 import org.openpnp.vision.pipeline.CvStage.Result.Circle;
+import org.pmw.tinylog.Logger;
+
 import javax.swing.JSeparator;
 
 public class ResultsPanel extends JPanel {
@@ -220,36 +222,52 @@ public class ResultsPanel extends JPanel {
                     if (displayTrueColors) {
                         ColorSpace colorSpace = result.getColorSpace();
                         if (colorSpace != null) {
-                            switch (colorSpace) {
-                                case Gray :
-                                case Bgr :
-                                    //format is already ok for display
-                                    break;
-                                case Rgb :
-                                    //need to swap channels 0 and 2 to get to Bgr format
-                                    Mat rChannel = new Mat();
-                                    Mat bChannel = new Mat();
-                                    Core.extractChannel(image, rChannel, 0);
-                                    Core.extractChannel(image, bChannel, 2);
-                                    Core.insertChannel(bChannel, image, 0);
-                                    Core.insertChannel(rChannel, image, 2);
-                                    rChannel.release();
-                                    bChannel.release();
-                                    break;
-                                case Hls :
-                                    Imgproc.cvtColor(image, image, ColorCode.Hls2Bgr.getCode());
-                                    break;
-                                case HlsFull :
-                                    Imgproc.cvtColor(image, image, ColorCode.Hls2BgrFull.getCode());
-                                    break;
-                                case Hsv :
-                                    Imgproc.cvtColor(image, image, ColorCode.Hsv2Bgr.getCode());
-                                    break;
-                                case HsvFull :
-                                    Imgproc.cvtColor(image, image, ColorCode.Hsv2BgrFull.getCode());
-                                    break;
-                                default:
-                                    break;
+                            if ((image.channels() == 3) || (colorSpace == ColorSpace.Gray)) {
+                                switch (colorSpace) {
+                                    case Gray :
+                                    case Bgr :
+                                        //format is already ok for display
+                                        break;
+                                    case Rgb :
+                                        //need to swap channels 0 and 2 to get to Bgr format
+                                        Mat rChannel = new Mat();
+                                        Mat bChannel = new Mat();
+                                        Core.extractChannel(image, rChannel, 0);
+                                        Core.extractChannel(image, bChannel, 2);
+                                        Core.insertChannel(bChannel, image, 0);
+                                        Core.insertChannel(rChannel, image, 2);
+                                        rChannel.release();
+                                        bChannel.release();
+                                        break;
+                                    case Hls :
+                                        Imgproc.cvtColor(image, image, ColorCode.Hls2Bgr.getCode());
+                                        break;
+                                    case HlsFull :
+                                        Imgproc.cvtColor(image, image, ColorCode.Hls2BgrFull.getCode());
+                                        break;
+                                    case Hsv :
+                                        Imgproc.cvtColor(image, image, ColorCode.Hsv2Bgr.getCode());
+                                        break;
+                                    case HsvFull :
+                                        Imgproc.cvtColor(image, image, ColorCode.Hsv2BgrFull.getCode());
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                            else {
+                                Logger.error("Expecting image to be in the " + colorSpace +
+                                        " color space but it has only one channel. " + 
+                                        "Please send this log file to the developers!" );
+                                Logger.error("The offending pipeline is:");
+                                String pipelineStr;
+                                try {
+                                    pipelineStr = "\n" + editor.getPipeline().toXmlString();
+                                }
+                                catch (Exception ex) {
+                                    pipelineStr = "Unavailable due to " + ex.toString();
+                                }
+                                Logger.error(pipelineStr);
                             }
                         }
                     }
