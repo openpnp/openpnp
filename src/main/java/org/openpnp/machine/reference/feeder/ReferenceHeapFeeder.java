@@ -335,8 +335,11 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         nozzle.moveTo(location.add(new Location(LengthUnit.Millimeters, 0, 0, lastFeedDepth, 0)), Motion.MotionOption.SpeedOverPrecision);
         // while vacuum difference is not reached, slowly stir in the heap
         double currentDepth = lastFeedDepth + part.getHeight().getValue() / 1.5; // start always a bit higher than last time, to be sure that level is empty
-        for (int i = 0; ! stableVacuumDifferenceReached(nozzle, vacuumLevel, requiredVacuumDifference) && currentDepth > (boxDepth + part.getHeight().getValue()); i++) {
-            currentDepth -= Math.max(0.1, (part.getHeight().getValue() / 10.0));
+        for (int i = 0; ! stableVacuumDifferenceReached(nozzle, vacuumLevel, requiredVacuumDifference)              // part found
+                && currentDepth > (boxDepth + part.getHeight().getValue())                                          // on the bottom
+                && !(currentDepth <= (lastFeedDepth - 3 * part.getHeight().getValue()) && lastFeedDepth != 0); i++) { // avoid going to deep into parts. Risk of damaging parts and low chance of picking something up. 
+                                                                                                                    // (but only if not after reset = 0. First time let it find the start of the heap)
+            currentDepth -= Math.min(0.1, (part.getHeight().getValue() / 10.0));
             switch (i % 8) {
                 case 0: {
                     moveToHeapCorner(nozzle, currentDepth, 0); 
@@ -373,8 +376,12 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             }
         }
         // if at the bottom => failed
-        if (currentDepth < (boxDepth + part.getHeight().getValue())) {
+        if (currentDepth <= (boxDepth + part.getHeight().getValue())) {
             throw new Exception("HeapFeeder " + getName() + ": Can not grab parts. Heap Empty or VacuumDifference wrong.");
+        }
+        // if moved too much into parts => failed
+        if (currentDepth <= (lastFeedDepth - 3 * part.getHeight().getValue()) && lastFeedDepth != 0) {
+            throw new Exception("HeapFeeder " + getName() + ": Can not grab parts. No parts found on three times part height.");
         }
 
         // we have parts
