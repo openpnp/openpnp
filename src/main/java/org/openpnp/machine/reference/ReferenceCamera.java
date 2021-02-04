@@ -381,7 +381,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     }
     
     public boolean isDeinterlace() {
-        return deinterlace;
+        return isDeinterlaced();
     }
 
     public void setDeinterlace(boolean deinterlace) {
@@ -406,44 +406,43 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         this.allowMachineActuators = allowMachineActuators;
     }
 
-    // TODO Optimization: We could skip the convert to and from Mat if no transforms are needed.
     protected BufferedImage transformImage(BufferedImage image) {
         try {
             if (image == null) {
                 return null;
             }
 
-            Mat mat = OpenCvUtils.toMat(image);
+            // We do skip the convert to and from Mat if no transforms are needed.
+            if (isCropped() 
+                || isDeinterlaced() 
+                || isRotated()
+                || isOffset()
+                || isScaled()
+                || isUndistorted()
+                || isFlipped()) {
 
-            mat = crop(mat);
+                Mat mat = OpenCvUtils.toMat(image);
 
-            mat = calibrate(mat);
+                mat = deinterlace(mat);
 
-            mat = undistort(mat);
+                mat = crop(mat);
 
-            // apply affine transformations
-            mat = scale(mat, scaleWidth, scaleHeight);
+                mat = calibrate(mat);
 
-            mat = rotate(mat, rotation);
+                mat = undistort(mat);
 
-            mat = offset(mat, offsetX, offsetY);
+                // apply affine transformations
+                mat = scale(mat);
 
-            mat = deinterlace(mat);
+                mat = rotate(mat);
 
-            if (flipX || flipY) {
-                int flipCode;
-                if (flipX && flipY) {
-                    flipCode = -1;
-                }
-                else {
-                    flipCode = flipX ? 0 : 1;
-                }
-                Core.flip(mat, mat, flipCode);
+                mat = offset(mat);
+
+                mat = flip(mat);
+
+                image = OpenCvUtils.toBufferedImage(mat);
+                mat.release();
             }
-
-            image = OpenCvUtils.toBufferedImage(mat);
-            mat.release();
-
             if (image != null) {
                 // save the new image dimensions
                 width = image.getWidth();
@@ -458,7 +457,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     }
 
     private Mat crop(Mat mat) {
-        if (cropWidth != 0 || cropHeight != 0) {
+        if (isCropped()) {
             int cw = (cropWidth != 0 && cropWidth < (int) mat.size().width) ? cropWidth : (int) mat.size().width;
             int ch = (cropHeight != 0 && cropHeight < (int) mat.size().height) ? cropHeight : (int) mat.size().height;
             Rect roi = new Rect(
@@ -472,9 +471,13 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         }
         return mat;
     }
-    
+
+    protected boolean isCropped() {
+        return cropWidth != 0 || cropHeight != 0;
+    }
+
     private Mat deinterlace(Mat mat) {
-        if (!deinterlace) {
+        if (!isDeinterlaced()) {
             return mat;
         }
         Mat dst = new Mat(mat.size(), mat.type());
@@ -486,8 +489,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return dst;
     }
 
-    private static Mat rotate(Mat mat, double rotation) {
-        if (rotation == 0D) {
+    protected boolean isDeinterlaced() {
+        return deinterlace;
+    }
+
+    private Mat rotate(Mat mat) {
+        if (!isRotated()) {
             return mat;
         }
 
@@ -515,8 +522,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return dst;
     }
 
-    private static Mat offset(Mat mat, int offsetX, int offsetY) {
-        if (offsetX == 0D && offsetY == 0D) {
+    protected boolean isRotated() {
+        return rotation != 0D;
+    }
+
+    private Mat offset(Mat mat) {
+        if (!isOffset()) {
             return mat;
         }
 
@@ -535,9 +546,13 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
         return dst;
     }
+
+    protected boolean isOffset() {
+        return offsetX != 0D || offsetY != 0D;
+    }
     
-    private static Mat scale(Mat mat, int scaleWidth, int scaleHeight) {
-        if (scaleWidth == 0 || scaleHeight == 0) {
+    private Mat scale(Mat mat) {
+        if (!isScaled()) {
             return mat;
         }
         Mat dst = new Mat();
@@ -546,8 +561,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return dst;
     }
 
+    protected boolean isScaled() {
+        return scaleWidth != 0D || scaleHeight != 0D;
+    }
+
     private Mat undistort(Mat mat) {
-        if (!calibration.isEnabled()) {
+        if (!isUndistorted()) {
             return mat;
         }
 
@@ -567,6 +586,28 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         mat.release();
 
         return dst;
+    }
+
+    protected boolean isUndistorted() {
+        return calibration.isEnabled();
+    }
+
+    protected Mat flip(Mat mat) {
+        if (isFlipped()) {
+            int flipCode;
+            if (flipX && flipY) {
+                flipCode = -1;
+            }
+            else {
+                flipCode = flipX ? 0 : 1;
+            }
+            Core.flip(mat, mat, flipCode);
+        }
+        return mat;
+    }
+
+    protected boolean isFlipped() {
+        return flipX || flipY;
     }
 
     private Mat calibrate(Mat mat) {
@@ -839,7 +880,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     public void setState(Solutions.State state) throws Exception {
                         if (confirmStateChange(state)) {
                             view.setRenderingQuality((state == Solutions.State.Solved) ? RenderingQuality.High : renderingQuality);
-                            cameraViewHasChanged();
+                            cameraViewHasChanged(null);
                             super.setState(state);
                         }
                     }
