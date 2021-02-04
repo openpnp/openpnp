@@ -11,7 +11,7 @@ to linear readings. If you use Smoothie and have linear sensors attached to the 
 inputs this may be useful in linearizing the output.
 
 See https://github.com/openpnp/openpnp/wiki/ThermistorToLinearSensorActuator for more info!
- 
+
 
 # 2021-01-14
 
@@ -41,6 +41,7 @@ Actuators that can control Camera lights in various ways have been implemented i
 - Improved SwitcherCamera to only broadcast the correctly switched channel. 
 - Optional Auto-Camera-Preview: the active Camera is automatically switched in single preview. 
 - Various related bug-fixes.
+
 
 # 2020-12-29
 
