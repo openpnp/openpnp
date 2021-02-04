@@ -39,7 +39,11 @@ public interface Locatable {
          * Suppress dynamic (i.e. runtime calibrated) compensations, such as
          * NozzleTip runout compensation.
          */
-        SuppressDynamicCompensation
+        SuppressDynamicCompensation,
+        /**
+         * Replaces virtual coordinates with the head offset.
+         */
+        ReplaceVirtual
     }
 
     /**

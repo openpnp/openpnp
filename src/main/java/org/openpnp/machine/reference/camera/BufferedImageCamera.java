@@ -55,6 +55,11 @@ public class BufferedImageCamera extends ReferenceCamera {
     }
 
     @Override
+    protected BufferedImage transformImage(BufferedImage image) {
+        return image;
+    }
+
+    @Override
     public Wizard getConfigurationWizard() {
         return null;
     }
