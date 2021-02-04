@@ -119,15 +119,14 @@ public class ReferenceHeapFeederConfigurationWizard
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.MIN_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.MIN_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.MIN_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.MIN_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),},
+                FormSpecs.RELATED_GAP_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
@@ -153,7 +152,6 @@ public class ReferenceHeapFeederConfigurationWizard
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,});
-        fl_whateverPanel.setColumnGroups(new int[][]{new int[]{4, 6, 8, 10}});
         whateverPanel.setLayout(fl_whateverPanel);
         
         dropBoxNameTf = new JTextField();
@@ -185,29 +183,26 @@ public class ReferenceHeapFeederConfigurationWizard
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("min:grow"),
+                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("min:grow"),
+                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("min:grow"),
+                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("min:grow"),
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
+                FormSpecs.MIN_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                RowSpec.decode("default:grow"),
-                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,});
-        fl_dropBoxPanel.setColumnGroups(new int[][]{new int[]{4, 6, 8, 10}});
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,});
         dropBoxPanel.setLayout(fl_dropBoxPanel);
         
         for (DropBox box : ReferenceHeapFeeder.getDropBoxes()) {
@@ -241,7 +236,7 @@ public class ReferenceHeapFeederConfigurationWizard
         dropBoxLocButtons = new LocationButtonsPanel(tfCenterBottomLocation_x, tfCenterBottomLocation_y, tfCenterBottomLocation_z, (JTextField) null);
         FlowLayout flowLayout_5 = (FlowLayout) dropBoxLocButtons.getLayout();
         flowLayout_5.setAlignment(FlowLayout.LEFT);
-        dropBoxPanel.add(dropBoxLocButtons, "10, 4, fill, fill");
+        dropBoxPanel.add(dropBoxLocButtons, "10, 4, default, fill");
         
         lblDropLocation = new JLabel("Drop Location");
         dropBoxPanel.add(lblDropLocation, "2, 6");
