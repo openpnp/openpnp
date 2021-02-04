@@ -239,5 +239,10 @@ public class VisionUtilsTest {
         public Length getDefaultZ() {
             return new Length(0.0, LengthUnit.Millimeters);
         }
+
+        @Override
+        public boolean isShownInMultiCameraView() {
+            return false;
+        }
     }
 }

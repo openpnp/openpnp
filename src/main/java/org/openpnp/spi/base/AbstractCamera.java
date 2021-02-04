@@ -63,6 +63,9 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     protected boolean autoVisible = false;
 
     @Attribute(required = false)
+    protected boolean shownInMultiCameraView = true;
+
+    @Attribute(required = false)
     protected boolean beforeCaptureLightOn = true;
 
     @Attribute(required = false)
@@ -359,6 +362,17 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
             e1.printStackTrace();
         }
         return cameraLocation;
+    }
+
+    @Override
+    public boolean isShownInMultiCameraView() {
+        return shownInMultiCameraView;
+    }
+
+    public void setShownInMultiCameraView(boolean shownInMultiCameraView) {
+        Object oldValue = this.shownInMultiCameraView;
+        this.shownInMultiCameraView = shownInMultiCameraView;
+        firePropertyChange("shownInMultiCameraView", oldValue, shownInMultiCameraView);
     }
 
     public boolean isEnableUnitsPerPixel3D() {
