@@ -1,6 +1,18 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2020-02-04
+
+## New Thermistor Linearizing Actuator
+
+A new Actuator, the ThermistorToLinearSensorActuator, has been added. This Actuator converts
+sensor readings that have been processed with thermistor transforms, like Smoothieware does,
+to linear readings. If you use Smoothie and have linear sensors attached to the thermistor
+inputs this may be useful in linearizing the output.
+
+See https://github.com/openpnp/openpnp/wiki/ThermistorToLinearSensorActuator for more info!
+ 
+
 # 2021-01-14
 
 ## Actuators with Profiles / Built-in Camera Lighting / Camera Automatisms
