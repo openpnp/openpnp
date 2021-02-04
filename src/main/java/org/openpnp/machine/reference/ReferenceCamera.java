@@ -610,7 +610,6 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return flipX || flipY;
     }
 
-
     private Mat calibrate(Mat mat) {
         if (!calibrating) {
             return mat;
@@ -881,7 +880,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     public void setState(Solutions.State state) throws Exception {
                         if (confirmStateChange(state)) {
                             view.setRenderingQuality((state == Solutions.State.Solved) ? RenderingQuality.High : renderingQuality);
-                            cameraViewHasChanged();
+                            cameraViewHasChanged(null);
                             super.setState(state);
                         }
                     }

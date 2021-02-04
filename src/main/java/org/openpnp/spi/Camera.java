@@ -59,7 +59,7 @@ public interface Camera extends HeadMountable, WizardConfigurable,
 
     /**
      * The number of X and Y units per pixel this camera shows when in perfect focus. The Z value of
-     * this location is the height above the camera at which the units per pixel were measured.
+     * this location is the height at which the units per pixel were measured.
      * 
      * @return a Location whose x and y length represent the units per pixel in those axis
      * respectively
@@ -78,17 +78,6 @@ public interface Camera extends HeadMountable, WizardConfigurable,
      * respectively
      */
     public Location getUnitsPerPixel(Length z);
-    
-    /**
-     * Gets the units per pixel for determining the physical size of an object in an image given
-     * its Z height is known
-     * 
-     * @param location - a location with the z coordinate of the imaged object, if null, the height
-     * of the default working plane for this camera is used
-     * @return a Location whose x and y length represent the units per pixel in those axis
-     * respectively
-     */
-    public Location getUnitsPerPixel(Location location);
 
     /**
      * Gets the Z  height of the default working plane for this camera.  This is the height

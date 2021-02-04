@@ -394,7 +394,8 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
                             .put(new AxesLocation(rawAxis, currentRawLocation.getCoordinate(rawAxis)));
                 }
             }
-            else if ((axis instanceof ReferenceVirtualAxis) && (Arrays.asList(options).contains(LocationOption.ReplaceVirtual))) {
+            else if ((axis instanceof ReferenceVirtualAxis) 
+                && (Arrays.asList(options).contains(LocationOption.ReplaceVirtual))) {
                 // Replace the virtual axis coordinate with zero
                 desiredRawLocation = desiredRawLocation
                         .put(new AxesLocation(axis, new Length(0.0, LengthUnit.Millimeters)));

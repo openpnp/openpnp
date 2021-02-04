@@ -166,7 +166,7 @@ public class LocationButtonsPanel extends JPanel {
     }
 
     private Location getParsedLocation() {
-        double x = Double.NaN, y = Double.NaN, z = Double.NaN, rotation = Double.NaN;
+        double x = 0, y = 0, z = 0, rotation = 0;
         if (textFieldX != null) {
             x = Length.parse(textFieldX.getText()).getValue();
         }
