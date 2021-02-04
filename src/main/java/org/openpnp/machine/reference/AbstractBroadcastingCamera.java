@@ -65,7 +65,7 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
     @Attribute(required = false)
     protected boolean suspendPreviewInTasks = false;
 
-    private Thread thread;
+    private volatile Thread thread;
 
     private static BufferedImage CAPTURE_ERROR_IMAGE = null;
 
@@ -280,10 +280,9 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
         if (isOpen()) {
             thread.interrupt();
             try {
-                thread.join(3000);
+                thread.join(200);
             }
             catch (Exception e) {
-
             }
         }
         thread = null;
@@ -331,7 +330,14 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
 
     @Override
     public void run() {
+        Logger.trace("Camera "+getName()+" thread "+Thread.currentThread().getId()+" started.");
         while (!Thread.interrupted()) {
+            if (thread == null
+                    ||thread.getId()!= Thread.currentThread().getId()) {
+                // The interrupt must have missed. We're not the running thread.
+                Logger.trace("Camera "+getName()+" thread "+Thread.currentThread().getId()+" interrupt failed, closing anyway.");
+                break;
+            }
             try {
                 // The camera should reuse images recently captures by on-going computer vision as 
                 // every call to captureTransformed() may consume the frame and make it unavailable 
@@ -367,6 +373,7 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
                 break;
             }
         }
+        Logger.trace("Camera "+getName()+" thread "+Thread.currentThread().getId()+" bye-bye.");
     }
 
     public boolean isPreviewSuspended() {

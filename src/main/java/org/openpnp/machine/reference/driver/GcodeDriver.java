@@ -391,6 +391,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             else {
                 try {
                     sendGcode(getCommand(null, CommandType.DISABLE_COMMAND));
+                    drainCommandQueue(getTimeoutAtMachineSpeed());
                 }
                 catch (Exception e) {
                     // When the connection is lost, we have IO errors. We should still be able to go on
@@ -721,6 +722,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         return motionPending;
     }
 
+    protected void drainCommandQueue(long timeout) throws InterruptedException {
+        // This does nothing in the plain GcodeDriver. It will be overridden in the GcodeAsyncDriver. 
+    }
+
     @Override
     public void waitForCompletion(ReferenceHeadMountable hm, 
             CompletionType completionType) throws Exception {
@@ -734,27 +739,31 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     -1 : getTimeoutAtMachineSpeed());
         }
 
-        /*
-         * If moveToCompleteRegex is specified we need to wait until we match the regex in a
-         * response before continuing. We first search the initial responses from the
-         * command for the regex. If it's not found we then collect responses for up to
-         * timeoutMillis while searching the responses for the regex. As soon as it is
-         * matched we continue. If it's not matched within the timeout we throw an
-         * Exception.
-         * 
-         * AFAIK, this was used on TinyG and it is now obsolete with new firmware :  
-         * https://makr.zone/tinyg-new-g-code-commands-for-openpnp-use/577/
-         */
-        String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
-        if (moveToCompleteRegex != null) {
-            receiveResponses(moveToCompleteRegex, completionType == CompletionType.WaitForStillstandIndefinitely ?
-                    -1 : getTimeoutAtMachineSpeed(), 
-                    (responses) -> {
-                throw new Exception("Timed out waiting for move to complete.");
-            });
+        if (completionType.isEnforcingStillstand()) {
+            if (isMotionPending()) {
+                /*
+                 * If moveToCompleteRegex is specified we need to wait until we match the regex in a
+                 * response before continuing. We first search the initial responses from the
+                 * command for the regex. If it's not found we then collect responses for up to
+                 * timeoutMillis while searching the responses for the regex. As soon as it is
+                 * matched we continue. If it's not matched within the timeout we throw an
+                 * Exception.
+                 * 
+                 * AFAIK, this was used on TinyG and it is now obsolete with new firmware :  
+                 * https://makr.zone/tinyg-new-g-code-commands-for-openpnp-use/577/
+                 */
+                String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
+                if (moveToCompleteRegex != null) {
+                    receiveResponses(moveToCompleteRegex, completionType == CompletionType.WaitForStillstandIndefinitely ?
+                            -1 : getTimeoutAtMachineSpeed(), 
+                            (responses) -> {
+                        throw new Exception("Timed out waiting for move to complete.");
+                    });
+                }
+            }
+            // Remember, we're now standing still.  
+            motionPending = false;
         }
-        // Remember, we're now standing still.  
-        motionPending = false;
     }
 
     private boolean containsMatch(List<Line> responses, String regex) {
