@@ -230,5 +230,19 @@ public class VisionUtilsTest {
         public boolean hasNewFrame() {
             return true;
         }
+
+        public Location getUnitsPerPixel(Length z) {
+            return new Location(LengthUnit.Millimeters, 1, 1, 0, 0).derive(null, null, z.getValue(), null);
+        }
+
+        @Override
+        public Location getUnitsPerPixel(Location location) {
+            return new Location(LengthUnit.Millimeters, 1, 1, 0, 0);
+        }
+
+        @Override
+        public Length getDefaultZ() {
+            return new Length(0.0, LengthUnit.Millimeters);
+        }
     }
 }
