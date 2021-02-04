@@ -6,7 +6,7 @@ The Actuator performs a set of inverse transforms to convert the "temperature" r
 
 # Configuration
 
-The Actuator performs three transforms:
+The Actuator performs four transforms:
 
 ## Inverse Steinhart-Hart
 
@@ -36,3 +36,5 @@ temperature_control.zprobe.thermistor       EPCOS100K
 temperature_control.zprobe.designator       ZP
 
 ```
+
+The Actuator defaults to parameters for the EPCOS100K thermistor. If you use that in your Smoothie configuration there is no need to configure Thermistor or ADC in OpenPnP.
