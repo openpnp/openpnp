@@ -452,7 +452,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         MovableUtils.moveToLocationAtSafeZ(camera, visionCenter.derive(null, null, Double.NaN, 0d));
         try (CvPipeline pipeline = getFeederPipeline()) {
             // wait for the move to finish
-            camera.waitForCompletion(CompletionType.CommandStillstand);
+            camera.waitForCompletion(CompletionType.WaitForStillstand);
             // Process the pipeline to extract RotatedRect results
             pipeline.setProperty("camera", camera);
             pipeline.setProperty("nozzle", nozzle);
@@ -886,7 +886,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
          */
         private Location getNearestPart(CvPipeline pipeline, Camera camera, Nozzle nozzle) throws Exception {
             // make sure move halted for vision
-            camera.waitForCompletion(CompletionType.CommandStillstand);
+            camera.waitForCompletion(CompletionType.WaitForStillstand);
             // Process the pipeline to extract RotatedRect results
             pipeline.setProperty("camera", camera);
             pipeline.setProperty("nozzle", nozzle);
