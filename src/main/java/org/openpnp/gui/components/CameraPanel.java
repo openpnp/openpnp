@@ -148,7 +148,7 @@ public class CameraPanel extends JPanel {
      * otherwise we select the specified Camera.
      * 
      * @param camera
-     * @return
+     * @return The CameraView.
      */
     public CameraView ensureCameraVisible(Camera camera) {
         if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_H) || camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_V)) {

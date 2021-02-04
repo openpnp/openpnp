@@ -60,9 +60,9 @@ public class CameraViewPopupMenu extends JPopupMenu {
         this.cameraView = cameraView;
 
         // For cameras that have been calibrated at two different heights, add menu options to reset
-        // the reticle height and for estimating an object's height
+        // the viewing plane and for estimating an object's height
         if (cameraView.isViewingPlaneChangable()) {
-            JMenuItem mntmResetReticleHeight = new JMenuItem("Reset Reticle Height to Default");
+            JMenuItem mntmResetReticleHeight = new JMenuItem("Reset Viewing Plane Z to Default");
             mntmResetReticleHeight.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {

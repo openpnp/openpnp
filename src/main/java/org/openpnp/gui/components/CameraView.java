@@ -400,7 +400,7 @@ public class CameraView extends JComponent implements CameraListener {
     }
 
     /**
-     * Gets the current Z coordinate at which the reticle is correctly scaled
+     * Gets the current Z coordinate of the viewing plane at which the reticle is correctly scaled
      * 
      * @return the Z coordinate
      */
@@ -414,7 +414,20 @@ public class CameraView extends JComponent implements CameraListener {
      * @param viewingPlaneZ the Z coordinate
      */
     public void setViewingPlaneZ(Length viewingPlaneZ) {
-        this.viewingPlaneZ = viewingPlaneZ;
+        try {
+            if (camera.getAxisZ() != null 
+                    && camera.isInSafeZZone(viewingPlaneZ)) {
+                this.viewingPlaneZ = camera.getDefaultZ();
+            }
+            else {
+                this.viewingPlaneZ = viewingPlaneZ;
+            }
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+        }
+        calculateScalingData();
+        repaint();
     }
 
     /**
@@ -422,7 +435,7 @@ public class CameraView extends JComponent implements CameraListener {
      * camera
      */
     public void resetViewingPlaneZ() {
-        this.viewingPlaneZ = camera.getDefaultZ();
+        this.setViewingPlaneZ(camera.getDefaultZ());
     }
 
     /**
@@ -694,18 +707,19 @@ public class CameraView extends JComponent implements CameraListener {
                 paintLightToggle(g2d);
             }
 
-            // Display the height of the reticle in the lower left corner if it is different than
-            // the default
-            Length viewingPlaneDiff = viewingPlaneZ.subtract(camera.getDefaultZ());
-            if (Math.abs(viewingPlaneDiff.
-                    convertToUnits(LengthUnit.Millimeters)
-                    .getValue()) > 0.05) {
-                LengthConverter lengthConverter = new LengthConverter();
-                String text = "Focus Z: " + lengthConverter.convertForward(viewingPlaneZ) + " / " 
-                +(viewingPlaneDiff.getValue() > 0 ? "+" : "") 
-                    +lengthConverter.convertForward(viewingPlaneDiff) + viewingPlaneDiff.getUnits().getShortName();
-                Dimension dim = measureTextOverlay(g2d, text);
-                drawTextOverlay(g2d, width - dim.width - 10, height - dim.height - 10, text);
+            if (viewingPlaneZ != null) {
+                // Display the height of the reticle in the lower left corner if it is different than
+                // the default
+                Length viewingPlaneDiff = viewingPlaneZ.subtract(camera.getDefaultZ());
+                if (Math.abs(viewingPlaneDiff.
+                        convertToUnits(LengthUnit.Millimeters)
+                        .getValue()) > 0.05) {
+                    LengthConverter lengthConverter = new LengthConverter();
+                    String text = "Z: " + lengthConverter.convertForward(viewingPlaneZ) 
+                    + viewingPlaneDiff.getUnits().getShortName();
+                    Dimension dim = measureTextOverlay(g2d, text);
+                    drawTextOverlay(g2d, width - dim.width - 10, height - dim.height - 10, text);
+                }
             }
         }
         else {

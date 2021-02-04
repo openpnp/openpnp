@@ -77,28 +77,50 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     /**
      * The primary units per pixel for this camera. This is used to convert the apparent size (in
      * pixels) of an object's image to an estimate of its physical size (in units). Note that this
-     * conversion is only valid for objects at the same height above the camera at which the
+     * conversion is only valid for objects at the same distance from the camera at which the
      * calibration of the units per pixel was performed. The units per pixel z-coordinate contains
-     * the height above the camera at which the conversion is valid. Also see unitsPerPixelSecondary
-     * below.
+     * the height at which the measurement was made. In combination with {@link #cameraPrimaryZ} a
+     * camera relative Z distance can be computed (necessary for Z-movable cameras). 
+     * 
+     * Also see {@link #unitsPerPixelSecondary}.
      */
     @Element
     protected Location unitsPerPixel = new Location(LengthUnit.Millimeters);
 
     /**
      * The secondary units per pixel for this camera. This is typically calibrated at a different
-     * height above the camera than the primary units per pixel (above) so that the two together
-     * can be used compute an object's true size (in units) assuming its actual height above the
-     * camera is known.
+     * distance from the camera than the primary {@link #unitsPerPixel} so that the two together
+     * can be used compute an object's true size (in units) assuming its actual z coordinate is known. 
      */
     @Element(required = false)
     protected Location unitsPerPixelSecondary = null;
+
+    /**
+     * The Z coordinate of camera at the primary units per pixel measurement for this camera. 
+     */
+    @Element(required = false)
+    protected Length cameraPrimaryZ = null;
+
+    /**
+     * The Z coordinate of camera at the secondary units per pixel measurement for this camera. 
+     */
+    @Element(required = false)
+    protected Length cameraSecondaryZ = null;
 
     /**
      * The Z coordinate at which objects are assumed to be if their true height is unknown. 
      */
     @Element(required = false)
     protected Length defaultZ = null;
+
+    @Attribute(required = false)
+    boolean enableUnitsPerPixel3D = false;
+
+    /**
+     * Automatically set the CameraView viewing plane Z according to taregeted user action.  
+     */
+    @Attribute(required = false)
+    boolean autoViewPlaneZ = false;
 
     @Element(required = false)
     protected VisionProvider visionProvider;
@@ -214,17 +236,6 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
                 settleMethod = SettleMethod.FixedTime;
             }
         }
-        
-        // If the secondary units per pixel doesn't exist, we're migrating from the old single
-        // height calibration to the new dual height calibration.  Since a second calibration hasn't
-        // actually been performed yet, the secondary units per pixel is just set to the same as the
-        // primary setting.  Since they are then the same, height above the camera is irrelevant so
-        // we just initialize the default Z to zero.  This will ensure legacy units per pixel
-        // calibrations will be correctly handled.
-        if (unitsPerPixelSecondary == null) {
-            unitsPerPixelSecondary = unitsPerPixel.derive(null, null, null, null);
-            defaultZ = new Length(0.0, LengthUnit.Millimeters);
-        }
     }
 
 
@@ -312,50 +323,58 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     }
 
     /**
-     * Gets the height above the physical camera of the specified z coordinate
+     * Gets the relative Z distance above the physical camera of the specified z coordinate
      * 
      * @param zCoordinate
-     * @return the height above the camera in the same units as zCoordinate
+     * @return 
      */
-    public Length getHeightAboveCamera(Length zCoordinate) {
-        Location cameraLocation = getLocation();
-        try {
-            //Replace virtual axis coordinates, if any, with the head offset
-            cameraLocation = getApproximativeLocation(cameraLocation, cameraLocation, LocationOption.ReplaceVirtual);
-        }
-        catch (Exception e1) {
-            e1.printStackTrace();
-        }
+    public Length getCameraRelativeZ(Length zCoordinate) {
+        Location cameraLocation = getCameraPhysicalLocation();
         return zCoordinate.subtract(cameraLocation.getLengthZ());
-    }
-    
-    /**
-     * Gets the height above the physical camera of the specified location
-     * 
-     * @param location - the location whose height is being determined
-     * @return the height above the camera in the same units as location
-     */
-    public Length getHeightAboveCamera(Location location) {
-        return getHeightAboveCamera(location.getLengthZ());
     }
 
     /**
-     * Gets the Z coordinate that is a given height above the physical camera
+     * Gets the absolute camera z coordinate from the given relative Z.
      * 
-     * @param heightAboveCamera
-     * @return the Z coordinate that is the given height above the camera
+     * @param cameraRelativeZ
+     * @return 
      */
-    protected Length getZCoordinateAboveCamera(Length heightAboveCamera) {
+    protected Length getCameraAbsoluteZ(Length cameraRelativeZ) {
+        Location cameraLocation = getCameraPhysicalLocation();
+        return cameraRelativeZ.add(cameraLocation.getLengthZ());
+    }
+
+    /**
+     * Get the physical location of the camera i.e. do not take virtual axes into consideration.
+     * 
+     * @return 
+     */
+    public Location getCameraPhysicalLocation() {
         Location cameraLocation = getLocation();
         try {
             //Replace virtual axis coordinates, if any, with the head offset
             cameraLocation = getApproximativeLocation(cameraLocation, cameraLocation, LocationOption.ReplaceVirtual);
         }
         catch (Exception e1) {
-            // TODO Auto-generated catch block
             e1.printStackTrace();
         }
-        return heightAboveCamera.add(cameraLocation.getLengthZ());
+        return cameraLocation;
+    }
+
+    public boolean isEnableUnitsPerPixel3D() {
+        return enableUnitsPerPixel3D;
+    }
+
+    public void setEnableUnitsPerPixel3D(boolean enableUnitsPerPixel3D) {
+        this.enableUnitsPerPixel3D = enableUnitsPerPixel3D;
+    }
+
+    public boolean isAutoViewPlaneZ() {
+        return autoViewPlaneZ;
+    }
+
+    public void setAutoViewPlaneZ(boolean autoViewPlaneZ) {
+        this.autoViewPlaneZ = autoViewPlaneZ;
     }
 
     @Override
@@ -364,33 +383,40 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     }
 
     @Override
-    public Location getUnitsPerPixel(Length atHeight) {
-        if (atHeight == null) {
-            atHeight = defaultZ;
+    public Location getUnitsPerPixel(Length viewingPlaneZ) {
+        if (!isSecondaryUnitsPerPixelCalibrated()) {
+            return unitsPerPixel;
+        }
+        if (viewingPlaneZ == null) {
+            viewingPlaneZ = defaultZ;
         }
         LengthUnit units = unitsPerPixel.getUnits();
         Location uppCal1 = unitsPerPixel;
         Location uppCal2 = unitsPerPixelSecondary.convertToUnits(units);
-        if (uppCal1.getZ() == uppCal2.getZ()) {
-            // Calibration wasn't performed at two different heights above the camera so just
+        double cameraRelZ1 = uppCal1.getLengthZ().subtract(cameraPrimaryZ).getValue();
+        double cameraRelZ2 = uppCal2.getLengthZ().subtract(cameraSecondaryZ).getValue();
+        if (cameraRelZ1 == cameraRelZ2) {
+            // Calibration wasn't performed at two different Z / camera Z
             // return the primary units per pixels
-        return unitsPerPixel;
-    }
+            return unitsPerPixel;
+        }
 
-        double heightAboveCamera = getHeightAboveCamera(atHeight).convertToUnits(units).getValue();
+        double cameraRelZ = getCameraRelativeZ(viewingPlaneZ).convertToUnits(units).getValue();
 
         // Linearly interpolate between the two calibration points
-        double k = (heightAboveCamera - uppCal2.getZ()) / (uppCal1.getZ() - uppCal2.getZ());
+        double k = (cameraRelZ - cameraRelZ2) / (cameraRelZ1 - cameraRelZ2);
         return new Location(units, k * (uppCal1.getX() - uppCal2.getX()) + uppCal2.getX(),
-                k * (uppCal1.getY() - uppCal2.getY()) + uppCal2.getY(), heightAboveCamera, 0.0);
+                k * (uppCal1.getY() - uppCal2.getY()) + uppCal2.getY(), cameraRelZ, 0.0);
     }
 
-    @Override
-    public Location getUnitsPerPixel(Location location) {
-        if (location == null) {
-            return getUnitsPerPixel(defaultZ);
-        }
-        return getUnitsPerPixel(location.getLengthZ());
+    public boolean isSecondaryUnitsPerPixelCalibrated() {
+        return (enableUnitsPerPixel3D
+                && unitsPerPixelSecondary != null 
+                && unitsPerPixelSecondary.getX() != 0 
+                && unitsPerPixelSecondary.getY() != 0 
+                && cameraPrimaryZ != null
+                && cameraSecondaryZ != null
+                && defaultZ != null);
     }
 
     @Override
@@ -399,11 +425,31 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     }
 
     /**
+     * Gets the primary units per pixel (direct access getter)
+     * 
+     * @return a location whose x and y coordinates are the measured pixels per unit for those axis
+     *         respectively and the z coordinate is the height at which the measurements were made.
+     */
+    public Location getUnitsPerPixelPrimary() {
+        return unitsPerPixel;
+    }
+
+    /**
+     * Sets the primary units per pixel (direct access setter)
+     * 
+     * @param unitsPerPixelPrimary - a location whose x and y coordinates are the measured pixels
+     * per unit for those axis respectively and the z coordinate is the height at which the measurements 
+     * were made.
+     */
+    public void setUnitsPerPixelPrimary(Location unitsPerPixelPrimary) {
+        this.unitsPerPixel = unitsPerPixelPrimary;
+    }
+
+    /**
      * Gets the secondary units per pixel
      * 
      * @return a location whose x and y coordinates are the measured pixels per unit for those axis
-     *         respectively and the z coordinate is the height above the camera at which the
-     *         measurements were made.
+     *         respectively and the z coordinate is the height at which the measurements were made.
      */
     public Location getUnitsPerPixelSecondary() {
         return unitsPerPixelSecondary;
@@ -413,8 +459,8 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
      * Sets the secondary units per pixel
      * 
      * @param unitsPerPixelSecondary - a location whose x and y coordinates are the measured pixels
-     * per unit for those axis respectively and the z coordinate is the height above the camera at
-     * which the measurements were made.
+     * per unit for those axis respectively and the z coordinate is the height at which the 
+     * measurements were made.
      */
     public void setUnitsPerPixelSecondary(Location unitsPerPixelSecondary) {
         this.unitsPerPixelSecondary = unitsPerPixelSecondary;
@@ -430,6 +476,28 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     }
 
     /**
+     * @return Get the z coordinate of camera where the primary units per pixel measurement was made. 
+     */
+    public Length getCameraPrimaryZ() {
+        return cameraPrimaryZ;
+    }
+
+    public void setCameraPrimaryZ(Length cameraPrimaryZ) {
+        this.cameraPrimaryZ = cameraPrimaryZ;
+    }
+
+    /**
+     * @return Get the z coordinate of camera where the secondary units per pixel measurement was made. 
+     */
+    public Length getCameraSecondaryZ() {
+        return cameraSecondaryZ;
+    }
+
+    public void setCameraSecondaryZ(Length cameraSecondaryZ) {
+        this.cameraSecondaryZ = cameraSecondaryZ;
+    }
+
+    /**
      * Estimates the Z height of an object based upon the observed units per pixel for the
      * object. This is typically found by capturing images of a feature of the object from two
      * different camera positions. The observed units per pixel is then computed by dividing the
@@ -440,18 +508,22 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
      * @return - the estimated Z height of the object
      */
     public Length estimateZCoordinateOfObject(Location observedUnitsPerPixel) throws Exception {
+        if (!isSecondaryUnitsPerPixelCalibrated()) {
+            throw new Exception("Secondary Camera Units Per Pixel have not been calibrated.");
+        }
         LengthUnit units = observedUnitsPerPixel.getUnits();
         double uppX = Math.abs(observedUnitsPerPixel.getX());
         double uppY = Math.abs(observedUnitsPerPixel.getY());
 
         Location uppCal1 = unitsPerPixel.convertToUnits(units);
         Location uppCal2 = unitsPerPixelSecondary.convertToUnits(units);
-
-        if (uppCal1.getZ() == uppCal2.getZ()) {
+        double cameraRelZ1 = uppCal1.getLengthZ().subtract(cameraPrimaryZ).getValue();
+        double cameraRelZ2 = uppCal2.getLengthZ().subtract(cameraSecondaryZ).getValue();
+        if (cameraRelZ1 == cameraRelZ2) {
             throw new Exception("Camera Units Per Pixel has not been calibrated at two different " +
-                    "heights.");
+                    "camera relative Z.");
         }
-        
+
         if (!Double.isFinite(uppX) && !Double.isFinite(uppY)) {
             throw new Exception("Apparent change in position or apparent size of object feature " +
                     "is too small to estimate object Z coordinate.");
@@ -471,11 +543,11 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         else {
             k = (uppY - uppCal2.getY()) / (uppCal1.getY() - uppCal2.getY());
         }
-        
+
         // Compute the Z offset relative to the camera
-        double heightAboveCamera = k * (uppCal1.getZ() - uppCal2.getZ()) + uppCal2.getZ();
-        
-        return getZCoordinateAboveCamera(new Length(heightAboveCamera, units));
+        double cameraRelZ = k * (cameraRelZ1 - cameraRelZ2) + cameraRelZ2;
+
+        return getCameraAbsoluteZ(new Length(cameraRelZ, units));
     }
 
     @Override
@@ -1238,7 +1310,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
             return obj.equals(listener);
         }
     }
-    
+
     @Override
     public void findIssues(List<Issue> issues) {
         super.findIssues(issues);
@@ -1250,18 +1322,14 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
                     "Calibrate the camera's units per pixel.", 
                     Severity.Warning,
                     "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel"));
-}
-        else if (unitsPerPixel.getLengthZ().
-                subtract(unitsPerPixelSecondary.getLengthZ()).getValue() == 0) {
+        }
+        else if (!isSecondaryUnitsPerPixelCalibrated()) {
             issues.add(new Solutions.PlainIssue(
                     this, 
-                    "Camera units per pixel has not been calibrated at two different heights.", 
+                    "Camera units per pixel can be calibrated for 3D scale estimation.", 
                     "Calibrate the camera's units per pixel at two different heights.", 
                     Severity.Suggestion,
                     "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel"));
         }
-
     }
 }
-    
-
