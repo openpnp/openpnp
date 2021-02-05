@@ -20,6 +20,7 @@
 package org.openpnp.machine.reference.feeder.wizards;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
@@ -52,6 +53,7 @@ import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IdentifiableComparator;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.JBindings.Wrapper;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
@@ -76,7 +78,9 @@ public class ReferenceHeapFeederConfigurationWizard
         extends AbstractConfigurationWizard {
     private final ReferenceHeapFeeder feeder;
     private JTextField dropBoxNameTf;
-
+    private MutableLocationProxy dropBoxLocation;
+    private MutableLocationProxy dropBoxDropLocation;
+    
     @SuppressWarnings("rawtypes")
     public class PartsComboBoxModel extends DefaultComboBoxModel implements PropertyChangeListener {
         private IdentifiableComparator<Part> comparator = new IdentifiableComparator<>();
@@ -167,7 +171,7 @@ public class ReferenceHeapFeederConfigurationWizard
         JPanel panel_1 = new JPanel();
         FlowLayout flowLayout_1 = (FlowLayout) panel_1.getLayout();
         flowLayout_1.setAlignment(FlowLayout.LEFT);
-        whateverPanel.add(panel_1, "12, 2");
+        whateverPanel.add(panel_1, "11, 2");
         
         JLabel lblDropBox = new JLabel("DropBox");
         whateverPanel.add(lblDropBox, "2, 2, right, default");
@@ -521,7 +525,7 @@ public class ReferenceHeapFeederConfigurationWizard
             });
         bind(UpdateStrategy.READ_WRITE, dropBoxWrapper, "value.dummyPartForUnknown", cbDummyPartForUnknownParts, "selectedItem");
 
-        MutableLocationProxy dropBoxLocation = new MutableLocationProxy();
+        dropBoxLocation = new MutableLocationProxy();
         addWrappedBinding(feeder, "dropBoxLocation", dropBoxLocation, "location");
         bind(UpdateStrategy.READ_WRITE, dropBoxLocation, "lengthX", tfCenterBottomLocation_x, "text", lengthConverter);
         bind(UpdateStrategy.READ_WRITE, dropBoxLocation, "lengthY", tfCenterBottomLocation_y, "text", lengthConverter);
@@ -531,7 +535,7 @@ public class ReferenceHeapFeederConfigurationWizard
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfCenterBottomLocation_z);
         //bind(UpdateStrategy.READ_WRITE, dropBoxWrapper, "value.centerBottomLocation", dropBoxLocation, "location");
         
-        MutableLocationProxy dropBoxDropLocation = new MutableLocationProxy();
+        dropBoxDropLocation = new MutableLocationProxy();
         addWrappedBinding(feeder, "dropBoxDropLocation", dropBoxDropLocation, "location");
         bind(UpdateStrategy.READ_WRITE, dropBoxDropLocation, "lengthX", tfDropLocation_x, "text", lengthConverter);
         bind(UpdateStrategy.READ_WRITE, dropBoxDropLocation, "lengthY", tfDropLocation_y, "text", lengthConverter);
@@ -544,6 +548,8 @@ public class ReferenceHeapFeederConfigurationWizard
         
         dropBoxCb.addActionListener(e -> {
             notifyChange();
+            dropBoxLocation.setLocation(((DropBox)dropBoxCb.getSelectedItem()).getCenterBottomLocation());
+            dropBoxDropLocation.setLocation(((DropBox)dropBoxCb.getSelectedItem()).getDropLocation());
         });
     }
 
@@ -602,11 +608,11 @@ public class ReferenceHeapFeederConfigurationWizard
     };
 
     private void editPartsPipeline() throws Exception {
-        CvPipeline pipeline = feeder.getDropBox().getPartPipeline();
+        CvPipeline pipeline = ((DropBox)dropBoxCb.getSelectedItem()).getPartPipeline();
         pipeline.setProperty("camera", Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
-        pipeline.setProperty("dropBox", feeder.getDropBox());
+        pipeline.setProperty("dropBox", ((DropBox)dropBoxCb.getSelectedItem()));
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), feeder.getDropBox().getId() + " Part-Pipeline", editor);
+        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), ((DropBox)dropBoxCb.getSelectedItem()).getId() + " Part-Pipeline", editor);
         dialog.setVisible(true);
 }
 
@@ -623,7 +629,7 @@ public class ReferenceHeapFeederConfigurationWizard
         @Override
         public void actionPerformed(ActionEvent e) {
             UiUtils.messageBoxOnException(() -> {
-                feeder.getDropBox().resetPartPipeline();
+                ((DropBox)dropBoxCb.getSelectedItem()).resetPartPipeline();
             });
         }
     };
