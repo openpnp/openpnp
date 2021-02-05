@@ -204,6 +204,13 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
         autoVisible = new JCheckBox("");
         panel.add(autoVisible, "4, 8");
+        
+        lblShowMultiview = new JLabel("Show in multi camera view?");
+        lblShowMultiview.setToolTipText("<html>\r\nShow this camera in the Camera Panel when mutiple cameras are shown.<br/>\r\nFor example this can be switched off for capture card cameras that are <br/>\r\nalready exposed through SwitcherCameras.\r\n</html>");
+        panel.add(lblShowMultiview, "6, 8, right, default");
+        
+        shownInMultiCameraView = new JCheckBox("");
+        panel.add(shownInMultiCameraView, "8, 8");
         panelLight = new JPanel();
         panelLight.setBorder(new TitledBorder(null, "Light", TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
@@ -525,6 +532,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         addWrappedBinding(camera, "previewFps", previewFps, "text", doubleConverter);
         addWrappedBinding(camera, "suspendPreviewInTasks", suspendPreviewInTasks, "selected");
         addWrappedBinding(camera, "autoVisible", autoVisible, "selected");
+        addWrappedBinding(camera, "shownInMultiCameraView", shownInMultiCameraView, "selected");
 
         addWrappedBinding(camera, "allowMachineActuators", allowMachineActuators, "selected");
         addWrappedBinding(camera, "lightActuator", lightActuator, "selectedItem", actuatorConverter);
@@ -877,4 +885,6 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     private JCheckBox enableUnitsPerPixel3D;
     private JLabel lblAutoViewPlaneZ;
     private JCheckBox autoViewPlaneZ;
+    private JLabel lblShowMultiview;
+    private JCheckBox shownInMultiCameraView;
 }

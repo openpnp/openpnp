@@ -201,4 +201,9 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     default boolean isAutoVisible() { 
         return false; 
     }
+
+    /**
+     * @return True if this Camera should be shown in multi camera view panels. 
+     */
+    boolean isShownInMultiCameraView();
 }
