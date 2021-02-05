@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * Copyright (C) 2021 Johannes Formann <johannes-openpnp@formann.de>
+
  * 
  * This file is part of OpenPnP.
  * 
@@ -20,7 +22,6 @@
 package org.openpnp.machine.reference.feeder.wizards;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
@@ -53,7 +54,6 @@ import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IdentifiableComparator;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IntegerConverter;
-import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.JBindings.Wrapper;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
