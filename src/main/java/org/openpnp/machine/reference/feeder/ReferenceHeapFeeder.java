@@ -112,13 +112,13 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      * Pipeline to detect parts (correct laying).
      */
     @Element(required = false)
-    private CvPipeline feederPipeline = createFeederPipeline();
+    private CvPipeline feederPipeline = HeapFeederHelper.createPipeline("Part", dropBox);
 
     /**
      * Pipeline for getting a reference image.
      */
     @Element(required = false)
-    private CvPipeline trainingPipeline = createTrainingPipeline();
+    private CvPipeline trainingPipeline = HeapFeederHelper.createPipeline("Training", dropBox);
 
     private Location pickLocation;
 
@@ -148,7 +148,6 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         dropBoxId = getDropBox().getId();
     }
 
-
     /**
      * Get all defined DropBoxes.
      * @return List of DropBoxes
@@ -171,7 +170,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
     }
 
     /**
-     * If a pick location exist, retur that.
+     * If a pick location exist, return that.
      * Else the center of the DropBox.
      */
     @Override
@@ -247,7 +246,6 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         fetchParts(nozzle);
     }
 
-
     /**
      * Moves the nozzle to this Heap.
      * Uses the three "waypoints", sets "SpeedOverPrecision".
@@ -304,7 +302,6 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         }
         return true;
     }
-
 
     /**
      * Gets parts from the Heap and drops them in the associated DropBox
@@ -434,96 +431,32 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      */
     private Location getFeederPart(Nozzle nozzle) throws Exception {
         Location location = dropBox.centerBottomLocation.derive(null, null, Double.NaN, 0.0);
-
+        CvPipeline pipeline = getFeederPipeline();
+        Camera camera = nozzle.getHead().getDefaultCamera();
         // if there is a part, get a precise location
         for (int i = 0; i < 3 && location != null; i++) {
-            location = locateFeederPart(nozzle, location);
+            MovableUtils.moveToLocationAtSafeZ(camera, location.derive(null, null, Double.NaN, 0d));
+            location = HeapFeederHelper.getNearestPart(pipeline, camera, nozzle, this, getDropBox());
             if (location != null) {
                 // adjust Z
                 location = location.derive(null, null, dropBox.centerBottomLocation.convertToUnits(location.getUnits()).getZ()
                         + part.getHeight().convertToUnits(location.getUnits()).getValue(), null);
             }
         }
+        MainFrame.get()
+        .getCameraViews()
+        .getCameraView(camera)
+        .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()),
+                500);
         return location;
     }
 
-    /**
-     * Executes the vision pipeline to locate a part.
-     * @param nozzle used nozzle
-     * @param visionCenter 
-     * @return location or null
-     * @throws Exception something went wrong
-     */
-    private Location locateFeederPart(Nozzle nozzle, Location visionCenter) throws Exception {
-        Camera camera = nozzle.getHead().getDefaultCamera();
-        MovableUtils.moveToLocationAtSafeZ(camera, visionCenter.derive(null, null, Double.NaN, 0d));
-        try (CvPipeline pipeline = getFeederPipeline()) {
-            // wait for the move to finish
-            camera.waitForCompletion(CompletionType.WaitForStillstand);
-            // Process the pipeline to extract RotatedRect results
-            pipeline.setProperty("camera", camera);
-            pipeline.setProperty("nozzle", nozzle);
-            pipeline.setProperty("feeder", this);
-            pipeline.process();
-            // Grab the results
-            List<RotatedRect> results = (List<RotatedRect>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
-            if ((results == null) || results.isEmpty()) {
-                //nothing found
-                return null;
-            }
-            // Find the closest result
-            results.sort((a, b) -> {
-                Double da = VisionUtils.getPixelLocation(camera, a.center.x, a.center.y)
-                        .getLinearDistanceTo(camera.getLocation());
-                Double db = VisionUtils.getPixelLocation(camera, b.center.x, b.center.y)
-                        .getLinearDistanceTo(camera.getLocation());
-                return da.compareTo(db);
-            });
-            RotatedRect result = results.get(0);
-            Location location = VisionUtils.getPixelLocation(camera, result.center.x, result.center.y);
-            // Get the result's Location
-            // Update the location with the result's rotation
-            location = location.derive(null, null, null, -(result.angle + getLocation().getRotation()));
-            MainFrame.get().getCameraViews().getCameraView(camera)
-            .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
-            
-            // just make sure vision has not left the dropBox
-            if(location.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(getDropBoxLocation()) > 8) {
-                return null;
-            }
-            
-            return location;
-        }
-    }
-
-    private CvPipeline createTrainingPipeline() {
-        try {
-            String xml = IOUtils.toString(ReferenceHeapFeeder.class
-                    .getResource("HeapFeeder-Training-DefaultPipeline.xml"));
-            return new CvPipeline(xml);
-        }
-        catch (Exception e) {
-            throw new Error(e);
-        }       
-    }
-
-    private CvPipeline createFeederPipeline() {
-        try {
-            String xml = IOUtils.toString(ReferenceHeapFeeder.class
-                    .getResource("HeapFeeder-Part-DefaultPipeline.xml"));
-            return new CvPipeline(xml);
-        }
-        catch (Exception e) {
-            throw new Error(e);
-        }       
-    }
-
     public void resetFeederPipeline() {
-        feederPipeline = createFeederPipeline();
+        feederPipeline = HeapFeederHelper.createPipeline("Part", dropBox);
     }
 
     public void resetTrainingPipeline() {
-        trainingPipeline = createTrainingPipeline();
+        trainingPipeline = HeapFeederHelper.createPipeline("Training", dropBox);
     }
 
     @Override
@@ -643,8 +576,8 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
          * The pipeline to detect all parts in a DropBox, should detect everything, despite orientation, wrong part and so on.
          */
         @Element
-        private CvPipeline partPipeline = createPartPipeline();
-
+        private CvPipeline partPipeline = HeapFeederHelper.createPipeline("DropBox", this);
+        
         /**
          * Center (xy) and bottom (z) of the DropBox
          */
@@ -852,10 +785,10 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             MovableUtils.moveToLocationAtSafeZ(camera, centerBottomLocation.derive(null, null, Double.NaN, 0d));
             Location partLocation;
             try (CvPipeline pipeline = getPartPipeline()) {
-                partLocation = getNearestPart(pipeline, camera, nozzle);
+                partLocation = HeapFeederHelper.getNearestPart(pipeline, camera, nozzle, getLastHeap(), this);
                 if (partLocation != null) {
                     camera.moveTo(partLocation.derive(null, null, null, 0.0));
-                    partLocation = getNearestPart(pipeline, camera, nozzle);
+                    partLocation = HeapFeederHelper.getNearestPart(pipeline, camera, nozzle, getLastHeap(), this);
                     if (partLocation != null) {
                         camera.moveTo(partLocation.derive(null, null, null, 0.0));
                         double partHeight = dummyPartForUnknown.getHeight().getValue();
@@ -871,48 +804,11 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
                 .getCameraViews()
                 .getCameraView(camera)
                 .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()),
-                        1000);
+                        500);
             }
             return partLocation;
         }
 
-        /**
-         * Returns the nearest part from the current center.
-         * @param pipeline used pipeline
-         * @param camera used camera
-         * @param nozzle used nozzle
-         * @return location if found, otherwise null
-         * @throws Exception 
-         */
-        private Location getNearestPart(CvPipeline pipeline, Camera camera, Nozzle nozzle) throws Exception {
-            // make sure move halted for vision
-            camera.waitForCompletion(CompletionType.WaitForStillstand);
-            // Process the pipeline to extract RotatedRect results
-            pipeline.setProperty("camera", camera);
-            pipeline.setProperty("nozzle", nozzle);
-            pipeline.setProperty("feeder", this);
-            pipeline.process();
-            // Grab the results
-            List<RotatedRect> results =
-                    (List<RotatedRect>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
-            if (results == null || results.isEmpty()) {
-                return null;
-            }
-            // Find the closest result
-            results.sort((a, b) -> {
-                Double da = VisionUtils.getPixelLocation(camera, a.center.x, a.center.y)
-                        .getLinearDistanceTo(camera.getLocation());
-                Double db = VisionUtils.getPixelLocation(camera, b.center.x, b.center.y)
-                        .getLinearDistanceTo(camera.getLocation());
-                return da.compareTo(db);
-            });
-            RotatedRect result = results.get(0);
-            // Get the result's Location
-            Location location = VisionUtils.getPixelLocation(camera, result.center.x, result.center.y);
-            // Update the location's rotation with the result's angle
-            location = location.derive(null, null, null, result.angle + this.centerBottomLocation.getRotation());
-            return location;
-        }
 
         @Override
         public String toString() {
@@ -920,18 +816,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         }
 
         public void resetPartPipeline() {
-            partPipeline = createPartPipeline();
-        }
-
-        private CvPipeline createPartPipeline() {
-            try {
-                String xml = IOUtils.toString(ReferenceHeapFeeder.class
-                        .getResource("HeapFeeder-DropBox-DefaultPipeline.xml"));
-                return new CvPipeline(xml);
-            }
-            catch (Exception e) {
-                throw new Error(e);
-            }       
+            partPipeline = HeapFeederHelper.createPipeline("DropBox", this);
         }
 
         public CvPipeline getPartPipeline() {
@@ -989,7 +874,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             firePropertyChange("name", oldValue, name);
         }
     }
-
+    
     /**
      * This class is just a delegate wrapper around a list. 
      */
@@ -997,5 +882,84 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
     public static class DropBoxProperty {
         @ElementList
         IdentifiableList<DropBox> boxes = new IdentifiableList<>();
+    }
+    
+    /**
+     * This class contains some methods used in the dropBox and the Heap
+     *
+     */
+    public static class HeapFeederHelper {
+        
+        /**
+         * Returns the nearest part from the current center.
+         * @param pipeline used pipeline
+         * @param camera used camera
+         * @param nozzle used nozzle
+         * @return location if found, otherwise null
+         * @throws Exception 
+         */
+        static Location getNearestPart(CvPipeline pipeline, Camera camera, Nozzle nozzle, ReferenceFeeder feeder, DropBox dropBox) throws Exception {
+            // make sure move halted for vision
+            camera.waitForCompletion(CompletionType.WaitForStillstand);
+            // Process the pipeline to extract RotatedRect results
+            pipeline.setProperty("camera", camera);
+            pipeline.setProperty("nozzle", nozzle);
+            pipeline.setProperty("feeder", feeder);
+            pipeline.process();
+            // Grab the results
+            List<RotatedRect> results =
+                    (List<RotatedRect>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
+            if (results == null || results.isEmpty()) {
+                return null;
+            }
+            // Find the closest result
+            results.sort((a, b) -> {
+                Double da = VisionUtils.getPixelLocation(camera, a.center.x, a.center.y)
+                        .getLinearDistanceTo(camera.getLocation());
+                Double db = VisionUtils.getPixelLocation(camera, b.center.x, b.center.y)
+                        .getLinearDistanceTo(camera.getLocation());
+                return da.compareTo(db);
+            });
+            RotatedRect result = results.get(0);
+            // Get the result's Location
+            Location location = VisionUtils.getPixelLocation(camera, result.center.x, result.center.y);
+            // Update the location's rotation with the result's angle 
+            location = location.derive(null, null, null, -result.angle);
+            
+            // just make sure vision has not left the dropBox
+            if(location.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(dropBox.getCenterBottomLocation()) > 8) {
+                return null;
+            }
+            
+            MainFrame.get()
+            .getCameraViews()
+            .getCameraView(camera)
+            .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()),
+                    250);
+
+
+            return location;
+        }
+
+        
+        static CvPipeline createPipeline(String type, DropBox dropBox) {
+            String dropBoxColor = "GREEN";  // default
+            if (dropBox  != null && dropBox.getName() != null) {
+                dropBoxColor = dropBox.getName().toUpperCase();
+            }
+            if (! (dropBoxColor.equals("GREEN") || dropBoxColor.equals("WHITE") || dropBoxColor.equals("BLACK") ) ) {
+                dropBoxColor = "GREEN"; // default if color could not be guessed from name
+            }
+            String ressource = "HeapFeeder-" + type + "-" + dropBoxColor + "-Pipeline.xml";
+            try {
+                String xml = IOUtils.toString(ReferenceHeapFeeder.class
+                        .getResource(ressource));
+                return new CvPipeline(xml);
+            }
+            catch (Exception e) {
+                throw new Error(e);
+            }       
+        }
+        
     }
 }
