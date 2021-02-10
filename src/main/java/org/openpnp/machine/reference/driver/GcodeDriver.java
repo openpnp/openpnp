@@ -4,17 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,7 +50,6 @@ import org.openpnp.spi.base.AbstractHeadMountable;
 import org.openpnp.spi.base.AbstractSingleTransformedAxis;
 import org.openpnp.spi.base.AbstractTransformedAxis;
 import org.openpnp.util.NanosecondTime;
-import org.openpnp.util.Triplet;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -98,6 +90,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
         ACTUATE_STRING_COMMAND(true, "Id", "Name", "Index", "StringValue"),
         ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index"),
+        @Deprecated
         ACTUATOR_READ_WITH_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
         ACTUATOR_READ_REGEX(true);
 
@@ -300,6 +293,25 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Commit
     public void commit() {
         super.commit();
+
+        Map<String, Command> actuatorReadWithDoubleCommands = new HashMap<>();
+        Map<String, Command> actuatorReadCommands = new HashMap<>();
+
+        for (Command command : commands) {
+            if(command.type == CommandType.ACTUATOR_READ_WITH_DOUBLE_COMMAND) {
+                actuatorReadWithDoubleCommands.put(command.headMountableId, command);
+            }
+
+            if(command.type == CommandType.ACTUATOR_READ_COMMAND) {
+                actuatorReadCommands.put(command.headMountableId, command);
+            }
+        }
+
+        for (Map.Entry<String, Command> entry : actuatorReadWithDoubleCommands.entrySet()) {
+            if(actuatorReadCommands.get(entry.getKey()) == null) {
+                entry.getValue().type = CommandType.ACTUATOR_READ_COMMAND;
+            }
+        }
     }
 
     @Override
