@@ -245,6 +245,9 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         
         // get  parts
         fetchParts(nozzle);
+        
+        // move camera
+        MovableUtils.moveToLocationAtSafeZ(nozzle.getHead().getDefaultCamera(), dropBox.centerBottomLocation.derive(null, null, Double.NaN, 0.0));
     }
 
     /**
