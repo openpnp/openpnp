@@ -99,7 +99,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      * Used to avoid endless retries if a part is not recognizable.
      */
     @Attribute(required = false)
-    private int throwAwayDropBoxContentAfterFailedFeeds = 7;
+    private int throwAwayDropBoxContentAfterFailedFeeds = 9;
 
     /**
      * Needed increase in the vacuum while stirring in a heap to define "part(s) on the nozzle".
@@ -221,6 +221,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
                 // deny the parts are from this heap => trash
                 dropBox.setLastHeap(null);
                 dropBox.clean(nozzle);
+                dropBox.setLastHeap(this);
             }
         }
     }
