@@ -95,7 +95,7 @@ However, with the other **Motion Control Type**s, the velocity that is effective
 
 ![Effective-Feedrate-Limit](https://user-images.githubusercontent.com/9963310/96274469-cead2500-0fd0-11eb-8626-ea42324f8680.gif)
 
-This is done by also controlling acceleration (and possibly jerk) limits. The acceleration limit is scaled with the speed factor to the power of 2, the jerk limit (if applicable) with the factor to the power of 3. So a 50% speed move has only 25% of the accleration and a mere 12.5% of the jerk. Even a moderate reduction of speed results in a much smoother/gentler motion, due to strong attenuation of vibrations. 
+This is done by also controlling acceleration (and possibly jerk) limits. The acceleration limit is scaled with the speed factor to the power of 2, the jerk limit (if applicable) with the factor to the power of 3. So a 50% speed move has only 25% of the accleration and a mere 12.5% of the jerk. Even a moderate reduction of speed results in a much smoother/gentler motion, due to strong attenuation of accelerations ("g-forces" acting on nozzle, part etc.) and vibrations. 
 
 Therefore, if you migrate an existing machine setup and then change the **Motion Control Type**, you will need to revisit the various speed factors. Because slowed moves are now much smoother/gentler, you can get away with higher speed factors. 
 
