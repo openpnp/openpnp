@@ -56,7 +56,7 @@ Using a trusted precision square or a large millimeter paper, you should be able
 
 This is just one example, fixing the X/Y non-squareness using a compensation in X. If you prefer, you could also compensate in Y. If your machine table is uneven, compensate in Z. Any axis can be transformed, even in combination. 
 
-The created axis must now be used **instead of the physical axis** in the [[Axis Mapping|Mapping Axes]].
+**IMPORTANT:** The created axis must now be used **instead of the physical axis** in the [[Axis Mapping|Mapping Axes]].
 
 ## Other uses
 
