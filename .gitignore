@@ -12,3 +12,7 @@ src/main/resources/icons/src/Soft_Scraps_by_deleket
 .github_changelog_generator
 hs_err*
 *.log
+src/main/resources/org/.DS_Store
+src/main/resources/org/openpnp/.DS_Store
+src/main/resources/org/openpnp/machine/.DS_Store
+src/main/resources/org/openpnp/machine/reference/.DS_Store
