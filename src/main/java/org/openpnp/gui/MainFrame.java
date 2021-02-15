@@ -342,6 +342,10 @@ public class MainFrame extends JFrame {
         JMenu mnLanguage = new JMenu(Translations.getString("Menu.View.Language")); //$NON-NLS-1$
         mnView.add(mnLanguage);
 
+        menuItem = new JCheckBoxMenuItem(new LanguageSelectionAction(new Locale("zh")));
+        buttonGroup.add(menuItem);
+        mnLanguage.add(menuItem);
+
         menuItem = new JCheckBoxMenuItem(new LanguageSelectionAction(Locale.US));
         buttonGroup.add(menuItem);
         mnLanguage.add(menuItem);
@@ -659,7 +663,7 @@ public class MainFrame extends JFrame {
 	            configuration.load();
 	            scriptFileWatcher = new ScriptFileWatcher(configuration.getScripting());
 	            scriptFileWatcher.setMenu(mnScripts);
-	            
+	            //openpnp 欢迎界面
 	            if (Configuration.get().getMachine().getProperty("Welcome2_0_Dialog_Shown") == null) {
 	                Welcome2_0Dialog dialog = new Welcome2_0Dialog(this);
 	                dialog.setSize(750, 550);
@@ -1228,7 +1232,8 @@ public class MainFrame extends JFrame {
         public void actionPerformed(ActionEvent arg0) {
           configuration.setLocale(locale);
           MessageBoxes.infoBox("Notice", //$NON-NLS-1$
-                  "Please restart OpenPnP for the changes to take effect."); //$NON-NLS-1$
+                  "Please restart OpenPnP for the changes to take effect.\n" +
+                          "语言设置会在重新启动OpenPnP后生效。"); //$NON-NLS-1$
       }
     }
     
