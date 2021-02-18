@@ -16,7 +16,7 @@
 
 ## How do I let OpenPnP help me?
 
-Check out the [[Issues and Solutions]] system. It can often diagnose issues and sometimes even suggest solutions. Issue are also most of the times linked to the relevant pages in this Wiki. 
+Check out the [[Issues and Solutions]] system. It can often diagnose issues and sometimes even suggest solutions. Issues are also most of the times linked to the relevant pages in this Wiki. 
 
 ## How do I get help?
 
