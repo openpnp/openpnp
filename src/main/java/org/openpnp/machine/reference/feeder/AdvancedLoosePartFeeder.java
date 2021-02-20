@@ -35,7 +35,6 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
@@ -60,11 +59,6 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
-        // just to be sure it's the right nozzle for the job
-        if ( !getPart().getPackage().getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
-            nozzle.loadNozzleTip(getPart().getPackage().getCompatibleNozzleTips().toArray(new NozzleTip[0])[0]);
-        }
-
         // no part found => no pick location
         pickLocation = location.derive(null, null, Double.NaN, 0.0);
 
