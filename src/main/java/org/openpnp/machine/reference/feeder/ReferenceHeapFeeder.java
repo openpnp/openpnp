@@ -177,11 +177,9 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
     public Location getPickLocation() throws Exception {
         if (pickLocation != null) {
             return pickLocation;
-        } else if (dropBox != null) {
-            return new Location(dropBox.centerBottomLocation.getUnits(), dropBox.centerBottomLocation.getX(), dropBox.centerBottomLocation.getY(),
-                    dropBox.centerBottomLocation.getZ() + part.getHeight().getValue(), dropBox.centerBottomLocation.getRotation());
+        } else {
+            throw new Exception("Feeder " + getName() + ": No parts found.");
         }
-        return null;
     }
 
     /**
