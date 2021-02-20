@@ -175,11 +175,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      */
     @Override
     public Location getPickLocation() throws Exception {
-        if (pickLocation != null) {
-            return pickLocation;
-        } else {
-            throw new Exception("Feeder " + getName() + ": No parts found.");
-        }
+        return pickLocation == null ? location : pickLocation;
     }
 
     /**
@@ -221,6 +217,10 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
                 dropBox.clean(nozzle);
                 dropBox.setLastHeap(this);
             }
+        }
+        // throw if feed results in no parts
+        if (pickLocation == null) {
+            throw new Exception("Feeder " + getName() + ": No parts found.");
         }
     }
     
