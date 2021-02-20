@@ -54,10 +54,7 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
 
     @Override
     public Location getPickLocation() throws Exception {
-        if (pickLocation == null) {
-            throw new Exception("Feeder " + getName() + ": No parts found.");
-        }
-        return pickLocation;
+        return pickLocation == null ? location : pickLocation;
     }
 
     @Override
@@ -68,6 +65,10 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
         // if there is a part, get a precise location
         for (int i = 0; i < 3 && pickLocation != null; i++) {
             pickLocation = locateFeederPart(nozzle, pickLocation);
+        }
+        // throw if feed results in no parts
+        if (pickLocation == null) {
+            throw new Exception("Feeder " + getName() + ": No parts found.");
         }
     }
 
