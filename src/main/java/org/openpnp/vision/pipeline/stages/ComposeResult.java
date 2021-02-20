@@ -20,6 +20,7 @@
 package org.openpnp.vision.pipeline.stages;
 
 import org.opencv.core.Mat;
+import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -62,6 +63,7 @@ public class ComposeResult extends CvStage {
 
         Object model = null;
         Mat image = null;
+        ColorSpace colorSpace = null;
 
         if (modelStageName == null || modelStageName.trim()
                                                     .equals("")) {
@@ -75,13 +77,15 @@ public class ComposeResult extends CvStage {
         if (imageStageName == null || imageStageName.trim()
                                                     .equals("")) {
             image = pipeline.getWorkingImage();
+            colorSpace = pipeline.getWorkingColorSpace();
         }
         else {
             image = pipeline.getExpectedResult(imageStageName).image;
+            colorSpace = pipeline.getExpectedResult(imageStageName).colorSpace;
         }
         if (model == null) {
-            return new Result(image);
+            return new Result(image, colorSpace);
         }
-        return new Result(image, model);
+        return new Result(image, colorSpace, model);
     }
 }

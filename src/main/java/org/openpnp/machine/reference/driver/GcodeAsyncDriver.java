@@ -336,23 +336,28 @@ public class GcodeAsyncDriver extends GcodeDriver {
                 getReportedLocation(timeout);
             }
             else {
-                // Normal confirmation report wanted. We queue a null command to drain the queue and confirm 
-                // the last real command. 
-                confirmationComplete = false;
-                CommandLine commandLine = new CommandLine(null, 1);
-                commandQueue.offer(commandLine, writerQueueTimeout, TimeUnit.MILLISECONDS);
-                while (!confirmationComplete) {
-                    try {
-                        synchronized(this) { 
-                            wait(timeout);
-                        }
-                    }
-                    catch (InterruptedException e) {
-                        Logger.warn(getName() +" was interrupted while waiting for completion.", e);
-                    }
-                }
+                drainCommandQueue(timeout);
             }
             Logger.trace("{} confirmation complete.", getName());
+        }
+    }
+
+    @Override
+    protected void drainCommandQueue(long timeout) throws InterruptedException {
+        // Normal confirmation report wanted. We queue a null command to drain the queue and confirm 
+        // the last real command. 
+        confirmationComplete = false;
+        CommandLine commandLine = new CommandLine(null, 1);
+        commandQueue.offer(commandLine, writerQueueTimeout, TimeUnit.MILLISECONDS);
+        while (!confirmationComplete) {
+            try {
+                synchronized(this) { 
+                    wait(timeout);
+                }
+            }
+            catch (InterruptedException e) {
+                Logger.warn(getName() +" was interrupted while waiting for completion.", e);
+            }
         }
     }
 

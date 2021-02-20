@@ -191,15 +191,40 @@ class GcodeDriverSolutions implements Solutions.Subject {
 
         if (gcodeDriver instanceof GcodeAsyncDriver) {
             boolean locationConfirmation = ((GcodeAsyncDriver)gcodeDriver).isReportedLocationConfirmation();
-            if (hasAxes ^ locationConfirmation) {
+            boolean confirmationFlowControl = ((GcodeAsyncDriver)gcodeDriver).isConfirmationFlowControl();
+            boolean locationConfirmationRecommended = hasAxes;
+            if (locationConfirmationRecommended != locationConfirmation) {
                 issues.add(new Solutions.Issue(
                         gcodeDriver, 
-                        (hasAxes ? 
-                                "Switch to Location Confirmation for full asynchronous operation and extra features in homing, contact probing, etc."
-                                :"Switch to Confirmation Flow Control (controller has no axes)."),
-                        (hasAxes ? 
-                                "Enable Location Confirmation, Disable Confirmation Flow Control."
-                                :"Disable Location Confirmation, Enable Confirmation Flow Control."), 
+                        (locationConfirmationRecommended 
+                                ? (confirmationFlowControl 
+                                        ? "Location Confirmation recommended for extra features in homing, contact probing, etc."
+                                                : "Location Confirmation required when Confirmation Flow Control is off. Supports extra features in homing, contact probing, etc.")
+                                        : "Location Confirmation usually not available when no axes present."),
+                        (locationConfirmationRecommended ? "Enable Location Confirmation" : "Disable Location Confirmation"), 
+                        (confirmationFlowControl ? Severity.Suggestion : Severity.Error),
+                        "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#advanced-settings") {
+
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        if (confirmStateChange(state)) {
+                            ((GcodeAsyncDriver) gcodeDriver)
+                            .setReportedLocationConfirmation(locationConfirmation ^ (state == Solutions.State.Solved));
+                            super.setState(state);
+                        }
+                    }
+                });
+            }
+            boolean confirmationFlowControlRecommended = isTinyG || ! hasAxes;
+            if (confirmationFlowControlRecommended != confirmationFlowControl) {
+                issues.add(new Solutions.Issue(
+                        gcodeDriver, 
+                        (confirmationFlowControl ? 
+                                "Disable Confirmation Flow Control for full asynchronous operation."
+                                : "Enable Confirmation Flow Control" + (hasAxes ? "" : ", controller has no axes") + (isTinyG ? ", TinyG detected" : "") + "."),
+                        (confirmationFlowControl ? 
+                                "Disable Confirmation Flow Control."
+                                :"Enable Confirmation Flow Control."), 
                         Severity.Suggestion,
                         "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#advanced-settings") {
 
@@ -207,9 +232,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                     public void setState(Solutions.State state) throws Exception {
                         if (confirmStateChange(state)) {
                             ((GcodeAsyncDriver) gcodeDriver)
-                            .setReportedLocationConfirmation(hasAxes ^ !(state == Solutions.State.Solved));
-                            ((GcodeAsyncDriver) gcodeDriver)
-                            .setConfirmationFlowControl(hasAxes ^ (state == Solutions.State.Solved));
+                            .setConfirmationFlowControl(confirmationFlowControl ^ (state == Solutions.State.Solved));
                             super.setState(state);
                         }
                     }
@@ -331,15 +354,15 @@ class GcodeDriverSolutions implements Solutions.Subject {
             });
         }
 
-        if (gcodeDriver.communicationsType.equals("serial") && gcodeDriver.serial != null) {
+        if (gcodeDriver.communicationsType == CommunicationsType.serial && gcodeDriver.serial != null) {
             final FlowControl oldFlowControl = gcodeDriver.serial.getFlowControl();
-            final FlowControl newFlowControl = FlowControl.RtsCts; 
+            final FlowControl newFlowControl = isTinyG ? FlowControl.XonXoff : FlowControl.RtsCts; 
             if (oldFlowControl != newFlowControl) {
                 issues.add(new Solutions.Issue(
                         gcodeDriver, 
-                        "Serial Port Flow Control recommended.", 
-                        "Set "+newFlowControl.name()+" Flow Control on Serial Port.", 
-                        gcodeDriver.serial.getFlowControl() == FlowControl.Off ? Severity.Warning : Severity.Suggestion,
+                        "Change of serial port Flow Control recommended.", 
+                        "Set "+newFlowControl.name()+" on serial port.", 
+                        (gcodeDriver.serial.getFlowControl() == FlowControl.Off || isTinyG ? Severity.Warning : Severity.Suggestion),
                         "https://en.wikipedia.org/wiki/Flow_control_(data)#Hardware_flow_control") {
 
                     @Override
@@ -432,6 +455,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                 String command = gcodeDriver.getCommand(null, commandType);
                 String commandBuilt = null;
                 boolean disallowHeadMountables = false;
+                boolean commandModified = false;
                 switch (commandType) {
                     case CONNECT_COMMAND:
                         if (command == null) {
@@ -440,9 +464,22 @@ class GcodeDriverSolutions implements Solutions.Subject {
                                             +"G90 ; Set absolute positioning mode";
                             if (isTinyG) {
                                 commandBuilt = 
-                                        "$ex=2\n" // RtsCts
+                                        "$ex=1\n" // XonXoff
                                         +"$sv=0\n" // Non-verbose
                                         +commandBuilt;
+                            }
+                        }
+                        else if (isTinyG) {
+                            commandModified = true;
+                            if (command.contains("$ex=2")) {
+                                commandBuilt = command.replace("$ex=2", "$ex=1");
+                            }
+                            else if (command.contains("$ex=0")) {
+                                commandBuilt = command.replace("$ex=0", "$ex=1");
+                            }
+                            else if (!command.contains("$ex=1")){
+                                commandBuilt = "$ex=1\n"
+                                        +command;
                             }
                         }
                         break;
@@ -518,7 +555,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                         }
                         break;
                     case MOVE_TO_COMPLETE_REGEX:
-                        if (command != null && isTinyG) {
+                        if (command != null) {
                             // Make it obsolete with the new (detected) firmware.
                             commandBuilt = "";
                         }
@@ -594,54 +631,70 @@ class GcodeDriverSolutions implements Solutions.Subject {
                         }
                         break;
                 }
-                final String commandSuggested = commandBuilt; 
-                if (commandSuggested != null && !commandSuggested.equals(command)) {
-                    issues.add(new Solutions.Issue(
-                            gcodeDriver, 
-                            commandType.name()+(commandSuggested.isEmpty() ? " obsolete." : " suggested.")
-                            + (gcodeDriver.isSpeakingGcode() ? "" : " Accept if this is a true Gcode controller."), 
-                            (commandSuggested.isEmpty() ? "Delete it." : commandSuggested), 
-                            commandSuggested.isEmpty() ? Severity.Warning 
-                                    : (gcodeDriver.isSpeakingGcode() ? Severity.Suggestion : Severity.Fundamental),
-                            "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version") {
+                suggestGcodeCommand(gcodeDriver, null, issues, commandType, commandBuilt, commandModified, 
+                        disallowHeadMountables);
+            }
+        }
+    }
 
-                        @Override
-                        public void setState(Solutions.State state) throws Exception {
-                            if (confirmStateChange(state)) {
-                                gcodeDriver.setCommand(null, commandType, (state == Solutions.State.Solved) ? commandSuggested : command);
-                                super.setState(state);
-                            }
-                        }
-                    });
+    /**
+     * Add a solution for the given gcodeDriver to the issues, to suggest the given suggestedCommand instead of the currentCommand.
+     *  
+     * @param gcodeDriver
+     * @param issues
+     * @param commandType
+     * @param currentCommand
+     * @param suggestedCommand
+     * @param disallowHeadMountables Set true to disallow the commandType on HeadMountables. This is used when switching to axis letter variables.  
+     */
+    public static void suggestGcodeCommand(GcodeDriver gcodeDriver, HeadMountable headMountable, List<Solutions.Issue> issues,
+            CommandType commandType, String suggestedCommand, boolean commandModified,
+            boolean disallowHeadMountables) {
+        String currentCommand = gcodeDriver.getCommand(headMountable, commandType);
+        if (suggestedCommand != null && !suggestedCommand.equals(currentCommand)) {
+            issues.add(new Solutions.Issue(
+                    (headMountable != null ? headMountable : gcodeDriver), 
+                    commandType.name()+(suggestedCommand.isEmpty() ? " obsolete." : (commandModified ? " modification suggested." : " suggested."))
+                    + (gcodeDriver.isSpeakingGcode() ? "" : " Accept if this is a true Gcode controller."), 
+                    (suggestedCommand.isEmpty() ? "Delete it." : suggestedCommand), 
+                    suggestedCommand.isEmpty() ? Severity.Warning 
+                            : (gcodeDriver.isSpeakingGcode() ? Severity.Suggestion : Severity.Fundamental),
+                    "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version") {
+
+                @Override
+                public void setState(Solutions.State state) throws Exception {
+                    if (confirmStateChange(state)) {
+                        gcodeDriver.setCommand(headMountable, commandType, (state == Solutions.State.Solved) ? suggestedCommand : currentCommand);
+                        super.setState(state);
+                    }
                 }
-                if (disallowHeadMountables) {
-                    for (Head head : machine.getHeads()) {
-                        for (HeadMountable hm : head.getHeadMountables()) {
-                            Command commandHeadMountable = gcodeDriver.getCommand(hm, commandType, false);
-                            if (commandHeadMountable != null) {
-                                issues.add(new Solutions.Issue(
-                                        gcodeDriver, 
-                                        hm.getClass().getSimpleName()+" "+hm.getName()+" "+commandType+" obsolete with Letter Variables.", 
-                                        "Remove the command.", 
-                                        Severity.Error,
-                                        "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version") {
+            });
+        }
+        if (disallowHeadMountables) {
+            for (Head head : Configuration.get().getMachine().getHeads()) {
+                for (HeadMountable hm : head.getHeadMountables()) {
+                    Command commandHeadMountable = gcodeDriver.getCommand(hm, commandType, false);
+                    if (commandHeadMountable != null) {
+                        issues.add(new Solutions.Issue(
+                                gcodeDriver, 
+                                hm.getClass().getSimpleName()+" "+hm.getName()+" "+commandType+" obsolete with Letter Variables.", 
+                                "Remove the command.", 
+                                Severity.Error,
+                                "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version") {
 
-                                    @Override
-                                    public void setState(Solutions.State state) throws Exception {
-                                        if (confirmStateChange(state)) {
-                                            gcodeDriver.setCommand(hm, commandType, (state == Solutions.State.Solved) ? null : commandHeadMountable.getCommand());
-                                            super.setState(state);
-                                        }
-                                    }
-                                });
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                if (confirmStateChange(state)) {
+                                    gcodeDriver.setCommand(hm, commandType, (state == Solutions.State.Solved) ? null : commandHeadMountable.getCommand());
+                                    super.setState(state);
+                                }
                             }
-                        }
+                        });
                     }
                 }
             }
         }
     }
-
 
     private static Serializer createSerializer() {
         Style style = new HyphenStyle();
@@ -672,6 +725,8 @@ class GcodeDriverSolutions implements Solutions.Subject {
         Serializer serIn = createSerializer();
         StringReader sr = new StringReader(gcodeDriverSerialized);
         GcodeAsyncDriver asyncDriver = serIn.read(GcodeAsyncDriver.class, sr);
+        // Triple the timeout as asynchronously executed move sequences can be longer than single moves. 
+        asyncDriver.setTimeoutMilliseconds(asyncDriver.getTimeoutMilliseconds()*3);
         replaceDriver(asyncDriver);
     }
 

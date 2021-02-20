@@ -23,8 +23,11 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
@@ -36,6 +39,7 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.CameraItem;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.base.AbstractCamera;
 
 /**
  * Shows a square grid of cameras or a blown up image from a single camera.
@@ -108,6 +112,19 @@ public class CameraPanel extends JPanel {
             camerasCombo.insertItemAt(SHOW_ALL_ITEM_H, 1);
             camerasCombo.insertItemAt(SHOW_ALL_ITEM_V, 2);
         }
+        if (camera instanceof AbstractCamera) {
+            ((AbstractCamera) camera).addPropertyChangeListener("shownInMultiCameraView", 
+                    new PropertyChangeListener() {
+                        
+                        @Override
+                        public void propertyChange(PropertyChangeEvent evt) {
+                            if (evt.getOldValue() == null 
+                                    || ! evt.getOldValue().equals(evt.getNewValue())) {
+                                SwingUtilities.invokeLater(()->relayoutPanel());
+                            }
+                        }
+                    });
+        }
         relayoutPanel();
     }
     
@@ -148,13 +165,13 @@ public class CameraPanel extends JPanel {
      * otherwise we select the specified Camera.
      * 
      * @param camera
-     * @return
+     * @return The CameraView.
      */
-    public void ensureCameraVisible(Camera camera) {
+    public CameraView ensureCameraVisible(Camera camera) {
         if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_H) || camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_V)) {
-            return;
+            return getCameraView(camera);
         }
-        setSelectedCamera(camera);
+        return setSelectedCamera(camera);
     }
 
     public CameraView setSelectedCamera(Camera camera) {
@@ -189,6 +206,13 @@ public class CameraPanel extends JPanel {
             selectedCameraView = null;
         }
         else if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_H) || camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM_V)) {
+            LinkedHashMap<Camera, CameraView> cameraViews = new LinkedHashMap<>();
+            for (Entry<Camera, CameraView> entry : this.cameraViews.entrySet()) {
+                if (entry.getKey().isShownInMultiCameraView()) {
+                    cameraViews.put(entry.getKey(), entry.getValue());
+                }
+            }
+
             int rows = (int) Math.ceil(Math.sqrt(cameraViews.size()));
             if (rows == 0) {
                 rows = 1;

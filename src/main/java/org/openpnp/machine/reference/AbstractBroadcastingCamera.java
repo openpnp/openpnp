@@ -30,8 +30,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.swing.SwingUtilities;
+
 import org.openpnp.CameraListener;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -62,7 +65,7 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
     @Attribute(required = false)
     protected boolean suspendPreviewInTasks = false;
 
-    private Thread thread;
+    private volatile Thread thread;
 
     private static BufferedImage CAPTURE_ERROR_IMAGE = null;
 
@@ -125,7 +128,7 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
                             }
                             if (nearestCamera == AbstractBroadcastingCamera.this) {
                                 // The nearest is our camera. That's an updated view, then. 
-                                cameraViewHasChanged();
+                                cameraViewHasChanged(hm.getLocation());
                             }
                         }
                     });
@@ -182,14 +185,25 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
      * this method should be called to trigger a new image capture. 
      * If the camera is set to 0 fps or otherwise not continuously capturing, this will generate an updated 
      * camera view (subject to configuration and other constraints).
+     *
+     * @param location Location at which the view is targeted.
      *  
      */
-    public void cameraViewHasChanged() {
+    public void cameraViewHasChanged(Location location) {
         cameraViewDirty = true;
         notifyCapture();
         if (isAutoVisible()) {
             ensureCameraVisible();
-        } 
+        }
+        if (isAutoViewPlaneZ()) {
+            setViewingPlaneZ(location);
+        }
+    }
+
+    public void setViewingPlaneZ(Location location) {
+        SwingUtilities.invokeLater(() -> {
+            MainFrame.get().getCameraViews().getCameraView(this).setViewingPlaneZ(location.getLengthZ());
+        });
     }
 
     public synchronized static BufferedImage getCaptureErrorImage() {
@@ -197,12 +211,12 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
             CAPTURE_ERROR_IMAGE = new BufferedImage(640, 480, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = (Graphics2D) CAPTURE_ERROR_IMAGE.createGraphics();
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g.setColor(Color.black);
+            g.setColor(Color.darkGray);
             g.fillRect(0, 0, 640, 480);
             g.setColor(Color.red);
-            g.setStroke(new BasicStroke(5));
-            g.drawLine(0, 0, 640, 480);
-            g.drawLine(640, 0, 0, 480);
+            g.setStroke(new BasicStroke(20));
+            g.drawLine(20, 20, 100, 100);
+            g.drawLine(20, 100, 100, 20);
             g.dispose();
         }
         return CAPTURE_ERROR_IMAGE;
@@ -266,10 +280,9 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
         if (isOpen()) {
             thread.interrupt();
             try {
-                thread.join(3000);
+                thread.join(200);
             }
             catch (Exception e) {
-
             }
         }
         thread = null;
@@ -317,7 +330,14 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
 
     @Override
     public void run() {
+        Logger.trace("Camera "+getName()+" thread "+Thread.currentThread().getId()+" started.");
         while (!Thread.interrupted()) {
+            if (thread == null
+                    ||thread.getId()!= Thread.currentThread().getId()) {
+                // The interrupt must have missed. We're not the running thread.
+                Logger.trace("Camera "+getName()+" thread "+Thread.currentThread().getId()+" interrupt failed, closing anyway.");
+                break;
+            }
             try {
                 // The camera should reuse images recently captures by on-going computer vision as 
                 // every call to captureTransformed() may consume the frame and make it unavailable 
@@ -353,6 +373,7 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
                 break;
             }
         }
+        Logger.trace("Camera "+getName()+" thread "+Thread.currentThread().getId()+" bye-bye.");
     }
 
     public boolean isPreviewSuspended() {

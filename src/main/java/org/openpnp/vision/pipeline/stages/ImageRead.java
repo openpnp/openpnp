@@ -2,6 +2,7 @@ package org.openpnp.vision.pipeline.stages;
 
 import java.io.File;
 
+import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -44,6 +45,10 @@ public class ImageRead extends CvStage {
         if (!file.exists()) {
             return null;
         }
-        return new Result(Imgcodecs.imread(file.getAbsolutePath()), colorSpace);
+        Mat image = Imgcodecs.imread(file.getAbsolutePath());
+        if (image.channels() == 1) {
+            colorSpace = ColorSpace.Gray;
+        }
+        return new Result(image, colorSpace);
     }
 }

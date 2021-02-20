@@ -23,6 +23,7 @@ import java.awt.image.BufferedImage;
 import java.io.Closeable;
 
 import org.openpnp.CameraListener;
+import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 
 /**
@@ -35,7 +36,7 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     }
 
     /**
-     * Get the location of the camera inlcuding the calibrated offset for the given tool.   
+     * Get the location of the camera including the calibrated offset for the given tool.   
      * If the bottom camera focal plane is different from the PCB surface plane, the various
      * tools might introduce slight offsets in X, Y as their Z axes are not perfectly parallel.
      * This offset is compensated if the getLocation(tool) method is used instead of the plain
@@ -57,15 +58,35 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     public void setLooking(Looking looking);
 
     /**
-     * The number of X and Y units per pixel this camera shows when in perfect focus. Location isn't
-     * a great datatype for this, but it gets the job done.
+     * The number of X and Y units per pixel this camera shows when in perfect focus. The Z value of
+     * this location is the height at which the units per pixel were measured.
      * 
-     * @return
+     * @return a Location whose x and y length represent the units per pixel in those axis
+     * respectively
      */
     public Location getUnitsPerPixel();
 
     public void setUnitsPerPixel(Location unitsPerPixel);
     
+    /**
+     * Gets the units per pixel for determining the physical size of an object in an image given
+     * its Z height is known
+     * 
+     * @param z - a length with the z coordinate of the imaged object, if null, the height of the 
+     * default working plane for this camera is used
+     * @return a Location whose x and y length represent the units per pixel in those axis
+     * respectively
+     */
+    public Location getUnitsPerPixel(Length z);
+
+    /**
+     * Gets the Z  height of the default working plane for this camera.  This is the height
+     * at which objects are assumed to be if no other information is available.
+     * 
+     * @return the Z height of the default working plane
+     */
+    public Length getDefaultZ();
+
     /**
      * Immediately captures an image from the camera and returns it in it's native format. Fires
      * the Camera.BeforeCapture and Camera.AfterCapture scripting events before and after.
@@ -180,4 +201,9 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     default boolean isAutoVisible() { 
         return false; 
     }
+
+    /**
+     * @return True if this Camera should be shown in multi camera view panels. 
+     */
+    boolean isShownInMultiCameraView();
 }
