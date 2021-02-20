@@ -117,6 +117,14 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
         }
     }
 
+    /**
+     * Checks if the testLocation is inside the camera view starting on the feeder location.
+     * Avoids to run outside the initial area if a bad pipeline repeated detects the parts
+     * on one edge of the field of view, even after moving the camera to the location.
+     * @param camera the used camera
+     * @param testLocation the location to test
+     * @return the testLocation, or null if outside the initial field of view
+     */
     private Location checkIfInInitialView(Camera camera, Location testLocation) {
         // just make sure, the vision did not "run away" => outside of the initial camera range
         // should never happen, but with badly dialed in pipelines ...
