@@ -34,6 +34,7 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.camera.OnvifIPCamera;
+import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -59,10 +60,8 @@ public class OnvifIPCameraConfigurationWizard extends AbstractConfigurationWizar
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC,},
+                FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -106,45 +105,35 @@ public class OnvifIPCameraConfigurationWizard extends AbstractConfigurationWizar
         lbluseFor_pw = new JLabel("(leave blank for none)");
         panelGeneral.add(lbluseFor_pw, "6, 6");
 
-        lblFps = new JLabel("FPS");
-        panelGeneral.add(lblFps, "2, 8, right, default");
-
-        fpsTextField = new JTextField();
-        panelGeneral.add(fpsTextField, "4, 8");
-        fpsTextField.setColumns(10);
-
-        lbluseFor_fps = new JLabel("(refresh rate)");
-        panelGeneral.add(lbluseFor_fps, "6, 8");
-
         lblSupportedResolutions = new JLabel("Resolution");
-        panelGeneral.add(lblSupportedResolutions, "2, 10, right, default");
+        panelGeneral.add(lblSupportedResolutions, "2, 8, right, default");
 
         cboSupportedResolutions = new JComboBox<String>();
         refreshResolutionList();
-        panelGeneral.add(cboSupportedResolutions, "4, 10, fill, default");
+        panelGeneral.add(cboSupportedResolutions, "4, 8, fill, default");
 
         lbluseFor_res = new JLabel("(only supported resolutions shown)");
-        panelGeneral.add(lbluseFor_res, "6, 10");
+        panelGeneral.add(lbluseFor_res, "6, 8");
 
         lblResizeWidth = new JLabel("Target Width");
-        panelGeneral.add(lblResizeWidth, "2, 12, right, default");
+        panelGeneral.add(lblResizeWidth, "2, 10, right, default");
 
         resizeWidthTextField = new JTextField();
-        panelGeneral.add(resizeWidthTextField, "4, 12");
+        panelGeneral.add(resizeWidthTextField, "4, 10");
         resizeWidthTextField.setColumns(10);
 
         lbluseFor_rw = new JLabel("(Use 0 for no resizing)");
-        panelGeneral.add(lbluseFor_rw, "6, 12");
+        panelGeneral.add(lbluseFor_rw, "6, 10");
 
         lblResizeHeight = new JLabel("Target Height");
-        panelGeneral.add(lblResizeHeight, "2, 14, right, default");
+        panelGeneral.add(lblResizeHeight, "2, 12, right, default");
 
         resizeHeightTextField = new JTextField();
-        panelGeneral.add(resizeHeightTextField, "4, 14");
+        panelGeneral.add(resizeHeightTextField, "4, 12");
         resizeHeightTextField.setColumns(10);
 
         lbluseFor_rh = new JLabel("(Use 0 for no resizing)");
-        panelGeneral.add(lbluseFor_rh, "6, 14");
+        panelGeneral.add(lbluseFor_rh, "6, 12");
     }
     
     private void refreshResolutionList() {
@@ -174,13 +163,11 @@ public class OnvifIPCameraConfigurationWizard extends AbstractConfigurationWizar
         addWrappedBinding(camera, "preferredResolution", cboSupportedResolutions, "selectedItem");
         addWrappedBinding(camera, "resizeWidth", resizeWidthTextField, "text", intConverter);
         addWrappedBinding(camera, "resizeHeight", resizeHeightTextField, "text", intConverter);
-        addWrappedBinding(camera, "fps", fpsTextField, "text", intConverter);
         addWrappedBinding(camera, "username", usernameTextField, "text");
         addWrappedBinding(camera, "password", passwordTextField, "text");
         // Should always be last so that it doesn't trigger multiple camera reloads.
         addWrappedBinding(camera, "hostIP", ipTextField, "text");
 
-        ComponentDecorators.decorateWithAutoSelect(fpsTextField);
         ComponentDecorators.decorateWithAutoSelect(ipTextField);
         ComponentDecorators.decorateWithAutoSelect(usernameTextField);
         ComponentDecorators.decorateWithAutoSelect(passwordTextField);
@@ -196,7 +183,9 @@ public class OnvifIPCameraConfigurationWizard extends AbstractConfigurationWizar
     protected void saveToModel() {
         super.saveToModel();
         if (camera.isDirty()) {
-            camera.setHostIP(camera.getHostIP());
+            UiUtils.messageBoxOnException(() -> {
+                camera.reinitialize();
+            });
         }
         
         refreshResolutionList();
@@ -208,8 +197,6 @@ public class OnvifIPCameraConfigurationWizard extends AbstractConfigurationWizar
     private JTextField usernameTextField;
     private JLabel lblPassword;
     private JTextField passwordTextField;
-    private JLabel lblFps;
-    private JTextField fpsTextField;
     private JLabel lblSupportedResolutions;
     private JComboBox<String> cboSupportedResolutions;
     private JLabel lblResizeWidth;
@@ -219,7 +206,6 @@ public class OnvifIPCameraConfigurationWizard extends AbstractConfigurationWizar
     private JLabel lbluseFor_ip;
     private JLabel lbluseFor_un;
     private JLabel lbluseFor_pw;
-    private JLabel lbluseFor_fps;
     private JLabel lbluseFor_res;
     private JLabel lbluseFor_rw;
     private JLabel lbluseFor_rh;

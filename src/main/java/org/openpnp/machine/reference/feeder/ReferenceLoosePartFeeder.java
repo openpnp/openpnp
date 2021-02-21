@@ -78,11 +78,10 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         pipeline.setProperty("feeder", this);
         pipeline.process();
         // Grab the results
-        List<RotatedRect> results =
-                (List<RotatedRect>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
-        if (results.isEmpty()) {
-            throw new Exception("Feeder " + getName() + ": No parts found.");
-        }
+        List<RotatedRect> results = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
+                .getExpectedListModel(RotatedRect.class, 
+                        new Exception("Feeder " + getName() + ": No parts found."));
+
         // Find the closest result
         results.sort((a, b) -> {
             Double da = VisionUtils.getPixelLocation(camera, a.center.x, a.center.y)

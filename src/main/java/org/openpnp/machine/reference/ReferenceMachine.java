@@ -105,6 +105,7 @@ import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.openpnp.util.Collect;
 import org.pmw.tinylog.Logger;
+import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.core.Commit;
@@ -125,6 +126,9 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Element(required = false)
     private boolean homeAfterEnabled = false;
+
+    @Attribute(required = false)
+    private boolean autoToolSelect = true;
 
     @ElementList(required = false)
     Set<String> dismissedSolutions = new HashSet<>();
@@ -211,6 +215,9 @@ public class ReferenceMachine extends AbstractMachine {
             fireMachineEnabled();
         }
         else {
+            // remove homed-flag if machine is disabled
+            this.setHomed(false);
+            fireMachineAboutToBeDisabled("User requested stop.");
             // In a multi-driver machine, we must try to disable all drivers even if one throws.
             Exception e = null;
             List<Driver> enabledDrivers = new ArrayList<>();
@@ -232,9 +239,6 @@ public class ReferenceMachine extends AbstractMachine {
                 throw e;
             }
             fireMachineDisabled("User requested stop.");
-
-            // remove homed-flag if machine is disabled
-            this.setHomed(false);
         }
     }
 
@@ -245,6 +249,17 @@ public class ReferenceMachine extends AbstractMachine {
 
     public void setMotionPlanner(MotionPlanner motionPlanner) {
         this.motionPlanner = motionPlanner;
+    }
+
+    @Override
+    public boolean isAutoToolSelect() {
+        return autoToolSelect;
+    }
+
+    public void setAutoToolSelect(boolean autoToolSelect) {
+        Object oldValue = this.autoToolSelect;
+        this.autoToolSelect = autoToolSelect;
+        firePropertyChange("autoToolSelect", oldValue, autoToolSelect);
     }
 
     @Override
@@ -480,6 +495,7 @@ public class ReferenceMachine extends AbstractMachine {
         Logger.info("setHomed({})", isHomed);
         this.isHomed = isHomed;
         firePropertyChange("homed", null, this.isHomed);
+        fireMachineHomed(isHomed);
     }
 
     @Override
@@ -504,6 +520,23 @@ public class ReferenceMachine extends AbstractMachine {
                         }
                         // Reselect the tree path to reload the wizard with potentially different property sheets. 
                         MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
+                        super.setState(state);
+                    }
+                }
+            });
+        }
+        if (! isAutoToolSelect()) {
+            issues.add(new Solutions.Issue(
+                    this, 
+                    "OpenPnP can often automatically select the right tool for you in Machine Controls.", 
+                    "Enable Auto tool select.", 
+                    Solutions.Severity.Suggestion,
+                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Machine-Setup#configuration") {
+
+                @Override
+                public void setState(Solutions.State state) throws Exception {
+                    if (confirmStateChange(state)) {
+                        setAutoToolSelect((state == Solutions.State.Solved));
                         super.setState(state);
                     }
                 }

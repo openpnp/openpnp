@@ -65,7 +65,7 @@ public class MaskModel extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (modelStageName == null) {
+        if (modelStageName == null || modelStageName.trim().isEmpty()) {
             throw new Exception("Stage name for model must be specified.");
         }
         Mat mat = pipeline.getWorkingImage();
@@ -75,7 +75,7 @@ public class MaskModel extends CvStage {
 
         ArrayList<MatOfPoint> poly = new ArrayList<MatOfPoint>();
 
-        Result result = pipeline.getResult(modelStageName);
+        Result result = pipeline.getExpectedResult(modelStageName);
         if (result.model instanceof RotatedRect) {
             // just one RotatedRect
             RotatedRect rect = (RotatedRect) result.model;

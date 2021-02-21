@@ -42,16 +42,20 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.SimpleGraphView;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LongConverter;
+import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.base.AbstractCamera;
+import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractCamera.SettleMethod;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
@@ -64,19 +68,21 @@ import com.jgoodies.forms.layout.RowSpec;
 @SuppressWarnings("serial")
 public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard {
     private final AbstractCamera camera;
-
+    
     public CameraVisionConfigurationWizard(AbstractCamera camera) {
+        AbstractMachine machine = (AbstractMachine) Configuration.get().getMachine();
         this.camera = camera;
 
+
         panelVision = new JPanel();
-        panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING,
+        panelVision.setBorder(new TitledBorder(null, "Camera Settling", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelVision);
         panelVision.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("max(50dlu;default)"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -103,7 +109,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
-                        RowSpec.decode("default:grow"),}));
+                        RowSpec.decode("max(70dlu;default):grow"),}));
 
         lblSettleMethod = new JLabel("Settle Method");
         panelVision.add(lblSettleMethod, "2, 2, 1, 3, right, default");
@@ -289,6 +295,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
 
     @Override
     public void createBindings() {
+        AbstractMachine machine = (AbstractMachine) Configuration.get().getMachine();
         LongConverter longConverter = new LongConverter();
         IntegerConverter intConverter = new IntegerConverter();
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
@@ -357,7 +364,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
                 }
                 MainFrame.get().getMachineControls().getJogControlsPanel().jogTool(x, y, 0, c, jogTool);
                 MainFrame.get().getMachineControls().getJogControlsPanel().jogTool(-x, -y, 0, -c, jogTool);
-                camera.settleAndCapture();
+                camera.lightSettleAndCapture();
             });
         });
     }
@@ -428,7 +435,8 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
                     // Go to the camera.
                     UiUtils.submitUiMachineTask(() -> {
                         MovableUtils.moveToLocationAtSafeZ(jogTool, camera.getLocation());
-                        camera.settleAndCapture();
+                        camera.lightSettleAndCapture();
+                        MovableUtils.fireTargetedUserAction(camera);
                     });
                 }
                 else {
@@ -437,7 +445,8 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
                     UiUtils.submitUiMachineTask(() -> {
                         jogTool.moveToSafeZ();
                         jogTool.moveTo(location);
-                        camera.settleAndCapture();
+                        camera.lightSettleAndCapture();
+                        MovableUtils.fireTargetedUserAction(camera);
                     });
                 }
             });
@@ -452,11 +461,11 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         public void actionPerformed(ActionEvent e) {
             UiUtils.messageBoxOnException(() -> {
                 applyAction.actionPerformed(e);
-                camera.settleAndCapture();
+                camera.lightSettleAndCapture();
+                MovableUtils.fireTargetedUserAction(camera);
             });
         }
     };
-
 
     private JPanel panelVision;
     private JLabel lblSettleTimeMs;

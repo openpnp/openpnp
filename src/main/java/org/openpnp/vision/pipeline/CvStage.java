@@ -7,9 +7,13 @@ import java.beans.EventSetDescriptor;
 import java.beans.Introspector;
 import java.beans.MethodDescriptor;
 import java.beans.PropertyDescriptor;
+import java.util.List;
 
 import org.opencv.core.Mat;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.vision.pipeline.ui.PipelinePropertySheetTable;
+import org.openpnp.vision.FluentCv;
+import org.openpnp.vision.FluentCv.ColorSpace;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -160,22 +164,38 @@ public abstract class CvStage {
     }
 
     public static class Result {
+        final public CvStage stage;
         final public Mat image;
         final public Object model;
         final public long processingTimeNs;
+        final public ColorSpace colorSpace;
 
-        public Result(Mat image, Object model, long processingTimeNs) {
+        public Result(Mat image, ColorSpace colorSpace, Object model, long processingTimeNs, CvStage stage) {
             this.image = image;
             this.model = model;
             this.processingTimeNs = processingTimeNs;
+            this.stage = stage;
+            this.colorSpace = colorSpace;
+        }
+
+        public Result(Mat image, Object model, long processingTimeNs) {
+            this(image, null, model, processingTimeNs, null);
+        }
+
+        public Result(Mat image, ColorSpace colorSpace, Object model) {
+            this(image, colorSpace, model, 0, null);
         }
 
         public Result(Mat image, Object model) {
-            this(image, model, 0);
+            this(image, null, model);
+        }
+
+        public Result(Mat image, ColorSpace colorSpace) {
+            this(image, colorSpace, null);
         }
 
         public Result(Mat image) {
-            this(image, null, 0);
+            this(image, null);
         }
         
         public Mat getImage() {
@@ -184,6 +204,53 @@ public abstract class CvStage {
         
         public Object getModel() {
             return model;
+        }
+
+        public ColorSpace getColorSpace() {
+            return colorSpace;
+        }
+
+        public CvStage getStage() {
+            return stage;
+        }
+
+        public String getName() {
+            if (stage != null) {
+                return stage.getName();
+            }
+            return "";
+        }
+
+        @SuppressWarnings("unchecked")
+        public <T> T getExpectedModel(Class<T> expectedModelClass) throws Exception {
+            // Due to type erasure we need to pass the class as well.
+            T typedModel = null;
+            if (model == null) {
+                throw new Exception("Pipeline stage \""+getName()+"\" returned no "+expectedModelClass.getSimpleName()+".");
+            }
+            if (expectedModelClass.isInstance(model)) {
+                typedModel = (T)model;
+            }
+            if (typedModel == null) {
+                throw new Exception("Pipeline stage \""+getName()+"\" returned a "+model.getClass().getSimpleName()+" but expected a "+expectedModelClass.getSimpleName()+".");
+            }
+            return typedModel;
+        }
+
+        @SuppressWarnings("unchecked")
+        public <T> List<T> getExpectedListModel(Class<T> expectedElementClass, Exception emptyException) throws Exception {
+            @SuppressWarnings("rawtypes")
+            List list = getExpectedModel(List.class);
+            if (list.size() == 0) {
+                if (emptyException != null) {
+                    throw emptyException;
+                }
+                return (List<T>)list;
+            }
+            if (!expectedElementClass.isInstance(list.get(0))) {
+                throw new Exception("Pipeline stage \""+getName()+"\" returned a "+list.get(0).getClass().getSimpleName()+" list but expected a "+expectedElementClass.getSimpleName()+" list.");
+            }
+            return (List<T>)list;
         }
 
         public static class Circle {
@@ -288,5 +355,14 @@ public abstract class CvStage {
                         + height + ", score=" + score + "]";
             }
         }
+    }
+
+    /**
+     * Stages can override to register customized PropertyEditors.
+     * 
+     * @param table
+     * @param pipeline
+     */
+    public void customizePropertySheet(PipelinePropertySheetTable table, CvPipeline pipeline) {
     }
 }

@@ -33,12 +33,18 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView.RenderingQuality;
 import org.openpnp.gui.components.reticle.CrosshairReticle;
 import org.openpnp.gui.components.reticle.FiducialReticle;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.components.reticle.RulerReticle;
+import org.openpnp.gui.processes.EstimateObjectZCoordinateProcess;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
+import org.openpnp.spi.Nozzle;
+import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 
 // TODO: For the time being, since setting a property on the reticle doesn't re-save it we are
 // making a redundant call to setReticle on every property update. Fix that somehow.
@@ -52,6 +58,30 @@ public class CameraViewPopupMenu extends JPopupMenu {
 
     public CameraViewPopupMenu(CameraView cameraView) {
         this.cameraView = cameraView;
+
+        // For cameras that have been calibrated at two different heights, add menu options to reset
+        // the viewing plane and for estimating an object's height
+        if (cameraView.isViewingPlaneChangable()) {
+            JMenuItem mntmResetReticleHeight = new JMenuItem("Reset Viewing Plane Z to Default");
+            mntmResetReticleHeight.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    cameraView.resetViewingPlaneZ();
+                }
+            });
+            add(mntmResetReticleHeight);
+
+            JMenuItem mntmEstimateZCoordinate = new JMenuItem("Estimate Z Coordinate of Object");
+            mntmEstimateZCoordinate.addActionListener(estimateZCoordinateAction);
+            add(mntmEstimateZCoordinate);
+        }
+
+        // For non-movable cameras, add a menu option to move the selected nozzle to the camera
+        if (cameraView.getCamera().getHead() == null) {
+            JMenuItem mntmMoveSelectedNozzleToCamera = new JMenuItem("Move Selected Nozzle to Camera");
+            mntmMoveSelectedNozzleToCamera.addActionListener(moveSelectedNozzleToCameraAction);
+            add(mntmMoveSelectedNozzleToCamera);
+        }
 
         zoomIncMenu = createZoomIncMenu();
 
@@ -580,4 +610,38 @@ public class CameraViewPopupMenu extends JPopupMenu {
             cameraView.setDefaultReticle(reticle);
         }
     };
+
+    /**
+     * Listen for menu selection to estimate an object's height
+     */
+    private ActionListener estimateZCoordinateAction = new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.messageBoxOnException(() -> {
+                new EstimateObjectZCoordinateProcess(MainFrame.get(), cameraView);
+            });
+        }
+    };
+
+    /**
+     * Listener for menu selection to move the selected nozzle to the camera (only works for
+     * non-movable cameras)
+     */
+    private ActionListener moveSelectedNozzleToCameraAction = new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.submitUiMachineTask(() -> {
+                // Get the selected nozzle
+                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                // Add the offsets to the Camera's nozzle calibrated position.
+                Location location = cameraView.getCamera().getLocation(nozzle);
+                // Don't change rotation. 
+                location = nozzle.getLocation().derive(location, true, true, true, false);
+                // Move the nozzle to the camera
+                MovableUtils.moveToLocationAtSafeZ(nozzle, location);
+                MovableUtils.fireTargetedUserAction(nozzle);
+            });
+        }
+    };
+
 }

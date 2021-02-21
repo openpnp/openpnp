@@ -135,12 +135,12 @@ public class FilterRects extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (rotatedRectsStageName == null) {
+        if (rotatedRectsStageName == null || rotatedRectsStageName.trim().isEmpty()) {
             return null;
         }
 
-        Result result = pipeline.getResult(rotatedRectsStageName);
-        if (result == null || result.model == null) {
+        Result result = pipeline.getExpectedResult(rotatedRectsStageName);
+        if (result.model == null) {
             return null;
         }
 
@@ -149,7 +149,7 @@ public class FilterRects extends CvStage {
             rects = Collections.singletonList((RotatedRect) result.model);
         }
         else {
-            rects = (List<RotatedRect>) result.model;
+            rects = result.getExpectedListModel(RotatedRect.class, null);
         }
 
         List<RotatedRect> results = new ArrayList<RotatedRect>();

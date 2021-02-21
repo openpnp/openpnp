@@ -230,7 +230,8 @@ public class JogControlsPanel extends JPanel {
         }
 
         tool.moveTo(targetLocation, MotionOption.JogMotion); 
-        // to test without backlash comp for continous jogging: add MotionOption.SpeedOverPrecision
+
+        MovableUtils.fireTargetedUserAction(tool);
     }
 
     private boolean nozzleLocationIsSafe(Location origin, Location dimension, Location nozzle,
@@ -557,7 +558,14 @@ public class JogControlsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                MovableUtils.park(machineControlsPanel.getSelectedTool().getHead());
+                Head head = machineControlsPanel.getSelectedTool().getHead();
+                if (head == null) {
+                    head = Configuration.get()
+                            .getMachine()
+                            .getDefaultHead(); 
+                }
+                MovableUtils.park(head);
+                MovableUtils.fireTargetedUserAction(head.getDefaultHeadMountable());
             });
         }
     };
@@ -576,6 +584,7 @@ public class JogControlsPanel extends JPanel {
                 double safeZ = (safeZLength != null ? safeZLength.convertToUnits(location.getUnits()).getValue() : Double.NaN);
                 location = location.derive(null, null, safeZ, null);
                 hm.moveTo(location);
+                MovableUtils.fireTargetedUserAction(hm);
             });
         }
     };
@@ -589,6 +598,7 @@ public class JogControlsPanel extends JPanel {
                 Location location = hm.getLocation();
                 location = location.derive(null, null, null, 0.);
                 hm.moveTo(location);
+                MovableUtils.fireTargetedUserAction(hm);
             });
         }
     };
@@ -598,10 +608,10 @@ public class JogControlsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                Configuration.get()
-                             .getMachine()
-                             .getDefaultHead()
-                             .moveToSafeZ();
+                HeadMountable hm = machineControlsPanel.getSelectedTool();
+                Head head = hm.getHead();
+                head.moveToSafeZ();
+                MovableUtils.fireTargetedUserAction(hm);
             });
         }
     };

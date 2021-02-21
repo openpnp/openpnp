@@ -62,11 +62,11 @@ public class DrawEllipses extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (ellipsesStageName == null) {
+        if (ellipsesStageName == null || ellipsesStageName.trim().isEmpty()) {
             throw new Exception("ellipsesStageName must be specified.");
         }
-        Result result = pipeline.getResult(ellipsesStageName);
-        if (result == null || result.model == null) {
+        Result result = pipeline.getExpectedResult(ellipsesStageName);
+        if (result.model == null) {
             return null;
         }
 

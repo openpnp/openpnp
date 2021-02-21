@@ -59,7 +59,7 @@ public class OrientRotatedRects extends CvStage {
             return null;
         }
         
-        Object model = pipeline.getResult(rotatedRectsStageName).model;
+        Object model = pipeline.getExpectedResult(rotatedRectsStageName).model;
         
         if (model == null) {
             return null;

@@ -66,8 +66,8 @@ public class OpenCvVisionProvider implements VisionProvider {
         return new OpenCvVisionProviderConfigurationWizard(this);
     }
 
-    protected Mat getCameraImage() {
-        BufferedImage image_ = camera.capture();
+    protected Mat getCameraImage() throws Exception {
+        BufferedImage image_ = camera.lightSettleAndCapture();
         Mat image = OpenCvUtils.toMat(image_);
         return image;
     }
@@ -82,7 +82,7 @@ public class OpenCvVisionProvider implements VisionProvider {
      * @throws Exception 
      */
     public List<TemplateMatch> getTemplateMatches(BufferedImage template) throws Exception {
-        BufferedImage image = camera.settleAndCapture();
+        BufferedImage image = camera.lightSettleAndCapture();
 
         // Convert the camera image and template image to the same type. This
         // is required by the cvMatchTemplate call.
@@ -149,7 +149,7 @@ public class OpenCvVisionProvider implements VisionProvider {
     @Override
     public Point[] locateTemplateMatches(int roiX, int roiY, int roiWidth, int roiHeight, int coiX,
             int coiY, BufferedImage templateImage_) throws Exception {
-        BufferedImage cameraImage_ = camera.settleAndCapture();
+        BufferedImage cameraImage_ = camera.lightSettleAndCapture();
 
         // Convert the camera image and template image to the same type. This
         // is required by the cvMatchTemplate call.

@@ -1,9 +1,13 @@
 package org.openpnp.util;
 
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.base.AbstractMachine;
+import org.pmw.tinylog.Logger;
 
 public class MovableUtils {
     /**
@@ -41,5 +45,22 @@ public class MovableUtils {
         Location location = head.getParkLocation();
         location = location.derive(null, null, Double.NaN, Double.NaN);
         hm.moveTo(location);
+    }
+
+    public static void fireTargetedUserAction(HeadMountable hm) {
+        Machine machine = Configuration.get().getMachine();
+        if (machine instanceof AbstractMachine) {
+            ((AbstractMachine)machine).fireMachineTargetedUserAction(hm);
+        }
+    }
+
+    public static boolean isInSafeZZone(HeadMountable hm) {
+        try {
+            return hm.isInSafeZZone(hm.getLocation().getLengthZ());
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+            return false;
+        }
     }
 }

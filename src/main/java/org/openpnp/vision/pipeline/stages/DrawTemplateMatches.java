@@ -45,16 +45,16 @@ public class DrawTemplateMatches extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (templateMatchesStageName == null) {
+        if (templateMatchesStageName == null || templateMatchesStageName.trim().isEmpty()) {
             return null;
         }
-        Result result = pipeline.getResult(templateMatchesStageName);
-        if (result == null || result.model == null) {
+        Result result = pipeline.getExpectedResult(templateMatchesStageName);
+        if (result.model == null) {
             return null;
         }
         Mat mat = pipeline.getWorkingImage();
 
-        List<TemplateMatch> matches = (List<TemplateMatch>) result.model;
+        List<TemplateMatch> matches = result.getExpectedListModel(TemplateMatch.class, null);
         for (int i = 0; i < matches.size(); i++) {
             TemplateMatch match = matches.get(i);
             double x = match.x;

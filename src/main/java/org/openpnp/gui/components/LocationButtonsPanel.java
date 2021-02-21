@@ -283,6 +283,7 @@ public class LocationButtonsPanel extends JPanel {
                             location = location.addWithRotation(baseLocation);
                         }
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
+                        MovableUtils.fireTargetedUserAction(camera);
                         try {
                             Map<String, Object> globals = new HashMap<>();
                             globals.put("camera", camera);
@@ -311,6 +312,7 @@ public class LocationButtonsPanel extends JPanel {
                     location = location.addWithRotation(baseLocation);
                 }
                 MovableUtils.moveToLocationAtSafeZ(tool, location);
+                MovableUtils.fireTargetedUserAction(tool);
             });
         }
     };
@@ -332,6 +334,7 @@ public class LocationButtonsPanel extends JPanel {
                             location = location.addWithRotation(baseLocation);
                         }
                         tool.moveTo(location);
+                        MovableUtils.fireTargetedUserAction(tool);
                     });
                 }
             };
@@ -353,6 +356,7 @@ public class LocationButtonsPanel extends JPanel {
                             location = location.addWithRotation(baseLocation);
                         }
                         MovableUtils.moveToLocationAtSafeZ(actuator, location);
+                        MovableUtils.fireTargetedUserAction(actuator);
                     });
                 }
             };
@@ -373,6 +377,7 @@ public class LocationButtonsPanel extends JPanel {
                             location = location.addWithRotation(baseLocation);
                         }
                         actuator.moveTo(location);
+                        MovableUtils.fireTargetedUserAction(actuator);
                     });
                 }
             };

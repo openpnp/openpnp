@@ -22,8 +22,8 @@ package org.openpnp.machine.reference.camera;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
-import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.SwitcherCameraConfigurationWizard;
@@ -31,9 +31,10 @@ import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.base.AbstractActuator;
 import org.simpleframework.xml.Attribute;
 
-public class SwitcherCamera extends ReferenceCamera implements Runnable {
+public class SwitcherCamera extends ReferenceCamera {
     @Attribute(required=false)
     private int switcher = 0;
     
@@ -49,92 +50,68 @@ public class SwitcherCamera extends ReferenceCamera implements Runnable {
     @Attribute(required=false)
     private long actuatorDelayMillis = 500;
     
-    @Attribute(required = false)
-    private int fps = 10;
-    
-    private Thread thread = null;
-    
     private static Map<Integer, Camera> switchers = new HashMap<>();
     
+    protected int getCaptureTryCount() {
+        return 1;
+    }
+
     @Override
     public synchronized BufferedImage internalCapture() {
-        if (!ensureOpen()) {
-            return null;
-        }
-        return getCamera().captureRaw();
-    }
-    
-    @Override
-    public BufferedImage capture() {
         if (!ensureOpen()) {
             return null;
         }
         synchronized (switchers) {
             if (switchers.get(switcher) != this) {
                 try {
-                    if (Configuration.get().getMachine().isEnabled()) {
-                        // TODO This would ideally happen within a machine task, but in almost all
-                        // cases it will end up being called from a machine task so it's okay. It
-                        // would be good if we could detect if it wasn't and trigger one.
-                        getActuator().actuate(actuatorDoubleValue);
-                        Thread.sleep(actuatorDelayMillis);
-                        switchers.put(switcher, this);
+                    // Make sure this happens within a machine task, but wait for it.
+                    Camera switchedCamera = Configuration.get().getMachine().execute(() -> {
+                            getActuator().actuate(actuatorDoubleValue);
+                            return this;
+                        }, true, 0); // execute only if the Machine is enabled and with zero timeout if it is busy.
+                    if (this != switchedCamera) {
+                        return null;
                     }
+                    Thread.sleep(actuatorDelayMillis);
+                    switchers.put(switcher, this);
+                }
+                catch (TimeoutException e) {
+                    // If the machine is busy we can't switch, so we should return a null image.
+                    return null;
                 }
                 catch (Exception e) {
                     e.printStackTrace();
-                }                
+                    return null;
+                }
             }
         }
-        return super.capture();
-    }
-
-    private synchronized boolean ensureOpen() {
-        if (thread == null) {
-            thread = new Thread(this);
-            thread.setDaemon(true);
-            thread.start();
-        }
-        return getCamera() != null && getActuator() != null;
-    }
-    
-    @Override
-    public synchronized void startContinuousCapture(CameraListener listener) {
-        ensureOpen();
-        super.startContinuousCapture(listener);
+        // Note, the target camera is actually a capture device with multiple analog cameras connected via multiplexer. 
+        // Each analog camera can have a different lens attached and may be subject to different mounting imperfections, 
+        // therefore each SwitcherCamera must have its own set of lens calibration and transforms. 
+        // The target camera device however must not apply any calibration or transform, hence the raw capture.  
+        return getCamera().captureRaw();
     }
 
     @Override
-    public synchronized void stopContinuousCapture(CameraListener listener) {
-        super.stopContinuousCapture(listener);
-        if (listeners.size() == 0) {
-            stop();
+    public boolean hasNewFrame() {
+        if (!isOpen()) {
+            return false;
         }
+        synchronized (switchers) {
+            if (switchers.get(switcher) != this) {
+                // Always assume an off-switched camera has a new frame.
+                return true;
+            }
+        }
+        return getCamera().hasNewFrame();
     }
 
-    private synchronized void stop() {
-        if (thread != null && thread.isAlive()) {
-            thread.interrupt();
-            try {
-                thread.join(3000);
-            }
-            catch (Exception e) {
-
-            }
-            thread = null;
+    @Override
+    protected synchronized boolean ensureOpen() {
+        if (getCamera() == null || getActuator() == null) {
+            return false;
         }
-    }
-
-    public void run() {
-        while (!Thread.interrupted()) {
-            broadcastCapture(captureForPreview());
-            try {
-                Thread.sleep(1000 / fps);
-            }
-            catch (InterruptedException e) {
-                return;
-            }
-        }
+        return super.ensureOpen();
     }
 
     @Override
@@ -212,7 +189,9 @@ public class SwitcherCamera extends ReferenceCamera implements Runnable {
     }
 
     public Actuator getActuator() {
-        return Configuration.get().getMachine().getActuator(actuatorId);
+        Actuator actuator = Configuration.get().getMachine().getActuator(actuatorId); 
+        AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
+        return actuator;
     }
 
     public void setActuator(Actuator actuator) {

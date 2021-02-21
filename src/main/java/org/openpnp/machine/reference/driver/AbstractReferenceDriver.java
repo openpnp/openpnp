@@ -30,11 +30,15 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
     @Element(required = false)
     protected SimulatedCommunications simulated = new SimulatedCommunications();
 
+    public enum CommunicationsType {
+        serial, // lower case for legacy support.
+        tcp
+    }
     @Attribute(required = false, name = "communications")
-    protected String communicationsType = "serial";
+    protected CommunicationsType communicationsType = CommunicationsType.serial;
     
     @Attribute(required = false)
-    protected boolean connectionKeepAlive = true;
+    protected boolean connectionKeepAlive = false;
 
     /**
      * TODO The following properties are for backwards compatibility and can be removed after 2019-07-15. 
@@ -113,13 +117,13 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
         this.motionControlType = motionControlType;
     }
 
-    public String getCommunicationsType() {
+    public CommunicationsType getCommunicationsType() {
         return communicationsType;
     }
 
-    public void setCommunicationsType(String communicationsType) {
+    public void setCommunicationsType(CommunicationsType communicationsType) {
         // If the communications type is changing we need to disconnect the old one first.
-        if (communicationsType == null || !communicationsType.equals(this.communicationsType)) {
+        if (communicationsType == null || communicationsType != this.communicationsType) {
             try {
                 disconnect();
             }
@@ -151,10 +155,11 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
             return simulated;
         }
         switch (communicationsType) {
-            case "serial": {
+            case serial: {
                 return serial;
             }
-            case "tcp": {
+            case tcp: {
+                tcp.setDriver(this);
                 return tcp;
             }
             default: {
