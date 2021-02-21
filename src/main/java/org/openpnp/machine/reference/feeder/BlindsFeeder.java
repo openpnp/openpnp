@@ -621,7 +621,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
                 Result ocrStageResult = pipeline.getResult("OCR"); 
                 if (ocrStageResult != null) {
-                    detectedOcrModel = (SimpleOcr.OcrModel) ocrStageResult.model;
+                    detectedOcrModel = ocrStageResult.getExpectedModel(SimpleOcr.OcrModel.class);
                 }
 
                 // in accordance with EIA-481 etc. we use millimeters.
