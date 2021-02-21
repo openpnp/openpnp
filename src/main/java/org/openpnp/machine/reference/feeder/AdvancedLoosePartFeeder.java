@@ -30,8 +30,10 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.AdvancedLoosePartFeederConfigurationWizard;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
@@ -39,11 +41,8 @@ import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.simpleframework.xml.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class AdvancedLoosePartFeeder extends ReferenceFeeder {
-    private final static Logger logger = LoggerFactory.getLogger(AdvancedLoosePartFeeder.class);
 
     @Element(required = false)
     private CvPipeline pipeline = createDefaultPipeline();
@@ -60,16 +59,29 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
-        Camera camera = nozzle.getHead().getDefaultCamera();
-        // Move to the feeder pick location
-        MovableUtils.moveToLocationAtSafeZ(camera, location);
-        for (int i = 0; i < 3; i++) {
-            pickLocation = getPickLocation(camera, nozzle);
-            camera.moveTo(pickLocation);
+        // no part found => no pick location
+        pickLocation = location.derive(null, null, Double.NaN, 0.0);
+
+        // if there is a part, get a precise location
+        for (int i = 0; i < 3 && pickLocation != null; i++) {
+            pickLocation = locateFeederPart(nozzle, pickLocation);
+        }
+        // throw if feed results in no parts
+        if (pickLocation == null) {
+            throw new Exception("Feeder " + getName() + ": No parts found.");
         }
     }
 
-    private Location getPickLocation(Camera camera, Nozzle nozzle) throws Exception {
+    /**
+     * Executes the vision pipeline to locate a part.
+     * @param nozzle used nozzle
+     * @return location or null
+     * @throws Exception something went wrong
+     */
+    private Location locateFeederPart(Nozzle nozzle, Location startPoint) throws Exception {
+        Camera camera = nozzle.getHead().getDefaultCamera();
+        MovableUtils.moveToLocationAtSafeZ(camera, startPoint.derive(null, null, Double.NaN, 0d));
+        camera.waitForCompletion(CompletionType.WaitForStillstand);
         try (CvPipeline pipeline = getPipeline()) {
             // Process the pipeline to extract RotatedRect results
             pipeline.setProperty("camera", camera);
@@ -77,10 +89,11 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
             pipeline.setProperty("feeder", this);
             pipeline.process();
             // Grab the results
-            List<RotatedRect> results = (List<RotatedRect>) pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
-                    .getExpectedListModel(RotatedRect.class, 
-                            new Exception("Feeder " + getName() + ": No parts found."));
-
+            List<RotatedRect> results = (List<RotatedRect>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
+            if ((results == null) || results.isEmpty()) {
+                //nothing found
+                return null;
+            }
             // Find the closest result
             results.sort((a, b) -> {
                 Double da = VisionUtils.getPixelLocation(camera, a.center.x, a.center.y)
@@ -90,21 +103,45 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
                 return da.compareTo(db);
             });
             RotatedRect result = results.get(0);
-            Location location = VisionUtils.getPixelLocation(camera, result.center.x, result.center.y);
+            Location partLocation = VisionUtils.getPixelLocation(camera, result.center.x, result.center.y);
             // Get the result's Location
             // Update the location with the result's rotation
-            location = location.derive(null, null, null, -(result.angle + getLocation().getRotation()));
+            partLocation = partLocation.derive(null, null, null, -(result.angle + getLocation().getRotation()));
             // Update the location with the correct Z, which is the configured Location's Z
             // plus the part height.
-            location =
-                    location.derive(null, null,
-                            this.location.convertToUnits(location.getUnits()).getZ()
-                                    + part.getHeight().convertToUnits(location.getUnits()).getValue(),
+            partLocation =
+                    partLocation.derive(null, null,
+                            this.location.convertToUnits(partLocation.getUnits()).getZ()
+                            + part.getHeight().convertToUnits(partLocation.getUnits()).getValue(),
                             null);
             MainFrame.get().getCameraViews().getCameraView(camera)
-                    .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
-            return location;
+            .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
+            
+            return checkIfInInitialView(camera, partLocation);
         }
+    }
+
+    /**
+     * Checks if the testLocation is inside the camera view starting on the feeder location.
+     * Avoids to run outside the initial area if a bad pipeline repeated detects the parts
+     * on one edge of the field of view, even after moving the camera to the location.
+     * @param camera the used camera
+     * @param testLocation the location to test
+     * @return the testLocation, or null if outside the initial field of view
+     */
+    private Location checkIfInInitialView(Camera camera, Location testLocation) {
+        // just make sure, the vision did not "run away" => outside of the initial camera range
+        // should never happen, but with badly dialed in pipelines ...
+        double distanceX = Math.abs(this.location.convertToUnits(LengthUnit.Millimeters).getX() - testLocation.convertToUnits(LengthUnit.Millimeters).getX());
+        double distanceY = Math.abs(this.location.convertToUnits(LengthUnit.Millimeters).getY() - testLocation.convertToUnits(LengthUnit.Millimeters).getY());
+        
+        // if moved more than the half of the camera picture size => something went wrong => return no result
+        if (distanceX > camera.getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters).getX() * camera.getWidth() / 2
+                || distanceY > camera.getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters).getY() * camera.getHeight() / 2) {
+            System.err.println("Vision outside of the initial area");
+            return null;
+        }        
+        return testLocation;
     }
 
     public CvPipeline getPipeline() {
