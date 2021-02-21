@@ -22,6 +22,23 @@ The following requirements apply for controllers with axes attached:
 
 7. The controller must support dynamic acceleration and/or jerk limits, typically by the [`M204`](https://www.reprap.org/wiki/G-code#M204:_Set_default_acceleration) command for acceleration or the [`M201.3`](https://makr.zone/tinyg-new-g-code-commands-for-openpnp-use/577/) command for jerk.
 
+## Duet3D
+
+[Duet3D 2/3 controllers](https://www.duet3d.com/index.php?route=common/home#products) firmwares have been improved for use with OpenPnP. Many thanks to Duet3D for providing a free Duet 3 board and to [dc42](https://github.com/dc42) for implementing substantial improvements, and accepting a crucial [pull request](https://github.com/Duet3D/RepRapFirmware/pull/471). For advanced OpenPnP use, Duet firmware has been improved in...
+
+* USB serial speed
+* Fixes for compressed G-code parsing
+* Fixes and configurable option for correct feed rate calculations according to section 2.1.2.5 of the NIST G-Code standard.
+* Configurable grace period for proper look-ahead planning
+
+Firmware [version 3.3beta](https://github.com/Duet3D/RepRapFirmware/blob/v3-dev/WHATS_NEW_RRF3_Beta.md#reprapfirmware-33beta1) or newer must be used to support most OpenPnP Advanced Motion Control features. Use the [[Issues and Solutions]] system to help you detect the correct version and configuration and to setup proper G-code.
+
+Refer to the Duet3D Wiki on how to upgrade:
+
+* [Duet 2 Installing and Updating Firmware](https://duet3d.dozuki.com/Wiki/Installing_and_Updating_Firmware)
+
+* [Duet 3 Installing and Updating Firmware](https://duet3d.dozuki.com/Wiki/Getting_Started_With_Duet_3#Section_Updating_Duet_3_main_board_firmware)
+
 ## Smoothieware
 
 A special Smoothieware firmware for OpenPnP is available. It contains some bug-fixes and features that are crucial for use with OpenPnP but are not present/accepted in the official Smoothieware firmware. The firmware and more details are available here:
@@ -31,16 +48,6 @@ A special Smoothieware firmware for OpenPnP is available. It contains some bug-f
 Refer to the Smoothieware Wiki on how to upgrade:
 
 * [Flashing Smoothie Firmware](http://smoothieware.org/flashing-smoothie-firmware)
-
-## Duet3D
-
-The work to make [Duet3D 2/3 controllers](https://www.duet3d.com/index.php?route=common/home#products) ideal for OpenPnP is ongoing. More info will be made available here.
-
-Refer to the Duet3D Wiki on how to upgrade:
-
-* [Duet 2 Installing and Updating Firmware](https://duet3d.dozuki.com/Wiki/Installing_and_Updating_Firmware)
-
-* [Duet 3 Installing and Updating Firmware](https://duet3d.dozuki.com/Wiki/Getting_Started_With_Duet_3#Section_Updating_Duet_3_main_board_firmware)
 
 ## Marlin 2.0
 
