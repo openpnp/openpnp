@@ -210,6 +210,8 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         if (stream == null || format == null) {
             throw new Exception("Camera stream not properly initialized."); 
         }
+        // Stop the broadcasting thread.
+        stop();
         // Start warmup capture timer for 1 second.
         boolean warmup = true;
         long t0 = System.currentTimeMillis();
@@ -236,6 +238,8 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
                 }
             }
         }
+        // Start the broadcasting thread.
+        start();
         // Compute the fps.
         return capturedFrames*1000./(t1-t0);
     }
