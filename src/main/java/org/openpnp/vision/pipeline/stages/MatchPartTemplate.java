@@ -122,7 +122,7 @@ public class MatchPartTemplate extends CvStage {
         }
         else {
 
-            model = (List<?>) pipeline.getResult(modelStageName.toString()).model;
+            model = pipeline.getExpectedResult(modelStageName).model;
         }
         Mat originalImage = pipeline.getWorkingImage()
                                     .clone();
@@ -138,9 +138,9 @@ public class MatchPartTemplate extends CvStage {
                                                           .equals("")) {
             return null;
         }
-        Result template = pipeline.getResult(templateStageName.toString());
+        Result template = pipeline.getExpectedResult(templateStageName);
         // no template image is an error
-        if (template == null || template.image == null) {
+        if (template.image == null) {
 
             return null;
         }

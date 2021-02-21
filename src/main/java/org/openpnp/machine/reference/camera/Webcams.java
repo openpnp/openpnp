@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.WebcamConfigurationWizard;
@@ -52,7 +51,6 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
     private int preferredHeight = 0;
 
     protected Webcam webcam;
-    private Thread thread;
     private boolean forceGray;
 
     private static final JHGrayFilter GRAY = new JHGrayFilter();
@@ -69,12 +67,10 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
 
     @Override
     public synchronized BufferedImage internalCapture() {
-        if (thread == null) {
-            setDeviceId(deviceId);
-        }
-        if (thread == null) {
+        if (! ensureOpen()) {
             return null;
         }
+
         try {
             return webcam.getImage();
         }
@@ -83,50 +79,28 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
         }
     }
 
-    @Override
-    public synchronized void startContinuousCapture(CameraListener listener) {
-        if (thread == null) {
-            setDeviceId(deviceId);
-        }
-        super.startContinuousCapture(listener);
-    }
-
-    public void run() {
-        while (!Thread.interrupted()) {
-            try {
-                broadcastCapture(captureForPreview());
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                Thread.sleep(1000 / 30);
-            }
-            catch (InterruptedException e) {
-                break;
-            }
-        }
-    }
-
     public String getDeviceId() {
         return deviceId;
     }
 
-    public synchronized void setDeviceId(String deviceId) {
+    public void setDeviceId(String deviceId) {
         this.deviceId = deviceId;
-        if (thread != null) {
-            thread.interrupt();
+    }
+
+    @Override
+    public void open() throws Exception {
+        stop();
+
+        if (webcam != null) {
             try {
-                thread.join(3000);
+                webcam.close();
             }
             catch (Exception e) {
                 e.printStackTrace();
             }
-            thread = null;
-            webcam.close();
+            webcam = null;
         }
         try {
-            webcam = null;
             for (Webcam cam : Webcam.getWebcams()) {
                 if (cam.getName().equals(deviceId)) {
                     webcam = cam;
@@ -142,14 +116,16 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
             if (forceGray) {
                 webcam.setImageTransformer(this);
             }
+            else {
+                webcam.setImageTransformer(null);
+            }
         }
         catch (Exception e) {
             e.printStackTrace();
             return;
         }
-        thread = new Thread(this);
-        thread.setDaemon(true);
-        thread.start();
+
+        super.open();
     }
 
     public void setForceGray(boolean val) {
@@ -205,15 +181,9 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
     @Override
     public void close() throws IOException {
         super.close();
-        if (thread != null) {
-            thread.interrupt();
-            try {
-                thread.join(3000);
-            }
-            catch (Exception e) {
-
-            }
+        if (webcam != null) {
             webcam.close();
+            webcam = null;
         }
     }
 }

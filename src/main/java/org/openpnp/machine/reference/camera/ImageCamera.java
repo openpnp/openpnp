@@ -25,8 +25,8 @@ import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeSupport;
 import java.net.URL;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -35,7 +35,6 @@ import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
-import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.SimulationModeMachine;
@@ -44,6 +43,8 @@ import org.openpnp.model.Footprint;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider.TemplateMatch;
@@ -52,14 +53,8 @@ import org.openpnp.vision.FluentCv;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.Commit;
 
-public class ImageCamera extends ReferenceCamera implements Runnable {
-    private PropertyChangeSupport pcs = new PropertyChangeSupport(this);
-
-    @Attribute(required = false)
-    private int fps = 30;
-
+public class ImageCamera extends ReferenceCamera {
     @Element
     private String sourceUri = "classpath://samples/pnp-test/pnp-test.png";
 
@@ -70,8 +65,6 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
     private int height = 480;
 
     private BufferedImage source;
-
-    private Thread thread;
 
     /**
      * In pick location checking, this is the maximum distance allowed.
@@ -96,69 +89,35 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 
     public ImageCamera() {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.04233, 0.04233, 0, 0));
-        try {
-            setSourceUri(sourceUri);
-        }
-        catch (Exception e) {
-            
-        }
-    }
-
-    @SuppressWarnings("unused")
-    @Commit
-    protected void commit() throws Exception {
-        super.commit();
-        setSourceUri(sourceUri);
-    }
-
-    @Override
-    public synchronized void startContinuousCapture(CameraListener listener) {
-        start();
-        super.startContinuousCapture(listener);
-    }
-
-    @Override
-    public synchronized void stopContinuousCapture(CameraListener listener) {
-        super.stopContinuousCapture(listener);
-        if (listeners.size() == 0) {
-            stop();
-        }
-    }
-
-    private synchronized void stop() {
-        if (thread != null && thread.isAlive()) {
-            thread.interrupt();
-            try {
-                thread.join(3000);
-            }
-            catch (Exception e) {
-
-            }
-            thread = null;
-        }
-    }
-
-    private synchronized void start() {
-        if (thread == null) {
-            thread = new Thread(this);
-            thread.setDaemon(true);
-            thread.start();
-        }
     }
 
     public String getSourceUri() {
         return sourceUri;
     }
 
-    public void setSourceUri(String sourceUri) throws Exception {
+    public void setSourceUri(String sourceUri) {
         String oldValue = this.sourceUri;
         this.sourceUri = sourceUri;
-        pcs.firePropertyChange("sourceUri", oldValue, sourceUri);
-        initialize();
+        firePropertyChange("sourceUri", oldValue, sourceUri);
+    }
+
+    @Override 
+    public synchronized void open() throws Exception {
+        if (sourceUri.startsWith("classpath://")) {
+            source = ImageIO.read(getClass().getClassLoader()
+                    .getResourceAsStream(sourceUri.substring("classpath://".length())));
+        }
+        else {
+            source = ImageIO.read(new URL(sourceUri));
+        }
+        super.open();
     }
 
     @Override
     public synchronized BufferedImage internalCapture() {
+        if (! ensureOpen()) {
+            return null;
+        }
         Location location = SimulationModeMachine.getSimulatedPhysicalLocation(this, getLooking());
 
         BufferedImage frame = locationCapture(location, width, height, true);
@@ -217,7 +176,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
         }
 
         if (simulation) {
-            SimulationModeMachine.drawSimulatedCameraNoise(gFrame, width, height);
+            SimulationModeMachine.simulateCameraExposure(this, gFrame, width, height);
         }
 
         gFrame.dispose();
@@ -374,35 +333,6 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
         }
     }
 
-    private synchronized void initialize() throws Exception {
-        stop();
-
-        if (sourceUri.startsWith("classpath://")) {
-            source = ImageIO.read(getClass().getClassLoader()
-                    .getResourceAsStream(sourceUri.substring("classpath://".length())));
-        }
-        else {
-            source = ImageIO.read(new URL(sourceUri));
-        }
-
-        if (listeners.size() > 0) {
-            start();
-        }
-    }
-
-
-    public void run() {
-        while (!Thread.interrupted()) {
-            broadcastCapture(captureForPreview());
-            try {
-                Thread.sleep(1000 / fps);
-            }
-            catch (InterruptedException e) {
-                return;
-            }
-        }
-    }
-
     @Override
     public Wizard getConfigurationWizard() {
         return new ImageCameraConfigurationWizard(this);
@@ -416,5 +346,33 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         return null;
+    }
+    
+
+    @Override
+    public void findIssues(List<Solutions.Issue> issues) {
+        super.findIssues(issues);
+        issues.add(new Solutions.Issue(
+                this, 
+                "The simulation ImageCamera can be replaced with a OpenPnpCaptureCamera to connect to a real USB camera.", 
+                "Replace with OpenPnpCaptureCamera.", 
+                Severity.Fundamental,
+                "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera") {
+
+            @Override
+            public void setState(Solutions.State state) throws Exception {
+                if (confirmStateChange(state)) {
+                    if (state == Solutions.State.Solved) {
+                        OpenPnpCaptureCamera camera = createReplacementCamera();
+                        replaceCamera(camera);
+                    }
+                    else if (getState() == Solutions.State.Solved) {
+                        // Place the old one back (from the captured ImageCamera.this).
+                        replaceCamera(ImageCamera.this);
+                    }
+                    super.setState(state);
+                }
+            }
+        });
     }
 }

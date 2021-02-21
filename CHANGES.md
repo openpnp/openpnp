@@ -1,6 +1,71 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2020-02-04
+
+## New Thermistor Linearizing Actuator
+
+A new Actuator, the ThermistorToLinearSensorActuator, has been added. This Actuator converts
+sensor readings that have been processed with thermistor transforms, like Smoothieware does,
+to linear readings. If you use Smoothie and have linear sensors attached to the thermistor
+inputs this may be useful in linearizing the output.
+
+See https://github.com/openpnp/openpnp/wiki/ThermistorToLinearSensorActuator for more info!
+
+
+# 2021-01-14
+
+## Actuators with Profiles / Built-in Camera Lighting / Camera Automatisms
+
+Actuators that can control Camera lights in various ways have been implemented inside OpenPnP.   
+
+- Actuators can be configured for a specific (writing) value type (Boolean, Double, String, 
+  Profile).
+- Non-Boolean actuators can be configured for specific typed ON and OFF values, so they can be
+  triggered using Boolean semantics.
+- Actuators can automatically be state-initialized or actuated when Machine States change: 
+  Enabled, Homed, Disabled.
+- The GUI was reworked to adapt itself to the value types. 
+- `HttpActuator` and `ScriptActuator` were extended to support all value types.
+- The new actuator value type Profile introduces a "multiple choice" actuator. 
+- A Profile type actuator can control multiple target actuators (including itself). 
+- Each of the choice profiles controls a set of specific values to be written to the target 
+  actuators. 
+- Added a Light Actuator to the Camera. A Profile type actuator is the ideal choice to control 
+  multi-channel lights such as RGB lights or other selective/angular light sources, or to 
+  provide predefined step values for scalar light intensity. 
+- Actuator based light triggering can be configured in various ways. 
+- The pipeline `ImageCapture` stage can set/override the Light Actuator value as a parameter.
+- Camera implementations have been unified in terms of broadcasting, preview FPS etc.
+- Full support for 0 fps where only the actual vision captures are displayed.
+- Improved SwitcherCamera to only broadcast the correctly switched channel. 
+- Optional Auto-Camera-Preview: the active Camera is automatically switched in single preview. 
+- Various related bug-fixes.
+
+
+# 2020-12-29
+
+## Retry Bug Fixes and Improvements
+
+This is the first in a series of updates to improve retry and error handling in OpenPnP. The
+goal of this change is to fix features that were already in OpenPnP but not working correctly
+and additionally bring back (and fix) a feature that existed in OpenPnP 1.0.
+
+- Feeder.feedRetryCount now works correctly: feeds will be retried if they fail due to the feed()
+  method throwing an Exception. This most often happens in feeders that can detect they are out
+  of parts, such as Strip and Tray feeders. If a feeder fails all of it's retries it is disabled.
+
+- Feeder.pickRetryCount implemented: If the vacuum check after a pick fails, the pick and vacuum
+  check will be retried without performing another feed. Since this was not previously implemented
+  at all, but the setting was there, and this could potentially break feeders or nozzles that
+  use shutters the value will be reset to 0 on initial load of this version. You can set it
+  if you want to use the new functionality.
+
+- Part.pickRetryCount: This new retry value controls how many times the feed-pick sequence will
+  be retried for a part. Defaults to 0. Setting this value makes it possible to automatically
+  try additional feeders when one becomes disabled.  
+
+
 # 2020-12-12
 
 ## Advanced Motion Control

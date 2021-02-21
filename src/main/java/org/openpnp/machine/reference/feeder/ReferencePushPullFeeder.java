@@ -295,6 +295,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     }
 
     public void assertCalibrated(boolean tapeFeed) throws Exception {
+        if (getHole1Location().convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(getHole2Location()) < 3) {
+            throw new Exception("Feeder "+getName()+" sprocket hole locations undefined/too close together.");
+        }
         if ((visionOffset == null && calibrationTrigger != CalibrationTrigger.None)
                 || (tapeFeed && calibrationTrigger == CalibrationTrigger.UntilConfident && !isPrecisionSufficient())
                 || (tapeFeed && calibrationTrigger == CalibrationTrigger.OnEachTapeFeed)) {
@@ -1034,6 +1037,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         // with the locations manually.
 
         Location unitVector = getHole1Location().unitVectorTo(getHole2Location());
+        if (!(Double.isFinite(unitVector.getX()) && Double.isFinite(unitVector.getY()))) {
+            // Catch (yet) undefined hole locations.    
+            unitVector = new Location(getHole1Location().getUnits(), 0, 1, 0, 0);
+        }
         double rotationTape = Math.atan2(unitVector.getY(), unitVector.getX())*180.0/Math.PI;
         Location transform = getLocation().derive(null, null, null, rotationTape);
         if (Math.abs(rotationTape - getLocation().getRotation()) > 0.1) {
@@ -1345,8 +1352,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 Object res = null;
                 try {
                     // Grab the results
-                    res = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
-                    List resultsList = (List) res;
+                    resultsList = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
+                            .getExpectedModel(List.class);
 
                     // Convert eligible results into circles
                     for (Object result : resultsList) {
@@ -1632,6 +1639,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             performVisionOperations(camera, pipeline, true, true, false, OcrWrongPartAction.ChangePart, false, null);
             // Move the camera back to the pick location
             MovableUtils.moveToLocationAtSafeZ(camera, getLocation());
+            MovableUtils.fireTargetedUserAction(camera);
         }
     }
 
@@ -1777,7 +1785,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         });
 
         for (ReferencePushPullFeeder templateFeeder : list) {
-            if (templateFeeder != this) { 
+            if (templateFeeder.getPart() != null && templateFeeder != this) { 
                 if (compatiblePart == null || compatiblePartPackages(compatiblePart, templateFeeder.getPart())) {
                     // the first ranking does it  
                     return templateFeeder;
@@ -1790,7 +1798,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     public List<ReferencePushPullFeeder> getCompatibleFeeders() {
         List<ReferencePushPullFeeder> list = new ArrayList<>();
         for (ReferencePushPullFeeder feeder : getAllPushPullFeeders()) {
-            if (feeder != this) { 
+            if (feeder.getPart() != null && feeder != this) { 
                 if (ReferencePushPullFeeder.compatiblePartPackages(getPart(), feeder.getPart())) {
                     list.add(feeder);
                 }
@@ -1806,10 +1814,12 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             status += "Clones to ";
             int n = 0;
             for (ReferencePushPullFeeder targetFeeder : getCompatibleFeeders()) {
+                if (targetFeeder.getPart() != null) {
                 if (n++ > 0) {
                     status += ",<br/>";
                 }
                 status += targetFeeder.getName()+" "+targetFeeder.getPart().getId();
+            }
             }
             status += n == 0 ? "none." : " (Count: "+n+")";
         }

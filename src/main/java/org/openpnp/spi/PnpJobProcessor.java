@@ -58,12 +58,15 @@ public interface PnpJobProcessor extends JobProcessor {
         }
 
         public double getPartHeight() {
-            return placement.getPart().getHeight().convertToUnits(LengthUnit.Millimeters)
-                    .getValue();
+            return (placement.getPart() != null 
+                    ? placement.getPart().getHeight().convertToUnits(LengthUnit.Millimeters).getValue()
+                            : 0.0);
         }
 
         public String getPartId() {
-            return placement.getPart().getId();
+            return (placement.getPart() != null 
+                    ? placement.getPart().getId()
+                            : "");
         }
         
         @Override

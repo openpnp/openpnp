@@ -25,13 +25,20 @@ import org.jdesktop.beansbinding.Converter;
 import org.openpnp.model.Named;
 
 public class NamedConverter<NamedType extends Named> extends Converter<NamedType, String> {
-    final List<NamedType> pool;
-    
+    final List<NamedType> pool1;
+    final List<NamedType> pool2;
+
     public NamedConverter(List<NamedType> pool) {
         super();
-        this.pool = pool;
+        this.pool1 = pool;
+        this.pool2 = null;
     }
-    
+    public NamedConverter(List<NamedType> pool1, List<NamedType> pool2) {
+        super();
+        this.pool1 = pool1;
+        this.pool2 = pool2;
+    }
+
     @Override
     public String convertForward(NamedType named) {
         if (named == null) {
@@ -44,9 +51,16 @@ public class NamedConverter<NamedType extends Named> extends Converter<NamedType
 
     @Override
     public NamedType convertReverse(String s) {
-        for (NamedType named : pool) {
+        for (NamedType named : pool1) {
             if (named.getName().equals(s)) {
                 return named;
+            }
+        }
+        if (pool2 != null) {
+            for (NamedType named : pool2) {
+                if (named.getName().equals(s)) {
+                    return named;
+                }
             }
         }
         return null;

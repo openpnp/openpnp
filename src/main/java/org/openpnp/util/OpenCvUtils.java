@@ -35,7 +35,6 @@ public class OpenCvUtils {
 
     static {
         nu.pattern.OpenCV.loadShared();
-        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }
 
     public static BufferedImage toBufferedImage(Mat m) {
@@ -124,7 +123,7 @@ public class OpenCvUtils {
         double maxDiameterPixels = maxDiameter.getValue() / avgUnitsPerPixel;
         double minDistancePixels = minDistance.getValue() / avgUnitsPerPixel;
 
-        BufferedImage image = camera.capture();
+        BufferedImage image = camera.lightSettleAndCapture();
         Mat mat = toMat(image);
         Mat circles = houghCircles(mat, minDiameterPixels, maxDiameterPixels, minDistancePixels);
 

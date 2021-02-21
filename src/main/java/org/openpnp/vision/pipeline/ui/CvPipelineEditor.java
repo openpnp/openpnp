@@ -164,10 +164,18 @@ public class CvPipelineEditor extends JPanel {
     private final CvPipeline pipeline;
     private PipelinePanel pipelinePanel;
     private ResultsPanel resultsPanel;
+    
+    private String originalVersion = "";
 
     public CvPipelineEditor(CvPipeline pipeline) {
         this.pipeline = pipeline;
-
+        try {
+            originalVersion = pipeline.toXmlString();
+        }
+        catch (Exception e1) {
+            // Do nothing
+        }
+        
         setLayout(new BorderLayout(0, 0));
 
         JSplitPane inputAndOutputSplitPane = new JSplitPane();
@@ -206,6 +214,26 @@ public class CvPipelineEditor extends JPanel {
         resultsPanel.setSelectedStage(stage);
     }
 
+    public boolean isDirty( ) {
+        String editedVersion = "";
+        try {
+            editedVersion = pipeline.toXmlString();
+        }
+        catch (Exception e) {
+            // Do nothing
+        }
+        return !editedVersion.equals(originalVersion);
+    }
+    
+    public void undoEdits() {
+        try {
+            pipeline.fromXmlString(originalVersion);
+        }
+        catch (Exception e) {
+            // Do nothing
+        }
+    }
+    
     public static Set<Class<? extends CvStage>> getStageClasses() {
         return Collections.unmodifiableSet(stageClasses);
     }

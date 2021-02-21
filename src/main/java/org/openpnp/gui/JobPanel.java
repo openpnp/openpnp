@@ -784,6 +784,7 @@ public class JobPanel extends JPanel {
                     existingBoard.addSolderPastePad(pad);
                 }
                 jobPlacementsPanel.setBoardLocation(getSelection());
+                frame.getFeedersTab().updateView();
             }
         }
         catch (Exception e) {
@@ -822,6 +823,7 @@ public class JobPanel extends JPanel {
                 Job job = configuration.loadJob(file);
                 setJob(job);
                 addRecentJob(file);
+                frame.getFeedersTab().updateView();
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -1250,9 +1252,9 @@ public class JobPanel extends JPanel {
                     UiUtils.submitUiMachineTask(() -> {
                         HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                         Camera camera = tool.getHead().getDefaultCamera();
-                        MainFrame.get().getCameraViews().ensureCameraVisible(camera);
                         Location location = getSelection().getLocation();
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
+                        MovableUtils.fireTargetedUserAction(camera);
                         try {
                             Map<String, Object> globals = new HashMap<>();
                             globals.put("camera", camera);
@@ -1284,10 +1286,9 @@ public class JobPanel extends JPanel {
                     	comp.requestFocus();
                        HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                         Camera camera = tool.getHead().getDefaultCamera();
-                        MainFrame.get().getCameraViews().ensureCameraVisible(camera);
                         Location location = getSelection().getLocation();
-                        
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
+                        MovableUtils.fireTargetedUserAction(camera);
                        
                         try {
                             Map<String, Object> globals = new HashMap<>();
@@ -1314,6 +1315,7 @@ public class JobPanel extends JPanel {
                 HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Location location = getSelection().getLocation();
                 MovableUtils.moveToLocationAtSafeZ(tool, location);
+                MovableUtils.fireTargetedUserAction(tool);
             });
         }
     };
@@ -1364,8 +1366,8 @@ public class JobPanel extends JPanel {
                  */
                 HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
-                MainFrame.get().getCameraViews().ensureCameraVisible(camera);
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
+                MovableUtils.fireTargetedUserAction(camera);
             });
         }
     };
@@ -1426,9 +1428,8 @@ public class JobPanel extends JPanel {
                 refreshSelectedRow();
                 HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
-                MainFrame.get().getCameraViews().ensureCameraVisible(camera);
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
-
+                MovableUtils.fireTargetedUserAction(camera);
             });
         }
 
@@ -1538,6 +1539,7 @@ public class JobPanel extends JPanel {
                 Job job = configuration.loadJob(file);
                 setJob(job);
                 addRecentJob(file);
+                frame.getFeedersTab().updateView();
             }
             catch (Exception e) {
                 e.printStackTrace();

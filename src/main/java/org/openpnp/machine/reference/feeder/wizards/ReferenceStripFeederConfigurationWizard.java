@@ -73,6 +73,7 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.HslColor;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
@@ -116,6 +117,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JLabel lblFeedCount;
     private JTextField textFieldFeedCount;
     private JButton btnResetFeedCount;
+    private JLabel lblMaxFeedCount;
+    private JButton btnMaxFeedCount;
+    private JTextField textFieldMaxFeedCount;
     private JLabel lblTapeType;
     private JComboBox comboBoxTapeType;
     private JLabel lblRotationInTape;
@@ -220,6 +224,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         btnAutoSetup = new JButton(autoSetup);
@@ -261,6 +266,26 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         });
         panelTapeSettings.add(btnResetFeedCount, "12, 6");
 
+        lblMaxFeedCount = new JLabel("Max Feed Count");
+        panelTapeSettings.add(lblMaxFeedCount,"8, 8, right, default");
+        textFieldMaxFeedCount = new JTextField();
+        panelTapeSettings.add(textFieldMaxFeedCount,"10,8");
+        textFieldMaxFeedCount.setColumns(10);
+        textFieldMaxFeedCount.setToolTipText("Max number of parts to feed from this strip.  If set to zero, this setting is ignored.");
+        btnMaxFeedCount = new JButton(new AbstractAction("Auto Set MaxFeedCount") {
+        	@Override
+        	public void actionPerformed(ActionEvent e) {
+        		Location h0 = feeder.getReferenceHoleLocation();
+        		Location h1 = feeder.getLastHoleLocation();
+        		Length strip_len = h0.getLinearLengthTo(h1);
+        		double part_count = strip_len.divide(feeder.getPartPitch());
+        		int ipart_count = 1+(int)Math.round(part_count);
+        		textFieldMaxFeedCount.setText(Integer.toString(ipart_count));
+        	}
+        });
+        btnMaxFeedCount.setToolTipText("Calculate the Max Feed Count using the feeder's hole locations and part pitch");
+        panelTapeSettings.add(btnMaxFeedCount,"12,8");
+        
         JPanel panelVision = new JPanel();
         panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
@@ -380,6 +405,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         addWrappedBinding(feeder, "tapeWidth", textFieldTapeWidth, "text", lengthConverter);
         addWrappedBinding(feeder, "partPitch", textFieldPartPitch, "text", lengthConverter);
         addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", intConverter);
+        addWrappedBinding(feeder, "maxFeedCount", textFieldMaxFeedCount, "text", intConverter);
 
         MutableLocationProxy feedStartLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "referenceHoleLocation", feedStartLocation,
@@ -405,6 +431,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         ComponentDecorators.decorateWithAutoSelect(pickRetryCount);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPartPitch);
         ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
+        ComponentDecorators.decorateWithAutoSelect(textFieldMaxFeedCount);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartZ);
@@ -459,6 +486,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                                              .getCameraView(autoSetupCamera);
             cameraView.addActionListener(autoSetupPart1Clicked);
             cameraView.setText("Click on the center of the first part in the tape.");
+            MovableUtils.fireTargetedUserAction(autoSetupCamera);
             cameraView.flash();
 
             logDebugInfo = (e.getModifiers() & ActionEvent.ALT_MASK) != 0;
@@ -517,6 +545,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                              public Void call() throws Exception {
                                  cameraView.setText("Checking first part...");
                                  autoSetupCamera.moveTo(firstPartLocation);
+                                 MovableUtils.fireTargetedUserAction(autoSetupCamera);
                                  part1HoleLocations = findHoles(autoSetupCamera);
                                  if (part1HoleLocations.size() < 1) {
                                      throw new Exception("No hole found at selected location");
@@ -561,6 +590,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                              public Void call() throws Exception {
                                  cameraView.setText("Checking second part...");
                                  autoSetupCamera.moveTo(secondPartLocation);
+                                 MovableUtils.fireTargetedUserAction(autoSetupCamera);
                                  List<Location> part2HoleLocations = findHoles(autoSetupCamera);
                                  if (part2HoleLocations.size() < 1) {
                                      throw new Exception("No hole found at selected location");
@@ -601,6 +631,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
                                  feeder.setFeedCount(1);
                                  autoSetupCamera.moveTo(feeder.getPickLocation());
+                                 MovableUtils.fireTargetedUserAction(autoSetupCamera);
                                  feeder.setFeedCount(0);
 
                                  cameraView.setText("Setup complete!");
@@ -665,7 +696,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
      */
     private BufferedImage showHoles(Camera camera, BufferedImage image) throws Exception {
         // BufferedCameraImage is used as we want to run the pipeline on an existing image
-        BufferedImageCamera bufferedImageCamera = new BufferedImageCamera(camera, image);
+        BufferedImageCamera bufferedImageCamera = BufferedImageCamera.get(camera, image);
 
         try (CvPipeline pipeline = getCvPipeline(bufferedImageCamera, true)) {
             // Process the pipeline to clean up the image and detect the tape holes
@@ -716,15 +747,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         }
 
         public FindHoles invoke() throws Exception {
-            List<CvStage.Result.Circle> results = null;
-            Object result = null;
-            try {
-                result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
-                results = (List<CvStage.Result.Circle>) result;
-            }
-            catch (ClassCastException e) {
-                throw new Exception("Unrecognized result type (should be Circles): " + result);
-            }
+            List<CvStage.Result.Circle> results = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
+                    .getExpectedListModel(CvStage.Result.Circle.class, null);
 
             // Sort by the distance to the camera center (which is over the part, not the hole)
             results.sort((a, b) -> {

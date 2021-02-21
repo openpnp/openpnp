@@ -23,16 +23,23 @@ import javax.swing.JTextPane;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
 
+import org.opencv.core.Core;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
+import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.vision.FluentCv.ColorCode;
+import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result;
 import org.openpnp.vision.pipeline.CvStage.Result.Circle;
+import org.pmw.tinylog.Logger;
+
+import javax.swing.JSeparator;
 
 public class ResultsPanel extends JPanel {
     private final CvPipelineEditor editor;
@@ -41,7 +48,10 @@ public class ResultsPanel extends JPanel {
     private CvStage pinnedStage;
 
     private Robot robot;
-
+    
+    private boolean displayTrueColors = true;
+    
+    
     public ResultsPanel(CvPipelineEditor editor) {
         this.editor = editor;
         
@@ -92,6 +102,15 @@ public class ResultsPanel extends JPanel {
         JButton pinResultButton = new JButton(pinResultAction);
         pinResultButton.setHideActionText(true);
         toolBar.add(pinResultButton);
+        
+        JSeparator separator = new JSeparator();
+        separator.setOrientation(SwingConstants.VERTICAL);
+        toolBar.add(separator);
+        
+        JButton colorResultButton = new JButton(colorResultAction);
+        colorResultButton.setHideActionText(true);
+        toolBar.add(colorResultButton);
+        
 
         JPanel modelPanel = new JPanel();
         modelPanel.setLayout(new BorderLayout(0, 0));
@@ -198,7 +217,61 @@ public class ResultsPanel extends JPanel {
         if (displayStage != null) {
             result = editor.getPipeline().getResult(displayStage);
             if (result != null) {
-                image = result.image;
+                if (result.image != null) {
+                    image = result.image.clone();
+                    if (displayTrueColors) {
+                        ColorSpace colorSpace = result.getColorSpace();
+                        if (colorSpace != null) {
+                            if ((image.channels() == 3) || (colorSpace == ColorSpace.Gray)) {
+                                switch (colorSpace) {
+                                    case Gray :
+                                    case Bgr :
+                                        //format is already ok for display
+                                        break;
+                                    case Rgb :
+                                        //need to swap channels 0 and 2 to get to Bgr format
+                                        Mat rChannel = new Mat();
+                                        Mat bChannel = new Mat();
+                                        Core.extractChannel(image, rChannel, 0);
+                                        Core.extractChannel(image, bChannel, 2);
+                                        Core.insertChannel(bChannel, image, 0);
+                                        Core.insertChannel(rChannel, image, 2);
+                                        rChannel.release();
+                                        bChannel.release();
+                                        break;
+                                    case Hls :
+                                        Imgproc.cvtColor(image, image, ColorCode.Hls2Bgr.getCode());
+                                        break;
+                                    case HlsFull :
+                                        Imgproc.cvtColor(image, image, ColorCode.Hls2BgrFull.getCode());
+                                        break;
+                                    case Hsv :
+                                        Imgproc.cvtColor(image, image, ColorCode.Hsv2Bgr.getCode());
+                                        break;
+                                    case HsvFull :
+                                        Imgproc.cvtColor(image, image, ColorCode.Hsv2BgrFull.getCode());
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                            else {
+                                Logger.error("Expecting image to be in the " + colorSpace +
+                                        " color space but it has only one channel. " + 
+                                        "Please send this log file to the developers!" );
+                                Logger.error("The offending pipeline is:");
+                                String pipelineStr;
+                                try {
+                                    pipelineStr = "\n" + editor.getPipeline().toXmlString();
+                                }
+                                catch (Exception ex) {
+                                    pipelineStr = "Unavailable due to " + ex.toString();
+                                }
+                                Logger.error(pipelineStr);
+                            }
+                        }
+                    }
+                }
                 model = result.model;
             }
         }
@@ -217,6 +290,9 @@ public class ResultsPanel extends JPanel {
             modelTextPane.setText(model == null ? "" : model.toString());
         }
         matView.setMat(image);
+        if (image != null) {
+            image.release();
+        }
         resultStageNameLabel.setText(result == null || displayStage == null ? ""
                 : (displayStage.getName() + " ( " + (result.processingTimeNs / 1000000.0)
                         + " ms / " + (editor.getPipeline().getTotalProcessingTimeNs() / 1000000.0) + " ms)"));
@@ -404,6 +480,30 @@ public class ResultsPanel extends JPanel {
             }
         }
     };
+
+    public final Action colorResultAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.colorTrue);
+            putValue(NAME, "");
+            putValue(SHORT_DESCRIPTION, "Images displayed in true color.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            if (displayTrueColors) {
+                displayTrueColors = false;
+                putValue(SMALL_ICON, Icons.colorFalse);
+                putValue(SHORT_DESCRIPTION, "Images displayed assuming BGR color space - colors may not look correct.");
+            }
+            else {
+                displayTrueColors = true;
+                putValue(SMALL_ICON, Icons.colorTrue);
+                putValue(SHORT_DESCRIPTION, "Images displayed in true color.");
+            }
+            updateAllEverything();
+        }
+    };
+
     private JTextPane modelTextPane;
     private JLabel resultStageNameLabel;
     private MatView matView;

@@ -20,6 +20,7 @@
 package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -34,7 +35,9 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Motion;
+import org.openpnp.model.Solutions;
 import org.openpnp.model.Motion.MoveToCommand;
+import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.Machine;
@@ -264,5 +267,31 @@ public class NullDriver extends AbstractDriver {
     @Override
     public MotionControlType getMotionControlType() {
         return MotionControlType.Full3rdOrderControl;
+    }
+
+    @Override
+    public void findIssues(List<Solutions.Issue> issues) {
+        super.findIssues(issues);
+        issues.add(new Solutions.Issue(
+                this, 
+                "The simulation NullDriver can replaced with a GcodeAsyncDriver to drive a real controller.", 
+                "Replace with GcodeAsyncDriver.", 
+                Severity.Fundamental,
+                "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver") {
+
+            @Override
+            public void setState(Solutions.State state) throws Exception {
+                if (confirmStateChange(state)) {
+                    if (state == Solutions.State.Solved) {
+                        GcodeDriverSolutions.convertToAsync(NullDriver.this);
+                    }
+                    else if (getState() == Solutions.State.Solved) {
+                        // Place the old one back (from the captured NullDriver.this).
+                        GcodeDriverSolutions.replaceDriver(NullDriver.this);
+                    }
+                    super.setState(state);
+                }
+            }
+        });
     }
 }

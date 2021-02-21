@@ -23,7 +23,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.math.BigInteger;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -35,7 +42,7 @@ import java.util.prefs.Preferences;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.ConfigurationListener;
-import org.openpnp.Scripting;
+import org.openpnp.scripting.Scripting;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.ResourceUtils;
@@ -98,14 +105,49 @@ public class Configuration extends AbstractModelObject {
         return instance;
     }
 
+    /**
+     * Initializes a new persistent Configuration singleton storing configuration files in
+     * configurationDirectory.
+     * @param configurationDirectory
+     */
     public static synchronized void initialize(File configurationDirectory) {
         instance = new Configuration(configurationDirectory);
+        instance.setLengthDisplayFormatWithUnits(PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS_DEF);
+    }
+    
+    /**
+     * Initializes a new temporary Configuration singleton storing configuration in memory only.
+     * @param configurationDirectory
+     */
+    public static synchronized void initialize() {
+        /**
+         * TODO STOPSHIP ideally this would use an in memory prefs, too, so that we
+         * don't mess with global user prefs.
+         */
+        instance = new Configuration();
         instance.setLengthDisplayFormatWithUnits(PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS_DEF);
     }
 
     private Configuration(File configurationDirectory) {
         this.configurationDirectory = configurationDirectory;
         this.prefs = Preferences.userNodeForPackage(Configuration.class);
+        File scriptingDirectory = new File(configurationDirectory, "scripts");
+        this.scripting = new Scripting(scriptingDirectory);
+    }
+    
+    private Configuration() {
+        this.prefs = Preferences.userNodeForPackage(Configuration.class);
+        this.scripting = new Scripting(null);
+        /**
+         * Setting loaded = true allows the mechanism of immediately notifying late
+         * Configuration.addListener() calls that the configuration is ready. It's a legacy
+         * hack.
+         */
+        loaded = true;
+    }
+    
+    public void setMachine(Machine machine) {
+        this.machine = machine;
     }
     
     public Scripting getScripting() {
@@ -310,29 +352,45 @@ public class Configuration extends AbstractModelObject {
         for (ConfigurationListener listener : listeners) {
             listener.configurationComplete(this);
         }
-        
-        scripting = new Scripting();
     }
 
     public synchronized void save() throws Exception {
+        LocalDateTime now = LocalDateTime.now();
         try {
-            saveMachine(new File(configurationDirectory, "machine.xml"));
+           saveMachine(createBackedUpFile("machine.xml", now));
         }
         catch (Exception e) {
             throw new Exception("Error while saving machine.xml (" + e.getMessage() + ")", e);
         }
         try {
-            savePackages(new File(configurationDirectory, "packages.xml"));
+            savePackages(createBackedUpFile("packages.xml", now));
         }
         catch (Exception e) {
             throw new Exception("Error while saving packages.xml (" + e.getMessage() + ")", e);
         }
         try {
-            saveParts(new File(configurationDirectory, "parts.xml"));
+            saveParts(createBackedUpFile("parts.xml", now));
         }
         catch (Exception e) {
             throw new Exception("Error while saving parts.xml (" + e.getMessage() + ")", e);
         }
+    }
+
+    protected File createBackedUpFile(String fileName, LocalDateTime now) throws Exception {
+        File file = new File(configurationDirectory, fileName);
+        if (file.exists()) {
+            File backupsDirectory = new File(configurationDirectory, "backups");
+            if (System.getProperty("backups") != null) {
+                backupsDirectory = new File(System.getProperty("backups"));
+            }
+
+            File singleBackupDirectory = new File(backupsDirectory, DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.mm.ss").format(now));
+            singleBackupDirectory.mkdirs();
+            File backupFile = new File(singleBackupDirectory, fileName);
+            Files.copy(Paths.get(file.toURI()), Paths.get(backupFile.toURI()), 
+                    StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+        }
+        return file;
     }
 
     public Package getPackage(String id) {

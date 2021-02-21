@@ -15,6 +15,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.OpenCvUtils;
+import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -111,6 +112,6 @@ public class CreateShapeTemplateImage extends CvStage {
 
         g2d.dispose();
 
-        return new Result(OpenCvUtils.toMat(template));
+        return new Result(OpenCvUtils.toMat(template), ColorSpace.Bgr);
     }
 }

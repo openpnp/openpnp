@@ -614,10 +614,10 @@ public class BlindsFeeder extends ReferenceFeeder {
             List<RotatedRect> results = null;
             try {
                 // Grab the results
-                results = ((List<RotatedRect>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model);
-                if (results == null /*???|| results.isEmpty()*/) {
-                    throw new Exception("Feeder " + getName() + ": No features found.");
-                }
+                results = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
+                        .getExpectedListModel(RotatedRect.class, 
+                                null/*???new Exception("Feeder " + getName() + ": No features found.")*/);
+
 
                 Result ocrStageResult = pipeline.getResult("OCR"); 
                 if (ocrStageResult != null) {

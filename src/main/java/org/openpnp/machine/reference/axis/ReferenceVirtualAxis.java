@@ -34,6 +34,13 @@ import org.openpnp.spi.base.AbstractCoordinateAxis;
  * moving a physical axis.
  */
 public class ReferenceVirtualAxis extends AbstractCoordinateAxis implements CoordinateAxis {
+    public ReferenceVirtualAxis(Type type) {
+        setType(type);
+    }
+    
+    public ReferenceVirtualAxis() {
+        
+    }
 
     @Override
     public Wizard getConfigurationWizard() {

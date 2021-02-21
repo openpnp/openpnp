@@ -34,8 +34,32 @@ public interface Actuator
      * @return the driver through which this Actuator is controlled. 
      */
     public Driver getDriver();
-    
+
     public void setDriver(Driver driver);
+
+    public enum ActuatorValueType {
+        Double,
+        Boolean,
+        String,
+        Profile
+    }
+
+    /**
+     * Declares the primary value type of the Actuator. This will allow the GUI to present the proper control for value editing.   
+     * 
+     * @return 
+     */
+    public ActuatorValueType getValueType();
+
+    /**
+     * In case the Actuator has the Profile value type, this will return the available choice of values.  
+     * @return
+     */
+    public String [] getProfileValues();
+
+    public Object getDefaultOnValue();
+
+    public Object getDefaultOffValue();
 
     /**
      * Turns the Actuator on or off.
@@ -64,9 +88,42 @@ public interface Actuator
     public void actuate(String value) throws Exception;
 
     /**
+     * Provides the actuator with a generic value to which it can respond in an implementation
+     * dependent manner. This will ultimately call typed actuate() methods according to getValueType(). 
+     * 
+     * @param value
+     * @throws Exception
+     */
+    public void actuate(Object value) throws Exception;
+
+    /**
+     * Actuate the profile identified by the given name.   
+     * 
+     * @param name
+     * @throws Exception 
+     */
+    abstract void actuateProfile(String name) throws Exception;
+
+    /**
+     * Actuate the default ON/OFF profile. 
+     * 
+     * @param name
+     * @throws Exception 
+     */
+    abstract void actuateProfile(boolean on) throws Exception;
+
+    /**
      * @return the last actuation value or null if no actuation has happened since the last homing.
      */
     public Object getLastActuationValue();
+
+    /**
+     * Returns the Boolean state of the actuator i.e. whether the last actuation was not equal to the default off value.
+     * Returns false when the actuator state is unknown, i.e. when it was never actuated. 
+     * 
+     * @return 
+     */
+    public boolean isActuated();
 
     /**
      * Read a value from the actuator. The value will be returned exactly as provided by the

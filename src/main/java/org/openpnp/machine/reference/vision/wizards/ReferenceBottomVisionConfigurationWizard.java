@@ -55,11 +55,11 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:default"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
+                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),},
+                FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,

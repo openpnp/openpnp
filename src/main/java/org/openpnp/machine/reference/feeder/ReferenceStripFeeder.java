@@ -108,6 +108,9 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     @Attribute
     private int feedCount = 0;
 
+	@Attribute(required = false)
+	private int maxFeedCount = 0;
+
     private Length holeDiameter = new Length(1.5, LengthUnit.Millimeters);
 
     private Length holePitch = new Length(4, LengthUnit.Millimeters);
@@ -220,6 +223,11 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     public void feed(Nozzle nozzle) throws Exception {
         setFeedCount(getFeedCount() + 1);
 
+        // Throw an exception when the feeder runs out of parts
+        if ((maxFeedCount > 0) && (feedCount > maxFeedCount)) {
+			throw new Exception("Tried to feed part: " + part.getId() + "  Feeder " + name + " empty.");
+		}
+
         updateVisionOffsets(nozzle);
     }
 
@@ -276,28 +284,21 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
             pipeline.process();
     
-            try {
-                MainFrame.get().getCameraViews().getCameraView(camera)
-                        .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
+            if (MainFrame.get() != null) {
+                try {
+                    MainFrame.get().getCameraViews().getCameraView(camera)
+                            .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
+                }
+                catch (Exception e) {
+                    // if we aren't running in the UI this will fail, and that's okay
+                }
             }
-            catch (Exception e) {
-                // if we aren't running in the UI this will fail, and that's okay
-            }
-    
+
             // Grab the results
-            Object result = null;
-            List<CvStage.Result.Circle> results = null;
-            try {
-                result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;            
-                results = (List<CvStage.Result.Circle>) result;
-            }
-            catch (ClassCastException e) {
-                throw new Exception("Unrecognized result type (should be Circles): " + result);
-            }
-            if (results.isEmpty()) {
-                throw new Exception("Feeder " + getName() + ": No tape holes found.");
-            }
-    
+            List<CvStage.Result.Circle> results = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
+                    .getExpectedListModel(CvStage.Result.Circle.class, 
+                            new Exception("Feeder " + getName() + ": No tape holes found."));            
+
             // Find the closest result
             results.sort((a, b) -> {
                 Double da = VisionUtils.getPixelLocation(camera, a.x, a.y)
@@ -397,6 +398,14 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         this.feedCount = feedCount;
         firePropertyChange("feedCount", oldValue, feedCount);
     }
+
+	public int getMaxFeedCount() {
+		return maxFeedCount;
+	}
+
+	public void setMaxFeedCount(int count) {
+		maxFeedCount = count;
+	}
 
     public Length getReferenceHoleToPartLinear() {
         return referenceHoleToPartLinear;

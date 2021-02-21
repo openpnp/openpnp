@@ -32,6 +32,9 @@ public class Icons {
     public static Icon centerCameraOnFeeder = getIcon("/icons/position-camera-on-feeder.svg");
     public static Icon centerNozzleOnFeeder = getIcon("/icons/position-nozzle-on-feeder.svg");
 
+    public static Icon colorFalse = getIcon("/icons/color-false.svg");
+    public static Icon colorTrue = getIcon("/icons/color-true.svg");
+    
     public static Icon start = getIcon("/icons/control-start.svg");
     public static Icon pause = getIcon("/icons/control-pause.svg");
     public static Icon step = getIcon("/icons/control-next.svg");

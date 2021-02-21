@@ -115,6 +115,16 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     public Nozzle getNozzle(String id) {
         return nozzles.get(id);
     }
+    
+    @Override
+    public Nozzle getNozzleByName(String name) {
+        for (Nozzle nozzle : nozzles) {
+            if (nozzle.getName().equals(name)) {
+                return nozzle;
+            }
+        }
+        return null;
+    }
 
     @Override
     public List<Actuator> getActuators() {
@@ -161,6 +171,18 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
         int index = cameras.indexOf(camera);
         if (cameras.remove(camera)) {
             fireIndexedPropertyChange("cameras", index, camera, null);
+        }
+    }
+
+    @Override 
+    public void permutateCamera(Camera camera, int direction) {
+        int index0 = cameras.indexOf(camera);
+        int index1 = direction > 0 ? index0+1 : index0-1;
+        if (0 <= index1 && cameras.size() > index1) {
+            cameras.remove(camera);
+            cameras.add(index1, camera);
+            fireIndexedPropertyChange("cameras", index0, camera, cameras.get(index0));
+            fireIndexedPropertyChange("cameras", index1, cameras.get(index0), camera);
         }
     }
 
