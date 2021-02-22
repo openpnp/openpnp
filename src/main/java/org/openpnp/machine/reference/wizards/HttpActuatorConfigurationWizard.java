@@ -27,6 +27,7 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.machine.reference.HttpActuator;
+import org.openpnp.spi.Actuator.ActuatorValueType;
 import org.openpnp.spi.base.AbstractMachine;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -45,6 +46,8 @@ public class HttpActuatorConfigurationWizard extends AbstractActuatorConfigurati
     private JTextField offUrlTf;
     private JLabel lblParametricUrl;
     private JTextField paramUrl;
+    private JTextField readUrlTf;
+    private JLabel lblReadUrl;
 
     public HttpActuatorConfigurationWizard(AbstractMachine machine, HttpActuator httpActuator) {
         super(machine, httpActuator);
@@ -103,10 +106,10 @@ public class HttpActuatorConfigurationWizard extends AbstractActuatorConfigurati
         paramUrl.setColumns(40);
 
         lblReadUrl = new JLabel("Read URL");
-        panelProperties.add(lblReadUrl, "2, 8, right, default");
+        panelProperties.add(lblReadUrl, "2, 10, right, default");
 
         readUrlTf = new JTextField();
-        panelProperties.add(readUrlTf, "4, 8, fill, default");
+        panelProperties.add(readUrlTf, "4, 10, fill, default");
         readUrlTf.setColumns(40);
 
 
