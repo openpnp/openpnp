@@ -1,13 +1,17 @@
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
+
 
 import javax.swing.Action;
 import javax.swing.Icon;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -20,8 +24,25 @@ import org.openpnp.spi.VisionProvider;
 import org.openpnp.spi.base.AbstractHeadMountable;
 import org.openpnp.util.VisionUtils;
 
+import com.google.common.io.Files;
+
 
 public class VisionUtilsTest {
+	
+	@Before
+	public void before() throws Exception {
+		/**
+		 * Create a new config directory and load the default configuration.
+		 */
+		File workingDirectory = Files.createTempDir();
+		workingDirectory = new File(workingDirectory, ".openpnp");
+		System.out.println("Configuration directory: " + workingDirectory);
+		Configuration.initialize(workingDirectory);
+		Configuration.get().load();
+
+	}
+	 
+	 
     @Test
     public void testOffsets() {
         Camera camera = new TestCamera();
