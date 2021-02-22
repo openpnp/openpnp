@@ -54,6 +54,9 @@ public class HttpActuator extends ReferenceActuator {
     // configuration changes. 
     protected String lastActuationUrl = null;
 
+    @Element(required = false)
+    protected String readUrl = "";
+
     public HttpActuator() {}
 
     @Override
@@ -115,6 +118,42 @@ public class HttpActuator extends ReferenceActuator {
     }
 
     @Override
+    public String read() throws Exception {
+        if (isCoordinatedBeforeRead()) {
+            coordinateWithMachine(false);
+        }
+        
+        
+        
+        // getDriver().actuate(this, on);
+        URL obj = null;
+        obj = new URL(this.readUrl);
+        
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+        
+        con.setRequestMethod("GET");
+        con.setRequestProperty("User-Agent", "Mozilla/5.0");
+
+        int responseCode = con.getResponseCode();
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        String inputLine;
+        StringBuffer response = new StringBuffer();
+
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
+        }
+        in.close();
+        
+        
+        if (isCoordinatedAfterActuate()) {
+            coordinateWithMachine(true);
+        }
+        getMachine().fireMachineHeadActivity(head);
+        return response.toString();
+    }
+
+    @Override
     public Wizard getConfigurationWizard() {
         return new HttpActuatorConfigurationWizard(getMachine(), this);
     }
@@ -143,5 +182,14 @@ public class HttpActuator extends ReferenceActuator {
 
     public void setParamUrl(String paramUrl) {
         this.paramUrl = paramUrl;
+    }
+
+    public String getReadUrl() {
+        return this.readUrl;
+    }
+
+    public void setReadUrl(String url) {
+        this.readUrl = url;
+        firePropertyChange("readUrl", null, this.readUrl);
     }
 }

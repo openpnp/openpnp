@@ -20,9 +20,6 @@
 
 package org.openpnp.machine.reference.wizards;
 
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -30,7 +27,6 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.machine.reference.HttpActuator;
-import org.openpnp.spi.Actuator.ActuatorValueType;
 import org.openpnp.spi.base.AbstractMachine;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -73,6 +69,8 @@ public class HttpActuatorConfigurationWizard extends AbstractActuatorConfigurati
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblName = new JLabel("Name");
@@ -104,20 +102,31 @@ public class HttpActuatorConfigurationWizard extends AbstractActuatorConfigurati
         panelProperties.add(paramUrl, "4, 8, fill, default");
         paramUrl.setColumns(40);
 
+        lblReadUrl = new JLabel("Read URL");
+        panelProperties.add(lblReadUrl, "2, 8, right, default");
+
+        readUrlTf = new JTextField();
+        panelProperties.add(readUrlTf, "4, 8, fill, default");
+        readUrlTf.setColumns(40);
+
+
         super.createUi(machine);
     }
 
     @Override
     public void createBindings() {
+        super.createBindings();
         addWrappedBinding(actuator, "name", nameTf, "text");
         addWrappedBinding(actuator, "onUrl", onUrlTf, "text");
         addWrappedBinding(actuator, "offUrl", offUrlTf, "text");
         addWrappedBinding(actuator, "paramUrl", paramUrl, "text");
+        addWrappedBinding(actuator, "readUrl", readUrlTf, "text");
 
         ComponentDecorators.decorateWithAutoSelect(nameTf);
         ComponentDecorators.decorateWithAutoSelect(onUrlTf);
         ComponentDecorators.decorateWithAutoSelect(offUrlTf);
         ComponentDecorators.decorateWithAutoSelect(paramUrl);
+        ComponentDecorators.decorateWithAutoSelect(readUrlTf);
 
         super.createBindings();
     }
@@ -131,5 +140,7 @@ public class HttpActuatorConfigurationWizard extends AbstractActuatorConfigurati
         offUrlTf.setVisible(isBoolean);
         lblParametricUrl.setVisible(!isBoolean);
         paramUrl.setVisible(!isBoolean);
+        lblReadUrl.setVisible(!isBoolean);
+        readUrlTf.setVisible(!isBoolean);
     }
 }
