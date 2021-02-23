@@ -26,9 +26,17 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.camera.SimulatedUpCamera;
+import org.openpnp.machine.reference.driver.GcodeDriver.Line;
 import org.openpnp.machine.reference.wizards.HttpActuatorConfigurationWizard;
+import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Severity;
+import org.openpnp.spi.Camera.Looking;
 import org.openpnp.util.TextUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
@@ -43,6 +51,9 @@ public class HttpActuator extends ReferenceActuator {
 
     @Element(required = false)
     protected String paramUrl = "";
+
+    @Element(required = false)
+    protected String regex = "";
 
     // The actuation state should not be persisted.
     @Deprecated
@@ -124,13 +135,12 @@ public class HttpActuator extends ReferenceActuator {
         }
         
         
-        
         // getDriver().actuate(this, on);
         URL obj = null;
         obj = new URL(this.readUrl);
-        
+
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-        
+
         con.setRequestMethod("GET");
         con.setRequestProperty("User-Agent", "Mozilla/5.0");
 
@@ -140,16 +150,26 @@ public class HttpActuator extends ReferenceActuator {
         String inputLine;
         StringBuffer response = new StringBuffer();
 
+        Pattern pattern = Pattern.compile(regex);
+
         while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
+            Matcher matcher = pattern.matcher(inputLine);
+            if (matcher.matches()) {
+                String s = matcher.group("Value");
+                response.append(s);
+            }
+            if (regex.length() == 0) {
+                response.append(inputLine);
+            }
+
         }
         in.close();
-        
-        
+
         if (isCoordinatedAfterActuate()) {
             coordinateWithMachine(true);
         }
         getMachine().fireMachineHeadActivity(head);
+
         return response.toString();
     }
 
@@ -191,5 +211,35 @@ public class HttpActuator extends ReferenceActuator {
     public void setReadUrl(String url) {
         this.readUrl = url;
         firePropertyChange("readUrl", null, this.readUrl);
+    }
+
+    public String getRegex() {
+        return this.regex;
+    }
+
+    public void setRegex(String regex) {
+        this.regex = regex;
+        firePropertyChange("regex", null, this.regex);
+    }
+
+    @Override
+    public void findIssues(List<Solutions.Issue> issues) {
+        super.findIssues(issues);
+        if (this.readUrl.length() > 0 && this.regex.length() == 0) {
+
+            issues.add(new Solutions.Issue(this,
+                    "A HTTPActuator with Read URL likely needs a regular Expression to parse the value.",
+                    "Set an example expression", Severity.Warning,
+                    "https://github.com/openpnp/openpnp/wiki/HttpActuatorRead") {
+
+                @Override
+                public void setState(Solutions.State state) throws Exception {
+                    if (confirmStateChange(state)) {
+                        setRegex("read:(?<Value>-?\\d+)");
+                        super.setState(state);
+                    }
+                }
+            });
+        }
     }
 }
