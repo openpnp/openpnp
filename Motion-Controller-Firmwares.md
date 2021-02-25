@@ -49,6 +49,21 @@ Refer to the Smoothieware Wiki on how to upgrade:
 
 * [Flashing Smoothie Firmware](http://smoothieware.org/flashing-smoothie-firmware)
 
+Please make sure your Smoothieware is configured to use true axes, i.e. `A` `B` `C`, not extruders (we're not 3D printing!). If your config.txt contains something like this:
+  
+```
+# Extruder module configuration
+# See http://smoothieware.org/extruder
+extruder.hotend.enable                          true          # Whether to activate the extruder module at all. All configuration is ignored if false
+extruder.hotend.steps_per_mm                    8.8888      # Steps per mm for extruder stepper
+```
+
+Then you must remove the `extruder` parts and instead use the `delta`, `epsilon` and `zeta` definitions as described in the [Smoothieware 6axis page](https://smoothieware.org/6axis).
+
+If you skip this, you will get a complaint by [[Issues and Solutions]] saying "The driver does not report axes in the expected X Y Z A B C order".
+
+![driver reported](https://user-images.githubusercontent.com/9963310/109156343-02633d00-7771-11eb-8f22-73a0af0ef0a7.png)
+
 ## Marlin 2.0
 
 OpenPnP user Bill made a Marlin 2.0 port to Teensy 4.1 with advanced axis support. More information there:
