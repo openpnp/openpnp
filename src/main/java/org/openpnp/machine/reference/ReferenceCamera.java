@@ -413,12 +413,14 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             }
 
             // We do skip the convert to and from Mat if no transforms are needed.
-            if (isCropped() 
-                || isDeinterlaced() 
+            // But we must enter while calibrating. 
+            if (isDeinterlaced()
+                || isCropped() 
+                || isCalibrating()
+                || isUndistorted()
+                || isScaled()
                 || isRotated()
                 || isOffset()
-                || isScaled()
-                || isUndistorted()
                 || isFlipped()) {
 
                 Mat mat = OpenCvUtils.toMat(image);
@@ -611,7 +613,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     }
 
     private Mat calibrate(Mat mat) {
-        if (!calibrating) {
+        if (!isCalibrating()) {
             return mat;
         }
 
@@ -652,6 +654,10 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return appliedMat;
     }
 
+    public boolean isCalibrating() {
+        return calibrating;
+    }
+
     protected void clearCalibrationCache() {
         // Clear the calibration cache
         if (undistortionMap1 != null) {
@@ -673,7 +679,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     }
 
     public void cancelCalibration() {
-        if (calibrating) {
+        if (isCalibrating()) {
             lensCalibration.close();
         }
         calibrating = false;
