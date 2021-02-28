@@ -72,7 +72,6 @@ import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
 
 import org.openpnp.Translations;
@@ -600,14 +599,14 @@ public class MainFrame extends JFrame {
                     }
                 });
 
-        tabs.addTab("Job", null, jobPanel, null); //$NON-NLS-1$
-        tabs.addTab("Parts", null, partsPanel, null); //$NON-NLS-1$
-        tabs.addTab("Packages", null, packagesPanel, null); //$NON-NLS-1$
-        tabs.addTab("Feeders", null, feedersPanel, null); //$NON-NLS-1$
-        tabs.addTab("Machine Setup", null, machineSetupPanel, null); //$NON-NLS-1$
+        tabs.addTab(Translations.getString("Main.Tab.Job"), null, jobPanel, null); //$NON-NLS-1$
+        tabs.addTab(Translations.getString("Main.Tab.Parts"), null, partsPanel, null); //$NON-NLS-1$
+        tabs.addTab(Translations.getString("Main.Tab.Packages"), null, packagesPanel, null); //$NON-NLS-1$
+        tabs.addTab(Translations.getString("Main.Tab.Feeders"), null, feedersPanel, null); //$NON-NLS-1$
+        tabs.addTab(Translations.getString("Main.Tab.MachineSetup"), null, machineSetupPanel, null); //$NON-NLS-1$
 
         LogPanel logPanel = new LogPanel();
-        tabs.addTab("Log", null, logPanel, null); //$NON-NLS-1$
+        tabs.addTab(Translations.getString("Main.Tab.Log"), null, logPanel, null); //$NON-NLS-1$
 
         panelStatusAndDros = new JPanel();
         panelStatusAndDros.setBorder(null);
@@ -649,7 +648,7 @@ public class MainFrame extends JFrame {
         droLbl.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
         panelStatusAndDros.add(droLbl, "8, 1"); //$NON-NLS-1$
 
-        cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING, //$NON-NLS-1$
+        cameraPanel.setBorder(new TitledBorder(null, Translations.getString("Main.Panel.Cameras"), TitledBorder.LEADING, //$NON-NLS-1$
                 TitledBorder.TOP, null, null));
         panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
 
