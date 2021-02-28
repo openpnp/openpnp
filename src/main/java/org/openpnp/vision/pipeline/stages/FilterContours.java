@@ -48,14 +48,14 @@ public class FilterContours extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (contoursStageName == null) {
+        if (contoursStageName == null || contoursStageName.trim().isEmpty()) {
             return null;
         }
-        Result result = pipeline.getResult(contoursStageName);
-        if (result == null || result.model == null) {
+        Result result = pipeline.getExpectedResult(contoursStageName);
+        if (result.model == null) {
             return null;
         }
-        List<MatOfPoint> contours = (List<MatOfPoint>) result.model;
+        List<MatOfPoint> contours = result.getExpectedListModel(MatOfPoint.class, null);
         List<MatOfPoint> results = new ArrayList<MatOfPoint>();
         for (MatOfPoint contour : contours) {
             double area = Imgproc.contourArea(contour);

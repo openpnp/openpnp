@@ -44,6 +44,10 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
         return id;
     }
 
+    public void setId(String id) {
+        this.id = id;
+    }
+
     @Override
     public String getName() {
         return name;

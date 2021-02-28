@@ -19,12 +19,11 @@
 
 package org.openpnp.machine.reference;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.AbstractAction;
@@ -40,11 +39,17 @@ import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.CameraPanel;
+import org.openpnp.gui.components.CameraView;
+import org.openpnp.gui.components.CameraView.RenderingQuality;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.gui.wizards.CameraVisionConfigurationWizard;
+import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
+import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.wizards.ReferenceCameraCalibrationConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraPositionConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraTransformsConfigurationWizard;
@@ -53,7 +58,12 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.base.AbstractCamera;
+import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Severity;
+import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Camera;
+import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.LensCalibration;
 import org.openpnp.vision.LensCalibration.LensModel;
@@ -64,15 +74,17 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
-public abstract class ReferenceCamera extends AbstractCamera implements ReferenceHeadMountable {
+public abstract class ReferenceCamera extends AbstractBroadcastingCamera implements ReferenceHeadMountable {
     static {
         nu.pattern.OpenCV.loadShared();
     }
 
-    private static final int CAPTURE_RETRY_COUNT = 10;
-    
-    private static BufferedImage CAPTURE_ERROR_IMAGE = null;
-    
+    @Attribute(required = false)
+    private int captureTryCount = 4;
+
+    @Attribute(required = false)
+    private int captureTryTimeoutMs = 2000;
+
     @Element(required = false)
     private Location headOffsets = new Location(LengthUnit.Millimeters);
 
@@ -112,7 +124,12 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     @Element(required = false)
     private LensCalibrationParams calibration = new LensCalibrationParams();
-    
+
+    @Attribute(required = false)
+    private String lightActuatorId; 
+    @Attribute(required = false)
+    private boolean allowMachineActuators = false;
+
     private boolean calibrating;
     private CalibrationCallback calibrationCallback;
     private int calibrationCountGoal = 25;
@@ -121,12 +138,30 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     private Mat undistortionMap2;
 
     private LensCalibration lensCalibration;
-    
+
+    private Actuator lightActuator;
+
     public ReferenceCamera() {
+        super();
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+
+            @Override
+            public void configurationLoaded(Configuration configuration) throws Exception {
+                // We don't have access to machine or head here. So we need to scan them all. 
+                // I'm sure there is a better solution.
+                Machine machine = configuration.getMachine();
+                lightActuator = machine.getActuator(lightActuatorId);
+                for (Head head : machine.getHeads()) {
+                    if (lightActuator == null) {
+                        lightActuator = head.getActuator(lightActuatorId);
+                    }
+                }
+            }
+        });
     }
     
     /**
-     * Captures an image using captureForPreview() and performs scripting and lighting events
+     * Captures an image using captureTransformed() and performs scripting and lighting events
      * before and after the capture.
      */
     @Override
@@ -139,7 +174,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         catch (Exception e) {
             Logger.warn(e);
         }
-        BufferedImage image = captureForPreview();
+        BufferedImage image = captureTransformed();
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("camera", this);
@@ -155,7 +190,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
      * Captures an image using captureRaw(), applies local transformations and returns the image.
      */
     @Override
-    public BufferedImage captureForPreview() {
+    public BufferedImage captureTransformed() {
         return transformImage(captureRaw());
     }
     
@@ -167,7 +202,13 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public BufferedImage captureRaw() {
         return safeInternalCapture();
     }
-    
+
+    @Override
+    public boolean hasNewFrame() {
+        // Default behavior: always has frames when open.
+        return isOpen();
+    }
+
     protected abstract BufferedImage internalCapture();
     
     /**
@@ -179,33 +220,39 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
      * @return
      */
     protected synchronized BufferedImage safeInternalCapture() {
-        for (int i = 0; i < CAPTURE_RETRY_COUNT; i++) {
+        if (! ensureOpen()) {
+            return getCaptureErrorImage();
+        }
+        long t1 = System.currentTimeMillis() + captureTryTimeoutMs;
+        int i = 0;
+        while (true) {
             BufferedImage image = internalCapture();
+            i++;
             if (image != null) {
                 return image;
             }
+            if (i >= getCaptureTryCount()) {
+                break;
+            }
+            if (System.currentTimeMillis() > t1) {
+                // Timed out.
+                break;
+            }
             Logger.trace("Camera {} failed to return an image. Retrying.", this);
+            Thread.yield();
         }
-        if (CAPTURE_ERROR_IMAGE == null) {
-            CAPTURE_ERROR_IMAGE = new BufferedImage(640, 480, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g = (Graphics2D) CAPTURE_ERROR_IMAGE.createGraphics();
-            g.setColor(Color.black);
-            g.fillRect(0, 0, 640, 480);
-            g.setColor(Color.red);
-            g.drawLine(0, 0, 640, 480);
-            g.drawLine(640, 0, 0, 480);
-            g.dispose();
-        }
-        Logger.warn("Camera {} failed to return an image after {} tries.", this, CAPTURE_RETRY_COUNT);
-        return CAPTURE_ERROR_IMAGE;
+        Logger.warn("Camera {} failed to return an image after {} tries.", this, i);
+        return getCaptureErrorImage();
     }
-    
+
+    protected int getCaptureTryCount() {
+        return captureTryCount;
+    }
+
     @Override
     public synchronized int getWidth() {
         if (width == null) {
-            BufferedImage image = safeInternalCapture();
-            width = image.getWidth();
-            height = image.getHeight();
+            determineSize();
         }
         return width;
     }
@@ -213,11 +260,21 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     @Override
     public synchronized int getHeight() {
         if (height == null) {
-            BufferedImage image = safeInternalCapture();
+            determineSize();
+        }
+        return height;
+    }
+
+    private void determineSize() {
+        if (isOpen()) {
+            BufferedImage image = captureTransformed();
             width = image.getWidth();
             height = image.getHeight();
         }
-        return height;
+        else {
+            width = 640;
+            height = 480;
+        }
     }
 
     @Override
@@ -324,58 +381,87 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     }
     
     public boolean isDeinterlace() {
-        return deinterlace;
+        return isDeinterlaced();
     }
 
     public void setDeinterlace(boolean deinterlace) {
         this.deinterlace = deinterlace;
     }
 
-    // TODO Optimization: We could skip the convert to and from Mat if no transforms are needed.
+    @Override
+    public Actuator getLightActuator() {
+        return lightActuator;
+    }
+
+    public void setLightActuator(Actuator lightActuator) {
+        this.lightActuator = lightActuator;
+        this.lightActuatorId = (lightActuator == null) ? null : lightActuator.getId();
+    }
+
+    public boolean isAllowMachineActuators() {
+        return allowMachineActuators;
+    }
+
+    public void setAllowMachineActuators(boolean allowMachineActuators) {
+        this.allowMachineActuators = allowMachineActuators;
+    }
+
     protected BufferedImage transformImage(BufferedImage image) {
-        Mat mat = OpenCvUtils.toMat(image);
-
-        mat = crop(mat);
-
-        mat = calibrate(mat);
-
-        mat = undistort(mat);
-
-        // apply affine transformations
-        mat = scale(mat, scaleWidth, scaleHeight);
-        
-        mat = rotate(mat, rotation);
-
-        mat = offset(mat, offsetX, offsetY);
-        
-        mat = deinterlace(mat);
-
-        if (flipX || flipY) {
-            int flipCode;
-            if (flipX && flipY) {
-                flipCode = -1;
+        try {
+            if (image == null) {
+                return null;
             }
-            else {
-                flipCode = flipX ? 0 : 1;
+
+            // We do skip the convert to and from Mat if no transforms are needed.
+            // But we must enter while calibrating. 
+            if (isDeinterlaced()
+                || isCropped() 
+                || isCalibrating()
+                || isUndistorted()
+                || isScaled()
+                || isRotated()
+                || isOffset()
+                || isFlipped()) {
+
+                Mat mat = OpenCvUtils.toMat(image);
+
+                mat = deinterlace(mat);
+
+                mat = crop(mat);
+
+                mat = calibrate(mat);
+
+                mat = undistort(mat);
+
+                // apply affine transformations
+                mat = scale(mat);
+
+                mat = rotate(mat);
+
+                mat = offset(mat);
+
+                mat = flip(mat);
+
+                image = OpenCvUtils.toBufferedImage(mat);
+                mat.release();
             }
-            Core.flip(mat, mat, flipCode);
+            if (image != null) {
+                // save the new image dimensions
+                width = image.getWidth();
+                height = image.getHeight();
+                setLastTransformedImage(image);
+            }
         }
-
-        image = OpenCvUtils.toBufferedImage(mat);
-        mat.release();
-        
-        if (image != null) { 
-            // save the new image dimensions
-            width = image.getWidth();
-            height = image.getHeight();
+        catch (Exception e) {
+            Logger.error(e);
         }
         return image;
     }
 
     private Mat crop(Mat mat) {
-        if (cropWidth != 0 || cropHeight != 0) {
-            int cw = (cropWidth != 0) ? cropWidth : (int) mat.size().width;
-            int ch = (cropHeight != 0) ? cropHeight : (int) mat.size().height;
+        if (isCropped()) {
+            int cw = (cropWidth != 0 && cropWidth < (int) mat.size().width) ? cropWidth : (int) mat.size().width;
+            int ch = (cropHeight != 0 && cropHeight < (int) mat.size().height) ? cropHeight : (int) mat.size().height;
             Rect roi = new Rect(
                     (int) ((mat.size().width / 2) - (cw / 2)),
                     (int) ((mat.size().height / 2) - (ch / 2)),
@@ -387,9 +473,13 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         }
         return mat;
     }
-    
+
+    protected boolean isCropped() {
+        return cropWidth != 0 || cropHeight != 0;
+    }
+
     private Mat deinterlace(Mat mat) {
-        if (!deinterlace) {
+        if (!isDeinterlaced()) {
             return mat;
         }
         Mat dst = new Mat(mat.size(), mat.type());
@@ -401,8 +491,12 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         return dst;
     }
 
-    private static Mat rotate(Mat mat, double rotation) {
-        if (rotation == 0D) {
+    protected boolean isDeinterlaced() {
+        return deinterlace;
+    }
+
+    private Mat rotate(Mat mat) {
+        if (!isRotated()) {
             return mat;
         }
 
@@ -430,8 +524,12 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         return dst;
     }
 
-    private static Mat offset(Mat mat, int offsetX, int offsetY) {
-        if (offsetX == 0D && offsetY == 0D) {
+    protected boolean isRotated() {
+        return rotation != 0D;
+    }
+
+    private Mat offset(Mat mat) {
+        if (!isOffset()) {
             return mat;
         }
 
@@ -450,9 +548,13 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
         return dst;
     }
+
+    protected boolean isOffset() {
+        return offsetX != 0D || offsetY != 0D;
+    }
     
-    private static Mat scale(Mat mat, int scaleWidth, int scaleHeight) {
-        if (scaleWidth == 0 || scaleHeight == 0) {
+    private Mat scale(Mat mat) {
+        if (!isScaled()) {
             return mat;
         }
         Mat dst = new Mat();
@@ -461,8 +563,12 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         return dst;
     }
 
+    protected boolean isScaled() {
+        return scaleWidth != 0D || scaleHeight != 0D;
+    }
+
     private Mat undistort(Mat mat) {
-        if (!calibration.isEnabled()) {
+        if (!isUndistorted()) {
             return mat;
         }
 
@@ -484,8 +590,30 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         return dst;
     }
 
+    protected boolean isUndistorted() {
+        return calibration.isEnabled();
+    }
+
+    protected Mat flip(Mat mat) {
+        if (isFlipped()) {
+            int flipCode;
+            if (flipX && flipY) {
+                flipCode = -1;
+            }
+            else {
+                flipCode = flipX ? 0 : 1;
+            }
+            Core.flip(mat, mat, flipCode);
+        }
+        return mat;
+    }
+
+    protected boolean isFlipped() {
+        return flipX || flipY;
+    }
+
     private Mat calibrate(Mat mat) {
-        if (!calibrating) {
+        if (!isCalibrating()) {
             return mat;
         }
 
@@ -526,6 +654,10 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         return appliedMat;
     }
 
+    public boolean isCalibrating() {
+        return calibrating;
+    }
+
     protected void clearCalibrationCache() {
         // Clear the calibration cache
         if (undistortionMap1 != null) {
@@ -547,7 +679,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     }
 
     public void cancelCalibration() {
-        if (calibrating) {
+        if (isCalibrating()) {
             lensCalibration.close();
         }
         calibrating = false;
@@ -556,9 +688,6 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public LensCalibrationParams getCalibration() {
         return calibration;
     }
-
-    @Override
-    public void close() throws IOException {}
 
     @Override
     public PropertySheet[] getPropertySheets() {
@@ -597,6 +726,12 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
                     Configuration.get().getMachine().removeCamera(ReferenceCamera.this);
                 }
                 MainFrame.get().getCameraViews().removeCamera(ReferenceCamera.this);
+                try {
+                    ReferenceCamera.this.close();
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     };
@@ -658,6 +793,183 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
         public void setDistortionCoefficientsMat(Mat distortionCoefficients) {
             this.distortionCoefficients = distortionCoefficients.clone();
+        }
+    }
+
+    @Override
+    public void findIssues(List<Solutions.Issue> issues) {
+        super.findIssues(issues);
+        if (getLooking() == Looking.Up
+                && isFlipX() == isFlipY()
+                && ! (this instanceof SimulatedUpCamera)) {
+            issues.add(new Solutions.PlainIssue(
+                    this, 
+                    "An up-looking camera should usually mirror the image.", 
+                    "Enable either Flip X or Flip Y (but not both) in the camera's Image Transforms.", 
+                    Severity.Warning,
+                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#set-rotation-and-transforms"));
+        }
+        if (getUnitsPerPixel().getX() == 0 && getUnitsPerPixel().getY() == 0) {
+            issues.add(new Solutions.PlainIssue(
+                    this, 
+                    "Units per pixel are not yet set.", 
+                    "Perform the Units Per Pixel measurement in the General Configuration tab .", 
+                    Severity.Error,
+                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#set-units-per-pixel"));
+        }
+        final double previewFps = getPreviewFps();
+        if (previewFps > 15) {
+            issues.add(new Solutions.Issue(
+                    this, 
+                    "A high Preview FPS value might create undue CPU load.", 
+                    "Set to 5 FPS.", 
+                    Severity.Suggestion,
+                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#general-configuration") {
+                
+
+                @Override
+                public void setState(Solutions.State state) throws Exception {
+                    if (confirmStateChange(state)) {
+                        setPreviewFps((state == Solutions.State.Solved) ? 5.0 : previewFps);
+                        super.setState(state);
+                    }
+                }
+            });
+        }
+        if (! isSuspendPreviewInTasks()) {
+            issues.add(new Solutions.Issue(
+                    this, 
+                    "It is recommended to suspend camera preview during machine tasks / Jobs.", 
+                    "Enable Suspend during tasks.", 
+                    Severity.Suggestion,
+                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#general-configuration") {
+
+                @Override
+                public void setState(Solutions.State state) throws Exception {
+                    if (confirmStateChange(state)) {
+                        setSuspendPreviewInTasks((state == Solutions.State.Solved));
+                        super.setState(state);
+                    }
+                }
+            });
+        }
+        if (! isAutoVisible()) {
+            issues.add(new Solutions.Issue(
+                    this, 
+                    "In single camera preview OpenPnP can automatically switch the camera for you.", 
+                    "Enable Auto Camera View.", 
+                    Severity.Suggestion,
+                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#general-configuration") {
+
+                @Override
+                public void setState(Solutions.State state) throws Exception {
+                    if (confirmStateChange(state)) {
+                        setAutoVisible((state == Solutions.State.Solved));
+                        super.setState(state);
+                    }
+                }
+            });
+        }
+        CameraPanel cameraPanel = MainFrame.get().getCameraViews();
+        CameraView view = cameraPanel.getCameraView(this);
+        if (view != null) {
+            final RenderingQuality renderingQuality = view.getRenderingQuality();
+            if (renderingQuality.ordinal() < RenderingQuality.High.ordinal()) {
+                issues.add(new Solutions.Issue(
+                        this, 
+                        "The preview rendering quality can be improved.", 
+                        "Set to Rendering Quality to High (right click the Camera View to see other options).", 
+                        Severity.Suggestion,
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#camera-view-configuration") {
+
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        if (confirmStateChange(state)) {
+                            view.setRenderingQuality((state == Solutions.State.Solved) ? RenderingQuality.High : renderingQuality);
+                            cameraViewHasChanged(null);
+                            super.setState(state);
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    /**
+     * Create a replacement OpenPnpCaptureCamera for this camera with some of the
+     * generic settings transferred.  
+     * 
+     * @return
+     */
+    protected OpenPnpCaptureCamera createReplacementCamera() {
+        OpenPnpCaptureCamera camera = new OpenPnpCaptureCamera();
+        camera.setHead(getHead());
+        camera.setId(getId());
+        camera.setLooking(getLooking());
+        camera.setName(getName());
+        camera.setHeadOffsets(getHeadOffsets());
+        camera.setAxisX(getAxisX());
+        camera.setAxisY(getAxisY());
+        camera.setAxisZ(getAxisZ());
+        camera.setAxisRotation(getAxisRotation());
+        camera.setPreviewFps(getPreviewFps());
+        camera.setSuspendPreviewInTasks(isSuspendPreviewInTasks());
+        camera.setAutoVisible(isAutoVisible());
+        camera.setLightActuator(getLightActuator());
+        camera.setAllowMachineActuators(isAllowMachineActuators());
+        camera.setBeforeCaptureLightOn(isBeforeCaptureLightOn());
+        camera.setAfterCaptureLightOff(isAfterCaptureLightOff());
+        camera.setUserActionLightOn(isUserActionLightOn());
+        camera.setAntiGlareLightOff(isAntiGlareLightOff());
+        return camera;
+    }
+
+    /**
+     * Replace a camera with the same Id at the same place in the cameras list.
+     * 
+     * @param camera
+     * @throws Exception
+     */
+    public static void replaceCamera(Camera camera) throws Exception {
+        // Disable the machine, so the driver isn't connected.
+        Machine machine = Configuration.get().getMachine();
+        // Find the old driver with the same Id.
+        List<Camera> list = (camera.getHead() == null ? machine.getCameras() : camera.getHead().getCameras());
+        Camera replaced = null;
+        int index;
+        for (index = 0; index < list.size(); index++) {
+            if (list.get(index).getId().equals(camera.getId())) {
+                replaced = list.get(index);
+                if (camera instanceof AbstractBroadcastingCamera) {
+                    ((AbstractBroadcastingCamera) replaced).stop();
+                }
+                if (replaced.getHead() == null) {
+                    machine.removeCamera(replaced);
+                }
+                else {
+                    replaced.getHead().removeCamera(replaced);
+                }
+                break;
+            }
+        }
+        // Add the new one.
+        if (replaced.getHead() == null) {
+            machine.addCamera(camera);
+        }
+        else {
+            replaced.getHead().addCamera(camera);
+        }
+        // Permutate it back to the old list place (cumbersome but works).
+        for (int p = list.size()-index; p > 1; p--) {
+            if (replaced.getHead() == null) {
+                machine.permutateCamera(camera, -1);
+            }
+            else {
+                replaced.getHead().permutateCamera(camera, -1);
+            }
+        }
+        if (camera instanceof AbstractBroadcastingCamera) {
+            ((AbstractBroadcastingCamera) camera).reinitialize();
         }
     }
 }

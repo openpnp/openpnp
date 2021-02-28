@@ -21,6 +21,7 @@ package org.openpnp.machine.reference.feeder;
 
 import javax.swing.Action;
 
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceAutoFeederConfigurationWizard;
@@ -29,21 +30,18 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.base.AbstractActuator;
 import org.openpnp.util.MovableUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
 public class ReferenceAutoFeeder extends ReferenceFeeder {
-    public enum ActuatorType {
-        Double,
-        Boolean
-    }
-    
     @Attribute(required=false)
     protected String actuatorName;
     
+    @Deprecated
     @Attribute(required=false)
-    protected ActuatorType actuatorType = ActuatorType.Double;
+    protected Actuator.ActuatorValueType actuatorType = null;
     
     @Attribute(required=false)
     protected double actuatorValue;
@@ -51,8 +49,9 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
     @Attribute(required=false)
     protected String postPickActuatorName;
     
+    @Deprecated
     @Attribute(required=false)
-    protected ActuatorType postPickActuatorType = ActuatorType.Double;
+    protected Actuator.ActuatorValueType postPickActuatorType = null;
     
     @Attribute(required=false)
     protected double postPickActuatorValue;
@@ -63,6 +62,25 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
     @Override
     public Location getPickLocation() throws Exception {
         return location;
+    }
+
+    public ReferenceAutoFeeder() {
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationLoaded(Configuration configuration) throws Exception {
+                // Migrate actuator value types.
+                if (actuatorType != null) { 
+                    Actuator actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
+                    AbstractActuator.suggestValueType(actuator, actuatorType);
+                    actuatorType = null;
+                }
+                if (postPickActuatorType != null) {
+                    Actuator actuator = Configuration.get().getMachine().getActuatorByName(postPickActuatorName);
+                    AbstractActuator.suggestValueType(actuator, postPickActuatorType);
+                    postPickActuatorType = null;
+                }
+            }
+        });
     }
 
     @Override
@@ -81,12 +99,8 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
         if (isMoveBeforeFeed()) {
             MovableUtils.moveToLocationAtSafeZ(nozzle, getPickLocation().derive(null, null, Double.NaN, null));
         }
-        if (actuatorType == ActuatorType.Boolean) {
-            actuator.actuate(actuatorValue != 0);
-        }
-        else {
-            actuator.actuate(actuatorValue);
-        }
+        // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
+        actuator.actuate((Object)actuatorValue);
     }
     
     @Override
@@ -101,12 +115,8 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
         if (actuator == null) {
             throw new Exception("Post pick failed. Unable to find an actuator named " + postPickActuatorName);
         }
-        if (postPickActuatorType == ActuatorType.Boolean) {
-            actuator.actuate(postPickActuatorValue != 0);
-        }
-        else {
-            actuator.actuate(postPickActuatorValue);
-        }
+        // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
+        actuator.actuate((Object)postPickActuatorValue);
     }
     
     public String getActuatorName() {
@@ -115,14 +125,6 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
 
     public void setActuatorName(String actuatorName) {
         this.actuatorName = actuatorName;
-    }
-
-    public ActuatorType getActuatorType() {
-        return actuatorType;
-    }
-
-    public void setActuatorType(ActuatorType actuatorType) {
-        this.actuatorType = actuatorType;
     }
 
     public double getActuatorValue() {
@@ -139,14 +141,6 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
 
     public void setPostPickActuatorName(String postPickActuatorName) {
         this.postPickActuatorName = postPickActuatorName;
-    }
-
-    public ActuatorType getPostPickActuatorType() {
-        return postPickActuatorType;
-    }
-
-    public void setPostPickActuatorType(ActuatorType postPickActuatorType) {
-        this.postPickActuatorType = postPickActuatorType;
     }
 
     public double getPostPickActuatorValue() {

@@ -117,7 +117,7 @@ public class ClosestModel extends CvStage {
         }
         else {
 
-            model = pipeline.getResult(modelStageName).model;
+            model = pipeline.getExpectedResult(modelStageName).model;
         }
         if (model == null || image == null) {
             if (log) {
@@ -132,20 +132,16 @@ public class ClosestModel extends CvStage {
         if (filterStageName != null && !filterStageName.trim()
                                                        .equals("")) {
 
-            CvStage filterStage = pipeline.getStage(filterStageName);
-            if (filterStage != null && pipeline.getResult(filterStage) != null) {
-
-                Result filterResult = pipeline.getResult(filterStage);
-                if (filterResult.model instanceof RotatedRect) {
-                    frect = ((RotatedRect) filterResult.model);
-                }
-                else if (filterResult.model instanceof List<?>
-                        && ((List<?>) filterResult.model).get(0) instanceof RotatedRect) {
-                    frect = ((RotatedRect) ((List<?>) filterResult.model).get(0));
-                }
-                else {
-                    // we only handle RotatedRect filters
-                }
+            Result filterResult = pipeline.getExpectedResult(filterStageName);
+            if (filterResult.model instanceof RotatedRect) {
+                frect = ((RotatedRect) filterResult.model);
+            }
+            else if (filterResult.model instanceof List<?>
+            && ((List<?>) filterResult.model).get(0) instanceof RotatedRect) {
+                frect = ((RotatedRect) ((List<?>) filterResult.model).get(0));
+            }
+            else {
+                // we only handle RotatedRect filters
             }
         }
         if (log) {

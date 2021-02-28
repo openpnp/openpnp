@@ -44,11 +44,11 @@ public class DrawKeyPoints extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (keyPointsStageName == null) {
+        if (keyPointsStageName == null || keyPointsStageName.trim().isEmpty()) {
             return null;
         }
-        Result result = pipeline.getResult(keyPointsStageName);
-        if (result == null || result.model == null) {
+        Result result = pipeline.getExpectedResult(keyPointsStageName);
+        if (result.model == null) {
             return null;
         }
         Mat mat = pipeline.getWorkingImage();

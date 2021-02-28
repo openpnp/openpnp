@@ -32,6 +32,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -61,6 +62,10 @@ public class ReadPartTemplateImage extends CvStage {
     @Property(description = "Enable logging.")
     private boolean log = false;
 
+    @Attribute(required=false)
+    @Property(description="The color space of the image.  Use to select the color space that the original image had when it was written.  Note that this does not change any of the numerical values that represent the image but rather their interpretation when the image is displayed in the pipeline editor.")
+    private ColorSpace colorSpace = ColorSpace.Bgr;
+    
     public String getTemplateFile() {
         return templateFile;
     }
@@ -91,6 +96,14 @@ public class ReadPartTemplateImage extends CvStage {
 
     public void setPrefix(String prefix) {
         this.prefix = prefix;
+    }
+
+    public ColorSpace getColorSpace() {
+        return colorSpace;
+    }
+
+    public void setColorSpace(ColorSpace colorSpace) {
+        this.colorSpace = colorSpace;
     }
 
     @Override
@@ -204,7 +217,7 @@ public class ReadPartTemplateImage extends CvStage {
                             Logger.info("Using package body as a template.");
                         }
                         // that's all we can do for now
-                        return new Result(templateImage, rrect);
+                        return new Result(templateImage, ColorSpace.Bgr, rrect);
                     }
                     else {
                         return null;
@@ -225,12 +238,16 @@ public class ReadPartTemplateImage extends CvStage {
         // Read template image from disk
         Mat templateImage = Imgcodecs.imread(file.getAbsolutePath());
 
+        if (templateImage.channels() == 1) {
+            colorSpace = ColorSpace.Gray;
+        }
         width = templateImage.size().width;
         height = templateImage.size().height;
         if (width == 0.0 && height == 0.0) {
             return null;
         }
-        return new Result(templateImage, new RotatedRect(new Point(width / 2, height / 2),
-                new Size(width, height), (double) 0));
+        return new Result(templateImage, colorSpace,
+                new RotatedRect(new Point(width / 2, height / 2),
+                        new Size(width, height), (double) 0));
     }
 }

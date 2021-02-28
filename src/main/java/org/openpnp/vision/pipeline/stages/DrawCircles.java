@@ -67,15 +67,15 @@ public class DrawCircles extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (circlesStageName == null) {
+        if (circlesStageName == null || circlesStageName.trim().isEmpty()) {
             return null;
         }
-        Result result = pipeline.getResult(circlesStageName);
-        if (result == null || result.model == null) {
+        Result result = pipeline.getExpectedResult(circlesStageName);
+        if (result.model == null) {
             return null;
         }
         Mat mat = pipeline.getWorkingImage();
-        List<Result.Circle> circles = (List<Result.Circle>) result.model;
+        List<Result.Circle> circles = result.getExpectedListModel(Result.Circle.class, null);
         for (int i = 0; i < circles.size(); i++) {
             Result.Circle circle = circles.get(i);
             Color color = this.color == null ? FluentCv.indexedColor(i) : this.color;

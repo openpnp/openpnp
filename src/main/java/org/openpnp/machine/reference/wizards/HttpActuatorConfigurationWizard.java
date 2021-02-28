@@ -20,6 +20,8 @@
 
 package org.openpnp.machine.reference.wizards;
 
+import java.util.List;
+
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -27,6 +29,11 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.machine.reference.HttpActuator;
+import org.openpnp.machine.reference.camera.SimulatedUpCamera;
+import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Severity;
+import org.openpnp.spi.Actuator.ActuatorValueType;
+import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.base.AbstractMachine;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -43,6 +50,12 @@ public class HttpActuatorConfigurationWizard extends AbstractActuatorConfigurati
     private JTextField onUrlTf;
     private JLabel lblOffUrl;
     private JTextField offUrlTf;
+    private JLabel lblParametricUrl;
+    private JTextField paramUrl;
+    private JTextField readUrlTf;
+    private JLabel lblReadUrl;
+    private JTextField regexTf;
+    private JLabel lblRegex;
 
     public HttpActuatorConfigurationWizard(AbstractMachine machine, HttpActuator httpActuator) {
         super(machine, httpActuator);
@@ -54,18 +67,30 @@ public class HttpActuatorConfigurationWizard extends AbstractActuatorConfigurati
         panelProperties.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelProperties);
-        panelProperties.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblName = new JLabel("Name");
         panelProperties.add(lblName, "2, 2, right, default");
 
         nameTf = new JTextField();
-        panelProperties.add(nameTf, "4, 2, fill, default");
+        panelProperties.add(nameTf, "4, 2");
         nameTf.setColumns(20);
 
         lblOnUrl = new JLabel("On URL");
@@ -82,6 +107,30 @@ public class HttpActuatorConfigurationWizard extends AbstractActuatorConfigurati
         panelProperties.add(offUrlTf, "4, 6, fill, default");
         offUrlTf.setColumns(40);
 
+        lblParametricUrl = new JLabel("Parametric URL");
+        lblParametricUrl.setToolTipText("<html>\r\nUse a parametric template to encode non-boolean actuation values into the URL.<br/>\r\nThe {val} placeholder can be used. <br/>\r\nFormatting is possible in the form of {val:%f} etc.<br/>\r\n<br/>\r\n<strong>Note:</strong> no escaping is performed. If using String actuation values, <br/>\r\nyou can use complex URI fragments e.g. drive multiple parameters. \r\n</html>");
+        panelProperties.add(lblParametricUrl, "2, 8, right, default");
+
+        paramUrl = new JTextField();
+        panelProperties.add(paramUrl, "4, 8, fill, default");
+        paramUrl.setColumns(40);
+
+        lblReadUrl = new JLabel("Read URL");
+        panelProperties.add(lblReadUrl, "2, 10, right, default");
+
+        readUrlTf = new JTextField();
+        panelProperties.add(readUrlTf, "4, 10, fill, default");
+        readUrlTf.setColumns(40);
+        
+        lblRegex = new JLabel("Regular Expression");
+        panelProperties.add(lblRegex, "2, 12, right, default");
+
+        regexTf = new JTextField();
+        panelProperties.add(regexTf, "4, 12, fill, default");
+        regexTf.setColumns(40);
+        
+
+
         super.createUi(machine);
     }
 
@@ -91,9 +140,34 @@ public class HttpActuatorConfigurationWizard extends AbstractActuatorConfigurati
         addWrappedBinding(actuator, "name", nameTf, "text");
         addWrappedBinding(actuator, "onUrl", onUrlTf, "text");
         addWrappedBinding(actuator, "offUrl", offUrlTf, "text");
-        
+        addWrappedBinding(actuator, "paramUrl", paramUrl, "text");
+        addWrappedBinding(actuator, "readUrl", readUrlTf, "text");
+        addWrappedBinding(actuator, "regex", regexTf, "text");
+
         ComponentDecorators.decorateWithAutoSelect(nameTf);
         ComponentDecorators.decorateWithAutoSelect(onUrlTf);
         ComponentDecorators.decorateWithAutoSelect(offUrlTf);
+        ComponentDecorators.decorateWithAutoSelect(paramUrl);
+        ComponentDecorators.decorateWithAutoSelect(readUrlTf);
+        ComponentDecorators.decorateWithAutoSelect(regexTf);
+
+        super.createBindings();
     }
+
+    protected void adaptDialog() {
+        super.adaptDialog();
+        boolean isBoolean = (valueType.getSelectedItem() == ActuatorValueType.Boolean);
+        lblOnUrl.setVisible(isBoolean);
+        onUrlTf.setVisible(isBoolean);
+        lblOffUrl.setVisible(isBoolean);
+        offUrlTf.setVisible(isBoolean);
+        lblParametricUrl.setVisible(!isBoolean);
+        paramUrl.setVisible(!isBoolean);
+        lblReadUrl.setVisible(!isBoolean);
+        readUrlTf.setVisible(!isBoolean);
+        lblRegex.setVisible(!isBoolean);
+        regexTf.setVisible(!isBoolean);
+    }
+    
+   
 }

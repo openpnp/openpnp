@@ -33,6 +33,9 @@ public class SimulatedCommunications extends ReferenceDriverCommunications {
     public synchronized void disconnect() throws Exception {
         if (clientSocket != null && clientSocket.isBound()) {
             clientSocket.close();
+            input.close();
+            output.close();
+            gcodeServer.shutdown();
             input = null;
             output = null;
             clientSocket = null;

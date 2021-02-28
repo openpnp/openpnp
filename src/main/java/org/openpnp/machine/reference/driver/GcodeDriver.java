@@ -1,10 +1,34 @@
+/*
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ *
+ * This file is part of OpenPnP.
+ *
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ *
+ * For more information about OpenPnP visit http://openpnp.org
+ */
+
 package org.openpnp.machine.reference.driver;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -50,6 +74,7 @@ import org.openpnp.spi.base.AbstractHeadMountable;
 import org.openpnp.spi.base.AbstractSingleTransformedAxis;
 import org.openpnp.spi.base.AbstractTransformedAxis;
 import org.openpnp.util.NanosecondTime;
+import org.openpnp.util.TextUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -239,6 +264,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Element(required = false, data=true) 
     String reportedAxes = null; 
 
+    @Element(required = false, data=true)
+    String configuredAxes = null;
+
     @ElementList(required = false, inline = true)
     public ArrayList<Command> commands = new ArrayList<>();
 
@@ -251,7 +279,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     protected List<Axis> axes = null;
 
     private ReaderThread readerThread;
-    boolean disconnectRequested;
+    volatile boolean disconnectRequested;
     protected boolean connected;
     
     static public class Line {
@@ -326,6 +354,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public synchronized void connect() throws Exception {
+        disconnectRequested = false;
         getCommunications().connect();
         connected = false;
 
@@ -379,6 +408,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             else {
                 try {
                     sendGcode(getCommand(null, CommandType.DISABLE_COMMAND));
+                    drainCommandQueue(getTimeoutAtMachineSpeed());
                 }
                 catch (Exception e) {
                     // When the connection is lost, we have IO errors. We should still be able to go on
@@ -729,6 +759,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         return motionPending;
     }
 
+    protected void drainCommandQueue(long timeout) throws InterruptedException {
+        // This does nothing in the plain GcodeDriver. It will be overridden in the GcodeAsyncDriver.
+    }
+
     @Override
     public void waitForCompletion(ReferenceHeadMountable hm, 
             CompletionType completionType) throws Exception {
@@ -742,27 +776,31 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     -1 : getTimeoutAtMachineSpeed());
         }
 
-        /*
-         * If moveToCompleteRegex is specified we need to wait until we match the regex in a
-         * response before continuing. We first search the initial responses from the
-         * command for the regex. If it's not found we then collect responses for up to
-         * timeoutMillis while searching the responses for the regex. As soon as it is
-         * matched we continue. If it's not matched within the timeout we throw an
-         * Exception.
-         * 
-         * AFAIK, this was used on TinyG and it is now obsolete with new firmware :  
-         * https://makr.zone/tinyg-new-g-code-commands-for-openpnp-use/577/
-         */
-        String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
-        if (moveToCompleteRegex != null) {
-            receiveResponses(moveToCompleteRegex, completionType == CompletionType.WaitForStillstandIndefinitely ?
-                    -1 : getTimeoutAtMachineSpeed(), 
-                    (responses) -> {
-                throw new Exception("Timed out waiting for move to complete.");
-            });
+        if (completionType.isEnforcingStillstand()) {
+            if (isMotionPending()) {
+                /*
+                 * If moveToCompleteRegex is specified we need to wait until we match the regex in a
+                 * response before continuing. We first search the initial responses from the
+                 * command for the regex. If it's not found we then collect responses for up to
+                 * timeoutMillis while searching the responses for the regex. As soon as it is
+                 * matched we continue. If it's not matched within the timeout we throw an
+                 * Exception.
+                 *
+                 * AFAIK, this was used on TinyG and it is now obsolete with new firmware :
+                 * https://makr.zone/tinyg-new-g-code-commands-for-openpnp-use/577/
+                 */
+                String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
+                if (moveToCompleteRegex != null) {
+                    receiveResponses(moveToCompleteRegex, completionType == CompletionType.WaitForStillstandIndefinitely ?
+                            -1 : getTimeoutAtMachineSpeed(),
+                            (responses) -> {
+                        throw new Exception("Timed out waiting for move to complete.");
+                    });
+                }
+            }
+            // Remember, we're now standing still.
+            motionPending = false;
         }
-        // Remember, we're now standing still.  
-        motionPending = false;
     }
 
     private boolean containsMatch(List<Line> responses, String regex) {
@@ -877,7 +915,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         catch (Exception e) {
             Logger.error("disconnect()", e);
         }
-        disconnectRequested = false;
 
         closeGcodeLogger();
     }
@@ -1161,8 +1198,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     continue;
                 }
                 catch (IOException e) {
-                    Logger.error("Read error", e);
-                    return;
+                    if (disconnectRequested) {
+                        Logger.trace("Read error while disconnecting", e);
+                        return;
+                    }
+                    else {
+                        Logger.error("Read error", e);
+                        return;
+                    }
                 }
                 Line line = new Line(receivedLine);
                 Logger.trace("[{}] << {}", getCommunications().getConnectionName(), line);
@@ -1244,34 +1287,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         return true;
     }
 
-    /**
-     * Find matches of variables in the format {Name:Format} and replace them with the specified
-     * value formatted using String.format with the specified Format. Format is optional and
-     * defaults to %s. A null value replaces the variable with "".
-     */
     static protected String substituteVariable(String command, String name, Object value) {
-        if (command == null) {
-            return command;
-        }
-        StringBuffer sb = new StringBuffer();
-        Matcher matcher = Pattern.compile("\\{(\\w+)(?::(.+?))?\\}").matcher(command);
-        while (matcher.find()) {
-            String n = matcher.group(1);
-            if (!n.equals(name)) {
-                continue;
-            }
-            String format = matcher.group(2);
-            if (format == null) {
-                format = "%s";
-            }
-            String v = "";
-            if (value != null) {
-                v = String.format((Locale) null, format, value);
-            }
-            matcher.appendReplacement(sb, v);
-        }
-        matcher.appendTail(sb);
-        return sb.toString();
+        return TextUtils.substituteVar(command, name, value);
     }
 
     /**
@@ -1398,6 +1415,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         return detectedFirmware;
     }
 
+    public void setDetectedFirmware(String detectedFirmware) {
+        Object oldValue = this.detectedFirmware;
+        this.detectedFirmware = detectedFirmware;
+        firePropertyChange("detectedFirmware", oldValue, detectedFirmware);
+        firePropertyChange("firmwareConfiguration", null, getFirmwareConfiguration());
+    }
+
     public String getReportedAxes() {
         return reportedAxes;
     }
@@ -1406,12 +1430,27 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         Object oldValue = this.reportedAxes;
         this.reportedAxes = reportedAxes;
         firePropertyChange("reportedAxes", oldValue, reportedAxes);
+        firePropertyChange("firmwareConfiguration", null, getFirmwareConfiguration());
     }
 
-    public void setDetectedFirmware(String detectedFirmware) {
-        Object oldValue = this.detectedFirmware;
-        this.detectedFirmware = detectedFirmware;
-        firePropertyChange("detectedFirmware", oldValue, detectedFirmware);
+    public String getConfiguredAxes() {
+        return configuredAxes;
+    }
+
+    public void setConfiguredAxes(String configuredAxes) {
+        Object oldValue = this.configuredAxes;
+        this.configuredAxes = configuredAxes;
+        firePropertyChange("configuredAxes", oldValue, configuredAxes);
+        firePropertyChange("firmwareConfiguration", null, getFirmwareConfiguration());
+    }
+
+    public String getFirmwareConfiguration() {
+        return detectedFirmware+"\n\n"
+                +(reportedAxes != null ? reportedAxes : "")+"\n\n"
+                +(configuredAxes != null ? configuredAxes : "");
+    }
+
+    public void setFirmwareConfiguration(String configuredAxes) {
     }
 
     protected void closeGcodeLogger() {
@@ -1435,12 +1474,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         if (!preserveOldValue) {
             setDetectedFirmware(null);
             setReportedAxes(null);
+            setConfiguredAxes(null);
         }
         boolean wasConnected = connected;
         if (!wasConnected) {
             connect();
         }
-        
+
         try {
             sendCommand("M115");
             String firmware = receiveSingleResponse("^FIRMWARE.*");
@@ -1451,6 +1491,23 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 sendCommand("M114");
                 String reportedAxes = receiveSingleResponse(".*[XYZABCDEUVW]:-?\\d+\\.\\d+.*");
                 if (reportedAxes != null) {
+                    if (firmware != null) {
+                        try {
+                            if (getFirmwareProperty("FIRMWARE_NAME", "").contains("Duet")) {
+                                sendCommand("M584");
+                                String axisConfig = receiveSingleResponse("^Driver assignments:.*");
+                                if (axisConfig != null) {
+                                    setConfiguredAxes(axisConfig);
+                                }
+                            }
+                            else {
+                                setConfiguredAxes(null);
+                            }
+                        }
+                        catch (Exception e) {
+                            // ignore
+                        }
+                    }
                     setReportedAxes(reportedAxes);
                 }
             }
@@ -1469,13 +1526,24 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         if (detectedFirmware == null) {
             return defaultValue;
         }
-        Pattern pattern = Pattern.compile("([A-Za-z0-9_\\-]+):?([^,]+)?");
+        Pattern pattern = Pattern.compile("([A-Za-z0-9\\_\\-]+):");
         Matcher matcher = pattern.matcher(detectedFirmware);
         while (matcher.find()) {
             if (name.equals(matcher.group(1))) {
-                String value = matcher.group(2).trim();
+                String value;
+                int pos = matcher.end();
+                if (matcher.find()) {
+                    value = detectedFirmware.substring(pos, matcher.start()-1);
+                }
+                else {
+                    value = detectedFirmware.substring(pos);
+                }
                 value = value.replace("%3A", ":");
-                return value;
+                int comma = value.indexOf(",");
+                if (comma >= 0) {
+                    value = value.substring(0, comma);
+                }
+                return value.trim();
             }
         }
         return defaultValue;

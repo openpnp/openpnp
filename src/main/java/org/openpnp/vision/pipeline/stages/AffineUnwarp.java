@@ -49,14 +49,8 @@ public class AffineUnwarp extends CvStage {
         if (warpStageName == null || warpStageName.isEmpty()) {
             return null;
         }
-        Result warpResult = pipeline.getResult(warpStageName);
-        if (warpResult == null || warpResult.getModel() == null) {
-            return null;
-        }
-        if (! (warpResult.getModel() instanceof AffineTransform)) {
-            throw new Exception("Stage "+warpStageName+" result model is not an AffineTransform.");
-        }
-        AffineTransform transform = (AffineTransform)warpResult.getModel();
+        AffineTransform transform = pipeline.getExpectedResult(warpStageName)
+                .getExpectedModel(AffineTransform.class);
         AffineTransform transformInverse = transform.createInverse();
 
         Object model = null;
@@ -64,10 +58,7 @@ public class AffineUnwarp extends CvStage {
             model = pipeline.getWorkingModel();
         }
         else {
-            Result result = pipeline.getResult(resultsStageName);
-            if (result == null) {
-                throw new Exception("Stage "+resultsStageName+" not found.");
-            }
+            Result result = pipeline.getExpectedResult(resultsStageName);
             model = result.getModel();
         }
 

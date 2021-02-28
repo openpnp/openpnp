@@ -30,6 +30,7 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.camera.Webcams;
+import org.openpnp.util.UiUtils;
 
 import com.github.sarxos.webcam.WebcamDiscoveryEvent;
 import com.github.sarxos.webcam.WebcamDiscoveryListener;
@@ -128,4 +129,11 @@ public class WebcamConfigurationWizard extends AbstractConfigurationWizard
         updateList();
     }
 
+    @Override
+    protected void saveToModel() {
+        super.saveToModel();
+        UiUtils.messageBoxOnException(() -> {
+            camera.reinitialize(); 
+        });
+    }
 }

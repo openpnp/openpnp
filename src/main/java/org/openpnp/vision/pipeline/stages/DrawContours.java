@@ -10,6 +10,7 @@ import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
+import org.openpnp.vision.pipeline.CvStage.Result;
 import org.openpnp.vision.pipeline.stages.convert.ColorConverter;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -64,15 +65,15 @@ public class DrawContours extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (contoursStageName == null) {
+        if (contoursStageName == null || contoursStageName.trim().isEmpty()) {
             throw new Exception("contoursStageName is required.");
         }
-        Result result = pipeline.getResult(contoursStageName);
-        if (result == null || result.model == null) {
-            throw new Exception("No model found in results.");
+        Result result = pipeline.getExpectedResult(contoursStageName);
+        if (result.model == null) {
+            return null;
         }
+        List<MatOfPoint> contours = result.getExpectedListModel(MatOfPoint.class, null);
         Mat mat = pipeline.getWorkingImage();
-        List<MatOfPoint> contours = (List<MatOfPoint>) result.model;
         if (index < 0) {
             for (int i = 0; i < contours.size(); i++) {
                 Imgproc.drawContours(mat, contours, i, FluentCv.colorToScalar(color == null ? FluentCv.indexedColor(i) : color), thickness);
