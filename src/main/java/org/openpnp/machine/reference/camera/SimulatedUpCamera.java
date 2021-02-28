@@ -26,14 +26,17 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.Utils2D;
+import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 
 @Root
 public class SimulatedUpCamera extends ReferenceCamera {
+    @Attribute(required=false)
     protected int width = 640;
 
+    @Attribute(required=false)
     protected int height = 480;
 
     @Element(required=false)
@@ -145,6 +148,22 @@ public class SimulatedUpCamera extends ReferenceCamera {
         // Draw
         g.setColor(color);
         g.fill(shape);
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
     }
 
     public Location getErrorOffsets() {

@@ -263,6 +263,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Element(required = false, data=true) 
     String reportedAxes = null; 
 
+    @Element(required = false, data=true) 
+    String configuredAxes = null; 
+
     @ElementList(required = false, inline = true)
     public ArrayList<Command> commands = new ArrayList<>();
 
@@ -1384,6 +1387,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         return detectedFirmware;
     }
 
+    public void setDetectedFirmware(String detectedFirmware) {
+        Object oldValue = this.detectedFirmware;
+        this.detectedFirmware = detectedFirmware;
+        firePropertyChange("detectedFirmware", oldValue, detectedFirmware);
+        firePropertyChange("firmwareConfiguration", null, getFirmwareConfiguration());
+    }
+
     public String getReportedAxes() {
         return reportedAxes;
     }
@@ -1392,12 +1402,27 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         Object oldValue = this.reportedAxes;
         this.reportedAxes = reportedAxes;
         firePropertyChange("reportedAxes", oldValue, reportedAxes);
+        firePropertyChange("firmwareConfiguration", null, getFirmwareConfiguration());
     }
 
-    public void setDetectedFirmware(String detectedFirmware) {
-        Object oldValue = this.detectedFirmware;
-        this.detectedFirmware = detectedFirmware;
-        firePropertyChange("detectedFirmware", oldValue, detectedFirmware);
+    public String getConfiguredAxes() {
+        return configuredAxes;
+    }
+
+    public void setConfiguredAxes(String configuredAxes) {
+        Object oldValue = this.configuredAxes;
+        this.configuredAxes = configuredAxes;
+        firePropertyChange("configuredAxes", oldValue, configuredAxes);
+        firePropertyChange("firmwareConfiguration", null, getFirmwareConfiguration());
+    }
+
+    public String getFirmwareConfiguration() {
+        return detectedFirmware+"\n\n"
+                +(reportedAxes != null ? reportedAxes : "")+"\n\n"
+                +(configuredAxes != null ? configuredAxes : "");
+    }
+
+    public void setFirmwareConfiguration(String configuredAxes) {
     }
 
     protected void closeGcodeLogger() {
@@ -1421,12 +1446,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         if (!preserveOldValue) {
             setDetectedFirmware(null);
             setReportedAxes(null);
+            setConfiguredAxes(null);
         }
         boolean wasConnected = connected;
         if (!wasConnected) {
             connect();
         }
-        
+
         try {
             sendCommand("M115");
             String firmware = receiveSingleResponse("^FIRMWARE.*");
@@ -1437,6 +1463,23 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 sendCommand("M114");
                 String reportedAxes = receiveSingleResponse(".*[XYZABCDEUVW]:-?\\d+\\.\\d+.*");
                 if (reportedAxes != null) {
+                    if (firmware != null) {
+                        try {
+                            if (getFirmwareProperty("FIRMWARE_NAME", "").contains("Duet")) {
+                                sendCommand("M584");
+                                String axisConfig = receiveSingleResponse("^Driver assignments:.*");
+                                if (axisConfig != null) {
+                                    setConfiguredAxes(axisConfig);
+                                }
+                            }
+                            else {
+                                setConfiguredAxes(null);
+                            }
+                        }
+                        catch (Exception e) {
+                            // ignore
+                        }
+                    }
                     setReportedAxes(reportedAxes);
                 }
             }
@@ -1455,13 +1498,24 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         if (detectedFirmware == null) {
             return defaultValue;
         }
-        Pattern pattern = Pattern.compile("([A-Za-z0-9_\\-]+):?([^,]+)?");
+        Pattern pattern = Pattern.compile("([A-Za-z0-9\\_\\-]+):");
         Matcher matcher = pattern.matcher(detectedFirmware);
         while (matcher.find()) {
             if (name.equals(matcher.group(1))) {
-                String value = matcher.group(2).trim();
+                String value;
+                int pos = matcher.end();
+                if (matcher.find()) {
+                    value = detectedFirmware.substring(pos, matcher.start()-1);
+                }
+                else {
+                    value = detectedFirmware.substring(pos);
+                }
                 value = value.replace("%3A", ":");
-                return value;
+                int comma = value.indexOf(",");
+                if (comma >= 0) {
+                    value = value.substring(0, comma);
+                }
+                return value.trim();
             }
         }
         return defaultValue;

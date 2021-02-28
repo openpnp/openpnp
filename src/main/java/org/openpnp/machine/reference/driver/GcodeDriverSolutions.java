@@ -24,6 +24,8 @@ package org.openpnp.machine.reference.driver;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
@@ -108,6 +110,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
         boolean isGrblSyntax = false;
         boolean isTinyG = false;
         boolean isMarlin = false;
+        boolean isDuet = false;
         if (gcodeDriver.getDetectedFirmware() == null) {
             issues.add(new Solutions.Issue(
                     gcodeDriver, 
@@ -148,13 +151,52 @@ class GcodeDriverSolutions implements Solutions.Subject {
                             "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#smoothieware"));
                 }
             }
-            else if (gcodeDriver.getDetectedFirmware().contains("Duet 3")) {
-                issues.add(new Solutions.PlainIssue(
-                        gcodeDriver, 
-                        "The Duet3D firmware is being improved for OpenPnP. "+gcodeDriver.getDetectedFirmware(), 
-                        "Follow the progress on the linked web page.", 
-                        Severity.Information, 
-                        "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#duet"));
+            else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("Duet")) {
+                isDuet = true;
+                String firmwareVersion = gcodeDriver.getFirmwareProperty("FIRMWARE_VERSION", "0.0");
+                Integer major = null;
+                Integer minor = null;
+                try {
+                    Matcher matcher =
+                            Pattern.compile("(?<major>-?\\d+)\\.(?<minor>-?\\d+).*").matcher(firmwareVersion);
+                    matcher.matches();
+                    major = Integer.parseUnsignedInt(matcher.group("major"));
+                    minor = Integer.parseUnsignedInt(matcher.group("minor"));
+                }
+                catch (Exception e) {
+                    Logger.warn(e);
+                }
+                if (major == null || minor == null
+                        || major < 3 || (major == 3 && minor < 3)) {
+                    issues.add(new Solutions.PlainIssue(
+                            gcodeDriver, 
+                            "Duet3D firmware was improved for OpenPnP, please use version 3.3beta or newer. Current version is "+firmwareVersion, 
+                            "Get the new version through the linked web page.", 
+                            Severity.Error, 
+                            "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#duet"));
+                }
+                if (gcodeDriver.getConfiguredAxes() != null) { 
+                    try {
+                        Matcher matcher =
+                                Pattern.compile(".*\\s(?<axes>-?\\d+)\\saxes\\svisible.*").matcher(gcodeDriver.getConfiguredAxes());
+                        matcher.matches();
+                        firmwareAxesCount = Integer.parseUnsignedInt(matcher.group("axes"));
+                    }
+                    catch (NumberFormatException e) {
+                        // ignore
+                    }
+                    if (gcodeDriver.getConfiguredAxes().contains("(r)")) {
+                        issues.add(new Solutions.PlainIssue(
+                                gcodeDriver, 
+                                "Axes should be configured as linear in feedrate calculations on the Duet controller. See the linked web page.", 
+                                "Use the M584 S0 option in your config.g file.", 
+                                Severity.Error, 
+                                "https://duet3d.dozuki.com/Wiki/Gcode#Section_M584_Set_drive_mapping")); 
+                    }
+                    else {
+                        firmwarePrimaryAxesCount = firmwareAxesCount;
+                    }
+                }
             }
             else if (gcodeDriver.getDetectedFirmware().contains("Marlin")) {
                 isMarlin = true;
@@ -402,7 +444,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                 lettersOk = false;
             }
             else if (axis instanceof ReferenceControllerAxis) {
-                if (firmwarePrimaryAxesCount != null && firmwarePrimaryAxesCount == firmwareAxesCount) { 
+                if (firmwarePrimaryAxesCount != null && firmwarePrimaryAxesCount == firmwareAxesCount) {  
                     // Check rotation axes have the linear switch set.
                     if (axis.isRotationalOnController()) {
                         final boolean oldInvertLinearRotational = ((ReferenceControllerAxis) axis).isInvertLinearRotational();

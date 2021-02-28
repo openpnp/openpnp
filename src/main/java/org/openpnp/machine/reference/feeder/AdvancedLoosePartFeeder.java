@@ -35,7 +35,6 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
@@ -60,17 +59,16 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
-        // just to be sure it's the right nozzle for the job
-        if ( !getPart().getPackage().getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
-            nozzle.loadNozzleTip(getPart().getPackage().getCompatibleNozzleTips().toArray(new NozzleTip[0])[0]);
-        }
-
         // no part found => no pick location
         pickLocation = location.derive(null, null, Double.NaN, 0.0);
 
         // if there is a part, get a precise location
         for (int i = 0; i < 3 && pickLocation != null; i++) {
             pickLocation = locateFeederPart(nozzle, pickLocation);
+        }
+        // throw if feed results in no parts
+        if (pickLocation == null) {
+            throw new Exception("Feeder " + getName() + ": No parts found.");
         }
     }
 
@@ -123,6 +121,14 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
         }
     }
 
+    /**
+     * Checks if the testLocation is inside the camera view starting on the feeder location.
+     * Avoids to run outside the initial area if a bad pipeline repeated detects the parts
+     * on one edge of the field of view, even after moving the camera to the location.
+     * @param camera the used camera
+     * @param testLocation the location to test
+     * @return the testLocation, or null if outside the initial field of view
+     */
     private Location checkIfInInitialView(Camera camera, Location testLocation) {
         // just make sure, the vision did not "run away" => outside of the initial camera range
         // should never happen, but with badly dialed in pipelines ...
