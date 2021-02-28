@@ -808,7 +808,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public <T> String actuatorRead(ReferenceActuator actuator, T parameter) throws Exception {
+    public String actuatorRead(ReferenceActuator actuator, Object parameter) throws Exception {
         /*
          * The logic here is a little complicated. This is the only driver method that is
          * not fire and forget. In this case, we need to know if the command was serviced or not
