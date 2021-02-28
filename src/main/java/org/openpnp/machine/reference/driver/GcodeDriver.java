@@ -294,22 +294,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     public void commit() {
         super.commit();
 
-        Map<String, Command> actuatorReadWithDoubleCommands = new HashMap<>();
-        Map<String, Command> actuatorReadCommands = new HashMap<>();
-
         for (Command command : commands) {
             if(command.type == CommandType.ACTUATOR_READ_WITH_DOUBLE_COMMAND) {
-                actuatorReadWithDoubleCommands.put(command.headMountableId, command);
-            }
+                Command actuatorReadCommand = getExactCommand(
+                        command.headMountableId,
+                        CommandType.ACTUATOR_READ_COMMAND
+                );
 
-            if(command.type == CommandType.ACTUATOR_READ_COMMAND) {
-                actuatorReadCommands.put(command.headMountableId, command);
-            }
-        }
-
-        for (Map.Entry<String, Command> entry : actuatorReadWithDoubleCommands.entrySet()) {
-            if(actuatorReadCommands.get(entry.getKey()) == null) {
-                entry.getValue().type = CommandType.ACTUATOR_READ_COMMAND;
+                if(actuatorReadCommand == null) {
+                    command.type = CommandType.ACTUATOR_READ_COMMAND;
+                }
             }
         }
     }
@@ -540,6 +534,26 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         }
         // Timeout expired.
         throw new Exception(getName()+" timeout waiting for response to " + command);
+    }
+
+    /**
+     * This is similar to the other getCommand calls, except the head mountable id is passed in and it must match
+     * exactly. By passing in null or "*", you will get a command that matches that head mountable id or null.
+     */
+    public Command getExactCommand(String headMountableId, CommandType type) {
+        for (Command c : commands) {
+            if(c.type != type) {
+                continue;
+            }
+
+            if(c.headMountableId != null && c.headMountableId.equals(headMountableId)) {
+                return c;
+            } else if(c.headMountableId == null && headMountableId == null) {
+                return c;
+            }
+        }
+
+        return null;
     }
 
     public Command getCommand(HeadMountable hm, CommandType type, boolean checkDefaults) {

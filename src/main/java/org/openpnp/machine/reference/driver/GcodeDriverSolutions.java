@@ -24,6 +24,7 @@ package org.openpnp.machine.reference.driver;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.List;
+import java.util.Optional;
 
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
@@ -214,7 +215,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
             }
         }
 
-        if (hasAxes) { 
+        if (hasAxes) {
             if (gcodeDriver.isSupportingPreMove()) {
                 issues.add(new Solutions.Issue(
                         gcodeDriver, 
@@ -632,6 +633,51 @@ class GcodeDriverSolutions implements Solutions.Subject {
                     }
                 }
             }
+        }
+
+        for (Command command : gcodeDriver.commands) {
+            if(command.type != CommandType.ACTUATOR_READ_WITH_DOUBLE_COMMAND) {
+                continue;
+            }
+
+            Command readCommand = gcodeDriver.getExactCommand(
+                    command.headMountableId,
+                    CommandType.ACTUATOR_READ_COMMAND
+            );
+
+            if (readCommand == null) {
+                continue;
+            }
+
+            String headMountable;
+            if(command.headMountableId == null) {
+                headMountable = "the default head mountable";
+            } else if(command.headMountableId.equals("*")) {
+                headMountable = "the catch all head mountable";
+            } else {
+                headMountable = "head mountable id " + command.headMountableId;
+            }
+            issues.add(new Solutions.Issue(
+                    gcodeDriver,
+                    "Both ACTUATOR_READ_COMMAND and ACTUATOR_READ_WITH_DOUBLE_COMMAND are set for " +
+                             headMountable +
+                            " but the latter is deprecated",
+                    "Accept to replace ACTUATOR_READ_COMMAND with ACTUATOR_READ_WITH_DOUBLE_COMMAND. Dismiss to remove read with double.",
+                    Severity.Suggestion,
+                    "<some url goes here>"
+            ) {
+                @Override
+                public void setState(Solutions.State state) throws Exception {
+                    super.setState(state);
+
+                    if(state.equals(Solutions.State.Solved)) {
+                        gcodeDriver.commands.remove(readCommand);
+                        command.type = CommandType.ACTUATOR_READ_COMMAND;
+                    } else if(state.equals(Solutions.State.Dismissed)) {
+                        gcodeDriver.commands.remove(command);
+                    }
+                }
+            });
         }
     }
 
