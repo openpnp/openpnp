@@ -6,9 +6,13 @@ import java.util.Map;
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import java.awt.Shape;
+
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
+import org.opencv.core.Size;
+
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -19,6 +23,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.Footprint;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
@@ -47,6 +52,12 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Attribute(required = false)
     protected boolean preRotate = false;
+
+//    @Attribute(required = false)
+//    protected boolean checkPartSize = false;
+//
+//    @Attribute(required = false)
+//    protected double checkSizeTolerancePercent = 20;
 
     @Attribute(required = false)
     protected int maxVisionPasses = 3;
@@ -174,8 +185,10 @@ public class ReferenceBottomVision implements PartAlignment {
                             offsets, Math.abs(angleOffset), getMaxAngularOffset());
                 }
                 else {
-                    // We have a good enough fix - go on with that.
-                    break;
+                	if(partSizeCheck(part, partSettings, rect, camera)) {
+                        // We have a good enough fix - go on with that.
+                        break;                		
+                	}
                 }
 
                 // Not a good enough fix - try again with corrected position.
@@ -220,6 +233,13 @@ public class ReferenceBottomVision implements PartAlignment {
                 // turning more than 180° in one direction makes no sense
                 angleOffset = angleNorm(angleOffset, 180);
             }
+            
+            if (!partSizeCheck(part, partSettings, rect, camera) ) {
+                throw new Exception(String.format(
+                        "ReferenceBottomVision (%s): Incorrect part size.",
+                        part.getId() 
+                        ));          	
+            }
 
             // Set the angle on the offsets.
             offsets = offsets.derive(null, null, null, angleOffset);
@@ -230,6 +250,47 @@ public class ReferenceBottomVision implements PartAlignment {
             return new PartAlignmentOffset(offsets, false);
         }
     }
+    
+    
+    private boolean partSizeCheck(Part part, PartSettings partSettings, RotatedRect partRect, Camera camera) {
+		if(!partSettings.getCheckPartSize()) {
+			return true;
+		}
+    	Footprint footprint = part.getPackage().getFootprint();                	
+    	Length width = new Length(footprint.getBodyWidth(), LengthUnit.Millimeters);
+    	Length height = new Length((double) footprint.getBodyHeight(), LengthUnit.Millimeters);
+    	double pxWidth = VisionUtils.toPixels(width, camera);	
+    	double pxHeight = VisionUtils.toPixels(height, camera);
+    	Size meausuredSize = partRect.size;
+    	
+    	double size_tolerance_multiplier = 1.0 + (partSettings.getCheckSizeTolerancePercent() * 0.01);
+    	double pxMaxWidth = pxWidth * size_tolerance_multiplier;
+    	double pxMinWidth = pxWidth / size_tolerance_multiplier;
+    	double pxMaxHeight = pxHeight * size_tolerance_multiplier;
+    	double pxMinHeight = pxHeight / size_tolerance_multiplier;
+    	
+    	if (meausuredSize.width > pxMaxWidth) {
+    		Logger.debug("Package pixel width {} : limit {} : measured {}", 
+    				pxWidth, pxMaxWidth, meausuredSize.width);                		
+    	} else if (meausuredSize.width < pxMinWidth) {
+    		Logger.debug("Package pixel width {} : limit {} : measured {}", 
+    				pxWidth, pxMinWidth, meausuredSize.width);        
+    		return false;
+    	} else if (meausuredSize.height > pxMaxHeight) {
+    		Logger.debug("Package pixel height {} : limit {} : measured {}", 
+    				pxHeight, pxMaxHeight, meausuredSize.height);                		
+    		return false;
+    	} else if (meausuredSize.height < pxMinHeight) {
+    		Logger.debug("Package pixel height {} : limit {} : measured {}", 
+    				pxHeight, pxMinHeight, meausuredSize.height);                		
+    		return false;
+    	}
+    	
+    	Logger.debug("Package pixel size ok. Width {}, Height {}", 
+				meausuredSize.width, meausuredSize.height); 
+    	return true;
+    }
+    
 
     private static void displayResult(CvPipeline pipeline, Part part, Location offsets, Camera camera) {
         MainFrame mainFrame = MainFrame.get();
@@ -377,6 +438,22 @@ public class ReferenceBottomVision implements PartAlignment {
     public void setMaxAngularOffset(double maxAngularOffset) {
         this.maxAngularOffset = maxAngularOffset;
     }
+    
+//    public boolean getCheckPartSize() {
+//    	return checkPartSize;
+//    }
+//    
+//    public void setCheckPartSize(boolean checkPartSize) {
+//        this.checkPartSize = checkPartSize;
+//    }        
+//
+//    public double getCheckSizeTolerancePercent() {
+//    	return checkSizeTolerancePercent;
+//    }
+//    
+//    public void setCheckPartSize(double checkSizeTolerancePercent) {
+//        this.checkSizeTolerancePercent = checkSizeTolerancePercent;
+//    }    
 
     @Override
     public String getPropertySheetHolderTitle() {
@@ -442,6 +519,12 @@ public class ReferenceBottomVision implements PartAlignment {
         protected boolean enabled;
         @Attribute(required = false)
         protected PreRotateUsage preRotateUsage = PreRotateUsage.Default;
+        
+        @Attribute(required = false)
+        protected boolean checkPartSize = false;
+
+        @Attribute(required = false)
+        protected double checkSizeTolerancePercent = 20;
 
         @Attribute(required = false)
         protected MaxRotation maxRotation = MaxRotation.Adjust;
@@ -494,6 +577,23 @@ public class ReferenceBottomVision implements PartAlignment {
 
         public void setMaxRotation(MaxRotation maxRotation) {
             this.maxRotation = maxRotation;
+        }         
+
+        public boolean getCheckPartSize() {
+        	return checkPartSize;
         }
+        
+        public void setCheckPartSize(boolean checkPartSize) {
+            this.checkPartSize = checkPartSize;
+        }        
+
+        public double getCheckSizeTolerancePercent() {
+        	return checkSizeTolerancePercent;
+        }
+        
+        public void setCheckPartSize(double checkSizeTolerancePercent) {
+            this.checkSizeTolerancePercent = checkSizeTolerancePercent;
+        }            
+        
     }
 }

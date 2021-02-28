@@ -9,13 +9,16 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -42,6 +45,8 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     private JCheckBox chckbxCenterAfterTest;
     private JComboBox comboBoxPreRotate;
     private JComboBox comboBoxMaxRotation;
+    private JCheckBox checkPartSizeCheckbox;
+    private JTextField textPartSizeTolerance;
     
     public ReferenceBottomVisionPartConfigurationWizard(ReferenceBottomVision bottomVision,
             Part part) {
@@ -59,8 +64,12 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -133,6 +142,16 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         comboBoxMaxRotation = new JComboBox(ReferenceBottomVision.MaxRotation.values());
         comboBoxMaxRotation.setToolTipText("Adjust for all parts, where only some minor offset is expected. Full for parts, where bottom vision detects pin 1");
         panel.add(comboBoxMaxRotation, "4, 10, fill, default");
+
+        checkPartSizeCheckbox = new JCheckBox("Check size");
+        panel.add(checkPartSizeCheckbox, "6, 12");
+        
+        JLabel lblPartSizeTolerance = new JLabel("Size tolerance (%)");
+        panel.add(lblPartSizeTolerance, "2, 12");
+
+        textPartSizeTolerance = new JTextField();
+        panel.add(textPartSizeTolerance, "4, 12, fill, default");
+        
     }
 
     private void testAlignment() throws Exception {
@@ -219,7 +238,13 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
 
     @Override
     public void createBindings() {
-        addWrappedBinding(partSettings, "enabled", enabledCheckbox, "selected");
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get()
+                .getLengthDisplayFormat());
+        
+    	addWrappedBinding(partSettings, "enabled", enabledCheckbox, "selected");
+        addWrappedBinding(partSettings, "checkPartSize", checkPartSizeCheckbox, "selected");
+        addWrappedBinding(partSettings, "checkSizeTolerancePercent", textPartSizeTolerance, "text", doubleConverter);
+        
         addWrappedBinding(partSettings, "preRotateUsage", comboBoxPreRotate, "selectedItem");
         addWrappedBinding(partSettings, "maxRotation", comboBoxMaxRotation, "selectedItem");
     }
