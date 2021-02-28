@@ -253,15 +253,37 @@ public class ReferenceBottomVision implements PartAlignment {
     
     
     private boolean partSizeCheck(Part part, PartSettings partSettings, RotatedRect partRect, Camera camera) {
+    	//Check if this test needs to be done
 		if(!partSettings.getCheckPartSize()) {
 			return true;
 		}
-    	Footprint footprint = part.getPackage().getFootprint();                	
-    	Length width = new Length(footprint.getBodyWidth(), LengthUnit.Millimeters);
-    	Length height = new Length((double) footprint.getBodyHeight(), LengthUnit.Millimeters);
+		
+		//Get the part footprint body dimensions to compare to
+    	Footprint footprint = part.getPackage().getFootprint();
+    	double bodyWidth = footprint.getBodyWidth();
+    	double bodyHeight = footprint.getBodyHeight();
+    	
+    	//Make sure width is the longest dimension
+    	if (bodyHeight > bodyWidth) {
+    		double height = bodyHeight;
+    		double width = bodyHeight;
+    		bodyWidth = height;
+    		bodyHeight = width;
+    		}
+    	
+    	Length width = new Length(bodyWidth, LengthUnit.Millimeters);
+    	Length height = new Length(bodyHeight, LengthUnit.Millimeters);
     	double pxWidth = VisionUtils.toPixels(width, camera);	
     	double pxHeight = VisionUtils.toPixels(height, camera);
-    	Size meausuredSize = partRect.size;
+    	
+    	//Make sure width is the longest dimension
+    	Size measuredSize = partRect.size;
+    	if (measuredSize.height > measuredSize.width) {
+    		double mHeight = measuredSize.height;
+    		double mWidth = measuredSize.width;    		
+    		measuredSize.height = mWidth;
+    		measuredSize.width = mHeight;
+    	}
     	
     	double size_tolerance_multiplier = 1.0 + (partSettings.getCheckSizeTolerancePercent() * 0.01);
     	double pxMaxWidth = pxWidth * size_tolerance_multiplier;
@@ -269,25 +291,25 @@ public class ReferenceBottomVision implements PartAlignment {
     	double pxMaxHeight = pxHeight * size_tolerance_multiplier;
     	double pxMinHeight = pxHeight / size_tolerance_multiplier;
     	
-    	if (meausuredSize.width > pxMaxWidth) {
+    	if (measuredSize.width > pxMaxWidth) {
     		Logger.debug("Package pixel width {} : limit {} : measured {}", 
-    				pxWidth, pxMaxWidth, meausuredSize.width);                		
-    	} else if (meausuredSize.width < pxMinWidth) {
+    				pxWidth, pxMaxWidth, measuredSize.width);                		
+    	} else if (measuredSize.width < pxMinWidth) {
     		Logger.debug("Package pixel width {} : limit {} : measured {}", 
-    				pxWidth, pxMinWidth, meausuredSize.width);        
+    				pxWidth, pxMinWidth, measuredSize.width);        
     		return false;
-    	} else if (meausuredSize.height > pxMaxHeight) {
+    	} else if (measuredSize.height > pxMaxHeight) {
     		Logger.debug("Package pixel height {} : limit {} : measured {}", 
-    				pxHeight, pxMaxHeight, meausuredSize.height);                		
+    				pxHeight, pxMaxHeight, measuredSize.height);                		
     		return false;
-    	} else if (meausuredSize.height < pxMinHeight) {
+    	} else if (measuredSize.height < pxMinHeight) {
     		Logger.debug("Package pixel height {} : limit {} : measured {}", 
-    				pxHeight, pxMinHeight, meausuredSize.height);                		
+    				pxHeight, pxMinHeight, measuredSize.height);                		
     		return false;
     	}
     	
     	Logger.debug("Package pixel size ok. Width {}, Height {}", 
-				meausuredSize.width, meausuredSize.height); 
+				measuredSize.width, measuredSize.height); 
     	return true;
     }
     
