@@ -814,13 +814,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
          * not fire and forget. In this case, we need to know if the command was serviced or not
          * and throw an Exception if not.
          */
-        String command;
-        if (parameter == null) {
-            command = getCommand(actuator, CommandType.ACTUATOR_READ_COMMAND);
-        }
-        else {
-            command = getCommand(actuator, CommandType.ACTUATOR_READ_WITH_DOUBLE_COMMAND);
-        }
+        String command = getCommand(actuator, CommandType.ACTUATOR_READ_COMMAND);
         String regex = getCommand(actuator, CommandType.ACTUATOR_READ_REGEX);
         if (command != null && regex != null) {
             command = substituteVariable(command, "Id", actuator.getId());
