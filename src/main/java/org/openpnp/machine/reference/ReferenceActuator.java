@@ -335,7 +335,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     }
 
     @Override
-    public <T> String read(T parameter) throws Exception {
+    public String read(Object parameter) throws Exception {
         if (isCoordinatedBeforeRead()) {
             coordinateWithMachine(false);
         }
