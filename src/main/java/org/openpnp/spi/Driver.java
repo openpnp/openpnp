@@ -158,7 +158,7 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
      * @return 
      * @throws Exception
      */
-    public default <T> String actuatorRead(ReferenceActuator actuator, T parameter) throws Exception {
+    public default String actuatorRead(ReferenceActuator actuator, Object parameter) throws Exception {
         return null;
     }
 
