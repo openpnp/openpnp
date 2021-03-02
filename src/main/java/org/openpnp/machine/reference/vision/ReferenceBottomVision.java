@@ -7,6 +7,7 @@ import javax.swing.Action;
 import javax.swing.Icon;
 
 import java.awt.Shape;
+import java.awt.Rectangle;
 
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.Point;
@@ -46,18 +47,11 @@ public class ReferenceBottomVision implements PartAlignment {
     @Element(required = false)
     protected CvPipeline pipeline = createDefaultPipeline();
 
-
     @Attribute(required = false)
     protected boolean enabled = false;
 
     @Attribute(required = false)
     protected boolean preRotate = false;
-
-//    @Attribute(required = false)
-//    protected boolean checkPartSize = false;
-//
-//    @Attribute(required = false)
-//    protected double checkSizeTolerancePercent = 20;
 
     @Attribute(required = false)
     protected int maxVisionPasses = 3;
@@ -254,25 +248,43 @@ public class ReferenceBottomVision implements PartAlignment {
     
     private boolean partSizeCheck(Part part, PartSettings partSettings, RotatedRect partRect, Camera camera) {
     	//Check if this test needs to be done
-		if(!partSettings.getCheckPartSize()) {
+    	PartSettings.PartSizeCheckMethod partSizeCheckMethod = partSettings.getCheckPartSizeMethod();
+
+		double checkWidth = 0.0; 
+		double checkHeight = 0.0;
+
+    	if(partSizeCheckMethod == PartSettings.PartSizeCheckMethod.PartSizeCheckNone) {
 			return true;
 		}
 		
-		//Get the part footprint body dimensions to compare to
     	Footprint footprint = part.getPackage().getFootprint();
-    	double bodyWidth = footprint.getBodyWidth();
-    	double bodyHeight = footprint.getBodyHeight();
-    	
+		LengthUnit footprintLengthUnit = footprint.getUnits();
+		
+		//Get the part footprint body dimensions to compare to
+		switch(partSizeCheckMethod) {
+		case PartSizeCheckNone:
+			return true;
+		case PartSizeCheckBodySize:
+	    	checkWidth = footprint.getBodyWidth();
+	    	checkHeight = footprint.getBodyHeight();
+			break;
+		case PartSizeCheckPadExtents:
+			Rectangle bounds = footprint.getPadsShape().getBounds();
+			checkWidth = bounds.getWidth();
+			checkHeight = bounds.getHeight();
+			break;
+		}
+
     	//Make sure width is the longest dimension
-    	if (bodyHeight > bodyWidth) {
-    		double height = bodyHeight;
-    		double width = bodyHeight;
-    		bodyWidth = height;
-    		bodyHeight = width;
+    	if (checkHeight > checkWidth) {
+    		double height = checkHeight;
+    		double width = checkHeight;
+    		checkWidth = height;
+    		checkHeight = width;
     		}
     	
-    	Length width = new Length(bodyWidth, LengthUnit.Millimeters);
-    	Length height = new Length(bodyHeight, LengthUnit.Millimeters);
+    	Length width = new Length(checkWidth, footprintLengthUnit);
+    	Length height = new Length(checkHeight, footprintLengthUnit);
     	double pxWidth = VisionUtils.toPixels(width, camera);	
     	double pxHeight = VisionUtils.toPixels(height, camera);
     	
@@ -535,15 +547,21 @@ public class ReferenceBottomVision implements PartAlignment {
     public enum MaxRotation {
         Adjust, Full
     }
+    
     @Root
     public static class PartSettings {
-        @Attribute
+
+    	public enum PartSizeCheckMethod {
+            PartSizeCheckNone, PartSizeCheckBodySize, PartSizeCheckPadExtents
+        }
+    	
+    	@Attribute
         protected boolean enabled;
         @Attribute(required = false)
         protected PreRotateUsage preRotateUsage = PreRotateUsage.Default;
         
         @Attribute(required = false)
-        protected boolean checkPartSize = false;
+        protected PartSizeCheckMethod checkPartSizeMethod = PartSizeCheckMethod.PartSizeCheckNone;
 
         @Attribute(required = false)
         protected double checkSizeTolerancePercent = 20;
@@ -601,12 +619,12 @@ public class ReferenceBottomVision implements PartAlignment {
             this.maxRotation = maxRotation;
         }         
 
-        public boolean getCheckPartSize() {
-        	return checkPartSize;
+        public PartSizeCheckMethod getCheckPartSizeMethod() {
+        	return checkPartSizeMethod;
         }
         
-        public void setCheckPartSize(boolean checkPartSize) {
-            this.checkPartSize = checkPartSize;
+        public void setCheckPartSizeMethod(PartSizeCheckMethod checkPartSizeMethod) {
+            this.checkPartSizeMethod = checkPartSizeMethod;
         }        
 
         public double getCheckSizeTolerancePercent() {

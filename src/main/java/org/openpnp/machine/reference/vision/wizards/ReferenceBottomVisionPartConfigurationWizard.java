@@ -22,6 +22,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.UiUtils;
@@ -45,7 +46,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     private JCheckBox chckbxCenterAfterTest;
     private JComboBox comboBoxPreRotate;
     private JComboBox comboBoxMaxRotation;
-    private JCheckBox checkPartSizeCheckbox;
+    private JComboBox comboBoxcheckPartSizeMethod;
     private JTextField textPartSizeTolerance;
     
     public ReferenceBottomVisionPartConfigurationWizard(ReferenceBottomVision bottomVision,
@@ -142,9 +143,9 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         comboBoxMaxRotation = new JComboBox(ReferenceBottomVision.MaxRotation.values());
         comboBoxMaxRotation.setToolTipText("Adjust for all parts, where only some minor offset is expected. Full for parts, where bottom vision detects pin 1");
         panel.add(comboBoxMaxRotation, "4, 10, fill, default");
-
-        checkPartSizeCheckbox = new JCheckBox("Check size");
-        panel.add(checkPartSizeCheckbox, "6, 12");
+        
+        comboBoxcheckPartSizeMethod = new JComboBox(PartSettings.PartSizeCheckMethod.values());
+        panel.add(comboBoxcheckPartSizeMethod, "6, 12, fill, default");        
         
         JLabel lblPartSizeTolerance = new JLabel("Size tolerance (%)");
         panel.add(lblPartSizeTolerance, "2, 12");
@@ -242,7 +243,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                 .getLengthDisplayFormat());
         
     	addWrappedBinding(partSettings, "enabled", enabledCheckbox, "selected");
-        addWrappedBinding(partSettings, "checkPartSize", checkPartSizeCheckbox, "selected");
+        addWrappedBinding(partSettings, "checkPartSizeMethod", comboBoxcheckPartSizeMethod, "selectedItem");
         addWrappedBinding(partSettings, "checkSizeTolerancePercent", textPartSizeTolerance, "text", doubleConverter);
         
         addWrappedBinding(partSettings, "preRotateUsage", comboBoxPreRotate, "selectedItem");
