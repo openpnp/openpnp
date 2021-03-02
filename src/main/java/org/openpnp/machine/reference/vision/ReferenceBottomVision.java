@@ -247,84 +247,77 @@ public class ReferenceBottomVision implements PartAlignment {
     
     
     private boolean partSizeCheck(Part part, PartSettings partSettings, RotatedRect partRect, Camera camera) {
-    	//Check if this test needs to be done
-    	PartSettings.PartSizeCheckMethod partSizeCheckMethod = partSettings.getCheckPartSizeMethod();
+        // Check if this test needs to be done
+        PartSettings.PartSizeCheckMethod partSizeCheckMethod = partSettings.getCheckPartSizeMethod();
 
-		double checkWidth = 0.0; 
-		double checkHeight = 0.0;
+        double checkWidth = 0.0;
+        double checkHeight = 0.0;
 
-    	if(partSizeCheckMethod == PartSettings.PartSizeCheckMethod.PartSizeCheckNone) {
-			return true;
-		}
-		
-    	Footprint footprint = part.getPackage().getFootprint();
-		LengthUnit footprintLengthUnit = footprint.getUnits();
-		
-		//Get the part footprint body dimensions to compare to
-		switch(partSizeCheckMethod) {
-		case PartSizeCheckNone:
-			return true;
-		case PartSizeCheckBodySize:
-	    	checkWidth = footprint.getBodyWidth();
-	    	checkHeight = footprint.getBodyHeight();
-			break;
-		case PartSizeCheckPadExtents:
-			Rectangle bounds = footprint.getPadsShape().getBounds();
-			checkWidth = bounds.getWidth();
-			checkHeight = bounds.getHeight();
-			break;
-		}
+        Footprint footprint = part.getPackage().getFootprint();
+        LengthUnit footprintLengthUnit = footprint.getUnits();
 
-    	//Make sure width is the longest dimension
-    	if (checkHeight > checkWidth) {
-    		double height = checkHeight;
-    		double width = checkHeight;
-    		checkWidth = height;
-    		checkHeight = width;
-    		}
-    	
-    	Length width = new Length(checkWidth, footprintLengthUnit);
-    	Length height = new Length(checkHeight, footprintLengthUnit);
-    	double pxWidth = VisionUtils.toPixels(width, camera);	
-    	double pxHeight = VisionUtils.toPixels(height, camera);
-    	
-    	//Make sure width is the longest dimension
-    	Size measuredSize = partRect.size;
-    	if (measuredSize.height > measuredSize.width) {
-    		double mHeight = measuredSize.height;
-    		double mWidth = measuredSize.width;    		
-    		measuredSize.height = mWidth;
-    		measuredSize.width = mHeight;
-    	}
-    	
-    	double size_tolerance_multiplier = 1.0 + (partSettings.getCheckSizeTolerancePercent() * 0.01);
-    	double pxMaxWidth = pxWidth * size_tolerance_multiplier;
-    	double pxMinWidth = pxWidth / size_tolerance_multiplier;
-    	double pxMaxHeight = pxHeight * size_tolerance_multiplier;
-    	double pxMinHeight = pxHeight / size_tolerance_multiplier;
-    	
-    	if (measuredSize.width > pxMaxWidth) {
-    		Logger.debug("Package pixel width {} : limit {} : measured {}", 
-    				pxWidth, pxMaxWidth, measuredSize.width);                		
-    	} else if (measuredSize.width < pxMinWidth) {
-    		Logger.debug("Package pixel width {} : limit {} : measured {}", 
-    				pxWidth, pxMinWidth, measuredSize.width);        
-    		return false;
-    	} else if (measuredSize.height > pxMaxHeight) {
-    		Logger.debug("Package pixel height {} : limit {} : measured {}", 
-    				pxHeight, pxMaxHeight, measuredSize.height);                		
-    		return false;
-    	} else if (measuredSize.height < pxMinHeight) {
-    		Logger.debug("Package pixel height {} : limit {} : measured {}", 
-    				pxHeight, pxMinHeight, measuredSize.height);                		
-    		return false;
-    	}
-    	
-    	Logger.debug("Package pixel size ok. Width {}, Height {}", 
-				measuredSize.width, measuredSize.height); 
-    	return true;
+        // Get the part footprint body dimensions to compare to
+        switch (partSizeCheckMethod) {
+        case Disabled:
+            return true;
+        case BodySize:
+            checkWidth = footprint.getBodyWidth();
+            checkHeight = footprint.getBodyHeight();
+            break;
+        case PadExtents:
+            Rectangle bounds = footprint.getPadsShape().getBounds();
+            checkWidth = bounds.getWidth();
+            checkHeight = bounds.getHeight();
+            break;
+        }
+
+        // Make sure width is the longest dimension
+        if (checkHeight > checkWidth) {
+            double height = checkHeight;
+            double width = checkHeight;
+            checkWidth = height;
+            checkHeight = width;
+        }
+
+        Length width = new Length(checkWidth, footprintLengthUnit);
+        Length height = new Length(checkHeight, footprintLengthUnit);
+        double pxWidth = VisionUtils.toPixels(width, camera);
+        double pxHeight = VisionUtils.toPixels(height, camera);
+
+        // Make sure width is the longest dimension
+        Size measuredSize = partRect.size;
+        if (measuredSize.height > measuredSize.width) {
+            double mHeight = measuredSize.height;
+            double mWidth = measuredSize.width;
+            measuredSize.height = mWidth;
+            measuredSize.width = mHeight;
+        }
+
+        double widthTolerance = pxWidth * 0.01 * (double) partSettings.getCheckSizeTolerancePercent();
+        double heightTolerance = pxHeight * 0.01 * (double) partSettings.getCheckSizeTolerancePercent();
+        double pxMaxWidth = pxWidth + heightTolerance;
+        double pxMinWidth = pxWidth - heightTolerance;
+        double pxMaxHeight = pxHeight + heightTolerance;
+        double pxMinHeight = pxHeight - heightTolerance;
+
+        if (measuredSize.width > pxMaxWidth) {
+            Logger.debug("Package pixel width {} : limit {} : measured {}", pxWidth, pxMaxWidth, measuredSize.width);
+        } else if (measuredSize.width < pxMinWidth) {
+            Logger.debug("Package pixel width {} : limit {} : measured {}", pxWidth, pxMinWidth, measuredSize.width);
+            return false;
+        } else if (measuredSize.height > pxMaxHeight) {
+            Logger.debug("Package pixel height {} : limit {} : measured {}", pxHeight, pxMaxHeight,
+                    measuredSize.height);
+            return false;
+        } else if (measuredSize.height < pxMinHeight) {
+            Logger.debug("Package pixel height {} : limit {} : measured {}", pxHeight, pxMinHeight,
+                    measuredSize.height);
+            return false;
+        }
+
+        Logger.debug("Package {} pixel size ok. Width {}, Height {}", part.getId(), measuredSize.width, measuredSize.height);
+        return true;
     }
-    
 
     private static void displayResult(CvPipeline pipeline, Part part, Location offsets, Camera camera) {
         MainFrame mainFrame = MainFrame.get();
@@ -473,22 +466,6 @@ public class ReferenceBottomVision implements PartAlignment {
         this.maxAngularOffset = maxAngularOffset;
     }
     
-//    public boolean getCheckPartSize() {
-//    	return checkPartSize;
-//    }
-//    
-//    public void setCheckPartSize(boolean checkPartSize) {
-//        this.checkPartSize = checkPartSize;
-//    }        
-//
-//    public double getCheckSizeTolerancePercent() {
-//    	return checkSizeTolerancePercent;
-//    }
-//    
-//    public void setCheckPartSize(double checkSizeTolerancePercent) {
-//        this.checkSizeTolerancePercent = checkSizeTolerancePercent;
-//    }    
-
     @Override
     public String getPropertySheetHolderTitle() {
         return "Bottom Vision";
@@ -551,20 +528,20 @@ public class ReferenceBottomVision implements PartAlignment {
     @Root
     public static class PartSettings {
 
-    	public enum PartSizeCheckMethod {
-            PartSizeCheckNone, PartSizeCheckBodySize, PartSizeCheckPadExtents
+        public enum PartSizeCheckMethod {
+            Disabled, BodySize, PadExtents
         }
-    	
-    	@Attribute
+
+        @Attribute
         protected boolean enabled;
         @Attribute(required = false)
         protected PreRotateUsage preRotateUsage = PreRotateUsage.Default;
         
         @Attribute(required = false)
-        protected PartSizeCheckMethod checkPartSizeMethod = PartSizeCheckMethod.PartSizeCheckNone;
+        protected PartSizeCheckMethod checkPartSizeMethod = PartSizeCheckMethod.Disabled;
 
         @Attribute(required = false)
-        protected double checkSizeTolerancePercent = 20;
+        protected int checkSizeTolerancePercent = 20;
 
         @Attribute(required = false)
         protected MaxRotation maxRotation = MaxRotation.Adjust;
@@ -617,7 +594,7 @@ public class ReferenceBottomVision implements PartAlignment {
 
         public void setMaxRotation(MaxRotation maxRotation) {
             this.maxRotation = maxRotation;
-        }         
+        }
 
         public PartSizeCheckMethod getCheckPartSizeMethod() {
         	return checkPartSizeMethod;
@@ -625,15 +602,15 @@ public class ReferenceBottomVision implements PartAlignment {
         
         public void setCheckPartSizeMethod(PartSizeCheckMethod checkPartSizeMethod) {
             this.checkPartSizeMethod = checkPartSizeMethod;
-        }        
+        }
 
-        public double getCheckSizeTolerancePercent() {
+        public int getCheckSizeTolerancePercent() {
         	return checkSizeTolerancePercent;
         }
-        
-        public void setCheckPartSize(double checkSizeTolerancePercent) {
+
+        public void setCheckPartSize(int checkSizeTolerancePercent) {
             this.checkSizeTolerancePercent = checkSizeTolerancePercent;
-        }            
-        
+        }
+
     }
 }
