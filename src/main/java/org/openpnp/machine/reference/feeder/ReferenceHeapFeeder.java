@@ -77,7 +77,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      * To save time, store the depth of the last pick, so we did not need to start at the top every time.
      */
     @Attribute(required = false)
-    private double lastFeedDepth = -5;
+    private double lastFeedDepth = 0;
 
     /**
      * Three locations used to escape a "maze" of heaps.
