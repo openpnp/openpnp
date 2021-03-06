@@ -295,8 +295,8 @@ public class ReferenceBottomVision implements PartAlignment {
 
         double widthTolerance = pxWidth * 0.01 * (double) partSettings.getCheckSizeTolerancePercent();
         double heightTolerance = pxHeight * 0.01 * (double) partSettings.getCheckSizeTolerancePercent();
-        double pxMaxWidth = pxWidth + heightTolerance;
-        double pxMinWidth = pxWidth - heightTolerance;
+        double pxMaxWidth = pxWidth + widthTolerance;
+        double pxMinWidth = pxWidth - widthTolerance;
         double pxMaxHeight = pxHeight + heightTolerance;
         double pxMinHeight = pxHeight - heightTolerance;
 
