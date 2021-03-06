@@ -672,7 +672,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             if (partLocation == null || lastHeap == null) {
                 return false; // is empty
             } else {
-                // pick part, move up, drop ist
+                // pick part, move up, drop it
                 pickPart(nozzle, partLocation, lastHeap.getPart());
                 dropInto(nozzle);
                 return true;
