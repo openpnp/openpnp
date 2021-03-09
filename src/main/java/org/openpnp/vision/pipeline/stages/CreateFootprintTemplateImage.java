@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 
 import org.openpnp.model.Footprint;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.FluentCv.ColorSpace;
@@ -80,6 +81,10 @@ public class CreateFootprintTemplateImage extends CvStage {
     public Result process(CvPipeline pipeline) throws Exception {
         Camera camera = (Camera) pipeline.getProperty("camera");
         Footprint footprint = (Footprint) pipeline.getProperty("footprint");
+        if (footprint == null && pipeline.getProperty("part") != null) {
+            Part part = (Part)pipeline.getProperty("part");
+            footprint = part.getPackage().getFootprint();
+        }
 
         if (camera == null) {
             throw new Exception("Property \"camera\" is required.");
