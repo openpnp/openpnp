@@ -16,7 +16,9 @@ Another important consideration is making sure that the motion controller has en
 
 There are a *lot* of motion controllers available, from Open Source software that runs on an Arduino and a shield, to all in one systems like Smoothie, all the way up to closed loop, high power servo controllers. Most people find that something in the middle works well.
 
-# Smoothie
+# Recommended Models
+
+## Smoothie
 
 Based on years of evidence, and lots and lots of different builds, we recommend a [Smoothie](http://smoothieware.org/) based board for most machines. Smoothie is an Open Source motion controller firmware that runs on a variety of affordable, all in one boards. It's easy to configure, well documented and works great with OpenPnP.
 
@@ -32,21 +34,25 @@ Some Smoothie based boards that are known to work with OpenPnP, and which you ca
 
 Note that MKS Smoothie clones are **not recommended**. See [this FAQ](http://smoothieware.org/troubleshooting#what-is-wrong-with-mks) for more information on why.
 
-## Peter's Head
+### Using with a Peter's Head and Advanced Motion Control
 
-There is a common style of pick and place often referred to as "Peter's Head". This style of head has one Z axis motor which uses belts or gears to drive two nozzles. Due to the complex homing operation required for this type of head, you may need to use the modified Smoothie firmware found [here](https://github.com/openpnp/Smoothieware) if you have this style of head.
+There is a common style of pick and place often referred to as "Peter's Head". This style of head has one Z axis motor which uses belts or gears to drive two nozzles. Due to the complex homing operation required for this type of head, the Smoothie firmware had to be extended to support it. In addition, for use with new Advanced Motion Control features in OpenPnP, a special PnP Smoothie firmware version was developed and is now a requirement:
 
-A new version, based on the latest Smoothieware version (edge) was created [here](https://github.com/Smoothieware/Smoothieware/pull/1423), but is still in testing (help wanted).
+Please see the [Firmwares page](https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#smoothieware).
 
-# Other Options
+## Duet + RepRapFirmware
 
-In general, any motion controller that can accept GCode commands for movement and output control will work with OpenPnP. You can even use other protocols than GCode if you are feeling adventurous.
+After having been specifically extended to support OpenPnP very well, Duet 2 and Duet 3 and RepRapFirmware (starting from 3.3beta) are now also formidable platforms for OpenPnP. 
+
+See the [Firmwares page](https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#duet3d).
+
+Those interested in using Duet 2 or Duet3 with OpenPnP, for help and support please contact dc42 on the OpenPnP forum at https://groups.google.com/forum/#!forum/openpnp or the Duet3D forum at https://forum.duet3d.com/.
 
 ## TinyG
 
-[TinyG](http://synthetos.myshopify.com/products/tinyg) is another great Open Source motion control platform. It supports up to 6 axes and is one of the only ones to support S-curve acceleration. This makes it's motion very smooth and can allow for faster accelerations without losing steps. The TinyG board only has 4 stepper drivers, but if that's all you need than it's an excellent choice.
+[TinyG](http://synthetos.myshopify.com/products/tinyg) is another great Open Source motion control platform. It supports up to 6 axes and is one of the only ones to support S-curve acceleration. This makes its motion very smooth and can allow for faster accelerations without losing steps. The TinyG board only has 4 stepper drivers, but if that's all you need then it's an excellent choice.
 
-Unfortunately, due to some strange quirks in TinyG, it's not a great solution for OpenPnP. The problems can be worked around, but it requires some hacking that is not fully documented. For more information, see [TinyG Quirks](https://github.com/openpnp/openpnp/wiki/TinyG#quirks)
+Unfortunately, due to some strange quirks in TinyG, it's not a great solution for OpenPnP out of the box. Some problems have been resolved by creating a special PnP firmware version, [see the Firmwares page](https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#tinyg). Using the standard firmware is no longer recommended, it requires some hacking that is not fully documented. For more information, see [TinyG Quirks](https://github.com/openpnp/openpnp/wiki/TinyG#quirks)
 
 ## Grbl
 
@@ -55,10 +61,6 @@ Unfortunately, due to some strange quirks in TinyG, it's not a great solution fo
 ## Aprinter
 
 [Aprinter](https://github.com/ambrop72/aprinter) is a modern 3D printer firmware that may be useful for OpenPnP. I don't think of any machines using it yet, but the features list says all the right things and it may be worth looking into.
-
-## Duet + RepRapFirmware
-
-Those interested in using Duet 2 or Duet3 with OpenPnP, for help and support please contact dc42 on the OpenPnP forum at https://groups.google.com/forum/#!forum/openpnp or the Duet3D forum at https://forum.duet3d.com/.
 
 ## Marlin and Other 3D Printer Firmwares
 
