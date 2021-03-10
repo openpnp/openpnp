@@ -75,6 +75,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
 
+import com.github.weisj.darklaf.settings.ThemeSettings;
 import org.openpnp.Translations;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.importer.BoardImporter;
@@ -414,6 +415,8 @@ public class MainFrame extends JFrame {
         if (prefs.getBoolean(PREF_WINDOW_STYLE_MULTIPLE, PREF_WINDOW_STYLE_MULTIPLE_DEF)) {
             windowStyleMultipleMenuItem.setSelected(true);
         }
+
+        mnWindows.add(new JMenuItem(editThemeAction));
 
         // Help
         /////////////////////////////////////////////////////////////////////
@@ -1043,6 +1046,13 @@ public class MainFrame extends JFrame {
             }
             MessageBoxes.infoBox("Windows Style Changed", //$NON-NLS-1$
                     "Window style has been changed. Please restart OpenPnP to see the changes."); //$NON-NLS-1$
+        }
+    };
+
+    private Action editThemeAction = new AbstractAction(Translations.getString("Menu.Window.Theme")) { //$NON-NLS-1$
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            ThemeSettings.showSettingsDialog(mainFrame);
         }
     };
 
