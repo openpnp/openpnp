@@ -83,7 +83,7 @@ public class PackageVisionPanel extends JPanel {
         add(propertiesPanel, BorderLayout.NORTH);
         propertiesPanel.setBorder(
                 new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Settings",
-                        TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+                        TitledBorder.LEADING, TitledBorder.TOP, null));
         propertiesPanel.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
