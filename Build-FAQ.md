@@ -104,6 +104,8 @@ This is a hard to answer question since it's specific to the machine, the camera
 
 M12 lenses are cheap, so we recommend picking up a couple sizes to experiment with. 
 
+The [Ikosi Vision Pick and Place Lens Calculator](http://www.ikosivision.com/index.php/pick-and-place-lens-calculator/) can help you choose appropriate lens sizes for your machine setup, and has some great tips on choosing a lens.
+
 The [Vision Doctor optics basics page](https://www.vision-doctor.com/en/optical-basics.html) and [lens calculators](https://www.vision-doctor.com/en/optical-calculations.html) can help with this decision.
 
 ## Pneumatics
