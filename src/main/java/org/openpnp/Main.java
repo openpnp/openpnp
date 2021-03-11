@@ -157,7 +157,7 @@ public class Main {
             tSettings.setConfiguration(theme);
             tSettings.apply();
         }
-        LafManager.install(tSettings.getTheme());
+        LafManager.install();
         LafManager.addThemeChangeListener(new ThemeChangeStoreListener());
         EventQueue.invokeLater(new Runnable() {
             public void run() {
