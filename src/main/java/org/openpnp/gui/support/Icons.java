@@ -1,12 +1,7 @@
 package org.openpnp.gui.support;
 
-import com.github.weisj.darklaf.icons.CustomThemedIcon;
-import com.github.weisj.darklaf.icons.ThemedSVGIcon;
-import com.github.weisj.darklaf.icons.UIAwareIcon;
-
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import java.net.URISyntaxException;
 
 public class Icons {
     public static Icon add = getIcon("/icons/general-add.svg");
@@ -110,11 +105,7 @@ public class Icons {
     
     public static Icon getIcon(String resourceName, int width, int height) {
         if (resourceName.endsWith(".svg")) {
-            try {
-                return new ThemedSVGIcon(Icons.class.getResource(resourceName).toURI(), width, height);
-            } catch (URISyntaxException e) {
-                return null;
-            }
+            return new SvgIcon(Icons.class.getResource(resourceName), width, height);
         }
         else {
             return new ImageIcon(Icons.class.getResource(resourceName));

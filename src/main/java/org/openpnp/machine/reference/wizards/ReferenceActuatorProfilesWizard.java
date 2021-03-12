@@ -103,7 +103,7 @@ public class ReferenceActuatorProfilesWizard extends AbstractConfigurationWizard
     protected void createUi() {
         AbstractMachine machine = (AbstractMachine) Configuration.get().getMachine();
         panelInterlock = new JPanel();
-        panelInterlock.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Actuators", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelInterlock.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Actuators", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelInterlock);
         panelInterlock.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -197,7 +197,7 @@ public class ReferenceActuatorProfilesWizard extends AbstractConfigurationWizard
         panelInterlock.add(actuator6, "4, 12, fill, default");
 
         panelCondition = new JPanel();
-        panelCondition.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Profiles", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelCondition.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Profiles", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelCondition);
         panelCondition.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
