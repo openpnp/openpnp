@@ -128,7 +128,7 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
     }
     private void createUi() {
         panelSettings = new JPanel();
-        panelSettings.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Motion Planner", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelSettings.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Motion Planner", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelSettings);
         panelSettings.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -179,7 +179,7 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
         panelSettings.add(interpolationRetiming, "4, 6, right, top");
 
         panel = new JPanel();
-        panel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Test Motion", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Test Motion", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,

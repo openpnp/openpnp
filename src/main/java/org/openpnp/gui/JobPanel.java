@@ -291,7 +291,7 @@ public class JobPanel extends JPanel {
         JPanel pnlBoards = new JPanel();
         pnlBoards.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
                 Translations.getString("JobPanel.Tab.Boards"),
-                TitledBorder.LEADING, TitledBorder.TOP, null)); //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0))); //$NON-NLS-1$
         pnlBoards.setLayout(new BorderLayout(0, 0));
 
         JToolBar toolBarBoards = new JToolBar();

@@ -114,7 +114,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 
 		panelPart = new JPanel();
 		panelPart.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General Settings",
-				TitledBorder.LEADING, TitledBorder.TOP, null));
+				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		contentPanel.add(panelPart);
 		panelPart.setLayout(new FormLayout(new ColumnSpec[] {
 		        FormSpecs.RELATED_GAP_COLSPEC,
@@ -174,7 +174,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		if (includePickLocation) {
 			panelLocation = new JPanel();
 			panelLocation.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-					"Tray Component Locations", TitledBorder.LEADING, TitledBorder.TOP, null));
+					"Tray Component Locations", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 			contentPanel.add(panelLocation);
 			panelLocation.setLayout(new FormLayout(
 					new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
@@ -242,7 +242,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 
 			panelParameters = new JPanel();
 			panelParameters.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-					"Tray Parameters", TitledBorder.LEADING, TitledBorder.TOP, null));
+					"Tray Parameters", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 			contentPanel.add(panelParameters);
 
 			panelParameters.setLayout(new FormLayout(
@@ -385,7 +385,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 
 			panelIllustration = new JPanel();
 			panelIllustration.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-					"Tray Illustration", TitledBorder.LEADING, TitledBorder.TOP, null));
+					"Tray Illustration", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 			contentPanel.add(panelIllustration);
 
 			InputStream stream = getClass().getResourceAsStream("/illustrations/rotatedtrayfeeder.png");
