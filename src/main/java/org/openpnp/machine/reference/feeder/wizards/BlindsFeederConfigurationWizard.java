@@ -126,7 +126,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         panelPart = new JPanel();
         panelPart.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
+                "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null,
+                new Color(0, 0, 0)));
         contentPanel.add(panelPart);
         panelPart.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -203,7 +204,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         contentPanel.add(panelTapeSettings);
         panelTapeSettings.setBorder(new TitledBorder(
                 new EtchedBorder(EtchedBorder.LOWERED, null, null), "Tape Settings",
-                TitledBorder.LEADING, TitledBorder.TOP, null));
+                TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         panelTapeSettings.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),
