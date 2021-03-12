@@ -143,8 +143,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
         panelPart = new JPanel();
         panelPart.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null,
-                new Color(0, 0, 0)));
+                "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPart);
         panelPart.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -213,7 +212,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         contentPanel.add(panelTapeSettings);
         panelTapeSettings.setBorder(new TitledBorder(
                 new EtchedBorder(EtchedBorder.LOWERED, null, null), "Tape Settings",
-                TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         panelTapeSettings.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,

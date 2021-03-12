@@ -94,7 +94,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
-            globals.put("part", part);
+            globals.put("part", getPart());
             Configuration.get().getScripting().on("Nozzle.BeforePlaceProbe", globals);
         } catch (Exception e) {
             Logger.warn(e);
@@ -113,7 +113,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("nozzle", this);
-            globals.put("part", part);
+            globals.put("part", getPart());
             Configuration.get().getScripting().on("Nozzle.AfterPlaceProbe", globals);
         } catch (Exception e) {
             Logger.warn(e);

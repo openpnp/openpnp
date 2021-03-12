@@ -202,7 +202,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         addWrappedBinding(bottomVision, "maxVisionPasses", textFieldMaxVisionPasses, "text", intConverter);
         addWrappedBinding(bottomVision, "maxLinearOffset", textFieldMaxLinearOffset, "text", lengthConverter);
         addWrappedBinding(bottomVision, "maxAngularOffset", textFieldMaxAngularOffset, "text", doubleConverter);
-        
+
         ComponentDecorators.decorateWithAutoSelect(textFieldMaxVisionPasses);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldMaxLinearOffset);
         ComponentDecorators.decorateWithAutoSelect(textFieldMaxAngularOffset);

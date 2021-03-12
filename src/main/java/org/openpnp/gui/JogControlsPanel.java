@@ -26,6 +26,7 @@ import java.awt.FocusTraversalPolicy;
 import java.awt.Font;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -55,11 +56,14 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Motion.MotionOption;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
@@ -169,8 +173,8 @@ public class JogControlsPanel extends JPanel {
     public void jogTool(final int x, final int y, final int z, final int c, HeadMountable tool)
             throws Exception {
         Location l = tool.getLocation()
-                         .convertToUnits(Configuration.get()
-                                                      .getSystemUnits());
+                .convertToUnits(Configuration.get()
+                        .getSystemUnits());
         double xPos = l.getX();
         double yPos = l.getY();
         double zPos = l.getZ();
@@ -211,15 +215,15 @@ public class JogControlsPanel extends JPanel {
         if (!this.getBoardProtectionOverrideEnabled()) {
             /* check board location before movement */
             List<BoardLocation> boardLocations = machineControlsPanel.getJobPanel()
-                                                                     .getJob()
-                                                                     .getBoardLocations();
+                    .getJob()
+                    .getBoardLocations();
             for (BoardLocation boardLocation : boardLocations) {
                 if (!boardLocation.isEnabled()) {
                     continue;
                 }
                 boolean safe = nozzleLocationIsSafe(boardLocation.getLocation(),
                         boardLocation.getBoard()
-                                     .getDimensions(),
+                        .getDimensions(),
                         targetLocation, new Length(1.0, l.getUnits()));
                 if (!safe) {
                     throw new Exception(
@@ -237,7 +241,7 @@ public class JogControlsPanel extends JPanel {
     private boolean nozzleLocationIsSafe(Location origin, Location dimension, Location nozzle,
             Length safeDistance) {
         double distance = safeDistance.convertToUnits(nozzle.getUnits())
-                                      .getValue();
+                .getValue();
         Location originConverted = origin.convertToUnits(nozzle.getUnits());
         Location dimensionConverted = dimension.convertToUnits(dimension.getUnits());
         double boardUpperZ = originConverted.getZ();
@@ -366,8 +370,8 @@ public class JogControlsPanel extends JPanel {
             @Override
             public void stateChanged(ChangeEvent e) {
                 Configuration.get()
-                             .getMachine()
-                             .setSpeed(speedSlider.getValue() * 0.01);
+                .getMachine()
+                .setSpeed(speedSlider.getValue() * 0.01);
             }
         });
 
@@ -439,6 +443,12 @@ public class JogControlsPanel extends JPanel {
 
         JButton btnDiscard = new JButton(discardAction);
         panelSpecial.add(btnDiscard);
+
+        JButton btnRecycle = new JButton(recycleAction);
+        btnRecycle.setEnabled(false);
+        btnRecycle.setToolTipText(Translations.getString("JogControlsPanel.btnRecycle.toolTipText")); //$NON-NLS-1$
+        btnRecycle.setText(Translations.getString("JogControlsPanel.btnRecycle.text")); //$NON-NLS-1$
+        panelSpecial.add(btnRecycle);
 
         panelActuators = new JPanel();
         tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Actuators"), null, panelActuators, null); //$NON-NLS-1$
@@ -632,8 +642,8 @@ public class JogControlsPanel extends JPanel {
                     Logger.warn(e);
                 }
                 MovableUtils.moveToLocationAtSafeZ(nozzle, Configuration.get()
-                                                                        .getMachine()
-                                                                        .getDiscardLocation());
+                        .getMachine()
+                        .getDiscardLocation());
                 // discard the part
                 nozzle.place();
                 nozzle.moveToSafeZ();
@@ -648,6 +658,31 @@ public class JogControlsPanel extends JPanel {
             });
         }
     };
+
+    @SuppressWarnings("serial")
+    public Action recycleAction = new AbstractAction(Translations.getString("JogControlsPanel.Action.Recycle")) { //$NON-NLS-1$
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
+                Part part = nozzle.getPart();
+
+                // just make sure a part is there
+                if (part == null) {
+                    throw new Exception("No Part on the current nozzle!");
+                }
+
+                // go through the feeders
+                for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+                    if (part.equals(feeder.getPart()) && feeder.isEnabled() && feeder.canTakeBackPart()) {
+                        feeder.takeBackPart(nozzle);
+                        break;
+                    }
+                }
+            });
+        }
+    };
+
 
     @SuppressWarnings("serial")
     public Action raiseIncrementAction = new AbstractAction(Translations.getString("JogControlsPanel.Action.RaiseJogIncrement")) { //$NON-NLS-1$
@@ -666,64 +701,64 @@ public class JogControlsPanel extends JPanel {
                     Math.max(sliderIncrements.getMinimum(), sliderIncrements.getValue() - 1));
         }
     };
-	
+
     @SuppressWarnings("serial")
     public Action setIncrement1Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.FirstJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(1);
-		}
+        }
     };
     @SuppressWarnings("serial")
     public Action setIncrement2Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.SecondJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(2);
-		}
+        }
     };
     @SuppressWarnings("serial")
     public Action setIncrement3Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.ThirdJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(3);
-		}
+        }
     };
     @SuppressWarnings("serial")
     public Action setIncrement4Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.FourthJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(4);
-		}
+        }
     };
     @SuppressWarnings("serial")
     public Action setIncrement5Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.FifthJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(5);
-		}
+        }
     };
 
 
     private void addActuator(Actuator actuator) {
         String name = actuator.getHead() == null ? actuator.getName() : actuator.getHead()
-                                                                                .getName()
+                .getName()
                 + ":" + actuator.getName(); //$NON-NLS-1$
-        JButton actuatorButton = new JButton(name);
-        actuatorButton.addActionListener((e) -> {
-            ActuatorControlDialog dlg = new ActuatorControlDialog(actuator);
-            dlg.pack();
-            dlg.revalidate();
-            dlg.setLocationRelativeTo(JogControlsPanel.this);
-            dlg.setVisible(true);
-        });
-        BeanUtils.addPropertyChangeListener(actuator, "name", e -> { //$NON-NLS-1$
-            actuatorButton.setText(
-                    actuator.getHead() == null ? actuator.getName() : actuator.getHead()
-                                                                              .getName()
-                            + ":" + actuator.getName()); //$NON-NLS-1$
-        });
-        panelActuators.add(actuatorButton);
-        actuatorButtons.put(actuator, actuatorButton);
+                JButton actuatorButton = new JButton(name);
+                actuatorButton.addActionListener((e) -> {
+                    ActuatorControlDialog dlg = new ActuatorControlDialog(actuator);
+                    dlg.pack();
+                    dlg.revalidate();
+                    dlg.setLocationRelativeTo(JogControlsPanel.this);
+                    dlg.setVisible(true);
+                });
+                BeanUtils.addPropertyChangeListener(actuator, "name", e -> { //$NON-NLS-1$
+                    actuatorButton.setText(
+                            actuator.getHead() == null ? actuator.getName() : actuator.getHead()
+                                    .getName()
+                                    + ":" + actuator.getName()); //$NON-NLS-1$
+                });
+                panelActuators.add(actuatorButton);
+                actuatorButtons.put(actuator, actuatorButton);
     }
 
     private void removeActuator(Actuator actuator) {
@@ -735,13 +770,13 @@ public class JogControlsPanel extends JPanel {
         public void configurationComplete(Configuration configuration) throws Exception {
             setUnits(configuration.getSystemUnits());
             speedSlider.setValue((int) (configuration.getMachine()
-                                                     .getSpeed()
+                    .getSpeed()
                     * 100));
 
             panelActuators.removeAll();
 
             Machine machine = Configuration.get()
-                                           .getMachine();
+                    .getMachine();
 
             for (Actuator actuator : machine.getActuators()) {
                 addActuator(actuator);
@@ -770,6 +805,32 @@ public class JogControlsPanel extends JPanel {
 
 
             setEnabled(machineControlsPanel.isEnabled());
+            
+            // add property listener for recycle button
+            // enable recycle only if part on current head
+            PropertyChangeListener recyclePropertyListener = (e) -> {
+                    boolean canTakeBack = false;
+                    Part part = machineControlsPanel.getSelectedNozzle().getPart();
+                    if (part != null) {
+                        for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+                            if (feeder.isEnabled() && feeder.getPart().equals(part) && feeder.canTakeBackPart()) {
+                                canTakeBack = true;
+                            }
+                        }
+                    }
+                    recycleAction.setEnabled(canTakeBack);
+                };
+            // add to all nozzles
+            for (Head head : Configuration.get().getMachine().getHeads()) {
+                for (Nozzle nozzle : head.getNozzles()) {
+                    if (nozzle instanceof AbstractNozzle) {
+                        AbstractNozzle aNozzle = (AbstractNozzle) nozzle;
+                        aNozzle.addPropertyChangeListener("part", recyclePropertyListener);
+                    }
+                }
+            }
+            // add to the currently selected tool, so we get a notification if that changed, maybe other part on the nozzle
+            machineControlsPanel.addPropertyChangeListener("selectedTool", recyclePropertyListener);
         }
     };
 
