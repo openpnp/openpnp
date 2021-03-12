@@ -808,9 +808,7 @@ public class JogControlsPanel extends JPanel {
             
             // add property listener for recycle button
             // enable recycle only if part on current head
-            PropertyChangeListener recyclePropertyListener = new PropertyChangeListener() {
-                @Override
-                public void propertyChange(PropertyChangeEvent arg0) {
+            PropertyChangeListener recyclePropertyListener = (e) -> {
                     boolean canTakeBack = false;
                     Part part = machineControlsPanel.getSelectedNozzle().getPart();
                     if (part != null) {
@@ -820,20 +818,19 @@ public class JogControlsPanel extends JPanel {
                             }
                         }
                     }
-                    System.err.println("Can cake back: " + canTakeBack);
                     recycleAction.setEnabled(canTakeBack);
-                }
-            };
+                };
             // add to all nozzles
             for (Head head : Configuration.get().getMachine().getHeads()) {
                 for (Nozzle nozzle : head.getNozzles()) {
                     if (nozzle instanceof AbstractNozzle) {
                         AbstractNozzle aNozzle = (AbstractNozzle) nozzle;
                         aNozzle.addPropertyChangeListener("part", recyclePropertyListener);
-                        System.err.println("Added PropertyChangeListener to: " + aNozzle.getName());
                     }
                 }
             }
+            // add to the currently selected tool, so we get a notification if that changed, maybe other part on the nozzle
+            machineControlsPanel.addPropertyChangeListener("selectedTool", recyclePropertyListener);
         }
     };
 
