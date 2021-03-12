@@ -19,10 +19,7 @@
 
 package org.openpnp.model;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -40,6 +37,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.prefs.Preferences;
 
+import com.github.weisj.darklaf.settings.SettingsConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.scripting.Scripting;
@@ -70,6 +68,8 @@ public class Configuration extends AbstractModelObject {
 
     private static final String PREF_UNITS = "Configuration.units";
     private static final String PREF_UNITS_DEF = "Millimeters";
+
+    private static final String PREF_THEME = "Configuration.theme";
 
     private static final String PREF_LENGTH_DISPLAY_FORMAT = "Configuration.lengthDisplayFormat";
     private static final String PREF_LENGTH_DISPLAY_FORMAT_DEF = "%.3f";
@@ -178,6 +178,28 @@ public class Configuration extends AbstractModelObject {
     public void setLocale(Locale locale) {
         prefs.put(PREF_LOCALE_LANG, locale.getLanguage());
         prefs.put(PREF_LOCALE_COUNTRY, locale.getCountry());
+    }
+
+    public SettingsConfiguration getTheme() {
+        byte[] serializedSettings = prefs.getByteArray(PREF_THEME, null);
+        if (serializedSettings != null) {
+            try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(serializedSettings))) {
+                SettingsConfiguration theme = (SettingsConfiguration) in.readObject();
+                return theme;
+            } catch (IOException | ClassNotFoundException ignore) {
+            }
+        }
+        return null;
+    }
+
+    public void setTheme(SettingsConfiguration theme) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (ObjectOutputStream out = new ObjectOutputStream(bos)) {
+            out.writeObject(theme);
+            out.flush();
+            prefs.putByteArray(PREF_THEME, bos.toByteArray());
+        } catch (IOException ignore) {
+        }
     }
 
     public String getLengthDisplayFormat() {

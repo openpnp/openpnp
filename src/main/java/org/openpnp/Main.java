@@ -25,10 +25,14 @@ import java.util.Locale;
 
 import javax.swing.UIManager;
 
+import com.github.weisj.darklaf.LafManager;
+import com.github.weisj.darklaf.settings.SettingsConfiguration;
+import com.github.weisj.darklaf.settings.ThemeSettings;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.logging.ConsoleWriter;
 import org.openpnp.logging.SystemLogger;
 import org.openpnp.model.Configuration;
+import org.openpnp.util.ThemeChangeStoreListener;
 import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
 import org.pmw.tinylog.Logger;
@@ -146,6 +150,15 @@ public class Main {
         Configuration.initialize(configurationDirectory);
         final Configuration configuration = Configuration.get();
         Locale.setDefault(Configuration.get().getLocale());
+
+        ThemeSettings tSettings = ThemeSettings.getInstance();
+        SettingsConfiguration theme = configuration.getTheme();
+        if (theme != null) {
+            tSettings.setConfiguration(theme);
+            tSettings.apply();
+        }
+        LafManager.install();
+        LafManager.addThemeChangeListener(new ThemeChangeStoreListener());
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {

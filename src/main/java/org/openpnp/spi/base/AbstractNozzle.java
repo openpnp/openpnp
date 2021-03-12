@@ -72,6 +72,11 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
         firePropertyChange("name", null, name);
     }
     
+    protected void setPart(Part part) {
+        this.part = part;
+        firePropertyChange("part", null, part);
+    }
+    
     @Override
     public Part getPart() {
         return part;

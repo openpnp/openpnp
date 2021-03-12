@@ -59,7 +59,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         this.nozzleTip = nozzleTip;
         
         panelPartOnVacuumSensing = new JPanel();
-        panelPartOnVacuumSensing.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Part On Vacuum Sensing", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        panelPartOnVacuumSensing.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Part On Vacuum Sensing", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPartOnVacuumSensing);
         panelPartOnVacuumSensing.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -178,7 +178,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOnVacuumSensing.add(vacuumPartOnGraph, "4, 16, 9, 1, default, fill");
         
         panelPartOffVacuumSensing = new JPanel();
-        panelPartOffVacuumSensing.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Part Off Vacuum Sensing", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        panelPartOffVacuumSensing.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Part Off Vacuum Sensing", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPartOffVacuumSensing);
         panelPartOffVacuumSensing.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,

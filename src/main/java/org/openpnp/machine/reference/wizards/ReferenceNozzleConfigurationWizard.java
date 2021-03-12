@@ -103,7 +103,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
 
         panelOffsets = new JPanel();
         panelOffsets.setBorder(new TitledBorder(null,
-                "Coordinate System", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+                "Coordinate System", TitledBorder.LEADING, TitledBorder.TOP, null));
         panelOffsets.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -207,7 +207,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
 
         panelChanger = new JPanel();
         panelChanger.setBorder(new TitledBorder(null,
-                "Settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+                "Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelChanger);
         panelChanger
                 .setLayout(
