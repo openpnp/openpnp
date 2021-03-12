@@ -75,7 +75,7 @@ public class LogPanel extends JPanel {
         JPanel settingsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         settingsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Global Logging Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
+                "Global Logging Settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 
         settingsPanel.add(createGlobalLogLevelPanel());
 
@@ -85,7 +85,7 @@ public class LogPanel extends JPanel {
         JPanel filterPanel = new JPanel(new BorderLayout(0, 0));
 
         filterPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Filter Logging Panel", TitledBorder.LEADING, TitledBorder.TOP, null));
+                "Filter Logging Panel", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 
         JPanel filterContentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 

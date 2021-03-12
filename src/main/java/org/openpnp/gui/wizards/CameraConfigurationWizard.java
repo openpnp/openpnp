@@ -290,7 +290,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panelUpp = new JPanel();
         contentPanel.add(panelUpp);
         panelUpp.setBorder(new TitledBorder(null, "Units Per Pixel", TitledBorder.LEADING,
-                TitledBorder.TOP, null));
+                TitledBorder.TOP, null, new Color(0, 0, 0)));
         panelUpp.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
@@ -445,7 +445,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panelCal = new JPanel();
         panelCal.setName("Units Per Pixel Calibration Tool");
         panelCal.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
-                "Calibration Instructions", TitledBorder.LEADING, TitledBorder.TOP, null));
+                "Calibration Instructions", TitledBorder.LEADING, TitledBorder.TOP, null,
+                new Color(0, 0, 0)));
         panelUpp.add(panelCal, "2, 14, 13, 1, fill, fill");
         panelCal.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
