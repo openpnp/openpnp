@@ -453,6 +453,32 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         return location;
     }
 
+    /**
+     * Since a heap can store so many parts, we can always accept parts
+     */
+    @Override
+    public boolean canTakeBackPart() {
+        return true;
+    }
+
+    @Override
+    public void takeBackPart(Nozzle nozzle) throws Exception {
+        // first check if we can and want to take back this part (should be always be checked before calling, but to be sure)
+        if (nozzle.getPart() == null) {
+            throw new UnsupportedOperationException("No part loaded that could be taken back.");
+        }
+        if (!nozzle.getPart().equals(getPart())) {
+            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getName() + " this feeder only supports " + getPart().getName());
+        }
+
+        // ok, now move the part back to the heap
+        moveToHeap(nozzle);
+        HeapFeederHelper.dropPart(nozzle, location);
+        nozzle.moveToSafeZ();
+        // move up a tiny bit the "pick height"
+        lastFeedDepth -= part.getHeight().getValue() / 10;
+    }
+    
     public void resetFeederPipeline() {
         feederPipeline = HeapFeederHelper.createPipeline("Part", dropBox);
     }
@@ -657,7 +683,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
          * @throws Exception something went wrong.
          */
         public void dropInto(Nozzle nozzle) throws Exception {
-            dropPart(nozzle, dropLocation);
+            HeapFeederHelper.dropPart(nozzle, dropLocation);
         }
 
         /**
@@ -715,7 +741,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
                     nozzle.loadNozzleTip(dummyPartForUnknown.getPackage().getCompatibleNozzleTips().toArray(new NozzleTip[0])[0]);
                 }
                 pickPart(nozzle, partLocation, dummyPartForUnknown);
-                dropPart(nozzle, Configuration.get().getMachine().getDiscardLocation());
+                HeapFeederHelper.dropPart(nozzle, Configuration.get().getMachine().getDiscardLocation());
             } else {    // known origin, not wasting parts
                 if ( !lastHeap.getPart().getPackage().getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
                     nozzle.loadNozzleTip(lastHeap.getPart().getPackage().getCompatibleNozzleTips().toArray(new NozzleTip[0])[0]);
@@ -723,7 +749,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
                 pickPart(nozzle, partLocation, lastHeap.getPart());
                 nozzle.moveToSafeZ();
                 lastHeap.moveToHeap(nozzle);
-                dropPart(nozzle, lastHeap.getLocation());
+                HeapFeederHelper.dropPart(nozzle, lastHeap.getLocation());
             }
 
         }
@@ -743,36 +769,6 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             // Retract
             nozzle.moveToSafeZ();
         }
-
-        /**
-         * Drop(s) the part(s) on the nozzle
-         * @param nozzle used nozzle
-         * @param location destination
-         * @throws Exception something went wrong
-         */
-        public void dropPart(Nozzle nozzle, Location location) throws Exception {
-            // move to the  location
-            if (nozzle.getLocation().getLinearDistanceTo(location) > 0.0001) {
-                nozzle.moveToSafeZ();
-            }
-            nozzle.moveTo(location);
-            // discard the part
-            nozzle.place();
-            // blow off the part
-            Actuator blowOffValve = nozzle.getHead().getActuatorByName(((ReferenceNozzle) nozzle).getBlowOffActuatorName()); 
-            if (blowOffValve != null) {
-                blowOffValve.actuate(true);
-            }
-            Thread.sleep(Math.round(1.1 * (((ReferenceNozzle)nozzle).getPlaceDwellMilliseconds() + ((ReferenceNozzleTip)nozzle.getNozzleTip()).getPlaceDwellMilliseconds())));
-            // move the nozzle a bit to help parts fall down
-            if (blowOffValve != null) {
-                blowOffValve.actuate(false);
-            }
-            if (!nozzle.isPartOff()) {
-                throw new Exception("DropBox " + getName() + ": Dropping part failed, check nozzle tip");
-            }
-        }
-
 
         /**
          * Detects the location of a part in the dropBox.
@@ -963,5 +959,34 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             }       
         }
         
+        /**
+         * Drop(s) the part(s) on the nozzle
+         * @param nozzle used nozzle
+         * @param location destination
+         * @throws Exception something went wrong
+         */
+        static void dropPart(Nozzle nozzle, Location location) throws Exception {
+            // move to the  location
+            if (nozzle.getLocation().getLinearDistanceTo(location) > 0.0001) {
+                nozzle.moveToSafeZ();
+            }
+            nozzle.moveTo(location);
+            // discard the part
+            nozzle.place();
+            // blow off the part
+            Actuator blowOffValve = nozzle.getHead().getActuatorByName(((ReferenceNozzle) nozzle).getBlowOffActuatorName()); 
+            if (blowOffValve != null) {
+                blowOffValve.actuate(true);
+            }
+            Thread.sleep(Math.round(1.1 * (((ReferenceNozzle)nozzle).getPlaceDwellMilliseconds() + ((ReferenceNozzleTip)nozzle.getNozzleTip()).getPlaceDwellMilliseconds())));
+            // move the nozzle a bit to help parts fall down
+            if (blowOffValve != null) {
+                blowOffValve.actuate(false);
+            }
+            if (!nozzle.isPartOff()) {
+                throw new Exception("HeapFeeder: Dropping part failed, check nozzle tip");
+            }
+        }
+
     }
 }
