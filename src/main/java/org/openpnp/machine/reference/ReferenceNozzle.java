@@ -274,7 +274,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             Logger.warn(e);
         }
         
-        this.part = part;
+        setPart(part);
 
         // if the method needs it, store one measurement up front
         storeBeforePickVacuumLevel();
@@ -322,8 +322,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         // if the method needs it, store one measurement up front
         storeBeforePlaceVacuumLevel();
 
-        if (part != null) {
-            double placeBlowLevel = part.getPackage().getPlaceBlowOffLevel();
+        if (getPart() != null) {
+            double placeBlowLevel = getPart().getPackage().getPlaceBlowOffLevel();
             if (Double.compare(placeBlowLevel, Double.valueOf(0.0)) != 0) {
                 actuateBlowValve(placeBlowLevel);
             } 
@@ -339,7 +339,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         // wait for the Dwell Time and/or make sure the vacuum level decays to the desired range (with timeout)
         establishPlaceVacuumLevel(this.getPlaceDwellMilliseconds() + nozzleTip.getPlaceDwellMilliseconds());
 
-        this.part = null;
+        setPart(null);
         getMachine().fireMachineHeadActivity(head);
         
         try {
@@ -456,8 +456,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
         if (enableDynamicSafeZ) { 
             // if a part is loaded, decrease (higher) safeZ
-            if (part != null) {
-                safeZ = safeZ.add(part.getHeight());
+            if (getPart() != null) {
+                safeZ = safeZ.add(getPart().getHeight());
                 // Note, the safeZ value will be validated in moveToSafeZ()
                 // to make sure it is not outside the Safe Z Zone.
             }

@@ -6,9 +6,14 @@ import java.util.Map;
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import java.awt.Shape;
+import java.awt.Rectangle;
+
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
+import org.opencv.core.Size;
+
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -19,6 +24,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.Footprint;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
@@ -40,7 +46,6 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Element(required = false)
     protected CvPipeline pipeline = createDefaultPipeline();
-
 
     @Attribute(required = false)
     protected boolean enabled = false;
@@ -174,8 +179,10 @@ public class ReferenceBottomVision implements PartAlignment {
                             offsets, Math.abs(angleOffset), getMaxAngularOffset());
                 }
                 else {
-                    // We have a good enough fix - go on with that.
-                    break;
+                	if(partSizeCheck(part, partSettings, rect, camera)) {
+                        // We have a good enough fix - go on with that.
+                        break;                		
+                	}
                 }
 
                 // Not a good enough fix - try again with corrected position.
@@ -220,6 +227,13 @@ public class ReferenceBottomVision implements PartAlignment {
                 // turning more than 180° in one direction makes no sense
                 angleOffset = angleNorm(angleOffset, 180);
             }
+            
+            if (!partSizeCheck(part, partSettings, rect, camera) ) {
+                throw new Exception(String.format(
+                        "ReferenceBottomVision (%s): Incorrect part size.",
+                        part.getId() 
+                        ));          	
+            }
 
             // Set the angle on the offsets.
             offsets = offsets.derive(null, null, null, angleOffset);
@@ -229,6 +243,80 @@ public class ReferenceBottomVision implements PartAlignment {
 
             return new PartAlignmentOffset(offsets, false);
         }
+    }
+    
+    
+    private boolean partSizeCheck(Part part, PartSettings partSettings, RotatedRect partRect, Camera camera) {
+        // Check if this test needs to be done
+        PartSettings.PartSizeCheckMethod partSizeCheckMethod = partSettings.getCheckPartSizeMethod();
+
+        double checkWidth = 0.0;
+        double checkHeight = 0.0;
+
+        Footprint footprint = part.getPackage().getFootprint();
+        LengthUnit footprintLengthUnit = footprint.getUnits();
+
+        // Get the part footprint body dimensions to compare to
+        switch (partSizeCheckMethod) {
+        case Disabled:
+            return true;
+        case BodySize:
+            checkWidth = footprint.getBodyWidth();
+            checkHeight = footprint.getBodyHeight();
+            break;
+        case PadExtents:
+            Rectangle bounds = footprint.getPadsShape().getBounds();
+            checkWidth = bounds.getWidth();
+            checkHeight = bounds.getHeight();
+            break;
+        }
+
+        // Make sure width is the longest dimension
+        if (checkHeight > checkWidth) {
+            double height = checkHeight;
+            double width = checkHeight;
+            checkWidth = height;
+            checkHeight = width;
+        }
+
+        Length width = new Length(checkWidth, footprintLengthUnit);
+        Length height = new Length(checkHeight, footprintLengthUnit);
+        double pxWidth = VisionUtils.toPixels(width, camera);
+        double pxHeight = VisionUtils.toPixels(height, camera);
+
+        // Make sure width is the longest dimension
+        Size measuredSize = partRect.size;
+        if (measuredSize.height > measuredSize.width) {
+            double mHeight = measuredSize.height;
+            double mWidth = measuredSize.width;
+            measuredSize.height = mWidth;
+            measuredSize.width = mHeight;
+        }
+
+        double widthTolerance = pxWidth * 0.01 * (double) partSettings.getCheckSizeTolerancePercent();
+        double heightTolerance = pxHeight * 0.01 * (double) partSettings.getCheckSizeTolerancePercent();
+        double pxMaxWidth = pxWidth + widthTolerance;
+        double pxMinWidth = pxWidth - widthTolerance;
+        double pxMaxHeight = pxHeight + heightTolerance;
+        double pxMinHeight = pxHeight - heightTolerance;
+
+        if (measuredSize.width > pxMaxWidth) {
+            Logger.debug("Package pixel width {} : limit {} : measured {}", pxWidth, pxMaxWidth, measuredSize.width);
+        } else if (measuredSize.width < pxMinWidth) {
+            Logger.debug("Package pixel width {} : limit {} : measured {}", pxWidth, pxMinWidth, measuredSize.width);
+            return false;
+        } else if (measuredSize.height > pxMaxHeight) {
+            Logger.debug("Package pixel height {} : limit {} : measured {}", pxHeight, pxMaxHeight,
+                    measuredSize.height);
+            return false;
+        } else if (measuredSize.height < pxMinHeight) {
+            Logger.debug("Package pixel height {} : limit {} : measured {}", pxHeight, pxMinHeight,
+                    measuredSize.height);
+            return false;
+        }
+
+        Logger.debug("Package {} pixel size ok. Width {}, Height {}", part.getId(), measuredSize.width, measuredSize.height);
+        return true;
     }
 
     private static void displayResult(CvPipeline pipeline, Part part, Location offsets, Camera camera) {
@@ -377,7 +465,7 @@ public class ReferenceBottomVision implements PartAlignment {
     public void setMaxAngularOffset(double maxAngularOffset) {
         this.maxAngularOffset = maxAngularOffset;
     }
-
+    
     @Override
     public String getPropertySheetHolderTitle() {
         return "Bottom Vision";
@@ -436,12 +524,24 @@ public class ReferenceBottomVision implements PartAlignment {
     public enum MaxRotation {
         Adjust, Full
     }
+    
     @Root
     public static class PartSettings {
+
+        public enum PartSizeCheckMethod {
+            Disabled, BodySize, PadExtents
+        }
+
         @Attribute
         protected boolean enabled;
         @Attribute(required = false)
         protected PreRotateUsage preRotateUsage = PreRotateUsage.Default;
+        
+        @Attribute(required = false)
+        protected PartSizeCheckMethod checkPartSizeMethod = PartSizeCheckMethod.Disabled;
+
+        @Attribute(required = false)
+        protected int checkSizeTolerancePercent = 20;
 
         @Attribute(required = false)
         protected MaxRotation maxRotation = MaxRotation.Adjust;
@@ -495,5 +595,22 @@ public class ReferenceBottomVision implements PartAlignment {
         public void setMaxRotation(MaxRotation maxRotation) {
             this.maxRotation = maxRotation;
         }
+
+        public PartSizeCheckMethod getCheckPartSizeMethod() {
+        	return checkPartSizeMethod;
+        }
+        
+        public void setCheckPartSizeMethod(PartSizeCheckMethod checkPartSizeMethod) {
+            this.checkPartSizeMethod = checkPartSizeMethod;
+        }
+
+        public int getCheckSizeTolerancePercent() {
+        	return checkSizeTolerancePercent;
+        }
+
+        public void setCheckPartSize(int checkSizeTolerancePercent) {
+            this.checkSizeTolerancePercent = checkSizeTolerancePercent;
+        }
+
     }
 }

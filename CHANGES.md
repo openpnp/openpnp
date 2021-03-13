@@ -1,7 +1,38 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
-# 2020-02-04
+# 2021-03-12
+
+## CreateFootprintTemplateImage Stage Improvements
+
+The CreateFootprintTemplateImage CvPipeline stage can now automatically create a footprint from
+a Nozzle.Part if the footprint is not supplied to the stage.
+
+https://github.com/openpnp/openpnp/pull/1140
+
+Thanks @doppelgrau!
+
+## OrientRotatedRects Stage Improvements
+
+You can now specify a snap-to angle for this stage helping orientation in LoosePartsFeeder
+and other advanced vision feeders.
+
+https://github.com/openpnp/openpnp/pull/1138
+
+Thanks @MatSpy!
+
+## Part Size Check Option in Bottom Vision
+
+Option to check package size during bottom camera part alignment. Compares measured vs.
+expected dimension with a part configurable tolerance. This can be used to detect
+mis-picks, wrong part loaded, tombstones, etc.
+
+https://github.com/openpnp/openpnp/pull/1135
+
+Thanks @crashmatt!
+
+
+# 2021-02-04
 
 ## New Thermistor Linearizing Actuator
 
