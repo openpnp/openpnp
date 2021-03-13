@@ -22,8 +22,12 @@ public class ThemeInfo implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         ThemeInfo themeInfo = (ThemeInfo) o;
         return dark == themeInfo.dark && Objects.equals(name, themeInfo.name) && Objects.equals(resourceName, themeInfo.resourceName) && Objects.equals(themeFile, themeInfo.themeFile) && Objects.equals(lafClassName, themeInfo.lafClassName);
     }

@@ -78,8 +78,9 @@ public class ThemeSettingsPanel extends JPanel {
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 String name = ((ThemeInfo) value).name;
                 int sep = name.indexOf('/');
-                if (sep >= 0)
+                if (sep >= 0) {
                     name = name.substring(sep + 1).trim();
+                }
 
                 JComponent c = (JComponent) super.getListCellRendererComponent(list, name, index, isSelected, cellHasFocus);
                 c.setToolTipText(buildToolTip((ThemeInfo) value));
@@ -87,10 +88,12 @@ public class ThemeSettingsPanel extends JPanel {
             }
 
             private String buildToolTip(ThemeInfo ti) {
-                if (ti.themeFile != null)
+                if (ti.themeFile != null) {
                     return ti.themeFile.getPath();
-                if (ti.resourceName == null)
+                }
+                if (ti.resourceName == null) {
                     return ti.name;
+                }
 
                 return "Name: " + ti.name;
             }
@@ -234,8 +237,9 @@ public class ThemeSettingsPanel extends JPanel {
             try {
                 if (themeInfo.themeFile.getName().endsWith(".properties")) {
                     FlatLaf.install(new FlatPropertiesLaf(themeInfo.name, themeInfo.themeFile));
-                } else
+                } else {
                     FlatLaf.install(IntelliJTheme.createLaf(new FileInputStream(themeInfo.themeFile)));
+                }
             } catch (Exception ignore) {
             }
         } else {

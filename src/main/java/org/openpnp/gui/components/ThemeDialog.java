@@ -78,7 +78,7 @@ public class ThemeDialog {
     }
 
     protected Component createButtonPanel() {
-        JButton ok = new JButton(Translations.getString("Theme.Ok"));
+        JButton ok = new JButton(Translations.getString("Theme.Save"));
         ok.setDefaultCapable(true);
         ok.addActionListener(e -> {
             ThemeInfo theme = themePanel.setTheme();
