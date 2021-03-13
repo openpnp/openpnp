@@ -1,6 +1,17 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2021-03-13
+
+## OpenCV Upgrade and Arm64 Support
+
+The OpenCV package has been updated to a new version that has automatic builds
+for Arm64. This is the last native library that was not compatible with Arm64
+which means that OpenPnP is now compatible with Raspberry Pi 4 (with a 64 bit OS) and
+Jetson Nano. Support is bundled into all of the usual Linux downloads for
+OpenPnP.
+
+
 # 2021-03-12
 
 ## CreateFootprintTemplateImage Stage Improvements
