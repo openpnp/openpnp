@@ -19,20 +19,20 @@
 
 package org.openpnp;
 
-import java.awt.EventQueue;
+import java.awt.*;
 import java.io.File;
 import java.util.Locale;
 
-import javax.swing.UIManager;
+import javax.swing.*;
 
-import com.github.weisj.darklaf.LafManager;
-import com.github.weisj.darklaf.settings.SettingsConfiguration;
-import com.github.weisj.darklaf.settings.ThemeSettings;
+import com.formdev.flatlaf.FlatLightLaf;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.ThemeDialog;
+import org.openpnp.gui.components.ThemeInfo;
+import org.openpnp.gui.components.ThemeSettingsPanel;
 import org.openpnp.logging.ConsoleWriter;
 import org.openpnp.logging.SystemLogger;
 import org.openpnp.model.Configuration;
-import org.openpnp.util.ThemeChangeStoreListener;
 import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
 import org.pmw.tinylog.Logger;
@@ -151,14 +151,13 @@ public class Main {
         final Configuration configuration = Configuration.get();
         Locale.setDefault(Configuration.get().getLocale());
 
-        ThemeSettings tSettings = ThemeSettings.getInstance();
-        SettingsConfiguration theme = configuration.getTheme();
-        if (theme != null) {
-            tSettings.setConfiguration(theme);
-            tSettings.apply();
+        ThemeInfo theme = configuration.getThemeInfo();
+        if (theme == null) {
+            theme = new ThemeInfo("Light", null, false, null, FlatLightLaf.class.getName());
         }
-        LafManager.install();
-        LafManager.addThemeChangeListener(new ThemeChangeStoreListener());
+        ThemeSettingsPanel.setTheme(theme, configuration.getFontSize());
+        ThemeDialog.getInstance().setOldTheme(theme);
+
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {

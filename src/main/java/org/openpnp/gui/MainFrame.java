@@ -67,9 +67,9 @@ import javax.swing.border.TitledBorder;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
 
-import com.github.weisj.darklaf.settings.ThemeSettings;
 import org.openpnp.Translations;
 import org.openpnp.gui.components.CameraPanel;
+import org.openpnp.gui.components.ThemeDialog;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.importer.DipTraceImporter;
 import org.openpnp.gui.importer.EagleBoardImporter;
@@ -1045,7 +1045,7 @@ public class MainFrame extends JFrame {
     private Action editThemeAction = new AbstractAction(Translations.getString("Menu.Window.Theme")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            ThemeSettings.showSettingsDialog(mainFrame);
+            ThemeDialog.showThemeDialog(mainFrame);
         }
     };
 

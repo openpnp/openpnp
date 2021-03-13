@@ -196,9 +196,19 @@
         	<version>2.3.0</version>
     	</dependency>
 		<dependency>
-			<groupId>com.github.weisj</groupId>
-			<artifactId>darklaf-core</artifactId>
-			<version>2.5.5</version>
+			<groupId>com.formdev</groupId>
+			<artifactId>flatlaf</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.formdev</groupId>
+			<artifactId>flatlaf-extras</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.formdev</groupId>
+			<artifactId>svgSalamander</artifactId>
+			<version>1.1.2.4</version>
 		</dependency>
    	</dependencies>
 	<build>

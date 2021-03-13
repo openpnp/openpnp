@@ -37,9 +37,10 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.prefs.Preferences;
 
-import com.github.weisj.darklaf.settings.SettingsConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.components.ThemeInfo;
+import org.openpnp.gui.components.ThemeSettingsPanel;
 import org.openpnp.scripting.Scripting;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.NanosecondTime;
@@ -69,7 +70,8 @@ public class Configuration extends AbstractModelObject {
     private static final String PREF_UNITS = "Configuration.units";
     private static final String PREF_UNITS_DEF = "Millimeters";
 
-    private static final String PREF_THEME = "Configuration.theme";
+    private static final String PREF_THEME_INFO = "Configuration.theme.info";
+    private static final String PREF_THEME_FONT_SIZE = "Configuration.theme.fontSize";
 
     private static final String PREF_LENGTH_DISPLAY_FORMAT = "Configuration.lengthDisplayFormat";
     private static final String PREF_LENGTH_DISPLAY_FORMAT_DEF = "%.3f";
@@ -180,11 +182,11 @@ public class Configuration extends AbstractModelObject {
         prefs.put(PREF_LOCALE_COUNTRY, locale.getCountry());
     }
 
-    public SettingsConfiguration getTheme() {
-        byte[] serializedSettings = prefs.getByteArray(PREF_THEME, null);
+    public ThemeInfo getThemeInfo() {
+        byte[] serializedSettings = prefs.getByteArray(PREF_THEME_INFO, null);
         if (serializedSettings != null) {
             try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(serializedSettings))) {
-                SettingsConfiguration theme = (SettingsConfiguration) in.readObject();
+                ThemeInfo theme = (ThemeInfo) in.readObject();
                 return theme;
             } catch (IOException | ClassNotFoundException ignore) {
             }
@@ -192,12 +194,34 @@ public class Configuration extends AbstractModelObject {
         return null;
     }
 
-    public void setTheme(SettingsConfiguration theme) {
+    public void setThemeInfo(ThemeInfo theme) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         try (ObjectOutputStream out = new ObjectOutputStream(bos)) {
             out.writeObject(theme);
             out.flush();
-            prefs.putByteArray(PREF_THEME, bos.toByteArray());
+            prefs.putByteArray(PREF_THEME_INFO, bos.toByteArray());
+        } catch (IOException ignore) {
+        }
+    }
+
+    public ThemeSettingsPanel.FontSize getFontSize() {
+        byte[] serializedSettings = prefs.getByteArray(PREF_THEME_FONT_SIZE, null);
+        if (serializedSettings != null) {
+            try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(serializedSettings))) {
+                ThemeSettingsPanel.FontSize theme = (ThemeSettingsPanel.FontSize) in.readObject();
+                return theme;
+            } catch (IOException | ClassNotFoundException ignore) {
+            }
+        }
+        return null;
+    }
+
+    public void setFontSize(ThemeSettingsPanel.FontSize fontSize) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (ObjectOutputStream out = new ObjectOutputStream(bos)) {
+            out.writeObject(fontSize);
+            out.flush();
+            prefs.putByteArray(PREF_THEME_FONT_SIZE, bos.toByteArray());
         } catch (IOException ignore) {
         }
     }

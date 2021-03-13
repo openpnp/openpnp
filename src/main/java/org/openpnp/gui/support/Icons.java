@@ -1,8 +1,6 @@
 package org.openpnp.gui.support;
 
-import com.github.weisj.darklaf.icons.CustomThemedIcon;
-import com.github.weisj.darklaf.icons.ThemedSVGIcon;
-import com.github.weisj.darklaf.icons.UIAwareIcon;
+import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -110,11 +108,7 @@ public class Icons {
     
     public static Icon getIcon(String resourceName, int width, int height) {
         if (resourceName.endsWith(".svg")) {
-            try {
-                return new ThemedSVGIcon(Icons.class.getResource(resourceName).toURI(), width, height);
-            } catch (URISyntaxException e) {
-                return null;
-            }
+            return new FlatSVGIcon(resourceName.substring(1), width, height);
         }
         else {
             return new ImageIcon(Icons.class.getResource(resourceName));
