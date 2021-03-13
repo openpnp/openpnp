@@ -152,10 +152,7 @@ public class Main {
         Locale.setDefault(Configuration.get().getLocale());
 
         ThemeInfo theme = configuration.getThemeInfo();
-        if (theme == null) {
-            theme = new ThemeInfo("Light", null, false, null, FlatLightLaf.class.getName());
-        }
-        ThemeSettingsPanel.setTheme(theme, configuration.getFontSize());
+        new ThemeSettingsPanel().setTheme(theme, configuration.getFontSize());
         ThemeDialog.getInstance().setOldTheme(theme);
 
         EventQueue.invokeLater(new Runnable() {

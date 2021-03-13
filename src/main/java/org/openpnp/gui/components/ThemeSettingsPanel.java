@@ -73,31 +73,6 @@ public class ThemeSettingsPanel extends JPanel {
 
     public ThemeSettingsPanel() {
         initComponents();
-        themesList.setCellRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                String name = ((ThemeInfo) value).name;
-                int sep = name.indexOf('/');
-                if (sep >= 0) {
-                    name = name.substring(sep + 1).trim();
-                }
-
-                JComponent c = (JComponent) super.getListCellRendererComponent(list, name, index, isSelected, cellHasFocus);
-                c.setToolTipText(buildToolTip((ThemeInfo) value));
-                return c;
-            }
-
-            private String buildToolTip(ThemeInfo ti) {
-                if (ti.themeFile != null) {
-                    return ti.themeFile.getPath();
-                }
-                if (ti.resourceName == null) {
-                    return ti.name;
-                }
-
-                return "Name: " + ti.name;
-            }
-        });
         updateThemesList(null);
     }
 
@@ -113,6 +88,41 @@ public class ThemeSettingsPanel extends JPanel {
         themesScrollPane.setViewportView(themesList);
         themesScrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
         add(themesScrollPane);
+        themesList.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                ThemeInfo theme = (ThemeInfo) value;
+                String name = theme.name;
+                int sep = name.indexOf('/');
+                if (sep >= 0) {
+                    name = name.substring(sep + 1).trim();
+                }
+
+                JComponent c;
+                if (theme.themeFile == null && theme.lafClassName == null && theme.resourceName == null) {
+                    name = " - " + name + " -";
+                    c = (JComponent) super.getListCellRendererComponent(list, name, index, false, false);
+                    c.setEnabled(false);
+                    c.setFocusable(false);
+                    c.setAlignmentX(CENTER_ALIGNMENT);
+                } else {
+                    c = (JComponent) super.getListCellRendererComponent(list, name, index, isSelected, cellHasFocus);
+                }
+                c.setToolTipText(buildToolTip((ThemeInfo) value));
+                return c;
+            }
+
+            private String buildToolTip(ThemeInfo ti) {
+                if (ti.themeFile != null) {
+                    return ti.themeFile.getPath();
+                }
+                if (ti.resourceName == null) {
+                    return ti.name;
+                }
+
+                return "Name: " + ti.name;
+            }
+        });
         JLabel fontLabel = new JLabel();
         fontLabel.setText(Translations.getString("Theme.Section.FontSize"));
         fontLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -123,30 +133,43 @@ public class ThemeSettingsPanel extends JPanel {
         separator.setMinimumSize(new Dimension(0, 5));
         add(separator);
         add(fontLabel);
-        fontSizeSlider = createFontSlider();
-        fontSizeSlider.setAlignmentX(Component.LEFT_ALIGNMENT);
-        add(fontSizeSlider);
+        createFontSlider();
     }
 
-    private JSlider createFontSlider() {
+    private void createFontSlider() {
         Font defaultFont = UIManager.getLookAndFeelDefaults().getFont("defaultFont");
         Font currentFont = UIManager.getFont("defaultFont");
+        if (fontSizeSlider != null) {
+            remove(fontSizeSlider);
+        }
+        if (defaultFont == null || currentFont == null) {
+            fontSizeSlider = new JSlider();
+            fontSizeSlider.setEnabled(false);
+            fontSizeSlider.setMinimum(-1);
+            fontSizeSlider.setMaximum(0);
+            fontSizeSlider.setValue(-1);
+            fontSizeSlider.setPaintTicks(true);
+            fontSizeSlider.setOrientation(JSlider.HORIZONTAL);
+            fontSizeSlider.setAlignmentX(Component.LEFT_ALIGNMENT);
+            add(fontSizeSlider);
+            return;
+        }
         int defaultPercent = FontSize.fromSize(defaultFont.getSize()).getPercent();
         int currentPercent = FontSize.fromSize(currentFont.getSize()).getPercent();
-        JSlider fontSlider = new JSlider() {
+        fontSizeSlider = new JSlider() {
             @Override
             public String getToolTipText(final MouseEvent event) {
                 return getValue() + "%";
             }
         };
-        fontSlider.setToolTipText(String.valueOf(fontSlider.getValue()));
-        fontSlider.setOrientation(JSlider.HORIZONTAL);
-        fontSlider.setPaintTicks(true);
-        fontSlider.setMinimum(FontSize.SMALLEST.getPercent());
-        fontSlider.setMaximum(FontSize.LARGEST.getPercent());
+        fontSizeSlider.setToolTipText(String.valueOf(fontSizeSlider.getValue()));
+        fontSizeSlider.setOrientation(JSlider.HORIZONTAL);
+        fontSizeSlider.setPaintTicks(true);
+        fontSizeSlider.setMinimum(FontSize.SMALLEST.getPercent());
+        fontSizeSlider.setMaximum(FontSize.LARGEST.getPercent());
         int tickSpacing = 10;
         @SuppressWarnings("unchecked")
-        Dictionary<Integer, JComponent> dict = fontSlider.createStandardLabels(tickSpacing);
+        Dictionary<Integer, JComponent> dict = fontSizeSlider.createStandardLabels(tickSpacing);
 
         JLabel mid = ((JLabel) dict.get(defaultPercent));
 
@@ -160,13 +183,14 @@ public class ThemeSettingsPanel extends JPanel {
         mid.setAlignmentX(JComponent.CENTER_ALIGNMENT);
         mid.setHorizontalTextPosition(JLabel.RIGHT);
 
-        fontSlider.setLabelTable(dict);
-        fontSlider.setMajorTickSpacing(tickSpacing);
-        fontSlider.setMinorTickSpacing(tickSpacing);
-        fontSlider.setPaintLabels(true);
-        fontSlider.setSnapToTicks(true);
-        fontSlider.setValue(currentPercent);
-        return fontSlider;
+        fontSizeSlider.setLabelTable(dict);
+        fontSizeSlider.setMajorTickSpacing(tickSpacing);
+        fontSizeSlider.setMinorTickSpacing(tickSpacing);
+        fontSizeSlider.setPaintLabels(true);
+        fontSizeSlider.setSnapToTicks(true);
+        fontSizeSlider.setValue(currentPercent);
+        fontSizeSlider.setAlignmentX(Component.LEFT_ALIGNMENT);
+        add(fontSizeSlider);
     }
 
     public void updateThemesList(ThemeInfo oldSel) {
@@ -176,6 +200,19 @@ public class ThemeSettingsPanel extends JPanel {
 
         themes.clear();
 
+        themes.add(new ThemeInfo("System Themes", null, false, null, null));
+        UIManager.LookAndFeelInfo[] lookAndFeels = UIManager.getInstalledLookAndFeels();
+        for( UIManager.LookAndFeelInfo lookAndFeel : lookAndFeels ) {
+            String name = lookAndFeel.getName();
+            String className = lookAndFeel.getClassName();
+            if (className.equals("com.sun.java.swing.plaf.windows.WindowsClassicLookAndFeel") ||
+                    className.equals("com.sun.java.swing.plaf.motif.MotifLookAndFeel")) {
+                continue;
+            }
+            themes.add(new ThemeInfo(name, null, false, null, className));
+        }
+
+        themes.add(new ThemeInfo("Extra Themes", null, false, null, null));
         themes.add(new ThemeInfo("Light", null, false, null, FlatLightLaf.class.getName()));
         themes.add(new ThemeInfo("Dark", null, true, null, FlatDarkLaf.class.getName()));
         themes.add(new ThemeInfo("IntelliJ Light", null, false, null, FlatIntelliJLaf.class.getName()));
@@ -219,7 +256,7 @@ public class ThemeSettingsPanel extends JPanel {
         }
     }
 
-    public static void setTheme(ThemeInfo themeInfo, FontSize fontSize) {
+    public void setTheme(ThemeInfo themeInfo, FontSize fontSize) {
         if (themeInfo == null) {
             return;
         }
@@ -242,7 +279,7 @@ public class ThemeSettingsPanel extends JPanel {
                 }
             } catch (Exception ignore) {
             }
-        } else {
+        } else if (themeInfo.resourceName != null) {
             FlatAnimatedLafChange.showSnapshot();
             IntelliJTheme.install(ThemeSettingsPanel.class.getResourceAsStream(THEMES_PACKAGE + themeInfo.resourceName));
         }
@@ -253,8 +290,10 @@ public class ThemeSettingsPanel extends JPanel {
                 UIManager.put("defaultFont", newFont);
             }
         }
-
         FlatLaf.updateUI();
+        removeAll();
+        initComponents();
+        updateThemesList(themeInfo);
         FlatAnimatedLafChange.hideSnapshotWithAnimation();
     }
 
@@ -265,6 +304,10 @@ public class ThemeSettingsPanel extends JPanel {
     }
 
     public FontSize getFontSize() {
+        int value = fontSizeSlider.getValue();
+        if (value < 0) {
+            return null;
+        }
         return FontSize.fromPercent(fontSizeSlider.getValue());
     }
 }

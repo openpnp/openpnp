@@ -59,6 +59,7 @@ public class ThemeDialog {
         dialog.setContentPane(contentPane);
         contentPane.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
         dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        dialog.setMinimumSize(new Dimension(400, 500));
         dialog.pack();
         dialog.setLocationByPlatform(true);
         dialog.setLocationRelativeTo(parent);
@@ -86,18 +87,26 @@ public class ThemeDialog {
             oldFontSize = themePanel.getFontSize();
             Configuration.get().setThemeInfo(theme);
             Configuration.get().setFontSize(oldFontSize);
+            dialog.pack();
+            dialog.doLayout();
             dialog.dispatchEvent(new WindowEvent(dialog, WindowEvent.WINDOW_CLOSING));
         });
 
         JButton cancel = new JButton(Translations.getString("Theme.Cancel"));
         cancel.addActionListener(e -> {
             if (oldTheme != null) {
-                ThemeSettingsPanel.setTheme(oldTheme, oldFontSize);
+                themePanel.setTheme(oldTheme, oldFontSize);
             }
+            dialog.pack();
+            dialog.doLayout();
             dialog.dispatchEvent(new WindowEvent(dialog, WindowEvent.WINDOW_CLOSING));
         });
         JButton apply = new JButton(Translations.getString("Theme.Apply"));
-        apply.addActionListener(e -> themePanel.setTheme());
+        apply.addActionListener(e -> {
+            themePanel.setTheme();
+            dialog.pack();
+            dialog.doLayout();
+        });
 
         Box box = Box.createHorizontalBox();
         box.add(Box.createHorizontalGlue());
