@@ -114,7 +114,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
         ACTUATE_STRING_COMMAND(true, "Id", "Name", "Index", "StringValue"),
-        ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index"),
+        ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue", "Value"),
         @Deprecated
         ACTUATOR_READ_WITH_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
         ACTUATOR_READ_REGEX(true);

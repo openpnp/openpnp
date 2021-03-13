@@ -707,7 +707,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                             " but the latter is deprecated",
                     "Accept to replace ACTUATOR_READ_COMMAND with ACTUATOR_READ_WITH_DOUBLE_COMMAND. Dismiss to remove read with double.",
                     Severity.Suggestion,
-                    "<some url goes here>"
+                    "https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuator_read_command"
             ) {
                 @Override
                 public void setState(Solutions.State state) throws Exception {
