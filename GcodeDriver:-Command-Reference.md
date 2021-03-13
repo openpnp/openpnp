@@ -205,6 +205,23 @@ Sent whenever an Actuator's read() method is called. Along with [ACTUATOR_READ_R
 | Id             | String   | The user defined id of the actuator. |
 | Name           | String   | The user defined name of the actuator. |
 | Index          | Index    | The user defined index of the actuator. Can be used to specify a register or port number. |
+| Value          | Object   | The object that is sent to the actuator. If it's a double, DoubleValue and IntegerValue will be filled in automatically. The actual value sent is whatever this object's toString() method returns. This gives things that use an actuator more internal freedom on what to send through to the actuator. |
+| DoubleValue    | Double   | The Double value sent to the actuator. This is typically user defined in the configuration of the device using the actuator. |
+| IntegerValue   | Integer | The Double value sent to the actuator after being cast to an Integer. This is typically user defined in the configuration of the device using the actuator. |
+
+### ACTUATOR_READ_WITH_DOUBLE_COMMAND
+
+**NOTE** This command is deprecated in OpenPnP 2.0. Use the [ACTUATOR_READ_COMMAND](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuator_read_command) instead. If ACTUATOR_READ_WITH_DOUBLE_COMMAND is defined but ACTUATOR_READ_COMMAND is not, it will migrate automatically. If both are defined, an issue in the "Issues & Solutions" tab will appear. Accept that issue to replace the read command with the "read with double" command. Dismiss it to remove the "read with double" command entirely.
+
+Sent whenever an Actuator's read(double) method is called. Along with [ACTUATOR_READ_REGEX](https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex) this can be used to read a value from any type of attached sensor or device.
+
+| Variable Name  |   Type   | Description |
+| -------------- | -------- | ----------- |
+| Id             | String   | The user defined id of the actuator. |
+| Name           | String   | The user defined name of the actuator. |
+| Index          | Index    | The user defined index of the actuator. Can be used to specify a register or port number. |
+| DoubleValue    | Double   | The Double value sent to the actuator. This is typically user defined in the configuration of the device using the actuator. |
+| IntegerValue   | Integer | The Double value sent to the actuator after being cast to an Integer. This is typically user defined in the configuration of the device using the actuator. |
 
 ### POST_VISION_HOME_COMMAND
 
