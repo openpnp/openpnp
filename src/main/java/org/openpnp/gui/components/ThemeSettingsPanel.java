@@ -203,15 +203,18 @@ public class ThemeSettingsPanel extends JPanel {
 
         themes.clear();
 
-        themes.add(new ThemeInfo("System Themes", null, false, null, null));
+        themes.add(new ThemeInfo(Translations.getString("Theme.Section.System"), null, false, null, null));
         UIManager.LookAndFeelInfo[] lookAndFeels = UIManager.getInstalledLookAndFeels();
         for (UIManager.LookAndFeelInfo lookAndFeel : lookAndFeels) {
             String name = lookAndFeel.getName();
+            if (lookAndFeel.getClassName().equals(UIManager.getSystemLookAndFeelClassName())){
+                name += " - " + Translations.getString("Theme.Default");
+            }
             String className = lookAndFeel.getClassName();
             themes.add(new ThemeInfo(name, null, false, null, className));
         }
 
-        themes.add(new ThemeInfo("Extra Themes", null, false, null, null));
+        themes.add(new ThemeInfo(Translations.getString("Theme.Section.Extra"), null, false, null, null));
         themes.add(new ThemeInfo("Light", null, false, null, FlatLightLaf.class.getName()));
         themes.add(new ThemeInfo("Dark", null, true, null, FlatDarkLaf.class.getName()));
         themes.add(new ThemeInfo("IntelliJ Light", null, false, null, FlatIntelliJLaf.class.getName()));
@@ -224,7 +227,7 @@ public class ThemeSettingsPanel extends JPanel {
         File[] themeFiles = themesDirectory.listFiles((dir, name) -> name.endsWith(".theme.json") || name.endsWith(".properties"));
         if (themeFiles != null) {
             if (themeFiles.length > 0) {
-                themes.add(new ThemeInfo("User Themes", null, false, null, null));
+                themes.add(new ThemeInfo(Translations.getString("Theme.Section.User"), null, false, null, null));
                 for (File f : themeFiles) {
                     String fName = f.getName();
                     String name = fName.endsWith(".properties")
