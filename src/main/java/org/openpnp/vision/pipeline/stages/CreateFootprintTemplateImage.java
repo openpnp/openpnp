@@ -46,6 +46,11 @@ public class CreateFootprintTemplateImage extends CvStage {
     @Property(description = "Color of the background.")
     private Color backgroundColor = Color.black; 
 
+    @Attribute(required=false)
+    @Property(description = "If enabled dimensions are only controled by the part size.")
+    private boolean minimalImageSize = false;
+
+    
     public FootprintView getFootprintView() {
         return footprintView;
     }
@@ -96,11 +101,19 @@ public class CreateFootprintTemplateImage extends CvStage {
             throw new Exception("Property \"footprint\" is required.");
         }
 
+        double marginFactor = 1.5f;
+        int minimumMarginSize = 3;
+        
+        if (minimalImageSize) {
+            marginFactor = 1;
+            minimumMarginSize = 0;
+        }
+        
         BufferedImage template = OpenCvUtils.createFootprintTemplate(camera, footprint, 0.0,
                 footprintView == FootprintView.TopView, 
                 padsColor, 
                 (footprintView == FootprintView.Fiducial ? null : bodyColor), 
-                backgroundColor, 1.5, 3);
+                backgroundColor, marginFactor, minimumMarginSize);
 
         return new Result(OpenCvUtils.toMat(template), ColorSpace.Bgr);
     }
