@@ -205,10 +205,6 @@ public class ThemeSettingsPanel extends JPanel {
         for( UIManager.LookAndFeelInfo lookAndFeel : lookAndFeels ) {
             String name = lookAndFeel.getName();
             String className = lookAndFeel.getClassName();
-            if (className.equals("com.sun.java.swing.plaf.windows.WindowsClassicLookAndFeel") ||
-                    className.equals("com.sun.java.swing.plaf.motif.MotifLookAndFeel")) {
-                continue;
-            }
             themes.add(new ThemeInfo(name, null, false, null, className));
         }
 
