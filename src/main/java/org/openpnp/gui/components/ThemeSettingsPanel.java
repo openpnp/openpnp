@@ -2,14 +2,18 @@ package org.openpnp.gui.components;
 
 import com.formdev.flatlaf.*;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
+import com.formdev.flatlaf.util.StringUtils;
 import org.openpnp.Translations;
+import org.openpnp.gui.support.FlexibleColor;
+import org.openpnp.model.Configuration;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.io.FileInputStream;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 public class ThemeSettingsPanel extends JPanel {
     public enum FontSize {
@@ -200,23 +204,40 @@ public class ThemeSettingsPanel extends JPanel {
 
         themes.clear();
 
-        themes.add(new ThemeInfo("System Themes", null, false, null, null));
+        themes.add(new ThemeInfo(Translations.getString("Theme.Section.System"), null, false, null, null));
         UIManager.LookAndFeelInfo[] lookAndFeels = UIManager.getInstalledLookAndFeels();
-        for( UIManager.LookAndFeelInfo lookAndFeel : lookAndFeels ) {
+        for (UIManager.LookAndFeelInfo lookAndFeel : lookAndFeels) {
             String name = lookAndFeel.getName();
-            String className = lookAndFeel.getClassName();
-            if (className.equals("com.sun.java.swing.plaf.windows.WindowsClassicLookAndFeel") ||
-                    className.equals("com.sun.java.swing.plaf.motif.MotifLookAndFeel")) {
-                continue;
+            if (lookAndFeel.getClassName().equals(UIManager.getSystemLookAndFeelClassName())){
+                name += " - " + Translations.getString("Theme.Default");
             }
+            String className = lookAndFeel.getClassName();
             themes.add(new ThemeInfo(name, null, false, null, className));
         }
 
-        themes.add(new ThemeInfo("Extra Themes", null, false, null, null));
+        themes.add(new ThemeInfo(Translations.getString("Theme.Section.Extra"), null, false, null, null));
         themes.add(new ThemeInfo("Light", null, false, null, FlatLightLaf.class.getName()));
         themes.add(new ThemeInfo("Dark", null, true, null, FlatDarkLaf.class.getName()));
         themes.add(new ThemeInfo("IntelliJ Light", null, false, null, FlatIntelliJLaf.class.getName()));
         themes.add(new ThemeInfo("Darcula", null, true, null, FlatDarculaLaf.class.getName()));
+
+        File themesDirectory = new File(Configuration.get().getConfigurationDirectory(), "themes");
+        if (!themesDirectory.exists() || !themesDirectory.isDirectory()) {
+            themesDirectory.mkdirs();
+        }
+        File[] themeFiles = themesDirectory.listFiles((dir, name) -> name.endsWith(".theme.json") || name.endsWith(".properties"));
+        if (themeFiles != null) {
+            if (themeFiles.length > 0) {
+                themes.add(new ThemeInfo(Translations.getString("Theme.Section.User"), null, false, null, null));
+                for (File f : themeFiles) {
+                    String fName = f.getName();
+                    String name = fName.endsWith(".properties")
+                            ? StringUtils.removeTrailing(fName, ".properties")
+                            : StringUtils.removeTrailing(fName, ".theme.json");
+                    themes.add(new ThemeInfo(name, null, false, f, null));
+                }
+            }
+        }
 
         themesList.setModel(new AbstractListModel<ThemeInfo>() {
             @Override
@@ -262,8 +283,11 @@ public class ThemeSettingsPanel extends JPanel {
         }
         // change look and feel
         if (themeInfo.lafClassName != null) {
+            FlatAnimatedLafChange.showSnapshot();
             if (!themeInfo.lafClassName.equals(UIManager.getLookAndFeel().getClass().getName())) {
-                FlatAnimatedLafChange.showSnapshot();
+                if (themeInfo.lafClassName.equals("com.sun.java.swing.plaf.gtk.GTKLookAndFeel")) {
+                    UIManager.put("Slider.paintValue", Boolean.FALSE);
+                }
                 try {
                     UIManager.setLookAndFeel(themeInfo.lafClassName);
                 } catch (Exception ignore) {
@@ -289,6 +313,12 @@ public class ThemeSettingsPanel extends JPanel {
                 Font newFont = font.deriveFont((float) fontSize.getSize());
                 UIManager.put("defaultFont", newFont);
             }
+        }
+        FlexibleColor defaultRowColor = new FlexibleColor(UIManager.getColor("Table.background").getRGB());
+        if (FlatLaf.isLafDark()) {
+            UIManager.put("Table.alternateRowColor", defaultRowColor.brighter(30));
+        } else {
+            UIManager.put("Table.alternateRowColor", defaultRowColor.darker(30));
         }
         FlatLaf.updateUI();
         removeAll();
