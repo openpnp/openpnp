@@ -20,7 +20,6 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.FileDialog;
 import java.awt.Frame;
@@ -71,6 +70,7 @@ import org.openpnp.events.BoardLocationSelectedEvent;
 import org.openpnp.events.JobLoadedEvent;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.support.CustomBooleanRenderer;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.panelization.DlgAutoPanelize;
 import org.openpnp.gui.panelization.DlgPanelXOut;
@@ -196,7 +196,7 @@ public class JobPanel extends JPanel {
         table.setAutoCreateRowSorter(true);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         table.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
-
+        table.setDefaultRenderer(Boolean.class, new CustomBooleanRenderer());
         table.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
