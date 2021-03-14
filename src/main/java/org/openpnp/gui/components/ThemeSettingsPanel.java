@@ -2,14 +2,17 @@ package org.openpnp.gui.components;
 
 import com.formdev.flatlaf.*;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
+import com.formdev.flatlaf.util.StringUtils;
 import org.openpnp.Translations;
+import org.openpnp.model.Configuration;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.io.FileInputStream;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 public class ThemeSettingsPanel extends JPanel {
     public enum FontSize {
@@ -202,7 +205,7 @@ public class ThemeSettingsPanel extends JPanel {
 
         themes.add(new ThemeInfo("System Themes", null, false, null, null));
         UIManager.LookAndFeelInfo[] lookAndFeels = UIManager.getInstalledLookAndFeels();
-        for( UIManager.LookAndFeelInfo lookAndFeel : lookAndFeels ) {
+        for (UIManager.LookAndFeelInfo lookAndFeel : lookAndFeels) {
             String name = lookAndFeel.getName();
             String className = lookAndFeel.getClassName();
             themes.add(new ThemeInfo(name, null, false, null, className));
@@ -213,6 +216,24 @@ public class ThemeSettingsPanel extends JPanel {
         themes.add(new ThemeInfo("Dark", null, true, null, FlatDarkLaf.class.getName()));
         themes.add(new ThemeInfo("IntelliJ Light", null, false, null, FlatIntelliJLaf.class.getName()));
         themes.add(new ThemeInfo("Darcula", null, true, null, FlatDarculaLaf.class.getName()));
+
+        File themesDirectory = new File(Configuration.get().getConfigurationDirectory(), "themes");
+        if (!themesDirectory.exists() || !themesDirectory.isDirectory()) {
+            themesDirectory.mkdirs();
+        }
+        File[] themeFiles = themesDirectory.listFiles((dir, name) -> name.endsWith(".theme.json") || name.endsWith(".properties"));
+        if (themeFiles != null) {
+            if (themeFiles.length > 0) {
+                themes.add(new ThemeInfo("User Themes", null, false, null, null));
+                for (File f : themeFiles) {
+                    String fName = f.getName();
+                    String name = fName.endsWith(".properties")
+                            ? StringUtils.removeTrailing(fName, ".properties")
+                            : StringUtils.removeTrailing(fName, ".theme.json");
+                    themes.add(new ThemeInfo(name, null, false, f, null));
+                }
+            }
+        }
 
         themesList.setModel(new AbstractListModel<ThemeInfo>() {
             @Override
