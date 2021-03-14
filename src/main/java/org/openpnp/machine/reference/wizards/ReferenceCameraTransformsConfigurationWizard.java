@@ -44,8 +44,7 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
 
         panelTransforms = new JPanel();
         panelTransforms.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Image Transforms", TitledBorder.LEADING, TitledBorder.TOP, null,
-                new Color(0, 0, 0)));
+                "Image Transforms", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelTransforms);
         panelTransforms.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,

@@ -12,8 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import javax.swing.Icon;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
 import org.opencv.core.Core;
 import org.opencv.core.Core.MinMaxLocResult;
@@ -641,13 +640,19 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     private SimpleGraph startDiagnostics() {
         if (settleDiagnostics) {
+            Color gridColor = UIManager.getColor ( "PasswordField.capsLockIconColor" );
+            if (gridColor == null) {
+                gridColor = new Color(0, 0, 0, 64);
+            } else {
+                gridColor = new Color(gridColor.getRed(), gridColor.getGreen(), gridColor.getBlue(), 64);
+            }
             // Diagnostics wanted, create the simple graph.
             SimpleGraph settleGraph = new SimpleGraph();
             settleGraph.setRelativePaddingLeft(0.05);
             // init difference scale
             SimpleGraph.DataScale settleScale =  settleGraph.getScale(DIFFERENCE);
             settleScale.setRelativePaddingBottom(0.3);
-            settleScale.setColor(new Color(0, 0, 0, 64));
+            settleScale.setColor(gridColor);
             SimpleGraph.DataScale captureScale =  settleGraph.getScale(BOOLEAN);
             captureScale.setRelativePaddingTop(0.8);
             captureScale.setRelativePaddingBottom(0.1);

@@ -2,9 +2,7 @@ package org.openpnp.machine.reference;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.JOptionPane;
+import javax.swing.*;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
@@ -634,6 +632,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public static final String VALVE_ON = "ON"; 
 
     protected final SimpleGraph startNewVacuumGraph(double vacuumLevel, boolean valveSwitchingOn) {
+        Color gridColor = UIManager.getColor ( "PasswordField.capsLockIconColor" );
+        if (gridColor == null) {
+            gridColor = new Color(0, 0, 0, 64);
+        } else {
+            gridColor = new Color(gridColor.getRed(), gridColor.getGreen(), gridColor.getBlue(), 64);
+        }
         // start a new graph 
         SimpleGraph vacuumGraph = new SimpleGraph();
         vacuumGraph.setRelativePaddingLeft(0.05);
@@ -641,7 +645,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         // init pressure scale
         SimpleGraph.DataScale vacuumScale =  vacuumGraph.getScale(PRESSURE);
         vacuumScale.setRelativePaddingBottom(0.3);
-        vacuumScale.setColor(new Color(0, 0, 0, 64));
+        vacuumScale.setColor(gridColor);
         // init valve scale
         SimpleGraph.DataScale valveScale =  vacuumGraph.getScale(BOOLEAN);
         valveScale.setRelativePaddingTop(0.75);

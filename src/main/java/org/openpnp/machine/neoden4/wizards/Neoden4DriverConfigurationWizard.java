@@ -54,7 +54,7 @@ public class Neoden4DriverConfigurationWizard extends AbstractConfigurationWizar
 
         JPanel panelMachineDetails = new JPanel();
         panelMachineDetails.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Machine Details", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+                "Machine Details", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelMachineDetails);
         panelMachineDetails.setLayout(new FormLayout(
                 new ColumnSpec[] { 
