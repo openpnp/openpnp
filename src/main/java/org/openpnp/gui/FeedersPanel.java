@@ -164,8 +164,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		searchTextField.setColumns(15);
 
 		table = new AutoSelectTextTable(tableModel);
-        table.setDefaultRenderer(Boolean.class, new CustomBooleanRenderer());
-		table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+		table.setDefaultRenderer(Boolean.class, new CustomBooleanRenderer() {
 			// cells are grayed if the feeder is not used by any enabled placement.
 			@Override
 			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
@@ -192,7 +191,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 								continue;
 							}
 
-							if (placement.getPart() != null && placement.getPart().getId() == partId) {
+							if (placement.getPart() != null && placement.getPart().getId().equals(partId)) {
 								bFound = true;
 								break;
 							}
@@ -203,6 +202,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 					}
 					if (!bFound) {
                         c.setEnabled(false);
+                    } else {
+					    c.setEnabled(true);
                     }
 				}
 				return c;

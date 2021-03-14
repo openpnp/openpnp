@@ -4,6 +4,7 @@ import com.formdev.flatlaf.*;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.util.StringUtils;
 import org.openpnp.Translations;
+import org.openpnp.gui.support.FlexibleColor;
 import org.openpnp.model.Configuration;
 
 import javax.swing.*;
@@ -310,11 +311,11 @@ public class ThemeSettingsPanel extends JPanel {
                 UIManager.put("defaultFont", newFont);
             }
         }
-        Color defaultRowColor = UIManager.getColor("Table.background");
+        FlexibleColor defaultRowColor = new FlexibleColor(UIManager.getColor("Table.background").getRGB());
         if (FlatLaf.isLafDark()) {
-            UIManager.put("Table.alternateRowColor", defaultRowColor.brighter());
+            UIManager.put("Table.alternateRowColor", defaultRowColor.brighter(30));
         } else {
-            UIManager.put("Table.alternateRowColor", defaultRowColor.darker());
+            UIManager.put("Table.alternateRowColor", defaultRowColor.darker(30));
         }
         FlatLaf.updateUI();
         removeAll();
