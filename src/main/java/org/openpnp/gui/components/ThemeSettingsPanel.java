@@ -283,8 +283,11 @@ public class ThemeSettingsPanel extends JPanel {
         }
         // change look and feel
         if (themeInfo.lafClassName != null) {
+            FlatAnimatedLafChange.showSnapshot();
             if (!themeInfo.lafClassName.equals(UIManager.getLookAndFeel().getClass().getName())) {
-                FlatAnimatedLafChange.showSnapshot();
+                if (themeInfo.lafClassName.equals("com.sun.java.swing.plaf.gtk.GTKLookAndFeel")) {
+                    UIManager.put("Slider.paintValue", Boolean.FALSE);
+                }
                 try {
                     UIManager.setLookAndFeel(themeInfo.lafClassName);
                 } catch (Exception ignore) {
