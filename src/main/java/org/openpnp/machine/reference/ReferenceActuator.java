@@ -83,7 +83,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
                 Configuration.get().getMachine().addListener(new MachineListener.Adapter() {
-                    @Override 
+                    @Override
                     public void machineEnabled(Machine machine) {
                         actuateMachineState(machine, getEnabledActuation(), true);
                     }
@@ -91,9 +91,9 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
                     public void machineHomed(Machine machine, boolean isHomed) {
                         if (isHomed) {
                             actuateMachineState(machine, getHomedActuation(), true);
-                        } 
+                        }
                     }
-                    @Override 
+                    @Override
                     public void machineAboutToBeDisabled(Machine machine, String reason) {
                         actuateMachineState(machine, getDisabledActuation(), false);
                     }
@@ -172,7 +172,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     }
 
     public ReferenceActuatorProfiles getActuatorProfiles() {
-        if (actuatorProfiles == null && getValueType() == ActuatorValueType.Profile) 
+        if (actuatorProfiles == null && getValueType() == ActuatorValueType.Profile)
         { actuatorProfiles = new ReferenceActuatorProfiles();
         }
         return actuatorProfiles;
@@ -231,12 +231,12 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         try {
             assertOnOffDefined();
             if (deferred) {
-                UiUtils.submitUiMachineTask(() -> { 
+                UiUtils.submitUiMachineTask(() -> {
                     actuate(value ? getDefaultOnValue() : getDefaultOffValue());
                 });
             }
             else {
-                machine.execute(() -> { 
+                machine.execute(() -> {
                     actuate(value ? getDefaultOnValue() : getDefaultOffValue());
                     return true;
                 }, true, 0);
@@ -335,12 +335,12 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     }
 
     @Override
-    public String read(double parameter) throws Exception {
+    public String read(Object parameter) throws Exception {
         if (isCoordinatedBeforeRead()) {
             coordinateWithMachine(false);
         }
         String value = getDriver().actuatorRead(this, parameter);
-        Logger.debug("{}.readWithDouble({}): {}", getName(), parameter, value);
+        Logger.debug("{}.readWithParameter({}): {}", getName(), parameter, value);
         getMachine().fireMachineHeadActivity(head);
         return value;
     }
