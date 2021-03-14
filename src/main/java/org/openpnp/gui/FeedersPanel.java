@@ -201,7 +201,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 							break;
 						}
 					}
-					c.setBackground(bFound ? Color.WHITE : new Color(230, 230, 230));
+					if (!bFound) {
+                        c.setEnabled(false);
+                    }
 				}
 				return c;
 			}

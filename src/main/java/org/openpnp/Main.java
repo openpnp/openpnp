@@ -19,13 +19,17 @@
 
 package org.openpnp;
 
-import java.awt.EventQueue;
+import java.awt.*;
 import java.io.File;
 import java.util.Locale;
 
-import javax.swing.UIManager;
+import javax.swing.*;
 
+import com.formdev.flatlaf.FlatLightLaf;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.ThemeDialog;
+import org.openpnp.gui.components.ThemeInfo;
+import org.openpnp.gui.components.ThemeSettingsPanel;
 import org.openpnp.logging.ConsoleWriter;
 import org.openpnp.logging.SystemLogger;
 import org.openpnp.model.Configuration;
@@ -146,6 +150,11 @@ public class Main {
         Configuration.initialize(configurationDirectory);
         final Configuration configuration = Configuration.get();
         Locale.setDefault(Configuration.get().getLocale());
+
+        ThemeInfo theme = configuration.getThemeInfo();
+        new ThemeSettingsPanel().setTheme(theme, configuration.getFontSize());
+        ThemeDialog.getInstance().setOldTheme(theme);
+
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {

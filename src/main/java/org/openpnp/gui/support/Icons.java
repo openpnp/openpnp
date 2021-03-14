@@ -1,7 +1,10 @@
 package org.openpnp.gui.support;
 
+import com.formdev.flatlaf.extras.FlatSVGIcon;
+
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import java.net.URISyntaxException;
 
 public class Icons {
     public static Icon add = getIcon("/icons/general-add.svg");
@@ -105,7 +108,7 @@ public class Icons {
     
     public static Icon getIcon(String resourceName, int width, int height) {
         if (resourceName.endsWith(".svg")) {
-            return new SvgIcon(Icons.class.getResource(resourceName), width, height);
+            return new FlatSVGIcon(resourceName.substring(1), width, height);
         }
         else {
             return new ImageIcon(Icons.class.getResource(resourceName));
