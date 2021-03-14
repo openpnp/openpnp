@@ -24,6 +24,29 @@ which means that OpenPnP is now compatible with Raspberry Pi 4 (with a 64 bit OS
 Jetson Nano. Support is bundled into all of the usual Linux downloads for
 OpenPnP.
 
+## Feeder Recycle
+
+This new feature from @doppelgrau adds a Recycle button next to the Discard buttong
+which allows you to put a picked part back in the feeder if the feeder supports
+the operation. Currently supported on: Strip, Tray, AdvancedLoose, Loose, Blinds, and
+RotatedTray feeders.
+
+https://github.com/openpnp/openpnp/pull/1143
+
+Thanks @doppelgrau!
+
+## CreateFootprintTemplateImage Minimal Images
+
+Added a boolean value to disabling the default border around the part.
+
+Just enable the checkbox in the stage settings, and the border disappears.
+Warning: only works with symmetrical parts. Parts where the body is not in
+the center, one side will have border, the other will be cut off.
+
+https://github.com/openpnp/openpnp/pull/1152
+
+Thanks @doppelgrau!
+
 
 # 2021-03-12
 
