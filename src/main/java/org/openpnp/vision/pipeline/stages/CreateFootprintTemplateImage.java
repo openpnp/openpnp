@@ -51,6 +51,14 @@ public class CreateFootprintTemplateImage extends CvStage {
     private boolean minimalImageSize = false;
 
     
+    public boolean isMinimalImageSize() {
+        return minimalImageSize;
+    }
+
+    public void setMinimalImageSize(boolean minimalImageSize) {
+        this.minimalImageSize = minimalImageSize;
+    }
+
     public FootprintView getFootprintView() {
         return footprintView;
     }
