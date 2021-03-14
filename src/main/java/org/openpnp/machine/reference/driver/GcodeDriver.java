@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -114,7 +114,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
         ACTUATE_STRING_COMMAND(true, "Id", "Name", "Index", "StringValue"),
-        ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index"),
+        ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue", "Value"),
+        @Deprecated
         ACTUATOR_READ_WITH_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
         ACTUATOR_READ_REGEX(true);
 
@@ -263,8 +264,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Element(required = false, data=true) 
     String reportedAxes = null; 
 
-    @Element(required = false, data=true) 
-    String configuredAxes = null; 
+    @Element(required = false, data=true)
+    String configuredAxes = null;
 
     @ElementList(required = false, inline = true)
     public ArrayList<Command> commands = new ArrayList<>();
@@ -320,6 +321,19 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Commit
     public void commit() {
         super.commit();
+
+        for (Command command : commands) {
+            if(command.type == CommandType.ACTUATOR_READ_WITH_DOUBLE_COMMAND) {
+                Command actuatorReadCommand = getExactCommand(
+                        command.headMountableId,
+                        CommandType.ACTUATOR_READ_COMMAND
+                );
+
+                if(actuatorReadCommand == null) {
+                    command.type = CommandType.ACTUATOR_READ_COMMAND;
+                }
+            }
+        }
     }
 
     @Override
@@ -552,6 +566,26 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         throw new Exception(getName()+" timeout waiting for response to " + command);
     }
 
+    /**
+     * This is similar to the other getCommand calls, except the head mountable id is passed in and it must match
+     * exactly. By passing in null or "*", you will get a command that matches that head mountable id or null.
+     */
+    public Command getExactCommand(String headMountableId, CommandType type) {
+        for (Command c : commands) {
+            if(c.type != type) {
+                continue;
+            }
+
+            if(c.headMountableId != null && c.headMountableId.equals(headMountableId)) {
+                return c;
+            } else if(c.headMountableId == null && headMountableId == null) {
+                return c;
+            }
+        }
+
+        return null;
+    }
+
     public Command getCommand(HeadMountable hm, CommandType type, boolean checkDefaults) {
         // If a HeadMountable is specified, see if we can find a match
         // for both the HeadMountable ID and the command type.
@@ -726,7 +760,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     protected void drainCommandQueue(long timeout) throws InterruptedException {
-        // This does nothing in the plain GcodeDriver. It will be overridden in the GcodeAsyncDriver. 
+        // This does nothing in the plain GcodeDriver. It will be overridden in the GcodeAsyncDriver.
     }
 
     @Override
@@ -751,20 +785,20 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                  * timeoutMillis while searching the responses for the regex. As soon as it is
                  * matched we continue. If it's not matched within the timeout we throw an
                  * Exception.
-                 * 
-                 * AFAIK, this was used on TinyG and it is now obsolete with new firmware :  
+                 *
+                 * AFAIK, this was used on TinyG and it is now obsolete with new firmware :
                  * https://makr.zone/tinyg-new-g-code-commands-for-openpnp-use/577/
                  */
                 String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
                 if (moveToCompleteRegex != null) {
                     receiveResponses(moveToCompleteRegex, completionType == CompletionType.WaitForStillstandIndefinitely ?
-                            -1 : getTimeoutAtMachineSpeed(), 
+                            -1 : getTimeoutAtMachineSpeed(),
                             (responses) -> {
                         throw new Exception("Timed out waiting for move to complete.");
                     });
                 }
             }
-            // Remember, we're now standing still.  
+            // Remember, we're now standing still.
             motionPending = false;
         }
     }
@@ -811,32 +845,32 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         sendGcode(command);
     }
 
-    private String actuatorRead(ReferenceActuator actuator, Double parameter) throws Exception {
-        /**
+    @Override
+    public String actuatorRead(ReferenceActuator actuator, Object parameter) throws Exception {
+        /*
          * The logic here is a little complicated. This is the only driver method that is
-         * not fire and forget. In this case, we need to know if the command was serviced or not 
+         * not fire and forget. In this case, we need to know if the command was serviced or not
          * and throw an Exception if not.
          */
-        String command;
-        if (parameter == null) {
-            command = getCommand(actuator, CommandType.ACTUATOR_READ_COMMAND);
-        }
-        else {
-            command = getCommand(actuator, CommandType.ACTUATOR_READ_WITH_DOUBLE_COMMAND);
-        }
+        String command = getCommand(actuator, CommandType.ACTUATOR_READ_COMMAND);
         String regex = getCommand(actuator, CommandType.ACTUATOR_READ_REGEX);
         if (command != null && regex != null) {
             command = substituteVariable(command, "Id", actuator.getId());
             command = substituteVariable(command, "Name", actuator.getName());
             command = substituteVariable(command, "Index", actuator.getIndex());
             if (parameter != null) {
-                command = substituteVariable(command, "DoubleValue", parameter);
-                command = substituteVariable(command, "IntegerValue", (int) parameter.doubleValue());
+                if (parameter instanceof Double) { // Backwards compatibility
+                    Double doubleParameter = (Double) parameter;
+                    command = substituteVariable(command, "DoubleValue", doubleParameter);
+                    command = substituteVariable(command, "IntegerValue", (int) doubleParameter.doubleValue());
+                }
+
+                command = substituteVariable(command, "Value", parameter);
             }
             sendGcode(command);
             List<Line> responses = receiveResponses(regex, timeoutMilliseconds, (r) -> {
                 throw new Exception(String.format("Actuator \"%s\" read error: No matching responses found.", actuator.getName()));
-            }); 
+            });
 
             Pattern pattern = Pattern.compile(regex);
             for (Line line : responses) {
@@ -844,15 +878,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 if (matcher.matches()) {
                     Logger.trace("actuatorRead response: {}", line);
                     try {
-                        String s = matcher.group("Value");
-                        return s;
+                        return matcher.group("Value");
                     }
                     catch (IllegalArgumentException e) {
-                        throw new Exception(String.format("Actuator \"%s\" read error: Regex is missing \"Value\" capturing group. See https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex", 
+                        throw new Exception(String.format("Actuator \"%s\" read error: Regex is missing \"Value\" capturing group. See https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex",
                                 actuator.getName()), e);
                     }
                     catch (Exception e) {
-                        throw new Exception(String.format("Actuator \"%s\" read error: Failed to parse response. See https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex", 
+                        throw new Exception(String.format("Actuator \"%s\" read error: Failed to parse response. See https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex",
                                 actuator.getName()), e);
                     }
                 }
@@ -867,12 +900,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
     @Override
     public String actuatorRead(ReferenceActuator actuator) throws Exception {
-        return actuatorRead(actuator, null); 
-    }
-
-    @Override
-    public String actuatorRead(ReferenceActuator actuator, double parameter) throws Exception {
-        return actuatorRead(actuator, (Double) parameter);
+        return actuatorRead(actuator, null);
     }
 
     public synchronized void disconnect() {
