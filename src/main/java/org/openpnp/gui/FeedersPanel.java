@@ -20,7 +20,6 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -59,6 +58,7 @@ import javax.swing.table.TableRowSorter;
 import org.openpnp.events.FeederSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ClassSelectionDialog;
+import org.openpnp.gui.support.CustomBooleanRenderer;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
@@ -164,7 +164,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		searchTextField.setColumns(15);
 
 		table = new AutoSelectTextTable(tableModel);
-
+        table.setDefaultRenderer(Boolean.class, new CustomBooleanRenderer());
 		table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
 			// cells are grayed if the feeder is not used by any enabled placement.
 			@Override

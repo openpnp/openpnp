@@ -290,6 +290,12 @@ public class ThemeSettingsPanel extends JPanel {
                 UIManager.put("defaultFont", newFont);
             }
         }
+        Color defaultRowColor = UIManager.getColor("Table.background");
+        if (FlatLaf.isLafDark()) {
+            UIManager.put("Table.alternateRowColor", defaultRowColor.brighter());
+        } else {
+            UIManager.put("Table.alternateRowColor", defaultRowColor.darker());
+        }
         FlatLaf.updateUI();
         removeAll();
         initComponents();
