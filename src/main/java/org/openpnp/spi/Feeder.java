@@ -101,6 +101,16 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
     public void feed(Nozzle nozzle) throws Exception;
 
     public void postPick(Nozzle nozzle) throws Exception;
+
+    /*
+     * If the feeder (currently) supports taking back a part
+     */
+    public boolean canTakeBackPart();
+    
+    /**
+     * Asks the feeder to take back the part currently on the nozzle.
+     */
+    public void takeBackPart(Nozzle nozzle) throws Exception;
     
     /**
      * If feed() throws an Exception during job processing, the job processor will retry the
