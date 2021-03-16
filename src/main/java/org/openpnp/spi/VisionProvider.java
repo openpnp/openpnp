@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
 
 /**
  * Provides an interface for implementors of vision systems to implement. A VisionProvider is
@@ -43,7 +42,7 @@ public interface VisionProvider {
 
     public Wizard getConfigurationWizard();
 
-    public List<TemplateMatch> getTemplateMatches(BufferedImage template);
+    public List<TemplateMatch> getTemplateMatches(BufferedImage template) throws Exception;
 
     /**
      * @deprecated This function's interface will change in the near future to return real units

@@ -19,10 +19,15 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
+import java.awt.event.ActionEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
@@ -37,6 +42,7 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
+@SuppressWarnings("serial")
 public class ReferenceTrayFeederConfigurationWizard
         extends AbstractReferenceFeederConfigurationWizard {
     private final ReferenceTrayFeeder feeder;
@@ -56,7 +62,7 @@ public class ReferenceTrayFeederConfigurationWizard
         panelFields.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC, ColumnSpec.decode("default:grow"),
                         FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
@@ -88,7 +94,7 @@ public class ReferenceTrayFeederConfigurationWizard
         textFieldOffsetsX.setColumns(10);
 
         textFieldOffsetsY = new JTextField();
-        panelFields.add(textFieldOffsetsY, "6, 4, fill, default");
+        panelFields.add(textFieldOffsetsY, "6, 4, 2, 1, fill, default");
         textFieldOffsetsY.setColumns(10);
 
         JLabel lblTrayCount = new JLabel("Tray Count");
@@ -99,11 +105,11 @@ public class ReferenceTrayFeederConfigurationWizard
         textFieldTrayCountX.setColumns(10);
 
         textFieldTrayCountY = new JTextField();
-        panelFields.add(textFieldTrayCountY, "6, 6, fill, default");
+        panelFields.add(textFieldTrayCountY, "6, 6, 2, 1, fill, default");
         textFieldTrayCountY.setColumns(10);
 
         JSeparator separator = new JSeparator();
-        panelFields.add(separator, "4, 8, 3, 1");
+        panelFields.add(separator, "4, 8, 4, 1");
 
         JLabel lblFeedCount = new JLabel("Feed Count");
         panelFields.add(lblFeedCount, "2, 10, right, default");
@@ -113,6 +119,16 @@ public class ReferenceTrayFeederConfigurationWizard
         textFieldFeedCount.setColumns(10);
 
         contentPanel.add(panelFields);
+        
+        JButton btnResetFeedCount = new JButton(new AbstractAction("Reset") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                textFieldFeedCount.setText("0");
+                applyAction.actionPerformed(e);
+            }
+        });
+        btnResetFeedCount.setHorizontalAlignment(SwingConstants.LEFT);
+        panelFields.add(btnResetFeedCount, "6, 10, left, default");
     }
 
     @Override

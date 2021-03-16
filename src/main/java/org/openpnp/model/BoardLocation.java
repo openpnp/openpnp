@@ -19,14 +19,21 @@
 
 package org.openpnp.model;
 
+import java.awt.geom.AffineTransform;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.openpnp.model.Board.Side;
+import org.openpnp.model.Placement.Type;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.core.Commit;
 
 public class BoardLocation extends AbstractModelObject {
     @Element
     private Location location;
+    
     @Attribute
     private Side side = Side.Top;
     private Board board;
@@ -35,13 +42,38 @@ public class BoardLocation extends AbstractModelObject {
     private String boardFile;
 
     @Attribute(required = false)
+    private String panelId = new String("Panel1"); // UI doesn't have a way to specify multiple
+                                                    // panels at this point
+
+    @Attribute(required = false)
     private boolean checkFiducials;
 
     @Attribute(required = false)
     private boolean enabled = true;
 
+    @ElementMap(required = false)
+    private Map<String, Boolean> placed = new HashMap<>();
+
+    /**
+     * Important note: The placement transform is in Millimeters no matter what the source
+     * units are.
+     */
+    private AffineTransform placementTransform;
+
     BoardLocation() {
         setLocation(new Location(LengthUnit.Millimeters));
+    }
+
+    // Copy constructor needed for deep copy of object.
+    public BoardLocation(BoardLocation obj) {
+        this.location = obj.location;
+        this.side = obj.side;
+        this.board = obj.board;
+        this.boardFile = obj.boardFile;
+        this.panelId = obj.panelId;
+        this.checkFiducials = obj.checkFiducials;
+        this.enabled = obj.enabled;
+        this.placed = obj.placed;
     }
 
     public BoardLocation(Board board) {
@@ -64,10 +96,46 @@ public class BoardLocation extends AbstractModelObject {
         Location oldValue = this.location;
         this.location = location;
         firePropertyChange("location", oldValue, location);
+        // If the location is changing it is not possible the placement transform is
+        // still valid, so clear it.
+        if (!this.location.equals(oldValue)) {
+            setPlacementTransform(null);
+        }
     }
-
+    
     public Side getSide() {
         return side;
+    }
+    
+    public int getTotalActivePlacements(){
+    	if (board == null) {
+    		return 0;
+    	}
+    	int counter = 0;
+    	for(Placement placement : board.getPlacements()) {
+    		if (placement.getSide() == getSide()
+    		        && placement.getType() == Type.Placement
+    		        && placement.isEnabled()) {
+    				counter++;
+        	}
+    	}
+    	return counter;
+    }
+    
+    public int getActivePlacements() {
+    	if (board == null) {
+    		return 0;
+    	}
+    	int counter = 0;
+	    for(Placement placement : board.getPlacements()) {
+            if (placement.getSide() == getSide()
+                    && placement.getType() == Type.Placement
+                    && placement.isEnabled()
+                    && !getPlaced(placement.getId())) {
+                    counter++;
+            }
+        }
+    	return counter;
     }
 
     public void setSide(Side side) {
@@ -94,6 +162,16 @@ public class BoardLocation extends AbstractModelObject {
         this.boardFile = boardFile;
     }
 
+    public String getPanelId() {
+        return panelId;
+    }
+
+    public void setPanelId(String id) {
+        String oldValue = this.panelId;
+        this.panelId = id;
+        firePropertyChange("panelId", oldValue, panelId);
+    }
+
     public boolean isCheckFiducials() {
         return checkFiducials;
     }
@@ -112,6 +190,35 @@ public class BoardLocation extends AbstractModelObject {
         boolean oldValue = this.enabled;
         this.enabled = enabled;
         firePropertyChange("enabled", oldValue, enabled);
+    }
+
+    public void setPlaced(String placementId, boolean placed) {
+        this.placed.put(placementId, placed);
+        firePropertyChange("placed", null, this.placed);
+    }
+
+    public boolean getPlaced(String placementId) {
+        if (placed.containsKey(placementId)) {
+            return placed.get(placementId);
+        } 
+        else {
+            return false;
+        }
+    }
+    
+    public void clearAllPlaced() {
+        this.placed.clear();
+        firePropertyChange("placed", null, this.placed);
+    }
+    
+    public AffineTransform getPlacementTransform() {
+        return placementTransform;
+    }
+
+    public void setPlacementTransform(AffineTransform placementTransform) {
+        Object oldValue = this.placementTransform;
+        this.placementTransform = placementTransform;
+        firePropertyChange("placementTransform", oldValue, placementTransform);
     }
 
     @Override

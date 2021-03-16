@@ -38,6 +38,7 @@ public class Helpers {
 
     public static void copyLocationIntoTextFields(Location l, JTextField x, JTextField y,
             JTextField z, JTextField rotation) {
+        l = l.convertToUnits(Configuration.get().getSystemUnits());
         if (x != null) {
             x.setText(String.format(Locale.US, Configuration.get().getLengthDisplayFormat(),
                     l.getLengthX().getValue()));
@@ -63,7 +64,29 @@ public class Helpers {
      */
     public static void selectLastTableRow(JTable table) {
         table.clearSelection();
-        int index = table.getRowCount() - 1;
+        int index = table.getModel().getRowCount() - 1;
+        index = table.convertRowIndexToView(index);
+        table.addRowSelectionInterval(index, index);
+    }
+    
+    public static void selectNextTableRow(JTable table){
+    	 int index = table.getSelectedRow();
+    	 
+    	 if (index == -1){
+    		 index = 0;
+    	 }
+    	 
+         table.clearSelection();
+         if (++index > table.getRowCount() - 1){
+         	index = 0;
+         }
+         
+         table.addRowSelectionInterval(index, index);   
+    }
+    
+    public static void selectFirstTableRow(JTable table) {
+        table.clearSelection();
+        int index = 0;
         index = table.convertRowIndexToView(index);
         table.addRowSelectionInterval(index, index);
     }

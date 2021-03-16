@@ -2,16 +2,16 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import javax.print.attribute.standard.JobState;
-
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
-import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.machine.reference.driver.test.TestDriver;
 import org.openpnp.machine.reference.driver.test.TestDriver.TestDriverDelegate;
+import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -19,22 +19,18 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
+import org.openpnp.model.Motion;
+import org.openpnp.model.Motion.MoveToCommand;
 import org.openpnp.model.Placement;
-import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Files;
 
 public class BasicJobTest {
-    private final static Logger logger = LoggerFactory.getLogger(TestDriver.class);
-
     /**
      * Creates a basic job in memory and attempts to run it. The Driver is monitored to make sure it
      * performs a pre-defined set of expected moves. This test is intended to test the primary
@@ -63,50 +59,76 @@ public class BasicJobTest {
 
         Configuration.initialize(workingDirectory);
         Configuration.get().load();
+        // Save back migrated.
+        Configuration.get().save();
 
         Machine machine = Configuration.get().getMachine();
         ReferenceMachine referenceMachine = (ReferenceMachine) machine;
-        TestDriver testDriver = (TestDriver) referenceMachine.getDriver();
+        TestDriver testDriver = (TestDriver) referenceMachine.getDefaultDriver();
         BasicJobTestDriverDelegate delegate = new BasicJobTestDriverDelegate();
         testDriver.setDelegate(delegate);
+        
+        // Set feeder to Z-10 
+        ReferenceTubeFeeder feeder = (ReferenceTubeFeeder) machine.getFeeder("F1");
+        feeder.setLocation(feeder.getLocation().derive(null, null, -10.0, null));
 
         Job job = createSimpleJob();
 
         Head h1 = machine.getHead("H1");
         Nozzle n1 = h1.getNozzle("N1");
         Nozzle n2 = h1.getNozzle("N2");
-        
-        delegate.expectMove("Move N1 Nozzle Change Unload", n1, new Location(LengthUnit.Millimeters, 40, 0, 0, 0), 1.0);
-        delegate.expectMove("Move N1 Nozzle Change Load", n1, new Location(LengthUnit.Millimeters, 50, 0, 0, 0), 1.0);
+        Camera c1 = h1.getCamera("C1");
 
-        delegate.expectMove("Move N1 to F1", n1, new Location(LengthUnit.Millimeters, -10, 0, 0, 0),
+        delegate.expectMove("Move N1 Nozzle Change Load", n1,
+                new Location(LengthUnit.Millimeters, 40, 0, 0, 0), 1.0);
+        delegate.expectMove("Move N2 Nozzle Change Load", n2,
+                new Location(LengthUnit.Millimeters, 50, 0, 0, 0), 1.0);
+
+        delegate.expectMove("Move N1 to F1, Safe Z", n1, new Location(LengthUnit.Millimeters, -10, 0, 0, 0),
                 1.0);
-        delegate.expectPick(n1);
-
-        delegate.expectMove("Move N2 to F1", n2, new Location(LengthUnit.Millimeters, -20, 0, 0, 0),
+        delegate.expectMove("Move N1 to F1, Feeder Z", n1, new Location(LengthUnit.Millimeters, -10, 0, -10, 0),
                 1.0);
-        delegate.expectPick(n2);
 
+        delegate.expectedActuate();
+
+        delegate.expectMove("Move N1 to F1, Safe Z", n1, new Location(LengthUnit.Millimeters, -10, 0, 0, 0),
+                1.0);
+        delegate.expectMove("Move N2 to F1, Safe Z", n2, new Location(LengthUnit.Millimeters, -20, 0, 0, 0),
+                1.0);
+        delegate.expectMove("Move N2 to F1, Feeder Z", n2, new Location(LengthUnit.Millimeters, -20, 0, -10, 0),
+                1.0);
+
+        delegate.expectedActuate();
+
+        delegate.expectMove("Move N2 to F1, Safe Z", n2, new Location(LengthUnit.Millimeters, -20, 0, 0, 0),
+                1.0);
         delegate.expectMove("Move N1 to R1, Safe-Z", n1,
                 new Location(LengthUnit.Millimeters, 0, 10, 0, 45), 1.0);
         delegate.expectMove("Move N1 to R1, Z", n1,
-                new Location(LengthUnit.Millimeters, 0, 10, 0.825500, 45), 1.0);
-        delegate.expectPlace(n1);
+                new Location(LengthUnit.Millimeters, 0, 10, 0.825500 - 10, 45), 1.0);
+        delegate.expectedActuate();
         delegate.expectMove("Move N1 to R1, Safe-Z", n1,
                 new Location(LengthUnit.Millimeters, 0, 10, 0, 45), 1.0);
 
         delegate.expectMove("Move N2 to R2, Safe-Z", n2,
                 new Location(LengthUnit.Millimeters, 00, 20, 0, 90), 1.0);
         delegate.expectMove("Move N2 to R2, Z", n2,
-                new Location(LengthUnit.Millimeters, 00, 20, 0.825500, 90), 1.0);
-        delegate.expectPlace(n2);
+                new Location(LengthUnit.Millimeters, 00, 20, 0.825500 - 10, 90), 1.0);
+        delegate.expectedActuate();
         delegate.expectMove("Move N2 to R2, Safe-Z", n2,
                 new Location(LengthUnit.Millimeters, 00, 20, 0, 90), 1.0);
+        delegate.expectMove("Park", c1, new Location(LengthUnit.Millimeters, 0, 0, 0, 90), 1.0);
 
-        JobProcessor jobProcessor = machine.getPnpJobProcessor();
+        ReferencePnpJobProcessor jobProcessor = (ReferencePnpJobProcessor) machine.getPnpJobProcessor();
         machine.setEnabled(true);
-        jobProcessor.initialize(job);
-        while (jobProcessor.next());
+        machine.execute(() -> { 
+            jobProcessor.addTextStatusListener(text -> {
+                System.out.println(text);
+            });
+            jobProcessor.initialize(job);
+            while (jobProcessor.next());
+            return true;
+        });
     }
 
     private Job createSimpleJob() {
@@ -119,7 +141,7 @@ public class BasicJobTest {
         board.addPlacement(createPlacement("R2", "R-0805-10K", 20, 20, 0, 90, Side.Top));
 
         BoardLocation boardLocation = new BoardLocation(board);
-        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setSide(Side.Top);
 
         job.addBoardLocation(boardLocation);
@@ -143,17 +165,9 @@ public class BasicJobTest {
         private Queue<ExpectedOp> expectedOps = new LinkedList<>();
 
         public void expectMove(String description, HeadMountable hm, Location location,
-                double speed) {
+                double speed) throws Exception {
             ExpectedMove o = new ExpectedMove(description, hm, location, speed);
             expectedOps.add(o);
-        }
-
-        public void expectPick(Nozzle nozzle) {
-            expectedOps.add(new ExpectedPick(nozzle));
-        }
-
-        public void expectPlace(Nozzle nozzle) {
-            expectedOps.add(new ExpectedPlace(nozzle));
         }
 
         public void expectedActuate() {
@@ -161,103 +175,51 @@ public class BasicJobTest {
         }
 
         @Override
-        public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+        public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
                 throws Exception {
+            AxesLocation location = move.getLocation1();
+            
+            System.out.println(hm + " " + location);
             if (expectedOps.isEmpty()) {
-                throw new Exception("Unexpected Move " + location + ".");
+                throw new Exception("Unexpected Move " + hm + " " + location + ".");
             }
             else {
                 ExpectedOp op = expectedOps.remove();
 
                 if (!(op instanceof ExpectedMove)) {
-                    throw new Exception("Unexpected Move " + location + ". Expected " + op);
+                    throw new Exception("Unexpected Move " + hm + " " + location + ". Expected " + op);
                 }
 
-                ExpectedMove move = (ExpectedMove) op;
+                ExpectedMove expectedMove = (ExpectedMove) op;
 
-                if (!move.location.equals(location) || hm != move.headMountable) {
-                    throw new Exception("Unexpected Move " + location + ". Expected " + op);
-                }
-            }
-        }
-
-        @Override
-        public void pick(ReferenceNozzle nozzle) throws Exception {
-            if (expectedOps.isEmpty()) {
-                throw new Exception("Unexpected Pick " + nozzle + ".");
-            }
-            else {
-                ExpectedOp op = expectedOps.remove();
-                if (!(op instanceof ExpectedPick)) {
-                    throw new Exception("Unexpected Pick " + nozzle + ". Expected " + op);
-                }
-
-                ExpectedPick pick = (ExpectedPick) op;
-
-                if (pick.nozzle != nozzle) {
-                    throw new Exception("Unexpected Pick " + nozzle + ". Expected " + op);
-                }
-            }
-        }
-
-        @Override
-        public void place(ReferenceNozzle nozzle) throws Exception {
-            if (expectedOps.isEmpty()) {
-                throw new Exception("Unexpected Place " + nozzle + ".");
-            }
-            else {
-                ExpectedOp op = expectedOps.remove();
-                if (!(op instanceof ExpectedPlace)) {
-                    throw new Exception("Unexpected Place " + nozzle + ". Expected " + op);
-                }
-
-                ExpectedPlace place = (ExpectedPlace) op;
-
-                if (place.nozzle != nozzle) {
-                    throw new Exception("Unexpected Place " + nozzle + ". Expected " + op);
+                if (!expectedMove.location.matches(location) || hm != expectedMove.headMountable) {
+                    throw new Exception("Unexpected Move " + hm + " " + location + ". Expected " + op);
                 }
             }
         }
 
         @Override
         public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
-            // TODO Auto-generated method stub
+            if (expectedOps.isEmpty()) {
+                throw new Exception("Unexpected Actuate");
+            }
+            else {
+                ExpectedOp op = expectedOps.remove();
+
+                if (!(op instanceof ExpectedActuate)) {
+                    throw new Exception("Unexpected Actuate. Expected " + op);
+                }
+
+            }
             super.actuate(actuator, on);
         }
 
         @Override
         public void actuate(ReferenceActuator actuator, double value) throws Exception {
-            // TODO Auto-generated method stub
             super.actuate(actuator, value);
         }
 
         class ExpectedOp {
-        }
-
-        class ExpectedPick extends ExpectedOp {
-            public Nozzle nozzle;
-
-            public ExpectedPick(Nozzle nozzle) {
-                this.nozzle = nozzle;
-            }
-
-            @Override
-            public String toString() {
-                return "Pick " + nozzle + " " + nozzle.getNozzleTip().getName();
-            }
-        }
-
-        class ExpectedPlace extends ExpectedOp {
-            public Nozzle nozzle;
-
-            public ExpectedPlace(Nozzle nozzle) {
-                this.nozzle = nozzle;
-            }
-
-            @Override
-            public String toString() {
-                return "Place " + nozzle + " " + nozzle.getNozzleTip().getName();
-            }
         }
 
         class ExpectedActuate extends ExpectedOp {
@@ -269,14 +231,19 @@ public class BasicJobTest {
 
         class ExpectedMove extends ExpectedOp {
             public HeadMountable headMountable;
-            public Location location;
+            public AxesLocation location;
             public double speed;
             public String description;
 
             public ExpectedMove(String description, HeadMountable headMountable, Location location,
-                    double speed) {
+                    double speed) throws Exception {
                 this.headMountable = headMountable;
-                this.location = location;
+                // The expected location must be converted into raw coordinates, but it is already a head location.  
+                // Therefore, don't do this:  Location headLocation = headMountable.toHeadLocation(location);
+                this.location = headMountable.toRaw(location);
+                // Only controller coordinates (no virtual ones).
+                this.location = new AxesLocation(this.location.getControllerAxes(),
+                        (axis) -> this.location.getLengthCoordinate(axis));
                 this.speed = speed;
                 this.description = description;
             }

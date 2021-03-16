@@ -21,12 +21,17 @@ package org.openpnp.gui.components;
 
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Helpers;
@@ -38,8 +43,10 @@ import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.util.Cycles;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+import org.pmw.tinylog.Logger;
 
 /**
  * A JPanel of 4 small buttons that assist in setting locations. The buttons are Capture Camera
@@ -55,6 +62,8 @@ public class LocationButtonsPanel extends JPanel {
     private JButton buttonCenterTool;
     private JButton buttonCaptureCamera;
     private JButton buttonCaptureTool;
+    
+    private Location baseLocation;
 
     public LocationButtonsPanel(JTextField textFieldX, JTextField textFieldY, JTextField textFieldZ,
             JTextField textFieldC) {
@@ -65,15 +74,7 @@ public class LocationButtonsPanel extends JPanel {
         this.textFieldY = textFieldY;
         this.textFieldZ = textFieldZ;
         this.textFieldC = textFieldC;
-
-        buttonCaptureCamera = new JButton(captureCameraCoordinatesAction);
-        buttonCaptureCamera.setHideActionText(true);
-        add(buttonCaptureCamera);
-
-        buttonCaptureTool = new JButton(captureToolCoordinatesAction);
-        buttonCaptureTool.setHideActionText(true);
-        add(buttonCaptureTool);
-
+        
         JButton buttonCenterCamera = new JButton(positionCameraAction);
         buttonCenterCamera.setHideActionText(true);
         add(buttonCenterCamera);
@@ -84,13 +85,33 @@ public class LocationButtonsPanel extends JPanel {
 
         buttonCenterToolNoSafeZ = new JButton(positionToolNoSafeZAction);
         buttonCenterToolNoSafeZ.setHideActionText(true);
+                
+        separator = new JSeparator();
+        separator.setOrientation(SwingConstants.VERTICAL);
+        add(separator);
+
+        buttonCaptureCamera = new JButton(captureCameraCoordinatesAction);
+        buttonCaptureCamera.setHideActionText(true);
+        add(buttonCaptureCamera);
+
+        buttonCaptureTool = new JButton(captureToolCoordinatesAction);
+        buttonCaptureTool.setHideActionText(true);
+        add(buttonCaptureTool);
 
         setActuatorName(null);
     }
+    
+    public Location getBaseLocation() {
+        return baseLocation;
+    }
 
+    public void setBaseLocation(Location baseLocation) {
+        this.baseLocation = baseLocation;
+    }
+    
     public void setShowPositionToolNoSafeZ(boolean b) {
         if (b) {
-            add(buttonCenterToolNoSafeZ);
+            add(buttonCenterToolNoSafeZ, 2);
         }
         else {
             remove(buttonCenterToolNoSafeZ);
@@ -102,10 +123,12 @@ public class LocationButtonsPanel extends JPanel {
         if (actuatorName == null || actuatorName.trim().length() == 0) {
             buttonCaptureTool.setAction(captureToolCoordinatesAction);
             buttonCenterTool.setAction(positionToolAction);
+            buttonCenterToolNoSafeZ.setAction(positionToolNoSafeZAction);
         }
         else {
             buttonCaptureTool.setAction(captureActuatorCoordinatesAction);
             buttonCenterTool.setAction(positionActuatorAction);
+            buttonCenterToolNoSafeZ.setAction(positionActuatorNoSafeZAction);
         }
     }
 
@@ -114,7 +137,7 @@ public class LocationButtonsPanel extends JPanel {
     }
 
     public HeadMountable getTool() throws Exception {
-        return MainFrame.machineControlsPanel.getSelectedNozzle();
+        return MainFrame.get().getMachineControls().getSelectedNozzle();
     }
 
     public Camera getCamera() throws Exception {
@@ -134,7 +157,7 @@ public class LocationButtonsPanel extends JPanel {
         }
         HeadMountable tool = getTool();
         Head head = tool.getHead();
-        Actuator actuator = head.getActuator(actuatorName);
+        Actuator actuator = head.getActuatorByName(actuatorName);
         if (actuator == null) {
             throw new Exception(String.format("No Actuator with name %s on Head %s", actuatorName,
                     head.getName()));
@@ -168,10 +191,24 @@ public class LocationButtonsPanel extends JPanel {
 
                 @Override
                 public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.messageBoxOnException(() -> {
+                    UiUtils.submitUiMachineTask(() -> {
                         Location l = getCamera().getLocation();
-                        Helpers.copyLocationIntoTextFields(l, textFieldX, textFieldY, null,
-                                textFieldC);
+                        Location lz = Cycles.zProbe(l);
+                        if (lz != null) {
+                            l = lz;
+                        }
+                        if (baseLocation != null) {
+                            l = l.subtractWithRotation(baseLocation);
+                            l = l.rotateXy(-baseLocation.getRotation());
+                        }
+                        final Location lf = l;
+                        SwingUtilities.invokeAndWait(() -> {
+                            Helpers.copyLocationIntoTextFields(lf, 
+                                    textFieldX, 
+                                    textFieldY, 
+                                    lz == null ? null : textFieldZ,
+                                    textFieldC);
+                        });
                     });
                 }
             };
@@ -185,10 +222,17 @@ public class LocationButtonsPanel extends JPanel {
 
                 @Override
                 public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.messageBoxOnException(() -> {
+                    UiUtils.submitUiMachineTask(() -> {
                         Location l = getTool().getLocation();
-                        Helpers.copyLocationIntoTextFields(l, textFieldX, textFieldY, textFieldZ,
-                                textFieldC);
+                        if (baseLocation != null) {
+                            l = l.subtractWithRotation(baseLocation);
+                            l = l.rotateXy(-baseLocation.getRotation());
+                        }
+                        final Location lf = l;
+                        SwingUtilities.invokeAndWait(() -> {
+                            Helpers.copyLocationIntoTextFields(lf, textFieldX, textFieldY, textFieldZ,
+                                    textFieldC);
+                        });
                     });
                 }
             };
@@ -202,13 +246,21 @@ public class LocationButtonsPanel extends JPanel {
 
                 @Override
                 public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.messageBoxOnException(() -> {
+                    UiUtils.submitUiMachineTask(() -> {
                         Actuator actuator = getActuator();
                         if (actuator == null) {
                             return;
                         }
-                        Helpers.copyLocationIntoTextFields(actuator.getLocation(), textFieldX,
-                                textFieldY, textFieldZ, textFieldC);
+                        Location l = actuator.getLocation();
+                        if (baseLocation != null) {
+                            l = l.subtractWithRotation(baseLocation);
+                            l = l.rotateXy(-baseLocation.getRotation());
+                        }
+                        final Location lf = l;
+                        SwingUtilities.invokeAndWait(() -> {
+                            Helpers.copyLocationIntoTextFields(lf, textFieldX,
+                                    textFieldY, textFieldZ, textFieldC);
+                        });
                     });
 
                 }
@@ -226,7 +278,20 @@ public class LocationButtonsPanel extends JPanel {
                     UiUtils.submitUiMachineTask(() -> {
                         Camera camera = getCamera();
                         Location location = getParsedLocation();
+                        if (baseLocation != null) {
+                            location = location.rotateXy(baseLocation.getRotation());
+                            location = location.addWithRotation(baseLocation);
+                        }
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
+                        MovableUtils.fireTargetedUserAction(camera);
+                        try {
+                            Map<String, Object> globals = new HashMap<>();
+                            globals.put("camera", camera);
+                            Configuration.get().getScripting().on("Camera.AfterPosition", globals);
+                        }
+                        catch (Exception e) {
+                            Logger.warn(e);
+                        }
                     });
                 }
             };
@@ -242,7 +307,12 @@ public class LocationButtonsPanel extends JPanel {
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable tool = getTool();
                 Location location = getParsedLocation();
+                if (baseLocation != null) {
+                    location = location.rotateXy(baseLocation.getRotation());
+                    location = location.addWithRotation(baseLocation);
+                }
                 MovableUtils.moveToLocationAtSafeZ(tool, location);
+                MovableUtils.fireTargetedUserAction(tool);
             });
         }
     };
@@ -259,7 +329,12 @@ public class LocationButtonsPanel extends JPanel {
                     UiUtils.submitUiMachineTask(() -> {
                         HeadMountable tool = getTool();
                         Location location = getParsedLocation();
+                        if (baseLocation != null) {
+                            location = location.rotateXy(baseLocation.getRotation());
+                            location = location.addWithRotation(baseLocation);
+                        }
                         tool.moveTo(location);
+                        MovableUtils.fireTargetedUserAction(tool);
                     });
                 }
             };
@@ -276,9 +351,36 @@ public class LocationButtonsPanel extends JPanel {
                     UiUtils.submitUiMachineTask(() -> {
                         Actuator actuator = getActuator();
                         Location location = getParsedLocation();
+                        if (baseLocation != null) {
+                            location = location.rotateXy(baseLocation.getRotation());
+                            location = location.addWithRotation(baseLocation);
+                        }
                         MovableUtils.moveToLocationAtSafeZ(actuator, location);
+                        MovableUtils.fireTargetedUserAction(actuator);
+                    });
+                }
+            };
+    private Action positionActuatorNoSafeZAction =
+            new AbstractAction("Position Actuator (Without Safe Z)", Icons.centerPinNoSafeZ) {
+                {
+                    putValue(Action.SHORT_DESCRIPTION,
+                            "Position the actuator over the center of the location without first moving to Safe Z.");
+                }
+
+                @Override
+                public void actionPerformed(ActionEvent arg0) {
+                    UiUtils.submitUiMachineTask(() -> {
+                        Actuator actuator = getActuator();
+                        Location location = getParsedLocation();
+                        if (baseLocation != null) {
+                            location = location.rotateXy(baseLocation.getRotation());
+                            location = location.addWithRotation(baseLocation);
+                        }
+                        actuator.moveTo(location);
+                        MovableUtils.fireTargetedUserAction(actuator);
                     });
                 }
             };
     private JButton buttonCenterToolNoSafeZ;
+    private JSeparator separator;
 }

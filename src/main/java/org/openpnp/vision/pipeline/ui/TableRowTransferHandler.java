@@ -51,15 +51,17 @@ public class TableRowTransferHandler extends TransferHandler {
         JTable.DropLocation dl = (JTable.DropLocation) info.getDropLocation();
         int index = dl.getRow();
         int max = table.getModel().getRowCount();
-        if (index < 0 || index > max)
+        if (index < 0 || index > max) {
             index = max;
+        }
         target.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         try {
             Integer rowFrom = (Integer) info.getTransferable().getTransferData(localObjectFlavor);
             if (rowFrom != -1 && rowFrom != index) {
                 ((Reorderable) table.getModel()).reorder(rowFrom, index);
-                if (index > rowFrom)
+                if (index > rowFrom) {
                     index--;
+                }
                 target.getSelectionModel().addSelectionInterval(index, index);
                 return true;
             }

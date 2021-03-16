@@ -33,28 +33,67 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 
+import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.CameraView.RenderingQuality;
 import org.openpnp.gui.components.reticle.CrosshairReticle;
 import org.openpnp.gui.components.reticle.FiducialReticle;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.components.reticle.RulerReticle;
+import org.openpnp.gui.processes.EstimateObjectZCoordinateProcess;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
+import org.openpnp.spi.Nozzle;
+import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 
 // TODO: For the time being, since setting a property on the reticle doesn't re-save it we are
 // making a redundant call to setReticle on every property update. Fix that somehow.
 @SuppressWarnings("serial")
 public class CameraViewPopupMenu extends JPopupMenu {
     private CameraView cameraView;
+    private JMenu zoomIncMenu;
     private JMenu reticleMenu;
     private JMenu reticleOptionsMenu;
+    private JMenu renderingQualityMenu;
 
     public CameraViewPopupMenu(CameraView cameraView) {
         this.cameraView = cameraView;
 
+        // For cameras that have been calibrated at two different heights, add menu options to reset
+        // the viewing plane and for estimating an object's height
+        if (cameraView.isViewingPlaneChangable()) {
+            JMenuItem mntmResetReticleHeight = new JMenuItem("Reset Viewing Plane Z to Default");
+            mntmResetReticleHeight.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    cameraView.resetViewingPlaneZ();
+                }
+            });
+            add(mntmResetReticleHeight);
+
+            JMenuItem mntmEstimateZCoordinate = new JMenuItem("Estimate Z Coordinate of Object");
+            mntmEstimateZCoordinate.addActionListener(estimateZCoordinateAction);
+            add(mntmEstimateZCoordinate);
+        }
+
+        // For non-movable cameras, add a menu option to move the selected nozzle to the camera
+        if (cameraView.getCamera().getHead() == null) {
+            JMenuItem mntmMoveSelectedNozzleToCamera = new JMenuItem("Move Selected Nozzle to Camera");
+            mntmMoveSelectedNozzleToCamera.addActionListener(moveSelectedNozzleToCameraAction);
+            add(mntmMoveSelectedNozzleToCamera);
+        }
+
+        zoomIncMenu = createZoomIncMenu();
+
+        add(zoomIncMenu);
+
+        renderingQualityMenu = createRenderingQualityMenu();
+
+        add(renderingQualityMenu);
+
         reticleMenu = createReticleMenu();
-        JMenu maxFpsMenu = createMaxFpsMenu();
 
         add(reticleMenu);
-        add(maxFpsMenu);
 
         JCheckBoxMenuItem chkShowImageInfo = new JCheckBoxMenuItem(showImageInfoAction);
         chkShowImageInfo.setSelected(cameraView.isShowImageInfo());
@@ -77,45 +116,118 @@ public class CameraViewPopupMenu extends JPopupMenu {
         }
     }
 
-    private JMenu createMaxFpsMenu() {
+    private JMenu createZoomIncMenu() {
+        JMenu subMenu = new JMenu("Zoom Increment Per Mouse Wheel Tick");
         ButtonGroup buttonGroup = new ButtonGroup();
-        JMenu menu = new JMenu("Maximum FPS");
+        JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem("10.0");
+        buttonGroup.add(menuItem);
+        if (cameraView.getZoomIncPerMouseWheelTick() == 10.0) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cameraView.setZoomIncPerMouseWheelTick(10.0);
+            }
+        });
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("1.0");
+        buttonGroup.add(menuItem);
+        if (cameraView.getZoomIncPerMouseWheelTick() == 1.0) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cameraView.setZoomIncPerMouseWheelTick(1.0);
+            }
+        });
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("0.1");
+        buttonGroup.add(menuItem);
+        if (cameraView.getZoomIncPerMouseWheelTick() == 0.1) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cameraView.setZoomIncPerMouseWheelTick(0.1);
+            }
+        });
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("0.01");
+        buttonGroup.add(menuItem);
+        if (cameraView.getZoomIncPerMouseWheelTick() == 0.01) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cameraView.setZoomIncPerMouseWheelTick(0.01);
+            }
+        });
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("0.001");
+        buttonGroup.add(menuItem);
+        if (cameraView.getZoomIncPerMouseWheelTick() == 0.001) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cameraView.setZoomIncPerMouseWheelTick(0.001);
+            }
+        });
+        subMenu.add(menuItem);
+        
+        return subMenu;
+    }
+
+    private JMenu createRenderingQualityMenu() {
+        JMenu subMenu = new JMenu("Rendering Quality");
+        ButtonGroup buttonGroup = new ButtonGroup();
         JRadioButtonMenuItem menuItem;
-
-        menuItem = new JRadioButtonMenuItem("1");
-        menuItem.addActionListener(maxFpsAction);
+        
+        menuItem = new JRadioButtonMenuItem("Low Quality");
         buttonGroup.add(menuItem);
-        menu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("5");
-        menuItem.addActionListener(maxFpsAction);
+        if (cameraView.getRenderingQuality() == RenderingQuality.Low) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cameraView.setRenderingQuality(RenderingQuality.Low);
+            }
+        });
+        subMenu.add(menuItem);
+        
+        menuItem = new JRadioButtonMenuItem("High Quality");
         buttonGroup.add(menuItem);
-        menu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("10");
-        menuItem.addActionListener(maxFpsAction);
+        if (cameraView.getRenderingQuality() == RenderingQuality.High) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cameraView.setRenderingQuality(RenderingQuality.High);
+            }
+        });
+        subMenu.add(menuItem);
+        
+        menuItem = new JRadioButtonMenuItem("Highest Quality (best scale)");
         buttonGroup.add(menuItem);
-        menu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("15");
-        menuItem.addActionListener(maxFpsAction);
-        buttonGroup.add(menuItem);
-        menu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("24");
-        menuItem.addActionListener(maxFpsAction);
-        buttonGroup.add(menuItem);
-        menu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("30");
-        menuItem.addActionListener(maxFpsAction);
-        buttonGroup.add(menuItem);
-        menu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("45");
-        menuItem.addActionListener(maxFpsAction);
-        buttonGroup.add(menuItem);
-        menu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("60");
-        menuItem.addActionListener(maxFpsAction);
-        buttonGroup.add(menuItem);
-        menu.add(menuItem);
-
-        return menu;
+        if (cameraView.getRenderingQuality() == RenderingQuality.BestScale) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cameraView.setRenderingQuality(RenderingQuality.BestScale);
+            }
+        });
+        subMenu.add(menuItem);
+        
+        return subMenu;
     }
 
     private JMenu createReticleMenu() {
@@ -157,79 +269,35 @@ public class CameraViewPopupMenu extends JPopupMenu {
 
         return menu;
     }
+    
+    private JMenuItem createColorMenuItem(String name, Color color, ButtonGroup buttonGroup, CrosshairReticle reticle) {
+        JMenuItem menuItem = new JRadioButtonMenuItem(name);
+        buttonGroup.add(menuItem);
+        if (reticle.getColor().equals(color)) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reticle.setColor(color);
+                cameraView.setDefaultReticle(reticle);
+            }
+        });
+        return menuItem;
+    }
 
     private JMenu createCrosshairReticleOptionsMenu(final CrosshairReticle reticle) {
         JMenu menu = new JMenu("Options");
 
         ButtonGroup buttonGroup = new ButtonGroup();
 
-        JRadioButtonMenuItem menuItem;
-
-        menuItem = new JRadioButtonMenuItem("Red");
-        buttonGroup.add(menuItem);
-        if (reticle.getColor() == Color.red) {
-            menuItem.setSelected(true);
-        }
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                reticle.setColor(Color.red);
-                cameraView.setDefaultReticle(reticle);
-            }
-        });
-        menu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("Green");
-        buttonGroup.add(menuItem);
-        if (reticle.getColor() == Color.green) {
-            menuItem.setSelected(true);
-        }
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                reticle.setColor(Color.green);
-                cameraView.setDefaultReticle(reticle);
-            }
-        });
-        menu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("Yellow");
-        buttonGroup.add(menuItem);
-        if (reticle.getColor() == Color.yellow) {
-            menuItem.setSelected(true);
-        }
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                reticle.setColor(Color.yellow);
-                cameraView.setDefaultReticle(reticle);
-            }
-        });
-        menu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("Blue");
-        buttonGroup.add(menuItem);
-        if (reticle.getColor() == Color.blue) {
-            menuItem.setSelected(true);
-        }
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                reticle.setColor(Color.blue);
-                cameraView.setDefaultReticle(reticle);
-            }
-        });
-        menu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("White");
-        buttonGroup.add(menuItem);
-        if (reticle.getColor() == Color.white) {
-            menuItem.setSelected(true);
-        }
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                reticle.setColor(Color.white);
-                cameraView.setDefaultReticle(reticle);
-            }
-        });
-        menu.add(menuItem);
+        menu.add(createColorMenuItem("Red", Color.red, buttonGroup, reticle));
+        menu.add(createColorMenuItem("Green", Color.green, buttonGroup, reticle));
+        menu.add(createColorMenuItem("Yellow", Color.yellow, buttonGroup, reticle));
+        menu.add(createColorMenuItem("Orange", Color.decode("#ffd35d"), buttonGroup, reticle));
+        menu.add(createColorMenuItem("Blue", Color.blue, buttonGroup, reticle));
+        menu.add(createColorMenuItem("White", Color.white, buttonGroup, reticle));
+        menu.add(createColorMenuItem("Red", Color.red, buttonGroup, reticle));
 
         return menu;
     }
@@ -243,71 +311,12 @@ public class CameraViewPopupMenu extends JPopupMenu {
 
         subMenu = new JMenu("Color");
         buttonGroup = new ButtonGroup();
-        menuItem = new JRadioButtonMenuItem("Red");
-        buttonGroup.add(menuItem);
-        if (reticle.getColor() == Color.red) {
-            menuItem.setSelected(true);
-        }
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                reticle.setColor(Color.red);
-                cameraView.setDefaultReticle(reticle);
-            }
-        });
-        subMenu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("Green");
-        buttonGroup.add(menuItem);
-        if (reticle.getColor() == Color.green) {
-            menuItem.setSelected(true);
-        }
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                reticle.setColor(Color.green);
-                cameraView.setDefaultReticle(reticle);
-            }
-        });
-        subMenu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("Yellow");
-        buttonGroup.add(menuItem);
-        if (reticle.getColor() == Color.yellow) {
-            menuItem.setSelected(true);
-        }
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                reticle.setColor(Color.yellow);
-                cameraView.setDefaultReticle(reticle);
-            }
-        });
-        subMenu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("Blue");
-        buttonGroup.add(menuItem);
-        if (reticle.getColor() == Color.blue) {
-            menuItem.setSelected(true);
-        }
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                reticle.setColor(Color.blue);
-                cameraView.setDefaultReticle(reticle);
-            }
-        });
-        subMenu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("White");
-        buttonGroup.add(menuItem);
-        if (reticle.getColor() == Color.white) {
-            menuItem.setSelected(true);
-        }
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                reticle.setColor(Color.white);
-                cameraView.setDefaultReticle(reticle);
-            }
-        });
-        subMenu.add(menuItem);
+        subMenu.add(createColorMenuItem("Red", Color.red, buttonGroup, reticle));
+        subMenu.add(createColorMenuItem("Green", Color.green, buttonGroup, reticle));
+        subMenu.add(createColorMenuItem("Yellow", Color.yellow, buttonGroup, reticle));
+        subMenu.add(createColorMenuItem("Orange", Color.decode("#ffd35d"), buttonGroup, reticle));
+        subMenu.add(createColorMenuItem("Blue", Color.blue, buttonGroup, reticle));
+        subMenu.add(createColorMenuItem("White", Color.white, buttonGroup, reticle));
         menu.add(subMenu);
 
         subMenu = new JMenu("Units");
@@ -447,71 +456,12 @@ public class CameraViewPopupMenu extends JPopupMenu {
 
         subMenu = new JMenu("Color");
         buttonGroup = new ButtonGroup();
-        menuItem = new JRadioButtonMenuItem("Red");
-        buttonGroup.add(menuItem);
-        if (reticle.getColor() == Color.red) {
-            menuItem.setSelected(true);
-        }
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                reticle.setColor(Color.red);
-                cameraView.setDefaultReticle(reticle);
-            }
-        });
-        subMenu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("Green");
-        buttonGroup.add(menuItem);
-        if (reticle.getColor() == Color.green) {
-            menuItem.setSelected(true);
-        }
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                reticle.setColor(Color.green);
-                cameraView.setDefaultReticle(reticle);
-            }
-        });
-        subMenu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("Yellow");
-        buttonGroup.add(menuItem);
-        if (reticle.getColor() == Color.yellow) {
-            menuItem.setSelected(true);
-        }
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                reticle.setColor(Color.yellow);
-                cameraView.setDefaultReticle(reticle);
-            }
-        });
-        subMenu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("Blue");
-        buttonGroup.add(menuItem);
-        if (reticle.getColor() == Color.blue) {
-            menuItem.setSelected(true);
-        }
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                reticle.setColor(Color.blue);
-                cameraView.setDefaultReticle(reticle);
-            }
-        });
-        subMenu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("White");
-        buttonGroup.add(menuItem);
-        if (reticle.getColor() == Color.white) {
-            menuItem.setSelected(true);
-        }
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                reticle.setColor(Color.white);
-                cameraView.setDefaultReticle(reticle);
-            }
-        });
-        subMenu.add(menuItem);
+        subMenu.add(createColorMenuItem("Red", Color.red, buttonGroup, reticle));
+        subMenu.add(createColorMenuItem("Green", Color.green, buttonGroup, reticle));
+        subMenu.add(createColorMenuItem("Yellow", Color.yellow, buttonGroup, reticle));
+        subMenu.add(createColorMenuItem("Orange", Color.decode("#ffd35d"), buttonGroup, reticle));
+        subMenu.add(createColorMenuItem("Blue", Color.blue, buttonGroup, reticle));
+        subMenu.add(createColorMenuItem("White", Color.white, buttonGroup, reticle));
         menu.add(subMenu);
 
         subMenu = new JMenu("Units");
@@ -661,11 +611,37 @@ public class CameraViewPopupMenu extends JPopupMenu {
         }
     };
 
-    private Action maxFpsAction = new AbstractAction() {
+    /**
+     * Listen for menu selection to estimate an object's height
+     */
+    private ActionListener estimateZCoordinateAction = new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            int maximumFps = Integer.parseInt(e.getActionCommand());
-            cameraView.setMaximumFps(maximumFps);
+            UiUtils.messageBoxOnException(() -> {
+                new EstimateObjectZCoordinateProcess(MainFrame.get(), cameraView);
+            });
         }
     };
+
+    /**
+     * Listener for menu selection to move the selected nozzle to the camera (only works for
+     * non-movable cameras)
+     */
+    private ActionListener moveSelectedNozzleToCameraAction = new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.submitUiMachineTask(() -> {
+                // Get the selected nozzle
+                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                // Add the offsets to the Camera's nozzle calibrated position.
+                Location location = cameraView.getCamera().getLocation(nozzle);
+                // Don't change rotation. 
+                location = nozzle.getLocation().derive(location, true, true, true, false);
+                // Move the nozzle to the camera
+                MovableUtils.moveToLocationAtSafeZ(nozzle, location);
+                MovableUtils.fireTargetedUserAction(nozzle);
+            });
+        }
+    };
+
 }

@@ -7,13 +7,18 @@ import java.beans.EventSetDescriptor;
 import java.beans.Introspector;
 import java.beans.MethodDescriptor;
 import java.beans.PropertyDescriptor;
+import java.util.List;
 
 import org.opencv.core.Mat;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.vision.pipeline.ui.PipelinePropertySheetTable;
+import org.openpnp.vision.FluentCv;
+import org.openpnp.vision.FluentCv.ColorSpace;
 import org.simpleframework.xml.Attribute;
 
 /**
  * Base class for a stage in a CvPipeline. A CvStage has a unique name within a pipeline and is able
- * to perform computer vision operations reuslting in either a modified working image or a new image
+ * to perform computer vision operations resulting in either a modified working image or a new image
  * and optional model data extracted from the image.
  */
 public abstract class CvStage {
@@ -22,7 +27,7 @@ public abstract class CvStage {
 
     @Attribute(required = false)
     private boolean enabled = true;
-
+    
     /**
      * Perform an operation in a pipeline. Typical implementations will call
      * CvPipeline#getWorkingImage(), perform some type of operation on the image and will return a
@@ -84,6 +89,12 @@ public abstract class CvStage {
         catch (Exception e) {
             return null;
         }
+    }
+
+    // a stage may optionally define a length unit which is handled in the pipeline editor's 
+    // ResultsPanel.matView
+    public LengthUnit getLengthUnit() {
+        return null;
     }
 
     public BeanInfo getBeanInfo() {
@@ -153,22 +164,93 @@ public abstract class CvStage {
     }
 
     public static class Result {
+        final public CvStage stage;
         final public Mat image;
         final public Object model;
         final public long processingTimeNs;
+        final public ColorSpace colorSpace;
 
-        public Result(Mat image, Object model, long processingTimeNs) {
+        public Result(Mat image, ColorSpace colorSpace, Object model, long processingTimeNs, CvStage stage) {
             this.image = image;
             this.model = model;
             this.processingTimeNs = processingTimeNs;
+            this.stage = stage;
+            this.colorSpace = colorSpace;
+        }
+
+        public Result(Mat image, Object model, long processingTimeNs) {
+            this(image, null, model, processingTimeNs, null);
+        }
+
+        public Result(Mat image, ColorSpace colorSpace, Object model) {
+            this(image, colorSpace, model, 0, null);
         }
 
         public Result(Mat image, Object model) {
-            this(image, model, 0);
+            this(image, null, model);
+        }
+
+        public Result(Mat image, ColorSpace colorSpace) {
+            this(image, colorSpace, null);
         }
 
         public Result(Mat image) {
-            this(image, null, 0);
+            this(image, null);
+        }
+        
+        public Mat getImage() {
+            return image;
+        }
+        
+        public Object getModel() {
+            return model;
+        }
+
+        public ColorSpace getColorSpace() {
+            return colorSpace;
+        }
+
+        public CvStage getStage() {
+            return stage;
+        }
+
+        public String getName() {
+            if (stage != null) {
+                return stage.getName();
+            }
+            return "";
+        }
+
+        @SuppressWarnings("unchecked")
+        public <T> T getExpectedModel(Class<T> expectedModelClass) throws Exception {
+            // Due to type erasure we need to pass the class as well.
+            T typedModel = null;
+            if (model == null) {
+                throw new Exception("Pipeline stage \""+getName()+"\" returned no "+expectedModelClass.getSimpleName()+".");
+            }
+            if (expectedModelClass.isInstance(model)) {
+                typedModel = (T)model;
+            }
+            if (typedModel == null) {
+                throw new Exception("Pipeline stage \""+getName()+"\" returned a "+model.getClass().getSimpleName()+" but expected a "+expectedModelClass.getSimpleName()+".");
+            }
+            return typedModel;
+        }
+
+        @SuppressWarnings("unchecked")
+        public <T> List<T> getExpectedListModel(Class<T> expectedElementClass, Exception emptyException) throws Exception {
+            @SuppressWarnings("rawtypes")
+            List list = getExpectedModel(List.class);
+            if (list.size() == 0) {
+                if (emptyException != null) {
+                    throw emptyException;
+                }
+                return (List<T>)list;
+            }
+            if (!expectedElementClass.isInstance(list.get(0))) {
+                throw new Exception("Pipeline stage \""+getName()+"\" returned a "+list.get(0).getClass().getSimpleName()+" list but expected a "+expectedElementClass.getSimpleName()+" list.");
+            }
+            return (List<T>)list;
         }
 
         public static class Circle {
@@ -179,6 +261,30 @@ public abstract class CvStage {
             public Circle(double x, double y, double diameter) {
                 this.x = x;
                 this.y = y;
+                this.diameter = diameter;
+            }
+            
+            public double getX() {
+                return x;
+            }
+
+            public void setX(double x) {
+                this.x = x;
+            }
+
+            public double getY() {
+                return y;
+            }
+
+            public void setY(double y) {
+                this.y = y;
+            }
+
+            public double getDiameter() {
+                return diameter;
+            }
+
+            public void setDiameter(double diameter) {
                 this.diameter = diameter;
             }
 
@@ -202,6 +308,46 @@ public abstract class CvStage {
                 this.height = height;
                 this.score = score;
             }
+            
+            public double getX() {
+                return x;
+            }
+
+            public void setX(double x) {
+                this.x = x;
+            }
+
+            public double getY() {
+                return y;
+            }
+
+            public void setY(double y) {
+                this.y = y;
+            }
+
+            public double getWidth() {
+                return width;
+            }
+
+            public void setWidth(double width) {
+                this.width = width;
+            }
+
+            public double getHeight() {
+                return height;
+            }
+
+            public void setHeight(double height) {
+                this.height = height;
+            }
+
+            public double getScore() {
+                return score;
+            }
+
+            public void setScore(double score) {
+                this.score = score;
+            }
 
             @Override
             public String toString() {
@@ -209,5 +355,14 @@ public abstract class CvStage {
                         + height + ", score=" + score + "]";
             }
         }
+    }
+
+    /**
+     * Stages can override to register customized PropertyEditors.
+     * 
+     * @param table
+     * @param pipeline
+     */
+    public void customizePropertySheet(PipelinePropertySheetTable table, CvPipeline pipeline) {
     }
 }

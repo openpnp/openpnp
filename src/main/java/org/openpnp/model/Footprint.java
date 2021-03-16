@@ -59,6 +59,23 @@ public class Footprint {
 
         return shape;
     }
+    
+    public Shape getBodyShape() {
+        Path2D.Double shape = new Path2D.Double();
+        Pad body = new Pad();
+        body.setWidth(bodyWidth);
+        body.setHeight(bodyHeight);
+        shape.append(body.getShape(), false);
+        return shape;
+    }
+    
+    public Shape getPadsShape() {
+        Path2D.Double shape = new Path2D.Double();
+        for (Pad pad : pads) {
+            shape.append(pad.getShape(), false);
+        }
+        return shape;
+    }
 
     public LengthUnit getUnits() {
         return units;

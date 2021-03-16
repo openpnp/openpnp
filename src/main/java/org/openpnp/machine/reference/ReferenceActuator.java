@@ -19,9 +19,17 @@
 
 package org.openpnp.machine.reference;
 
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+
+import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JOptionPane;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceActuatorConfigurationWizard;
@@ -29,34 +37,67 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Camera;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractActuator;
+import org.openpnp.util.UiUtils;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ReferenceActuator extends AbstractActuator implements ReferenceHeadMountable {
-    protected final static Logger logger = LoggerFactory.getLogger(ReferenceActuator.class);
 
     @Element
-    private Location headOffsets;
+    private Location headOffsets = new Location(LengthUnit.Millimeters);
+
+    public enum MachineStateActuation {
+        LeaveAsIs,
+        AssumeUnknown,
+        AssumeActuatedOff,
+        AssumeActuatedOn,
+        ActuateOff,
+        ActuateOn
+    };
+
+    @Attribute(required = false)
+    protected MachineStateActuation enabledActuation = MachineStateActuation.AssumeUnknown;
+    @Attribute(required = false)
+    protected MachineStateActuation homedActuation = MachineStateActuation.LeaveAsIs;
+    @Attribute(required = false)
+    protected MachineStateActuation disabledActuation = MachineStateActuation.LeaveAsIs;
 
     @Attribute
     private int index;
 
+    @Deprecated
     @Element(required = false)
-    protected Length safeZ = new Length(0, LengthUnit.Millimeters);
+    protected Length safeZ = null;
 
-    protected ReferenceMachine machine;
-    protected ReferenceDriver driver;
-
+    protected Object lastActuationValue;
+    
     public ReferenceActuator() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
+
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
-                machine = (ReferenceMachine) configuration.getMachine();
-                driver = machine.getDriver();
+                Configuration.get().getMachine().addListener(new MachineListener.Adapter() {
+                    @Override
+                    public void machineEnabled(Machine machine) {
+                        actuateMachineState(machine, getEnabledActuation(), true);
+                    }
+                    @Override
+                    public void machineHomed(Machine machine, boolean isHomed) {
+                        if (isHomed) {
+                            actuateMachineState(machine, getHomedActuation(), true);
+                        }
+                    }
+                    @Override
+                    public void machineAboutToBeDisabled(Machine machine, String reason) {
+                        actuateMachineState(machine, getDisabledActuation(), false);
+                    }
+                });
             }
         });
     }
@@ -71,6 +112,30 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         return headOffsets;
     }
 
+    public MachineStateActuation getEnabledActuation() {
+        return enabledActuation;
+    }
+
+    public void setEnabledActuation(MachineStateActuation enabledActuation) {
+        this.enabledActuation = enabledActuation;
+    }
+
+    public MachineStateActuation getHomedActuation() {
+        return homedActuation;
+    }
+
+    public void setHomedActuation(MachineStateActuation homedActuation) {
+        this.homedActuation = homedActuation;
+    }
+
+    public MachineStateActuation getDisabledActuation() {
+        return disabledActuation;
+    }
+
+    public void setDisabledActuation(MachineStateActuation disabledActuation) {
+        this.disabledActuation = disabledActuation;
+    }
+
     public int getIndex() {
         return index;
     }
@@ -79,45 +144,213 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         this.index = index;
     }
 
+    @Element(required = false)
+    private ReferenceActuatorProfiles actuatorProfiles;
+
     @Override
-    public void actuate(boolean on) throws Exception {
-        logger.debug("{}.actuate({})", getName(), on);
-        driver.actuate(this, on);
-        machine.fireMachineHeadActivity(head);
+    public Object getLastActuationValue() {
+        return lastActuationValue;
+    }
+
+    protected void setLastActuationValue(Object lastActuationValue) {
+        Object oldValue = this.lastActuationValue;
+        this.lastActuationValue = lastActuationValue;
+        firePropertyChange("lastActuationValue", oldValue, lastActuationValue);
+        if (oldValue == null || !oldValue.equals(lastActuationValue)) {
+            getMachine().fireMachineActuatorActivity(this);
+        }
     }
 
     @Override
-    public Location getLocation() {
-        return driver.getLocation(this);
+    public Location getCameraToolCalibratedOffset(Camera camera) {
+        return new Location(camera.getUnitsPerPixel().getUnits());
+    }
+
+    @Override
+    public void setValueType(ActuatorValueType valueType) {
+        super.setValueType(valueType);
+    }
+
+    public ReferenceActuatorProfiles getActuatorProfiles() {
+        if (actuatorProfiles == null && getValueType() == ActuatorValueType.Profile)
+        { actuatorProfiles = new ReferenceActuatorProfiles();
+        }
+        return actuatorProfiles;
+    }
+
+    public void setActuatorProfiles(ReferenceActuatorProfiles actuatorProfiles) {
+        this.actuatorProfiles = actuatorProfiles;
+        firePropertyChange("actuatorProfiles", null, actuatorProfiles);
+        firePropertyChange("profileValues", null, getProfileValues());
+    }
+
+    @Override
+    protected String getDefaultOnProfile() {
+        ReferenceActuatorProfiles.Profile profile = getActuatorProfiles().findProfile(true);
+        return (profile != null ? profile.getName() : null);
+    }
+
+    @Override
+    protected String getDefaultOffProfile() {
+        ReferenceActuatorProfiles.Profile profile = getActuatorProfiles().findProfile(false);
+        return (profile != null ? profile.getName() : null);
+    }
+
+    @Override
+    public String[] getProfileValues() {
+        if (getValueType() == ActuatorValueType.Profile) {
+            return getActuatorProfiles().getProfileNames();
+        }
+        return new String[] {};
+    }
+
+    public void actuateMachineState(Machine machine, MachineStateActuation machineStateActuation, boolean deferred) {
+        // Need to execute this now, before the machine is being disabled.
+        switch (machineStateActuation) {
+            case LeaveAsIs:
+                break;
+            case AssumeUnknown:
+                setLastActuationValue(null);
+                break;
+            case AssumeActuatedOff:
+                setLastActuationValue(getDefaultOffValue());
+                break;
+            case AssumeActuatedOn:
+                setLastActuationValue(getDefaultOnValue());
+                break;
+            case ActuateOff:
+                tryActuateBoolean(machine, false, deferred);
+                break;
+            case ActuateOn:
+                tryActuateBoolean(machine, true, deferred);
+                break;
+        }
+    }
+
+    protected void tryActuateBoolean(Machine machine, boolean value, boolean deferred) {
+        try {
+            assertOnOffDefined();
+            if (deferred) {
+                UiUtils.submitUiMachineTask(() -> {
+                    actuate(value ? getDefaultOnValue() : getDefaultOffValue());
+                });
+            }
+            else {
+                machine.execute(() -> {
+                    actuate(value ? getDefaultOnValue() : getDefaultOffValue());
+                    return true;
+                }, true, 0);
+            }
+        }
+        catch (Exception e) {
+            MessageBoxes.errorBox(MainFrame.get(), "Error actuating "+getName(), e);
+        }
+    }
+
+    @Override
+    public void actuate(boolean on) throws Exception {
+        if (isCoordinatedBeforeActuate()) {
+            coordinateWithMachine(false);
+        }
+        Logger.debug("{}.actuate({})", getName(), on);
+        if (getValueType() == ActuatorValueType.Profile) {
+            actuateProfile(on);
+        }
+        else {
+            driveActuation(on);
+            setLastActuationValue(on);
+        }
+        if (isCoordinatedAfterActuate()) {
+            coordinateWithMachine(true);
+        }
+        getMachine().fireMachineHeadActivity(head);
+    }
+
+    protected void driveActuation(boolean on) throws Exception {
+        getDriver().actuate(this, on);
     }
 
     @Override
     public void actuate(double value) throws Exception {
-        logger.debug("{}.actuate({})", getName(), value);
-        driver.actuate(this, value);
-        machine.fireMachineHeadActivity(head);
+        if (isCoordinatedBeforeActuate()) {
+            coordinateWithMachine(false);
+        }
+        Logger.debug("{}.actuate({})", getName(), value);
+        driveActuation(value);
+        setLastActuationValue(value);
+        if (isCoordinatedAfterActuate()) {
+            coordinateWithMachine(true);
+        }
+        getMachine().fireMachineHeadActivity(head);
+    }
+
+    protected void driveActuation(double value) throws Exception {
+        getDriver().actuate(this, value);
     }
 
     @Override
-    public void moveTo(Location location, double speed) throws Exception {
-        logger.debug("{}.moveTo({}, {})", getName(), location, speed);
-        driver.moveTo(this, location, speed);
-        machine.fireMachineHeadActivity(head);
+    public void actuate(String value) throws Exception {
+        if (isCoordinatedBeforeActuate()) {
+            coordinateWithMachine(false);
+        }
+        Logger.debug("{}.actuate({})", getName(), value);
+        driveActuation(value);
+        setLastActuationValue(value);
+        if (isCoordinatedAfterActuate()) {
+            coordinateWithMachine(true);
+        }
+        getMachine().fireMachineHeadActivity(head);
+    }
+
+    protected void driveActuation(String value) throws Exception {
+        getDriver().actuate(this, value);
     }
 
     @Override
-    public void moveToSafeZ(double speed) throws Exception {
-        logger.debug("{}.moveToSafeZ({})", getName(), speed);
-        Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
-        Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN,
-                safeZ.getValue(), Double.NaN);
-        driver.moveTo(this, l, speed);
-        machine.fireMachineHeadActivity(head);
+    public void actuateProfile(String name) throws Exception {
+        if (getActuatorProfiles() != null) {
+            setLastActuationValue(getActuatorProfiles().actuate(this, name));
+        }
     }
+
+    @Override
+    public void actuateProfile(boolean on) throws Exception {
+        if (getActuatorProfiles() != null) {
+            setLastActuationValue(getActuatorProfiles().actuate(this, on));
+        }
+    }
+
+    @Override
+    public String read() throws Exception {
+        if (isCoordinatedBeforeRead()) {
+            coordinateWithMachine(false);
+        }
+        String value = getDriver().actuatorRead(this);
+        Logger.debug("{}.read(): {}", getName(), value);
+        if (isCoordinatedAfterActuate()) {
+            coordinateWithMachine(true);
+        }
+        getMachine().fireMachineHeadActivity(head);
+        return value;
+    }
+
+    @Override
+    public String read(Object parameter) throws Exception {
+        if (isCoordinatedBeforeRead()) {
+            coordinateWithMachine(false);
+        }
+        String value = getDriver().actuatorRead(this, parameter);
+        Logger.debug("{}.readWithParameter({}): {}", getName(), parameter, value);
+        getMachine().fireMachineHeadActivity(head);
+        return value;
+    }
+
+    @Override
+    public void home() throws Exception {}
 
     @Override
     public Wizard getConfigurationWizard() {
-        return new ReferenceActuatorConfigurationWizard(this);
+        return new ReferenceActuatorConfigurationWizard(getMachine(), this);
     }
 
     @Override
@@ -127,31 +360,60 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
+        ArrayList<PropertySheet> propertySheets = new ArrayList<>();
+        propertySheets.add(new PropertySheetWizardAdapter(getConfigurationWizard()));
+        if (getInterlockMonitor() != null) {
+            propertySheets.add(new PropertySheetWizardAdapter(getInterlockMonitor().getConfigurationWizard(this), "Axis Interlock"));
+        }
+        if (getValueType() == ActuatorValueType.Profile) {
+            propertySheets.add(new PropertySheetWizardAdapter(getActuatorProfiles().getConfigurationWizard(this), "Profiles"));
+        }
+        return propertySheets.toArray(new PropertySheet[propertySheets.size()]);
     }
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
-        return null;
+        return new Action[] { deleteAction };
     }
+    
+    public Action deleteAction = new AbstractAction("Delete Actuator") {
+        {
+            putValue(SMALL_ICON, Icons.delete);
+            putValue(NAME, "Delete Actuator");
+            putValue(SHORT_DESCRIPTION, "Delete the currently selected actuator.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
+                    "Are you sure you want to delete " + getName() + "?",
+                    "Delete " + getName() + "?", JOptionPane.YES_NO_OPTION);
+            if (ret == JOptionPane.YES_OPTION) {
+                if (getHead() != null) {
+                    getHead().removeActuator(ReferenceActuator.this);
+                }
+                else {
+                    Configuration.get().getMachine().removeActuator(ReferenceActuator.this);
+                }
+            }
+        }
+    };
 
     @Override
     public String toString() {
         return getName();
     }
 
-    public Length getSafeZ() {
-        return safeZ;
+    ReferenceMachine getMachine() {
+        return (ReferenceMachine) Configuration.get().getMachine();
     }
 
-    public void setSafeZ(Length safeZ) {
-        this.safeZ = safeZ;
+    public void fireProfilesChanged() {
+        firePropertyChange("profileValues", null, getProfileValues());
     }
 }

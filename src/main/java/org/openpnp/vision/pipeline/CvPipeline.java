@@ -1,5 +1,6 @@
 package org.openpnp.vision.pipeline;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -8,15 +9,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.openpnp.model.Configuration;
-import org.openpnp.spi.Camera;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
+import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.CvStage.Result;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.simpleframework.xml.convert.AnnotationStrategy;
+import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.stream.Format;
+import org.simpleframework.xml.stream.HyphenStyle;
+import org.simpleframework.xml.stream.Style;
 
 /**
  * A CvPipeline performs computer vision operations on a working image by processing in series a
@@ -38,22 +45,23 @@ import org.slf4j.LoggerFactory;
  * TODO: Add info showing pixel coordinates when mouse is in image window.
  */
 @Root
-public class CvPipeline {
+public class CvPipeline implements AutoCloseable {
     static {
         nu.pattern.OpenCV.loadShared();
-        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }
-
-    private final static Logger logger = LoggerFactory.getLogger(CvPipeline.class);
 
     @ElementList
     private ArrayList<CvStage> stages = new ArrayList<>();
 
     private Map<CvStage, Result> results = new HashMap<CvStage, Result>();
+    
+    private Map<String, Object> properties = new HashMap<String, Object>();
 
     private Mat workingImage;
-
-    private Camera camera;
+    private Object workingModel;
+    private ColorSpace workingColorSpace;
+    
+    private long totalProcessingTimeNs;
     
     public CvPipeline() {
         
@@ -128,7 +136,7 @@ public class CvPipeline {
         }
         return null;
     }
-
+    
     /**
      * Get the Result returned by the CvStage with the given name. May return null if the stage did
      * not return a result.
@@ -141,6 +149,32 @@ public class CvPipeline {
             return null;
         }
         return getResult(getStage(name));
+    }
+
+    /**
+     * Get the Result returned by the CvStage with the given name, expected to be defined in the pipeline 
+     * and to return a non-null model. 
+     * 
+     * @param name
+     * @return
+     * @throws Exception when the stage name is undefined or the stage is missing in the pipeline.
+     */
+    public Result getExpectedResult(String name) throws Exception {
+        if (name == null || name.trim().isEmpty()) {
+            throw new Exception("Stage name must be given.");
+        }
+        CvStage stage = getStage(name);
+        if (stage == null) {
+            throw new Exception("Stage \""+name+"\" is missing in the pipeline.");
+        }
+        Result result = getResult(stage);
+        if (result == null) {
+            throw new Exception("Stage \""+name+"\" returned no result.");
+        }
+        if (result.model instanceof Exception) {
+            throw (Exception)(result.model);
+        }
+        return result;
     }
 
     /**
@@ -163,18 +197,37 @@ public class CvPipeline {
      * @return
      */
     public Mat getWorkingImage() {
+        if (workingImage == null || (workingImage.cols() == 0 && workingImage.rows() == 0)) {
+            workingImage = new Mat(480, 640, CvType.CV_8UC3, new Scalar(0, 0, 0));
+            Imgproc.line(workingImage, new Point(0, 0), new Point(640, 480), new Scalar(0, 0, 255));
+            Imgproc.line(workingImage, new Point(640, 0), new Point(0, 480), new Scalar(0, 0, 255));
+            workingColorSpace = ColorSpace.Bgr;
+        }
         return workingImage;
     }
 
-    public void setCamera(Camera camera) {
-        this.camera = camera;
+    public Object getWorkingModel() {
+      return workingModel;
+    }
+    
+    public ColorSpace getWorkingColorSpace() {
+        return workingColorSpace;
+    }
+    
+    public void setWorkingColorSpace(ColorSpace colorSpace) {
+        workingColorSpace = colorSpace;
     }
 
-    public Camera getCamera() {
-        return camera;
+    public long getTotalProcessingTimeNs() {
+      return totalProcessingTimeNs;
+    }
+
+    public void setTotalProcessingTimeNs(long totalProcessingTimeNs) {
+      this.totalProcessingTimeNs = totalProcessingTimeNs;
     }
 
     public void process() {
+        totalProcessingTimeNs = 0;
         release();
         for (CvStage stage : stages) {
             // Process and time the stage and get the result.
@@ -182,7 +235,7 @@ public class CvPipeline {
             Result result = null;
             try {
                 if (!stage.isEnabled()) {
-                    throw new Exception("Stage not enabled.");
+                    throw new Exception(String.format("Stage \"%s\"not enabled.", stage.getName()));
                 }
                 result = stage.process(this);
             }
@@ -190,15 +243,23 @@ public class CvPipeline {
                 result = new Result(null, e);
             }
             processingTimeNs = System.nanoTime() - processingTimeNs;
+            totalProcessingTimeNs += processingTimeNs;
 
             Mat image = null;
             Object model = null;
+            ColorSpace colorSpace = null;
             if (result != null) {
                 image = result.image;
                 model = result.model;
+                colorSpace = result.colorSpace;
             }
-
-            // If the result image is null and there is a working image, replace the result image
+            if(stage.isEnabled() && model != null) {
+                workingModel = model;
+            }
+            if(stage.isEnabled() && colorSpace != null) {
+                workingColorSpace = colorSpace;
+            }
+            // If the result image is null and there is a working image,
             // replace the result image with a clone of the working image.
             if (image == null) {
                 if (workingImage != null) {
@@ -217,7 +278,15 @@ public class CvPipeline {
                 image = image.clone();
             }
 
-            results.put(stage, new Result(image, model, processingTimeNs));
+            // If the result colorSpace is null and there is a working colorSpace,
+            // replace the result colorSpace with the working colorSpace.
+            if (colorSpace == null) {
+                if (workingColorSpace != null) {
+                    colorSpace = workingColorSpace;
+                }
+            }
+
+            results.put(stage, new Result(image, colorSpace, model, processingTimeNs, stage));
         }
     }
 
@@ -229,13 +298,26 @@ public class CvPipeline {
     public void release() {
         if (workingImage != null) {
             workingImage.release();
+            workingImage = null;
         }
         for (Result result : results.values()) {
             if (result.image != null) {
                 result.image.release();
             }
         }
+        workingModel = null;
         results.clear();
+    }
+    
+    @Override
+    public void close() throws IOException {
+        release();
+    }
+    
+    @Override
+    protected void finalize() throws Throwable {
+        release();
+        super.finalize();
     }
 
     /**
@@ -245,7 +327,7 @@ public class CvPipeline {
      * @throws Exception
      */
     public String toXmlString() throws Exception {
-        Serializer ser = Configuration.createSerializer();
+        Serializer ser = createSerializer();
         StringWriter sw = new StringWriter();
         ser.write(this, sw);
         return sw.toString();
@@ -259,7 +341,7 @@ public class CvPipeline {
      */
     public void fromXmlString(String s) throws Exception {
         release();
-        Serializer ser = Configuration.createSerializer();
+        Serializer ser = createSerializer();
         StringReader sr = new StringReader(s);
         CvPipeline pipeline = ser.read(CvPipeline.class, sr);
         stages.clear();
@@ -285,5 +367,21 @@ public class CvPipeline {
         catch (Exception e) {
             throw new CloneNotSupportedException(e.getMessage());
         }
+    }
+    
+    public Object getProperty(String name) {
+        return properties.get(name);
+    }
+    
+    public void setProperty(String name, Object value) {
+        properties.put(name, value);
+    }
+    
+    private static Serializer createSerializer() {
+        Style style = new HyphenStyle();
+        Format format = new Format(style);
+        AnnotationStrategy strategy = new AnnotationStrategy();
+        Serializer serializer = new Persister(strategy, format);
+        return serializer;
     }
 }

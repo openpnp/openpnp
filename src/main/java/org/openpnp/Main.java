@@ -19,16 +19,30 @@
 
 package org.openpnp;
 
-import java.awt.EventQueue;
+import java.awt.*;
 import java.io.File;
+import java.util.Locale;
 
-import javax.swing.UIManager;
+import javax.swing.*;
 
-import org.apache.commons.io.FileUtils;
+import com.formdev.flatlaf.FlatLightLaf;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.ThemeDialog;
+import org.openpnp.gui.components.ThemeInfo;
+import org.openpnp.gui.components.ThemeSettingsPanel;
+import org.openpnp.logging.ConsoleWriter;
+import org.openpnp.logging.SystemLogger;
 import org.openpnp.model.Configuration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.pmw.tinylog.Configurator;
+import org.pmw.tinylog.Level;
+import org.pmw.tinylog.Logger;
+import org.pmw.tinylog.writers.RollingFileWriter;
+
+import javassist.CannotCompileException;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.CtMethod;
+import javassist.NotFoundException;
 
 /**
  * Start with -Xdock:name=OpenPnP on Mac to make it prettier.
@@ -37,8 +51,6 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class Main {
-    private static Logger logger;
-
     public static String getVersion() {
         String version = Main.class.getPackage().getImplementationVersion();
         if (version == null) {
@@ -47,7 +59,74 @@ public class Main {
         return version;
     }
 
+    private static void configureLogging(File configurationDirectory) {
+        File logDirectory = new File(configurationDirectory, "log");
+        File logFile = new File(logDirectory, "OpenPnP.log");
+        Configurator
+            .currentConfig()
+            .writer(new RollingFileWriter(logFile.getAbsolutePath(), 100))
+            .addWriter(new ConsoleWriter(System.out, System.err))
+            .activate();
+        Configurator.currentConfig()
+            .formatPattern("{date:yyyy-MM-dd HH:mm:ss.SSS} {class_name} {level}: {message}")
+            .activate();
+
+        // Redirect the stdout and stderr to the LogPanel
+        SystemLogger out = new SystemLogger(System.out, Level.INFO);
+        SystemLogger err = new SystemLogger(System.err, Level.ERROR);
+        System.setOut(out);
+        System.setErr(err);
+    }
+    
+    private static void monkeyPatchBeansBinding() {
+        // This hack fixes a bug in BeansBinding that will never be released due to to the library
+        // being abandoned. The bug is that in BeansBinding.bind, it chooses to call an uncached
+        // introspection method rather than a cached one. This causes each binding to take upwards
+        // of 50ms on my machine. On a form with many bindings this can cause a huge load time
+        // when loading wizards. This was most apparent on Feeders.
+        // Note that the bug was fixed in Subversion in revision 629:
+        // https://java.net/projects/beansbinding/sources/svn/revision/629
+        // But it is unlikely this will ever be released to Maven.
+        // This hack was found at http://blog.marcnuri.com/beansbinding-performance-issue-37/
+        try {
+            ClassPool cp = ClassPool.getDefault();
+            CtClass cc = cp.get("org.jdesktop.beansbinding.ELProperty");
+            CtMethod m = cc.getDeclaredMethod("getBeanInfo");
+            m.setBody("{" +
+            // "assert $1 != null;" +
+                    "try {" + "return java.beans.Introspector.getBeanInfo($1.getClass());"
+                    + "} catch (java.beans.IntrospectionException ie) {"
+                    + "throw new org.jdesktop.beansbinding.PropertyResolutionException(\"Exception while introspecting \" + $1.getClass().getName(), ie);"
+                    + "} }");
+            Class c = cc.toClass();
+            cc = cp.get("org.jdesktop.beansbinding.BeanProperty");
+            m = cc.getDeclaredMethod("getBeanInfo");
+            m.setBody("{" +
+            // "assert $1 != null;" +
+                    "try {" + "return java.beans.Introspector.getBeanInfo($1.getClass());"
+                    + "} catch (java.beans.IntrospectionException ie) {"
+                    + "throw new org.jdesktop.beansbinding.PropertyResolutionException(\"Exception while introspecting \" + $1.getClass().getName(), ie);"
+                    + "} }");
+            c = cc.toClass();
+        }
+        catch (NotFoundException ex) {
+            ex.printStackTrace();
+        }
+        catch (CannotCompileException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
+        monkeyPatchBeansBinding();
+        
+        for (String s : args) {
+            if (s.equals("--version")) {
+                System.out.println(getVersion());
+                System.exit(0);
+            }
+        }
+        
         // http://developer.apple.com/library/mac/#documentation/Java/Conceptual/Java14Development/07-NativePlatformIntegration/NativePlatformIntegration.html#//apple_ref/doc/uid/TP40001909-212952-TPXREF134
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         try {
@@ -58,43 +137,31 @@ public class Main {
         }
 
         File configurationDirectory = new File(System.getProperty("user.home"));
-        configurationDirectory = new File(configurationDirectory, ".openpnp");
+        configurationDirectory = new File(configurationDirectory, ".openpnp2");
 
         if (System.getProperty("configDir") != null) {
             configurationDirectory = new File(System.getProperty("configDir"));
         }
 
-        // If the log4j.properties is not in the configuration directory, copy
-        // the default over.
-        File log4jConfigurationFile = new File(configurationDirectory, "log4j.properties");
-        if (!log4jConfigurationFile.exists()) {
-            try {
-                FileUtils.copyURLToFile(ClassLoader.getSystemResource("log4j.properties"),
-                        log4jConfigurationFile);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+        configurationDirectory.mkdirs();
 
-        // Use the local configuration if it exists.
-        if (log4jConfigurationFile.exists()) {
-            System.setProperty("log4j.configuration", log4jConfigurationFile.toURI().toString());
-        }
-
-        // We don't create a logger until log4j has been configured or it tries
-        // to configure itself.
-        logger = LoggerFactory.getLogger(Main.class);
-
-        logger.debug(String.format("OpenPnP %s Started.", Main.getVersion()));
+        configureLogging(configurationDirectory);
 
         Configuration.initialize(configurationDirectory);
         final Configuration configuration = Configuration.get();
+        Locale.setDefault(Configuration.get().getLocale());
+
+        ThemeInfo theme = configuration.getThemeInfo();
+        new ThemeSettingsPanel().setTheme(theme, configuration.getFontSize());
+        ThemeDialog.getInstance().setOldTheme(theme);
+
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
                     MainFrame frame = new MainFrame(configuration);
                     frame.setVisible(true);
+                    Logger.info(String.format("Bienvenue, Bienvenido, Willkommen, Hello, Namaskar, Welkom, Bonjour to OpenPnP version %s.", Main.getVersion()));
+                    configuration.getScripting().on("Startup", null);
                 }
                 catch (Exception e) {
                     e.printStackTrace();

@@ -60,7 +60,7 @@ public class Point {
 
     @Override
     public String toString() {
-        return String.format(Locale.US, "%f, %f", x, y);
+        return String.format(Locale.US, "(%f, %f)", x, y);
     }
 
     @Override

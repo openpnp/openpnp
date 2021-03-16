@@ -23,7 +23,6 @@ package org.openpnp.machine.reference.feeder;
 
 import javax.swing.Action;
 
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTrayFeederConfigurationWizard;
@@ -31,10 +30,10 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.util.MovableUtils;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -42,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * picked from without moving any tape. Can handle trays of arbitrary X and Y count.
  */
 public class ReferenceTrayFeeder extends ReferenceFeeder {
-    private final static Logger logger = LoggerFactory.getLogger(ReferenceTrayFeeder.class);
+
 
     @Attribute
     private int trayCountX = 1;
@@ -60,16 +59,16 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
         if (pickLocation == null) {
             pickLocation = location;
         }
-        logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
+        Logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
         return pickLocation;
     }
 
     public void feed(Nozzle nozzle) throws Exception {
-        logger.debug("{}.feed({})", getName(), nozzle);
+        Logger.debug("{}.feed({})", getName(), nozzle);
         int partX, partY;
 
         if (feedCount >= (trayCountX * trayCountY)) {
-            throw new Exception(String.format("Tray empty on feeder %s.", getName()));
+            throw new Exception("Tray empty.");
         }
 
         if (trayCountX >= trayCountY) {
@@ -88,13 +87,59 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
         // and then add them to the location to get the final pickLocation.
         pickLocation = location.add(offsets.multiply(partX, partY, 0.0, 0.0));
 
-        logger.debug(String.format("Feeding part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f",
+        Logger.debug(String.format("Feeding part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f",
                 feedCount, partX, partY, pickLocation.getX(), pickLocation.getY(),
                 pickLocation.getRotation()));
 
-        feedCount++;
+        setFeedCount(getFeedCount() + 1);
     }
 
+    /**
+     * Returns if the feeder can take back a part.
+     * Makes the assumption, that after each feed a pick followed,
+     * so the pockets are now empty.
+     */
+    @Override
+    public boolean canTakeBackPart() {
+        if (feedCount > 0 ) {  
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public void takeBackPart(Nozzle nozzle) throws Exception {
+        // first check if we can and want to take back this part (should be always be checked before calling, but to be sure)
+        if (nozzle.getPart() == null) {
+            throw new UnsupportedOperationException("No part loaded that could be taken back.");
+        }
+        if (!nozzle.getPart().equals(getPart())) {
+            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getName() + " this feeder only supports " + getPart().getName());
+        }
+        if (!canTakeBackPart()) {
+            throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no free slot. Can not take back the part.");
+        }
+        
+        // can be null, if part had been picked from an other feeder
+        if (pickLocation == null) {
+            // repeat last feed operation, so that the pickLocation is the last free spot 
+            setFeedCount(getFeedCount() - 1); // is immediately increased during feed
+            feed(nozzle);
+        }
+        // ok, now put the part back on the location of the last pick
+        Location putLocation = getPickLocation();
+        MovableUtils.moveToLocationAtSafeZ(nozzle, putLocation);
+        nozzle.place();
+        nozzle.moveToSafeZ();
+        if (!nozzle.isPartOff()) {
+            throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
+        }
+        // change FeedCount
+        setFeedCount(getFeedCount() - 1);
+    }
+
+    
     public int getTrayCountX() {
         return trayCountX;
     }
@@ -124,7 +169,9 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
     }
 
     public void setFeedCount(int feedCount) {
+        int oldValue = this.feedCount;
         this.feedCount = feedCount;
+        firePropertyChange("feedCount", oldValue, feedCount);
     }
 
     @Override
@@ -144,18 +191,11 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
-    }
-
-    @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
         return null;
     }
 }

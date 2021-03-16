@@ -19,8 +19,6 @@
 
 package org.openpnp.gui.components;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.util.Locale;
@@ -44,12 +42,13 @@ public class ComponentDecorators {
                 ((JTextField) event.getComponent()).selectAll();
             }
         });
-        textField.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent event) {
+        textField.addActionListener(event -> {
                 ((JTextField) event.getSource()).selectAll();
-            }
         });
+    }
+    
+    public static void decorateWithLengthConversion(JTextField textField) {
+        decorateWithLengthConversion(textField, Configuration.get().getLengthDisplayFormat());
     }
 
     /**
@@ -59,17 +58,14 @@ public class ComponentDecorators {
      * 
      * @param textField
      */
-    public static void decorateWithLengthConversion(JTextField textField) {
-        textField.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent event) {
-                convertLength(((JTextField) event.getSource()));
-            }
+    public static void decorateWithLengthConversion(JTextField textField, String format) {
+        textField.addActionListener(event -> {
+                convertLength(((JTextField) event.getSource()), format);
         });
         textField.addFocusListener(new FocusAdapter() {
             @Override
             public void focusLost(FocusEvent event) {
-                convertLength(((JTextField) event.getSource()));
+                convertLength(((JTextField) event.getSource()), format);
             }
         });
     }
@@ -79,7 +75,7 @@ public class ComponentDecorators {
         decorateWithLengthConversion(textField);
     }
 
-    private static void convertLength(JTextField textField) {
+    private static void convertLength(JTextField textField, String format) {
         Length length = Length.parse(textField.getText(), false);
         if (length == null) {
             return;
@@ -88,7 +84,6 @@ public class ComponentDecorators {
             length.setUnits(Configuration.get().getSystemUnits());
         }
         length = length.convertToUnits(Configuration.get().getSystemUnits());
-        textField.setText(String.format(Locale.US, Configuration.get().getLengthDisplayFormat(),
-                length.getValue()));
+        textField.setText(String.format(Locale.US, format, length.getValue()));
     }
 }

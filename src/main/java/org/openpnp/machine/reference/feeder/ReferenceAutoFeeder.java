@@ -21,7 +21,7 @@ package org.openpnp.machine.reference.feeder;
 
 import javax.swing.Action;
 
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceAutoFeederConfigurationWizard;
@@ -30,41 +30,136 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.base.AbstractActuator;
+import org.openpnp.util.MovableUtils;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-/**
- * Not yet finished feeder that will be used for automated feeding. Just getting the idea down
- * on paper, as it were. It will have an actuator attached and you will be able to choose
- * to either toggle the feeder with a delay or send a double.
- */
 
 public class ReferenceAutoFeeder extends ReferenceFeeder {
-    private final static Logger logger = LoggerFactory.getLogger(ReferenceAutoFeeder.class);
-
     @Attribute(required=false)
     protected String actuatorName;
     
+    @Deprecated
+    @Attribute(required=false)
+    protected Actuator.ActuatorValueType actuatorType = null;
+    
     @Attribute(required=false)
     protected double actuatorValue;
+
+    @Attribute(required=false)
+    protected String postPickActuatorName;
     
+    @Deprecated
+    @Attribute(required=false)
+    protected Actuator.ActuatorValueType postPickActuatorType = null;
+    
+    @Attribute(required=false)
+    protected double postPickActuatorValue;
+    
+    @Attribute(required=false)
+    protected boolean moveBeforeFeed;
+
     @Override
     public Location getPickLocation() throws Exception {
         return location;
     }
 
-    @Override
-    public void feed(Nozzle nozzle) throws Exception {
-        if (actuatorName == null) {
-            logger.warn("No actuatorName specified for feeder.");
-            return;
-        }
-        Actuator actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
-        actuator.actuate(actuatorValue);
+    public ReferenceAutoFeeder() {
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationLoaded(Configuration configuration) throws Exception {
+                // Migrate actuator value types.
+                if (actuatorType != null) { 
+                    Actuator actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
+                    AbstractActuator.suggestValueType(actuator, actuatorType);
+                    actuatorType = null;
+                }
+                if (postPickActuatorType != null) {
+                    Actuator actuator = Configuration.get().getMachine().getActuatorByName(postPickActuatorName);
+                    AbstractActuator.suggestValueType(actuator, postPickActuatorType);
+                    postPickActuatorType = null;
+                }
+            }
+        });
     }
 
     @Override
+    public void feed(Nozzle nozzle) throws Exception {
+        if (actuatorName == null || actuatorName.equals("")) {
+            Logger.warn("No actuatorName specified for feeder {}.", getName());
+            return;
+        }
+        Actuator actuator = nozzle.getHead().getActuatorByName(actuatorName);
+        if (actuator == null) {
+            actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
+        }
+        if (actuator == null) {
+            throw new Exception("Feed failed. Unable to find an actuator named " + actuatorName);
+        }
+        if (isMoveBeforeFeed()) {
+            MovableUtils.moveToLocationAtSafeZ(nozzle, getPickLocation().derive(null, null, Double.NaN, null));
+        }
+        // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
+        actuator.actuate((Object)actuatorValue);
+    }
+    
+    @Override
+    public void postPick(Nozzle nozzle) throws Exception {
+        if (postPickActuatorName == null || postPickActuatorName.equals("")) {
+            return;
+        }
+        Actuator actuator = nozzle.getHead().getActuatorByName(postPickActuatorName);
+        if (actuator == null) {
+            actuator = Configuration.get().getMachine().getActuatorByName(postPickActuatorName);
+        }
+        if (actuator == null) {
+            throw new Exception("Post pick failed. Unable to find an actuator named " + postPickActuatorName);
+        }
+        // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
+        actuator.actuate((Object)postPickActuatorValue);
+    }
+    
+    public String getActuatorName() {
+        return actuatorName;
+    }
+
+    public void setActuatorName(String actuatorName) {
+        this.actuatorName = actuatorName;
+    }
+
+    public double getActuatorValue() {
+        return actuatorValue;
+    }
+
+    public void setActuatorValue(double actuatorValue) {
+        this.actuatorValue = actuatorValue;
+    }
+
+    public String getPostPickActuatorName() {
+        return postPickActuatorName;
+    }
+
+    public void setPostPickActuatorName(String postPickActuatorName) {
+        this.postPickActuatorName = postPickActuatorName;
+    }
+
+    public double getPostPickActuatorValue() {
+        return postPickActuatorValue;
+    }
+
+    public void setPostPickActuatorValue(double postPickActuatorValue) {
+        this.postPickActuatorValue = postPickActuatorValue;
+    }
+
+    public boolean isMoveBeforeFeed() {
+		return moveBeforeFeed;
+	}
+
+	public void setMoveBeforeFeed(boolean moveBeforeFeed) {
+		this.moveBeforeFeed = moveBeforeFeed;
+	}
+
+	@Override
     public Wizard getConfigurationWizard() {
         return new ReferenceAutoFeederConfigurationWizard(this);
     }
@@ -76,18 +171,11 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
-    }
-
-    @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
         return null;
     }
 }

@@ -44,4 +44,8 @@ public abstract class AbstractModelObject {
     protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {
         propertyChangeSupport.firePropertyChange(propertyName, oldValue, newValue);
     }
+    
+    protected void fireIndexedPropertyChange(String propertyName, int index, Object oldValue, Object newValue) {
+        propertyChangeSupport.fireIndexedPropertyChange(propertyName, index, oldValue, newValue);
+    }
 }

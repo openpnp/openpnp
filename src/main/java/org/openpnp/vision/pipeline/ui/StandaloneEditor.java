@@ -37,7 +37,6 @@ public class StandaloneEditor extends JFrame {
         pipeline.add(new ImageRead());
         setTitle("CvPipelineEditor");
         setSize(1328, 1022);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         getContentPane().setLayout(new BorderLayout());
 
         JSplitPane splitPane = new JSplitPane();
@@ -126,7 +125,33 @@ public class StandaloneEditor extends JFrame {
                 setInputDirectory(defaultInputDirectory);
             }
         }
-
+        
+        String defaultPipeline =
+                Preferences.userNodeForPackage(getClass()).get("pipeline", null);
+        if (defaultPipeline != null) {
+            try {
+                editor.getPipeline().fromXmlString(defaultPipeline);
+            }
+            catch (Exception e) {
+                System.out.println("Previously saved pipeline failed to load: " + e.getMessage());
+            }
+        }
+        
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                try {
+                    Preferences.userNodeForPackage(getClass()).put("pipeline",
+                            editor.getPipeline().toXmlString());
+                }
+                catch (Exception e) {
+                    
+                }
+                System.exit(0);
+            }
+        });        
+        
         setVisible(true);
     }
 

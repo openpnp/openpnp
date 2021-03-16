@@ -21,20 +21,19 @@ package org.openpnp.gui.support;
 
 import org.openpnp.spi.Camera;
 
-public class CameraItem {
-    private Camera camera;
+public class CameraItem extends HeadMountableItem {
 
     public CameraItem(Camera camera) {
-        this.camera = camera;
+    	super(camera);
     }
 
     public Camera getCamera() {
-        return camera;
+        return (Camera)hm;
     }
 
     @Override
     public String toString() {
-        return String.format("Camera: %s %s", camera.getName(), camera.getHead() != null
-                ? String.format("(Head: %s)", camera.getHead().getName()) : "");
+        return String.format("Camera: %s %s", hm.getName(), hm.getHead() != null
+                ? String.format("(Head: %s)", hm.getHead().getName()) : "");
     }
 }

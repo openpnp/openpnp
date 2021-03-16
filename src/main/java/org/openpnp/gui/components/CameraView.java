@@ -26,17 +26,22 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.font.TextLayout;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.text.DateFormat;
@@ -60,32 +65,48 @@ import javax.swing.SwingUtilities;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.reticle.Reticle;
+import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.machine.reference.AbstractBroadcastingCamera;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+import org.openpnp.util.Utils2D;
 import org.openpnp.util.XmlSerialize;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.pmw.tinylog.Logger;
 
 @SuppressWarnings("serial")
 public class CameraView extends JComponent implements CameraListener {
-    private final static Logger logger = LoggerFactory.getLogger(CameraView.class);
-
     private static final String PREF_RETICLE = "CamerView.reticle";
+    private static final String PREF_ZOOM_INCREMENT = "CamerView.zoomIncrement";
+    private static final String PREF_RENDERING_QUALITY = "CamerView.renderingQuality";
+    private static final double DEFAULT_ZOOM_INCREMENT = 0.01;
 
     private static final String DEFAULT_RETICLE_KEY = "DEFAULT_RETICLE_KEY";
 
     private final static int HANDLE_DIAMETER = 8;
 
     private enum HandlePosition {
-        NW, N, NE, E, SE, S, SW, W
+        NW,
+        N,
+        NE,
+        E,
+        SE,
+        S,
+        SW,
+        W
     }
 
     private enum SelectionMode {
-        Resizing, Moving, Creating
+        Resizing,
+        Moving,
+        Creating
     }
 
     /**
@@ -97,11 +118,6 @@ public class CameraView extends JComponent implements CameraListener {
      * The last frame received, reported by the Camera.
      */
     private BufferedImage lastFrame;
-
-    /**
-     * The maximum frames per second that we'll display.
-     */
-    private int maximumFps;
 
     private LinkedHashMap<Object, Reticle> reticles = new LinkedHashMap<>();
 
@@ -180,27 +196,46 @@ public class CameraView extends JComponent implements CameraListener {
 
     private long flashStartTimeMs;
     private long flashLengthMs = 250;
-    
+
     private boolean showName = false;
+    
+    private double zoom = 1d;
+    private double zoomIncPerMouseWheelTick = DEFAULT_ZOOM_INCREMENT;
+    
+    private boolean dragJogging = false;
+    private boolean lightToggling = false;
+
+    
+    private MouseEvent dragJoggingStart = null;
+    private MouseEvent dragJoggingTarget = null;
+    private int dragJogHandleSize = 50;
+    Color dragJogHandleInactiveColor = new Color(125, 125, 125);
+    Color dragJogHandleActiveColor = Color.white;
+
+    private int lightToggleSize = 40;
+    Color lightToggleInactiveBgColor = new Color(255, 255, 255, 100);
+    Color lightToggleActiveBgColor = new Color(0, 0, 0, 100);
+    Color lightToggleInactiveColor = new Color(0, 0, 0, 200);
+    Color lightToggleActiveColor = new Color(255, 255, 125, 200);
+
+    long lastFrameReceivedTime = 0;
+    MovingAverage fpsAverage = new MovingAverage(24);
+    double fps = 0;
+    public enum RenderingQuality {
+        Low, High, BestScale
+    }
+    RenderingQuality renderingQuality = RenderingQuality.Low;
+
+    private Length viewingPlaneZ; //the Z coordinate at which the reticle is correctly scaled
 
     public CameraView() {
         setBackground(Color.black);
         setOpaque(true);
 
-        String reticlePref = prefs.get(PREF_RETICLE, null);
-        try {
-            Reticle reticle = (Reticle) XmlSerialize.deserialize(reticlePref);
-            setDefaultReticle(reticle);
-        }
-        catch (Exception e) {
-            // logger.warn("Warning: Unable to load Reticle preference");
-        }
-
-        popupMenu = new CameraViewPopupMenu(this);
-
         addMouseListener(mouseListener);
         addMouseMotionListener(mouseMotionListener);
         addComponentListener(componentListener);
+        addMouseWheelListener(mouseWheelListener);
 
         scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 
@@ -220,10 +255,17 @@ public class CameraView extends JComponent implements CameraListener {
             }
         }, 0, 50, TimeUnit.MILLISECONDS);
     }
+    
+    private String getReticlePrefKey() {
+        return PREF_RETICLE + "." + camera.getId();
+    }
 
-    public CameraView(int maximumFps) {
-        this();
-        setMaximumFps(maximumFps);
+    private String getZoomIncrementPrefKey() {
+        return PREF_ZOOM_INCREMENT + "." + camera.getId();
+    }
+
+    private String getQualityRenderingPrefKey() {
+        return PREF_RENDERING_QUALITY + "." + camera.getId();
     }
 
     public void addActionListener(CameraViewActionListener listener) {
@@ -236,42 +278,55 @@ public class CameraView extends JComponent implements CameraListener {
         return actionListeners.remove(listener);
     }
 
-    public void setMaximumFps(int maximumFps) {
-        this.maximumFps = maximumFps;
-        // turn off capture for the camera we are replacing, if any
-        if (this.camera != null) {
-            this.camera.stopContinuousCapture(this);
-        }
-        // turn on capture for the new camera
-        if (this.camera != null) {
-            this.camera.startContinuousCapture(this, maximumFps);
-        }
-    }
-
-    public int getMaximumFps() {
-        return maximumFps;
-    }
-
     public void setCamera(Camera camera) {
         // turn off capture for the camera we are replacing, if any
         if (this.camera != null) {
             this.camera.stopContinuousCapture(this);
         }
         this.camera = camera;
+        // load the reticle pref, if any
+        try {
+            String reticleXml = prefs.get(getReticlePrefKey(), null);
+            Reticle reticle = (Reticle) XmlSerialize.deserialize(reticleXml);
+            setDefaultReticle(reticle);
+        }
+        catch (Exception e) {
+            Logger.debug("Failed to load camera specific reticle, checking default.");
+            try {
+                String reticleXml = prefs.get(PREF_RETICLE, null);
+                Reticle reticle = (Reticle) XmlSerialize.deserialize(reticleXml);
+                setDefaultReticle(reticle);
+            }
+            catch (Exception e1) {
+                Logger.debug("No reticle preference found.");
+            }
+        }
+
+        // load the zoom increment pref, if any
+        zoomIncPerMouseWheelTick = prefs.getDouble(getZoomIncrementPrefKey(), DEFAULT_ZOOM_INCREMENT);
+        // load sub.pixel rendering prefs, if any.
+        try {
+            renderingQuality = RenderingQuality.valueOf(prefs.get(getQualityRenderingPrefKey(), RenderingQuality.Low.toString()));
+        }
+        catch (Exception e) {
+            // ignore errors
+        }
         // turn on capture for the new camera
         if (this.camera != null) {
-            this.camera.startContinuousCapture(this, maximumFps);
+            this.camera.startContinuousCapture(this);
+            // set the viewing plane to the default for the camera
+            viewingPlaneZ = camera.getDefaultZ();
         }
     }
 
     public Camera getCamera() {
         return camera;
     }
-    
+
     public void setShowName(boolean showName) {
         this.showName = showName;
     }
-    
+
     public boolean isShowName() {
         return this.showName;
     }
@@ -279,7 +334,7 @@ public class CameraView extends JComponent implements CameraListener {
     public void setDefaultReticle(Reticle reticle) {
         setReticle(DEFAULT_RETICLE_KEY, reticle);
 
-        prefs.put(PREF_RETICLE, XmlSerialize.serialize(reticle));
+        prefs.put(getReticlePrefKey(), XmlSerialize.serialize(reticle));
         try {
             prefs.flush();
         }
@@ -325,6 +380,76 @@ public class CameraView extends JComponent implements CameraListener {
         this.text = text;
     }
 
+    public double getZoomIncPerMouseWheelTick() {
+        return zoomIncPerMouseWheelTick;
+    }
+
+    public void setZoomIncPerMouseWheelTick(double zoomIncPerMouseWheelTick) {
+        prefs.putDouble(getZoomIncrementPrefKey(), zoomIncPerMouseWheelTick);
+        this.zoomIncPerMouseWheelTick = zoomIncPerMouseWheelTick;
+    }
+    
+    public RenderingQuality getRenderingQuality() {
+        return renderingQuality;
+    }
+
+    public void setRenderingQuality(RenderingQuality renderingQuality) {
+        prefs.put(getQualityRenderingPrefKey(), renderingQuality.toString());
+        this.renderingQuality = renderingQuality;
+        calculateScalingData();
+    }
+
+    /**
+     * Gets the current Z coordinate of the viewing plane at which the reticle is correctly scaled
+     * 
+     * @return the Z coordinate
+     */
+    public Length getViewingPlaneZ() {
+        return viewingPlaneZ;
+    }
+
+    /**
+     * Sets the Z coordinate at which the reticle is correctly scaled
+     * 
+     * @param viewingPlaneZ the Z coordinate
+     */
+    public void setViewingPlaneZ(Length viewingPlaneZ) {
+        try {
+            if (camera.getAxisZ() != null 
+                    && camera.isInSafeZZone(viewingPlaneZ)) {
+                this.viewingPlaneZ = camera.getDefaultZ();
+            }
+            else {
+                this.viewingPlaneZ = viewingPlaneZ;
+            }
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+        }
+        calculateScalingData();
+        repaint();
+    }
+
+    /**
+     * Resets the Z coordinate at which the reticle is correctly scaled to the default for the
+     * camera
+     */
+    public void resetViewingPlaneZ() {
+        this.setViewingPlaneZ(camera.getDefaultZ());
+    }
+
+    /**
+     * Checks to see if the viewing plane for this camera can be changed to different heights. This is
+     * true if the camera's Units Per Pixel is different at two different heights.
+     * 
+     * @return true if the viewing plane can be changed
+     */
+    public boolean isViewingPlaneChangable() {
+        Location upp1 = camera.getUnitsPerPixel(new Length(0.0, LengthUnit.Millimeters));
+        Location upp2 = camera.getUnitsPerPixel(new Length(10.0, LengthUnit.Millimeters));
+        return !upp1.equals(upp2);
+    }
+
     /**
      * Causes a short flash in the CameraView to get the user's attention.
      */
@@ -345,6 +470,9 @@ public class CameraView extends JComponent implements CameraListener {
 
     public void setCameraViewFilter(CameraViewFilter cameraViewFilter) {
         this.cameraViewFilter = cameraViewFilter;
+        if (camera.isAutoVisible()) {
+            camera.ensureCameraVisible();
+        }
     }
 
     public void showFilteredImage(final BufferedImage filteredImage, final long milliseconds) {
@@ -358,8 +486,8 @@ public class CameraView extends JComponent implements CameraListener {
      * briefly show the result of image processing. This is a shortcut to
      * setCameraViewFilter(CameraViewFilter) which simply removes itself after the specified time.
      * 
-     * In addition to showing the given image, if the text parameters is not null the text
-     * will be shown during the timeout using setText().
+     * In addition to showing the given image, if the text parameters is not null the text will be
+     * shown during the timeout using setText().
      * 
      * @param image
      * @param text
@@ -386,6 +514,8 @@ public class CameraView extends JComponent implements CameraListener {
                 }
             }
         });
+        // Make sure the filtered image is shown immediately and also counted as fps (for 0 or low fps cameras). 
+        frameReceived(null);
     }
 
     public BufferedImage captureSelectionImage() {
@@ -418,7 +548,9 @@ public class CameraView extends JComponent implements CameraListener {
         g.drawImage(lastFrame, 0, 0, sw, sh, sx, sy, sx + sw, sy + sh, null);
         g.dispose();
 
-        while (!future.isDone());
+        while (!future.isDone()) {
+            
+        }
 
         return image;
     }
@@ -432,13 +564,18 @@ public class CameraView extends JComponent implements CameraListener {
         if (cameraViewFilter != null) {
             img = cameraViewFilter.filterCameraImage(camera, img);
         }
+        if (img == null) {
+            return;
+        }
         BufferedImage oldFrame = lastFrame;
         lastFrame = img;
         if (oldFrame == null
                 || (oldFrame.getWidth() != img.getWidth() || oldFrame.getHeight() != img.getHeight()
-                        || camera.getUnitsPerPixel() != lastUnitsPerPixel)) {
+                        || !camera.getUnitsPerPixel(viewingPlaneZ).equals(lastUnitsPerPixel))) {
             calculateScalingData();
         }
+        fps = 1000.0 / fpsAverage.next(System.currentTimeMillis() - lastFrameReceivedTime);
+        lastFrameReceivedTime = System.currentTimeMillis();
         repaint();
     }
 
@@ -465,7 +602,7 @@ public class CameraView extends JComponent implements CameraListener {
 
         lastSourceWidth = image.getWidth();
         lastSourceHeight = image.getHeight();
-
+        
         double heightRatio = lastSourceHeight / destHeight;
         double widthRatio = lastSourceWidth / destWidth;
 
@@ -480,13 +617,25 @@ public class CameraView extends JComponent implements CameraListener {
             scaledHeight = (int) (scaledWidth * aspectRatio);
         }
 
+        scaledWidth *= zoom;
+        scaledHeight *= zoom;
+
+        if (renderingQuality == RenderingQuality.BestScale) {
+            // Bring to an integral scaling factor.
+            double scalingFactor = lastSourceWidth > scaledWidth ? 
+                    1./Math.max(1, Math.round(lastSourceWidth/scaledWidth))
+                    : Math.max(1, Math.round(scaledWidth/lastSourceWidth));
+            scaledWidth = (int)(lastSourceWidth*scalingFactor);
+            scaledHeight = (int)(lastSourceHeight*scalingFactor);
+        }
+
         imageX = ins.left + (width / 2) - (scaledWidth / 2);
         imageY = ins.top + (height / 2) - (scaledHeight / 2);
 
         scaleRatioX = lastSourceWidth / (double) scaledWidth;
         scaleRatioY = lastSourceHeight / (double) scaledHeight;
-
-        lastUnitsPerPixel = camera.getUnitsPerPixel();
+        
+        lastUnitsPerPixel = camera.getUnitsPerPixel(viewingPlaneZ);
         scaledUnitsPerPixelX = lastUnitsPerPixel.getX() * scaleRatioX;
         scaledUnitsPerPixelY = lastUnitsPerPixel.getY() * scaleRatioY;
 
@@ -499,6 +648,9 @@ public class CameraView extends JComponent implements CameraListener {
     @Override
     protected synchronized void paintComponent(Graphics g) {
         super.paintComponent(g);
+        if (lastFrame == null) {
+            frameReceived(AbstractBroadcastingCamera.getCaptureErrorImage());
+        }
         BufferedImage image = lastFrame;
         Insets ins = getInsets();
         int width = getWidth() - ins.left - ins.right;
@@ -508,12 +660,27 @@ public class CameraView extends JComponent implements CameraListener {
         g2d.fillRect(ins.left, ins.top, width, height);
         if (image != null) {
             // Only render if there is a valid image.
-            g2d.drawImage(lastFrame, imageX, imageY, scaledWidth, scaledHeight, null);
+            if (renderingQuality == RenderingQuality.Low) {
+                g2d.drawImage(lastFrame, imageX, imageY, scaledWidth, scaledHeight, null);
+            }
+            else {
+                g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                AffineTransform t = new AffineTransform();
+                double scaleW = ((double)scaledWidth)/image.getWidth();
+                double scaleH = ((double)scaledHeight)/image.getHeight();
+                // Scaled
+                t.translate(imageX, imageY);
+                t.scale(scaleW, scaleH);
+                g2d.drawImage(lastFrame, t, null);
+            }
 
-            double c = camera.getLocation().getRotation();
+            double c = MainFrame.get().getMachineControls().getSelectedTool().getLocation()
+                    .getRotation();
 
             for (Reticle reticle : reticles.values()) {
-                reticle.draw(g2d, camera.getUnitsPerPixel().getUnits(), scaledUnitsPerPixelX,
+                reticle.draw(g2d, camera.getUnitsPerPixel(viewingPlaneZ).getUnits(), scaledUnitsPerPixelX,
                         scaledUnitsPerPixelY, ins.left + (width / 2), ins.top + (height / 2),
                         scaledWidth, scaledHeight, c);
             }
@@ -521,7 +688,7 @@ public class CameraView extends JComponent implements CameraListener {
             if (text != null) {
                 drawTextOverlay(g2d, 10, 10, text);
             }
-            
+
             if (showName) {
                 Dimension dim = measureTextOverlay(g2d, camera.getName());
                 drawTextOverlay(g2d, 10, height - dim.height - 10, camera.getName());
@@ -533,6 +700,26 @@ public class CameraView extends JComponent implements CameraListener {
 
             if (selectionEnabled && selection != null) {
                 paintSelection(g2d);
+            }
+
+            if (!selectionEnabled) {
+                paintDragJogging(g2d);
+                paintLightToggle(g2d);
+            }
+
+            if (viewingPlaneZ != null) {
+                // Display the height of the reticle in the lower left corner if it is different than
+                // the default
+                Length viewingPlaneDiff = viewingPlaneZ.subtract(camera.getDefaultZ());
+                if (Math.abs(viewingPlaneDiff.
+                        convertToUnits(LengthUnit.Millimeters)
+                        .getValue()) > 0.05) {
+                    LengthConverter lengthConverter = new LengthConverter();
+                    String text = "Z: " + lengthConverter.convertForward(viewingPlaneZ) 
+                    + viewingPlaneDiff.getUnits().getShortName();
+                    Dimension dim = measureTextOverlay(g2d, text);
+                    drawTextOverlay(g2d, width - dim.width - 10, height - dim.height - 10, text);
+                }
             }
         }
         else {
@@ -548,6 +735,212 @@ public class CameraView extends JComponent implements CameraListener {
             alpha = Math.max(alpha, 0);
             g2d.setColor(new Color(1f, 1f, 1f, alpha));
             g2d.fillRect(0, 0, getWidth(), getHeight());
+        }
+    }
+    
+    private boolean isPointInsideRectangle(int pointX, int pointY, int rectX1, int rectY1, int rectX2, int rectY2) {
+        return pointX >= rectX1 && pointX <= rectX2 && pointY >= rectY1 && pointY <= rectY2;
+    }
+    
+    private boolean isPointInsideCircle(int pointX, int pointY, int circleX, int circleY, int circleRadius) {
+        return Math.pow(pointX - circleX, 2) + Math.pow(pointY - circleY, 2) <= Math.pow(circleRadius, 2);
+    }
+    
+    private boolean isPointInsideDragJogRotationHandle(int x, int y) {
+        HeadMountable selectedTool = MainFrame.get().getMachineControls().getSelectedTool(); 
+        if (selectedTool.getAxisRotation() == null) {
+            return false;
+        }
+        
+        Insets ins = getInsets();
+        int width = getWidth() - ins.left - ins.right;
+        int height = getHeight() - ins.top - ins.bottom;
+        int handleSize = 50;
+        int halfHandleSize = handleSize / 2;
+        
+        // The rotation handle is drawn on an imaginary circle centered in the view
+        double rotHandleRadius = Math.min(width, height) / 2 * .80;
+        double rotHandleAngle = -Utils2D.normalizeAngle(selectedTool.getLocation().getRotation() + 90);
+        double rotHandleX = rotHandleRadius * Math.cos(Math.toRadians(rotHandleAngle)) + (width / 2.);
+        double rotHandleY = rotHandleRadius * Math.sin(Math.toRadians(rotHandleAngle)) + (height / 2.);
+        
+        return isPointInsideCircle(x, y, (int) rotHandleX, (int) rotHandleY, (int) halfHandleSize);
+    }
+    
+    private boolean isPointInsideDragJogXyHandle(int x, int y) {
+        Insets ins = getInsets();
+        int width = getWidth() - ins.left - ins.right;
+        int height = getHeight() - ins.top - ins.bottom;
+        int halfHandleSize = dragJogHandleSize / 2;
+        
+        int xyHandleX0 = width / 2 - halfHandleSize;
+        int xyHandleY0 = height / 2 - halfHandleSize;
+        int xyHandleX1 = xyHandleX0 + dragJogHandleSize;
+        int xyHandleY1 = xyHandleY0 + dragJogHandleSize;
+        
+        return isPointInsideRectangle(x, y, xyHandleX0, xyHandleY0, xyHandleX1, xyHandleY1);
+    }
+    
+    private boolean isPointInsideDragJogHandle(int x, int y) {
+        return isPointInsideDragJogXyHandle(x, y) || isPointInsideDragJogRotationHandle(x, y);
+    }
+
+    private boolean isPointInsideLightToggle(int x, int y) {
+        Actuator actuator = camera.getLightActuator();
+        if (actuator == null) {
+            return false;
+        }
+        
+        Insets ins = getInsets();
+        int width = getWidth() - ins.left - ins.right;
+        int height = getHeight() - ins.top - ins.bottom;
+        // Center
+        int x0 = width - lightToggleSize/2;
+        int y0 = lightToggleSize/2;
+        
+        double distance = Math.sqrt(Math.pow(x-x0, 2)+ Math.pow(y-y0, 2));
+
+        return distance <= lightToggleSize/2;
+    }
+
+    private void drawCircle(Graphics2D g2d, int centerX, int centerY, int radius) {
+        g2d.drawArc(centerX - radius, centerY - radius, radius * 2, radius * 2, 0, 360);
+    }
+
+    private double snapRotationAngleToTypicalAngles(double angle) {
+        // Round to typical pcb placing angles
+        return ((int) Math.round(angle / 45)) * 45.0;
+    }
+    
+    private void paintDragJogRotationHandle(Graphics2D g2d, boolean active) {
+        HeadMountable selectedTool = MainFrame.get().getMachineControls().getSelectedTool(); 
+        if (selectedTool.getAxisRotation() == null) {
+            return;
+        }
+        
+        Insets ins = getInsets();
+        int width = getWidth() - ins.left - ins.right;
+        int height = getHeight() - ins.top - ins.bottom;
+
+        // The rotation handle is drawn on an imaginary circle centered in the view
+        double rotHandleRadius = Math.min(width, height) / 2 * .80;
+        double rotHandleAngle = -Utils2D.normalizeAngle(selectedTool.getLocation().getRotation() + 90);
+        double rotHandleX = rotHandleRadius * Math.cos(Math.toRadians(rotHandleAngle)) + (width / 2.);
+        double rotHandleY = rotHandleRadius * Math.sin(Math.toRadians(rotHandleAngle)) + (height / 2.);
+
+        // Draw the circular handle at it's original position in the inactive color
+        g2d.setColor(dragJogHandleInactiveColor);
+        drawCircle(g2d, (int) rotHandleX, (int) rotHandleY, dragJogHandleSize / 2);
+
+        if (active) {
+            // Draw the imaginary circle as a guideline for the rotation handle
+            g2d.setColor(dragJogHandleInactiveColor);
+            drawCircle(g2d, width / 2, height / 2, (int) rotHandleRadius);
+            
+            int targetX = dragJoggingTarget.getX();
+            int targetY = dragJoggingTarget.getY();
+            
+            // Now draw the circular handle at it's target position in the active color
+            double rotTargetHandleAngle = Math.toDegrees(Math.atan2(targetY - (height / 2), targetX - (width / 2)));
+            rotTargetHandleAngle = Utils2D.normalizeAngle(rotTargetHandleAngle);
+
+            // If the alt button is pressed snap to certain angles
+            if(dragJoggingTarget.isAltDown()) {
+                rotTargetHandleAngle = snapRotationAngleToTypicalAngles(rotTargetHandleAngle);
+            }
+
+            double rotTargetHandleX = rotHandleRadius * Math.cos(Math.toRadians(rotTargetHandleAngle)) + (width / 2.);
+            double rotTargetHandleY = rotHandleRadius * Math.sin(Math.toRadians(rotTargetHandleAngle)) + (height / 2.);
+            g2d.setColor(dragJogHandleActiveColor);
+            drawCircle(g2d, (int) rotTargetHandleX, (int) rotTargetHandleY, dragJogHandleSize / 2);
+            
+            // And draw a rotated crosshair to help the user line things up
+            double x1 = rotHandleRadius * Math.cos(Math.toRadians(rotTargetHandleAngle)) + (width / 2.);
+            double y1 = rotHandleRadius * Math.sin(Math.toRadians(rotTargetHandleAngle)) + (height / 2.);
+            double x2 = rotHandleRadius * Math.cos(Math.toRadians(rotTargetHandleAngle + 180)) + (width / 2.);
+            double y2 = rotHandleRadius * Math.sin(Math.toRadians(rotTargetHandleAngle + 180)) + (height / 2.);
+            g2d.drawLine((int) x1, (int) y1, (int) x2, (int) y2);
+            x1 = rotHandleRadius * Math.cos(Math.toRadians(rotTargetHandleAngle + 90)) + (width / 2.);
+            y1 = rotHandleRadius * Math.sin(Math.toRadians(rotTargetHandleAngle + 90)) + (height / 2.);
+            x2 = rotHandleRadius * Math.cos(Math.toRadians(rotTargetHandleAngle + 270)) + (width / 2.);
+            y2 = rotHandleRadius * Math.sin(Math.toRadians(rotTargetHandleAngle + 270)) + (height / 2.);
+            g2d.drawLine((int) x1, (int) y1, (int) x2, (int) y2);
+        }
+    }
+    
+    private void paintDragJogXyHandle(Graphics2D g2d, boolean active) {
+        Insets ins = getInsets();
+        int width = getWidth() - ins.left - ins.right;
+        int height = getHeight() - ins.top - ins.bottom;
+
+        int xyHandleX0 = width / 2 - dragJogHandleSize / 2;
+        int xyHandleY0 = height / 2 - dragJogHandleSize / 2;
+
+        g2d.setColor(dragJogHandleInactiveColor);
+        g2d.drawRect(xyHandleX0, xyHandleY0, dragJogHandleSize, dragJogHandleSize);
+
+        if (active) {
+            int targetX = dragJoggingTarget.getX();
+            int targetY = dragJoggingTarget.getY();
+            
+            int xyTargetHandleX0 = targetX - dragJogHandleSize / 2;
+            int xyTargetHandleY0 = targetY - dragJogHandleSize / 2;
+            g2d.setColor(dragJogHandleActiveColor);
+            g2d.drawRect(xyTargetHandleX0, xyTargetHandleY0, dragJogHandleSize, dragJogHandleSize);
+            
+            g2d.drawLine(xyTargetHandleX0 + dragJogHandleSize / 2, xyTargetHandleY0,
+                    xyTargetHandleX0 + dragJogHandleSize / 2, xyTargetHandleY0 + dragJogHandleSize);
+            g2d.drawLine(xyTargetHandleX0, xyTargetHandleY0 + dragJogHandleSize / 2,
+                    xyTargetHandleX0 + dragJogHandleSize, xyTargetHandleY0 + dragJogHandleSize / 2);
+            
+            g2d.drawLine(xyHandleX0 + dragJogHandleSize / 2, 
+                    xyHandleY0 + dragJogHandleSize / 2,
+                    targetX, targetY);
+        }
+    }
+    
+    private void paintDragJogging(Graphics2D g2d) {
+        paintDragJogXyHandle(g2d, isDragJogging() 
+                && !isPointInsideDragJogRotationHandle(dragJoggingStart.getX(), dragJoggingStart.getY()));
+        paintDragJogRotationHandle(g2d, isDragJogging() 
+                && isPointInsideDragJogRotationHandle(dragJoggingStart.getX(), dragJoggingStart.getY()));
+    }
+
+    private void paintLightToggle(Graphics2D g2d) {
+        Actuator actuator = camera.getLightActuator();
+        if (actuator == null) {
+            return;
+        }
+        Insets ins = getInsets();
+        int width = getWidth() - ins.left - ins.right;
+        int height = getHeight() - ins.top - ins.bottom;
+        // Center
+        int x0 = width - lightToggleSize/2;
+        int y0 = lightToggleSize/2;
+        if (isTogglingLight()) {
+            x0++;
+            y0++;
+        }
+        boolean active = actuator.isActuated();
+        for (int pass = 0 ; pass < 2; pass++) {
+            if (pass == 0) {
+                g2d.setStroke(new BasicStroke(active ? 4 : 4, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                g2d.setColor(active ? lightToggleActiveBgColor : lightToggleInactiveBgColor);
+            }
+            else {
+                g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                g2d.setColor(active ? lightToggleActiveColor : lightToggleInactiveColor);
+            }
+            drawCircle(g2d, x0, y0, (int)(lightToggleSize*0.27));
+            double r0 = lightToggleSize*0.36;
+            double r1 = lightToggleSize*0.5-1;
+            for (int angle = 15; angle < 360; angle += 30) {
+                g2d.drawLine(
+                        (int)(x0 + 0.5 + r0*Math.cos(Math.toRadians(angle))), 
+                        (int)(y0 + 0.5 + r0*Math.sin(Math.toRadians(angle))),
+                        (int)(x0 + 0.5 + r1*Math.cos(Math.toRadians(angle))), 
+                        (int)(y0 + 0.5 + r1*Math.sin(Math.toRadians(angle))));
+            }
         }
     }
 
@@ -588,8 +981,6 @@ public class CameraView extends JComponent implements CameraListener {
         if (selectionTextDelegate != null) {
             String text = selectionTextDelegate.getSelectionText(this);
             if (text != null) {
-                // TODO: Be awesome like Apple and move the overlay inside
-                // the rect if it goes past the edge of the window
                 drawTextOverlay(g2d, (int) (rx + rw + 6), (int) (ry + rh + 6), text);
             }
         }
@@ -750,7 +1141,7 @@ public class CameraView extends JComponent implements CameraListener {
             yPen += interLineSpacing;
         }
     }
-    
+
     private static Dimension measureTextOverlay(Graphics2D g2d, String text) {
         Insets insets = new Insets(10, 10, 10, 10);
         int interLineSpacing = 4;
@@ -767,16 +1158,20 @@ public class CameraView extends JComponent implements CameraListener {
             textLayouts.add(textLayout);
         }
         textHeight -= interLineSpacing;
-        return new Dimension(textWidth + insets.left + insets.right, textHeight + insets.top + insets.bottom);
+        return new Dimension(textWidth + insets.left + insets.right,
+                textHeight + insets.top + insets.bottom);
     }
 
-    private static void drawImageInfo(Graphics2D g2d, int topLeftX, int topLeftY,
+    private void drawImageInfo(Graphics2D g2d, int topLeftX, int topLeftY,
             BufferedImage image) {
         if (image == null) {
             return;
         }
-        String text = String.format("Resolution: %d x %d\nHistogram:", image.getWidth(),
-                image.getHeight());
+        String text = String.format("Resolution: %d x %d\nZoom: %d%%\nFPS: %.1f\nHistogram:", 
+                image.getWidth(),
+                image.getHeight(), 
+                (int) (zoom * 100),
+                fps);
         Insets insets = new Insets(10, 10, 10, 10);
         int interLineSpacing = 4;
         int cornerRadius = 8;
@@ -1019,8 +1414,12 @@ public class CameraView extends JComponent implements CameraListener {
                 setCursor(getCursorForHandlePosition(selectionActiveHandle));
             }
             else if (selectionMode == null && selection != null) {
-                int x = getMousePosition().x;
-                int y = getMousePosition().y;
+                Point p = getMousePosition();
+                if (p == null) {
+                    return;
+                }
+                int x = p.x;
+                int y = p.y;
 
                 HandlePosition handlePosition = getSelectionHandleAtPosition(x, y);
                 if (handlePosition != null) {
@@ -1046,17 +1445,14 @@ public class CameraView extends JComponent implements CameraListener {
      * Capture the current image (unscaled, unmodified) and write it to disk.
      */
     private void captureSnapshot() {
-        try {
+        UiUtils.messageBoxOnException(() -> {
             flash();
             File dir = new File(Configuration.get().getConfigurationDirectory(), "snapshots");
             dir.mkdirs();
             DateFormat df = new SimpleDateFormat("YYYY-MM-dd_HH.mm.ss.SSS");
             File file = new File(dir, camera.getName() + "_" + df.format(new Date()) + ".png");
-            ImageIO.write(lastFrame, "png", file);
-        }
-        catch (Exception e1) {
-            e1.printStackTrace();
-        }
+            ImageIO.write(camera.lightSettleAndCapture(), "png", file);
+        });
     }
 
     private void fireActionEvent(MouseEvent e) {
@@ -1085,9 +1481,11 @@ public class CameraView extends JComponent implements CameraListener {
 
         // Create a location in the Camera's units per pixel's units
         // and with the values of the offsets.
-        Location offsets = camera.getUnitsPerPixel().derive(offsetX, offsetY, 0.0, 0.0);
+        Location offsets = camera.getUnitsPerPixel(viewingPlaneZ).
+                derive(offsetX, offsetY, 0.0, 0.0);
         // Add the offsets to the Camera's position.
-        Location location = camera.getLocation().add(offsets);
+        Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+        Location location = camera.getLocation(nozzle).add(offsets);
         CameraViewActionEvent action =
                 new CameraViewActionEvent(CameraView.this, e.getX(), e.getY(),
                         e.getX() * scaledUnitsPerPixelX, e.getY() * scaledUnitsPerPixelY, location);
@@ -1096,10 +1494,30 @@ public class CameraView extends JComponent implements CameraListener {
         }
     }
 
-    private void moveToClick(MouseEvent e) {
-        int x = e.getX();
-        int y = e.getY();
+    /**
+     * Gets the offset from the center of the image in camera pixels given a set of coordinates in
+     * the camera view component.
+     *  
+     * @param x - the x position in the camera's view component as returned by a mouse click
+     * @param y - the y position in the camera's view component as returned by a mouse click
+     * @return the offset in camera pixels from the center of the image in a bottom left to
+     * top right coordinate system
+     */
+    public Point getCameraViewCenterPixelsFromXy(int x, int y) {
+        // Find the difference in X and Y from the center of the image
+        // to the mouse click.
+        double offsetX = (scaledWidth / 2.0D) - (x - imageX);
+        double offsetY = (scaledHeight / 2.0D) - (y - imageY) + 1;
 
+        // Invert the X so that the offsets represent a bottom left to
+        // top right coordinate system.
+        offsetX = -offsetX;
+
+        return new Point((int) Math.round(offsetX*scaleRatioX),
+                (int) Math.round(offsetY*scaleRatioY));
+    }
+
+    public Location getCameraViewCenterOffsetsFromXy(int x, int y) {
         // Find the difference in X and Y from the center of the image
         // to the mouse click.
         double offsetX = (scaledWidth / 2.0D) - (x - imageX);
@@ -1113,25 +1531,80 @@ public class CameraView extends JComponent implements CameraListener {
         offsetX *= scaledUnitsPerPixelX;
         offsetY *= scaledUnitsPerPixelY;
 
-        // The offsets now represent the distance to move the camera
-        // in the Camera's units per pixel's units.
+        // The offsets now represent the distance in the Camera's units per pixel's units.
 
         // Create a location in the Camera's units per pixel's units
         // and with the values of the offsets.
         Location offsets = camera.getUnitsPerPixel().derive(offsetX, offsetY, 0.0, 0.0);
-        // Add the offsets to the Camera's position.
-        Location location = camera.getLocation().add(offsets);
+        return offsets;
+    }
+
+    private void moveToClick(MouseEvent e) {
+        // Get the offset from the Camera view center in Camera's units.
+        Location offsets = getCameraViewCenterOffsetsFromXy(e.getX(), e.getY());
         // And move there.
         UiUtils.submitUiMachineTask(() -> {
+            // For non-movable cameras, move the nozzle so that the clicked position is centered in
+            // the camera's view.  For movable cameras, move the camera so that the clicked position
+            // is centered in the camera's view.
             if (camera.getHead() == null) {
-                // move the nozzle to the camera
-                Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+                // The camera is non-movable
+                // Get the selected nozzle
+                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                // Subtract the offsets from the nozzle position.
+                Location location = nozzle.getLocation().subtract(offsets);
+                // Only change X/Y. 
+                location = nozzle.getLocation().derive(location, true, true, false, false);
+                // Move the nozzle such that the clicked position is moved to the center of the camera view
                 MovableUtils.moveToLocationAtSafeZ(nozzle, location);
             }
-            else {
+            else { 
+                // The camera is movable
+                // Add the offsets to the Camera's position.
+                Location location = camera.getLocation().add(offsets);
                 // move the camera to the location
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
             }
+            MovableUtils.fireTargetedUserAction(camera);
+        });
+    }
+    
+    private void rotateToClick(MouseEvent e) {
+        Insets ins = getInsets();
+        int width = getWidth() - ins.left - ins.right;
+        int height = getHeight() - ins.top - ins.bottom;
+
+        double rotTargetHandleAngle = Math.toDegrees(Math.atan2(e.getY() - (height / 2), e.getX() - (width / 2)));
+        rotTargetHandleAngle = Utils2D.normalizeAngle(rotTargetHandleAngle);
+
+        // If the alt button is pressed snap to certain angles
+        if(e.isAltDown()) {
+            rotTargetHandleAngle = snapRotationAngleToTypicalAngles(rotTargetHandleAngle);
+        }
+
+        double targetAngle = Utils2D.normalizeAngle(-(rotTargetHandleAngle + 90));
+        HeadMountable selectedTool = MainFrame.get().getMachineControls().getSelectedTool();
+
+        UiUtils.submitUiMachineTask(() -> {
+            Location location = selectedTool.getLocation();
+            location = location.derive(null, null, null, targetAngle);
+            MovableUtils.moveToLocationAtSafeZ(selectedTool, location);
+            MovableUtils.fireTargetedUserAction(selectedTool);
+        });
+    }
+
+    private void toggleLight(MouseEvent e) {
+        Actuator actuator = camera.getLightActuator();
+        if (actuator == null) {
+            return;
+        }
+        UiUtils.submitUiMachineTask(() -> {
+            // Pass as Object for the generic behavior according to the actuator valueType.  
+            boolean state = !actuator.isActuated();
+            actuator.actuate((Object)state);
+            // Note, we cannot use MovableUtils.fireTargetedUserAction(), because this itself might 
+            // turn the light on.
+            camera.settleAndCapture();
         });
     }
 
@@ -1220,8 +1693,61 @@ public class CameraView extends JComponent implements CameraListener {
         selectionMode = null;
         selectionActiveHandle = null;
     }
+    
+    private void dragJoggingBegin(MouseEvent e) {
+        if (! isTogglingLight()) {
+            this.dragJogging = true;
+            this.dragJoggingStart = e;
+            this.dragJoggingTarget = e;
+            repaint();
+        }
+    }
+    
+    private void dragJoggingContinue(MouseEvent e) {
+        if (! isTogglingLight()) {
+            this.dragJoggingTarget = e;
+            repaint();
+        }
+    }
+    
+    private void dragJoggingEnd(MouseEvent e) {
+        if (! isTogglingLight()) {
+            int startX = dragJoggingStart.getX();
+            int startY = dragJoggingStart.getY();
+            
+            this.dragJogging = false;
+            this.dragJoggingStart = null;
+            this.dragJoggingTarget = null;
+            repaint();
+            
+            if (isPointInsideDragJogRotationHandle(startX, startY)) {
+                rotateToClick(e);
+            }
+            else {
+                moveToClick(e);
+            }
+        }
+    }
+
+    private boolean isDragJogging() {
+        return this.dragJogging;
+    }
+
+    private void beginTogglingLight() {
+        lightToggling = true;
+        repaint();
+    }
+    private void endTogglingLight() {
+        lightToggling = false;
+        repaint();
+    }
+    private boolean isTogglingLight() {
+        return lightToggling;
+    }
+
 
     private MouseListener mouseListener = new MouseAdapter() {
+ 
         @Override
         public void mouseClicked(MouseEvent e) {
             if (e.isPopupTrigger() || e.isShiftDown() || SwingUtilities.isRightMouseButton(e)) {
@@ -1239,26 +1765,35 @@ public class CameraView extends JComponent implements CameraListener {
         @Override
         public void mousePressed(MouseEvent e) {
             if (e.isPopupTrigger()) {
-                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                new CameraViewPopupMenu(CameraView.this).show(e.getComponent(), e.getX(), e.getY());
                 return;
             }
             else if (e.isShiftDown()) {
                 moveToClick(e);
             }
+            else if (isPointInsideLightToggle(e.getX(), e.getY())) {
+                beginTogglingLight();
+            }
             else if (selectionEnabled) {
                 beginSelection(e);
             }
         }
-
         @Override
         public void mouseReleased(MouseEvent e) {
             if (e.isPopupTrigger()) {
-                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                new CameraViewPopupMenu(CameraView.this).show(e.getComponent(), e.getX(), e.getY());
                 return;
+            }
+            else if (isDragJogging()) {
+                dragJoggingEnd(e);
+            }
+            else if (isTogglingLight() && isPointInsideLightToggle(e.getX(), e.getY())) {
+                toggleLight(e);
             }
             else {
                 endSelection();
             }
+            endTogglingLight();
         }
     };
 
@@ -1273,6 +1808,12 @@ public class CameraView extends JComponent implements CameraListener {
             if (selectionEnabled) {
                 continueSelection(e);
             }
+            else if (!isDragJogging()) {
+                dragJoggingBegin(e);
+            }
+            else if (isDragJogging()) {
+                dragJoggingContinue(e);
+            }
         }
     };
 
@@ -1283,18 +1824,66 @@ public class CameraView extends JComponent implements CameraListener {
         }
     };
 
+    private MouseWheelListener mouseWheelListener = new MouseWheelListener() {
+        @Override
+        public void mouseWheelMoved(MouseWheelEvent e) {
+            int modifiers = e.getModifiersEx();
+            boolean ctrlDown = (modifiers & InputEvent.CTRL_DOWN_MASK) != 0;
+            if (!ctrlDown) { // Scroll wheel without Ctrl changes the zoom factor
+                double zoomInc = Math.max(zoomIncPerMouseWheelTick,
+                        // When best-scale is selected, we can only zoom by 1.0 or faster.
+                        renderingQuality == RenderingQuality.BestScale ? 1.0 : 0);
+                zoom = (Math.round(zoom/zoomInc) - e.getPreciseWheelRotation()) * zoomInc; 
+                zoom = Math.max(zoom, 1.0d);
+                zoom = Math.min(zoom, 100d);
+            }
+            else { // Scroll wheel with Ctrl or Ctrl-Alt changes the viewing plane
+                if (isViewingPlaneChangable()) {
+                    double factor = (modifiers & InputEvent.ALT_DOWN_MASK) == 0 ? 1.0 : 0.1;
+                    viewingPlaneZ = viewingPlaneZ.subtract(factor * e.getPreciseWheelRotation());
+                }
+            }
+            calculateScalingData();
+            repaint();
+        }
+    };
+
     public CameraViewSelectionTextDelegate pixelsAndUnitsTextSelectionDelegate =
             new CameraViewSelectionTextDelegate() {
                 @Override
                 public String getSelectionText(CameraView cameraView) {
-                    double widthInUnits = selection.width * camera.getUnitsPerPixel().getX();
-                    double heightInUnits = selection.height * camera.getUnitsPerPixel().getY();
+                    double widthInUnits = selection.width * camera.getUnitsPerPixel(viewingPlaneZ).getX();
+                    double heightInUnits = selection.height * camera.getUnitsPerPixel(viewingPlaneZ).getY();
 
                     String text = String.format(Locale.US, "%dpx, %dpx\n%2.3f%s, %2.3f%s",
                             (int) selection.getWidth(), (int) selection.getHeight(), widthInUnits,
-                            camera.getUnitsPerPixel().getUnits().getShortName(), heightInUnits,
-                            camera.getUnitsPerPixel().getUnits().getShortName());
+                            camera.getUnitsPerPixel(viewingPlaneZ).getUnits().getShortName(), heightInUnits,
+                            camera.getUnitsPerPixel(viewingPlaneZ).getUnits().getShortName());
                     return text;
                 }
             };
+            
+    // From https://stackoverflow.com/questions/3793400/is-there-a-function-in-java-to-get-moving-average/42407811#42407811
+    static class MovingAverage {
+        private long [] window;
+        private int n, insert;
+        private long sum;
+
+        public MovingAverage(int size) {
+            window = new long[size];
+            insert = 0;
+            sum = 0;
+        }
+
+        public double next(long val) {
+            if (n < window.length)  {
+                n++;
+            }
+            sum -= window[insert];
+            sum += val;
+            window[insert] = val;
+            insert = (insert + 1) % window.length;
+            return (double)sum / n;
+        }
+    }            
 }

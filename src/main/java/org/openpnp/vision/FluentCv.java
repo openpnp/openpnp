@@ -74,7 +74,9 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.HslColor;
+import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.VisionUtils;
+import org.pmw.tinylog.Logger;
 
 /**
  * A fluent API for some of the most commonly used OpenCV primitives. Successive operations modify a
@@ -103,7 +105,16 @@ import org.openpnp.util.VisionUtils;
 public class FluentCv {
     static {
         nu.pattern.OpenCV.loadShared();
-        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
+    }
+
+    public enum ColorSpace {
+        Gray,
+        Bgr,
+        Rgb,
+        Hls,
+        HlsFull,
+        Hsv,
+        HsvFull;
     }
 
     public enum ColorCode {
@@ -128,6 +139,31 @@ public class FluentCv {
 
         public int getCode() {
             return code;
+        }
+        
+        public ColorSpace getResultingColorSpace() {
+            switch (this) {
+                case Bgr2Gray:
+                case Rgb2Gray:
+                    return ColorSpace.Gray;
+                case Gray2Bgr :
+                case Hls2Bgr :
+                case Hls2BgrFull :
+                case Hsv2Bgr :
+                case Hsv2BgrFull :
+                    return ColorSpace.Bgr;
+                case Gray2Rgb :
+                    return ColorSpace.Rgb;
+                case Bgr2Hls :
+                    return ColorSpace.Hls;
+                case Bgr2HlsFull :
+                    return ColorSpace.HlsFull;
+                case Bgr2Hsv :
+                    return ColorSpace.Hsv;
+                case Bgr2HsvFull :
+                    return ColorSpace.HsvFull;
+            }
+            return null;
         }
     }
 
@@ -279,8 +315,8 @@ public class FluentCv {
             double x = circle[0];
             double y = circle[1];
             double radius = circle[2];
-            Core.circle(mat, new Point(x, y), (int) radius, colorToScalar(color), 2);
-            Core.circle(mat, new Point(x, y), 1, colorToScalar(centerColor), 2);
+            Imgproc.circle(mat, new Point(x, y), (int) radius, colorToScalar(color), 2);
+            Imgproc.circle(mat, new Point(x, y), 1, colorToScalar(centerColor), 2);
         }
         return store(mat, tag);
     }
@@ -315,6 +351,16 @@ public class FluentCv {
         ImageIO.write(toBufferedImage(), "PNG", file);
         return this;
     }
+    
+    public FluentCv saveDebugImage(Class implementationClass, String function, String identifier) {
+        try {
+            OpenCvUtils.saveDebugImage(implementationClass, function, identifier, mat);
+        }
+        catch (Exception e) {
+            Logger.error(e, "Failed to save debug image.");
+        }
+        return this;
+    }
 
     public FluentCv read(File file, String... tag) throws Exception {
         return toMat(ImageIO.read(file), tag);
@@ -343,9 +389,9 @@ public class FluentCv {
         return image;
     }
 
-    public FluentCv settleAndCapture(String... tag) {
+    public FluentCv settleAndCapture(String... tag) throws Exception {
         checkCamera();
-        return toMat(camera.settleAndCapture(), tag);
+        return toMat(camera.lightSettleAndCapture(), tag);
     }
 
     /**
@@ -418,9 +464,9 @@ public class FluentCv {
             points.add(new Point(x, y));
         }
 
-        Point[] line = Ransac.ransac(points, 100, maxDistance);
-        Point a = line[0];
-        Point b = line[1];
+        List<Ransac.Line> lines = Ransac.ransac(points, 100, maxDistance);
+        Point a = lines.get(0).a;
+        Point b = lines.get(0).b;
 
         // filter the points by distance from the resulting line
         List<float[]> results = new ArrayList<>();
@@ -667,10 +713,30 @@ public class FluentCv {
         return img;
     }
 
+    // Distance from a point to the closest point on an infinte line that AB are on
     // From http://www.ahristov.com/tutorial/geometry-games/point-line-distance.html
     public static double pointToLineDistance(Point A, Point B, Point P) {
         double normalLength = Math.sqrt((B.x - A.x) * (B.x - A.x) + (B.y - A.y) * (B.y - A.y));
         return Math.abs((P.x - A.x) * (B.y - A.y) - (P.y - A.y) * (B.x - A.x)) / normalLength;
+    }
+
+    // Distance from a point to the closest point on the line segment AB
+    // From Real Time Collision Detection p/130
+    public static double pointToLineSegmentDistance(Point A, Point B, Point P) {
+        Point ab = new Point(B.x - A.x, B.y - A.y);
+        Point ap = new Point(P.x - A.x, P.y - A.y);
+        Point bp = new Point(P.x - B.x, P.y - B.y);
+        // Handle cases where P projects outside of AB
+        double e = ap.dot(ab);
+        if (e <= 0.0) {
+            return Math.sqrt(ap.dot(ap));
+        }
+        double f = ab.dot(ab);
+        if (e >= f) {
+            return Math.sqrt(bp.dot(bp));
+        }
+        // P projects onto AB
+        return Math.sqrt(ap.dot(ap) - e * e / f);
     }
 
     /**
@@ -702,7 +768,7 @@ public class FluentCv {
             p.y = 0;
             q.y = img.rows();
         }
-        Core.line(img, p, q, colorToScalar(color));
+        Imgproc.line(img, p, q, colorToScalar(color));
     }
 
     // From: http://stackoverflow.com/questions/23327502/opencv-how-to-draw-minarearect-in-java
@@ -711,7 +777,7 @@ public class FluentCv {
         rect.points(points);
         Scalar color_ = colorToScalar(color);
         for (int j = 0; j < 4; ++j) {
-            Core.line(mat, points[j], points[(j + 1) % 4], color_, thickness);
+            Imgproc.line(mat, points[j], points[(j + 1) % 4], color_, thickness);
         }
     }
 
@@ -727,8 +793,10 @@ public class FluentCv {
 
         double sse = s.val[0] + s.val[1] + s.val[2]; // sum channels
 
-        if (sse <= 1e-10) // for small values return zero
+        if (sse <= 1e-10) {
+            // for small values return zero
             return 0;
+        }
         else {
             double mse = sse / (double) (I1.channels() * I1.total());
             double psnr = 10.0 * Math.log10((255 * 255) / mse);

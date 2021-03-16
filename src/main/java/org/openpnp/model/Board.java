@@ -31,6 +31,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.Version;
 import org.simpleframework.xml.core.Commit;
 
 /**
@@ -43,11 +44,11 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
         Bottom, Top
     }
 
+    @Version(revision=1.1)
+    private double version;    
+
     @Attribute
     private String name;
-
-    @Element(required = false)
-    private Outline outline;
 
     @Element(required = false)
     private Location dimensions = new Location(LengthUnit.Millimeters);
@@ -70,7 +71,6 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
 
     public Board(File file) {
         setFile(file);
-        setOutline(new Outline());
         addPropertyChangeListener(this);
     }
 
@@ -161,16 +161,6 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
         }
     }
 
-
-    public Outline getOutline() {
-        return outline;
-    }
-
-    public void setOutline(Outline outline) {
-        Outline oldValue = this.outline;
-        this.outline = outline;
-        firePropertyChange("outline", oldValue, outline);
-    }
 
     public String getName() {
         return name;

@@ -25,17 +25,25 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 import org.openpnp.model.Location;
+import org.openpnp.model.Solutions;
 
 import com.google.common.util.concurrent.FutureCallback;
-
-
 
 /**
  * Machine represents the pick and place machine itself. It provides the information and interface
  * needed to cause the machine to do work. A Machine has one or more Heads. Unless otherwise noted,
  * the methods in this class block while performing their operations.
  */
-public interface Machine extends WizardConfigurable, PropertySheetHolder, Closeable {
+public interface Machine extends WizardConfigurable, PropertySheetHolder, Closeable, Solutions.Subject {
+    /**
+     * Gets a List of Axes attached to the Machine.
+     * 
+     * @return
+     */
+    public List<Axis> getAxes();
+
+    public Axis getAxis(String id);
+
     /**
      * Gets all active heads on the machine.
      * 
@@ -44,6 +52,19 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public List<Head> getHeads();
 
     public Head getHead(String id);
+
+    public Head getHeadByName(String name);
+    
+    /**
+     * Gets a List of Signalers attached to the Machine.
+     *
+     * @return
+     */
+    public List<Signaler> getSignalers();
+
+    public Signaler getSignaler(String id);
+
+    public Signaler getSignalerByName(String name);
 
     /**
      * Gets a List of Feeders attached to the Machine.
@@ -54,6 +75,7 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public Feeder getFeeder(String id);
 
+    public Feeder getFeederByName(String name);
 
     /**
      * Gets a List of Cameras attached to the Machine that are not attached to Heads.
@@ -61,6 +83,12 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
      * @return
      */
     public List<Camera> getCameras();
+
+    /**
+     * Gets a list of all Cameras attached to the Machine and to all the Heads.
+     * @return
+     */
+    public List<Camera> getAllCameras();
 
     public Camera getCamera(String id);
 
@@ -82,9 +110,19 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public Actuator getActuatorByName(String name);
 
     /**
-     * Commands all Heads to move to their home positions and reset their current positions to
-     * 0,0,0,0. Depending on the head configuration of the machine the home positions may not all be
-     * the same but the end result should be that any head commanded to move to a certain position
+     * Gets a List of Drivers attached to the Machine.
+     * 
+     * @return
+     */
+    public List<Driver> getDrivers();
+
+    public Driver getDriver(String id);
+
+    public MotionPlanner getMotionPlanner();
+
+    /**
+     * Commands all Heads to perform visual homing if available. Depending on the head configuration of the machine 
+     * the home positions may not all be the same but the end result should be that any head commanded to move to a certain position
      * will end up in the same position.
      */
     public void home() throws Exception;
@@ -93,6 +131,11 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
      * Returns whether the Machine is currently ready for commands.
      */
     public boolean isEnabled();
+
+    /**
+     * Returns whether the Machine is homed
+     */
+    public boolean isHomed();
 
     /**
      * Attempts to bring the Machine to a ready state or attempts to immediately stop it depending
@@ -115,40 +158,77 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
      * isEnabled() should return false until setEnabled(true) is successfully called again.
      */
     public void setEnabled(boolean enabled) throws Exception;
+    
+    public void setHomed(boolean homed);
 
     public void addListener(MachineListener listener);
 
     public void removeListener(MachineListener listener);
 
+    public List<Class<? extends Axis>> getCompatibleAxisClasses();
+
     public List<Class<? extends Feeder>> getCompatibleFeederClasses();
 
     public List<Class<? extends Camera>> getCompatibleCameraClasses();
+
+    public List<Class<? extends Nozzle>> getCompatibleNozzleClasses();
+
+    public List<Class<? extends Actuator>> getCompatibleActuatorClasses();
+
+    public List<Class<? extends Signaler>> getCompatibleSignalerClasses();
+
+    public List<Class<? extends Driver>> getCompatibleDriverClasses();
+
+    public List<Class<? extends MotionPlanner>> getCompatibleMotionPlannerClasses();
+
+    public void addAxis(Axis axis) throws Exception;
+
+    public void removeAxis(Axis axis);
+
+    public void permutateAxis(Axis axis, int direction);
+
+    public void addDriver(Driver driver) throws Exception;
+
+    public void removeDriver(Driver driver);
+
+    public void permutateDriver(Driver driver, int direction);
 
     public void addFeeder(Feeder feeder) throws Exception;
 
     public void removeFeeder(Feeder feeder);
 
+    public void addSignaler(Signaler signaler) throws Exception;
+
+    public void removeSignaler(Signaler signaler);
+
     public void addCamera(Camera camera) throws Exception;
 
     public void removeCamera(Camera camera);
 
+    public void permutateCamera(Camera driver, int direction);
+
+    public void addActuator(Actuator actuator) throws Exception;
+
+    public void removeActuator(Actuator actuator);
+
     public PnpJobProcessor getPnpJobProcessor();
     
-    public PasteDispenseJobProcessor getPasteDispenseJobProcessor();
-
     public Future<Object> submit(Runnable runnable);
 
     public <T> Future<T> submit(Callable<T> callable);
 
     public <T> Future<T> submit(final Callable<T> callable, final FutureCallback<T> callback);
 
+    public boolean getHomeAfterEnabled();
+
     /**
-     * Submit a task to be run with access to the Machine. This is the primary entry point into
-     * executing any blocking operation on the Machine. If you are doing anything that results in
-     * the Machine doing something it should happen here.
+     * Submit a task to be run with access to the Machine. The submit() and execute() methods are 
+     * the primary entry points into executing any blocking operation on the Machine. If you are 
+     * doing anything that results in the Machine doing something it should happen here.
      * 
-     * Tasks can be cancelled and interrupted via the returned Future. Tasks which operate in a loop
-     * should check Thread.currentThread().isInterrupted().
+     * With the submit() method, tasks can be cancelled and interrupted via the returned Future. 
+     * 
+     * Tasks which operate in a loop should check Thread.currentThread().isInterrupted().
      * 
      * When a task begins the MachineListeners are notified with machineBusy(true). When the task
      * ends, if there are no more tasks to run then machineBusy(false) is called.
@@ -172,9 +252,70 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public <T> Future<T> submit(final Callable<T> callable, final FutureCallback<T> callback,
             boolean ignoreEnabled);
 
+    /**
+     * Execute a task to be run with access to the Machine. The submit() and execute() methods are 
+     * the primary entry points into executing any blocking operation on the Machine. If you are 
+     * doing anything that results in the Machine doing something it should happen here.
+     * 
+     * With the execute() method, tasks are executed and waited for, rather than queued. 
+     * If called from inside a machine task the execution is immediate. If called from a different 
+     * thread, the task is submitted and then the calling thread will wait for completion.  
+     *   
+     * Return value and exceptions are always handled as if called directly. 
+     * 
+     * @param <T>
+     * @param callable
+     * @param onlyIfEnabled True if the task must only be executed if the machine is enabled.
+     * @param busyTimeout If the machine is busy executing other submitted task, the execution 
+     * will be rejected when the timeout (in milliseconds) expires, throwing a TimeoutException. 
+     * This will typically happen, when a long-running operation like a Job is pending.  
+     * @return
+     * @throws Exception
+     */
+    public <T> T execute(Callable<T> callable, boolean onlyIfEnabled, long busyTimeout) throws Exception;
+
+    public long DEFAULT_TASK_BUSY_TIMEOUT_MS = 1000;
+
+    /**
+     * Calls {@link #execute(Callable, boolean, long)} with default busy timeout. 
+     * 
+     * @param <T>
+     * @param callable
+     * @return
+     * @throws Exception
+     */
+    public default <T> T execute(Callable<T> callable) throws Exception {
+        return execute(callable, false, DEFAULT_TASK_BUSY_TIMEOUT_MS);
+    }
+
+    /**
+     * Same as execute() but the task is only executed if the Machine is enabled. 
+     * 
+     * @param <T>
+     * @param callable
+     * @return
+     * @throws Exception
+     */
+    public default <T> T executeIfEnabled(Callable<T> callable) throws Exception {
+        return execute(callable, true, DEFAULT_TASK_BUSY_TIMEOUT_MS);
+    }
+
+    /**
+     * Determines whether the given thread is a task thread currently executed by the machine. 
+     * 
+     * @param thread
+     * @return
+     */
+    public boolean isTask(Thread thread);
+
+    /**
+     * @return True if a machine task is currently running/pending.
+     */
+    public boolean isBusy();
+
     public Head getDefaultHead() throws Exception;
 
-    public PartAlignment getPartAlignment();
+    public List<PartAlignment> getPartAlignments();
 
     public FiducialLocator getFiducialLocator();
 
@@ -183,4 +324,28 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public void setSpeed(double speed);
 
     public double getSpeed();
+    
+    public Object getProperty(String name);
+    
+    public void setProperty(String name, Object value);
+
+    /**
+     * Get a list of the NozzleTips currently attached to the Nozzle.
+     * 
+     * @return
+     */
+    public List<NozzleTip> getNozzleTips();
+
+    public void addNozzleTip(NozzleTip nozzleTip) throws Exception;
+    
+    public void removeNozzleTip(NozzleTip nozzleTip);
+    
+    public NozzleTip getNozzleTip(String id);
+    
+    public NozzleTip getNozzleTipByName(String name);
+
+    /**
+     * @return True if the tool in machine controls should be auto-selected based on targeted user action.
+     */
+    public boolean isAutoToolSelect();
 }

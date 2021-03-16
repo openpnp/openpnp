@@ -22,25 +22,12 @@ package org.openpnp.machine.reference.camera;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-
-import javax.imageio.ImageIO;
-import javax.swing.Action;
-
-import org.openpnp.CameraListener;
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
-import org.openpnp.gui.support.Wizard;
-import org.openpnp.gui.wizards.CameraConfigurationWizard;
-import org.openpnp.machine.reference.ReferenceCamera;
-import org.openpnp.machine.reference.camera.wizards.OnvifIPCameraConfigurationWizard;
-import org.openpnp.spi.PropertySheetHolder;
-import org.simpleframework.xml.Attribute;
-
 import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.xml.soap.SOAPException;
 
 import org.onvif.ver10.device.wsdl.GetDeviceInformationResponse;
@@ -51,6 +38,11 @@ import org.onvif.ver10.schema.VideoEncoderConfigurationOptions;
 import org.onvif.ver10.schema.VideoEncoding;
 import org.onvif.ver10.schema.VideoRateControl;
 import org.onvif.ver10.schema.VideoResolution;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.camera.wizards.OnvifIPCameraConfigurationWizard;
+import org.openpnp.spi.PropertySheetHolder;
+import org.simpleframework.xml.Attribute;
 
 import de.onvif.soap.OnvifDevice;
 import de.onvif.soap.devices.InitialDevices;
@@ -69,34 +61,37 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
     private int resizeHeight;
 
     @Attribute(required = false)
-    private int fps = 10;
-
-    @Attribute(required = false)
     private String hostIP;
     @Attribute(required = false)
     private String username;
     @Attribute(required = false)
     private String password;
 
-    private Thread thread;
     private boolean dirty = false;
 
     private OnvifDevice nvt;
     private URL snapshotURI;
 
     public OnvifIPCamera() {}
+    
+    @Override 
+    protected synchronized boolean ensureOpen() {
+        if (hostIP == null || hostIP.isEmpty()) {
+            return false;
+        }
+        return super.ensureOpen();
+    }
 
     @Override
-    public BufferedImage capture() {
-        if (thread == null) {
-            initCamera();
+    public BufferedImage internalCapture() {
+        if (! ensureOpen()) {
+            return null;
         }
         try {
             if (snapshotURI == null) {
                 return null;
             }
-            BufferedImage img = ImageIO.read(snapshotURI);
-            return transformImage(resizeImage(img));
+            return resizeImage(ImageIO.read(snapshotURI));
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -104,83 +99,10 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
         }
     }
 
-    private BufferedImage resizeImage(BufferedImage src) {
-        int imgW = src.getWidth();
-        int imgH = src.getHeight();
-        if (resizeWidth != 0) {
-            imgW = resizeWidth;
-        }
-        if (resizeHeight != 0) {
-            imgH = resizeHeight;
-        }
-
-        if ((imgW != src.getWidth()) || (imgH != src.getHeight())) {
-            Image tmp = src.getScaledInstance(imgW, imgH, Image.SCALE_SMOOTH);
-            BufferedImage dst = new BufferedImage(imgW, imgH, BufferedImage.TYPE_INT_RGB);
-
-            Graphics2D g2d = dst.createGraphics();
-            g2d.drawImage(tmp, 0, 0, null);
-            g2d.dispose();
-
-            return dst;
-        }
-
-        return src;
-    }
-
     @Override
-    public synchronized void startContinuousCapture(CameraListener listener, int maximumFps) {
-        if (thread == null) {
-            initCamera();
-        }
-        super.startContinuousCapture(listener, maximumFps);
-    }
+    public void open() throws Exception {
+        stop();
 
-    public void run() {
-        while (!Thread.interrupted()) {
-            try {
-                BufferedImage image = capture();
-                if (image != null) {
-                    broadcastCapture(image);
-                }
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                Thread.sleep(1000 / fps);
-            }
-            catch (InterruptedException e) {
-                break;
-            }
-        }
-    }
-
-    private Profile findJPEGProfile(InitialDevices devices) throws Exception {
-        List<Profile> profiles = devices.getProfiles();
-
-        for (Profile profile : profiles) {
-            VideoEncoderConfiguration videoEncoderConfiguration = profile.getVideoEncoderConfiguration();
-            VideoEncoding videoEncoding = videoEncoderConfiguration.getEncoding();
-            if (videoEncoding == VideoEncoding.JPEG) {
-                return profile;
-            }
-        }
-
-        throw new Exception("No JPEG profiles available for camera at " + hostIP);
-    }
-
-    private void initCamera() {
-        if (thread != null) {
-            thread.interrupt();
-            try {
-                thread.join();
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            thread = null;
-        }
         try {
             setDirty(false);
             width = null;
@@ -286,28 +208,50 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
             e.printStackTrace();
             return;
         }
-        thread = new Thread(this);
-        thread.start();
+        
+        super.open();
     }
 
-    @Override
-    public void close() throws IOException {
-        super.close();
-        if (thread != null) {
-            thread.interrupt();
-            try {
-                thread.join();
-            }
-            catch (Exception e) {
+    private BufferedImage resizeImage(BufferedImage src) {
+        int imgW = src.getWidth();
+        int imgH = src.getHeight();
+        if (resizeWidth != 0) {
+            imgW = resizeWidth;
+        }
+        if (resizeHeight != 0) {
+            imgH = resizeHeight;
+        }
 
+        if ((imgW != src.getWidth()) || (imgH != src.getHeight())) {
+            Image tmp = src.getScaledInstance(imgW, imgH, Image.SCALE_SMOOTH);
+            BufferedImage dst = new BufferedImage(imgW, imgH, BufferedImage.TYPE_INT_RGB);
+
+            Graphics2D g2d = dst.createGraphics();
+            g2d.drawImage(tmp, 0, 0, null);
+            g2d.dispose();
+
+            return dst;
+        }
+
+        return src;
+    }
+
+    private Profile findJPEGProfile(InitialDevices devices) throws Exception {
+        List<Profile> profiles = devices.getProfiles();
+
+        for (Profile profile : profiles) {
+            VideoEncoderConfiguration videoEncoderConfiguration = profile.getVideoEncoderConfiguration();
+            VideoEncoding videoEncoding = videoEncoderConfiguration.getEncoding();
+            if (videoEncoding == VideoEncoding.JPEG) {
+                return profile;
             }
         }
+
+        throw new Exception("No JPEG profiles available for camera at " + hostIP);
     }
 
     public List<VideoResolution> getSupportedResolutions() {
-        if (thread == null) {
-            initCamera();
-        }
+        ensureOpen();
         if (nvt == null) {
             return null;
         }
@@ -349,8 +293,6 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
     public synchronized void setHostIP(String hostIP) {
         this.hostIP = hostIP;
         setDirty(true);
-
-        initCamera();
     }
 
     public String getUsername() {
@@ -396,14 +338,6 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
         this.resizeHeight = resizeHeight;
     }
 
-    public int getFps() {
-        return fps;
-    }
-
-    public void setFps(int fps) {
-        this.fps = fps;
-    }
-
     public boolean isDirty() {
         return dirty;
     }
@@ -424,19 +358,6 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(new CameraConfigurationWizard(this)),
-                new PropertySheetWizardAdapter(getConfigurationWizard())};
-    }
-
-    @Override
-    public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
         return null;
     }
 }

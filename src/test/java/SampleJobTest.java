@@ -3,23 +3,43 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
+import org.apache.commons.io.FileUtils;
 import org.jcodec.api.awt.SequenceEncoder;
 import org.junit.Test;
 import org.openpnp.CameraListener;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.ReferencePnpJobProcessor;
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.driver.NullDriver;
-import org.openpnp.machine.reference.driver.test.TestDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.JobProcessor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.spi.Axis;
+import org.openpnp.spi.base.AbstractCamera;
+import org.pmw.tinylog.Configurator;
+import org.pmw.tinylog.Level;
 
 import com.google.common.io.Files;
 
 public class SampleJobTest {
-    private final static Logger logger = LoggerFactory.getLogger(TestDriver.class);
+
+    /**
+     * Enable imperfectMachine for a full "imperfect machine" test. The poor machine has bad non-squareness,
+     * huge nozzle runout, is off from home, the camera has lag and bad vibration simulated from effective motion.
+     * Unlike the default machine, it also uses the Z axis.
+     * 
+     * This tests non-squareness compensation (axis transforms), runout compensation, visual homing, camera settling,
+     * Z motion, 3rd order (jerk controlled) motion planning and prediction, as well as its benefit against vibration.
+     * 
+     * It also uses "intelligent" pick and place location detection based on the ImageCamera's machine table image.
+     * So if the simulation tries to pick or place at the wrong location, the test fails.
+     * 
+     * Unfortunately, it is terribly slow as some aspects (camera settling/vibration) need to be simulated in 
+     * quasi real-time to be conclusive as a test. Takes about 2 min.
+     * 
+     */
+    final public static boolean imperfectMachine = true; 
 
     /**
      * Loads the pnp-test job that is included in the samples and attempts to run it within a test
@@ -35,21 +55,46 @@ public class SampleJobTest {
         workingDirectory = new File(workingDirectory, ".openpnp");
         System.out.println("Configuration directory: " + workingDirectory);
 
+        if (imperfectMachine) {
+            // Take the imperfect machine as a test case.
+            FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/SampleJobTest/machine.xml"),
+                new File(workingDirectory, "machine.xml"));
+        }
+
+        Configurator
+        .currentConfig()
+        .level(Level.INFO) // change this for other log levels.
+        .activate();
+
         Configuration.initialize(workingDirectory);
         Configuration.get().load();
-
+        
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
 
-        NullDriver driver = (NullDriver) machine.getDriver();
-        driver.setFeedRateMmPerMinute(0);
+        if (!imperfectMachine) {
+            NullDriver driver = (NullDriver) machine.getDefaultDriver();
+            // Make it faster for the test (now including axes).
+            driver.setFeedRateMmPerMinute(0);
+            for (Axis axis : machine.getAxes()) {
+                if (axis instanceof ReferenceControllerAxis) {
+                    ((ReferenceControllerAxis) axis).setFeedratePerSecond(new Length(1000000, LengthUnit.Millimeters));
+                    ((ReferenceControllerAxis) axis).setAccelerationPerSecond2(new Length(2000000, LengthUnit.Millimeters));
+                    ((ReferenceControllerAxis) axis).setJerkPerSecond3(new Length(0, LengthUnit.Millimeters));
+                }
+            }
 
-        Camera camera = machine.getDefaultHead().getDefaultCamera();
+            AbstractCamera camera = (AbstractCamera)machine.getDefaultHead().getDefaultCamera();
+            camera.setSettleMethod(AbstractCamera.SettleMethod.FixedTime);
+            camera.setSettleTimeMs(0);
+        }
+
+
         // File videoFile = new File("target");
         // videoFile = new File(videoFile, "SampleJobTest.mp4");
         // MpegEncodingCameraListener encoder = new MpegEncodingCameraListener(videoFile);
         // camera.startContinuousCapture(encoder, 25);
 
-        JobProcessor jobProcessor = machine.getPnpJobProcessor();
+        ReferencePnpJobProcessor jobProcessor = (ReferencePnpJobProcessor) machine.getPnpJobProcessor();
         jobProcessor.addTextStatusListener((text) -> {
             System.out.println(text);
         });
@@ -60,8 +105,12 @@ public class SampleJobTest {
         Job job = Configuration.get().loadJob(jobFile);
 
         machine.setEnabled(true);
-        jobProcessor.initialize(job);
-        while (jobProcessor.next());
+        machine.execute(() -> {
+            machine.home();
+            jobProcessor.initialize(job);
+            while (jobProcessor.next());
+            return null;
+        });
         // camera.stopContinuousCapture(encoder);
         // encoder.finish();
     }

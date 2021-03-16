@@ -23,7 +23,9 @@ import java.util.List;
 
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
+import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.Named;
+import org.openpnp.model.Solutions;
 
 
 /**
@@ -32,7 +34,7 @@ import org.openpnp.model.Named;
  * moved by moving any one of it's components. When any attached component is moved in (at least) X
  * or Y, it is expected that all components attached to the Head also move in the same axes.
  */
-public interface Head extends Identifiable, Named, WizardConfigurable, PropertySheetHolder {
+public interface Head extends Identifiable, Named, WizardConfigurable, PropertySheetHolder, Solutions.Subject {
     /**
      * Get a list of Nozzles that are attached to this head.
      * 
@@ -47,6 +49,8 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
      * @return
      */
     public Nozzle getNozzle(String id);
+    
+    public Nozzle getNozzleByName(String name);
 
     /**
      * Get a list of Actuators that are attached to this Head.
@@ -63,6 +67,13 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
      */
     public Actuator getActuator(String id);
 
+    /**
+     * Get the Actuator attached to this Head that has the specified name.
+     * Returns null if the name is null or empty.
+     * 
+     * @param id
+     * @return
+     */
     public Actuator getActuatorByName(String name);
 
     /**
@@ -81,6 +92,13 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
     public Camera getCamera(String id);
 
     /**
+     * Get a list of all the HeadMountables attached to this Head.
+     * 
+     * @return
+     */
+    List<HeadMountable> getHeadMountables();
+
+    /**
      * Directs the Head to move to it's home position and to move any attached devices to their home
      * positions.
      */
@@ -90,23 +108,70 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
 
     public void removeCamera(Camera camera);
 
+    public void permutateCamera(Camera driver, int direction);
+
+    public void addNozzle(Nozzle nozzle) throws Exception;
+
+    public void removeNozzle(Nozzle nozzle);
+
+    public void addActuator(Actuator actuator) throws Exception;
+
+    public void removeActuator(Actuator actuator);
+
     public void moveToSafeZ(double speed) throws Exception;
 
     public void moveToSafeZ() throws Exception;
-
-    public List<PasteDispenser> getPasteDispensers();
-
-    public PasteDispenser getPasteDispenser(String id);
 
     public Camera getDefaultCamera() throws Exception;
 
     public Nozzle getDefaultNozzle() throws Exception;
 
-    public PasteDispenser getDefaultPasteDispenser() throws Exception;
-    
+    /**
+     * @return The default HeadMountable on a Head. A Camera takes precedence, but if none is present, 
+     * the first HeadMountable will do.
+     * @throws Exception
+     */
+    public HeadMountable getDefaultHeadMountable() throws Exception;
+
     public void setMachine(Machine machine);
     
     public Machine getMachine();
     
     public Location getParkLocation();
+
+    /**
+     * All HeadMountable motion must go through the head to map to the right
+     * drivers.  
+     * 
+     * @param hm
+     * @param location
+     * @param speed
+     * @throws Exception
+     */
+    public void moveTo(HeadMountable hm, Location location, double speed, MotionOption... options) throws Exception;
+
+    /**
+     * Returns true if any nozzle on the Head is currently carrying a part.
+     * @return
+     */
+    public boolean isCarryingPart(); 
+
+    /**
+     * Returns the maximum speed percentage allowed by any parts being carried
+     * by the Nozzles on the Head. The slowest part will dictate the max.
+     * @return
+     */
+	public double getMaxPartSpeed(); 
+	
+    public Actuator getZProbe(); 
+    
+    public Actuator getPump(); 
+
+    /**
+     * Returns true if the given HeadMountable can go to the specified location within soft-limits.
+     * @param hm
+     * @param location
+     * @return
+     */
+    public boolean isInsideSoftLimits(HeadMountable hm, Location location) throws Exception;
 }

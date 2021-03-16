@@ -2,10 +2,11 @@ package org.openpnp.vision.pipeline.stages;
 
 import java.awt.Color;
 import java.util.List;
+import java.util.Locale;
 
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
@@ -44,16 +45,16 @@ public class DrawTemplateMatches extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (templateMatchesStageName == null) {
+        if (templateMatchesStageName == null || templateMatchesStageName.trim().isEmpty()) {
             return null;
         }
-        Result result = pipeline.getResult(templateMatchesStageName);
-        if (result == null || result.model == null) {
+        Result result = pipeline.getExpectedResult(templateMatchesStageName);
+        if (result.model == null) {
             return null;
         }
         Mat mat = pipeline.getWorkingImage();
 
-        List<TemplateMatch> matches = (List<TemplateMatch>) result.model;
+        List<TemplateMatch> matches = result.getExpectedListModel(TemplateMatch.class, null);
         for (int i = 0; i < matches.size(); i++) {
             TemplateMatch match = matches.get(i);
             double x = match.x;
@@ -63,10 +64,10 @@ public class DrawTemplateMatches extends CvStage {
             double height = match.height;
             Color color_ = this.color == null ? FluentCv.indexedColor(i) : this.color;
             Scalar color = FluentCv.colorToScalar(color_);
-            Core.rectangle(mat, new org.opencv.core.Point(x, y),
+            Imgproc.rectangle(mat, new org.opencv.core.Point(x, y),
                     new org.opencv.core.Point(x + width, y + height), color);
-            Core.putText(mat, "" + score, new org.opencv.core.Point(x + width, y + height),
-                    Core.FONT_HERSHEY_PLAIN, 1.0, color);
+            Imgproc.putText(mat, String.format(Locale.US, "%.3f", score), new org.opencv.core.Point(x + width, y + height),
+                    Imgproc.FONT_HERSHEY_PLAIN, 1.0, color);
         }
 
         return null;

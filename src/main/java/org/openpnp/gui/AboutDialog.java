@@ -26,42 +26,56 @@ import java.awt.Font;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 
+import org.apache.commons.io.FileUtils;
 import org.openpnp.Main;
 
 @SuppressWarnings("serial")
 public class AboutDialog extends JDialog {
 
     private final JPanel contentPanel = new JPanel();
+    private JTextPane releaseNotes;
+    private JTextPane credits;
 
     public AboutDialog(Frame frame) {
         super(frame, true);
+        createUi();
+
+        try {
+            String s = FileUtils.readFileToString(new File("CHANGES.md"));
+            releaseNotes.setText(s);
+            releaseNotes.setCaretPosition(0);
+        }
+        catch (Exception e) {
+
+        }
+        
+        try {
+            String s = FileUtils.readFileToString(new File("SPONSORS.md"));
+            credits.setText(s);
+            credits.setCaretPosition(0);
+        }
+        catch (Exception e) {
+
+        }
+    }
+
+    private void createUi() {
         setTitle("About OpenPnP");
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setBounds(100, 100, 347, 360);
         getContentPane().setLayout(new BorderLayout());
-        contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-        getContentPane().add(contentPanel, BorderLayout.CENTER);
-        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-        JLabel lblOpenpnp = new JLabel("OpenPnP");
-        lblOpenpnp.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lblOpenpnp.setFont(new Font("Lucida Grande", Font.BOLD, 32));
-        contentPanel.add(lblOpenpnp);
-        JLabel lblCopyright = new JLabel("Copyright © 2011, 2012, 2013 Jason von Nieda");
-        lblCopyright.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
-        lblCopyright.setAlignmentX(Component.CENTER_ALIGNMENT);
-        contentPanel.add(lblCopyright);
-        JLabel lblVersion = new JLabel("Version: " + Main.getVersion());
-        lblVersion.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
-        lblVersion.setAlignmentX(Component.CENTER_ALIGNMENT);
-        contentPanel.add(lblVersion);
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
         getContentPane().add(buttonPane, BorderLayout.SOUTH);
@@ -74,5 +88,32 @@ public class AboutDialog extends JDialog {
         okButton.setActionCommand("OK");
         buttonPane.add(okButton);
         getRootPane().setDefaultButton(okButton);
+
+        contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        getContentPane().add(contentPanel, BorderLayout.CENTER);
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        JLabel lblOpenpnp = new JLabel("OpenPnP");
+        lblOpenpnp.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblOpenpnp.setFont(new Font("Lucida Grande", Font.BOLD, 32));
+        contentPanel.add(lblOpenpnp);
+        JLabel lblCopyright = new JLabel("Copyright © Jason von Nieda and OpenPnP Contributors");
+        lblCopyright.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
+        lblCopyright.setAlignmentX(Component.CENTER_ALIGNMENT);
+        contentPanel.add(lblCopyright);
+        JLabel lblVersion = new JLabel("Version: " + Main.getVersion());
+        lblVersion.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
+        lblVersion.setAlignmentX(Component.CENTER_ALIGNMENT);
+        contentPanel.add(lblVersion);
+
+        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        contentPanel.add(tabbedPane);
+
+        releaseNotes = new JTextPane();
+        releaseNotes.setEditable(false);
+        tabbedPane.addTab("Release Notes", null, new JScrollPane(releaseNotes), null);
+
+        credits = new JTextPane();
+        credits.setEditable(false);
+        tabbedPane.addTab("Credits", null, new JScrollPane(credits), null);
     }
 }

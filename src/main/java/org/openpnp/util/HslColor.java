@@ -236,14 +236,18 @@ public class HslColor {
 
         float h = 0;
 
-        if (max == min)
+        if (max == min) {
             h = 0;
-        else if (max == r)
+        }
+        else if (max == r) {
             h = ((60 * (g - b) / (max - min)) + 360) % 360;
-        else if (max == g)
+        }
+        else if (max == g) {
             h = (60 * (b - r) / (max - min)) + 120;
-        else if (max == b)
+        }
+        else if (max == b) {
             h = (60 * (r - g) / (max - min)) + 240;
+        }
 
         // Calculate the Luminance
 
@@ -253,12 +257,15 @@ public class HslColor {
 
         float s = 0;
 
-        if (max == min)
+        if (max == min) {
             s = 0;
-        else if (l <= .5f)
+        }
+        else if (l <= .5f) {
             s = (max - min) / (max + min);
-        else
+        }
+        else {
             s = (max - min) / (2 - max - min);
+        }
 
         return new float[] {h, s * 100, l * 100};
     }
@@ -338,16 +345,18 @@ public class HslColor {
 
         float q = 0;
 
-        if (l < 0.5)
+        if (l < 0.5) {
             q = l * (1 + s);
-        else
+        }
+        else {
             q = (l + s) - (s * l);
+        }
 
         float p = 2 * l - q;
 
-        float r = Math.max(0, HueToRGB(p, q, h + (1.0f / 3.0f)));
-        float g = Math.max(0, HueToRGB(p, q, h));
-        float b = Math.max(0, HueToRGB(p, q, h - (1.0f / 3.0f)));
+        float r = Math.max(0, hueToRGB(p, q, h + (1.0f / 3.0f)));
+        float g = Math.max(0, hueToRGB(p, q, h));
+        float b = Math.max(0, hueToRGB(p, q, h - (1.0f / 3.0f)));
 
         r = Math.min(r, 1.0f);
         g = Math.min(g, 1.0f);
@@ -356,12 +365,14 @@ public class HslColor {
         return new Color(r, g, b, alpha);
     }
 
-    private static float HueToRGB(float p, float q, float h) {
-        if (h < 0)
+    private static float hueToRGB(float p, float q, float h) {
+        if (h < 0) {
             h += 1;
+        }
 
-        if (h > 1)
+        if (h > 1) {
             h -= 1;
+        }
 
         if (6 * h < 1) {
             return p + ((q - p) * 6 * h);

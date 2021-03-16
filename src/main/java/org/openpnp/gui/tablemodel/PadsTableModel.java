@@ -35,7 +35,7 @@ import org.openpnp.model.Location;
 public class PadsTableModel extends AbstractTableModel {
     final Configuration configuration;
 
-    private String[] columnNames = new String[] {"Name", "Side", "X", "Y", "ø", "Type"};
+    private String[] columnNames = new String[] {"Name", "Side", "X", "Y", "Rot.", "Type"};
 
     private Class[] columnTypes = new Class[] {String.class, Side.class, LengthCellValue.class,
             LengthCellValue.class, String.class, Type.class};

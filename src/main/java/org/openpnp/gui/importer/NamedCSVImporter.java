@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org> and Cri.S <phone.cri@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -52,13 +52,13 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.pmw.tinylog.Logger;
 
 import com.Ostermiller.util.CSVParser;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -71,7 +71,7 @@ import com.jgoodies.forms.layout.RowSpec;
 public class NamedCSVImporter implements BoardImporter {
     private final static String NAME = "Named CSV";
     private final static String DESCRIPTION = "Import Named Comma Separated Values Files.";
-    private static final Logger logger = LoggerFactory.getLogger(NamedCSVImporter.class);
+
 
 
     private Board board;
@@ -112,36 +112,66 @@ public class NamedCSVImporter implements BoardImporter {
     // if((str.indexOf("val")!=-1||str.indexOf("comment"))&&str.indexOf("val")!=-1&&str.indexOf("val")!=-1&&
 
     private static final String Refs[] =
-            {"Designator", "designator", "Part", "part", "Component", "component", "RefDes", "Ref"};
-    private static final String Vals[] = {"Value", "value", "Val", "val", "Comment", "comment"};
-    private static final String Packs[] =
-            {"Footprint", "footprint", "Package", "package", "Pattern", "pattern"};
-    private static final String Xs[] = {"X", "x", "X (mm)", "x (mm)", "Ref X", "ref x", "PosX"};
-    private static final String Ys[] = {"Y", "x", "Y (mm)", "x (mm)", "Ref Y", "ref x", "PosY"};
-    private static final String Rots[] = {"Rotation", "rotation", "Rot", "rot", "Rotate"};
-    private static final String TBs[] = {"Layer", "layer", "Side", "side", "TB", "tb"};
+            {"DESIGNATOR", "PART", "COMPONENT", "REFDES", "REF"};
+    private static final String Vals[] = {"VALUE", "VAL", "COMMENT", "COMP_VALUE"};
+    private static final String Packs[] = {"FOOTPRINT", "PACKAGE", "PATTERN", "COMP_PACKAGE"};
+    private static final String Xs[] = {"X", "X (MM)", "REF X", "POSX", "REF-X(MM)", "REF-X(MIL)", "SYM_X"};
+    private static final String Ys[] = {"Y", "Y (MM)", "REF Y", "POSY", "REF-Y(MM)", "REF-Y(MIL)", "SYM_Y"};
+    private static final String Rots[] = {"ROTATION", "ROT", "ROTATE", "SYM_ROTATE"};
+    private static final String TBs[] = {"LAYER", "SIDE", "TB", "SYM_MIRROR"};
+    private static final String Heights[] = {"HEIGHT", "HEIGHT(MIL)", "HEIGHT(MM)"};
     //////////////////////////////////////////////////////////
-    static private int Ref = -1, Val = -1, Pack = -1, X = -1, Y = -1, Rot = -1, TB = -1, Len = 0;
+    static private int Ref = -1, Val = -1, Pack = -1, X = -1, Y = -1, Rot = -1, TB = -1, HT = -1,
+            Len = 0;
+    static private int units_mils_x = 0, units_mils_y = 0, units_mils_height = 0; // set if units
+                                                                                  // are in mils not
+                                                                                  // mm
+
     static private char comma = ',';
+
     //////////////////////////////////////////////////////////
 
     private static int checkCSV(String str[], String val[]) {
-        for (int i = 0; i < str.length; i++)
-            for (int j = 0; j < val.length; j++)
+        for (int i = 0; i < str.length; i++) {
+            for (int j = 0; j < val.length; j++) {
                 if (str[i].equals(val[j])) {
-                    logger.trace("checkCSV: " + val[j] + " = " + j);
+                    Logger.trace("checkCSV: " + val[j] + " = " + j);
+
+                    // check for mil units
+                    // TODO This should be done better, but at moment I don't know a better way...
+                    // -trampas
+                    if (val[j].equals("REF-X(MIL)")) {
+                        units_mils_x = 1;
+                        Logger.trace("X units are in mils");
+                    }
+                    if (val[j].equals("REF-Y(MIL)")) {
+                        units_mils_y = 1;
+                        Logger.trace("Y units are in mils");
+                    }
+
+                    if (val[j].equals("HEIGHT(MIL)")) {
+                        units_mils_height = 1;
+                        Logger.trace("Height units are in mils");
+                    }
+
                     return j;
                 }
+            }
+        }
         return -1;
     }
 
     private static boolean checkCSV(String str[]) {
-        for (int i = 0; i < str.length; i++)
-            logger.trace("checkCSV: " + i + " -> " + str[i]);
+
+        // note that layer (TB) and Height (HT) are optional and thus checked against -2
         if ((Ref = checkCSV(Refs, str)) != -1 && (Val = checkCSV(Vals, str)) != -1
                 && (Pack = checkCSV(Packs, str)) != -1 && (X = checkCSV(Xs, str)) != -1
-                && (Y = checkCSV(Ys, str)) != -1 && (Rot = checkCSV(Rots, str)) != -1
-                && (TB = checkCSV(TBs, str)) != -2) {
+                && (Y = checkCSV(Ys, str)) != -1 && (Rot = checkCSV(Rots, str)) != -1) {
+
+            // the following fields are optional
+            HT = checkCSV(Heights, str); // optional height field
+            TB = checkCSV(TBs, str); // optional top/bottom layer field
+
             Len = Ref <= Len ? Len : Ref;
             Len = Val <= Len ? Len : Val;
             Len = Pack <= Len ? Len : Pack;
@@ -149,16 +179,18 @@ public class NamedCSVImporter implements BoardImporter {
             Len = Y <= Len ? Len : Y;
             Len = Rot <= Len ? Len : Rot;
             Len = TB <= Len ? Len : TB;
-            logger.trace("checkCSV: Len = " + Len);
+            Len = HT <= Len ? Len : HT;
+            Logger.trace("checkCSV: Len = " + Len);
             return true;
         }
-        logger.trace("checkCSV: Ref = " + Ref);
-        logger.trace("checkCSV: Val = " + Val);
-        logger.trace("checkCSV: Pack = " + Pack);
-        logger.trace("checkCSV: X = " + X);
-        logger.trace("checkCSV: Y = " + Y);
-        logger.trace("checkCSV: Rot = " + Rot);
-        logger.trace("checkCSV: TB = " + TB);
+        Logger.trace("checkCSV: Ref = " + Ref);
+        Logger.trace("checkCSV: Val = " + Val);
+        Logger.trace("checkCSV: Pack = " + Pack);
+        Logger.trace("checkCSV: X = " + X);
+        Logger.trace("checkCSV: Y = " + Y);
+        Logger.trace("checkCSV: Rot = " + Rot);
+        Logger.trace("checkCSV: TB = " + TB);
+        Logger.trace("checkCSV: HT = " + HT);
         Ref = -1;
         Val = -1;
         Pack = -1;
@@ -166,59 +198,60 @@ public class NamedCSVImporter implements BoardImporter {
         Y = -1;
         Rot = -1;
         TB = -1;
+        HT = -1;
         Len = 0;
         return false;
     }
 
     private static boolean checkLine(String str) throws Exception {
-        logger.trace("checkLine: " + str);
+        Logger.trace("checkLine: " + str);
+        String input_str = str.toUpperCase();
         int e = 0;
-        if (str.charAt(0) == '#')
-            str = str.substring(1);
-        if (str == null)
+        if (input_str.charAt(0) == '#') {
+            input_str = input_str.substring(1);
+        }
+        if (input_str == null) {
             return false;
-        logger.trace("checkLine: " + e++ + " ok");
-        if (str.indexOf("X") == -1 && str.indexOf("x") == -1)
+        }
+        if (input_str.indexOf("X") == -1) {
             return false;
-        logger.trace("checkLine: " + e++ + " ok");
-        if (str.indexOf("Y") == -1 && str.indexOf("y") == -1)
+        }
+        if (input_str.indexOf("Y") == -1) {
             return false;
-        logger.trace("checkLine: " + e++ + " ok");
-        if (str.indexOf("Rot") == -1 && str.indexOf("rot") == -1)
+        }
+        if (input_str.indexOf("ROT") == -1) {
             return false;
-        logger.trace("checkLine: " + e++ + " ok");
-        if (str.indexOf("val") == -1 && str.indexOf("Val") == -1 && str.indexOf("Comment") == -1
-                && str.indexOf("comment") == -1)
+        }
+        if (input_str.indexOf("VAL") == -1 
+        		&& input_str.indexOf("COMMENT") == -1) {
             return false;
-        logger.trace("checkLine: " + e++ + " ok");
-        if (str.indexOf("ootprint") == -1 && str.indexOf("ackage") == -1
-                && str.indexOf("attern") == -1)
+        }
+        if (input_str.indexOf("FOOTPRINT") == -1 
+        		&& input_str.indexOf("PACKAGE") == -1
+                && input_str.indexOf("PATTERN") == -1) {
             return false;
-        logger.trace("checkLine: " + e++ + " ok");
-        if (str.indexOf("Designator") == -1 && str.indexOf("designator") == -1
-                && str.indexOf("Part") == -1 && str.indexOf("part") == -1
-                && str.indexOf("Component") == -1 && str.indexOf("component") == -1
-                && str.indexOf("RefDes") == -1 && str.indexOf("Ref") == -1)
+        }
+        if (input_str.indexOf("DESIGNATOR") == -1
+                && input_str.indexOf("PART") == -1
+                && input_str.indexOf("COMP") == -1
+                && input_str.indexOf("REF") == -1) {
             return false;
-        logger.trace("checkLine: " + e++ + " ok");
+        }
         // seems to have data
         String as[], at[][];
-        CSVParser csvParser = new CSVParser(new StringReader(str));
+        CSVParser csvParser = new CSVParser(new StringReader(input_str));
         as = csvParser.getLine();
         comma = ',';
-        logger.trace("checkLine: comma " + as.length);
-        if (as.length >= 6 && checkCSV(as))
+        if (as.length >= 6 && checkCSV(as)) {
             return true;
-        logger.trace("checkLine: " + e++ + " ok");
-        at = csvParser.parse(str, comma = '\t');
-        logger.trace("checkLine: tab " + as.length);
-        if (at.length > 0 && at[0].length >= 6 && checkCSV(at[0]))
+        }
+        at = CSVParser.parse(input_str, comma = '\t');
+        if (at.length > 0 && at[0].length >= 6 && checkCSV(at[0])) {
             return true;
-        logger.trace("checkLine: " + e++ + " ok");
+        }
         /*
-         * at=csvParser.parse(str,comma=' '); logger.trace("checkLine: space "+as.length);
-         * if(at.length>0&&at[0].length>=6&&checkCSV(at[0])) return true; logger.trace(
-         * "checkLine: done "+ e++ +" ok");
+         * at=csvParser.parse(input_str,comma=' '); if(at.length>0&&at[0].length>=6&&checkCSV(at[0]))
+         * return true;
          */
         return false;
     }
@@ -230,50 +263,71 @@ public class NamedCSVImporter implements BoardImporter {
      */
     //////////////////////////////////////////////////////////
 
-    private static List<Placement> parseFile(File file, boolean createMissingParts)
-            throws Exception {
+    private static List<Placement> parseFile(File file, boolean createMissingParts,
+            boolean updateHeights) throws Exception {
         BufferedReader reader =
-                new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+                new BufferedReader(new InputStreamReader(new FileInputStream(file), "ISO-8859-1"));
         ArrayList<Placement> placements = new ArrayList<>();
         String line;
 
-        for (int i = 0; i++ < 10 && (line = reader.readLine()) != null;) {
+        for (int i = 0; i++ < 50 && (line = reader.readLine()) != null;) {
             line = line.trim();
-            if (line.length() == 0)
+            if (line.length() == 0) {
                 continue;
-            if (checkLine(line))
+            }
+            if (checkLine(line)) {
                 break;
+            }
         }
 
 
         if (Len == 0) {
             reader.close();
-            throw new Exception("Unable to parse CSV File Names");
+            throw new Exception("Unable to find relevant headers' names.\n See https://github.com/openpnp/openpnp/wiki/Importing-Centroid-Data for more.");
         }
 
         // CSVParser csvParser = new CSVParser(new FileInputStream(file));
         CSVParser csvParser = new CSVParser(reader, comma);
-        for (String as[]; (as = csvParser.getLine()) != null;)
-            if (as.length <= Len)
+        for (String as[]; (as = csvParser.getLine()) != null;) {
+            if (as.length <= Len) {
                 continue;
+            }
             else {
+                double placementX = Double.parseDouble(as[X].replace(",", ".").replace(" ", "")
+                        .replace("mm", "").replace("mil", ""));
+                // convert mils to mmm
+                if (units_mils_x == 1) {
+                    placementX = placementX * 0.0254;
+                }
+                double placementY = Double.parseDouble(as[Y].replace(",", ".").replace(" ", "")
+                        .replace("mm", "").replace("mil", ""));
 
-                logger.trace("CSV: " + as.length);
-                for (int i = 0; i < as.length; i++)
-                    logger.trace("CSV(" + i + ") |" + as[i] + "|");
-                logger.trace("");
-                double placementX = Double
-                        .parseDouble(as[X].replace(",", ".").replace(" ", "").replace("mm", ""));
-                double placementY = Double
-                        .parseDouble(as[Y].replace(",", ".").replace(" ", "").replace("mm", ""));
+                // convert mils to mmm
+                if (units_mils_y == 1) {
+                    placementY = placementY * 0.0254;
+                }
+
+
+                double heightZ = 0.0; // set default height to zero in case not included in CSV
+                if (HT != -1) {
+                    heightZ = Double.parseDouble(as[HT].replace(",", ".").replace(" ", "")
+                            .replace("mm", "").replace("mil", ""));
+
+                    // convert mils to mmm
+                    if (units_mils_height == 1) {
+                        heightZ = heightZ * 0.0254;
+                    }
+                }
+
                 double placementRotation =
                         Double.parseDouble(as[Rot].replace(",", ".").replace(" ", ""));
-                while (placementRotation > 180.0)
+                while (placementRotation > 180.0) {
                     placementRotation -= 360.0;
-                while (placementRotation < -180.0)
+                }
+                while (placementRotation < -180.0) {
                     placementRotation += 360.0;
+                }
 
-                logger.trace("ok");
 
                 Placement placement = new Placement(as[Ref]);
                 placement.setLocation(new Location(LengthUnit.Millimeters, placementX, placementY,
@@ -282,8 +336,11 @@ public class NamedCSVImporter implements BoardImporter {
                 if (cfg != null && createMissingParts) {
                     String partId = as[Pack] + "-" + as[Val];
                     Part part = cfg.getPart(partId);
+
                     if (part == null) {
                         part = new Part(partId);
+                        Length l = new Length(heightZ, LengthUnit.Millimeters);
+                        part.setHeight(l);
                         Package pkg = cfg.getPackage(as[Pack]);
                         if (pkg == null) {
                             pkg = new Package(as[Pack]);
@@ -293,20 +350,30 @@ public class NamedCSVImporter implements BoardImporter {
 
                         cfg.addPart(part);
                     }
+
+                    // if part exists and height exist and user wants height updated do it.
+                    if (cfg != null && updateHeights && HT != -1) {
+                        String partId2 = as[Pack] + "-" + as[Val];
+                        Part part2 = cfg.getPart(partId2);
+                        if (part2 != null) {
+                            Length l = new Length(heightZ, LengthUnit.Millimeters);
+                            part2.setHeight(l);
+                        }
+                    }
                     placement.setPart(part);
 
                 }
 
                 char c = 0;
-                if (TB != -1)
-                    c = as[TB].charAt(0);
-                placement.setSide(c == 'B' || c == 'b' ? Side.Bottom : Side.Top);
+                if (TB != -1) {
+                    c = as[TB].toUpperCase().charAt(0);
+                }
+                placement.setSide(c == 'B' || c == 'Y' ? Side.Bottom : Side.Top);
                 c = 0;
                 placements.add(placement);
             }
-        logger.trace("ok");
+        }
         reader.close();
-        logger.trace("ok");
         return placements;
     }
 
@@ -316,6 +383,7 @@ public class NamedCSVImporter implements BoardImporter {
         private final Action importAction = new SwingAction_2();
         private final Action cancelAction = new SwingAction_3();
         private JCheckBox chckbxCreateMissingParts;
+        private JCheckBox chckbxUpdatePartHeight;
 
         public Dlg(Frame parent) {
             super(parent, DESCRIPTION, true);
@@ -349,11 +417,16 @@ public class NamedCSVImporter implements BoardImporter {
             getContentPane().add(panel_1);
             panel_1.setLayout(new FormLayout(
                     new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                    new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+                    new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                            RowSpec.decode("default:grow")}));
 
             chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
             chckbxCreateMissingParts.setSelected(true);
             panel_1.add(chckbxCreateMissingParts, "2, 2");
+
+            chckbxUpdatePartHeight = new JCheckBox("Update Existing Part Heights");
+            chckbxUpdatePartHeight.setSelected(true);
+            panel_1.add(chckbxUpdatePartHeight, "2, 3");
 
             JSeparator separator = new JSeparator();
             getContentPane().add(separator);
@@ -415,14 +488,14 @@ public class NamedCSVImporter implements BoardImporter {
             }
 
             public void actionPerformed(ActionEvent e) {
-                logger.debug("Parsing " + textFieldTopFile.getText() + " CSV FIle");
+                Logger.debug("Parsing " + textFieldTopFile.getText() + " CSV FIle");
                 topFile = new File(textFieldTopFile.getText());
                 board = new Board();
                 List<Placement> placements = new ArrayList<>();
                 try {
                     if (topFile.exists()) {
-                        placements
-                                .addAll(parseFile(topFile, chckbxCreateMissingParts.isSelected()));
+                        placements.addAll(parseFile(topFile, chckbxCreateMissingParts.isSelected(),
+                                chckbxUpdatePartHeight.isSelected()));
                     }
                 }
                 catch (Exception e1) {

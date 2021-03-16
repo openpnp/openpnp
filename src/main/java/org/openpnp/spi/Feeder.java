@@ -19,10 +19,13 @@
 
 package org.openpnp.spi;
 
+import java.util.List;
+
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 import org.openpnp.model.Named;
 import org.openpnp.model.Part;
+import org.openpnp.model.Solutions;
 
 
 
@@ -31,7 +34,7 @@ import org.openpnp.model.Part;
  * feeder, a tray handler, a single part in a specific location or anything else that can be used as
  * a pick source.
  */
-public interface Feeder extends Identifiable, Named, WizardConfigurable, PropertySheetHolder {
+public interface Feeder extends Identifiable, Named, WizardConfigurable, PropertySheetHolder, Solutions.Subject {
     /**
      * Return true is the Feeder is currently enabled and can be considered in Job planning.
      * 
@@ -63,6 +66,28 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
     public Location getPickLocation() throws Exception;
 
     /**
+     * Some feeders need preparation for a Job that is best done up front and in bulk, such as vision 
+     * calibration, actuating covers, checking OCR labels etc. Some prep requires the head moving to the 
+     * feeder. For efficiency the JobProcessor uses a Travelling Salesman algorithm to visit
+     * all these feeders. The locations for these visits are gathered using getJobPreparationLocation().
+     *  
+     * @return The location for the feeder Job preparation visit or null if none.
+     */
+    public Location getJobPreparationLocation();
+    
+    /**
+     * Prepares a Feeder for usage in a Job. This is done for all the feeders that are enabled and 
+     * contain Parts that are used in pending placements. Preparation is done when the Job is started, 
+     * so it can perform bulk initialization that should not be postponed until the Nozzle.feed() 
+     * 
+     * @param visit true for visits along the getJobPreparationLocation() travel path, false for 
+     * general preparation (second pass for visited feeders).
+     *  
+     * @throws Exception
+     */
+    public void prepareForJob(boolean visit) throws Exception;
+    
+    /**
      * Commands the Feeder to do anything it needs to do to prepare the part to be picked by the
      * specified Nozzle. If the Feeder requires Head interaction to feed it will perform those
      * operations during this call.
@@ -74,6 +99,31 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
      * @throws Exception
      */
     public void feed(Nozzle nozzle) throws Exception;
+
+    public void postPick(Nozzle nozzle) throws Exception;
+
+    /*
+     * If the feeder (currently) supports taking back a part
+     */
+    public boolean canTakeBackPart();
     
-    public int getRetryCount();
+    /**
+     * Asks the feeder to take back the part currently on the nozzle.
+     */
+    public void takeBackPart(Nozzle nozzle) throws Exception;
+    
+    /**
+     * If feed() throws an Exception during job processing, the job processor will retry the
+     * feed() call this many times before raising the error.
+     * @return
+     */
+    public int getFeedRetryCount();
+    
+    /**
+     * If post pick checks such as isPartOn() fail during job processing, the job processor will
+     * retry the pick and check process this many times before raising the error. Note that
+     * this does not include re-feeding the part.  
+     * @return
+     */
+    public int getPickRetryCount();
 }

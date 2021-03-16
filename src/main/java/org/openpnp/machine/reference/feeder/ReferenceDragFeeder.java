@@ -30,11 +30,11 @@ import javax.imageio.ImageIO;
 import javax.swing.Action;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceDragFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Rectangle;
@@ -44,11 +44,11 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider;
+import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Persist;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Vision System Description
@@ -67,7 +67,7 @@ import org.slf4j.LoggerFactory;
  * the right position.
  */
 public class ReferenceDragFeeder extends ReferenceFeeder {
-    private final static Logger logger = LoggerFactory.getLogger(ReferenceDragFeeder.class);
+
 
     private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
@@ -76,13 +76,23 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     @Element
     protected Location feedEndLocation = new Location(LengthUnit.Millimeters);
     @Element(required = false)
+    private Length partPitch = new Length(4, LengthUnit.Millimeters);
+    @Element(required = false)
     protected double feedSpeed = 1.0;
     @Attribute(required = false)
     protected String actuatorName;
+    @Attribute(required = false)
+    protected String peelOffActuatorName;
     @Element(required = false)
     protected Vision vision = new Vision();
+    @Element(required = false)
+    protected Length backoffDistance = new Length(0, LengthUnit.Millimeters);    
 
     protected Location pickLocation;
+
+    private double feededCount = 0;
+    private double partsPitchX = -2; //-2mm for 0402
+    private double partsPitchY = 0;
 
     /*
      * visionOffset contains the difference between where the part was expected to be and where it
@@ -91,18 +101,28 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
      * correct feed locations.
      */
     protected Location visionOffset;
+    protected Location partPick;
 
     @Override
     public Location getPickLocation() throws Exception {
         if (pickLocation == null) {
             pickLocation = location;
         }
+
+        if (partPitch.convertToUnits(LengthUnit.Millimeters).getValue() == 2 && partPick != null) {
+			pickLocation = pickLocation.add(partPick);
+		}
+
+        if (vision.isEnabled() && visionOffset != null) {
+			pickLocation = pickLocation.subtract(visionOffset);
+        }
+
         return pickLocation;
     }
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
-        logger.debug("feed({})", nozzle);
+        Logger.debug("feed({})", nozzle);
 
         if (actuatorName == null) {
             throw new Exception("No actuator name set.");
@@ -125,6 +145,17 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
                     actuatorName, head.getName()));
         }
 
+		Actuator peelOffActuator = null;
+
+		if (peelOffActuatorName != null) {
+			peelOffActuator = head.getActuatorByName(peelOffActuatorName);
+
+	        if (peelOffActuator == null) {
+	            throw new Exception(String.format("No Actuator found with name %s on feed Head %s",
+						peelOffActuatorName, head.getName()));
+	        }
+		}
+
         head.moveToSafeZ();
 
         if (vision.isEnabled()) {
@@ -135,11 +166,12 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
                 // for the next operation. By front loading this we make sure
                 // that all future calls can go directly to the feed operation
                 // and skip checking the vision first.
-                logger.debug("First feed, running vision pre-flight.");
+                Logger.debug("First feed, running vision pre-flight.");
 
                 visionOffset = getVisionOffsets(head, location);
+                feededCount = 0;
             }
-            logger.debug("visionOffsets " + visionOffset);
+            Logger.debug("visionOffsets " + visionOffset);
         }
 
         // Now we have visionOffsets (if we're using them) so we
@@ -147,46 +179,84 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         // feedEndLocation and pickLocation. pickLocation will be saved
         // for the pick operation while feed start and end are used
         // here and then discarded.
-        Location feedStartLocation = this.feedStartLocation;
-        Location feedEndLocation = this.feedEndLocation;
         pickLocation = this.location;
-        if (visionOffset != null) {
-            feedStartLocation = feedStartLocation.subtract(visionOffset);
-            feedEndLocation = feedEndLocation.subtract(visionOffset);
-            pickLocation = pickLocation.subtract(visionOffset);
+
+        if (feededCount == 0) {
+            Location feedStartLocation = this.feedStartLocation;
+            Location feedEndLocation = this.feedEndLocation;
+	        if (vision.isEnabled() && visionOffset != null) {
+	            feedStartLocation = feedStartLocation.subtract(visionOffset);
+	            Logger.debug("New drag distance with visionOffset " + feedStartLocation.subtract(feedEndLocation));
+	        }
+
+	        // Move the actuator to the feed start location.
+	        actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
+
+	        // extend the pin
+	        actuator.actuate(true);
+
+	        // insert the pin
+	        actuator.moveTo(feedStartLocation);
+
+	        // drag the tape
+	        actuator.moveTo(feedEndLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
+
+			if (peelOffActuator != null) {
+				// peel off before backoff
+				peelOffActuator.actuate(true);
+				peelOffActuator.actuate(false);
+			}
+
+	        // backoff to release tension from the pin
+	        if (backoffDistance.getValue() != 0) {
+	            Location backoffLocation = Utils2D.getPointAlongLine(feedEndLocation, feedStartLocation, backoffDistance);
+	            actuator.moveTo(backoffLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
+	        }
+
+	        // retract the pin
+	        actuator.actuate(false);
+            
+            // evaluate for backwards compatibility
+            if(this.isPart0402() == true){
+                partPitch = new Length(2, LengthUnit.Millimeters);
+            }
+
+	        if (partPitch.convertToUnits(LengthUnit.Millimeters).getValue() == 2) {
+				// can change it to "feededCount = parts_count_userSettings;"
+				feededCount = 2;
+	        }
+        } 
+        else {
+			Logger.debug("Multi parts drag feeder: skipping drag " + feededCount);
         }
 
-        // Move the actuator to the feed start location.
-        actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
-
-        // extend the pin
-        actuator.actuate(true);
-
-        // insert the pin
-        actuator.moveTo(feedStartLocation);
-
-        // drag the tape
-        actuator.moveTo(feedEndLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
 
         head.moveToSafeZ();
 
-        // retract the pin
-        actuator.actuate(false);
+        if (feededCount > 0) {
+            feededCount--;
+            if (feededCount > 0) {
+                partPick = new Location(LengthUnit.Millimeters, partsPitchX * feededCount,
+                        partsPitchY * feededCount, 0, 0);
+            } 
+            else {
+                partPick = null;
+            }
+        }
 
         if (vision.isEnabled()) {
             visionOffset = getVisionOffsets(head, location);
 
-            logger.debug("final visionOffsets " + visionOffset);
-        }
+            Logger.debug("final visionOffsets " + visionOffset);
 
-        logger.debug("Modified pickLocation {}", pickLocation);
+            Logger.debug("Modified pickLocation {}", pickLocation.subtract(visionOffset));
+        }
     }
 
     // TODO: Throw an Exception if vision fails.
     private Location getVisionOffsets(Head head, Location pickLocation) throws Exception {
-        logger.debug("getVisionOffsets({}, {})", head.getName(), pickLocation);
+        Logger.debug("getVisionOffsets({}, {})", head.getName(), pickLocation);
         // Find the Camera to be used for vision
-        // TODO: Consider caching this
         Camera camera = null;
         for (Camera c : head.getCameras()) {
             if (c.getVisionProvider() != null) {
@@ -197,25 +267,30 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         if (camera == null) {
             throw new Exception("No vision capable camera found on head.");
         }
+        
+        if (vision.getTemplateImage() == null) {
+            throw new Exception("Template image is required when vision is enabled.");
+        }
+        
+        if (vision.getAreaOfInterest().getWidth() == 0 || vision.getAreaOfInterest().getHeight() == 0) {
+            throw new Exception("Area of Interest is required when vision is enabled.");
+        }
 
         head.moveToSafeZ();
 
         // Position the camera over the pick location.
-        logger.debug("Move camera to pick location.");
+        Logger.debug("Move camera to pick location.");
         camera.moveTo(pickLocation);
 
         // Move the camera to be in focus over the pick location.
         // head.moveTo(head.getX(), head.getY(), z, head.getC());
-
-        // Settle the camera
-        Thread.sleep(camera.getSettleTimeMs());
 
         VisionProvider visionProvider = camera.getVisionProvider();
 
         Rectangle aoi = getVision().getAreaOfInterest();
 
         // Perform the template match
-        logger.debug("Perform template match.");
+        Logger.debug("Perform template match.");
         Point[] matchingPoints = visionProvider.locateTemplateMatches(aoi.getX(), aoi.getY(),
                 aoi.getWidth(), aoi.getHeight(), 0, 0, vision.getTemplateImage());
 
@@ -225,42 +300,41 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         // match now contains the position, in pixels, from the top left corner
         // of the image to the top left corner of the match. We are interested in
         // knowing how far from the center of the image the center of the match is.
-        BufferedImage image = camera.capture();
-        double imageWidth = image.getWidth();
-        double imageHeight = image.getHeight();
+        double imageWidth = camera.getWidth();
+        double imageHeight = camera.getHeight();
         double templateWidth = vision.getTemplateImage().getWidth();
         double templateHeight = vision.getTemplateImage().getHeight();
         double matchX = match.x;
         double matchY = match.y;
 
-        logger.debug("matchX {}, matchY {}", matchX, matchY);
+        Logger.debug("matchX {}, matchY {}", matchX, matchY);
 
         // Adjust the match x and y to be at the center of the match instead of
         // the top left corner.
         matchX += (templateWidth / 2);
         matchY += (templateHeight / 2);
 
-        logger.debug("centered matchX {}, matchY {}", matchX, matchY);
+        Logger.debug("centered matchX {}, matchY {}", matchX, matchY);
 
         // Calculate the difference between the center of the image to the
         // center of the match.
         double offsetX = (imageWidth / 2) - matchX;
         double offsetY = (imageHeight / 2) - matchY;
 
-        logger.debug("offsetX {}, offsetY {}", offsetX, offsetY);
+        Logger.debug("offsetX {}, offsetY {}", offsetX, offsetY);
 
         // Invert the Y offset because images count top to bottom and the Y
         // axis of the machine counts bottom to top.
         offsetY *= -1;
 
-        logger.debug("negated offsetX {}, offsetY {}", offsetX, offsetY);
+        Logger.debug("negated offsetX {}, offsetY {}", offsetX, offsetY);
 
         // And convert pixels to units
         Location unitsPerPixel = camera.getUnitsPerPixel();
         offsetX *= unitsPerPixel.getX();
         offsetY *= unitsPerPixel.getY();
 
-        logger.debug("final, in camera units offsetX {}, offsetY {}", offsetX, offsetY);
+        Logger.debug("final, in camera units offsetX {}, offsetY {}", offsetX, offsetY);
 
         return new Location(unitsPerPixel.getUnits(), offsetX, offsetY, 0, 0);
     }
@@ -269,6 +343,21 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     public String toString() {
         return String.format("ReferenceTapeFeeder id %s", id);
     }
+
+	public void resetVisionOffsets() {
+		if (visionOffset != null) {
+			visionOffset = null;
+			Logger.debug("resetVisionOffsets " + visionOffset);
+		}
+
+		partPick = null;
+	}
+
+	public boolean isPart0402() {
+		return this.getPart() != null
+		        && (this.getPart().getPackage().getId().contains("C0402")
+				|| this.getPart().getPackage().getId().contains("R0402"));
+	}
 
     public Location getFeedStartLocation() {
         return feedStartLocation;
@@ -284,6 +373,14 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
     public void setFeedEndLocation(Location feedEndLocation) {
         this.feedEndLocation = feedEndLocation;
+    }
+
+    public Length getPartPitch() {
+        return partPitch;
+    }
+
+    public void setPartPitch(Length partPitch) {
+        this.partPitch = partPitch;
     }
 
     public Double getFeedSpeed() {
@@ -302,6 +399,24 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         String oldValue = this.actuatorName;
         this.actuatorName = actuatorName;
         propertyChangeSupport.firePropertyChange("actuatorName", oldValue, actuatorName);
+    }
+
+    public String getPeelOffActuatorName() {
+        return peelOffActuatorName;
+    }
+
+    public void setPeelOffActuatorName(String actuatorName) {
+        String oldValue = this.peelOffActuatorName;
+        this.peelOffActuatorName = actuatorName;
+        propertyChangeSupport.firePropertyChange("actuatorName", oldValue, actuatorName);
+    }
+
+    public Length getBackoffDistance() {
+        return backoffDistance;
+    }
+
+    public void setBackoffDistance(Length backoffDistance) {
+        this.backoffDistance = backoffDistance;
     }
 
     public Vision getVision() {
@@ -340,18 +455,11 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
-    }
-
-    @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
         return null;
     }
 

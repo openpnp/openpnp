@@ -79,8 +79,14 @@ public class ReferenceDragFeederConfigurationWizard
     private JTextField textFieldFeedEndY;
     private JTextField textFieldFeedEndZ;
     private JTextField textFieldFeedRate;
+    private JLabel lblPartPitch;
+    private JTextField textFieldPartPitch;
+    private JLabel lblFeedRate;
     private JLabel lblActuatorId;
+    private JLabel lblPeelOffActuatorId;
+    private JLabel lbl0402PartDetected;
     private JTextField textFieldActuatorId;
+    private JTextField textFieldPeelOffActuatorId;
     private JPanel panelGeneral;
     private JPanel panelVision;
     private JPanel panelLocations;
@@ -106,6 +112,9 @@ public class ReferenceDragFeederConfigurationWizard
     private JButton btnCancelChangeAoi;
     private JPanel panel;
     private JButton btnCancelChangeTemplateImage;
+    private JButton btnResetVisionOffsets;
+    private JLabel lblBackoffDistance;
+    private JTextField backoffDistTf;
 
     public ReferenceDragFeederConfigurationWizard(ReferenceDragFeeder feeder) {
         super(feeder);
@@ -121,38 +130,72 @@ public class ReferenceDragFeederConfigurationWizard
         panelFields.add(panelGeneral);
         panelGeneral.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblFeedRate = new JLabel("Feed Speed %");
-        panelGeneral.add(lblFeedRate, "2, 2");
+        lblPartPitch = new JLabel("Part Pitch");
+        panelGeneral.add(lblPartPitch, "2, 2, right, default");
+
+        textFieldPartPitch = new JTextField();
+        panelGeneral.add(textFieldPartPitch, "4, 2");
+        textFieldPartPitch.setColumns(5);
+
+        lblFeedRate = new JLabel("Feed Speed %");
+        panelGeneral.add(lblFeedRate, "2, 4");
 
         textFieldFeedRate = new JTextField();
-        panelGeneral.add(textFieldFeedRate, "4, 2");
+        panelGeneral.add(textFieldFeedRate, "4, 4");
         textFieldFeedRate.setColumns(5);
 
         lblActuatorId = new JLabel("Actuator Name");
-        panelGeneral.add(lblActuatorId, "2, 4, right, default");
+        panelGeneral.add(lblActuatorId, "2, 6, right, default");
 
         textFieldActuatorId = new JTextField();
-        panelGeneral.add(textFieldActuatorId, "4, 4");
+        panelGeneral.add(textFieldActuatorId, "4, 6");
         textFieldActuatorId.setColumns(5);
+
+        lblPeelOffActuatorId = new JLabel("Peel Off Actuator Name");
+        panelGeneral.add(lblPeelOffActuatorId, "6, 6, right, default");
+
+        textFieldPeelOffActuatorId = new JTextField();
+        panelGeneral.add(textFieldPeelOffActuatorId, "8, 6");
+        textFieldPeelOffActuatorId.setColumns(5);
+
+        if (feeder.isPart0402()) {
+	        lbl0402PartDetected = new JLabel("0402 Part DETECTED");
+	        panelGeneral.add(lbl0402PartDetected, "6, 2");
+        }
 
         panelLocations = new JPanel();
         panelFields.add(panelLocations);
         panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
-        panelLocations.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"),},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelLocations.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("left:default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblX = new JLabel("X");
         panelLocations.add(lblX, "4, 4");
@@ -200,6 +243,13 @@ public class ReferenceDragFeederConfigurationWizard
         locationButtonsPanelFeedEnd = new LocationButtonsPanel(textFieldFeedEndX, textFieldFeedEndY,
                 textFieldFeedEndZ, null);
         panelLocations.add(locationButtonsPanelFeedEnd, "10, 8");
+        
+        lblBackoffDistance = new JLabel("Backoff Distance");
+        panelLocations.add(lblBackoffDistance, "2, 10, right, default");
+        
+        backoffDistTf = new JTextField();
+        panelLocations.add(backoffDistTf, "4, 10");
+        backoffDistTf.setColumns(10);
         //
         panelVision = new JPanel();
         panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING,
@@ -227,8 +277,7 @@ public class ReferenceDragFeederConfigurationWizard
 
         panelTemplate = new JPanel();
         panelTemplate.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Template Image", TitledBorder.LEADING, TitledBorder.TOP, null,
-                new Color(0, 0, 0)));
+                "Template Image", TitledBorder.LEADING, TitledBorder.TOP, null));
         panelVisionTemplateAndAoe.add(panelTemplate, "2, 2, center, fill");
         panelTemplate.setLayout(new BoxLayout(panelTemplate, BoxLayout.Y_AXIS));
 
@@ -263,8 +312,13 @@ public class ReferenceDragFeederConfigurationWizard
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+						FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        }));
 
         lblX_1 = new JLabel("X");
         panelAoE.add(lblX_1, "2, 2");
@@ -305,6 +359,10 @@ public class ReferenceDragFeederConfigurationWizard
         cancelSelectTemplateImageAction.setEnabled(false);
         cancelSelectAoiAction.setEnabled(false);
 
+        btnResetVisionOffsets = new JButton("Reset offsets");
+        btnResetVisionOffsets.setAction(resetVisionOffsets);
+        panelAoE.add(btnResetVisionOffsets, "12, 10");
+
         contentPanel.add(panelFields);
     }
 
@@ -318,8 +376,10 @@ public class ReferenceDragFeederConfigurationWizard
         BufferedImageIconConverter imageConverter = new BufferedImageIconConverter();
         PercentConverter percentConverter = new PercentConverter();
 
+        addWrappedBinding(feeder, "partPitch", textFieldPartPitch, "text", lengthConverter);
         addWrappedBinding(feeder, "feedSpeed", textFieldFeedRate, "text", percentConverter);
         addWrappedBinding(feeder, "actuatorName", textFieldActuatorId, "text");
+        addWrappedBinding(feeder, "peelOffActuatorName", textFieldPeelOffActuatorId, "text");
 
         MutableLocationProxy feedStartLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "feedStartLocation", feedStartLocation, "location");
@@ -347,9 +407,13 @@ public class ReferenceDragFeederConfigurationWizard
                 intConverter);
         addWrappedBinding(feeder, "vision.areaOfInterest.height", textFieldAoiHeight, "text",
                 intConverter);
+        
+        addWrappedBinding(feeder, "backoffDistance", backoffDistTf, "text", lengthConverter);
 
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPartPitch);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedRate);
         ComponentDecorators.decorateWithAutoSelect(textFieldActuatorId);
+        ComponentDecorators.decorateWithAutoSelect(textFieldPeelOffActuatorId);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartZ);
@@ -360,12 +424,10 @@ public class ReferenceDragFeederConfigurationWizard
         ComponentDecorators.decorateWithAutoSelect(textFieldAoiY);
         ComponentDecorators.decorateWithAutoSelect(textFieldAoiWidth);
         ComponentDecorators.decorateWithAutoSelect(textFieldAoiHeight);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(backoffDistTf);
 
-        BeanProperty actuatorIdProperty = BeanProperty.create("actuatorId");
-        Bindings.createAutoBinding(UpdateStrategy.READ, feeder, actuatorIdProperty,
-                locationButtonsPanelFeedStart, actuatorIdProperty).bind();
-        Bindings.createAutoBinding(UpdateStrategy.READ, feeder, actuatorIdProperty,
-                locationButtonsPanelFeedEnd, actuatorIdProperty).bind();
+        bind(UpdateStrategy.READ, feeder, "actuatorName", locationButtonsPanelFeedStart, "actuatorName");
+        bind(UpdateStrategy.READ, feeder, "actuatorName", locationButtonsPanelFeedEnd, "actuatorName");
     }
 
     @SuppressWarnings("serial")
@@ -373,9 +435,9 @@ public class ReferenceDragFeederConfigurationWizard
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
-                CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+                CameraView cameraView = MainFrame.get().getCameraViews().setSelectedCamera(camera);
 
                 cameraView.setSelectionEnabled(true);
                 // org.openpnp.model.Rectangle r =
@@ -399,9 +461,9 @@ public class ReferenceDragFeederConfigurationWizard
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
-                CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+                CameraView cameraView = MainFrame.get().getCameraViews().setSelectedCamera(camera);
 
                 BufferedImage image = cameraView.captureSelectionImage();
                 if (image == null) {
@@ -424,9 +486,9 @@ public class ReferenceDragFeederConfigurationWizard
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
-                CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+                CameraView cameraView = MainFrame.get().getCameraViews().setSelectedCamera(camera);
 
                 btnChangeTemplateImage.setAction(selectTemplateImageAction);
                 cancelSelectTemplateImageAction.setEnabled(false);
@@ -440,9 +502,9 @@ public class ReferenceDragFeederConfigurationWizard
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
-                CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+                CameraView cameraView = MainFrame.get().getCameraViews().setSelectedCamera(camera);
 
                 btnChangeAoi.setAction(confirmSelectAoiAction);
                 cancelSelectAoiAction.setEnabled(true);
@@ -464,9 +526,9 @@ public class ReferenceDragFeederConfigurationWizard
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
-                CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+                CameraView cameraView = MainFrame.get().getCameraViews().setSelectedCamera(camera);
 
                 btnChangeAoi.setAction(selectAoiAction);
                 cancelSelectAoiAction.setEnabled(false);
@@ -490,15 +552,25 @@ public class ReferenceDragFeederConfigurationWizard
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
-                CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+                CameraView cameraView = MainFrame.get().getCameraViews().setSelectedCamera(camera);
 
                 btnChangeAoi.setAction(selectAoiAction);
                 cancelSelectAoiAction.setEnabled(false);
                 btnChangeAoi.setAction(selectAoiAction);
                 cancelSelectAoiAction.setEnabled(false);
                 cameraView.setSelectionEnabled(false);
+            });
+        }
+    };
+
+    @SuppressWarnings("serial")
+    private Action resetVisionOffsets = new AbstractAction("Reset vision offsets") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.messageBoxOnException(() -> {
+				feeder.resetVisionOffsets();
             });
         }
     };

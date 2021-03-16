@@ -9,19 +9,16 @@ public class CompositeWizard implements Wizard {
 
     @Override
     public void setWizardContainer(WizardContainer wizardContainer) {
-        // TODO Auto-generated method stub
 
     }
 
     @Override
     public JPanel getWizardPanel() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public String getWizardName() {
-        // TODO Auto-generated method stub
         return null;
     }
 

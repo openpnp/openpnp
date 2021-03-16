@@ -71,6 +71,16 @@ public class Length {
         return new Length(value * d, units);
     }
 
+    public double divide(Length length) {
+        length = length.convertToUnits(units);
+        return value / length.getValue();
+    }
+
+    public Length modulo(Length length) {
+        length = length.convertToUnits(units);
+        return new Length(value % length.getValue(), units);
+    }
+
     public double getValue() {
         return value;
     }
@@ -91,6 +101,7 @@ public class Length {
         if (this.units == units) {
             return this;
         }
+        // First convert the current value to millimeters, which we use as a base unit.
         double mm = 0;
         if (this.units == LengthUnit.Millimeters) {
             mm = value;
@@ -107,10 +118,17 @@ public class Length {
         else if (this.units == LengthUnit.Feet) {
             mm = value * 25.4 * 12;
         }
+        else if (this.units == LengthUnit.Mils) {
+            mm = value / 1000 * 25.4;
+        }
+        else if (this.units == LengthUnit.Microns) {
+            mm = value / 1000.0;
+        }
         else {
             throw new Error("convertLength() unrecognized units " + this.units);
         }
 
+        // Then convert the calculated millimeter value to the requested unit.
         if (units == LengthUnit.Millimeters) {
             return new Length(mm, units);
         }
@@ -125,6 +143,12 @@ public class Length {
         }
         else if (units == LengthUnit.Feet) {
             return new Length(mm * (1 / 25.4) * 12, units);
+        }
+        else if (units == LengthUnit.Mils) {
+            return new Length(mm * (1 / 25.4 * 1000), units);
+        }
+        else if (units == LengthUnit.Microns) {
+            return new Length(mm * 1000, units);
         }
         else {
             throw new Error("convertLength() unrecognized units " + units);
@@ -227,17 +251,22 @@ public class Length {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         Length other = (Length) obj;
-        if (units != other.units)
+        if (units != other.units) {
             return false;
-        if (Double.doubleToLongBits(value) != Double.doubleToLongBits(other.value))
+        }
+        if (Double.doubleToLongBits(value) != Double.doubleToLongBits(other.value)) {
             return false;
+        }
         return true;
     }
 

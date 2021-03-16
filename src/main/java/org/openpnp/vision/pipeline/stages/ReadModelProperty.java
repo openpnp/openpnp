@@ -37,15 +37,15 @@ public class ReadModelProperty extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (modelStageName == null) {
+        if (modelStageName == null || modelStageName.trim().isEmpty()) {
             throw new Exception("modelStageName is required.");
         }
         
-        if (propertyName == null) {
+        if (propertyName == null || propertyName.trim().isEmpty()) {
             throw new Exception("propertyName is required.");
         }
         
-        Result result = pipeline.getResult(modelStageName);
+        Result result = pipeline.getExpectedResult(modelStageName);
         Object model = result.model;
 
         Method method = BeanUtils.getReadMethod(model.getClass(), propertyName);

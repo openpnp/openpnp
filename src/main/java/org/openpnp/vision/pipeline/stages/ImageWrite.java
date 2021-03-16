@@ -2,7 +2,7 @@ package org.openpnp.vision.pipeline.stages;
 
 import java.io.File;
 
-import org.opencv.highgui.Highgui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
@@ -25,7 +25,7 @@ public class ImageWrite extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        Highgui.imwrite(file.getAbsolutePath(), pipeline.getWorkingImage());
+        Imgcodecs.imwrite(file.getAbsolutePath(), pipeline.getWorkingImage());
         return null;
     }
 }

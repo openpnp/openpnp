@@ -106,8 +106,9 @@ public class SeparatorComboBox extends JComboBox implements KeyListener {
             int current = getSelectedIndex();
             index += (index > current) ? 1 : -1;
 
-            if (index == -1 || index >= dataModel.getSize())
+            if (index == -1 || index >= dataModel.getSize()) {
                 return;
+            }
         }
 
         super.setSelectedIndex(index);

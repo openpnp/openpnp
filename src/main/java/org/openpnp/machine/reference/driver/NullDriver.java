@@ -20,79 +20,86 @@
 package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.List;
 
-import javax.swing.Action;
-import javax.swing.Icon;
-
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
-import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
-import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.machine.reference.ReferencePasteDispenser;
+import org.openpnp.machine.reference.SimulationModeMachine;
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.model.Motion;
+import org.openpnp.model.Solutions;
+import org.openpnp.model.Motion.MoveToCommand;
+import org.openpnp.model.Solutions.Severity;
+import org.openpnp.spi.Axis;
+import org.openpnp.spi.Axis.Type;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.MotionPlanner.CompletionType;
+import org.openpnp.spi.base.AbstractDriver;
+import org.openpnp.util.NanosecondTime;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * An example of the simplest possible driver that can support multiple heads. This driver maintains
- * a set of coordinates for each Head that it is asked to handle and simply logs all commands sent
- * to it.
+ * An example of the simplest possible driver. This driver maintains a set of coordinates for each Axis
+ * that it is asked to handle and simply logs all commands sent to it.
  */
-public class NullDriver implements ReferenceDriver {
-    private final static Logger logger = LoggerFactory.getLogger(NullDriver.class);
+public class NullDriver extends AbstractDriver {
+
 
     @Attribute(required = false)
     private double feedRateMmPerMinute = 5000;
 
-    private HashMap<Head, Location> headLocations = new HashMap<>();
-
     private boolean enabled;
 
     /**
-     * Gets the Location object being tracked for a specific Head. This is the absolute coordinates
-     * of a virtual Head on the machine.
-     * 
-     * @param head
-     * @return
+     * The simulated visual homing offsets are applied to what the simulated down camera sees.
+     * Works like Gcode G92. Initialized with the SimulationModeMachine.getHomingError() on homing.
      */
-    protected Location getHeadLocation(Head head) {
-        Location l = headLocations.get(head);
-        if (l == null) {
-            l = new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
-            setHeadLocation(head, l);
-        }
-        return l;
-    }
+    private AxesLocation homingOffsets = new AxesLocation();
 
-    protected void setHeadLocation(Head head, Location l) {
-        headLocations.put(head, l);
-    }
+    private boolean motionPending;
 
     @Override
-    public void home(ReferenceHead head) throws Exception {
-        logger.debug("home()");
+    public void home(ReferenceMachine machine) throws Exception {
+        Logger.debug("home()");
         checkEnabled();
-        setHeadLocation(head, getHeadLocation(head).derive(0.0, 0.0, 0.0, 0.0));
+        if (machine instanceof SimulationModeMachine) {
+            Location homingError = ((SimulationModeMachine) machine).getHomingError(); 
+            homingOffsets = new AxesLocation(machine, this, (axis) 
+                    -> (axis.getType() == Axis.Type.X ? homingError.getLengthX() :
+                        axis.getType() == Axis.Type.Y ? homingError.getLengthY() : 
+                            null));
+        }
+        else {
+            homingOffsets = new AxesLocation();
+        }
+        // Store the new homing coordinates on the axes
+        AxesLocation homeLocation = new AxesLocation(machine, this, (axis) -> (axis.getHomeCoordinate()));
+        homeLocation.setToDriverCoordinates(this);
     }
 
-    /**
-     * Return the Location of a specific ReferenceHeadMountable on the machine. We get the
-     * coordinates for the Head the object is attached to, and then we add the offsets assigned to
-     * the object to make the coordinates correct for that object.
-     */
+
     @Override
-    public Location getLocation(ReferenceHeadMountable hm) {
-        return getHeadLocation(hm.getHead()).add(hm.getHeadOffsets());
+    public void setGlobalOffsets(ReferenceMachine machine, AxesLocation location)
+            throws Exception {
+        // Take only this driver's axes.
+        AxesLocation newDriverLocation = location.drivenBy(this);
+        // Take the current driver location of the given axes.
+        AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this), 
+                (axis) -> (axis.getDriverLengthCoordinate()));
+        Logger.debug("setGlobalOffsets("+oldDriverLocation+" -> "+newDriverLocation+")");
+        // Calculate the new machine to working coordinate system offset. 
+        homingOffsets = newDriverLocation.subtract(oldDriverLocation).add(homingOffsets);
+        // Store to axes
+        newDriverLocation.setToDriverCoordinates(this);
     }
 
     /**
@@ -101,212 +108,87 @@ public class NullDriver implements ReferenceDriver {
      * considerations when writing your own driver.
      */
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+    public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
             throws Exception {
-        logger.debug("moveTo({}, {}, {})", hm, location, speed);
+        Logger.debug("moveTo({}, {}, {})", hm, move.getLocation1(), move.getFeedRatePerSecond());
         checkEnabled();
-
-        // Subtract the offsets from the incoming Location. This converts the
-        // offset coordinates to driver / absolute coordinates.
-        location = location.subtract(hm.getHeadOffsets());
-
-        // Convert the Location to millimeters, since that's the unit that
-        // this driver works in natively.
-        location = location.convertToUnits(LengthUnit.Millimeters);
-
-        // Get the current location of the Head that we'll move
-        Location hl = getHeadLocation(hm.getHead());
-
-        if (feedRateMmPerMinute > 0) {
-            simulateMovement(hm, location, hl, speed);
-        }
-
-        // Now that movement is complete, update the stored Location to the new
-        // Location, unless the incoming Location specified an axis with a value
-        // of NaN. NaN is interpreted to mean "Don't move this axis" so we don't
-        // update the value, either.
-
-        hl = hl.derive(Double.isNaN(location.getX()) ? null : location.getX(),
-                Double.isNaN(location.getY()) ? null : location.getY(),
-                Double.isNaN(location.getZ()) ? null : location.getZ(),
-                Double.isNaN(location.getRotation()) ? null : location.getRotation());
-
-        setHeadLocation(hm.getHead(), hl);
-    }
-
-    /**
-     * Simulates true machine movement, which takes time, by tracing the required movement lines
-     * over a period of time based on the input speed.
-     * 
-     * @param hm
-     * @param location
-     * @param hl
-     * @param speed
-     * @throws Exception
-     */
-    protected void simulateMovement(ReferenceHeadMountable hm, Location location, Location hl,
-            double speed) throws Exception {
-        double x = hl.getX();
-        double y = hl.getY();
-        double z = hl.getZ();
-        double c = hl.getRotation();
-
-        double x1 = x;
-        double y1 = y;
-        double z1 = z;
-        double c1 = c;
-        double x2 = Double.isNaN(location.getX()) ? x : location.getX();
-        double y2 = Double.isNaN(location.getY()) ? y : location.getY();
-        double z2 = Double.isNaN(location.getZ()) ? z : location.getZ();
-        double c2 = Double.isNaN(location.getRotation()) ? c : location.getRotation();
-
-        c2 = c2 % 360.0;
-
-        // Calculate the linear distance to travel in each axis.
-        double vx = x2 - x1;
-        double vy = y2 - y1;
-        double vz = z2 - z1;
-        double vc = c2 - c1;
-
-        // Calculate the linear distance to travel in each plane XY, Z and C.
-        double pxy = Math.sqrt(vx * vx + vy * vy);
-        double pz = Math.abs(vz);
-        double pc = Math.abs(vc);
-
-        // Distance moved in each plane so far.
-        double dxy = 0, dz = 0, dc = 0;
-
-        // The distance that we'll move each loop.
-        double distancePerTick = (feedRateMmPerMinute * speed) / 60.0 / 10.0;
-        double distancePerTickC = distancePerTick * 10;
-
-        while (dxy < pxy || dz < pz || dc < pc) {
-            if (dxy < pxy) {
-                x = x1 + (vx / pxy * dxy);
-                y = y1 + (vy / pxy * dxy);
-            }
-            else {
-                x = x2;
-                y = y2;
-            }
-            if (dz < pz) {
-                z = z1 + dz * (vz < 0 ? -1 : 1);
-            }
-            else {
-                z = z2;
-            }
-            if (dc < pc) {
-                c = c1 + dc * (vc < 0 ? -1 : 1);
-            }
-            else {
-                c = c2;
-            }
-
-            hl = hl.derive(x, y, z, c);
-            setHeadLocation(hm.getHead(), hl);
-
-            // Provide live updates to the Machine as the move progresses.
-            ((ReferenceMachine) Configuration.get().getMachine())
-                    .fireMachineHeadActivity(hm.getHead());
-
-            try {
-                Thread.sleep(100);
-            }
-            catch (Exception e) {
-
-            }
-
-            dxy = Math.min(pxy, dxy + distancePerTick);
-            dz = Math.min(pz, dz + distancePerTick);
-            dc = Math.min(pc, dc + distancePerTickC);
+        AxesLocation newDriverLocation = move.getLocation1();
+        // Take the current driver location of the given axes.
+        AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this), 
+                (axis) -> (axis.getDriverLengthCoordinate()));
+        if (!oldDriverLocation.matches(newDriverLocation)) {
+            // Store to axes
+            newDriverLocation.setToDriverCoordinates(this);
+            Logger.debug("Machine new location {}", newDriverLocation);
+            motionPending = true;
         }
     }
 
     @Override
-    public void pick(ReferenceNozzle nozzle) throws Exception {
-        logger.debug("pick({})", nozzle);
-        checkEnabled();
-        if (feedRateMmPerMinute > 0) {
-            Thread.sleep(500);
-        }
+    public boolean isMotionPending() {
+        return motionPending;
     }
 
     @Override
-    public void place(ReferenceNozzle nozzle) throws Exception {
-        logger.debug("place({})", nozzle);
-        checkEnabled();
-        if (feedRateMmPerMinute > 0) {
-            Thread.sleep(500);
+    public void waitForCompletion(ReferenceHeadMountable hm, CompletionType completionType) throws Exception {
+        ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
+        while (! machine.getMotionPlanner()
+                .getMomentaryMotion(NanosecondTime.getRuntimeSeconds())
+                .hasOption(Motion.MotionOption.Stillstand)) {
+            Thread.sleep(1);
         }
+        motionPending = false;
     }
+
+    @Override
+    public AxesLocation getReportedLocation(long timeout) throws Exception {
+        ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
+        double now = NanosecondTime.getRuntimeSeconds();
+        Motion motion = machine.getMotionPlanner()
+                .getMomentaryMotion(now);
+        return motion.getMomentaryLocation(now - motion.getPlannedTime0());
+    }
+
 
     @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
-        logger.debug("actuate({}, {})", actuator, value);
+        Logger.debug("actuate({}, {})", actuator, value);
         checkEnabled();
-        if (feedRateMmPerMinute > 0) {
-            Thread.sleep(500);
-        }
+        SimulationModeMachine.simulateActuate(actuator, value, feedRateMmPerMinute > 0);
     }
 
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
-        logger.debug("actuate({}, {})", actuator, on);
+        Logger.debug("actuate({}, {})", actuator, on);
+        checkEnabled();
+
+        SimulationModeMachine.simulateActuate(actuator, on, feedRateMmPerMinute > 0);
+    }
+
+    @Override
+    public void actuate(ReferenceActuator actuator, String value) throws Exception {
+        Logger.debug("actuate({}, {})", actuator, value);
         checkEnabled();
         if (feedRateMmPerMinute > 0) {
-            Thread.sleep(500);
+            Thread.sleep(10);
         }
     }
 
     @Override
-    public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
-            Location endLocation, long dispenseTimeMilliseconds) throws Exception {
-        logger.debug("dispense({}, {}, {}, {})",
-                new Object[] {dispenser, startLocation, endLocation, dispenseTimeMilliseconds});
-        checkEnabled();
-        Thread.sleep(dispenseTimeMilliseconds);
+    public String actuatorRead(ReferenceActuator actuator) throws Exception {
+        return Math.random() + "";
     }
 
     @Override
     public void setEnabled(boolean enabled) throws Exception {
-        logger.debug("setEnabled({})", enabled);
+        Logger.debug("setEnabled({})", enabled);
         this.enabled = enabled;
     }
 
     @Override
     public Wizard getConfigurationWizard() {
-        // TODO Auto-generated method stub
         return null;
     }
-
-    @Override
-    public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName();
-    }
-
-    @Override
-    public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
-    }
-
-    @Override
-    public Icon getPropertySheetHolderIcon() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
     private void checkEnabled() throws Exception {
         if (!enabled) {
             throw new Exception("Driver is not yet enabled!");
@@ -322,8 +204,94 @@ public class NullDriver implements ReferenceDriver {
     }
 
     @Override
-    public void close() throws IOException {
-        // TODO Auto-generated method stub
+    public Length getFeedRatePerSecond() {
+        return new Length(feedRateMmPerMinute/60.0, getUnits());
+    }
 
+
+    @Override
+    public void close() throws IOException {
+
+    }
+
+    public AxesLocation getHomingOffsets() {
+        return homingOffsets;
+    }
+
+
+    public void setHomingOffsets(AxesLocation homingOffsets) {
+        this.homingOffsets = homingOffsets;
+    }
+
+    @Override
+    public LengthUnit getUnits() {
+        return LengthUnit.Millimeters;
+    }
+
+    @Deprecated
+    @Override
+    public void migrateDriver(Machine machine) throws Exception {
+        machine.addDriver(this);
+        if (machine instanceof ReferenceMachine) {
+            createAxisMappingDefaults((ReferenceMachine) machine);
+            // Migrate feedrates etc.
+            for (Axis axis : machine.getAxes()) {
+                if (axis instanceof ReferenceControllerAxis) {
+                    double feedRateMmPerMinute = this.feedRateMmPerMinute;
+                    if (axis.getType() ==Type.Rotation) { 
+                        // like in the original NullDriver simulation, rotation is at 10 x speed
+                        feedRateMmPerMinute *= 10.0;
+                    }
+                    // Migrate the feedrate to the axes but change to mm/s.
+                    ((ReferenceControllerAxis) axis).setFeedratePerSecond(new Length(feedRateMmPerMinute/60.0, getUnits()));
+                    // Assume 0.5s average acceleration to reach top speed. v = a*t => a = v/t
+                    ((ReferenceControllerAxis) axis).setAccelerationPerSecond2(new Length(feedRateMmPerMinute/60/0.5, getUnits()));
+                    // Switch off jerk by default.
+                    ((ReferenceControllerAxis) axis).setJerkPerSecond3(new Length(0, getUnits()));
+                }
+            }
+            // Switch the driver limit off, only the axes' limits remains.
+            this.feedRateMmPerMinute = 0;
+            ReferenceHead head = (ReferenceHead) machine.getDefaultHead();
+            // Use the lower left PCB fiducial as homing fiducial (but not enabling Visual Homing yet).
+            head.setHomingFiducialLocation(new Location(LengthUnit.Millimeters, 5.736, 6.112, 0, 0));
+        }
+    }
+
+
+    @Override
+    public boolean isUsingLetterVariables() {
+        return false;
+    }
+
+    @Override
+    public MotionControlType getMotionControlType() {
+        return MotionControlType.Full3rdOrderControl;
+    }
+
+    @Override
+    public void findIssues(List<Solutions.Issue> issues) {
+        super.findIssues(issues);
+        issues.add(new Solutions.Issue(
+                this, 
+                "The simulation NullDriver can replaced with a GcodeAsyncDriver to drive a real controller.", 
+                "Replace with GcodeAsyncDriver.", 
+                Severity.Fundamental,
+                "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver") {
+
+            @Override
+            public void setState(Solutions.State state) throws Exception {
+                if (confirmStateChange(state)) {
+                    if (state == Solutions.State.Solved) {
+                        GcodeDriverSolutions.convertToAsync(NullDriver.this);
+                    }
+                    else if (getState() == Solutions.State.Solved) {
+                        // Place the old one back (from the captured NullDriver.this).
+                        GcodeDriverSolutions.replaceDriver(NullDriver.this);
+                    }
+                    super.setState(state);
+                }
+            }
+        });
     }
 }

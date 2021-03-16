@@ -29,6 +29,7 @@ import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -89,7 +90,7 @@ public class EagleMountsmdUlpImporter implements BoardImporter {
         return board;
     }
 
-    private static List<Placement> parseFile(File file, Side side, boolean createMissingParts)
+    public static List<Placement> parseFile(File file, Side side, boolean createMissingParts)
             throws Exception {
         BufferedReader reader =
                 new BufferedReader(new InputStreamReader(new FileInputStream(file)));
@@ -103,22 +104,33 @@ public class EagleMountsmdUlpImporter implements BoardImporter {
 
             // C1 41.91 34.93 180 0.1uF C0805
             // T10 21.59 14.22 90 SOT23-BEC
-            // printf("%s %5.2f %5.2f %3.0f %s %s\n",
-            Pattern pattern = Pattern.compile(
-                    "(\\S+)\\s+(-?\\d+\\.\\d+)\\s+(-?\\d+\\.\\d+)\\s+(-?\\d{1,3})\\s(.*)\\s(.*)");
-            Matcher matcher = pattern.matcher(line);
-            matcher.matches();
-            Placement placement = new Placement(matcher.group(1));
+            // BOTTOM_RULER_ORGIN 87.00 49.00 0 RULER
+            // Name, X, Y, Angle, Value, Package
+            //  printf("%s %5.2f %5.2f %3.0f %s %s\n",
+            //        E.name, u2mm((xmin + xmax)/2), u2mm((ymin + ymax)/2),
+            //        E.angle, E.value, E.package.name);
+            String[] fields = line.split("\\s+");
+            Placement placement = new Placement(fields[0]);
             placement.setLocation(new Location(LengthUnit.Millimeters,
-                    Double.parseDouble(matcher.group(2)), Double.parseDouble(matcher.group(3)), 0,
-                    Double.parseDouble(matcher.group(4))));
+                    Double.parseDouble(fields[1]), Double.parseDouble(fields[2]), 0,
+                    Double.parseDouble(fields[3])));
             Configuration cfg = Configuration.get();
             if (cfg != null && createMissingParts) {
-                String value = matcher.group(5);
-                String packageId = matcher.group(6);
+                String value = null, packageId = null;
+                if (fields.length > 4) {
+                    value = fields[4].trim();
+                }
+                if (fields.length > 5) {
+                    packageId = fields[5].trim();
+                }
 
+                if (packageId == null || packageId.isEmpty()) {
+                    packageId = value;
+                    value = null;
+                }
+                
                 String partId = packageId;
-                if (value.trim().length() > 0) {
+                if (value != null && !value.isEmpty()) {
                     partId += "-" + value;
                 }
                 Part part = cfg.getPart(partId);

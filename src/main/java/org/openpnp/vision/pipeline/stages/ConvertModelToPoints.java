@@ -3,18 +3,15 @@ package org.openpnp.vision.pipeline.stages;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.opencv.core.KeyPoint;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
-import org.opencv.features2d.KeyPoint;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
+import org.openpnp.vision.pipeline.Stage;
 import org.simpleframework.xml.Attribute;
 
-/**
- * Convert a variety of built in types to Points. Currently handles KeyPoints, Circles and
- * RotatedRects. The center point of each is stored. If the input model is a single value the result
- * will be a single value. If the input is a List the result will be a List.
- */
+@Stage(description="Convert a variety of built in types to Points. Currently handles KeyPoints, Circles and RotatedRects. The center point of each is stored. If the input model is a single value the result will be a single value. If the input is a List the result will be a List.")
 public class ConvertModelToPoints extends CvStage {
     @Attribute(required = false)
     private String modelStageName;
@@ -29,11 +26,11 @@ public class ConvertModelToPoints extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (modelStageName == null) {
+        if (modelStageName == null || modelStageName.trim().isEmpty()) {
             return null;
         }
-        Result result = pipeline.getResult(modelStageName);
-        if (result == null || result.model == null) {
+        Result result = pipeline.getExpectedResult(modelStageName);
+        if (result.model == null) {
             return null;
         }
         Object model = result.model;
@@ -44,9 +41,10 @@ public class ConvertModelToPoints extends CvStage {
             }
             return new Result(null, points);
         }
-        else {
+        else if (model != null) {
             return new Result(null, convertToPoint(model));
         }
+        return null;
     }
 
     private static Point convertToPoint(Object pointHolder) throws Exception {
@@ -62,7 +60,8 @@ public class ConvertModelToPoints extends CvStage {
             RotatedRect rotatedRect = (RotatedRect) pointHolder;
             return rotatedRect.center;
         }
-        else
+        else {
             throw new Exception("Don't know how to convert " + pointHolder + "to Point.");
+        }
     }
 }

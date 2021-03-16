@@ -19,18 +19,21 @@
 
 package org.openpnp.gui.tablemodel;
 
-import java.util.Locale;
-
 import javax.swing.table.AbstractTableModel;
 
+import org.openpnp.gui.JobPlacementsPanel;
 import org.openpnp.gui.support.LengthCellValue;
+import org.openpnp.gui.support.PartCellValue;
+import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
+import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Placement.ErrorHandling;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Feeder;
 
@@ -38,24 +41,45 @@ public class PlacementsTableModel extends AbstractTableModel {
     final Configuration configuration;
 
     private String[] columnNames =
-            new String[] {"Id", "Part", "Side", "X", "Y", "ø", "Type", "Status"};
+            new String[] {"Enabled", "ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Placed", "Status", "Error Handling", "Comments"};
 
-    private Class[] columnTypes = new Class[] {String.class, Part.class, Side.class,
-            LengthCellValue.class, LengthCellValue.class, String.class, Type.class, Status.class};
+    private Class[] columnTypes = new Class[] {Boolean.class, PartCellValue.class, Part.class, Side.class,
+            LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, Type.class,
+            Boolean.class, Status.class, ErrorHandling.class, String.class};
 
     public enum Status {
-        Ready, MissingPart, MissingFeeder, ZeroPartHeight
+        Ready,
+        MissingPart,
+        MissingFeeder,
+        ZeroPartHeight,
+        Disabled
     }
 
     private Board board;
+    private BoardLocation boardLocation;
+    private JobPlacementsPanel jobPlacementsPanel;
 
     public PlacementsTableModel(Configuration configuration) {
         this.configuration = configuration;
     }
+    
+    public void setJobPlacementsPanel(JobPlacementsPanel jobPlacementsPanel) {
+    	this.jobPlacementsPanel = jobPlacementsPanel;
+    }
 
-    public void setBoard(Board board) {
-        this.board = board;
+    public void setBoardLocation(BoardLocation boardLocation) {
+        this.boardLocation = boardLocation;
+        if (boardLocation == null) {
+            this.board = null;
+        }
+        else {
+            this.board = boardLocation.getBoard();
+        }
         fireTableDataChanged();
+    }
+    
+    public Placement getPlacement(int index) {
+        return board.getPlacements().get(index);
     }
 
     @Override
@@ -73,8 +97,7 @@ public class PlacementsTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex == 1 || columnIndex == 2 || columnIndex == 3 || columnIndex == 4
-                || columnIndex == 5 || columnIndex == 6;
+        return columnIndex != 1 && columnIndex != 9;
     }
 
     @Override
@@ -86,13 +109,19 @@ public class PlacementsTableModel extends AbstractTableModel {
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
             Placement placement = board.getPlacements().get(rowIndex);
-            if (columnIndex == 1) {
-                placement.setPart((Part) aValue);
+            if (columnIndex == 0) {
+                placement.setEnabled((Boolean) aValue);
+                jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 2) {
-                placement.setSide((Side) aValue);
+                placement.setPart((Part) aValue);
+                fireTableCellUpdated(rowIndex, 8);
             }
             else if (columnIndex == 3) {
+                placement.setSide((Side) aValue);
+                jobPlacementsPanel.updateActivePlacements();
+            }
+            else if (columnIndex == 4) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 value.setDisplayNativeUnits(true);
                 Length length = value.getLength();
@@ -101,7 +130,7 @@ public class PlacementsTableModel extends AbstractTableModel {
                         true);
                 placement.setLocation(location);
             }
-            else if (columnIndex == 4) {
+            else if (columnIndex == 5) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 value.setDisplayNativeUnits(true);
                 Length length = value.getLength();
@@ -110,12 +139,24 @@ public class PlacementsTableModel extends AbstractTableModel {
                         true);
                 placement.setLocation(location);
             }
-            else if (columnIndex == 5) {
+            else if (columnIndex == 6) {
                 placement.setLocation(placement.getLocation().derive(null, null, null,
                         Double.parseDouble(aValue.toString())));
             }
-            else if (columnIndex == 6) {
+            else if (columnIndex == 7) {
                 placement.setType((Type) aValue);
+                fireTableCellUpdated(rowIndex, 8);
+                jobPlacementsPanel.updateActivePlacements();
+            }
+            else if (columnIndex == 8) {
+                boardLocation.setPlaced(placement.getId(), (Boolean) aValue);
+                jobPlacementsPanel.updateActivePlacements();
+            }
+            else if (columnIndex == 10) {
+                placement.setErrorHandling((ErrorHandling) aValue);
+            }
+            else if (columnIndex == 11) {
+                placement.setComments((String) aValue);
             }
         }
         catch (Exception e) {
@@ -129,7 +170,11 @@ public class PlacementsTableModel extends AbstractTableModel {
         if (placement.getPart() == null) {
             return Status.MissingPart;
         }
-        if (placement.getType() == Placement.Type.Place) {
+        if (!placement.isEnabled()) {
+            return Status.Disabled;
+                    
+        }
+        if (placement.getType() == Placement.Type.Placement && placement.isEnabled()) {
             boolean found = false;
             for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
                 if (feeder.getPart() == placement.getPart() && feeder.isEnabled()) {
@@ -152,23 +197,34 @@ public class PlacementsTableModel extends AbstractTableModel {
         Placement placement = board.getPlacements().get(row);
         Location loc = placement.getLocation();
         switch (col) {
-            case 0:
-                return placement.getId();
+			case 0:
+				return placement.isEnabled();
             case 1:
-                return placement.getPart();
+                return new PartCellValue(placement.getId());
             case 2:
-                return placement.getSide();
+                return placement.getPart();
             case 3:
-                return new LengthCellValue(loc.getLengthX(), true);
+                return placement.getSide();
             case 4:
-                return new LengthCellValue(loc.getLengthY(), true);
+                return new LengthCellValue(loc.getLengthX(), true);
             case 5:
-                return String.format(Locale.US, configuration.getLengthDisplayFormat(),
-                        loc.getRotation());
+                return new LengthCellValue(loc.getLengthY(), true);
             case 6:
-                return placement.getType();
+                return new RotationCellValue(loc.getRotation(), true);
             case 7:
+                return placement.getType();
+            case 8:
+                // TODO STOPSHIP: Both of these are huge performance hogs and do not belong
+                // in the render process. At the least we should cache this information but it
+                // would be better if the information was updated out of band by a listener.
+            	jobPlacementsPanel.updateActivePlacements();
+            	return boardLocation.getPlaced(placement.getId());
+            case 9:
                 return getPlacementStatus(placement);
+            case 10:
+                return placement.getErrorHandling();
+            case 11:
+                return placement.getComments();
             default:
                 return null;
         }

@@ -26,11 +26,20 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 
 public class LengthConverter extends Converter<Length, String> {
+    final String format;
+    
+    public LengthConverter() {
+        this(Configuration.get().getLengthDisplayFormat());
+    }
+    
+    public LengthConverter(String format) {
+        this.format = format;
+    }
+    
     @Override
     public String convertForward(Length length) {
         length = length.convertToUnits(Configuration.get().getSystemUnits());
-        return String.format(Locale.US, Configuration.get().getLengthDisplayFormat(),
-                length.getValue());
+        return String.format(Locale.US, format, length.getValue());
     }
 
     @Override

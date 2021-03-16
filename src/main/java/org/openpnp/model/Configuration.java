@@ -19,22 +19,33 @@
 
 package org.openpnp.model;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
-import java.util.UUID;
 import java.util.prefs.Preferences;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.components.ThemeInfo;
+import org.openpnp.gui.components.ThemeSettingsPanel;
+import org.openpnp.scripting.Scripting;
 import org.openpnp.spi.Machine;
+import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.ResourceUtils;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
@@ -44,16 +55,23 @@ import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.stream.Format;
 import org.simpleframework.xml.stream.HyphenStyle;
 import org.simpleframework.xml.stream.Style;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.EventBus;
 
 public class Configuration extends AbstractModelObject {
-    private static final Logger logger = LoggerFactory.getLogger(Configuration.class);
-
     private static Configuration instance;
+
+    private static final String PREF_LOCALE_LANG = "Configuration.locale.lang";
+    private static final String PREF_LOCALE_LANG_DEF = "en";
+
+    private static final String PREF_LOCALE_COUNTRY = "Configuration.locale.country";
+    private static final String PREF_LOCALE_COUNTRY_DEF = "US";
 
     private static final String PREF_UNITS = "Configuration.units";
     private static final String PREF_UNITS_DEF = "Millimeters";
+
+    private static final String PREF_THEME_INFO = "Configuration.theme.info";
+    private static final String PREF_THEME_FONT_SIZE = "Configuration.theme.fontSize";
 
     private static final String PREF_LENGTH_DISPLAY_FORMAT = "Configuration.lengthDisplayFormat";
     private static final String PREF_LENGTH_DISPLAY_FORMAT_DEF = "%.3f";
@@ -65,6 +83,7 @@ public class Configuration extends AbstractModelObject {
     private static final String PREF_VERTICAL_SCROLL_UNIT_INCREMENT =
             "Configuration.verticalScrollUnitIncrement";
     private static final int PREF_VERTICAL_SCROLL_UNIT_INCREMENT_DEF = 16;
+    private static final String imgurClientId = "620fc1fa8ee0180";
 
     private LinkedHashMap<String, Package> packages = new LinkedHashMap<>();
     private LinkedHashMap<String, Part> parts = new LinkedHashMap<>();
@@ -74,6 +93,12 @@ public class Configuration extends AbstractModelObject {
     private Set<ConfigurationListener> listeners = Collections.synchronizedSet(new HashSet<>());
     private File configurationDirectory;
     private Preferences prefs;
+    private Scripting scripting;
+    private EventBus bus = new EventBus();
+
+    public static boolean isInstanceInitialized() {
+        return (instance != null);
+    }
 
     public static Configuration get() {
         if (instance == null) {
@@ -82,14 +107,57 @@ public class Configuration extends AbstractModelObject {
         return instance;
     }
 
+    /**
+     * Initializes a new persistent Configuration singleton storing configuration files in
+     * configurationDirectory.
+     * @param configurationDirectory
+     */
     public static synchronized void initialize(File configurationDirectory) {
         instance = new Configuration(configurationDirectory);
+        instance.setLengthDisplayFormatWithUnits(PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS_DEF);
+    }
+    
+    /**
+     * Initializes a new temporary Configuration singleton storing configuration in memory only.
+     * @param configurationDirectory
+     */
+    public static synchronized void initialize() {
+        /**
+         * TODO STOPSHIP ideally this would use an in memory prefs, too, so that we
+         * don't mess with global user prefs.
+         */
+        instance = new Configuration();
         instance.setLengthDisplayFormatWithUnits(PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS_DEF);
     }
 
     private Configuration(File configurationDirectory) {
         this.configurationDirectory = configurationDirectory;
         this.prefs = Preferences.userNodeForPackage(Configuration.class);
+        File scriptingDirectory = new File(configurationDirectory, "scripts");
+        this.scripting = new Scripting(scriptingDirectory);
+    }
+    
+    private Configuration() {
+        this.prefs = Preferences.userNodeForPackage(Configuration.class);
+        this.scripting = new Scripting(null);
+        /**
+         * Setting loaded = true allows the mechanism of immediately notifying late
+         * Configuration.addListener() calls that the configuration is ready. It's a legacy
+         * hack.
+         */
+        loaded = true;
+    }
+    
+    public void setMachine(Machine machine) {
+        this.machine = machine;
+    }
+    
+    public Scripting getScripting() {
+        return scripting;
+    }
+    
+    public EventBus getBus() {
+        return bus;
     }
 
     public File getConfigurationDirectory() {
@@ -102,6 +170,60 @@ public class Configuration extends AbstractModelObject {
 
     public void setSystemUnits(LengthUnit lengthUnit) {
         prefs.put(PREF_UNITS, lengthUnit.name());
+    }
+
+    public Locale getLocale() {
+        return new Locale(prefs.get(PREF_LOCALE_LANG, PREF_LOCALE_LANG_DEF), 
+                prefs.get(PREF_LOCALE_COUNTRY, PREF_LOCALE_COUNTRY_DEF));
+    }
+
+    public void setLocale(Locale locale) {
+        prefs.put(PREF_LOCALE_LANG, locale.getLanguage());
+        prefs.put(PREF_LOCALE_COUNTRY, locale.getCountry());
+    }
+
+    public ThemeInfo getThemeInfo() {
+        byte[] serializedSettings = prefs.getByteArray(PREF_THEME_INFO, null);
+        if (serializedSettings != null) {
+            try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(serializedSettings))) {
+                ThemeInfo theme = (ThemeInfo) in.readObject();
+                return theme;
+            } catch (IOException | ClassNotFoundException ignore) {
+            }
+        }
+        return null;
+    }
+
+    public void setThemeInfo(ThemeInfo theme) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (ObjectOutputStream out = new ObjectOutputStream(bos)) {
+            out.writeObject(theme);
+            out.flush();
+            prefs.putByteArray(PREF_THEME_INFO, bos.toByteArray());
+        } catch (IOException ignore) {
+        }
+    }
+
+    public ThemeSettingsPanel.FontSize getFontSize() {
+        byte[] serializedSettings = prefs.getByteArray(PREF_THEME_FONT_SIZE, null);
+        if (serializedSettings != null) {
+            try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(serializedSettings))) {
+                ThemeSettingsPanel.FontSize theme = (ThemeSettingsPanel.FontSize) in.readObject();
+                return theme;
+            } catch (IOException | ClassNotFoundException ignore) {
+            }
+        }
+        return null;
+    }
+
+    public void setFontSize(ThemeSettingsPanel.FontSize fontSize) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (ObjectOutputStream out = new ObjectOutputStream(bos)) {
+            out.writeObject(fontSize);
+            out.flush();
+            prefs.putByteArray(PREF_THEME_FONT_SIZE, bos.toByteArray());
+        } catch (IOException ignore) {
+        }
     }
 
     public String getLengthDisplayFormat() {
@@ -206,7 +328,7 @@ public class Configuration extends AbstractModelObject {
         try {
             File file = new File(configurationDirectory, "packages.xml");
             if (overrideUserConfig || !file.exists()) {
-                logger.info("No packages.xml found in configuration directory, loading defaults.");
+                Logger.info("No packages.xml found in configuration directory, loading defaults.");
                 file = File.createTempFile("packages", "xml");
                 FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/packages.xml"), file);
                 forceSave = true;
@@ -225,7 +347,7 @@ public class Configuration extends AbstractModelObject {
         try {
             File file = new File(configurationDirectory, "parts.xml");
             if (overrideUserConfig || !file.exists()) {
-                logger.info("No parts.xml found in configuration directory, loading defaults.");
+                Logger.info("No parts.xml found in configuration directory, loading defaults.");
                 file = File.createTempFile("parts", "xml");
                 FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/parts.xml"), file);
                 forceSave = true;
@@ -244,7 +366,7 @@ public class Configuration extends AbstractModelObject {
         try {
             File file = new File(configurationDirectory, "machine.xml");
             if (overrideUserConfig || !file.exists()) {
-                logger.info("No machine.xml found in configuration directory, loading defaults.");
+                Logger.info("No machine.xml found in configuration directory, loading defaults.");
                 file = File.createTempFile("machine", "xml");
                 FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/machine.xml"), file);
                 forceSave = true;
@@ -261,12 +383,14 @@ public class Configuration extends AbstractModelObject {
 
         loaded = true;
 
-        for (ConfigurationListener listener : listeners) {
+        // Tell all listeners the configuration is loaded. Use a snapshot of the list in order to tolerate new
+        // listener additions that may happen through object migration.
+        for (ConfigurationListener listener : new ArrayList<>(listeners)) {
             listener.configurationLoaded(this);
         }
 
         if (forceSave) {
-            logger.info("Defaults were loaded. Saving to configuration directory.");
+            Logger.info("Defaults were loaded. Saving to configuration directory.");
             configurationDirectory.mkdirs();
             save();
         }
@@ -277,24 +401,42 @@ public class Configuration extends AbstractModelObject {
     }
 
     public synchronized void save() throws Exception {
+        LocalDateTime now = LocalDateTime.now();
         try {
-            saveMachine(new File(configurationDirectory, "machine.xml"));
+           saveMachine(createBackedUpFile("machine.xml", now));
         }
         catch (Exception e) {
             throw new Exception("Error while saving machine.xml (" + e.getMessage() + ")", e);
         }
         try {
-            savePackages(new File(configurationDirectory, "packages.xml"));
+            savePackages(createBackedUpFile("packages.xml", now));
         }
         catch (Exception e) {
             throw new Exception("Error while saving packages.xml (" + e.getMessage() + ")", e);
         }
         try {
-            saveParts(new File(configurationDirectory, "parts.xml"));
+            saveParts(createBackedUpFile("parts.xml", now));
         }
         catch (Exception e) {
             throw new Exception("Error while saving parts.xml (" + e.getMessage() + ")", e);
         }
+    }
+
+    protected File createBackedUpFile(String fileName, LocalDateTime now) throws Exception {
+        File file = new File(configurationDirectory, fileName);
+        if (file.exists()) {
+            File backupsDirectory = new File(configurationDirectory, "backups");
+            if (System.getProperty("backups") != null) {
+                backupsDirectory = new File(System.getProperty("backups"));
+            }
+
+            File singleBackupDirectory = new File(backupsDirectory, DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.mm.ss").format(now));
+            singleBackupDirectory.mkdirs();
+            File backupFile = new File(singleBackupDirectory, fileName);
+            Files.copy(Paths.get(file.toURI()), Paths.get(backupFile.toURI()), 
+                    StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+        }
+        return file;
     }
 
     public Package getPackage(String id) {
@@ -369,6 +511,17 @@ public class Configuration extends AbstractModelObject {
         firePropertyChange("boards", null, boards);
         return board;
     }
+    
+    private static void serializeObject(Object o, File file) throws Exception {
+        Serializer serializer = createSerializer();
+        // This write forces any errors that will appear to happen before we start writing to
+        // the file, which keeps us from writing a partial configuration to the real file.
+        serializer.write(o, new ByteArrayOutputStream());
+        FileOutputStream out = new FileOutputStream(file);
+        serializer.write(o, out);
+        out.write('\n');
+        out.close();
+    }
 
     private void loadMachine(File file) throws Exception {
         Serializer serializer = createSerializer();
@@ -379,9 +532,7 @@ public class Configuration extends AbstractModelObject {
     private void saveMachine(File file) throws Exception {
         MachineConfigurationHolder holder = new MachineConfigurationHolder();
         holder.machine = machine;
-        Serializer serializer = createSerializer();
-        serializer.write(holder, new ByteArrayOutputStream());
-        serializer.write(holder, file);
+        serializeObject(holder, file);
     }
 
     private void loadPackages(File file) throws Exception {
@@ -394,11 +545,9 @@ public class Configuration extends AbstractModelObject {
     }
 
     private void savePackages(File file) throws Exception {
-        Serializer serializer = createSerializer();
         PackagesConfigurationHolder holder = new PackagesConfigurationHolder();
         holder.packages = new ArrayList<>(packages.values());
-        serializer.write(holder, new ByteArrayOutputStream());
-        serializer.write(holder, file);
+        serializeObject(holder, file);
     }
 
     private void loadParts(File file) throws Exception {
@@ -410,11 +559,9 @@ public class Configuration extends AbstractModelObject {
     }
 
     private void saveParts(File file) throws Exception {
-        Serializer serializer = createSerializer();
         PartsConfigurationHolder holder = new PartsConfigurationHolder();
         holder.parts = new ArrayList<>(parts.values());
-        serializer.write(holder, new ByteArrayOutputStream());
-        serializer.write(holder, file);
+        serializeObject(holder, file);
     }
 
     public Job loadJob(File file) throws Exception {
@@ -473,6 +620,10 @@ public class Configuration extends AbstractModelObject {
         job.setFile(file);
         job.setDirty(false);
     }
+    
+    public String getImgurClientId() {
+        return imgurClientId;
+    }
 
     public void saveBoard(Board board) throws Exception {
         Serializer serializer = createSerializer();
@@ -497,8 +648,9 @@ public class Configuration extends AbstractModelObject {
         return serializer;
     }
 
-    public static String createId() {
-        return UUID.randomUUID().toString();
+    public static String createId(String prefix) {
+        // NanosecondTime guarantees unique Ids, even if created in rapid succession such as in migration code.
+        return prefix + NanosecondTime.get().toString(16);
     }
 
     /**

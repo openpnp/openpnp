@@ -46,6 +46,9 @@ public class Part extends AbstractModelObject implements Identifiable {
 
     @Attribute(required = false)
     private double speed = 1.0;
+    
+    @Attribute(required = false)
+    private int pickRetryCount = 0;
 
 
     @SuppressWarnings("unused")
@@ -73,6 +76,16 @@ public class Part extends AbstractModelObject implements Identifiable {
     @Override
     public String getId() {
         return id;
+    }
+
+    /**
+     * Warning: This should never be called once the Part is added to the configuration. It
+     * should only be used when creating a new part.
+     * 
+     * @param id
+     */
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -120,6 +133,15 @@ public class Part extends AbstractModelObject implements Identifiable {
         Object oldValue = this.packag;
         this.packag = packag;
         firePropertyChange("package", oldValue, packag);
+    }
+    
+    public int getPickRetryCount() {
+        return pickRetryCount;
+    }
+
+    public void setPickRetryCount(int pickRetryCount) {
+        this.pickRetryCount = pickRetryCount;
+        firePropertyChange("pickRetryCount", null, pickRetryCount);
     }
 
     @Override

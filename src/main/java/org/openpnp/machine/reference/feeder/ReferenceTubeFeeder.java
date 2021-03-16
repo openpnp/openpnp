@@ -21,22 +21,19 @@ package org.openpnp.machine.reference.feeder;
 
 import javax.swing.Action;
 
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
-import org.openpnp.machine.reference.feeder.wizards.ReferenceTubeFeederConfigurationWizard;
+import org.openpnp.machine.reference.feeder.wizards.ReferenceFeederConfigurationWizard;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of Feeder that always picks from the same location. This can be used with a
  * gravity feed or vibratory tube feeder.
  */
 public class ReferenceTubeFeeder extends ReferenceFeeder {
-    private final static Logger logger = LoggerFactory.getLogger(ReferenceTubeFeeder.class);
+
 
     @Override
     public Location getPickLocation() throws Exception {
@@ -48,7 +45,7 @@ public class ReferenceTubeFeeder extends ReferenceFeeder {
 
     @Override
     public Wizard getConfigurationWizard() {
-        return new ReferenceTubeFeederConfigurationWizard(this);
+        return new ReferenceFeederConfigurationWizard(this);
     }
 
     @Override
@@ -58,18 +55,10 @@ public class ReferenceTubeFeeder extends ReferenceFeeder {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
-
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
-    }
-
     @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
         return null;
     }
 }

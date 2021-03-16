@@ -1,6 +1,7 @@
 package org.openpnp.gui.support;
 
 import org.openpnp.model.AbstractModelObject;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 
@@ -18,9 +19,26 @@ public class MutableLocationProxy extends AbstractModelObject {
     public void setLocation(Location location) {
         this.location = location;
         firePropertyChange("location", null, getLocation());
+        firePropertyChange("lengthX", null, getLengthX());
+        firePropertyChange("lengthY", null, getLengthY());
+        firePropertyChange("lengthZ", null, getLengthZ());
+        firePropertyChange("rotation", null, getRotation());
+    }
+
+    public Length getLengthX() {
+        if (location == null) {
+            return null;
+        }
+        return location.getLengthX();
     }
 
     public void setLengthX(Length l) {
+        if (l == null) {
+            return;
+        }
+        if (location == null) {
+            location = new Location(l.getUnits());
+        }
         if (l.getUnits() != location.getUnits()) {
             location = location.convertToUnits(l.getUnits());
             location = location.derive(l.getValue(), null, null, null);
@@ -34,9 +52,22 @@ public class MutableLocationProxy extends AbstractModelObject {
             firePropertyChange("lengthX", null, getLengthX());
             firePropertyChange("location", null, getLocation());
         }
+    }
+
+    public Length getLengthY() {
+        if (location == null) {
+            return null;
+        }
+        return location.getLengthY();
     }
 
     public void setLengthY(Length l) {
+        if (l == null) {
+            return;
+        }
+        if (location == null) {
+            location = new Location(l.getUnits());
+        }
         if (l.getUnits() != location.getUnits()) {
             location = location.convertToUnits(l.getUnits());
             location = location.derive(null, l.getValue(), null, null);
@@ -52,7 +83,20 @@ public class MutableLocationProxy extends AbstractModelObject {
         }
     }
 
+    public Length getLengthZ() {
+        if (location == null) {
+            return null;
+        }
+        return location.getLengthZ();
+    }
+
     public void setLengthZ(Length l) {
+        if (l == null) {
+            return;
+        }
+        if (location == null) {
+            location = new Location(l.getUnits());
+        }
         if (l.getUnits() != location.getUnits()) {
             location = location.convertToUnits(l.getUnits());
             location = location.derive(null, null, l.getValue(), null);
@@ -68,26 +112,23 @@ public class MutableLocationProxy extends AbstractModelObject {
         }
     }
 
-    public double getRotation() {
+    public Double getRotation() {
+        if (location == null) {
+            return null;
+        }
         return location.getRotation();
     }
 
-    public void setRotation(double rotation) {
+    public void setRotation(Double rotation) {
+        if (rotation == null) {
+            return;
+        }
+        if (location == null) {
+            location = new Location(Configuration.get().getSystemUnits());
+        }
         location = location.derive(null, null, null, rotation);
         firePropertyChange("rotation", null, getRotation());
         firePropertyChange("location", null, getLocation());
-    }
-
-    public Length getLengthX() {
-        return location.getLengthX();
-    }
-
-    public Length getLengthY() {
-        return location.getLengthY();
-    }
-
-    public Length getLengthZ() {
-        return location.getLengthZ();
     }
 }
 

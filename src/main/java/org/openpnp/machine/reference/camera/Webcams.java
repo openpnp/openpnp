@@ -25,12 +25,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.Action;
-
-import org.openpnp.CameraListener;
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.WebcamConfigurationWizard;
 import org.openpnp.spi.PropertySheetHolder;
@@ -56,9 +51,7 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
     private int preferredHeight = 0;
 
     protected Webcam webcam;
-    private Thread thread;
     private boolean forceGray;
-    private BufferedImage image;
 
     private static final JHGrayFilter GRAY = new JHGrayFilter();
 
@@ -73,52 +66,16 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
     }
 
     @Override
-    public synchronized BufferedImage capture() {
-        if (thread == null) {
-            setDeviceId(deviceId);
-        }
-        if (thread == null) {
+    public synchronized BufferedImage internalCapture() {
+        if (! ensureOpen()) {
             return null;
         }
+
         try {
-            BufferedImage img = webcam.getImage();
-            return transformImage(img);
+            return webcam.getImage();
         }
         catch (Exception e) {
             return null;
-        }
-    }
-
-    @Override
-    public synchronized void startContinuousCapture(CameraListener listener, int maximumFps) {
-        if (thread == null) {
-            setDeviceId(deviceId);
-        }
-        super.startContinuousCapture(listener, maximumFps);
-    }
-
-    private BufferedImage lastImage = null;
-    private BufferedImage redImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
-
-
-    public void run() {
-        while (!Thread.interrupted()) {
-            try {
-                BufferedImage image = capture();
-                if (image == null) {
-                    image = redImage;
-                }
-                broadcastCapture(image);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                Thread.sleep(1000 / 30);
-            }
-            catch (InterruptedException e) {
-                break;
-            }
         }
     }
 
@@ -126,21 +83,24 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
         return deviceId;
     }
 
-    public synchronized void setDeviceId(String deviceId) {
+    public void setDeviceId(String deviceId) {
         this.deviceId = deviceId;
-        if (thread != null) {
-            thread.interrupt();
+    }
+
+    @Override
+    public void open() throws Exception {
+        stop();
+
+        if (webcam != null) {
             try {
-                thread.join();
+                webcam.close();
             }
             catch (Exception e) {
                 e.printStackTrace();
             }
-            thread = null;
-            webcam.close();
+            webcam = null;
         }
         try {
-            webcam = null;
             for (Webcam cam : Webcam.getWebcams()) {
                 if (cam.getName().equals(deviceId)) {
                     webcam = cam;
@@ -156,13 +116,16 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
             if (forceGray) {
                 webcam.setImageTransformer(this);
             }
+            else {
+                webcam.setImageTransformer(null);
+            }
         }
         catch (Exception e) {
             e.printStackTrace();
             return;
         }
-        thread = new Thread(this);
-        thread.start();
+
+        super.open();
     }
 
     public void setForceGray(boolean val) {
@@ -202,15 +165,7 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
-    }
-
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {
-                new PropertySheetWizardAdapter(new CameraConfigurationWizard(this)),
-                new PropertySheetWizardAdapter(getConfigurationWizard())};
     }
 
 
@@ -224,23 +179,11 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
 
 
     @Override
-    public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public void close() throws IOException {
         super.close();
-        if (thread != null) {
-            thread.interrupt();
-            try {
-                thread.join();
-            }
-            catch (Exception e) {
-
-            }
+        if (webcam != null) {
             webcam.close();
+            webcam = null;
         }
     }
 }

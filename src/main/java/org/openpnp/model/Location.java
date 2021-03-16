@@ -119,6 +119,54 @@ public class Location {
                 + Math.pow(this.y - location.getY(), 2) + Math.pow(this.z - location.getZ(), 2)));
     }
 
+    public double getXyzcDistanceTo(Location location) {
+        location = location.convertToUnits(getUnits());
+        return (Math.sqrt(
+                Math.pow(this.x - location.getX(), 2)
+                + Math.pow(this.y - location.getY(), 2) 
+                + Math.pow(this.z - location.getZ(), 2) 
+                + Math.pow((this.rotation - location.getRotation()) % 360, 2)));
+    }
+
+    /**
+     * Returns the distance between this Location and the infinite line defined by the Locations a and b,
+     * in the units of this Location.
+     * From http://www.ahristov.com/tutorial/geometry-games/point-line-distance.html
+     * @return
+     */
+    public double getLinearDistanceToLine(Location A, Location B) {
+        A = A.convertToUnits(getUnits());
+        B = B.convertToUnits(getUnits());
+        double normalLength = Math.sqrt((B.x - A.x) * (B.x - A.x) + (B.y - A.y) * (B.y - A.y));
+        return Math.abs((this.x - A.x) * (B.y - A.y) - (this.y - A.y) * (B.x - A.x)) / normalLength;
+    }
+
+    /**
+     * Returns the distance between this Location and the line segment defined by the Locations a and b,
+     * in the units of this Location.
+     * From Real Time Collision Detection p/130
+     * @return
+     */
+    public double getLinearDistanceToLineSegment(Location A, Location B) {
+        A = A.convertToUnits(getUnits());
+        B = B.convertToUnits(getUnits());
+
+        org.opencv.core.Point ab = new org.opencv.core.Point(B.x - A.x, B.y - A.y);
+        org.opencv.core.Point ap = new org.opencv.core.Point(this.x - A.x, this.y - A.y);
+        org.opencv.core.Point bp = new org.opencv.core.Point(this.x - B.x, this.y - B.y);
+        // Handle cases where P projects outside of AB
+        double e = ap.dot(ab);
+        if (e <= 0.0) {
+            return Math.sqrt(ap.dot(ap));
+        }
+        double f = ab.dot(ab);
+        if (e >= f) {
+            return Math.sqrt(bp.dot(bp));
+        }
+        // P projects onto AB
+        return Math.sqrt(ap.dot(ap) - e * e / f);
+    }
+
     public Length getLengthX() {
         return new Length(x, units);
     }
@@ -169,7 +217,7 @@ public class Location {
 
     /**
      * Returns a new Location with the given Location's X, Y, and Z components added to this
-     * Location's X, Y, and Z components. Rotation is left unchanged.
+     * Location's X, Y, and Z components. Rotation is included.
      * 
      * @param l
      * @return
@@ -225,6 +273,29 @@ public class Location {
     }
 
     /**
+     * Returns the unit vector of the vector between this and l. 
+     * 
+     * @param l
+     * @return
+     */
+    public Location unitVectorTo(Location l) {
+        Location vector = l.subtract(this);
+        double norm = 1/this.getXyzDistanceTo(l);
+        return vector.multiply(norm, norm, norm, 0.0);
+    }
+
+    /**
+     * Return the dot product of this and l. Can be used to calculate the cosinus between two unit vectors. 
+     * 
+     * @param l
+     * @return
+     */
+    public Length dotProduct(Location l) {
+        l = l.convertToUnits(units);
+        return new Length(x * l.getX() + y * l.getY() + z * l.getZ(), getUnits());
+    }
+
+    /**
      * Returns a new Location with the same units as this one but with values updated to the passed
      * in values. A caveat is that if a specified value is null, the new Location will contain the
      * value from this object instead of the new value.
@@ -241,6 +312,30 @@ public class Location {
     public Location derive(Double x, Double y, Double z, Double rotation) {
         return new Location(units, x == null ? this.x : x, y == null ? this.y : y,
                 z == null ? this.z : z, rotation == null ? this.rotation : rotation);
+    }
+
+    /**
+     * Returns a new Location with the same units as this one but with values updated from 
+     * a second Location. If a specified boolean is false, the new Location will contain the
+     * value from this object instead of the second location.
+     * 
+     * This is intended as a utility method, useful for creating new Locations based on two existing
+     * ones with one or more values substituted.
+     * 
+     * @param location
+     * @param x
+     * @param y
+     * @param z
+     * @param rotation
+     * @return
+     */
+    public Location derive(Location location, boolean x, boolean y, boolean z, boolean rotation) {
+        location = location.convertToUnits(this.getUnits());
+        return new Location(units, 
+                x ? location.x : this.x, 
+                        y ? location.y : this.y,
+                                z ? location.z : this.z, 
+                                        rotation ? location.rotation : this.rotation);
     }
 
     /**
@@ -281,6 +376,22 @@ public class Location {
 
     public Point getXyPoint() {
         return new Point(getX(), getY());
+    }
+    
+    /**
+     * Checks if targetLocation is contained in current location given the current location represents a rectangular item with the origin in originLocation.
+     */
+    public boolean containsLocation(Location originLocation, Location targetLocation) {
+    	Location target = targetLocation.convertToUnits(this.units);
+    	double x = target.getX();
+    	double y = target.getY();
+    	Location origin = originLocation.convertToUnits(this.units);
+    	double x1 = origin.getX();
+    	double y1 = origin.getY();
+    	double x2 = x1 + getX();
+    	double y2 = y1 + getY();
+    	
+    	return (x >= x1) && (x <= x2) && (y > y1) && (y < y2);
     }
 
     /**

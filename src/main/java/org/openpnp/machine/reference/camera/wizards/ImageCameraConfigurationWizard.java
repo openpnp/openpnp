@@ -36,8 +36,10 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.camera.ImageCamera;
-import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
+import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -45,7 +47,7 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class ImageCameraConfigurationWizard extends ReferenceCameraConfigurationWizard {
+public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard {
     private final ImageCamera camera;
 
     private JPanel panelGeneral;
@@ -54,35 +56,69 @@ public class ImageCameraConfigurationWizard extends ReferenceCameraConfiguration
     private JButton btnBrowse;
 
     public ImageCameraConfigurationWizard(ImageCamera camera) {
-        super(camera);
-
         this.camera = camera;
 
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-        panelGeneral.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+                "General", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(50dlu;default):grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblWidth = new JLabel("Width");
+        panelGeneral.add(lblWidth, "2, 2, right, default");
+        
+        width = new JTextField();
+        panelGeneral.add(width, "4, 2, fill, default");
+        width.setColumns(10);
+        
+        lblHeight = new JLabel("Height");
+        panelGeneral.add(lblHeight, "2, 4, right, default");
+        
+        height = new JTextField();
+        panelGeneral.add(height, "4, 4, fill, default");
+        height.setColumns(10);
 
         lblSourceUrl = new JLabel("Source URL");
-        panelGeneral.add(lblSourceUrl, "2, 2, right, default");
+        panelGeneral.add(lblSourceUrl, "2, 8, right, default");
 
         textFieldSourceUrl = new JTextField();
-        panelGeneral.add(textFieldSourceUrl, "4, 2, fill, default");
-        textFieldSourceUrl.setColumns(10);
+        panelGeneral.add(textFieldSourceUrl, "4, 8, 3, 1, fill, default");
+        textFieldSourceUrl.setColumns(40);
 
         btnBrowse = new JButton(browseAction);
-        panelGeneral.add(btnBrowse, "6, 2");
+        panelGeneral.add(btnBrowse, "8, 8");
     }
 
     @Override
     public void createBindings() {
-        super.createBindings();
+        IntegerConverter intConverter = new IntegerConverter();
+
+        addWrappedBinding(camera, "width", width, "text", intConverter);
+        addWrappedBinding(camera, "height", height, "text", intConverter);
+
         addWrappedBinding(camera, "sourceUri", textFieldSourceUrl, "text");
+
+        ComponentDecorators.decorateWithAutoSelect(width);
+        ComponentDecorators.decorateWithAutoSelect(height);
         ComponentDecorators.decorateWithAutoSelect(textFieldSourceUrl);
     }
 
@@ -114,4 +150,16 @@ public class ImageCameraConfigurationWizard extends ReferenceCameraConfiguration
             textFieldSourceUrl.setText(file.toURI().toString());
         }
     };
+    private JLabel lblWidth;
+    private JLabel lblHeight;
+    private JTextField width;
+    private JTextField height;
+
+    @Override
+    protected void saveToModel() {
+        super.saveToModel();
+        UiUtils.messageBoxOnException(() -> {
+            camera.reinitialize(); 
+        });
+    }
 }

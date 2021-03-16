@@ -68,13 +68,12 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Serializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
 public class PackagesPanel extends JPanel {
-    private final static Logger logger = LoggerFactory.getLogger(PackagesPanel.class);
+
 
     private static final String PREF_DIVIDER_POSITION = "PackagesPanel.dividerPosition";
     private static final int PREF_DIVIDER_POSITION_DEF = -1;
@@ -138,6 +137,7 @@ public class PackagesPanel extends JPanel {
         searchTextField.setColumns(15);
 
         JSplitPane splitPane = new JSplitPane();
+        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         splitPane.setContinuousLayout(true);
         splitPane
                 .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
@@ -150,10 +150,6 @@ public class PackagesPanel extends JPanel {
         add(splitPane, BorderLayout.CENTER);
 
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-        JPanel footprintPanel = new JPanel();
-        footprintPanel.setLayout(new BorderLayout());
-        tabbedPane.add("Footprint", new JScrollPane(footprintPanel));
-
 
         table = new AutoSelectTextTable(tableModel);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -164,7 +160,7 @@ public class PackagesPanel extends JPanel {
                 if (e.getValueIsAdjusting()) {
                     return;
                 }
-
+                
                 List<Package> selections = getSelections();
 
                 if (selections.size() > 1) {
@@ -178,10 +174,15 @@ public class PackagesPanel extends JPanel {
 
                 Package pkg = getSelection();
 
-                footprintPanel.removeAll();
-
+                int selectedTab = tabbedPane.getSelectedIndex();
+                tabbedPane.removeAll();
                 if (pkg != null) {
-                    footprintPanel.add(new FootprintPanel(pkg.getFootprint()), BorderLayout.CENTER);
+                    tabbedPane.add("Nozzle Tips", new PackageNozzleTipsPanel(pkg));
+                    tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(pkg.getFootprint())));
+                    tabbedPane.add("Settings", new JScrollPane(new PackageSettingsPanel(pkg)));
+                    if (selectedTab != -1) {
+                        tabbedPane.setSelectedIndex(selectedTab);
+                    }
                 }
 
                 revalidate();
@@ -206,11 +207,11 @@ public class PackagesPanel extends JPanel {
                 try {
                     Camera camera =
                             Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-                    CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
+                    CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
                     if (cameraView == null) {
                         return;
                     }
-                    cameraView.removeReticle(FootprintPanel.class.getName());
+                    cameraView.removeReticle(PackageVisionPanel.class.getName());
                 }
                 catch (Exception e1) {
                 }
@@ -241,7 +242,7 @@ public class PackagesPanel extends JPanel {
             rf = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
         }
         catch (PatternSyntaxException e) {
-            logger.warn("Search failed", e);
+            Logger.warn("Search failed", e);
             return;
         }
         tableSorter.setRowFilter(rf);
@@ -288,7 +289,7 @@ public class PackagesPanel extends JPanel {
                 for (Part part : Configuration.get().getParts()) {
                     if (part.getPackage() == pkg) {
                         MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-                                getSelection().getId() + " cannot be deleted. It is used by "
+                                pkg.getId() + " cannot be deleted. It is used by "
                                         + part.getId());
                         return;
                     }
@@ -330,7 +331,7 @@ public class PackagesPanel extends JPanel {
                 return;
             }
             try {
-                Serializer s = Configuration.get().createSerializer();
+                Serializer s = Configuration.createSerializer();
                 StringWriter w = new StringWriter();
                 s.write(pkg, w);
                 StringSelection stringSelection = new StringSelection(w.toString());
@@ -353,7 +354,7 @@ public class PackagesPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             try {
-                Serializer ser = Configuration.get().createSerializer();
+                Serializer ser = Configuration.createSerializer();
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 String s = (String) clipboard.getData(DataFlavor.stringFlavor);
                 StringReader r = new StringReader(s);

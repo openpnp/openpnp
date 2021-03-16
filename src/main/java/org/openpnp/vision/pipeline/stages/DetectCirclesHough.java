@@ -7,19 +7,25 @@ import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
+import org.openpnp.vision.pipeline.Property;
+import org.openpnp.vision.pipeline.Stage;
 import org.simpleframework.xml.Attribute;
 
 /**
  * Finds circles in the working image and stores the results as a List<Circle> on the model. 
  */
+@Stage(description="Finds circles in the working image. Diameter and spacing can be specified.")
 public class DetectCirclesHough extends CvStage {
     @Attribute
+    @Property(description = "Minimum distance between circles, in pixels.")
     private int minDistance = 10;
 
     @Attribute
+    @Property(description = "Minimum diameter of circles, in pixels.")
     private int minDiameter = 10;
 
     @Attribute
+    @Property(description = "Maximum diameter of circles, in pixels.")
     private int maxDiameter = 100;
 
     /**
@@ -27,14 +33,16 @@ public class DetectCirclesHough extends CvStage {
      * the accumulator has the same resolution as the input image. If dp=2 , the accumulator has
      * half as big width and height.
      */
-    @Attribute
+    @Attribute(required = false)
+    @Property(description = "Inverse ratio of the accumulator resolution to the image resolution")
     private double dp = 1;
 
     /**
      * First method-specific parameter. In case of CV_HOUGH_GRADIENT , it is the higher threshold of
      * the two passed to the Canny() edge detector (the lower one is twice smaller).
      */
-    @Attribute
+    @Attribute(required = false)
+    @Property(description = "The higher threshold of the two passed to the Canny() edge detector (the lower one is twice smaller)")
     private double param1 = 80;
 
     /**
@@ -43,7 +51,8 @@ public class DetectCirclesHough extends CvStage {
      * circles may be detected. Circles, corresponding to the larger accumulator values, will be
      * returned first.
      */
-    @Attribute
+    @Attribute(required = false)
+    @Property(description = "The accumulator threshold for the circle centers at the detection stage. The smaller it is, the more false circles may be detected")
     private double param2 = 10;
 
     public int getMinDistance() {

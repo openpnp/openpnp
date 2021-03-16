@@ -34,8 +34,8 @@ import org.openpnp.model.Location;
 public class BoardLocationsTableModel extends AbstractTableModel {
     private final Configuration configuration;
 
-    private String[] columnNames = new String[] {"Board", "Width", "Height", "Side", "X", "Y", "Z",
-            "ø", "Enabled?", "Check Fids?"};
+    private String[] columnNames = new String[] {"Board", "Width", "Length", "Side", "X", "Y", "Z",
+            "Rot.", "Enabled?", "Check Fids?"};
 
     private Class[] columnTypes = new Class[] {String.class, LengthCellValue.class,
             LengthCellValue.class, Side.class, LengthCellValue.class, LengthCellValue.class,
@@ -54,6 +54,10 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 
     public Job getJob() {
         return job;
+    }
+
+    public BoardLocation getBoardLocation(int index) {
+        return job.getBoardLocations().get(index);
     }
 
     @Override
@@ -79,6 +83,11 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
+        if (job.isUsingPanel()) {
+            if (rowIndex >= 1) {
+                return false;
+            }
+        }
         return (columnIndex != 0);
     }
 
@@ -95,6 +104,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
                 Location location = boardLocation.getBoard().getDimensions();
                 location = Length.setLocationField(configuration, location, length, Length.Field.X);
                 boardLocation.getBoard().setDimensions(location);
+                fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 2) {
                 LengthCellValue value = (LengthCellValue) aValue;
@@ -102,6 +112,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
                 Location location = boardLocation.getBoard().getDimensions();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Y);
                 boardLocation.getBoard().setDimensions(location);
+                fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 3) {
                 boardLocation.setSide((Side) aValue);
@@ -113,6 +124,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
                 Location location = boardLocation.getLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.X);
                 boardLocation.setLocation(location);
+                fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 5) {
                 LengthCellValue value = (LengthCellValue) aValue;
@@ -120,6 +132,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
                 Location location = boardLocation.getLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Y);
                 boardLocation.setLocation(location);
+                fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 6) {
                 LengthCellValue value = (LengthCellValue) aValue;
@@ -127,16 +140,20 @@ public class BoardLocationsTableModel extends AbstractTableModel {
                 Location location = boardLocation.getLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Z);
                 boardLocation.setLocation(location);
+                fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 7) {
                 boardLocation.setLocation(boardLocation.getLocation().derive(null, null, null,
                         Double.parseDouble(aValue.toString())));
+                fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 8) {
                 boardLocation.setEnabled((Boolean) aValue);
+                fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 9) {
                 boardLocation.setCheckFiducials((Boolean) aValue);
+                fireTableCellUpdated(rowIndex, columnIndex);
             }
         }
         catch (Exception e) {

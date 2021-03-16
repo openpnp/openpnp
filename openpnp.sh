@@ -18,6 +18,6 @@ case "$platform" in
 		java -Xdock:name=OpenPnP -jar $rootdir/target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar
 	;;
 	linux)
-		java -jar $rootdir/target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar
+		java $1 -jar $rootdir/target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar
 	;;
 esac
