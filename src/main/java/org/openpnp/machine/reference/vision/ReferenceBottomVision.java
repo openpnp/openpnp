@@ -608,7 +608,7 @@ public class ReferenceBottomVision implements PartAlignment {
         	return checkSizeTolerancePercent;
         }
 
-        public void setCheckPartSize(int checkSizeTolerancePercent) {
+        public void setCheckSizeTolerancePercent(int checkSizeTolerancePercent) {
             this.checkSizeTolerancePercent = checkSizeTolerancePercent;
         }
 
