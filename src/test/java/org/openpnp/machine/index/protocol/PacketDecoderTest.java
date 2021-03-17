@@ -44,4 +44,17 @@ public class PacketDecoderTest {
 
         assertInvalidResponse(response);
     }
+
+    @Test
+    public void decodingTimeout() {
+        // TODO Verify this is what is actually returned from Marlin on timeout
+        PacketResponse response = PacketDecoder.decode("TIMEOUT").response();
+
+        assertFalse(response.isValid());
+        assertFalse(response.isOk());
+        assertEquals(ErrorTypes.TIMEOUT, response.getError());
+        assertNull(response.getUuid());
+        assertEquals(0, response.getTargetAddress());
+        assertEquals(0, response.getFeederAddress());
+    }
 }

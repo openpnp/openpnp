@@ -9,6 +9,11 @@ public class PacketDecoder {
     private PacketDecoder(String message) {
         response = new PacketResponse();
 
+        if(message.equals("TIMEOUT")) {
+            response.setValid(true);
+            response.setError(ErrorTypes.TIMEOUT);
+        }
+
         if(message.length() % 2 != 0) {
             response.setValid(false);
             return;
