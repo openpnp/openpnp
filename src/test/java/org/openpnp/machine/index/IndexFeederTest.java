@@ -99,18 +99,19 @@ public class IndexFeederTest {
     public void prepareForJobFindsFeederAddressAndInitializes() throws Exception {
         feeder.setHardwareId(hardwareId);
 
-        when(mockedActuator.read()).thenReturn(
-                GetFeederAddress.ok(feederAddress, hardwareId),
-                InitializeFeeder.ok(feederAddress)
-        );
+        String getFeederAddressCommand = getFeederAddress(hardwareId);
+        when(mockedActuator.read(getFeederAddressCommand))
+                .thenReturn(GetFeederAddress.ok(feederAddress, hardwareId));
+
+        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        when(mockedActuator.read(initializeFeederCommand))
+                .thenReturn(InitializeFeeder.ok(feederAddress));
 
         feeder.prepareForJob(false);
 
         InOrder inOrder = Mockito.inOrder(mockedActuator);
-        inOrder.verify(mockedActuator).actuate(getFeederAddress(hardwareId));
-        inOrder.verify(mockedActuator).read();
-        inOrder.verify(mockedActuator).actuate(initializeFeeder(feederAddress, hardwareId));
-        inOrder.verify(mockedActuator).read();
+        inOrder.verify(mockedActuator).read(getFeederAddressCommand);
+        inOrder.verify(mockedActuator).read(initializeFeederCommand);
 
         Assert.assertEquals(feederAddress, (int) feeder.getSlotAddress());
         Assert.assertTrue(feeder.isInitialized());
@@ -121,18 +122,15 @@ public class IndexFeederTest {
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(feederAddress);
 
-        when(mockedActuator.read()).thenReturn(
-                InitializeFeeder.ok(feederAddress)
-        );
+        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        when(mockedActuator.read(initializeFeederCommand))
+                .thenReturn(InitializeFeeder.ok(feederAddress));
 
         feeder.prepareForJob(false);
 
         InOrder inOrder = Mockito.inOrder(mockedActuator);
-        inOrder.verify(mockedActuator).actuate(initializeFeeder(feederAddress, hardwareId));
-        inOrder.verify(mockedActuator).read();
+        inOrder.verify(mockedActuator).read(initializeFeederCommand);
     }
-    
-    // TODO Test what happens when the feeder isn't plugged into the machine
     
     @Test
     public void feedMovesPartForwardByPitch() throws Exception {
@@ -140,19 +138,19 @@ public class IndexFeederTest {
         feeder.setSlotAddress(feederAddress);
         feeder.setPartPitch(2);
 
-        when(mockedActuator.read()).thenReturn(
-                InitializeFeeder.ok(feederAddress),
-                MoveFeedForward.ok(feederAddress),
-                MoveFeedForward.ok(feederAddress)
-        );
+        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        when(mockedActuator.read(initializeFeederCommand))
+                .thenReturn(InitializeFeeder.ok(feederAddress));
+
+        String moveFeedForwardCommand = moveFeedForward(feederAddress, 20);
+        when(mockedActuator.read(moveFeedForwardCommand))
+                .thenReturn(MoveFeedForward.ok(feederAddress));
 
         feeder.feed(mockedNozzle);
 
         InOrder inOrder = Mockito.inOrder(mockedActuator);
-        inOrder.verify(mockedActuator).actuate(initializeFeeder(feederAddress, hardwareId));
-        inOrder.verify(mockedActuator).read();
-        inOrder.verify(mockedActuator).actuate(moveFeedForward(feederAddress, 20));
-        inOrder.verify(mockedActuator, times(2)).read();
+        inOrder.verify(mockedActuator).read(initializeFeederCommand);
+        inOrder.verify(mockedActuator).read(moveFeedForwardCommand);
     }
     
     @Test
@@ -161,30 +159,36 @@ public class IndexFeederTest {
         feeder.setSlotAddress(feederAddress);
         feeder.setPartPitch(2);
 
+        String oldInitializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        when(mockedActuator.read(oldInitializeFeederCommand))
+                .thenReturn(InitializeFeeder.ok(feederAddress));
+
+        String oldMoveFeederForwardCommand = moveFeedForward(feederAddress, 20);
+        when(mockedActuator.read(oldMoveFeederForwardCommand))
+                .thenReturn(Errors.uninitializedFeeder(feederAddress, hardwareId));
+
         int newAddress = 11;
 
-        when(mockedActuator.read()).thenReturn(
-                InitializeFeeder.ok(feederAddress), // We have to start with an initialized feeder
-                Errors.uninitializedFeeder(feederAddress, hardwareId),
-                GetFeederAddress.ok(newAddress, hardwareId),
-                InitializeFeeder.ok(newAddress),
-                MoveFeedForward.ok(newAddress),
-                MoveFeedForward.ok(newAddress)
-        );
+        String newGetFeederAddressCommand = getFeederAddress(hardwareId);
+        when(mockedActuator.read(newGetFeederAddressCommand))
+                .thenReturn(GetFeederAddress.ok(newAddress, hardwareId));
+
+        String newInitializeFeederCommand = initializeFeeder(newAddress, hardwareId);
+        when(mockedActuator.read(newInitializeFeederCommand))
+                .thenReturn(InitializeFeeder.ok(newAddress));
+
+        String newMoveFeedForwardCommand = moveFeedForward(newAddress, 20);
+        when(mockedActuator.read(newMoveFeedForwardCommand))
+                .thenReturn(MoveFeedForward.ok(newAddress));
 
         feeder.feed(mockedNozzle);
 
         InOrder inOrder = Mockito.inOrder(mockedActuator);
-        inOrder.verify(mockedActuator).actuate(initializeFeeder(feederAddress, hardwareId));
-        inOrder.verify(mockedActuator).read(); // First initialization
-        inOrder.verify(mockedActuator).actuate(moveFeedForward(feederAddress, 20));
-        inOrder.verify(mockedActuator).read(); // Uninitialized feeder error
-        inOrder.verify(mockedActuator).actuate(getFeederAddress(hardwareId));
-        inOrder.verify(mockedActuator).read(); // New address
-        inOrder.verify(mockedActuator).actuate(initializeFeeder(newAddress, hardwareId));
-        inOrder.verify(mockedActuator).read(); // Second initialization in new slot
-        inOrder.verify(mockedActuator).actuate(moveFeedForward(newAddress, 20));
-        inOrder.verify(mockedActuator, times(2)).read();
+        inOrder.verify(mockedActuator).read(oldInitializeFeederCommand); // First initialization
+        inOrder.verify(mockedActuator).read(oldMoveFeederForwardCommand); // Uninitialized feeder error
+        inOrder.verify(mockedActuator).read(newGetFeederAddressCommand); // New address
+        inOrder.verify(mockedActuator).read(newInitializeFeederCommand); // Second initialization in new slot
+        inOrder.verify(mockedActuator).read(newMoveFeedForwardCommand); // Finally move the feeder
 
         Assert.assertEquals(newAddress, (int) feeder.getSlotAddress());
     }

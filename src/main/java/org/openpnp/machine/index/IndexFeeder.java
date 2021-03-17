@@ -3,7 +3,6 @@ package org.openpnp.machine.index;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.index.protocol.ErrorTypes;
 import org.openpnp.machine.index.protocol.IndexCommands;
-import org.openpnp.machine.index.protocol.IndexResponses;
 import org.openpnp.machine.index.protocol.PacketResponse;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.model.Configuration;
@@ -50,9 +49,8 @@ public class IndexFeeder extends ReferenceFeeder {
         }
 
         Actuator actuator = getActuator();
-        actuator.actuate(IndexCommands.getFeederAddress(hardwareId));
+        String feederAddressResponseString = actuator.read(IndexCommands.getFeederAddress(hardwareId));
 
-        String feederAddressResponseString = actuator.read();
         PacketResponse response = GetFeederAddress.decode(feederAddressResponseString);
         slotAddress = response.getFeederAddress();
     }
@@ -63,9 +61,9 @@ public class IndexFeeder extends ReferenceFeeder {
         }
 
         Actuator actuator = getActuator();
-        actuator.actuate(IndexCommands.initializeFeeder(slotAddress, hardwareId));
+        // TODO Verify this response
+        String response = actuator.read(IndexCommands.initializeFeeder(slotAddress, hardwareId));
 
-        String response = actuator.read();
         initialized = true;
     }
 
@@ -81,9 +79,8 @@ public class IndexFeeder extends ReferenceFeeder {
             initializeIfNeeded();
 
             Actuator actuator = getActuator();
-            actuator.actuate(IndexCommands.moveFeedForward(slotAddress, partPitch * 10));
+            String ackResponseString = actuator.read(IndexCommands.moveFeedForward(slotAddress, partPitch * 10));
 
-            String ackResponseString = actuator.read();
             PacketResponse ackResponse = InitializeFeeder.decode(ackResponseString);
             if (!ackResponse.isOk()) {
                 ErrorTypes error = ackResponse.getError();
@@ -94,7 +91,6 @@ public class IndexFeeder extends ReferenceFeeder {
                 }
             }
 
-            String movedResponse = actuator.read();
             return;
         }
     }
