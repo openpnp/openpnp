@@ -137,6 +137,20 @@ public class IndexFeederTest {
     }
 
     @Test
+    public void prepareForJobDoesNotInitializeIfSlotCanNotBeFound() throws Exception {
+        feeder.setHardwareId(hardwareId);
+
+        String getFeederAddressCommand = getFeederAddress(hardwareId);
+        when(mockedActuator.read(getFeederAddressCommand))
+                .thenReturn(Errors.timeout());
+
+        feeder.prepareForJob(false);
+
+        Assert.assertFalse(feeder.isInitialized());
+        Assert.assertNull(feeder.getSlotAddress());
+    }
+
+    @Test
     public void prepareForJobFindsFeederAgainIfLostToTimeout() throws Exception {
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(feederAddress);
@@ -421,9 +435,4 @@ public class IndexFeederTest {
         Assert.assertTrue(feederB.isInitialized());
         Assert.assertEquals(1, (int) feederB.getSlotAddress());
     }
-
-    /*
-    TODO More tests:
-    5. Find slot Address times out.
-     */
 }

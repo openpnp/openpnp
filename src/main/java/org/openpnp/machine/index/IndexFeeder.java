@@ -60,11 +60,18 @@ public class IndexFeeder extends ReferenceFeeder {
         String feederAddressResponseString = actuator.read(IndexCommands.getFeederAddress(hardwareId));
 
         PacketResponse response = GetFeederAddress.decode(feederAddressResponseString);
+        if(! response.isOk()) {
+            ErrorTypes error = response.getError();
+
+            if(error == ErrorTypes.TIMEOUT) {
+                return;
+            }
+        }
         setSlotAddress(response.getFeederAddress());
     }
 
     private void initializeIfNeeded() throws Exception {
-        if(initialized) {
+        if(initialized || slotAddress == null) {
             return;
         }
 
