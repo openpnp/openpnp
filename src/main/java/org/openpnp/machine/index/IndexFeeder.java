@@ -76,6 +76,18 @@ public class IndexFeeder extends ReferenceFeeder {
             if(response.getError() == ErrorTypes.TIMEOUT) {
                 slotAddress = null;
                 return;
+            } else if(response.getError() == ErrorTypes.WRONG_FEEDER_UUID) {
+                IndexFeeder otherFeeder = findByHardwareId(response.getUuid());
+                if(otherFeeder == null) {
+                    otherFeeder = new IndexFeeder();
+                    otherFeeder.setHardwareId(response.getUuid());
+                    Configuration.get().getMachine().addFeeder(otherFeeder);
+                }
+
+                // This other feeder is in the slot we thought we were
+                otherFeeder.setSlotAddress(slotAddress);
+
+                return;
             }
         }
 
@@ -193,5 +205,21 @@ public class IndexFeeder extends ReferenceFeeder {
 
     public void setPartPitch(int partPitch) {
         this.partPitch = partPitch;
+    }
+
+    public static IndexFeeder findByHardwareId(String hardwareId) {
+        for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+            if(! (feeder instanceof IndexFeeder)) {
+                continue;
+            }
+
+            IndexFeeder indexFeeder = (IndexFeeder) feeder;
+
+            if(indexFeeder.hardwareId != null && indexFeeder.hardwareId.equals(hardwareId)) {
+                return indexFeeder;
+            }
+        }
+
+        return null;
     }
 }
