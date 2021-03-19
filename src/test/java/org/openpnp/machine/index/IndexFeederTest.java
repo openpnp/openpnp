@@ -92,7 +92,7 @@ public class IndexFeederTest {
     }
 
     @Test
-    public void isInitializedByDefaultReturnsTrue() {
+    public void isInitializedByDefaultReturnsFalse() {
         Assert.assertFalse(feeder.isInitialized());
     }
 
