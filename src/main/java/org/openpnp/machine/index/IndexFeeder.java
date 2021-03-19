@@ -8,6 +8,7 @@ import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
@@ -36,9 +37,16 @@ public class IndexFeeder extends ReferenceFeeder {
 
     @Override
     public void prepareForJob(boolean visit) throws Exception {
-        findSlotAddressIfNeeded();
+        // TODO Better limit the number of times this can run before throwing an exception
+        for (int i = 0; i < 10; i++) {
+            findSlotAddressIfNeeded();
 
-        initializeIfNeeded();
+            initializeIfNeeded();
+
+            if(initialized) {
+                break;
+            }
+        }
 
         super.prepareForJob(visit);
     }
@@ -52,7 +60,7 @@ public class IndexFeeder extends ReferenceFeeder {
         String feederAddressResponseString = actuator.read(IndexCommands.getFeederAddress(hardwareId));
 
         PacketResponse response = GetFeederAddress.decode(feederAddressResponseString);
-        slotAddress = response.getFeederAddress();
+        setSlotAddress(response.getFeederAddress());
     }
 
     private void initializeIfNeeded() throws Exception {
@@ -61,8 +69,15 @@ public class IndexFeeder extends ReferenceFeeder {
         }
 
         Actuator actuator = getActuator();
-        // TODO Verify this response
-        String response = actuator.read(IndexCommands.initializeFeeder(slotAddress, hardwareId));
+        String responseString = actuator.read(IndexCommands.initializeFeeder(slotAddress, hardwareId));
+        PacketResponse response = InitializeFeeder.decode(responseString);
+
+        if(!response.isOk()) {
+            if(response.getError() == ErrorTypes.TIMEOUT) {
+                slotAddress = null;
+                return;
+            }
+        }
 
         initialized = true;
     }
@@ -73,7 +88,7 @@ public class IndexFeeder extends ReferenceFeeder {
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
-        // TODO limit the number of times this can run before throwing an exception
+        // TODO Better limit the number of times this can run before throwing an exception
         for (int i = 0; i < 10; i++) {
             findSlotAddressIfNeeded();
             initializeIfNeeded();
@@ -81,10 +96,11 @@ public class IndexFeeder extends ReferenceFeeder {
             Actuator actuator = getActuator();
             String ackResponseString = actuator.read(IndexCommands.moveFeedForward(slotAddress, partPitch * 10));
 
-            PacketResponse ackResponse = InitializeFeeder.decode(ackResponseString);
+            PacketResponse ackResponse = MoveFeedForward.decode(ackResponseString);
             if (!ackResponse.isOk()) {
                 ErrorTypes error = ackResponse.getError();
-                if (error == ErrorTypes.UNINITIALIZED_FEEDER) {
+                if (error == ErrorTypes.UNINITIALIZED_FEEDER ||
+                        error == ErrorTypes.TIMEOUT) {
                     slotAddress = null;
                     initialized = false;
                     continue;
@@ -128,6 +144,32 @@ public class IndexFeeder extends ReferenceFeeder {
 
     public void setSlotAddress(Integer slotAddress) {
         this.slotAddress = slotAddress;
+
+        if(slotAddress == null) {
+            return;
+        }
+
+        // Find any other index feeders and if they have this slot address, set their address to null
+        for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+            if(! (feeder instanceof IndexFeeder)) {
+                continue;
+            }
+
+            if(feeder == this) {
+                continue;
+            }
+
+            IndexFeeder indexFeeder = (IndexFeeder) feeder;
+
+            if(indexFeeder.slotAddress == null) {
+                continue;
+            }
+
+            if(this.slotAddress.equals(indexFeeder.slotAddress)) {
+                indexFeeder.slotAddress = null;
+                indexFeeder.initialized = false;
+            }
+        }
     }
 
     public String getHardwareId() {

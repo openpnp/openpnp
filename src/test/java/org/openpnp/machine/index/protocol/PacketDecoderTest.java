@@ -47,8 +47,7 @@ public class PacketDecoderTest {
 
     @Test
     public void decodingTimeout() {
-        // TODO Verify this is what is actually returned from Marlin on timeout
-        PacketResponse response = PacketDecoder.decode("TIMEOUT").response();
+        PacketResponse response = PacketDecoder.decode(IndexResponses.Errors.timeout()).response();
 
         assertFalse(response.isValid());
         assertFalse(response.isOk());

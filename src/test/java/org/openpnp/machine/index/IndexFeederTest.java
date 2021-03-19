@@ -24,6 +24,7 @@ public class IndexFeederTest {
 
     private IndexFeeder feeder;
 
+    private Machine machine;
     private Actuator mockedActuator;
     private Nozzle mockedNozzle;
 
@@ -35,7 +36,7 @@ public class IndexFeederTest {
         Configuration.initialize(workingDirectory);
         Configuration.get().load();
 
-        Machine machine = Configuration.get().getMachine();
+        machine = Configuration.get().getMachine();
         feeder = new IndexFeeder();
         machine.addFeeder(feeder);
 
@@ -131,6 +132,32 @@ public class IndexFeederTest {
         InOrder inOrder = Mockito.inOrder(mockedActuator);
         inOrder.verify(mockedActuator).read(initializeFeederCommand);
     }
+    @Test
+    public void prepareForJobFindsFeederAgainIfLostToTimeout() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+
+        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        when(mockedActuator.read(initializeFeederCommand))
+                .thenReturn(Errors.timeout());
+
+        int newAddress = 11;
+
+        String newGetFeederAddressCommand = getFeederAddress(hardwareId);
+        when(mockedActuator.read(newGetFeederAddressCommand))
+                .thenReturn(GetFeederAddress.ok(newAddress, hardwareId));
+
+        String newInitializeFeederCommand = initializeFeeder(newAddress, hardwareId);
+        when(mockedActuator.read(newInitializeFeederCommand))
+                .thenReturn(InitializeFeeder.ok(newAddress));
+
+        feeder.prepareForJob(false);
+
+        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        inOrder.verify(mockedActuator).read(initializeFeederCommand);
+        inOrder.verify(mockedActuator).read(newGetFeederAddressCommand);
+        inOrder.verify(mockedActuator).read(newInitializeFeederCommand);
+    }
     
     @Test
     public void feedMovesPartForwardByPitch() throws Exception {
@@ -193,14 +220,124 @@ public class IndexFeederTest {
         Assert.assertEquals(newAddress, (int) feeder.getSlotAddress());
     }
 
+    @Test
+    public void feedInitializesOnFeederTimeout() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        feeder.setPartPitch(2);
+
+        String oldInitializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        when(mockedActuator.read(oldInitializeFeederCommand))
+                .thenReturn(InitializeFeeder.ok(feederAddress));
+
+        String oldMoveFeederForwardCommand = moveFeedForward(feederAddress, 20);
+        when(mockedActuator.read(oldMoveFeederForwardCommand))
+                .thenReturn(Errors.timeout());
+
+        int newAddress = 11;
+
+        String newGetFeederAddressCommand = getFeederAddress(hardwareId);
+        when(mockedActuator.read(newGetFeederAddressCommand))
+                .thenReturn(GetFeederAddress.ok(newAddress, hardwareId));
+
+        String newInitializeFeederCommand = initializeFeeder(newAddress, hardwareId);
+        when(mockedActuator.read(newInitializeFeederCommand))
+                .thenReturn(InitializeFeeder.ok(newAddress));
+
+        String newMoveFeedForwardCommand = moveFeedForward(newAddress, 20);
+        when(mockedActuator.read(newMoveFeedForwardCommand))
+                .thenReturn(MoveFeedForward.ok(newAddress));
+
+        feeder.feed(mockedNozzle);
+
+        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        inOrder.verify(mockedActuator).read(oldInitializeFeederCommand); // First initialization
+        inOrder.verify(mockedActuator).read(oldMoveFeederForwardCommand); // Uninitialized feeder error
+        inOrder.verify(mockedActuator).read(newGetFeederAddressCommand); // New address
+        inOrder.verify(mockedActuator).read(newInitializeFeederCommand); // Second initialization in new slot
+        inOrder.verify(mockedActuator).read(newMoveFeedForwardCommand); // Finally move the feeder
+
+        Assert.assertEquals(newAddress, (int) feeder.getSlotAddress());
+    }
+
+    @Test
+    public void twoFeedersCanNotHaveTheSameAddress() throws Exception {
+        // Remove the main feeder so we can make two of our own in this test
+        machine.removeFeeder(feeder);
+
+        // Feeder A -> Slot 1
+        IndexFeeder feederA = new IndexFeeder();
+        String hardwareIdA = "445566778899AABBCCDDEEFF";
+        feederA.setHardwareId(hardwareIdA);
+        feederA.setSlotAddress(1);
+        machine.addFeeder(feederA);
+
+        // Feeder B -> Slot 2
+        IndexFeeder feederB = new IndexFeeder();
+        String hardwareIdB = "FFEEDDCCBBAA998877665544";
+        feederB.setHardwareId(hardwareIdB);
+        feederB.setSlotAddress(2);
+        feederB.setPartPitch(2);
+        machine.addFeeder(feederB);
+
+        // Both feeders initialized in their known slot
+        String feederASlot1InitializationCommand = initializeFeeder(1, hardwareIdA);
+        when(mockedActuator.read(feederASlot1InitializationCommand))
+                .thenReturn(InitializeFeeder.ok(1));
+
+        String feederBSlot2InitializationCommand = initializeFeeder(2, hardwareIdB);
+        when(mockedActuator.read(feederBSlot2InitializationCommand))
+                .thenReturn(InitializeFeeder.ok(2));
+
+        // Prepare both feeders for the job
+        feederA.prepareForJob(false);
+        feederB.prepareForJob(false);
+
+        // At this point, in the real world, the job would have been started. Feeder A is removed and feeder B is put
+        // into slot 1. This causes the next move command to timeout for feeder B. We don't need to be running a job in
+        // this unit test, we just need to call move manually below.
+
+        String feederBSlot2FeedCommand = moveFeedForward(2, 20);
+        when(mockedActuator.read(feederBSlot2FeedCommand))
+                .thenReturn(Errors.timeout());
+
+        // Feeder B is now in slot 1
+        String feederBGetAddressCommand = getFeederAddress(hardwareIdB);
+        when(mockedActuator.read(feederBGetAddressCommand))
+                .thenReturn(GetFeederAddress.ok(1, hardwareIdB));
+
+        String feederBSlot1InitializationCommand = initializeFeeder(1, hardwareIdB);
+        when(mockedActuator.read(feederBSlot1InitializationCommand))
+                .thenReturn(InitializeFeeder.ok(1));
+
+        // We can finally try feeding in the correct slot!
+        String feederBSlot1FeedCommand = moveFeedForward(1, 20);
+        when(mockedActuator.read(feederBSlot1FeedCommand))
+                .thenReturn(MoveFeedForward.ok(1));
+
+        // Actually try to feed on feeder B
+        feederB.feed(mockedNozzle);
+
+        // Verify all of the calls in order
+        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        inOrder.verify(mockedActuator).read(feederASlot1InitializationCommand); // First initialization Feeder A
+        inOrder.verify(mockedActuator).read(feederBSlot2InitializationCommand); // First initialization Feeder B
+        inOrder.verify(mockedActuator).read(feederBSlot2FeedCommand); // Feeder B timeout
+        inOrder.verify(mockedActuator).read(feederBGetAddressCommand); // Find feeder B slot
+        inOrder.verify(mockedActuator).read(feederBSlot1InitializationCommand); // Initialize feeder B
+        inOrder.verify(mockedActuator).read(feederBSlot1FeedCommand); // Finally move the feeder
+
+        // Verify the state of the two feeders
+        Assert.assertFalse(feederA.isInitialized());
+        Assert.assertNull(feeder.getSlotAddress());
+
+        Assert.assertTrue(feederB.isInitialized());
+        Assert.assertEquals(1, (int) feederB.getSlotAddress());
+    }
+
     /*
     TODO More tests:
-    1. Feeder isn't in machine on prepare (timeout)
-    2. Feeder isn't in machine on feed (timeout)
-    3. Two feeders can't have the same address. Imagine this scenario: Feeder A is initialized in slot 1.
-        Feeder B is initialized in slot 2. Feeder A is removed and Feeder B is put in slot 1. A feed on
-        Feeder B occurs. We get a timeout on slot 2. We find it again in slot 1. We initialize Feeder B
-        in slot 1. At this point, we MUST remove the address for Feeder A and consider it uninitialized.
-        Otherwise, we'll try to feed slot 1, which will work because there's an initialized feeder in there.
+    4. Feeder returns wrong UUID on initialization.
+    5. Find slot Address times out.
      */
 }

@@ -21,6 +21,11 @@ public class IndexResponses {
                     .putUuid(uuid)
                     .toByteString();
         }
+
+        public static String timeout() {
+            // TODO Verify this is what is actually returned from Marlin on timeout
+            return "TIMEOUT";
+        }
     }
 
     public static class GetFeederId {
