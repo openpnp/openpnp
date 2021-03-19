@@ -167,7 +167,7 @@ public class IndexFeederTest {
     }
 
     @Test
-    public void prepareForJobFindsFeederAgainIfWrongFeederUUID() throws Exception {
+    public void prepareForJobFindsFeederAgainIfWrongFeederUUIDAndMakesNewFeeder() throws Exception {
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(feederAddress);
         String otherHardwareId = "445566778899AABBCCDDEEFF";
@@ -200,6 +200,48 @@ public class IndexFeederTest {
 
         IndexFeeder otherFeeder = IndexFeeder.findByHardwareId(otherHardwareId);
         Assert.assertNotNull(otherFeeder);
+        Assert.assertFalse(otherFeeder.initialized);
+        Assert.assertEquals(feederAddress, (int) otherFeeder.slotAddress);
+    }
+
+    @Test
+    public void prepareForJobFindsFeederAgainIfWrongFeederUUIDAndUsesExistingFeeder() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+
+        String otherHardwareId = "445566778899AABBCCDDEEFF";
+        IndexFeeder otherFeeder = new IndexFeeder();
+        otherFeeder.setHardwareId(otherHardwareId);
+        machine.addFeeder(otherFeeder);
+
+        Assert.assertSame(otherFeeder, IndexFeeder.findByHardwareId(otherHardwareId));
+
+        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        when(mockedActuator.read(initializeFeederCommand))
+                .thenReturn(Errors.wrongFeederUUID(feederAddress, otherHardwareId));
+
+        int newAddress = 11;
+
+        String newGetFeederAddressCommand = getFeederAddress(hardwareId);
+        when(mockedActuator.read(newGetFeederAddressCommand))
+                .thenReturn(GetFeederAddress.ok(newAddress, hardwareId));
+
+        String newInitializeFeederCommand = initializeFeeder(newAddress, hardwareId);
+        when(mockedActuator.read(newInitializeFeederCommand))
+                .thenReturn(InitializeFeeder.ok(newAddress));
+
+        feeder.prepareForJob(false);
+
+        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        inOrder.verify(mockedActuator).read(initializeFeederCommand);
+        inOrder.verify(mockedActuator).read(newGetFeederAddressCommand);
+        inOrder.verify(mockedActuator).read(newInitializeFeederCommand);
+
+        Assert.assertEquals(newAddress, (int) feeder.getSlotAddress());
+        Assert.assertTrue(feeder.isInitialized());
+
+        IndexFeeder recalledOtherFeeder = IndexFeeder.findByHardwareId(otherHardwareId);
+        Assert.assertSame(otherFeeder, recalledOtherFeeder);
         Assert.assertFalse(otherFeeder.initialized);
         Assert.assertEquals(feederAddress, (int) otherFeeder.slotAddress);
     }
